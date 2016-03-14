@@ -65,6 +65,7 @@ import org.apache.calcite.util.Util;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 
 /**
  * Rule to reduce aggregates to simpler forms. Currently only AVG(x) to
@@ -122,11 +123,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
    */
   private boolean containsAvgStddevVarCall(List<AggregateCall> aggCallList) {
     for (AggregateCall call : aggCallList) {
-      SqlAggFunction sqlAggFunction = call.getAggregation();
-      if(sqlAggFunction instanceof DrillCalciteSqlWrapper) {
-        sqlAggFunction = (SqlAggFunction) ((DrillCalciteSqlWrapper) sqlAggFunction).getOperator();
-      }
-
+      SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getAggregation());
       if (sqlAggFunction instanceof SqlAvgAggFunction
           || sqlAggFunction instanceof SqlSumAggFunction) {
         return true;
@@ -225,11 +222,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       List<AggregateCall> newCalls,
       Map<AggregateCall, RexNode> aggCallMapping,
       List<RexNode> inputExprs) {
-    SqlAggFunction sqlAggFunction = oldCall.getAggregation();
-    if(sqlAggFunction instanceof DrillCalciteSqlWrapper) {
-      sqlAggFunction = (SqlAggFunction) ((DrillCalciteSqlWrapper) sqlAggFunction).getOperator();
-    }
-
+    final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(oldCall.getAggregation());
     if (sqlAggFunction instanceof SqlSumAggFunction) {
       // replace original SUM(x) with
       // case COUNT(x) when 0 then null else SUM0(x) end
@@ -702,11 +695,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     public boolean matches(RelOptRuleCall call) {
       DrillAggregateRel oldAggRel = (DrillAggregateRel) call.rels[0];
       for (AggregateCall aggregateCall : oldAggRel.getAggCallList()) {
-        SqlAggFunction sqlAggFunction = aggregateCall.getAggregation();
-        if(sqlAggFunction instanceof DrillCalciteSqlWrapper) {
-          sqlAggFunction = (SqlAggFunction) ((DrillCalciteSqlWrapper) sqlAggFunction).getOperator();
-        }
-
+        final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(aggregateCall.getAggregation());
         if(sqlAggFunction instanceof SqlSumAggFunction
             && !aggregateCall.getType().isNullable()) {
           // If SUM(x) is not nullable, the validator must have determined that
@@ -725,11 +714,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       final Map<AggregateCall, RexNode> aggCallMapping = Maps.newHashMap();
       final List<AggregateCall> newAggregateCalls = Lists.newArrayList();
       for (AggregateCall oldAggregateCall : oldAggRel.getAggCallList()) {
-        SqlAggFunction sqlAggFunction = oldAggregateCall.getAggregation();
-        if(sqlAggFunction instanceof DrillCalciteSqlWrapper) {
-          sqlAggFunction = (SqlAggFunction) ((DrillCalciteSqlWrapper) sqlAggFunction).getOperator();
-        }
-
+        final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(
+            oldAggregateCall.getAggregation());
         if(sqlAggFunction instanceof SqlSumAggFunction
             && !oldAggregateCall.getType().isNullable()) {
           final RelDataType argType = oldAggregateCall.getType();

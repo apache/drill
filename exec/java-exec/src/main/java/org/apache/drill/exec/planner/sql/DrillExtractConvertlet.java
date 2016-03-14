@@ -27,6 +27,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
@@ -61,11 +62,21 @@ public class DrillExtractConvertlet implements SqlRexConvertlet {
        exprs.add(cx.convertExpression(node));
     }
 
-    // Determine NULL-able using 2nd argument's Null-able.
-    RelDataType returnType = typeFactory.createTypeWithNullability(
-        typeFactory.createSqlType(
-            TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit)),
-            exprs.get(1).getType().isNullable());
+    final RelDataType returnType;
+    if(call.getOperator() == SqlStdOperatorTable.EXTRACT) {
+      // Legacy code:
+      // The return type is wrong!
+      // Legacy code choose SqlTypeName.BIGINT simply to avoid conflicting against Calcite's inference mechanism
+      // (, which chose BIGINT in validation phase already)
+      // Determine NULL-able using 2nd argument's Null-able.
+      returnType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT), exprs.get(1).getType().isNullable());
+    } else {
+      // Determine NULL-able using 2nd argument's Null-able.
+      returnType = typeFactory.createTypeWithNullability(
+          typeFactory.createSqlType(
+              TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit)),
+          exprs.get(1).getType().isNullable());
+    }
 
     return rexBuilder.makeCall(returnType, call.getOperator(), exprs);
   }

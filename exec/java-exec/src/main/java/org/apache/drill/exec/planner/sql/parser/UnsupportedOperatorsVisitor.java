@@ -352,7 +352,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    if(extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
+    if(DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
       for(SqlNode sqlNode : sqlCall.getOperandList()) {
         if(containsFlatten(sqlNode)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
@@ -416,7 +416,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
         if (operator == SqlStdOperatorTable.ROLLUP
             || operator == SqlStdOperatorTable.CUBE
             || operator == SqlStdOperatorTable.GROUPING_SETS) {
@@ -434,7 +434,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
           if (operator == SqlStdOperatorTable.GROUPING
               || operator == SqlStdOperatorTable.GROUPING_ID
               || operator == SqlStdOperatorTable.GROUP_ID) {
@@ -553,14 +553,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
           throw new UnsupportedOperationException();
         }
       }
-    }
-  }
-
-  private SqlOperator extractSqlOperatorFromWrapper(SqlOperator sqlOperator) {
-    if(sqlOperator instanceof DrillCalciteSqlWrapper) {
-      return ((DrillCalciteSqlWrapper) sqlOperator).getOperator();
-    } else {
-      return sqlOperator;
     }
   }
 }

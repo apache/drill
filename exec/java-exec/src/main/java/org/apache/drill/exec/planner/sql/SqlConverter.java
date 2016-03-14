@@ -196,34 +196,6 @@ public class SqlConverter {
         RelDataTypeFactory typeFactory, SqlConformance conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
     }
-
-    @Override
-    public SqlValidatorScope getSelectScope(final SqlSelect select) {
-      final SqlValidatorScope sqlValidatorScope = super.getSelectScope(select);
-      if(needsValidation(sqlValidatorScope)) {
-        final AggregatingSelectScope aggregatingSelectScope = ((AggregatingSelectScope) sqlValidatorScope);
-        for(SqlNode sqlNode : aggregatingSelectScope.groupExprList) {
-          if(sqlNode instanceof SqlCall) {
-            final SqlCall sqlCall = (SqlCall) sqlNode;
-            sqlCall.getOperator().deriveType(this, sqlValidatorScope, sqlCall);
-          }
-        }
-        identitySet.add(sqlValidatorScope);
-      }
-      return sqlValidatorScope;
-    }
-
-    // Due to the deep-copy of AggregatingSelectScope in the following two commits in the Forked Drill-Calcite:
-    // 1. [StarColumn] Reverse one change in CALCITE-356, which regresses AggChecker logic, after * query in schema-less table is added.
-    // 2. [StarColumn] When group-by a column, projecting on a star which cannot be expanded at planning time,
-    //    use ITEM operator to wrap this column
-    private boolean needsValidation(final SqlValidatorScope sqlValidatorScope) {
-      if(sqlValidatorScope instanceof AggregatingSelectScope) {
-        return !identitySet.contains(sqlValidatorScope);
-      } else {
-        return false;
-      }
-    }
   }
 
   private static class DrillTypeSystem extends RelDataTypeSystemImpl {
@@ -406,29 +378,15 @@ public class SqlConverter {
       super(typeFactory);
     }
 
+    /**
+     * Since Drill has different mechanism and rules for implicit casting,
+     * ensureType() is overridden to avoid conflicting cast functions being added to the expressions.
+     */
     @Override
     public RexNode ensureType(
         RelDataType type,
         RexNode node,
         boolean matchNullability) {
-      RelDataType targetType = type;
-      if (matchNullability) {
-        targetType = matchNullability(type, node);
-      }
-      if (targetType.getSqlTypeName() == SqlTypeName.ANY) {
-        return node;
-      }
-      if (!node.getType().equals(targetType)) {
-        if(!targetType.isStruct()) {
-          final RelDataType anyType = TypeInferenceUtils.createCalciteTypeWithNullability(
-              getTypeFactory(),
-              SqlTypeName.ANY,
-              targetType.isNullable());
-          return makeCast(anyType, node);
-        } else {
-          return makeCast(targetType, node);
-        }
-      }
       return node;
     }
   }

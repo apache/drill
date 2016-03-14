@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,25 @@ package org.apache.drill.exec.planner.sql;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-import java.util.ArrayList;
-
-public class DrillSqlAggOperatorNotInfer extends DrillSqlAggOperator {
-  public DrillSqlAggOperatorNotInfer(String name, int argCount) {
-    super(name, new ArrayList<DrillFuncHolder>(), argCount, argCount, DynamicReturnType.INSTANCE);
+public class HiveUDFOperatorWithoutInference extends HiveUDFOperator {
+  public HiveUDFOperatorWithoutInference(String name) {
+    super(name, DynamicReturnType.INSTANCE);
   }
 
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    return getAny(validator.getTypeFactory());
+    RelDataTypeFactory factory = validator.getTypeFactory();
+    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
   }
 
-  private RelDataType getAny(RelDataTypeFactory factory){
-    return factory.createSqlType(SqlTypeName.ANY);
+  @Override
+  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+    RelDataTypeFactory factory = opBinding.getTypeFactory();
+    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
   }
 }

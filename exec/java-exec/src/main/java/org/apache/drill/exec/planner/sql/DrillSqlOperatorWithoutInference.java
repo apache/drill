@@ -30,11 +30,11 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
 
-public class DrillSqlOperatorNotInfer extends DrillSqlOperator {
+public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
   private static final TypeProtos.MajorType NONE = TypeProtos.MajorType.getDefaultInstance();
   private final TypeProtos.MajorType returnType;
 
-  public DrillSqlOperatorNotInfer(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic) {
+  public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic) {
     super(name,
         new ArrayList< DrillFuncHolder>(),
         argCount,

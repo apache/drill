@@ -133,6 +133,14 @@ public class DrillSqlOperator extends SqlFunction {
     }
 
     public DrillSqlOperatorBuilder setDeterministic(boolean isDeterministic) {
+      /* By the logic here, we will group the entire Collection as a DrillSqlOperator. and claim it is non-deterministic.
+       * Add if there is a non-deterministic DrillFuncHolder, then we claim this DrillSqlOperator is non-deterministic.
+       *
+       * In fact, in this case, separating all DrillFuncHolder into two DrillSqlOperator
+       * (one being deterministic and the other being non-deterministic does not help) since in DrillOperatorTable.lookupOperatorOverloads(),
+       * parameter list is not passed in. So even if we have two DrillSqlOperator, DrillOperatorTable.lookupOperatorOverloads()
+       * does not have enough information to pick the one matching the argument list.
+       */
       if(this.isDeterministic) {
         this.isDeterministic = isDeterministic;
       }
@@ -140,6 +148,10 @@ public class DrillSqlOperator extends SqlFunction {
     }
 
     public DrillSqlOperator build() {
+      if(name == null || functions.isEmpty()) {
+        throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
+      }
+
       return new DrillSqlOperator(
           name,
           functions,

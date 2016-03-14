@@ -59,11 +59,10 @@ public class DrillSqlAggOperator extends SqlAggFunction {
   }
 
   public static class DrillSqlAggOperatorBuilder {
-    private String name;
+    private String name = null;
     private final List<DrillFuncHolder> functions = Lists.newArrayList();
     private int argCountMin = Integer.MAX_VALUE;
     private int argCountMax = Integer.MIN_VALUE;
-    private boolean isDeterministic = true;
 
     public DrillSqlAggOperatorBuilder setName(final String name) {
       this.name = name;
@@ -82,6 +81,9 @@ public class DrillSqlAggOperator extends SqlAggFunction {
     }
 
     public DrillSqlAggOperator build() {
+      if(name == null || functions.isEmpty()) {
+        throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
+      }
       return new DrillSqlAggOperator(
           name,
           functions,

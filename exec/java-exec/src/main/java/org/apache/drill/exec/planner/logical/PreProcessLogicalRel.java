@@ -30,6 +30,7 @@ import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 import org.apache.drill.exec.util.ApproximateStringMatcher;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -263,13 +264,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     @Override
     public RexNode visitCall(final RexCall call) {
       final List<RexNode> clonedOperands = visitList(call.operands, new boolean[]{true});
-      final SqlOperator sqlOperator;
-      if(call.getOperator() instanceof DrillCalciteSqlWrapper) {
-        sqlOperator = ((DrillCalciteSqlWrapper) call.getOperator()).getOperator();
-      } else {
-        sqlOperator = call.getOperator();
-      }
-
+      final SqlOperator sqlOperator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getOperator());
       return RexUtil.flatten(rexBuilder,
           rexBuilder.makeCall(
               call.getType(),

@@ -31,7 +31,7 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 
 public class HiveUDFOperator extends SqlFunction {
   public HiveUDFOperator(String name, SqlReturnTypeInference sqlReturnTypeInference) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), sqlReturnTypeInference, null, new ArgChecker(), null,
+    super(new SqlIdentifier(name, SqlParserPos.ZERO), sqlReturnTypeInference, null, ArgChecker.INSTANCE, null,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 

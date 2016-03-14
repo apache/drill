@@ -18,22 +18,15 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.Collection;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos;
@@ -43,7 +36,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
-import org.apache.drill.exec.planner.sql.HiveUDFOperatorNotInfer;
+import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
@@ -85,8 +78,8 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   @Override
   public void register(DrillOperatorTable operatorTable) {
     for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
-      operatorTable.addDefault(name, new HiveUDFOperatorNotInfer(name.toUpperCase()));
-      operatorTable.addInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
+      operatorTable.addOperatorWithoutInference(name, new HiveUDFOperatorWithoutInference(name.toUpperCase()));
+      operatorTable.addOperatorWithInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
     }
   }
 
@@ -240,11 +233,11 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
       final FunctionCall functionCall = TypeInferenceUtils.convertSqlOperatorBindingToFunctionCall(opBinding);
       final HiveFuncHolder hiveFuncHolder = getFunction(functionCall);
       if(hiveFuncHolder == null) {
-        String operandTypes = "";
+        final StringBuilder operandTypes = new StringBuilder();
         for(int j = 0; j < opBinding.getOperandCount(); ++j) {
-          operandTypes += opBinding.getOperandType(j).getSqlTypeName();
+          operandTypes.append(opBinding.getOperandType(j).getSqlTypeName());
           if(j < opBinding.getOperandCount() - 1) {
-            operandTypes += ",";
+            operandTypes.append(",");
           }
         }
 

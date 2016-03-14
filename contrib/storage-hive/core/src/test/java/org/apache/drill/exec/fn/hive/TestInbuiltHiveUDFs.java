@@ -17,8 +17,14 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestInbuiltHiveUDFs extends HiveTestBase {
 
@@ -45,30 +51,23 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
   }
 
   @Test
-  public void testReflect() throws Exception {
-    final String query = "select reflect('java.lang.Math', 'round', cast(2 as float)) as col \n" +
+  public void testXpath_Double() throws Exception {
+    final String query = "select xpath_double ('<a><b>20</b><c>40</c></a>', 'a/b * a/c') as col \n" +
         "from hive.kv \n" +
-        "limit 1";
+        "limit 0";
+
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()
         .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col")
-        .baselineValues("2")
-        .go();
-  }
-
-  @Test
-  public void testAbs() throws Exception {
-    final String query = "select reflect('java.lang.Math', 'abs', cast(-2 as double)) as col \n" +
-        "from hive.kv \n" +
-        "limit 1";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col")
-        .baselineValues("2.0")
-        .go();
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 }

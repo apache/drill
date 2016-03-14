@@ -81,7 +81,7 @@ public class PlannerSettings implements Context{
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
                               Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
 
-  public static final String TYPE_INFERENCE_KEY = "planner.type_inference.enable";
+  public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, true);
 
   public OptionManager options = null;
@@ -213,7 +213,7 @@ public class PlannerSettings implements Context{
   }
 
   public boolean isTypeInferenceEnabled() {
-    return options.getOption(TYPE_INFERENCE.getOptionName()).bool_val;
+    return options.getOption(TYPE_INFERENCE);
   }
 
   @Override

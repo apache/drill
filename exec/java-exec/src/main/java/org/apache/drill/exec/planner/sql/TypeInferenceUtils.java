@@ -27,9 +27,13 @@ import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlDynamicParam;
 import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.SqlRankFunction;
+import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -54,7 +58,8 @@ public class TypeInferenceUtils {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeInferenceUtils.class);
 
   public static final TypeProtos.MajorType UNKNOWN_TYPE = TypeProtos.MajorType.getDefaultInstance();
-  private static final ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING = ImmutableMap.<TypeProtos.MinorType, SqlTypeName> builder()
+  private static final ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING
+      = ImmutableMap.<TypeProtos.MinorType, SqlTypeName> builder()
       .put(TypeProtos.MinorType.INT, SqlTypeName.INTEGER)
       .put(TypeProtos.MinorType.BIGINT, SqlTypeName.BIGINT)
       .put(TypeProtos.MinorType.FLOAT4, SqlTypeName.FLOAT)
@@ -82,7 +87,8 @@ public class TypeInferenceUtils {
       //      - CHAR, SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST
       .build();
 
-  private static final ImmutableMap<SqlTypeName, TypeProtos.MinorType> CALCITE_TO_DRILL_MAPPING = ImmutableMap.<SqlTypeName, TypeProtos.MinorType> builder()
+  private static final ImmutableMap<SqlTypeName, TypeProtos.MinorType> CALCITE_TO_DRILL_MAPPING
+      = ImmutableMap.<SqlTypeName, TypeProtos.MinorType> builder()
       .put(SqlTypeName.INTEGER, TypeProtos.MinorType.INT)
       .put(SqlTypeName.BIGINT, TypeProtos.MinorType.BIGINT)
       .put(SqlTypeName.FLOAT, TypeProtos.MinorType.FLOAT4)
@@ -135,6 +141,32 @@ public class TypeInferenceUtils {
       .put("FLATTEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("KVGEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_FROM", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
+
+      // Window Functions
+      // RANKING
+      .put(SqlKind.CUME_DIST.name(), DrillRankingSqlReturnTypeInference.INSTANCE_DOUBLE)
+      .put(SqlKind.DENSE_RANK.name(), DrillRankingSqlReturnTypeInference.INSTANCE_BIGINT)
+      .put(SqlKind.PERCENT_RANK.name(), DrillRankingSqlReturnTypeInference.INSTANCE_DOUBLE)
+      .put(SqlKind.RANK.name(), DrillRankingSqlReturnTypeInference.INSTANCE_BIGINT)
+      .put(SqlKind.ROW_NUMBER.name(), DrillRankingSqlReturnTypeInference.INSTANCE_BIGINT)
+
+      // NTILE
+      .put("NTILE", DrillNTILESqlReturnTypeInference.INSTANCE)
+
+      // LEAD, LAG
+      .put("LEAD", DrillLeadLagSqlReturnTypeInference.INSTANCE)
+      .put("LAG", DrillLeadLagSqlReturnTypeInference.INSTANCE)
+
+      // FIRST_VALUE, LAST_VALUE
+      .put("FIRST_VALUE", DrillFirstLastValueSqlReturnTypeInference.INSTANCE)
+      .put("LAST_VALUE", DrillFirstLastValueSqlReturnTypeInference.INSTANCE)
+
+      // Functions rely on DrillReduceAggregatesRule for expression simplification as opposed to getting evaluated directly
+      .put(SqlAvgAggFunction.Subtype.AVG.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlAvgAggFunction.Subtype.STDDEV_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlAvgAggFunction.Subtype.STDDEV_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlAvgAggFunction.Subtype.VAR_POP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
+      .put(SqlAvgAggFunction.Subtype.VAR_SAMP.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
       .build();
 
   /**
@@ -530,6 +562,66 @@ public class TypeInferenceUtils {
       }
 
       return ret;
+    }
+  }
+
+  private static class DrillRankingSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillRankingSqlReturnTypeInference INSTANCE_BIGINT = new DrillRankingSqlReturnTypeInference(SqlTypeName.BIGINT);
+    private static final DrillRankingSqlReturnTypeInference INSTANCE_DOUBLE = new DrillRankingSqlReturnTypeInference(SqlTypeName.DOUBLE);
+
+    private final SqlTypeName returnType;
+    private DrillRankingSqlReturnTypeInference(final SqlTypeName returnType) {
+      this.returnType = returnType;
+    }
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          returnType,
+          false);
+    }
+  }
+
+  private static class DrillNTILESqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillNTILESqlReturnTypeInference INSTANCE = new DrillNTILESqlReturnTypeInference();
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          SqlTypeName.INTEGER,
+          opBinding.getOperandType(0).isNullable());
+    }
+  }
+
+  private static class DrillLeadLagSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillLeadLagSqlReturnTypeInference INSTANCE = new DrillLeadLagSqlReturnTypeInference();
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          opBinding.getOperandType(0).getSqlTypeName(),
+          true);
+    }
+  }
+
+  private static class DrillFirstLastValueSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillFirstLastValueSqlReturnTypeInference INSTANCE = new DrillFirstLastValueSqlReturnTypeInference();
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      return opBinding.getOperandType(0);
+    }
+  }
+
+  private static class DrillAvgAggSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillAvgAggSqlReturnTypeInference INSTANCE = new DrillAvgAggSqlReturnTypeInference();
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      final boolean isNullable = opBinding.getGroupCount() == 0 || opBinding.hasFilter() || opBinding.getOperandType(0).isNullable();
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          SqlTypeName.DOUBLE,
+          isNullable);
     }
   }
 
