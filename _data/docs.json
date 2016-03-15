@@ -939,8 +939,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
+                    "next_title": "Configuring Inbound Impersonation", 
+                    "next_url": "/docs/configuring-inbound-impersonation/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
@@ -956,11 +956,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authorization", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "next_title": "Configuring User Authentication", 
+                    "next_url": "/docs/configuring-user-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/071-configure-inbound-impersonation.md", 
+                    "title": "Configuring Inbound Impersonation", 
+                    "url": "/docs/configuring-inbound-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Inbound Impersonation", 
+                    "previous_url": "/docs/configuring-inbound-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
@@ -1178,6 +1195,23 @@
             "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
             "title": "Configuring Drill Memory", 
             "url": "/docs/configuring-drill-memory/"
+        }, 
+        "Configuring Inbound Impersonation": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring User Authentication", 
+            "next_url": "/docs/configuring-user-authentication/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring User Impersonation", 
+            "previous_url": "/docs/configuring-user-impersonation/", 
+            "relative_path": "_docs/configure-drill/071-configure-inbound-impersonation.md", 
+            "title": "Configuring Inbound Impersonation", 
+            "url": "/docs/configuring-inbound-impersonation/"
         }, 
         "Configuring JReport with Drill": {
             "breadcrumbs": [
@@ -1460,8 +1494,8 @@
             "next_title": "Configuring User Impersonation with Hive Authorization", 
             "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Impersonation", 
-            "previous_url": "/docs/configuring-user-impersonation/", 
+            "previous_title": "Configuring Inbound Impersonation", 
+            "previous_url": "/docs/configuring-inbound-impersonation/", 
             "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
             "title": "Configuring User Authentication", 
             "url": "/docs/configuring-user-authentication/"
@@ -1474,8 +1508,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Authentication", 
-            "next_url": "/docs/configuring-user-authentication/", 
+            "next_title": "Configuring Inbound Impersonation", 
+            "next_url": "/docs/configuring-inbound-impersonation/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring Resources for a Shared Drillbit", 
             "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
@@ -12878,8 +12912,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
+                    "next_title": "Configuring Inbound Impersonation", 
+                    "next_url": "/docs/configuring-inbound-impersonation/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
@@ -12895,11 +12929,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authorization", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "next_title": "Configuring User Authentication", 
+                    "next_url": "/docs/configuring-user-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/071-configure-inbound-impersonation.md", 
+                    "title": "Configuring Inbound Impersonation", 
+                    "url": "/docs/configuring-inbound-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Inbound Impersonation", 
+                    "previous_url": "/docs/configuring-inbound-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
