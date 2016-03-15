@@ -584,22 +584,6 @@ public class TestFunctionsQuery extends BaseTestQuery {
   }
 
   @Test
-  public void testHashFunctions() throws Exception {
-    String query = "select " +
-        "hash(cast(hire_date as date)) hash_date, " +
-        "hash(cast(employee_id as decimal(9, 2))) as hash_dec9, " +
-        "hash(cast(employee_id as decimal(38, 11))) as hash_dec38 " +
-        "from cp.`employee.json` where employee_id = 1 limit 1";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("hash_date", "hash_dec9", "hash_dec38")
-        .baselineValues(312993367, 292570647, 337328302)
-        .go();
-  }
-
-  @Test
   public void testDecimalAddConstant() throws Exception {
     String query = "select (cast('-1' as decimal(37, 3)) + cast (employee_id as decimal(37, 3))) as CNT " +
         "from cp.`employee.json` where employee_id <= 4";
@@ -795,6 +779,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .go();
   }
 
+
   /*
    * We may apply implicit casts in Hash Join while dealing with different numeric data types
    * For this to work we need to distribute the data based on a common key, below method
@@ -810,7 +795,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "hash64AsDouble(cast(employee_id as decimal(9, 0))) = hash64AsDouble(cast(employee_id as decimal(18, 0))) col5, " +
         "hash64AsDouble(cast(employee_id as decimal(18, 0))) = hash64AsDouble(cast(employee_id as decimal(28, 0))) col6, " +
         "hash64AsDouble(cast(employee_id as decimal(28, 0))) = hash64AsDouble(cast(employee_id as decimal(38, 0))) col7 " +
-        "from cp.`employee.json` where employee_id = 1";
+        "from cp.`employee.json`  where employee_id = 1";
 
     testBuilder()
         .sqlQuery(query)
@@ -818,11 +803,32 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
         .baselineValues(true, true, true, true, true, true, true)
         .go();
+
+    java.util.Random seedGen = new java.util.Random();
+    seedGen.setSeed(System.currentTimeMillis());
+    int seed = seedGen.nextInt();
+
+    String querytemplate = "select " +
+            "hash64AsDouble(cast(employee_id as int), #RAND_SEED#) = hash64AsDouble(cast(employee_id as bigint), #RAND_SEED#) col1, " +
+            "hash64AsDouble(cast(employee_id as bigint), #RAND_SEED#) = hash64AsDouble(cast(employee_id as float), #RAND_SEED#) col2, " +
+            "hash64AsDouble(cast(employee_id as float), #RAND_SEED#) = hash64AsDouble(cast(employee_id as double), #RAND_SEED#) col3, " +
+            "hash64AsDouble(cast(employee_id as double), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) col4, " +
+            "hash64AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) col5, " +
+            "hash64AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) col6, " +
+            "hash64AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) = hash64AsDouble(cast(employee_id as decimal(38, 0)), #RAND_SEED#) col7 " +
+            "from cp.`employee.json` where employee_id = 1";
+
+    String queryWithSeed = querytemplate.replaceAll("#RAND_SEED#", String.format("%d",seed));
+    testBuilder()
+            .sqlQuery(queryWithSeed)
+            .unOrdered()
+            .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+            .baselineValues(true, true, true, true, true, true, true)
+            .go();
+
   }
 
-  /*
-   * hash32 version of the above test
-   */
+
   @Test
   public void testHash32() throws Exception {
     String query = "select " +
@@ -841,6 +847,29 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
         .baselineValues(true, true, true, true, true, true, true)
         .go();
+
+    java.util.Random seedGen = new java.util.Random();
+    seedGen.setSeed(System.currentTimeMillis());
+    int seed = seedGen.nextInt();
+
+    String querytemplate = "select " +
+            "hash32AsDouble(cast(employee_id as int), #RAND_SEED#) = hash32AsDouble(cast(employee_id as bigint), #RAND_SEED#) col1, " +
+            "hash32AsDouble(cast(employee_id as bigint), #RAND_SEED#) = hash32AsDouble(cast(employee_id as float), #RAND_SEED#) col2, " +
+            "hash32AsDouble(cast(employee_id as float),  #RAND_SEED#) = hash32AsDouble(cast(employee_id as double), #RAND_SEED#) col3, " +
+            "hash32AsDouble(cast(employee_id as double), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) col4, " +
+            "hash32AsDouble(cast(employee_id as decimal(9, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) col5, " +
+            "hash32AsDouble(cast(employee_id as decimal(18, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) col6, " +
+            "hash32AsDouble(cast(employee_id as decimal(28, 0)), #RAND_SEED#) = hash32AsDouble(cast(employee_id as decimal(38, 0)), #RAND_SEED#) col7 " +
+            "from cp.`employee.json` where employee_id = 1";
+
+    String queryWithSeed = querytemplate.replaceAll("#RAND_SEED#", String.format("%d",seed));
+    testBuilder()
+            .sqlQuery(queryWithSeed)
+            .unOrdered()
+            .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+            .baselineValues(true, true, true, true, true, true, true)
+            .go();
+
   }
 
   @Test
