@@ -185,7 +185,8 @@ public class HiveTestDataGenerator {
         "  string_field STRING," +
         "  varchar_field VARCHAR(50)," +
         "  timestamp_field TIMESTAMP," +
-        "  date_field DATE" +
+        "  date_field DATE," +
+        "  char_field CHAR(10)" +
         ") PARTITIONED BY (" +
         // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
         // "  binary_part BINARY," +
@@ -204,7 +205,8 @@ public class HiveTestDataGenerator {
         "  string_part STRING," +
         "  varchar_part VARCHAR(50)," +
         "  timestamp_part TIMESTAMP," +
-        "  date_part DATE" +
+        "  date_part DATE," +
+        "  char_part CHAR(10)" +
         ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
         "TBLPROPERTIES ('serialization.null.format'='') "
     );
@@ -229,7 +231,8 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')"
+        "  date_part='2013-07-05', " +
+        "  char_part='char')"
     );
 
     // Add a second partition to table 'readtest' which contains the same values as the first partition except
@@ -253,7 +256,8 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // Load data into table 'readtest'
@@ -276,7 +280,9 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')", testDataFile));
+        "  date_part='2013-07-05'," +
+        "  char_part='char'" +
+            ")", testDataFile));
 
     // create a table that has all Hive types. This is to test how hive tables metadata is populated in
     // Drill's INFORMATION_SCHEMA.
@@ -298,7 +304,8 @@ public class HiveTestDataGenerator {
         "listType ARRAY<STRING>, " +
         "mapType MAP<STRING,INT>, " +
         "structType STRUCT<sint:INT,sboolean:BOOLEAN,sstring:STRING>, " +
-        "uniontypeType UNIONTYPE<int, double, array<string>>)"
+        "uniontypeType UNIONTYPE<int, double, array<string>>, " +
+        "charType CHAR(10))"
     );
 
     /**
@@ -321,7 +328,8 @@ public class HiveTestDataGenerator {
             "  smallint_field SMALLINT," +
             "  string_field STRING," +
             "  varchar_field VARCHAR(50)," +
-            "  timestamp_field TIMESTAMP" +
+            "  timestamp_field TIMESTAMP," +
+            "  char_field CHAR(10)" +
             ") PARTITIONED BY (" +
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             // "  binary_part BINARY," +
@@ -340,7 +348,8 @@ public class HiveTestDataGenerator {
             "  string_part STRING," +
             "  varchar_part VARCHAR(50)," +
             "  timestamp_part TIMESTAMP," +
-            "  date_part DATE" +
+            "  date_part DATE," +
+            "  char_part CHAR(10)" +
             ") STORED AS parquet "
     );
 
@@ -363,7 +372,8 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05'" +
+        "  date_part='2013-07-05', " +
+        "  char_part='char'" +
         ") " +
         " SELECT " +
         "  binary_field," +
@@ -381,7 +391,8 @@ public class HiveTestDataGenerator {
         "  smallint_field," +
         "  string_field," +
         "  varchar_field," +
-        "  timestamp_field" +
+        "  timestamp_field," +
+        "  char_field" +
         " FROM readtest WHERE tinyint_part = 64");
 
     // Add a second partition to table 'readtest_parquet' which contains the same values as the first partition except
@@ -405,7 +416,8 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
@@ -542,7 +554,7 @@ public class HiveTestDataGenerator {
     PrintWriter printWriter = new PrintWriter(file);
     printWriter.println("YmluYXJ5ZmllbGQ=,false,34,65.99,2347.923,2758725827.9999,29375892739852.7689," +
         "89853749534593985.7834783,8.345,4.67,123456,234235,3455,stringfield,varcharfield," +
-        "2013-07-05 17:01:00,2013-07-05");
+        "2013-07-05 17:01:00,2013-07-05,charfield");
     printWriter.println(",,,,,,,,,,,,,,,,");
     printWriter.close();
 

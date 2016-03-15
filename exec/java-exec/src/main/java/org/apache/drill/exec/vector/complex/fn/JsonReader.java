@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class JsonReader extends BaseJsonProcessor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
@@ -89,16 +91,51 @@ public class JsonReader extends BaseJsonProcessor {
 
   @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
-    // if we had no columns, create one empty one so we can return some data for count purposes.
-    SchemaPath sp = columns.get(0);
-    PathSegment fieldPath = sp.getRootSegment();
-    BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-    while (fieldPath.getChild() != null && ! fieldPath.getChild().isArray()) {
-      fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
-      fieldPath = fieldPath.getChild();
+    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
+    List<PathSegment> fieldPathList = Lists.newArrayList();
+    BitSet emptyStatus = new BitSet(columns.size());
+
+    // first pass: collect which fields are empty
+    for (int i = 0; i < columns.size(); i++) {
+      SchemaPath sp = columns.get(i);
+      PathSegment fieldPath = sp.getRootSegment();
+      BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      while (fieldPath.getChild() != null && ! fieldPath.getChild().isArray()) {
+        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        fieldPath = fieldPath.getChild();
+      }
+      writerList.add(fieldWriter);
+      fieldPathList.add(fieldPath);
+      if (fieldWriter.isEmptyMap()) {
+        emptyStatus.set(i, true);
+      }
+      if (i == 0 && !allTextMode) {
+        // when allTextMode is false, there is not much benefit to producing all the empty
+        // fields; just produce 1 field.  The reason is that the type of the fields is
+        // unknown, so if we produce multiple Integer fields by default, a subsequent batch
+        // that contains non-integer fields will error out in any case.  Whereas, with
+        // allTextMode true, we are sure that all fields are going to be treated as varchar,
+        // so it makes sense to produce all the fields, and in fact is necessary in order to
+        // avoid schema change exceptions by downstream operators.
+        break;
+      }
+
     }
-    if (fieldWriter.isEmptyMap()) {
-      fieldWriter.integer(fieldPath.getNameSegment().getPath());
+
+    // second pass: create default typed vectors corresponding to empty fields
+    // Note: this is not easily do-able in 1 pass because the same fieldWriter may be
+    // shared by multiple fields whereas we want to keep track of all fields independently,
+    // so we rely on the emptyStatus.
+    for (int j = 0; j < fieldPathList.size(); j++) {
+      BaseWriter.MapWriter fieldWriter = writerList.get(j);
+      PathSegment fieldPath = fieldPathList.get(j);
+      if (emptyStatus.get(j)) {
+        if (allTextMode) {
+          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
+        } else {
+          fieldWriter.integer(fieldPath.getNameSegment().getPath());
+        }
+      }
     }
   }
 

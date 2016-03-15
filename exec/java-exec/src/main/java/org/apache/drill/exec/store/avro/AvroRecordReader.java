@@ -218,7 +218,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         if (schema.getTypes().get(0).getType() != Schema.Type.NULL) {
           throw new UnsupportedOperationException("Avro union type must be of the format : [\"null\", \"some-type\"]");
         }
-        process(value, schema.getTypes().get(1), fieldName, writer, fieldSelection.getChild(fieldName));
+        process(value, schema.getTypes().get(1), fieldName, writer, fieldSelection);
         break;
       case MAP:
         @SuppressWarnings("unchecked")

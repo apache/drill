@@ -137,6 +137,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Override
   public void reset() {
     value = new ObjectHolder();
+    value.obj = new org.apache.drill.exec.expr.fn.impl.DrillByteArray();
     init.value = 0;
     nonNullCount.value = 0;
   }

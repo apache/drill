@@ -65,6 +65,7 @@ public class ExplainHandler extends DefaultSqlHandler {
     }
 
     Prel prel = convertToPrel(drel);
+    logAndSetTextPlan("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan, logger);

@@ -39,7 +39,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("SELECT encode(varchar_field, 'UTF-8') as rst from hive.readtest")
         .unOrdered()
         .baselineColumns("rst")
-        .baselineValues("varcharfield")
+        .baselineValues("varcharfield".getBytes())
         .baselineValues(new Object[] { null })
         .go();
   }

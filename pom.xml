@@ -20,7 +20,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.6.0-SNAPSHOT</version>
+  <version>1.7.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -208,6 +208,8 @@
             <exclude>**/*.linux</exclude>
             <exclude>**/client/build/**</exclude>
             <exclude>**/*.tbl</exclude>
+            <!-- TODO DRILL-4336: try to avoid the need to add this -->
+            <exclude>dependency-reduced-pom.xml</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -1387,10 +1389,10 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.2.0-mapr-1510</hive.version>
-        <hbase.version>0.98.9-mapr-1503-m7-4.1.0</hbase.version>
-        <hadoop.version>2.7.0-mapr-1506</hadoop.version>
-        <mapr.core.version>4.1.0-mapr</mapr.core.version>
+        <hive.version>1.2.0-mapr-1601</hive.version>
+        <hbase.version>0.98.12-mapr-1602-m7-5.1.0</hbase.version>
+        <hadoop.version>2.7.0-mapr-1602</hadoop.version>
+        <mapr.core.version>5.1.0-mapr</mapr.core.version>
       </properties>
       <dependencyManagement>
         <dependencies>
@@ -1583,14 +1585,13 @@
           </dependency>
           <dependency>
             <groupId>com.mapr.fs</groupId>
-            <artifactId>libprotodefs</artifactId>
-            <version>${mapr.core.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>com.mapr.fs</groupId>
             <artifactId>mapr-hbase</artifactId>
             <version>${mapr.core.version}</version>
             <exclusions>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
@@ -1625,6 +1626,33 @@
             <groupId>com.mapr.hadoop</groupId>
             <artifactId>maprfs</artifactId>
             <version>${mapr.core.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>com.mapr.db</groupId>
+            <artifactId>maprdb</artifactId>
+            <version>${mapr.core.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>com.mapr</groupId>
+                <artifactId>mapr-java-utils</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.ojai</groupId>
+            <artifactId>ojai</artifactId>
+            <version>1.0</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.5</version>
           </dependency>
           <dependency>
             <groupId>xerces</groupId>
@@ -1727,21 +1755,48 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
               </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+            <exclusions>
               <exclusion>
-                <artifactId>asm</artifactId>
-                <groupId>asm</groupId>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>libthrift</artifactId>
-                <groupId>org.apache.thrift</groupId>
+                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
               </exclusion>
               <exclusion>
-                <artifactId>jruby-complete</artifactId>
-                <groupId>org.jruby</groupId>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>hadoop-core</artifactId>
-                <groupId>org.apache.hadoop</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1771,6 +1826,47 @@
               <exclusion>
                 <artifactId>asm</artifactId>
                 <groupId>asm</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-annotations</artifactId>
+            <version>${hbase.version}</version>
+            <exclusions>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>${hbase.version}</version>
+            <exclusions>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-logging</artifactId>
+                <groupId>commons-logging</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-protocol</artifactId>
+            <version>${hbase.version}</version>
+            <exclusions>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-logging</artifactId>
+                <groupId>commons-logging</groupId>
               </exclusion>
             </exclusions>
           </dependency>

@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -157,7 +158,6 @@ public class DrillTestWrapper {
   }
 
   private void compareMergedVectors(Map<String, List<Object>> expectedRecords, Map<String, List<Object>> actualRecords) throws Exception {
-
     for (String s : actualRecords.keySet()) {
       assertNotNull("Unexpected extra column " + s + " returned by query.", expectedRecords.get(s));
       assertEquals("Incorrect number of rows returned by query.", expectedRecords.get(s).size(), actualRecords.get(s).size());
@@ -209,7 +209,7 @@ public class DrillTestWrapper {
   private Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                                       BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, HyperVectorValueIterator> combinedVectors = new HashMap<>();
+    Map<String, HyperVectorValueIterator> combinedVectors = new TreeMap<>();
 
     long totalRecords = 0;
     QueryDataBatch batch;
@@ -255,7 +255,7 @@ public class DrillTestWrapper {
    private Map<String, List<Object>> addToCombinedVectorResults(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                          BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, List<Object>> combinedVectors = new HashMap<>();
+    Map<String, List<Object>> combinedVectors = new TreeMap<>();
 
     long totalRecords = 0;
     QueryDataBatch batch;
@@ -398,38 +398,37 @@ public class DrillTestWrapper {
     Map<String, List<Object>> expectedSuperVectors;
 
     try {
-    BaseTestQuery.test(testOptionSettingQueries);
-    actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      BaseTestQuery.test(testOptionSettingQueries);
+      actual = BaseTestQuery.testRunAndReturn(queryType, query);
 
-    checkNumBatches(actual);
+      checkNumBatches(actual);
 
-    // To avoid extra work for test writers, types can optionally be inferred from the test query
-    addTypeInfoIfMissing(actual.get(0), testBuilder);
+      // To avoid extra work for test writers, types can optionally be inferred from the test query
+      addTypeInfoIfMissing(actual.get(0), testBuilder);
 
-    actualSuperVectors = addToCombinedVectorResults(actual, loader, schema);
+      actualSuperVectors = addToCombinedVectorResults(actual, loader, schema);
 
-    // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
-    // the cases where the baseline is stored in a file.
-    if (baselineRecords == null) {
-      BaseTestQuery.test(baselineOptionSettingQueries);
-      expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
-      expectedSuperVectors = addToCombinedVectorResults(expected, loader, schema);
-    } else {
-      // data is built in the TestBuilder in a row major format as it is provided by the user
-      // translate it here to vectorized, the representation expected by the ordered comparison
-      expectedSuperVectors = new HashMap<>();
-      expected = new ArrayList<>();
-      for (String s : baselineRecords.get(0).keySet()) {
-        expectedSuperVectors.put(s, new ArrayList<>());
-      }
-      for (Map<String, Object> m : baselineRecords) {
-        for (String s : m.keySet()) {
-          expectedSuperVectors.get(s).add(m.get(s));
+      // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
+      // the cases where the baseline is stored in a file.
+      if (baselineRecords == null) {
+        BaseTestQuery.test(baselineOptionSettingQueries);
+        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        expectedSuperVectors = addToCombinedVectorResults(expected, loader, schema);
+      } else {
+        // data is built in the TestBuilder in a row major format as it is provided by the user
+        // translate it here to vectorized, the representation expected by the ordered comparison
+        expectedSuperVectors = new TreeMap<>();
+        expected = new ArrayList<>();
+        for (String s : baselineRecords.get(0).keySet()) {
+          expectedSuperVectors.put(s, new ArrayList<>());
+        }
+        for (Map<String, Object> m : baselineRecords) {
+          for (String s : m.keySet()) {
+            expectedSuperVectors.get(s).add(m.get(s));
+          }
         }
       }
-    }
-
-    compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+      compareMergedVectors(expectedSuperVectors, actualSuperVectors);
     } catch (Exception e) {
       throw new Exception(e.getMessage() + "\nFor query: " + query , e);
     } finally {
@@ -510,15 +509,12 @@ public class DrillTestWrapper {
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (int j = 0; j < loader.getRecordCount(); j++) {
-        HashMap<String, Object> record = new HashMap<>();
+        Map<String, Object> record = new TreeMap<>();
         for (VectorWrapper<?> w : loader) {
           Object obj = w.getValueVector().getAccessor().getObject(j);
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
-            }
-            else if (obj instanceof byte[]) {
-              obj = new String((byte[]) obj, "UTF-8");
             }
             record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
           }

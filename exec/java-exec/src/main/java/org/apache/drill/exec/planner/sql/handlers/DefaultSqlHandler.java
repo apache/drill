@@ -128,35 +128,27 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   protected void log(final PlannerType plannerType, final PlannerPhase phase, final RelNode node, final Logger logger,
       Stopwatch watch) {
-    log(plannerType, phase, node, logger, watch, false);
-  }
-
-  protected void log(final PlannerType plannerType, final PlannerPhase phase, final RelNode node, final Logger logger,
-      Stopwatch watch, boolean number) {
     if (logger.isDebugEnabled()) {
-      log(plannerType.name() + ":" + phase.description, node, logger, watch, number);
+      log(plannerType.name() + ":" + phase.description, node, logger, watch);
     }
   }
 
   protected void log(final String description, final RelNode node, final Logger logger, Stopwatch watch) {
-    log(description, node, logger, watch, false);
-  }
-
-  protected void log(final String description, final RelNode node, final Logger logger, Stopwatch watch, boolean number) {
-
     if (logger.isDebugEnabled()) {
-      final String plan;
-      if (number && node instanceof Prel) {
-        plan = PrelSequencer.printWithIds((Prel) node, SqlExplainLevel.ALL_ATTRIBUTES);
-        if (textPlan != null) {
-          textPlan.value = plan;
-        }
-      } else {
-        plan = RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES);
-      }
-
+      final String plan = RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES);
       final String time = watch == null ? "" : String.format(" (%dms)", watch.elapsed(TimeUnit.MILLISECONDS));
       logger.debug(String.format("%s%s:\n%s", description, time, plan));
+    }
+  }
+
+  protected void logAndSetTextPlan(final String description, final Prel prel, final Logger logger) {
+    final String plan = PrelSequencer.printWithIds(prel, SqlExplainLevel.ALL_ATTRIBUTES);
+    if (textPlan != null) {
+      textPlan.value = plan;
+    }
+
+    if (logger.isDebugEnabled()) {
+      logger.debug(String.format("%s:\n%s", description, plan));
     }
   }
 
@@ -175,6 +167,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     final DrillRel drel = convertToDrel(queryRelNode, validatedRowType);
     final Prel prel = convertToPrel(drel);
+    logAndSetTextPlan("Drill Physical", prel, logger);
     final PhysicalOperator pop = convertToPop(prel);
     final PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan, logger);

@@ -14,7 +14,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -232,10 +232,6 @@
         </dependency>
         <dependency>
           <groupId>com.mapr.fs</groupId>
-          <artifactId>libprotodefs</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>com.mapr.fs</groupId>
           <artifactId>mapr-hbase</artifactId>
           <exclusions>
             <exclusion>
@@ -245,10 +241,30 @@
           </exclusions>
         </dependency>
         <dependency>
+          <groupId>com.mapr.db</groupId>
+          <artifactId>maprdb</artifactId>
+        </dependency>
+        <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-winutils</artifactId>
           <version>2.7.0-mapr-1506</version>
           <type>zip</type>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-client</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-annotations</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-common</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-protocol</artifactId>
         </dependency>
       </dependencies>
       <build>
