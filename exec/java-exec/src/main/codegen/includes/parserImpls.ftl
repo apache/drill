@@ -278,3 +278,19 @@ SqlNode SqlRefreshMetadata() :
     }
 }
 
+/**
+* Parses statement
+*   DESCRIBE { SCHEMA | DATABASE } name
+*/
+SqlNode SqlDescribeSchema() :
+{
+   SqlParserPos pos;
+   SqlIdentifier schema;
+}
+{
+   <DESCRIBE> { pos = getPos(); }
+   (<SCHEMA> | <DATABASE>) { schema = CompoundIdentifier(); }
+   {
+        return new SqlDescribeSchema(pos, schema);
+   }
+}
