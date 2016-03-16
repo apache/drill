@@ -1,6 +1,6 @@
 ---
 title: "SQL Window Functions Introduction"
-date:  
+date: 2016-03-16 00:00:27 UTC
 parent: "SQL Window Functions"
 ---
 
@@ -134,10 +134,20 @@ and *order_list* is:
 
 and the optional *frame_clause* is one of the following frames:
 
-       RANGE UNBOUNDED PRECEDING
-       RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-       RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-       ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  
+       { RANGE | ROWS } frame_start
+       { RANGE | ROWS } BETWEEN frame_start AND frame_end  
+
+where *frame_start* is one of the following choices: 
+ 
+       UNBOUNDED PRECEDING  
+       CURRENT ROW  
+
+and *frame_end* is one of the following choices:  
+
+       CURRENT ROW  
+       UNBOUNDED FOLLOWING  
+
+{% include startnote.html %}The *frame_end* choice cannot appear earlier than the *frame_start* choice and defaults to CURRENT ROW if not explicitly included.{% include endnote.html %}
 
 
 ## Arguments  
@@ -183,24 +193,23 @@ ASC | DESC
 Specifies sort order, either ascending or descending.  
 
 *frame_clause*  
-The frame\_clause specifies the group of rows that create the window frame. Currently, Drill only supports the default frame RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which sets the frame as all rows from the start of the partition through the current row's last peer in the ordering, as specified by the ORDER BY clause. The frame also includes ties when ordering is not unique. You cannot explicitly state the frame specification for ranking window functions.  
+For window functions that operate on the frame instead of the whole partition, the frame\_clause specifies the group of rows that create the window frame. The frame\_clause supports the following frames:  
 
-When the OVER clause contains an ORDER BY clause, the following frames are equivalent to the default frame: 
- 
-       RANGE UNBOUNDED PRECEDING
-       RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  
+* RANGE UNBOUNDED PRECEDING
+* RANGE BETWEEN CURRENT ROW AND CURRENT ROW
+* [RANGE | ROWS] BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+* [RANGE | ROWS] BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  
 
-When the OVER clause does not contain an ORDER BY clause, the following frames are equivalent to the default frame:  
-
-       RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-       ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  
+The default frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which is the same as RANGE UNBOUNDED PRECEDING. This frame sets the frame as all rows from the start of the partition through the current row's last peer in the ordering, as specified by the ORDER BY clause.  The frame also includes ties when ordering is not unique.  
 
 The following delimiters define the frame:  
 
-* UNBOUNDED PRECEDING means that the frame starts with the first row of the partition.
-* UNBOUNDED FOLLOWING means that the frame ends with the last row of the partition.
-* CURRENT ROW means that the frame starts or ends with the current row’s first or last peer in the ORDER BY list.  
-
+* UNBOUNDED PRECEDING  
+The frame starts with the first row of the partition.  
+* UNBOUNDED FOLLOWING  
+The frame ends with the last row of the partition, for both ROW and RANGE modes.  
+* CURRENT ROW  
+In ROWS mode, CURRENT ROW means that the frame starts or ends with the current row. In RANGE mode, CURRENT ROW means that the frame starts or ends with the current row’s first or last peer in the ORDER BY ordering.
 
 ## Usage Notes  
 
