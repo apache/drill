@@ -53,15 +53,28 @@ public class UnionAllPrule extends Prule {
     final DrillUnionRel union = (DrillUnionRel) call.rel(0);
     final List<RelNode> inputs = union.getInputs();
     List<RelNode> convertedInputList = Lists.newArrayList();
-    RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
+
+    /**
+     * Generally speaking, it is unsafe to let workload be distributed across multiple union all:
+     * When Drill reads an empty file and decides not to skip it (if this empty file is the only file),
+     * it produces a record batch with the following properties:
+     * 1. The column names are from the items in the select-list
+     * 2. The column types are optional integer
+     * 3. There is no record in the record batch
+     *
+     * Therefore, there is no way for Drill to distinguish between a record batch, produced by an empty file, and a
+     * record batch, which just happens to have no record (possibly due to limit 0 or filter in the subqueries).
+     *
+     * If there is one union all whose left or right foot happens to receive one record batch with zero record,
+     * then this union all could infer an output schema which is different from the other union all.
+     */
+    RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
 
     try {
       for (int i = 0; i < inputs.size(); i++) {
         RelNode convertedInput = convert(inputs.get(i), PrelUtil.fixTraits(call, traits));
         convertedInputList.add(convertedInput);
       }
-
-      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
 
       Preconditions.checkArgument(convertedInputList.size() >= 2, "Union list must be at least two items.");
       RelNode left = convertedInputList.get(0);

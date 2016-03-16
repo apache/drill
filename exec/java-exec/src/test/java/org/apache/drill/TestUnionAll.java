@@ -23,6 +23,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
@@ -31,6 +32,30 @@ import java.util.List;
 
 public class TestUnionAll extends BaseTestQuery{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+
+  @Test // DRILL-4510
+  public void testUnionAllWithEmptyBatchOnLeftInDistributedMode() throws Exception {
+    try {
+      final String left = FileUtils.getResourceAsFile("/store/text/data/unionInParallel/left").toURI().toString();
+      final String right = FileUtils.getResourceAsFile("/store/text/data/unionInParallel/right").toURI().toString();
+      final String option = "alter session set `planner.slice_target` = 1000000000000";
+      final String query = String.format("select a as col1 \n" +
+          "from ((select a from dfs_test.`%s` where a = 2) union all (select b from dfs_test.`%s`)) \n" +
+          "group by a", left, right);
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .optionSettingQueriesForTestQuery(option)
+          .baselineColumns("col1")
+          .baselineValues(1)
+          .baselineValues(2)
+          .build()
+          .run();
+    } finally {
+      test( "alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
