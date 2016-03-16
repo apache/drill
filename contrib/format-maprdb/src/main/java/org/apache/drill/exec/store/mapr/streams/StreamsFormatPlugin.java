@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mapr.streams;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -73,7 +74,7 @@ public class StreamsFormatPlugin extends TableFormatPlugin {
     List<String> files = selection.getFiles();
     assert (files.size() == 1);
     //TableProperties props = getMaprFS().getTableProperties(new Path(files.get(0)));
-    throw new UnsupportedOperationException("not implemented");
+    throw UserException.unsupportedError().message("MapR streams can not be querried at this time.").build(logger);
   }
 
 }
