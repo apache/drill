@@ -57,7 +57,6 @@ import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticatorFactory;
 import org.apache.drill.exec.work.user.UserWorker;
 
-import com.google.common.io.Closeables;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 
@@ -67,10 +66,13 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   final UserWorker worker;
   final BufferAllocator alloc;
   final UserAuthenticator authenticator;
+  final InboundImpersonationManager impersonationManager;
 
   public UserServer(DrillConfig config, ScanResult classpathScan, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
       UserWorker worker, Executor executor) throws DrillbitStartupException {
-    super(UserRpcConfig.getMapping(config, executor), alloc.getUnderlyingAllocator(), eventLoopGroup);
+    super(UserRpcConfig.getMapping(config, executor),
+        alloc.getAsByteBufAllocator(),
+        eventLoopGroup);
     this.worker = worker;
     this.alloc = alloc;
     // TODO: move this up
@@ -78,6 +80,11 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       authenticator = UserAuthenticatorFactory.createAuthenticator(config, classpathScan);
     } else {
       authenticator = null;
+    }
+    if (config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
+      impersonationManager = new InboundImpersonationManager();
+    } else {
+      impersonationManager = null;
     }
   }
 
@@ -150,6 +157,10 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
           .withUserProperties(inbound.getProperties())
           .setSupportComplexTypes(inbound.getSupportComplexTypes())
           .build();
+      final String targetName = session.getTargetUserName();
+      if (impersonationManager != null && targetName != null) {
+        impersonationManager.replaceUserOnSession(targetName, session);
+      }
     }
 
     public UserSession getSession(){
@@ -282,7 +293,13 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   public void close() throws IOException {
-    Closeables.closeQuietly(authenticator);
+    try {
+      if (authenticator != null) {
+        authenticator.close();
+      }
+    } catch (Exception e) {
+      logger.warn("Failure closing authenticator.", e);
+    }
     super.close();
   }
 }

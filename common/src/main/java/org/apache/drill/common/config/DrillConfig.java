@@ -19,6 +19,7 @@ package org.apache.drill.common.config;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -27,17 +28,19 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillConfigurationException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.reflections.util.ClasspathHelper;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
-public final class DrillConfig extends NestedConfig{
+public class DrillConfig extends NestedConfig {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
   private final ImmutableList<String> startupArguments;
@@ -56,6 +59,36 @@ public final class DrillConfig extends NestedConfig{
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
     logger.debug("DrillConfig object initialized.");
+  }
+
+  /**
+   * Get an instance of the provided interface using the configuration path provided. Construct the object based on the
+   * provided constructor arguments.
+   * @param path
+   *          The configuration path to use.
+   * @param iface
+   *          The Interface or Superclass of the instance you requested.
+   * @param constructorArgs
+   *          Any arguments required for constructing the requested type.
+   * @return The new Object instance that implements the provided Interface
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T getInstance(String path, Class<T> iface, Object... constructorArgs) {
+    try{
+      String className = this.getString(path);
+      Class<?> clazz = Class.forName(className);
+      Preconditions.checkArgument(iface.isAssignableFrom(clazz));
+      Class<?>[] argClasses = new Class[constructorArgs.length];
+      for (int i = 0; i < constructorArgs.length; i++) {
+        argClasses[i] = constructorArgs[i].getClass();
+      }
+      Constructor<?> constructor = clazz.getConstructor(argClasses);
+      return (T) constructor.newInstance(constructorArgs);
+    }catch(Exception e){
+      throw UserException.unsupportedError(e)
+          .message("Failure while attempting to load instance of the class of type %s requested at path %s.",
+              iface.getName(), path).build(logger);
+    }
   }
 
   public List<String> getStartupArguments() {
@@ -80,6 +113,7 @@ public final class DrillConfig extends NestedConfig{
   public static DrillConfig forClient() {
     return create(null, false);
   }
+
 
   /**
    * <p>
@@ -143,7 +177,7 @@ public final class DrillConfig extends NestedConfig{
                                     final Properties overriderProps,
                                     final boolean enableServerConfigs) {
     final StringBuilder logString = new StringBuilder();
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
     overrideFileResourcePathname =
         overrideFileResourcePathname == null
             ? CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME

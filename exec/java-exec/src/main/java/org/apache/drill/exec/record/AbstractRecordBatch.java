@@ -23,8 +23,8 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -46,11 +46,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected BatchState state;
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
-    this(popConfig, context, true, context.newOperatorContext(popConfig, true));
+    this(popConfig, context, true, context.newOperatorContext(popConfig));
   }
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema) throws OutOfMemoryException {
-    this(popConfig, context, buildSchema, context.newOperatorContext(popConfig, true));
+    this(popConfig, context, buildSchema, context.newOperatorContext(popConfig));
   }
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema,
@@ -74,12 +74,18 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   protected static enum BatchState {
-    BUILD_SCHEMA, // Need to build schema and return
-    FIRST, // This is still the first data batch
-    NOT_FIRST, // The first data batch has already been returned
-    STOP, // The query most likely failed, we need to propagate STOP to the root
-    OUT_OF_MEMORY, // Out of Memory while building the Schema...Ouch!
-    DONE // All work is done, no more data to be sent
+    /** Need to build schema and return. */
+    BUILD_SCHEMA,
+    /** This is still the first data batch. */
+    FIRST,
+    /** The first data batch has already been returned. */
+    NOT_FIRST,
+    /** The query most likely failed, we need to propagate STOP to the root. */
+    STOP,
+    /** Out of Memory while building the Schema...Ouch! */
+    OUT_OF_MEMORY,
+    /** All work is done, no more data to be sent. */
+    DONE
   }
 
   @Override

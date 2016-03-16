@@ -24,9 +24,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
+
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.BitSets;
-
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -44,18 +48,19 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.FileSystemPartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionLocation;
-import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.logical.DrillProjectRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -66,7 +71,9 @@ import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.drill.exec.vector.ValueVector;
+
 
 public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
@@ -78,73 +85,71 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     this.optimizerContext = optimizerContext;
   }
 
-  public static final RelOptRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
-    return new PruneScanRule(
-        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
-        "PruneScanRule:Filter_On_Project",
-        optimizerRulesContext) {
+  private static class DirPruneScanFilterOnProjectRule extends PruneScanRule {
+    public DirPruneScanFilterOnProjectRule(OptimizerRulesContext optimizerRulesContext) {
+      super(RelOptHelper.some(Filter.class, RelOptHelper.some(Project.class, RelOptHelper.any(TableScan.class))), "DirPruneScanRule:Filter_On_Project", optimizerRulesContext);
+    }
 
-      @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new FileSystemPartitionDescriptor(settings, scanRel);
-      }
+    @Override
+    public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+      return new FileSystemPartitionDescriptor(settings, scanRel);
+    }
 
-      @Override
-      public boolean matches(RelOptRuleCall call) {
-        final DrillScanRel scan = (DrillScanRel) call.rel(2);
-        GroupScan groupScan = scan.getGroupScan();
-        // this rule is applicable only for dfs based partition pruning
-        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
-      }
+    @Override
+    public boolean matches(RelOptRuleCall call) {
+      final TableScan scan = call.rel(2);
+      return isQualifiedDirPruning(scan);
+    }
 
-      @Override
-      public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
-        doOnMatch(call, filterRel, projectRel, scanRel);
-      }
-    };
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+      final Filter filterRel = call.rel(0);
+      final Project projectRel = call.rel(1);
+      final TableScan scanRel = call.rel(2);
+      doOnMatch(call, filterRel, projectRel, scanRel);
+    }
   }
 
-  public static final RelOptRule getFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
-    return new PruneScanRule(
-        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
-        "PruneScanRule:Filter_On_Scan", optimizerRulesContext) {
+  private static class DirPruneScanFilterOnScanRule extends PruneScanRule {
+    public DirPruneScanFilterOnScanRule(OptimizerRulesContext optimizerRulesContext) {
+      super(RelOptHelper.some(Filter.class, RelOptHelper.any(TableScan.class)), "DirPruneScanRule:Filter_On_Scan", optimizerRulesContext);
+    }
 
-      @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new FileSystemPartitionDescriptor(settings, scanRel);
-      }
+    @Override
+    public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+      return new FileSystemPartitionDescriptor(settings, scanRel);
+    }
 
-      @Override
-      public boolean matches(RelOptRuleCall call) {
-        final DrillScanRel scan = (DrillScanRel) call.rel(1);
-        GroupScan groupScan = scan.getGroupScan();
-        // this rule is applicable only for dfs based partition pruning
-        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
-      }
+    @Override
+    public boolean matches(RelOptRuleCall call) {
+      final TableScan scan = call.rel(1);
+      return isQualifiedDirPruning(scan);
+    }
 
-      @Override
-      public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
-        doOnMatch(call, filterRel, null, scanRel);
-      }
-    };
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+      final Filter filterRel = call.rel(0);
+      final TableScan scanRel = call.rel(1);
+      doOnMatch(call, filterRel, null, scanRel);
+    }
   }
 
-  protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
+  public static final RelOptRule getDirFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
+    return new DirPruneScanFilterOnProjectRule(optimizerRulesContext);
+  }
+
+  public static final RelOptRule getDirFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
+    return new DirPruneScanFilterOnScanRule(optimizerRulesContext);
+  }
+
+  protected void doOnMatch(RelOptRuleCall call, Filter filterRel, Project projectRel, TableScan scanRel) {
     final String pruningClassName = getClass().getName();
     logger.info("Beginning partition pruning, pruning class: {}", pruningClassName);
-    Stopwatch totalPruningTime = new Stopwatch();
-    totalPruningTime.start();
-
+    Stopwatch totalPruningTime = Stopwatch.createStarted();
 
     final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     PartitionDescriptor descriptor = getPartitionDescriptor(settings, scanRel);
     final BufferAllocator allocator = optimizerContext.getAllocator();
-
 
     RexNode condition = null;
     if (projectRel == null) {
@@ -180,7 +185,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     // stop watch to track how long we spend in different phases of pruning
-    Stopwatch miscTimer = new Stopwatch();
+    Stopwatch miscTimer = Stopwatch.createUnstarted();
 
     // track how long we spend building the filter tree
     miscTimer.start();
@@ -221,7 +226,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
           SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
           MajorType type = descriptor.getVectorType(column, settings);
-          MaterializedField field = MaterializedField.create(column, type);
+          MaterializedField field = MaterializedField.create(column.getAsUnescapedPath(), type);
           ValueVector v = TypeHelper.getNewVector(field, allocator);
           v.allocateNew();
           vectors[partitionColumnIndex] = v;
@@ -313,15 +318,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       condition = condition.accept(reverseVisitor);
       pruneCondition = pruneCondition.accept(reverseVisitor);
 
-      final DrillScanRel newScanRel =
-          new DrillScanRel(scanRel.getCluster(),
-              scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-              scanRel.getTable(),
-              descriptor.createNewGroupScan(newFiles),
-              scanRel.getRowType(),
-              scanRel.getColumns());
-
-      RelNode inputRel = newScanRel;
+      RelNode inputRel = descriptor.createTableScan(newFiles);
 
       if (projectRel != null) {
         inputRel = projectRel.copy(projectRel.getTraitSet(), Collections.singletonList(inputRel));
@@ -373,5 +370,28 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     return optimizerContext;
   }
 
-  public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel);
+  public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel);
+
+  private static boolean isQualifiedDirPruning(final TableScan scan) {
+    if (scan instanceof EnumerableTableScan) {
+      DrillTable drillTable;
+      drillTable = scan.getTable().unwrap(DrillTable.class);
+      if (drillTable == null) {
+        drillTable = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      }
+      final Object selection = drillTable.getSelection();
+      if (selection instanceof FormatSelection
+          && ((FormatSelection)selection).supportDirPruning()) {
+        return true;  // Do directory-based pruning in Calcite logical
+      } else {
+        return false; // Do not do directory-based pruning in Calcite logical
+      }
+    } else if (scan instanceof DrillScanRel) {
+      final GroupScan groupScan = ((DrillScanRel) scan).getGroupScan();
+      // this rule is applicable only for dfs based partition pruning in Drill Logical
+      return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown() && !((DrillScanRel)scan).partitionFilterPushdown();
+    }
+    return false;
+  }
+
 }

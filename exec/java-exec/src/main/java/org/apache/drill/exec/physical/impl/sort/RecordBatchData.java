@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.sort;
 
 import java.util.List;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
@@ -40,7 +41,7 @@ public class RecordBatchData {
   private int recordCount;
   VectorContainer container = new VectorContainer();
 
-  public RecordBatchData(VectorAccessible batch) {
+  public RecordBatchData(VectorAccessible batch, BufferAllocator allocator) {
     List<ValueVector> vectors = Lists.newArrayList();
     recordCount = batch.getRecordCount();
 
@@ -54,7 +55,7 @@ public class RecordBatchData {
       if (v.isHyper()) {
         throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
       }
-      TransferPair tp = v.getValueVector().getTransferPair();
+      TransferPair tp = v.getValueVector().getTransferPair(allocator);
       tp.transfer();
       vectors.add(tp.getTo());
     }

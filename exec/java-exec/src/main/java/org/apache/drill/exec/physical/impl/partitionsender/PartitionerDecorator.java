@@ -26,12 +26,12 @@ import java.util.concurrent.Future;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.record.RecordBatch;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.testing.CountDownLatchInjection;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 /**
  * Decorator class to hide multiple Partitioner existence from the caller
@@ -151,7 +151,7 @@ public class PartitionerDecorator {
     stats.startWait();
     final CountDownLatch latch = new CountDownLatch(partitioners.size());
     final List<CustomRunnable> runnables = Lists.newArrayList();
-    final List<Future> taskFutures = Lists.newArrayList();
+    final List<Future<?>> taskFutures = Lists.newArrayList();
     CountDownLatchInjection testCountDownLatch = null;
     try {
       // To simulate interruption of main fragment thread and interrupting the partition threads, create a
@@ -179,7 +179,7 @@ public class PartitionerDecorator {
           // If the fragment state says we shouldn't continue, cancel or interrupt partitioner threads
           if (!context.shouldContinue()) {
             logger.debug("Interrupting partioner threads. Fragment thread {}", tName);
-            for(Future f : taskFutures) {
+            for(Future<?> f : taskFutures) {
               f.cancel(true);
             }
 

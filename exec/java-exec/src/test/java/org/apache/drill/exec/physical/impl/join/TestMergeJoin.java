@@ -46,7 +46,7 @@ import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -87,11 +87,11 @@ public class TestMergeJoin extends PopUnitTestBase {
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
       for (final ValueVector v : exec) {
-        System.out.print("[" + v.getField().toExpr() + "]        ");
+        System.out.print("[" + v.getField().getPath() + "]        ");
       }
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = new ArrayList();
+        final List<Object> row = new ArrayList<>();
         for (final ValueVector v : exec) {
            row.add(v.getAccessor().getObject(valueIdx));
         }
@@ -130,7 +130,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_single_batch.json"), Charsets.UTF_8)
@@ -149,7 +150,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -186,7 +187,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_inner_single_batch.json"), Charsets.UTF_8)
@@ -205,7 +207,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -242,7 +244,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_multi_batch.json"), Charsets.UTF_8)
@@ -260,7 +263,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {

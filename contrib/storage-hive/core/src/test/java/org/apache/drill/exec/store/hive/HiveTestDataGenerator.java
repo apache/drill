@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -35,6 +36,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.hive.serde.serdeConstants;
 
 import static org.apache.drill.BaseTestQuery.getTempDir;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -183,9 +185,11 @@ public class HiveTestDataGenerator {
         "  string_field STRING," +
         "  varchar_field VARCHAR(50)," +
         "  timestamp_field TIMESTAMP," +
-        "  date_field DATE" +
+        "  date_field DATE," +
+        "  char_field CHAR(10)" +
         ") PARTITIONED BY (" +
-        "  binary_part BINARY," +
+        // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+        // "  binary_part BINARY," +
         "  boolean_part BOOLEAN," +
         "  tinyint_part TINYINT," +
         "  decimal0_part DECIMAL," +
@@ -201,7 +205,8 @@ public class HiveTestDataGenerator {
         "  string_part STRING," +
         "  varchar_part VARCHAR(50)," +
         "  timestamp_part TIMESTAMP," +
-        "  date_part DATE" +
+        "  date_part DATE," +
+        "  char_part CHAR(10)" +
         ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
         "TBLPROPERTIES ('serialization.null.format'='') "
     );
@@ -209,7 +214,8 @@ public class HiveTestDataGenerator {
     // Add a partition to table 'readtest'
     executeQuery(hiveDriver,
         "ALTER TABLE readtest ADD IF NOT EXISTS PARTITION ( " +
-        "  binary_part='binary', " +
+        // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+        // "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
         "  decimal0_part='36.9', " +
@@ -225,16 +231,18 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')"
+        "  date_part='2013-07-05', " +
+        "  char_part='char')"
     );
 
     // Add a second partition to table 'readtest' which contains the same values as the first partition except
-    // for boolean_part partition column
+    // for tinyint_part partition column
     executeQuery(hiveDriver,
         "ALTER TABLE readtest ADD IF NOT EXISTS PARTITION ( " +
-            "  binary_part='binary', " +
-            "  boolean_part='false', " +
-            "  tinyint_part='64', " +
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            // "  binary_part='binary', " +
+            "  boolean_part='true', " +
+            "  tinyint_part='65', " +
             "  decimal0_part='36.9', " +
             "  decimal9_part='36.9', " +
             "  decimal18_part='3289379872.945645', " +
@@ -248,13 +256,15 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // Load data into table 'readtest'
     executeQuery(hiveDriver,
         String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.readtest PARTITION (" +
-        "  binary_part='binary', " +
+        // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+        // "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
         "  decimal0_part='36.9', " +
@@ -270,7 +280,9 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05')", testDataFile));
+        "  date_part='2013-07-05'," +
+        "  char_part='char'" +
+            ")", testDataFile));
 
     // create a table that has all Hive types. This is to test how hive tables metadata is populated in
     // Drill's INFORMATION_SCHEMA.
@@ -292,18 +304,16 @@ public class HiveTestDataGenerator {
         "listType ARRAY<STRING>, " +
         "mapType MAP<STRING,INT>, " +
         "structType STRUCT<sint:INT,sboolean:BOOLEAN,sstring:STRING>, " +
-        "uniontypeType UNIONTYPE<int, double, array<string>>)"
+        "uniontypeType UNIONTYPE<int, double, array<string>>, " +
+        "charType CHAR(10))"
     );
 
     /**
-     * Create a PARQUET table with all supported types. In Hive 1.0.0, Hive Parquet format doesn't support BINARY and
-     * DATE types. Once the Hive storage plugin is upgraded to Hive 1.2 convert the DDL following this comment into
-     * following one line.
-     *
-     * executeQuery(hiveDriver, "CREATE TABLE readtest_parquet STORED AS parquet AS SELECT * FROM readtest");
+     * Create a PARQUET table with all supported types.
      */
     executeQuery(hiveDriver,
         "CREATE TABLE readtest_parquet (" +
+            "  binary_field BINARY, " +
             "  boolean_field BOOLEAN, " +
             "  tinyint_field TINYINT," +
             "  decimal0_field DECIMAL," +
@@ -318,9 +328,11 @@ public class HiveTestDataGenerator {
             "  smallint_field SMALLINT," +
             "  string_field STRING," +
             "  varchar_field VARCHAR(50)," +
-            "  timestamp_field TIMESTAMP" +
+            "  timestamp_field TIMESTAMP," +
+            "  char_field CHAR(10)" +
             ") PARTITIONED BY (" +
-            "  binary_part BINARY," +
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            // "  binary_part BINARY," +
             "  boolean_part BOOLEAN," +
             "  tinyint_part TINYINT," +
             "  decimal0_part DECIMAL," +
@@ -336,13 +348,15 @@ public class HiveTestDataGenerator {
             "  string_part STRING," +
             "  varchar_part VARCHAR(50)," +
             "  timestamp_part TIMESTAMP," +
-            "  date_part DATE" +
+            "  date_part DATE," +
+            "  char_part CHAR(10)" +
             ") STORED AS parquet "
     );
 
     executeQuery(hiveDriver, "INSERT OVERWRITE TABLE readtest_parquet " +
         "PARTITION (" +
-        "  binary_part='binary', " +
+        // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+        // "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
         "  decimal0_part='36.9', " +
@@ -358,9 +372,11 @@ public class HiveTestDataGenerator {
         "  string_part='string', " +
         "  varchar_part='varchar', " +
         "  timestamp_part='2013-07-05 17:01:00', " +
-        "  date_part='2013-07-05'" +
+        "  date_part='2013-07-05', " +
+        "  char_part='char'" +
         ") " +
         " SELECT " +
+        "  binary_field," +
         "  boolean_field," +
         "  tinyint_field," +
         "  decimal0_field," +
@@ -375,16 +391,18 @@ public class HiveTestDataGenerator {
         "  smallint_field," +
         "  string_field," +
         "  varchar_field," +
-        "  timestamp_field" +
-        " FROM readtest WHERE boolean_part = true");
+        "  timestamp_field," +
+        "  char_field" +
+        " FROM readtest WHERE tinyint_part = 64");
 
     // Add a second partition to table 'readtest_parquet' which contains the same values as the first partition except
-    // for boolean_part partition column
+    // for tinyint_part partition column
     executeQuery(hiveDriver,
         "ALTER TABLE readtest_parquet ADD PARTITION ( " +
-            "  binary_part='binary', " +
-            "  boolean_part='false', " +
-            "  tinyint_part='64', " +
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            // "  binary_part='binary', " +
+            "  boolean_part='true', " +
+            "  tinyint_part='65', " +
             "  decimal0_part='36.9', " +
             "  decimal9_part='36.9', " +
             "  decimal18_part='3289379872.945645', " +
@@ -398,7 +416,8 @@ public class HiveTestDataGenerator {
             "  string_part='string', " +
             "  varchar_part='varchar', " +
             "  timestamp_part='2013-07-05 17:01:00', " +
-            "  date_part='2013-07-05')"
+            "  date_part='2013-07-05', " +
+            "  char_part='char')"
     );
 
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
@@ -428,6 +447,62 @@ public class HiveTestDataGenerator {
         new Date(System.currentTimeMillis()).toString(), new Timestamp(System.currentTimeMillis()).toString()));
 
     executeQuery(hiveDriver, "DROP TABLE partition_pruning_test_loadtable");
+
+    // Create a partitioned parquet table (DRILL-3938)
+    executeQuery(hiveDriver,
+        "CREATE TABLE kv_parquet(key INT, value STRING) PARTITIONED BY (part1 int) STORED AS PARQUET");
+    executeQuery(hiveDriver, "INSERT INTO TABLE kv_parquet PARTITION(part1) SELECT key, value, key FROM default.kv");
+    executeQuery(hiveDriver, "ALTER TABLE kv_parquet ADD COLUMNS (newcol string)");
+
+    executeQuery(hiveDriver,
+        "CREATE TABLE countStar_Parquet (int_field INT) STORED AS parquet");
+
+    final int numOfRows = 200;
+    final StringBuffer sb = new StringBuffer();
+    sb.append("VALUES ");
+    for(int i = 0; i < numOfRows; ++i) {
+      if(i != 0) {
+        sb.append(",");
+      }
+      sb.append("(").append(i).append(")");
+    }
+
+    executeQuery(hiveDriver, "INSERT INTO TABLE countStar_Parquet \n" +
+        sb.toString());
+
+    // Create a StorageHandler based table (DRILL-3739)
+    executeQuery(hiveDriver, "CREATE TABLE kv_sh(key INT, value STRING) STORED BY " +
+        "'org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler'");
+    // Insert fails if the table directory already exists for tables with DefaultStorageHandlers. Its a known
+    // issue in Hive. So delete the table directory created as part of the CREATE TABLE
+    FileUtils.deleteQuietly(new File(whDir, "kv_sh"));
+    //executeQuery(hiveDriver, "INSERT OVERWRITE TABLE kv_sh SELECT * FROM kv");
+
+    // Create text tables with skip header and footer table property
+    executeQuery(hiveDriver, "create database if not exists skipper");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_small", "textfile", "1", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_small", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_large", "textfile", "2", "2"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_large", 5000, 2, 2));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_header", "textfile", "A", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_header", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_footer", "textfile", "1", "A"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_footer", 5, 1, 1));
+
+    // Create rcfile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_rcfile_large", "rcfile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_rcfile_large select * from skipper.kv_text_large");
+
+    // Create parquet table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_parquet_large", "parquet", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_parquet_large select * from skipper.kv_text_large");
+
+    // Create sequencefile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_sequencefile_large", "sequencefile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_sequencefile_large select * from skipper.kv_text_large");
 
     ss.close();
   }
@@ -479,10 +554,31 @@ public class HiveTestDataGenerator {
     PrintWriter printWriter = new PrintWriter(file);
     printWriter.println("YmluYXJ5ZmllbGQ=,false,34,65.99,2347.923,2758725827.9999,29375892739852.7689," +
         "89853749534593985.7834783,8.345,4.67,123456,234235,3455,stringfield,varcharfield," +
-        "2013-07-05 17:01:00,2013-07-05");
+        "2013-07-05 17:01:00,2013-07-05,charfield");
     printWriter.println(",,,,,,,,,,,,,,,,");
     printWriter.close();
 
     return file.getPath();
+  }
+
+  private String createTableWithHeaderFooterProperties(String tableName, String format, String headerValue, String footerValue) {
+    return String.format("create table %s (key int, value string) stored as %s tblproperties('%s'='%s', '%s'='%s')",
+        tableName, format, serdeConstants.HEADER_COUNT, headerValue, serdeConstants.FOOTER_COUNT, footerValue);
+  }
+
+  private String generateTestDataWithHeadersAndFooters(String tableName, int rowCount, int headerLines, int footerLines) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("insert into table ").append(tableName).append(" (key, value) values ");
+    int length = sb.length();
+    sb.append(StringUtils.repeat("('key_header', 'value_header')", ",", headerLines));
+    for (int i  = 1; i <= rowCount; i++) {
+        sb.append(",(").append(i).append(",").append("'key_").append(i).append("')");
+    }
+    if (headerLines <= 0) {
+      sb.deleteCharAt(length);
+    }
+    sb.append(StringUtils.repeat(",('key_footer', 'value_footer')", footerLines));
+
+    return sb.toString();
   }
 }

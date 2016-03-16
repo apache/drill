@@ -24,11 +24,9 @@ import java.util.HashMap;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.ByteArrayUtil;
-import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.bytes.DirectByteBufferAllocator;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -166,7 +164,7 @@ public class TestFileGenerator {
     CompressionCodecName codec = CompressionCodecName.UNCOMPRESSED;
     ParquetFileWriter w = new ParquetFileWriter(configuration, schema, path);
     w.start();
-    HashMap<String, Integer> columnValuesWritten = new HashMap();
+    HashMap<String, Integer> columnValuesWritten = new HashMap<>();
     int valsWritten;
     for (int k = 0; k < props.numberRowGroups; k++) {
       w.startBlock(props.recordsPerRowGroup);
@@ -176,13 +174,13 @@ public class TestFileGenerator {
       for (FieldInfo fieldInfo : props.fields.values()) {
 
         if ( ! columnValuesWritten.containsKey(fieldInfo.name)) {
-          columnValuesWritten.put((String) fieldInfo.name, 0);
+          columnValuesWritten.put(fieldInfo.name, 0);
           valsWritten = 0;
         } else {
           valsWritten = columnValuesWritten.get(fieldInfo.name);
         }
 
-        String[] path1 = {(String) fieldInfo.name};
+        String[] path1 = {fieldInfo.name};
         ColumnDescriptor c1 = schema.getColumnDescription(path1);
 
         w.startColumn(c1, props.recordsPerRowGroup, codec);
@@ -201,8 +199,8 @@ public class TestFileGenerator {
             new DirectByteBufferAllocator());
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;
-        if ((int) fieldInfo.bitLength > 0) {
-          bytes = new byte[(int) Math.ceil(valsPerPage * (int) fieldInfo.bitLength / 8.0)];
+        if (fieldInfo.bitLength > 0) {
+          bytes = new byte[(int) Math.ceil(valsPerPage * fieldInfo.bitLength / 8.0)];
         } else {
           // the twelve at the end is to account for storing a 4 byte length with each value
           int totalValLength = ((byte[]) fieldInfo.values[0]).length + ((byte[]) fieldInfo.values[1]).length + ((byte[]) fieldInfo.values[2]).length + 3 * bytesNeededToEncodeLength;
@@ -216,9 +214,9 @@ public class TestFileGenerator {
           }
           bytes = new byte[valsPerPage / 3 * totalValLength + leftOverBytes];
         }
-        int bytesPerPage = (int) (valsPerPage * ((int) fieldInfo.bitLength / 8.0));
+        int bytesPerPage = (int) (valsPerPage * (fieldInfo.bitLength / 8.0));
         int bytesWritten = 0;
-        for (int z = 0; z < (int) fieldInfo.numberOfPages; z++, bytesWritten = 0) {
+        for (int z = 0; z < fieldInfo.numberOfPages; z++, bytesWritten = 0) {
           for (int i = 0; i < valsPerPage; i++) {
             repLevels.writeInteger(0);
             defLevels.writeInteger(1);
@@ -244,7 +242,7 @@ public class TestFileGenerator {
                 bytesWritten += ((byte[])fieldInfo.values[valsWritten % 3]).length + bytesNeededToEncodeLength;
               } else{
                 System.arraycopy( ByteArrayUtil.toByta(fieldInfo.values[valsWritten % 3]),
-                    0, bytes, i * ((int) fieldInfo.bitLength / 8), (int) fieldInfo.bitLength / 8);
+                    0, bytes, i * (fieldInfo.bitLength / 8), fieldInfo.bitLength / 8);
               }
               valsWritten++;
             }
@@ -260,8 +258,8 @@ public class TestFileGenerator {
           currentBooleanByte = 0;
         }
         w.endColumn();
-        columnValuesWritten.remove((String) fieldInfo.name);
-        columnValuesWritten.put((String) fieldInfo.name, valsWritten);
+        columnValuesWritten.remove(fieldInfo.name);
+        columnValuesWritten.put(fieldInfo.name, valsWritten);
       }
 
       w.endBlock();

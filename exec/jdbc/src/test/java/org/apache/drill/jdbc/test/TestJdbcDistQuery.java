@@ -199,7 +199,7 @@ public class TestJdbcDistQuery extends JdbcTestBase {
       // (e.g., for debugging) then define a constant field or local variable
       // for the number of iterations.)
       for (int x = 0; x < 1; x++) {
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
         boolean first = true;
@@ -222,7 +222,7 @@ public class TestJdbcDistQuery extends JdbcTestBase {
           System.out.println();
         }
 
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsedMillis()));
+        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
       }
 
       System.out.println("\n\n\n");

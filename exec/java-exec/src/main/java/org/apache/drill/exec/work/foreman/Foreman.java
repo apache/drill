@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -43,8 +44,8 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -135,6 +136,8 @@ public class Foreman implements Runnable {
   private final ForemanResult foremanResult = new ForemanResult();
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
+  private final boolean queuingEnabled;
+
 
   private String queryText;
 
@@ -159,11 +162,15 @@ public class Foreman implements Runnable {
     this.closeFuture = initiatingClient.getChannel().closeFuture();
     closeFuture.addListener(closeListener);
 
-    queryContext = new QueryContext(connection.getSession(), drillbitContext);
-    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
-        stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
+    queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
+    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
+        drillbitContext.getClusterCoordinator(), stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
-    recordNewState(QueryState.PENDING);
+    final OptionManager optionManager = queryContext.getOptions();
+    queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
+
+    final QueryState initialState = queuingEnabled ? QueryState.ENQUEUED : QueryState.STARTING;
+    recordNewState(initialState);
   }
 
   private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
@@ -247,7 +254,7 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
-    } catch (final OutOfMemoryException | OutOfMemoryRuntimeException e) {
+    } catch (final OutOfMemoryException e) {
       moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
@@ -266,10 +273,7 @@ public class Foreman implements Runnable {
          * die here, they should get notified about that, and cancel themselves; we don't have to attempt to notify
          * them, which might not work under these conditions.
          */
-        System.out.println("Node ran out of Heap memory, exiting.");
-        e.printStackTrace();
-        System.out.flush();
-        System.exit(-1);
+        CatastrophicFailure.exit(e, "Unable to handle out of memory condition in Foreman.", -1);
       }
 
     } finally {
@@ -391,7 +395,10 @@ public class Foreman implements Runnable {
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
     setupSortMemoryAllocations(plan);
-    acquireQuerySemaphore(plan);
+    if (queuingEnabled) {
+      acquireQuerySemaphore(plan);
+      moveToState(QueryState.STARTING, null);
+    }
 
     final QueryWorkUnit work = getQueryWorkUnit(plan);
     final List<PlanFragment> planFragments = work.getFragments();
@@ -407,7 +414,6 @@ public class Foreman implements Runnable {
     setupRootFragment(rootPlanFragment, work.getRootOperator());
 
     setupNonRootFragments(planFragments);
-    drillbitContext.getAllocator().resetFragmentLimits(); // TODO a global effect for this query?!?
 
     moveToState(QueryState.RUNNING, null);
     logger.debug("Fragments running.");
@@ -435,7 +441,7 @@ public class Foreman implements Runnable {
       final OptionManager optionManager = queryContext.getOptions();
       final long maxWidthPerNode = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val;
       long maxAllocPerNode = Math.min(DrillConfig.getMaxDirectMemory(),
-          queryContext.getConfig().getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC));
+          queryContext.getConfig().getLong(RootAllocatorFactory.TOP_LEVEL_MAX_ALLOC));
       maxAllocPerNode = Math.min(maxAllocPerNode,
           optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY).num_val);
       final long maxSortAlloc = maxAllocPerNode / (sortList.size() * maxWidthPerNode);
@@ -458,49 +464,45 @@ public class Foreman implements Runnable {
    */
   private void acquireQuerySemaphore(final PhysicalPlan plan) throws ForemanSetupException {
     final OptionManager optionManager = queryContext.getOptions();
-    final boolean queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
-    if (queuingEnabled) {
-      final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
-      double totalCost = 0;
-      for (final PhysicalOperator ops : plan.getSortedOperators()) {
-        totalCost += ops.getCost();
-      }
-
-      final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
-      final String queueName;
-
-      try {
-        @SuppressWarnings("resource")
-        final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
-        final DistributedSemaphore distributedSemaphore;
-
-        // get the appropriate semaphore
-        if (totalCost > queueThreshold) {
-          final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
-          distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
-          queueName = "large";
-        } else {
-          final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
-          distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
-          queueName = "small";
-        }
-
-
-        lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
-      } catch (final Exception e) {
-        throw new ForemanSetupException("Unable to acquire slot for query.", e);
-      }
-
-      if (lease == null) {
-        throw UserException
-            .resourceError()
-            .message(
-                "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
-                queueName, queueTimeout / 1000)
-            .build(logger);
-      }
-
+    final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
+    double totalCost = 0;
+    for (final PhysicalOperator ops : plan.getSortedOperators()) {
+      totalCost += ops.getCost();
     }
+
+    final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
+    final String queueName;
+
+    try {
+      @SuppressWarnings("resource")
+      final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
+      final DistributedSemaphore distributedSemaphore;
+
+      // get the appropriate semaphore
+      if (totalCost > queueThreshold) {
+        final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
+        distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
+        queueName = "large";
+      } else {
+        final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
+        distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
+        queueName = "small";
+      }
+
+      lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
+    } catch (final Exception e) {
+      throw new ForemanSetupException("Unable to acquire slot for query.", e);
+    }
+
+    if (lease == null) {
+      throw UserException
+          .resourceError()
+          .message(
+              "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
+              queueName, queueTimeout / 1000)
+          .build(logger);
+    }
+
   }
 
   Exception getCurrentException() {
@@ -766,6 +768,12 @@ public class Foreman implements Runnable {
       bee.retireForeman(Foreman.this);
 
       try {
+        queryManager.close();
+      } catch (final Exception e) {
+        logger.warn("unable to close query manager", e);
+      }
+
+      try {
         releaseLease();
       } finally {
         isClosed = true;
@@ -797,7 +805,20 @@ public class Foreman implements Runnable {
       logger.debug(queryIdString + ": State change requested {} --> {}", state, newState,
           exception);
       switch (state) {
-      case PENDING:
+      case ENQUEUED:
+        switch (newState) {
+          case FAILED:
+            Preconditions.checkNotNull(exception, "exception cannot be null when new state is failed");
+            recordNewState(newState);
+            foremanResult.setFailed(exception);
+            foremanResult.close();
+            return;
+          case STARTING:
+            recordNewState(newState);
+            return;
+        }
+        break;
+      case STARTING:
         if (newState == QueryState.RUNNING) {
           recordNewState(QueryState.RUNNING);
           return;
@@ -842,10 +863,8 @@ public class Foreman implements Runnable {
           return;
         }
 
-        default:
-          throw new IllegalStateException("illegal transition from RUNNING to "
-              + newState);
         }
+        break;
       }
 
       case CANCELLATION_REQUESTED:
@@ -900,9 +919,12 @@ public class Foreman implements Runnable {
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {
-    final DrillSqlWorker sqlWorker = new DrillSqlWorker(queryContext);
+    // log query id and query text before starting any real work. Also, put
+    // them together such that it is easy to search based on query id
+    logger.info("Query text for query id {}: {}", this.queryIdString, sql);
+
     final Pointer<String> textPlan = new Pointer<>();
-    final PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
+    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
     queryManager.setPlanText(textPlan.value);
     runPhysicalPlan(plan);
   }

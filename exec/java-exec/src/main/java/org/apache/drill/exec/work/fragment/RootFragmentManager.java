@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 // TODO a lot of this is the same as NonRootFragmentManager
@@ -46,7 +46,7 @@ public class RootFragmentManager implements FragmentManager {
   }
 
   @Override
-  public boolean handle(final RawFragmentBatch batch) throws FragmentSetupException, IOException {
+  public boolean handle(final IncomingDataBatch batch) throws FragmentSetupException, IOException {
     return buffers.batchArrived(batch);
   }
 

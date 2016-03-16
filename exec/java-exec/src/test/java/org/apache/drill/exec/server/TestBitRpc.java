@@ -18,11 +18,17 @@
 package org.apache.drill.exec.server;
 
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -35,22 +41,21 @@ import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
-import org.apache.drill.exec.rpc.data.AckSender;
 import org.apache.drill.exec.rpc.data.DataConnectionManager;
-import org.apache.drill.exec.rpc.data.DataResponseHandler;
 import org.apache.drill.exec.rpc.data.DataServer;
 import org.apache.drill.exec.rpc.data.DataTunnel;
+import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
@@ -60,33 +65,59 @@ import org.junit.Test;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
-
 public class TestBitRpc extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
 
   @Test
-  public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus, @Injectable final FragmentManager fman, @Injectable final FragmentContext fcon) throws Exception {
+  public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
 
     DrillConfig config1 = DrillConfig.create();
     final BootStrapContext c = new BootStrapContext(config1, ClassPathScanner.fromPrescan(config1));
     DrillConfig config2 = DrillConfig.create();
     BootStrapContext c2 = new BootStrapContext(config2, ClassPathScanner.fromPrescan(config2));
 
+    final FragmentContext fcon = new MockUp<FragmentContext>(){
+      BufferAllocator getAllocator(){
+        return c.getAllocator();
+      }
+    }.getMockInstance();
+
+    final FragmentManager fman = new MockUp<FragmentManager>(){
+      int v = 0;
+
+      @Mock
+      boolean handle(IncomingDataBatch batch) throws FragmentSetupException, IOException {
+        try {
+          v++;
+          if (v % 10 == 0) {
+            System.out.println("sleeping.");
+            Thread.sleep(3000);
+          }
+        } catch (InterruptedException e) {
+
+        }
+        RawFragmentBatch rfb = batch.newRawFragmentBatch(c.getAllocator());
+        rfb.sendOk();
+        rfb.release();
+
+        return true;
+      }
+
+      public FragmentContext getFragmentContext(){
+        return fcon;
+      }
+
+    }.getMockInstance();
+
+
     new NonStrictExpectations() {{
       workBus.getFragmentManagerIfExists((FragmentHandle) any); result = fman;
       workBus.getFragmentManager( (FragmentHandle) any); result = fman;
-      fman.getFragmentContext(); result = fcon;
-      fcon.getAllocator(); result = c.getAllocator();
     }};
 
     int port = 1234;
 
-    DataResponseHandler drp = new BitComTestHandler();
-    DataServer server = new DataServer(c, workBus, drp);
+    DataServer server = new DataServer(c, c.getAllocator(), workBus, null);
 
     port = server.bind(port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
@@ -109,7 +140,7 @@ public class TestBitRpc extends ExecTest {
     List<ValueVector> vectors = Lists.newArrayList();
     for (int i = 0; i < 5; i++) {
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
-          MaterializedField.create(new SchemaPath("a", ExpressionPosition.UNKNOWN), Types.required(MinorType.FLOAT8)),
+          MaterializedField.create("a", Types.required(MinorType.FLOAT8)),
           allocator);
       v.allocateNew(records);
       v.getMutator().generateTestData(records);
@@ -120,7 +151,7 @@ public class TestBitRpc extends ExecTest {
 
   private class TimingOutcome implements RpcOutcomeListener<Ack> {
     private AtomicLong max;
-    private Stopwatch watch = new Stopwatch().start();
+    private Stopwatch watch = Stopwatch.createStarted();
 
     public TimingOutcome(AtomicLong max) {
       super();
@@ -152,33 +183,6 @@ public class TestBitRpc extends ExecTest {
     public void interrupted(final InterruptedException e) {
       // TODO(We don't have any interrupts in test code)
     }
-  }
-
-  private class BitComTestHandler implements DataResponseHandler {
-
-    int v = 0;
-
-    @Override
-    public void informOutOfMemory() {
-    }
-
-    @Override
-    public void handle(FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, AckSender sender)
-        throws FragmentSetupException, IOException {
-      // System.out.println("Received.");
-      try {
-        v++;
-        if (v % 10 == 0) {
-          System.out.println("sleeping.");
-          Thread.sleep(3000);
-        }
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-      sender.sendOk();
-    }
-
   }
 
 }

@@ -28,8 +28,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
-import com.carrotsearch.hppc.IntIntOpenHashMap;
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.IntIntHashMap;
+import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.cursors.IntIntCursor;
 import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import com.google.common.base.Preconditions;
@@ -38,9 +38,9 @@ public class InstructionModifier extends MethodVisitor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InstructionModifier.class);
 
   /* Map from old (reference) local variable index to new local variable information. */
-  private final IntObjectOpenHashMap<ValueHolderIden.ValueHolderSub> oldToNew = new IntObjectOpenHashMap<>();
+  private final IntObjectHashMap<ValueHolderIden.ValueHolderSub> oldToNew = new IntObjectHashMap<>();
 
-  private final IntIntOpenHashMap oldLocalToFirst = new IntIntOpenHashMap();
+  private final IntIntHashMap oldLocalToFirst = new IntIntHashMap();
 
   private final DirectSorter adder;
   private int lastLineNumber = 0; // the last line number seen
@@ -313,7 +313,7 @@ public class InstructionModifier extends MethodVisitor {
 
       // if local var is not set, then check map to see if existing holders are mapped to local var.
       if (oldLocalToFirst.containsKey(var)) {
-        final ValueHolderSub sub = oldToNew.get(oldLocalToFirst.lget());
+        final ValueHolderSub sub = oldToNew.get(oldLocalToFirst.get(var));
         if (sub.iden() == from.iden()) {
           // if they are, then transfer to that.
           from.transfer(this, sub.first());

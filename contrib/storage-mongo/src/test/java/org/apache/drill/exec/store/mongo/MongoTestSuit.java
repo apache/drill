@@ -39,7 +39,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
-
+import com.mongodb.client.model.Indexes;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -115,6 +115,7 @@ public class MongoTestSuit implements MongoTestConstants {
         throw new Exception(" Error while starting shrded cluster. ", e);
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
     }
 
     private static IMongodConfig crateConfigServerConfig(int configServerPort,
@@ -187,6 +188,7 @@ public class MongoTestSuit implements MongoTestConstants {
       mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
     }
 
     private static void cleanup() {
@@ -226,7 +228,7 @@ public class MongoTestSuit implements MongoTestConstants {
     }
     IndexOptions indexOptions = new IndexOptions().unique(true)
         .background(false).name(indexFieldName);
-    Bson keys = new Document(indexFieldName, Integer.valueOf(1));
+    Bson keys = Indexes.ascending(indexFieldName);
     mongoCollection.createIndex(keys, indexOptions);
   }
 

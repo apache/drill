@@ -53,8 +53,25 @@
     });
     function doUpdate() {
       $("#updateForm").ajaxForm(function(data) {
-        $("#message").removeClass("hidden").text(data.result).alert();
-        setTimeout(function() { location.reload(); }, 800);
+        var messageEl = $("#message");
+        if (data.result == "success") {
+          messageEl.removeClass("hidden")
+                   .removeClass("alert-danger")
+                   .addClass("alert-info")
+                   .text(data.result).alert();
+          setTimeout(function() { location.reload(); }, 800);
+        } else {
+          messageEl.addClass("hidden");
+          // Wait a fraction of a second before showing the message again. This
+          // makes it clear if a second attempt gives the same error as
+          // the first that a "new" message came back from the server
+          setTimeout(function() {
+            messageEl.removeClass("hidden")
+                     .removeClass("alert-info")
+                     .addClass("alert-danger")
+                     .text("Please retry: " + data.result).alert();
+          }, 200);
+        }
       });
     };
     function deleteFunction() {

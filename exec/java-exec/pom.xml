@@ -9,13 +9,12 @@
   License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
   OF ANY KIND, either express or implied. See the License for the specific 
   language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
@@ -27,6 +26,7 @@
       <version>1.3</version>
       <scope>test</scope>
     </dependency>
+    
     <!-- <dependency> -->
     <!-- <groupId>org.ow2.asm</groupId> -->
     <!-- <artifactId>asm-util</artifactId> -->
@@ -116,13 +116,17 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>2.4.3</version>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-transport-native-epoll</artifactId>
-      <classifier>linux-x86_64</classifier>
-      <version>4.0.27.Final</version>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-afterburner</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
@@ -150,7 +154,7 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-      <version>2.3.19</version>
+      <version>${freemarker.version}</version>
     </dependency>
     <dependency>
       <groupId>net.hydromatic</groupId>
@@ -264,16 +268,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-servlets</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <version>1</version>
@@ -286,6 +280,26 @@
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-logical</artifactId>
+      <version>${project.version}</version>
+    </dependency>    
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-rpc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.memory</groupId>
+      <artifactId>drill-memory-base</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>vector</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- <dependency> -->
@@ -321,6 +335,12 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <version>2.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
       <version>1.0.5-M3</version>
@@ -328,7 +348,7 @@
     <dependency>
       <groupId>com.carrotsearch</groupId>
       <artifactId>hppc</artifactId>
-      <version>0.4.2</version>
+      <version>0.7.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
@@ -391,6 +411,12 @@
       <artifactId>hadoop-hdfs</artifactId>
       <scope>test</scope>
       <classifier>tests</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
@@ -402,20 +428,6 @@
           <name>!alt-hadoop</name>
         </property>
       </activation>
-    </profile>
-    <profile>
-      <id>mapr</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.mapr.hadoop</groupId>
-          <artifactId>maprfs</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-          <version>20090211</version>
-        </dependency>
-      </dependencies>
     </profile>
     <profile>
       <id>cdh4</id>
@@ -466,11 +478,12 @@
   </profiles>
 
   <build>
+  
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
-          <execution> <!-- copy all templates in the same location to compile them at once -->
+          <execution> <!-- copy all templates/data in the same location to compile them at once -->
             <id>copy-fmpp-resources</id>
             <phase>initialize</phase>
             <goals><goal>copy-resources</goal></goals>
@@ -487,12 +500,12 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Extract parser grammar template from calcite-core.jar and put 
-          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.8</version>
         <executions>
+        <!-- Extract parser grammar template from calcite-core.jar and put 
+          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
           <execution>
             <id>unpack-parser-template</id>
             <phase>initialize</phase>
@@ -512,26 +525,42 @@
               </artifactItems>
             </configuration>
           </execution>
+          
+        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
+          it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
+          <execution>
+            <id>unpack-vector-types</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.drill.exec</groupId>
+                  <artifactId>vector</artifactId>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <includes>codegen/data/ValueVectorTypes.tdd</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>          
         </executions>
       </plugin>
+
       <plugin> <!-- generate sources from fmpp -->
         <groupId>org.apache.drill.tools</groupId>
         <artifactId>drill-fmpp-maven-plugin</artifactId>
         <version>${project.version}</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.19</version>
-          </dependency>
-        </dependencies>
         <executions>
           <execution>
             <id>generate-fmpp</id>
             <phase>generate-sources</phase>
             <goals><goal>generate</goal></goals>
             <configuration>
-              <config>src/main/codegen/config.fmpp</config>
+              <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
               <templates>${project.build.directory}/codegen/templates</templates>
             </configuration>
@@ -555,6 +584,11 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
+<!--
+              <debugParser>true</debugParser>
+              <debugLookAhead>true</debugLookAhead>
+              <debugTokenManager>true</debugTokenManager>
+ -->
             </configuration>
           </execution>
         </executions>

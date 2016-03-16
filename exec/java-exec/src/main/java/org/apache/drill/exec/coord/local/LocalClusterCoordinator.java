@@ -28,6 +28,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.DistributedSemaphore;
+import org.apache.drill.exec.coord.store.CachingTransientStoreFactory;
+import org.apache.drill.exec.coord.store.TransientStore;
+import org.apache.drill.exec.coord.store.TransientStoreConfig;
+import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Maps;
@@ -43,8 +47,19 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
   private final Map<RegistrationHandle, DrillbitEndpoint> endpoints = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, DistributedSemaphore> semaphores = Maps.newConcurrentMap();
 
+  private final TransientStoreFactory factory = CachingTransientStoreFactory.of(new TransientStoreFactory() {
+    @Override
+    public <V> TransientStore<V> getOrCreateStore(TransientStoreConfig<V> config) {
+      return new MapBackedStore<>(config);
+    }
+
+    @Override
+    public void close() throws Exception { }
+  });
+
   @Override
-  public void close() throws IOException {
+  public void close() throws Exception {
+    factory.close();
     endpoints.clear();
   }
 
@@ -123,6 +138,11 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
       semaphores.putIfAbsent(name, new LocalSemaphore(maximumLeases));
     }
     return semaphores.get(name);
+  }
+
+  @Override
+  public <V> TransientStore<V> getOrCreateTransientStore(final TransientStoreConfig<V> config) {
+    return factory.getOrCreateStore(config);
   }
 
   public class LocalSemaphore implements DistributedSemaphore {

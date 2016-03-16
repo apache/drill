@@ -29,17 +29,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.drill.common.config.DrillConfig;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.vector.ValueVector;
@@ -79,27 +78,22 @@ public class QueryWrapper {
     return type;
   }
 
-  public QueryResult run(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator)
-    throws Exception {
-    try(DrillClient client = new DrillClient(config, coordinator, allocator)){
-      Listener listener = new Listener(allocator);
-
-      client.connect();
-      client.runQuery(getType(), query, listener);
-
-      listener.waitForCompletion();
-      if (listener.results.isEmpty()) {
-        listener.results.add(Maps.<String, String>newHashMap());
-      }
-      final Map<String, String> first = listener.results.get(0);
-      for (String columnName : listener.columns) {
-        if (!first.containsKey(columnName)) {
-          first.put(columnName, null);
-        }
-      }
-
-      return new QueryResult(listener.columns, listener.results);
+  public QueryResult run(final DrillClient client, final BufferAllocator allocator) throws Exception {
+    Listener listener = new Listener(allocator);
+    client.runQuery(getType(), query, listener);
+    listener.waitForCompletion();
+    if (listener.results.isEmpty()) {
+      listener.results.add(Maps.<String, String>newHashMap());
     }
+
+    final Map<String, String> first = listener.results.get(0);
+    for (String columnName : listener.columns) {
+      if (!first.containsKey(columnName)) {
+        first.put(columnName, null);
+      }
+    }
+
+    return new QueryResult(listener.columns, listener.results);
   }
 
   public static class QueryResult {
@@ -153,7 +147,7 @@ public class QueryWrapper {
             // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
             // SchemaChangeException, so check/clean catch clause below.
             for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-              columns.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
+              columns.add(loader.getSchema().getColumn(i).getPath());
             }
             for (int i = 0; i < rows; ++i) {
               final Map<String, String> record = Maps.newHashMap();

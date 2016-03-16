@@ -19,49 +19,22 @@ package org.apache.drill.exec.memory;
 
 import org.apache.drill.common.config.DrillConfig;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public class RootAllocatorFactory {
+
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
+
   /**
    * Constructor to prevent instantiation of this static utility class.
    */
   private RootAllocatorFactory() {}
 
   /**
-   * Factory method.
-   *
-   * @param drillConfig the DrillConfig
+   * Create a new Root Allocator
+   * @param drillConfig
+   *          the DrillConfig
    * @return a new root allocator
    */
   public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(DRILL-1942)
-    if (BaseAllocator.DEBUG) {
-      return new TopLevelAllocator(drillConfig);
-    }
-*/
-
-    return new TopLevelAllocator(drillConfig);
+    return new RootAllocator(Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
   }
-
-  /**
-   * Factory method for testing, where a DrillConfig may not be available.
-   *
-   * @param allocationPolicy the allocation policy
-   * @param initAllocation initial allocation from parent
-   * @param maxReservation maximum amount of memory this can hand out
-   * @param flags one of BufferAllocator's F_* flags
-   * @return a new root allocator
-   */
-/* TODO(DRILL-1942)
-  @VisibleForTesting
-  public static BufferAllocator newRoot(
-      final AllocationPolicy allocationPolicy,
-      final long initAllocation, final long maxReservation, final int flags) {
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocatorDebug(allocationPolicy, initAllocation, maxReservation, flags);
-    }
-
-    return new RootAllocator(allocationPolicy, initAllocation, maxReservation, flags);
-  }
-*/
 }

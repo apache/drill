@@ -34,7 +34,6 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
@@ -68,9 +67,9 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
@@ -211,7 +210,11 @@ public class TestDrillbitResilience extends DrillTest {
     stopAllDrillbits();
 
     if (remoteServiceSet != null) {
-      AutoCloseables.close(remoteServiceSet, logger);
+      try {
+        remoteServiceSet.close();
+      } catch (Exception e) {
+        logger.warn("Failure on close()", e);
+      }
       remoteServiceSet = null;
     }
 

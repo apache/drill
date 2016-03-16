@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,10 +35,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -47,18 +50,19 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
+
 @Path("/")
+@RolesAllowed(ADMIN_ROLE)
 public class StorageResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageResources.class);
 
-  @Inject
-  StoragePluginRegistry storage;
-//  @Inject
-//  PStoreProvider storeProvider;
-  @Inject
-  ObjectMapper mapper;
+  @Inject UserAuthEnabled authEnabled;
+  @Inject StoragePluginRegistry storage;
+  @Inject ObjectMapper mapper;
+  @Inject SecurityContext sc;
 
-  static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR = new Comparator<PluginConfigWrapper>() {
+  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR = new Comparator<PluginConfigWrapper>() {
     @Override
     public int compare(PluginConfigWrapper o1, PluginConfigWrapper o2) {
       return o1.getName().compareTo(o2.getName());
@@ -71,7 +75,7 @@ public class StorageResources {
   public List<PluginConfigWrapper> getStoragePluginsJSON() {
 
     List<PluginConfigWrapper> list = Lists.newArrayList();
-    for (Map.Entry<String, StoragePluginConfig> entry : storage.getStore()) {
+    for (Map.Entry<String, StoragePluginConfig> entry : Lists.newArrayList(storage.getStore().getAll())) {
       PluginConfigWrapper plugin = new PluginConfigWrapper(entry.getKey(), entry.getValue());
       list.add(plugin);
     }
@@ -86,7 +90,7 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStoragePlugins() {
     List<PluginConfigWrapper> list = getStoragePluginsJSON();
-    return new Viewable("/rest/storage/list.ftl", list);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, list);
   }
 
   @GET
@@ -109,7 +113,7 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStoragePlugin(@PathParam("name") String name) {
     PluginConfigWrapper plugin = getStoragePluginJSON(name);
-    return new Viewable("/rest/storage/update.ftl", plugin);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc, plugin);
   }
 
   @GET

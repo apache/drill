@@ -36,6 +36,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
@@ -92,24 +93,26 @@ public abstract class WindowFunction {
 
   abstract void generateCode(final ClassGenerator<WindowFramer> cg);
 
+  abstract boolean supportsCustomFrames();
+
   /**
-   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @param pop window group definition
    * @return true if this window function requires all batches of current partition to be available before processing
    * the first batch
    */
-  public boolean requiresFullPartition(final boolean hasOrderBy) {
+  public boolean requiresFullPartition(final WindowPOP pop) {
     return true;
   }
 
   /**
    * @param numBatchesAvailable number of batches available for current partition
-   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @param pop window group definition
    * @param frameEndReached we found the last row of the first batch's frame
    * @param partitionEndReached all batches of current partition are available
    *
    * @return true if this window function can process the first batch immediately
    */
-  public boolean canDoWork(final int numBatchesAvailable, final boolean hasOrderBy, final boolean frameEndReached,
+  public boolean canDoWork(final int numBatchesAvailable, final WindowPOP pop, final boolean frameEndReached,
                            final boolean partitionEndReached) {
     return partitionEndReached;
   }
@@ -134,7 +137,7 @@ public abstract class WindowFunction {
       }
 
       // add corresponding ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), aggregate.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), aggregate.getMajorType());
       batch.addOrGet(output).allocateNew();
       TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
       writeAggregationToOutput = new ValueVectorWriteExpression(outputId, aggregate, true);
@@ -153,13 +156,18 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
-      return !hasOrderBy;
+    public boolean requiresFullPartition(final WindowPOP pop) {
+      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
-      return partitionEndReached || (hasOrderBy && frameEndReached);
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (!requiresFullPartition(pop) && frameEndReached);
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return true;
     }
   }
 
@@ -198,25 +206,30 @@ public abstract class WindowFunction {
     @Override
     boolean materialize(final NamedExpression ne, final VectorContainer batch, FunctionLookupContext registry)
         throws SchemaChangeException {
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
       return true;
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       // CUME_DIST, PERCENT_RANK and NTILE require the length of current partition before processing it's first batch
       return type == Type.CUME_DIST || type == Type.PERCENT_RANK || type == Type.NTILE;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
 
       // for CUME_DIST, PERCENT_RANK and NTILE we need the full partition
       // otherwise we can process the first batch immediately
-      return partitionEndReached || ! requiresFullPartition(hasOrderBy);
+      return partitionEndReached || ! requiresFullPartition(pop);
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
     }
   }
 
@@ -244,7 +257,7 @@ public abstract class WindowFunction {
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
       final LogicalExpression argument = call.args.get(0);
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), argument.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), argument.getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
 
@@ -298,7 +311,7 @@ public abstract class WindowFunction {
       }
 
       // add corresponding ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), majorType);
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId =  batch.getValueVectorId(ne.getRef());
 
@@ -307,13 +320,18 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       return partitionEndReached || numBatchesAvailable > 1;
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
     }
   }
 
@@ -341,7 +359,7 @@ public abstract class WindowFunction {
       }
 
       // add lag output ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), majorType);
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
@@ -372,14 +390,19 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
       return true;
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
     }
   }
 
@@ -400,7 +423,7 @@ public abstract class WindowFunction {
         return false;
       }
 
-      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
@@ -419,22 +442,26 @@ public abstract class WindowFunction {
       // this will generate the the following, pseudo, code:
       //   write current.source_last_value[frameLastRow] to container.last_value[row]
 
-      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupReadLastValue", "readLastValue", null, null);
-      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
-      final MappingSet mappingSet = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+      final GeneratorMapping mapping = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet("index", "outIndex", mapping, mapping);
 
       cg.setMappingSet(mappingSet);
       cg.addExpr(writeSourceToLastValue);
     }
 
     @Override
-    public boolean requiresFullPartition(final boolean hasOrderBy) {
-      return !hasOrderBy;
+    public boolean requiresFullPartition(final WindowPOP pop) {
+      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
-      return partitionEndReached || (hasOrderBy && frameEndReached);
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (!requiresFullPartition(pop) && frameEndReached);
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return true;
     }
   }
 
@@ -457,7 +484,7 @@ public abstract class WindowFunction {
         return false;
       }
 
-      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
@@ -471,10 +498,10 @@ public abstract class WindowFunction {
     @Override
     void generateCode(final ClassGenerator<WindowFramer> cg) {
       {
-        // in DefaultFrameTemplate we call setupCopyFirstValue:
-        //   setupCopyFirstValue(current, internal)
-        // and copyFirstValueToInternal:
-        //   copyFirstValueToInternal(currentRow, 0)
+        // in DefaultFrameTemplate we call setupSaveFirstValue:
+        //   setupSaveFirstValue(current, internal)
+        // and saveFirstValue:
+        //   saveFirstValue(currentRow, 0)
         //
         // this will generate the the following, pseudo, code:
         //   write current.source[currentRow] to internal.first_value[0]
@@ -482,7 +509,7 @@ public abstract class WindowFunction {
         // so it basically copies the first value of current partition into the first row of internal.first_value
         // this is especially useful when handling multiple batches for the same partition where we need to keep
         // the first value of the partition somewhere after we release the first batch
-        final GeneratorMapping mapping = GeneratorMapping.create("setupCopyFirstValue", "copyFirstValueToInternal", null, null);
+        final GeneratorMapping mapping = GeneratorMapping.create("setupSaveFirstValue", "saveFirstValue", null, null);
         final MappingSet mappingSet = new MappingSet("index", "0", mapping, mapping);
 
         cg.setMappingSet(mappingSet);
@@ -490,8 +517,8 @@ public abstract class WindowFunction {
       }
 
       {
-        // in DefaultFrameTemplate we call setupPasteValues:
-        //   setupPasteValues(internal, container)
+        // in DefaultFrameTemplate we call setupWriteFirstValue:
+        //   setupWriteFirstValue(internal, container)
         // and outputRow:
         //   outputRow(outIndex)
         //
@@ -499,7 +526,7 @@ public abstract class WindowFunction {
         //   write internal.first_value[0] to container.first_value[outIndex]
         //
         // so it basically copies the value stored in internal.first_value's first row into all rows of container.first_value
-        final GeneratorMapping mapping = GeneratorMapping.create("setupPasteValues", "outputRow", "resetValues", "cleanup");
+        final GeneratorMapping mapping = GeneratorMapping.create("setupWriteFirstValue", "outputRow", "resetValues", "cleanup");
         final MappingSet mappingSet = new MappingSet("0", "outIndex", mapping, mapping);
         cg.setMappingSet(mappingSet);
         cg.addExpr(writeFirstValueToFirstValue);
@@ -507,13 +534,18 @@ public abstract class WindowFunction {
     }
 
     @Override
-    public boolean requiresFullPartition(boolean hasOrderBy) {
+    public boolean requiresFullPartition(final WindowPOP pop) {
       return false;
     }
 
     @Override
-    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+    public boolean canDoWork(int numBatchesAvailable, WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      return true;
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
       return true;
     }
   }

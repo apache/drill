@@ -48,7 +48,7 @@ public class TestWindowFrame extends BaseTestQuery {
   private DrillTestWrapper buildWindowQuery(final String tableName, final boolean withPartitionBy, final int numBatches)
       throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()"))
+      .sqlQuery(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()")
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".tsv")
       .baselineColumns("count", "sum")
@@ -59,7 +59,7 @@ public class TestWindowFrame extends BaseTestQuery {
   private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName, final boolean withPartitionBy,
                                                        final int numBatches) throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)" : "(order by sub)"))
+      .sqlQuery(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)" : "(order by sub)")
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".oby.tsv")
       .baselineColumns("count", "sum", "row_number", "rank", "dense_rank", "cume_dist", "percent_rank")
@@ -96,6 +96,68 @@ public class TestWindowFrame extends BaseTestQuery {
   @Test
   public void testB1P2() throws Exception {
     runTest("b1.p2", 1);
+  }
+
+  @Test
+  public void testMultipleFramers() throws Exception {
+    final String window = " OVER(PARTITION BY position_id ORDER by sub)";
+    test("SELECT COUNT(*)"+window+", SUM(salary)"+window+", ROW_NUMBER()"+window+", RANK()"+window+" " +
+      "FROM dfs_test.`"+TEST_RES_PATH+"/window/b1.p1`"
+    );
+  }
+
+  @Test
+  public void testUnboundedFollowing() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/q3.sql"), TEST_RES_PATH)
+      .ordered()
+      .sqlBaselineQuery(getFile("window/q4.sql"), TEST_RES_PATH)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testAggregateRowsUnboundedAndCurrentRow() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/aggregate_rows_unbounded_current.sql"), table)
+      .ordered()
+      .sqlBaselineQuery(getFile("window/aggregate_rows_unbounded_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLastValueRowsUnboundedAndCurrentRow() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/last_value_rows_unbounded_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/last_value_rows_unbounded_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testAggregateRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/aggregate_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/aggregate_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValueRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/first_value_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/first_value_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
   }
 
   /**
@@ -360,5 +422,21 @@ public class TestWindowFrame extends BaseTestQuery {
     assertEquals(5, partition.ntile(5));
     partition.rowAggregated();
     assertEquals(5, partition.ntile(5));
+  }
+
+  @Test
+  public void test4457() throws Exception {
+    runSQL(String.format("CREATE TABLE dfs_test.tmp.`4457` AS " +
+      "SELECT columns[0] AS c0, NULLIF(columns[1], 'null') AS c1 " +
+      "FROM dfs_test.`%s/window/4457.csv`", TEST_RES_PATH));
+
+    testBuilder()
+      .sqlQuery("SELECT COALESCE(FIRST_VALUE(c1) OVER(ORDER BY c0 RANGE BETWEEN CURRENT ROW AND CURRENT ROW), 'EMPTY') AS fv FROM dfs_test.tmp.`4457`")
+      .ordered()
+      .baselineColumns("fv")
+      .baselineValues("a")
+      .baselineValues("b")
+      .baselineValues("EMPTY")
+      .go();
   }
 }

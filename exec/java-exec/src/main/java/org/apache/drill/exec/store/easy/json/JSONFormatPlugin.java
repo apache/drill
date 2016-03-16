@@ -46,8 +46,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
-public class
-        JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
+public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   private static final boolean IS_COMPRESSIBLE = true;
   private static final String DEFAULT_NAME = "json";
@@ -81,6 +80,7 @@ public class
 
     options.put("extension", "json");
     options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));
+    options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
 
     RecordWriter recordWriter = new JsonRecordWriter();
     recordWriter.init(options);
@@ -91,7 +91,7 @@ public class
   @JsonTypeName("json")
   public static class JSONFormatConfig implements FormatPluginConfig {
 
-    public List<String> extensions;
+    public List<String> extensions = ImmutableList.of("json");
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -105,21 +105,35 @@ public class
 
     @Override
     public int hashCode() {
-      return 31;
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      return result;
     }
 
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
         return true;
-      } else if (obj == null) {
-        return false;
-      } else if (getClass() == obj.getClass()) {
-        return true;
       }
-
-      return false;
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      JSONFormatConfig other = (JSONFormatConfig) obj;
+      if (extensions == null) {
+        if (other.extensions != null) {
+          return false;
+        }
+      } else if (!extensions.equals(other.extensions)) {
+        return false;
+      }
+      return true;
     }
+
+
   }
 
   @Override

@@ -18,30 +18,41 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
-import org.apache.calcite.tools.Planner;
+import java.util.Collection;
+import java.util.Map.Entry;
+
+import org.apache.calcite.tools.RuleSet;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.planner.sql.SqlConverter;
+import org.apache.drill.exec.store.StoragePlugin;
+
+import com.google.common.collect.Lists;
 
 public class SqlHandlerConfig {
+
   private final QueryContext context;
-  private final HepPlanner hepPlanner;
-  private final Planner planner;
+  private final SqlConverter converter;
 
-  public SqlHandlerConfig(HepPlanner hepPlanner, Planner planner, QueryContext context) {
-    this.hepPlanner = hepPlanner;
-    this.planner = planner;
+  public SqlHandlerConfig(QueryContext context, SqlConverter converter) {
+    super();
     this.context = context;
-  }
-
-  public Planner getPlanner() {
-    return planner;
-  }
-
-  public HepPlanner getHepPlanner() {
-    return hepPlanner;
+    this.converter = converter;
   }
 
   public QueryContext getContext() {
     return context;
+  }
+
+  public RuleSet getRules(PlannerPhase phase) {
+    Collection<StoragePlugin> plugins = Lists.newArrayList();
+    for (Entry<String, StoragePlugin> k : context.getStorage()) {
+      plugins.add(k.getValue());
+    }
+    return phase.getRules(context, plugins);
+  }
+
+  public SqlConverter getConverter() {
+    return converter;
   }
 }

@@ -70,7 +70,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         runStarts.add(i);
         batch = newBatch;
       } else {
-        throw new UnsupportedOperationException("Missing batch");
+        throw new UnsupportedOperationException(String.format("Missing batch. batch: %d newBatch: %d", batch, newBatch));
       }
     }
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
@@ -124,8 +124,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   @Override
   public void sort(final VectorContainer container) {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     while (runStarts.size() > 1) {
 
       // check if we're cancelled/failed frequently

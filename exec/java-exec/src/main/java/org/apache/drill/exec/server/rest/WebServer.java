@@ -21,9 +21,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -33,13 +35,23 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.server.session.HashSessionManager;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -48,13 +60,21 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.joda.time.DateTime;
 
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
+
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTICATED_ROLE;
 
 /**
  * Wrapper class around jetty based webserver.
@@ -107,8 +127,7 @@ public class WebServer implements AutoCloseable {
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
 
-    final ServletContextHandler servletContextHandler =
-        new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+    final ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
     embeddedJetty.setHandler(servletContextHandler);
@@ -123,11 +142,62 @@ public class WebServer implements AutoCloseable {
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
     staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
-    staticHolder.setInitParameter("dirAllowed","false");
-    staticHolder.setInitParameter("pathInfoOnly","true");
-    servletContextHandler.addServlet(staticHolder,"/static/*");
+    staticHolder.setInitParameter("dirAllowed", "false");
+    staticHolder.setInitParameter("pathInfoOnly", "true");
+    servletContextHandler.addServlet(staticHolder, "/static/*");
+
+    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    }
 
     embeddedJetty.start();
+  }
+
+  /**
+   * @return A {@link SessionHandler} which contains a {@link HashSessionManager}
+   */
+  private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
+    SessionManager sessionManager = new HashSessionManager();
+    sessionManager.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
+    sessionManager.addEventListener(new HttpSessionListener() {
+      @Override
+      public void sessionCreated(HttpSessionEvent se) {
+        // No-op
+      }
+
+      @Override
+      public void sessionDestroyed(HttpSessionEvent se) {
+        final HttpSession session = se.getSession();
+        if (session == null) {
+          return;
+        }
+
+        final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        if (authCreds != null) {
+          final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
+          securityHandler.logout(sessionAuth);
+          session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        }
+      }
+    });
+
+    return new SessionHandler(sessionManager);
+  }
+
+  /**
+   * @return {@link SecurityHandler} with appropriate {@link LoginService}, {@link Authenticator} and constraints.
+   */
+  private ConstraintSecurityHandler createSecurityHandler() {
+    ConstraintSecurityHandler security = new ConstraintSecurityHandler();
+
+    Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
+    security.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
+
+    security.setAuthenticator(new FormAuthenticator("/login", "/login", true));
+    security.setLoginService(new DrillRestLoginService(workManager.getContext()));
+
+    return security;
   }
 
   /**

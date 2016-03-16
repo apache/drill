@@ -39,6 +39,9 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.default", "infoschematest")
         .baselineValues("hive.default", "hiveview")
         .baselineValues("hive.default", "kv")
+        .baselineValues("hive.default", "kv_parquet")
+        .baselineValues("hive.default", "kv_sh")
+        .baselineValues("hive.default", "countstar_parquet")
         .go();
 
     testBuilder()
@@ -47,6 +50,19 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
         .baselineValues("hive.db1", "kv_db1")
         .baselineValues("hive.db1", "avro")
+        .go();
+
+    testBuilder()
+        .sqlQuery("SHOW TABLES IN hive.skipper")
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+        .baselineValues("hive.skipper", "kv_text_small")
+        .baselineValues("hive.skipper", "kv_text_large")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_header")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_footer")
+        .baselineValues("hive.skipper", "kv_rcfile_large")
+        .baselineValues("hive.skipper", "kv_parquet_large")
+        .baselineValues("hive.skipper", "kv_sequencefile_large")
         .go();
   }
 
@@ -58,6 +74,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("SCHEMA_NAME")
         .baselineValues("hive.default")
         .baselineValues("hive.db1")
+        .baselineValues("hive.skipper")
         .baselineValues("dfs.default")
         .baselineValues("dfs.root")
         .baselineValues("dfs.tmp")
@@ -161,7 +178,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         "       NUMERIC_PRECISION_RADIX, NUMERIC_PRECISION, NUMERIC_SCALE " +
         "FROM INFORMATION_SCHEMA.`COLUMNS` " +
         "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'infoschematest' AND " +
-        "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
+        "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR COLUMN_NAME = 'chartype' OR " +
         "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')";
 
     testBuilder()
@@ -178,6 +195,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("decimaltype", "DECIMAL",            null,   10,   38,    2)
         .baselineValues("stringtype",  "CHARACTER VARYING", 65535, null, null, null)
         .baselineValues("varchartype", "CHARACTER VARYING",    20, null, null, null)
+        .baselineValues("chartype", "CHARACTER", 10, null, null, null)
         .go();
   }
 

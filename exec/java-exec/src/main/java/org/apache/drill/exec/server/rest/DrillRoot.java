@@ -19,15 +19,18 @@ package org.apache.drill.exec.server.rest;
 
 import java.util.List;
 
+import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -35,16 +38,18 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.collect.Lists;
 
 @Path("/")
+@PermitAll
 public class DrillRoot {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
 
-  @Inject
-  WorkManager work;
+  @Inject UserAuthEnabled authEnabled;
+  @Inject WorkManager work;
+  @Inject SecurityContext sc;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStats() {
-    return new Viewable("/rest/index.ftl", getStatsJSON());
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getStatsJSON());
   }
 
   @GET

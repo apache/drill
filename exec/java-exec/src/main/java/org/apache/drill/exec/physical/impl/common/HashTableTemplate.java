@@ -467,7 +467,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     threshold = (int) Math.ceil(tableSize * loadf);
 
-    dummyIntField = MaterializedField.create(SchemaPath.getSimplePath("dummy"), Types.required(MinorType.INT));
+    dummyIntField = MaterializedField.create("dummy", Types.required(MinorType.INT));
 
     startIndices = allocMetadataVector(tableSize, EMPTY_SLOT);
 

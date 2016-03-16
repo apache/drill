@@ -47,7 +47,8 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -75,7 +76,7 @@ public class PlanningBase extends ExecTest{
 
   protected void testSqlPlan(String sqlCommands) throws Exception {
     final String[] sqlStrings = sqlCommands.split(";");
-    final LocalPStoreProvider provider = new LocalPStoreProvider(config);
+    final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
     provider.start();
     final ScanResult scanResult = ClassPathScanner.fromPrescan(config);
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
@@ -96,7 +97,7 @@ public class PlanningBase extends ExecTest{
         result = config;
         dbContext.getOptionManager();
         result = systemOptions;
-        dbContext.getPersistentStoreProvider();
+        dbContext.getStoreProvider();
         result = provider;
         dbContext.getClasspathScan();
         result = scanResult;
@@ -105,7 +106,7 @@ public class PlanningBase extends ExecTest{
       }
     };
 
-    final StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
+    final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
@@ -149,8 +150,7 @@ public class PlanningBase extends ExecTest{
       if (sql.trim().isEmpty()) {
         continue;
       }
-      final DrillSqlWorker worker = new DrillSqlWorker(context);
-      final PhysicalPlan p = worker.getPlan(sql);
+      final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }
 

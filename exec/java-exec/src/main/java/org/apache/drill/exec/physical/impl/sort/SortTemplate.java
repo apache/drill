@@ -47,8 +47,7 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
 
   @Override
   public void sort(SelectionVector4 vector4, VectorContainer container){
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     QuickSort qs = new QuickSort();
     qs.sort(this, 0, vector4.getTotalCount());
     logger.debug("Took {} us to sort {} records", watch.elapsed(TimeUnit.MICROSECONDS), vector4.getTotalCount());

@@ -30,7 +30,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
@@ -65,7 +65,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
         count += b.getHeader().getRowCount();
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
-          System.out.print(vw.getValueVector().getField().toExpr() + ": ");
+          System.out.print(vw.getValueVector().getField().getPath() + ": ");
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -127,8 +127,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
     try(DrillClient client = new DrillClient(config);) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
       client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
       System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
       client.close();

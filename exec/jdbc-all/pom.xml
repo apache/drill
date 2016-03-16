@@ -15,13 +15,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -57,8 +56,20 @@
           <artifactId>log4j</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.javassist</groupId>
+          <artifactId>javassist</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15on</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15on</artifactId>
         </exclusion>
         <exclusion>
           <artifactId>jersey-container-jetty-servlet</artifactId>
@@ -77,6 +88,10 @@
           <artifactId>hadoop-client</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro-mapred</artifactId>
+        </exclusion>
+        <exclusion>
           <artifactId>jersey-media-multipart</artifactId>
           <groupId>org.glassfish.jersey.media</groupId>
         </exclusion>
@@ -90,11 +105,11 @@
         </exclusion>
         <exclusion>
           <artifactId>parquet-hadoop</artifactId>
-          <groupId>com.twitter</groupId>
+          <groupId>org.apache.parquet</groupId>
         </exclusion>
         <exclusion>
           <artifactId>parquet-column</artifactId>
-          <groupId>com.twitter</groupId>
+          <groupId>org.apache.parquet</groupId>
         </exclusion>
         <exclusion>
           <artifactId>infinispan-core</artifactId>
@@ -156,28 +171,6 @@
       <version>2.6.1</version>
       <scope>test</scope>
     </dependency>
-    <!-- Specify xalan and xerces versions to avoid setXIncludeAware error. -->
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <exclusions>
-        <!-- <exclusion> -->
-        <!-- <groupId>xml-apis</groupId> -->
-        <!-- <artifactId>xml-apis</artifactId> -->
-        <!-- </exclusion> -->
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
-      <exclusions>
-        <!-- <exclusion> -->
-        <!-- <groupId>xml-apis</groupId> -->
-        <!-- <artifactId>xml-apis</artifactId> -->
-        <!-- </exclusion> -->
-      </exclusions>
-    </dependency>
-
 
     <!-- Test Dependencies -->
     <dependency>
@@ -270,7 +263,13 @@
         <configuration>
           <shadedArtifactAttached>false</shadedArtifactAttached>
           <createDependencyReducedPom>true</createDependencyReducedPom>
-          <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+          <!-- TODO DRILL-4336: try to move the dependencyReducedPom out of the default location (the module root).
+               Putting it here caused the target directory to be run as a submodule (oddly
+               only when trying to run the maven release goal) -->
+          <!--dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
+          <!-- TODO DRILL-4336: an attempt to fix the issue by moving the file elsewhere, had issues executing
+               but may be able to be modified to to fix the issue-->
+          <!--dependencyReducedPomLocation>${project.build.directory}/generated/shade/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
           <minimizeJar>false</minimizeJar>
 
           <artifactSet>
@@ -283,6 +282,10 @@
               <exclude>org.apache.calcite:*</exclude>
               <exclude>org.pentaho:*</exclude>
               <exclude>org.msgpack:*</exclude>
+              <exclude>xerces:*</exclude>
+              <exclude>xalan:*</exclude>
+              <exclude>org.apache.avro:*</exclude>
+              <exclude>org.mongodb:*</exclude>
               <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>dom4j:*</exclude>
               <exclude>org.hibernate:*</exclude>
@@ -292,6 +295,7 @@
               <exclude>com.univocity:*</exclude>
               <exclude>net.sf.jpam:*</exclude>
               <exclude>com.twitter:*</exclude>
+              <exclude>org.apache.parquet:*</exclude>
               <exclude>javax.inject:*</exclude>
               <exclude>com.beust:*</exclude>
               <exclude>jline:*</exclude>
@@ -371,8 +375,7 @@
             <relocation><pattern>org.apache.zookeeper.</pattern><shadedPattern>oadd.org.apache.zookeeper.</shadedPattern></relocation>
           </relocations>
           <transformers>
-            <transformer
-              implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
               <resource>drill-module.conf</resource>
             </transformer>
           </transformers>
@@ -391,6 +394,9 @@
                <exclude>javax/**</exclude>
                <exclude>rest/**</exclude>
                <exclude>*.tokens</exclude>
+               <exclude>codegen/**</exclude>
+               <exclude>bootstrap-storage-plugins.json</exclude>
+               <exclude>org/apache/parquet</exclude>
                <exclude>com/google/common/math</exclude>
                <exclude>com/google/common/net</exclude>
                <exclude>com/google/common/primitives</exclude>
@@ -413,6 +419,39 @@
            </filter>
          </filters>
         </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-jdbc-jar-compactness</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <rules>
+                <requireFilesSize>
+                  <message>
+                  
+                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range. 
+                  
+                  This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
+                  
+                  </message>
+                  <maxsize>20000000</maxsize>
+                  <minsize>15000000</minsize>
+                  <files>
+                   <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
+                  </files>
+                </requireFilesSize>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
@@ -492,55 +531,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <!-- mondrian data includes 10s of MBs of JSON file if you want to include
-         them run maven with -Pwith-mondrian-data -->
-    <profile>
-      <id>with-mondrian-data</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>net.hydromatic</groupId>
-          <artifactId>foodmart-queries</artifactId>
-          <version>0.4.1</version>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>net.hydromatic</groupId>
-          <artifactId>foodmart-data-json</artifactId>
-          <version>0.4</version>
-        </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>default-hadoop</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <projectVersion>${project.version}</projectVersion>
-      </properties>
-    </profile>
-    <profile>
-      <id>mapr</id>
-      <properties>
-        <projectVersion>${project.version}-mapr</projectVersion>
-      </properties>
-    </profile>
-    <profile>
-      <id>cdh</id>
-      <properties>
-        <projectVersion>${project.version}-mapr</projectVersion>
-      </properties>
-    </profile>
-    <profile>
-      <id>hdp</id>
-      <properties>
-        <projectVersion>${project.version}-hdp</projectVersion>
-      </properties>
     </profile>
   </profiles>
 

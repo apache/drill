@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -34,9 +35,9 @@ import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,7 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
  * persist between restarts.
  */
-public class SystemOptionManager extends BaseOptionManager {
+public class SystemOptionManager extends BaseOptionManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
   private static final CaseInsensitiveMap<OptionValidator> VALIDATORS;
@@ -79,8 +80,9 @@ public class SystemOptionManager extends BaseOptionManager {
       PlannerSettings.PARTITION_SENDER_MAX_THREADS,
       PlannerSettings.PARTITION_SENDER_SET_THREADS,
       PlannerSettings.ENABLE_DECIMAL_DATA_TYPE,
-      PlannerSettings.HEP_JOIN_OPT,
+      PlannerSettings.HEP_OPT,
       PlannerSettings.PLANNER_MEMORY_LIMIT,
+      PlannerSettings.HEP_PARTITION_PRUNING,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
@@ -95,10 +97,12 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.ENABLE_UNION_TYPE,
       ExecConstants.TEXT_ESTIMATED_ROW_SIZE,
       ExecConstants.JSON_EXTENDED_TYPES,
+      ExecConstants.JSON_WRITER_UGLIFY,
       ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
       ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR,
       ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
+      ExecConstants.MONGO_BSON_RECORD_READER_VALIDATOR,
       ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR,
       ExecConstants.SLICE_TARGET_OPTION,
       ExecConstants.AFFINITY_FACTOR,
@@ -122,6 +126,7 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR,
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
+      ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,
@@ -140,19 +145,19 @@ public class SystemOptionManager extends BaseOptionManager {
     VALIDATORS = CaseInsensitiveMap.newImmutableMap(tmp);
   }
 
-  private final PStoreConfig<OptionValue> config;
+  private final PersistentStoreConfig<OptionValue> config;
 
-  private final PStoreProvider provider;
+  private final PersistentStoreProvider provider;
 
   /**
    * Persistent store for options that have been changed from default.
    * NOTE: CRUD operations must use lowercase keys.
    */
-  private PStore<OptionValue> options;
+  private PersistentStore<OptionValue> options;
 
-  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PStoreProvider provider) {
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider) {
     this.provider = provider;
-    this.config =  PStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
+    this.config =  PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
         .name("sys.options")
         .build();
   }
@@ -163,10 +168,10 @@ public class SystemOptionManager extends BaseOptionManager {
    * @return this option manager
    * @throws IOException
    */
-  public SystemOptionManager init() throws IOException {
-    options = provider.getStore(config);
+  public SystemOptionManager init() throws Exception {
+    options = provider.getOrCreateStore(config);
     // if necessary, deprecate and replace options from persistent store
-    for (final Entry<String, OptionValue> option : options) {
+    for (final Entry<String, OptionValue> option : Lists.newArrayList(options.getAll())) {
       final String name = option.getKey();
       final OptionValidator validator = VALIDATORS.get(name);
       if (validator == null) {
@@ -212,7 +217,7 @@ public class SystemOptionManager extends BaseOptionManager {
       buildList.put(entry.getKey(), entry.getValue().getDefault());
     }
     // override if changed
-    for (final Map.Entry<String, OptionValue> entry : options) {
+    for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
       buildList.put(entry.getKey(), entry.getValue());
     }
     return buildList.values().iterator();
@@ -257,7 +262,7 @@ public class SystemOptionManager extends BaseOptionManager {
   public void deleteAllOptions(OptionType type) {
     checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
     final Set<String> names = Sets.newHashSet();
-    for (final Map.Entry<String, OptionValue> entry : options) {
+    for (final Map.Entry<String, OptionValue> entry : Lists.newArrayList(options.getAll())) {
       names.add(entry.getKey());
     }
     for (final String name : names) {
@@ -268,5 +273,10 @@ public class SystemOptionManager extends BaseOptionManager {
   @Override
   public OptionList getOptionList() {
     return (OptionList) IteratorUtils.toList(iterator());
+  }
+
+  @Override
+  public void close() throws Exception {
+    options.close();
   }
 }

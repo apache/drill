@@ -20,6 +20,8 @@ package org.apache.drill.exec.server.rest;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -28,10 +30,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -39,24 +44,26 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Path("/")
+@PermitAll
 public class StatusResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
-  @Inject
-  WorkManager work;
+  @Inject UserAuthEnabled authEnabled;
+  @Inject WorkManager work;
+  @Inject SecurityContext sc;
 
   @GET
   @Path("/status")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
-    String status = "Running!";
-    return new Viewable("/rest/status.ftl", status);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, "Running!");
   }
 
   @GET
   @Path("/options.json")
+  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.APPLICATION_JSON)
-  public List getSystemOptionsJSON() {
+  public List<OptionWrapper> getSystemOptionsJSON() {
     List<OptionWrapper> options = new LinkedList<>();
     for (OptionValue option : work.getContext().getOptionManager()) {
       options.add(new OptionWrapper(option.name, option.getValue(), option.type, option.kind));
@@ -66,13 +73,15 @@ public class StatusResources {
 
   @GET
   @Path("/options")
+  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
   public Viewable getSystemOptions() {
-    return new Viewable("/rest/options.ftl", getSystemOptionsJSON());
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/options.ftl", sc, getSystemOptionsJSON());
   }
 
   @POST
   @Path("/option/{optionName}")
+  @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
   public Viewable updateSystemOption(@FormParam("name") String name, @FormParam("value") String value,

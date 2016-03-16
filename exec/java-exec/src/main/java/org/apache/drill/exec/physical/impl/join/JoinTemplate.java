@@ -42,12 +42,13 @@ public abstract class JoinTemplate implements JoinWorker {
    */
   public final boolean doJoin(final JoinStatus status) {
     final boolean isLeftJoin = (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT);
-
+    status.setHasMoreData(false);
     while (!status.isOutgoingBatchFull()) {
       if (status.right.finished()) {
         if (isLeftJoin) {
           while (!status.left.finished()) {
             if (status.isOutgoingBatchFull()) {
+              status.setHasMoreData(true);
               return true;
             }
             doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
@@ -60,7 +61,7 @@ public abstract class JoinTemplate implements JoinWorker {
       if (status.left.finished()) {
         return true;
       }
-      final int comparison = doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition());
+      final int comparison = Integer.signum(doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition()));
       switch (comparison) {
         case -1:
           // left key < right key
@@ -83,6 +84,13 @@ public abstract class JoinTemplate implements JoinWorker {
             doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
             status.incOutputPos();
           }
+          if (status.isOutgoingBatchFull()) {
+            // Leave iterators at their current positions and markers.
+            // Don't mark on all subsequent doJoin iterations.
+            status.setHasMoreData(true);
+            status.disableMarking();
+            return true;
+          }
           // Move to next position in right iterator.
           status.right.next();
           while (!status.right.finished()) {
@@ -91,8 +99,7 @@ public abstract class JoinTemplate implements JoinWorker {
               doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
               status.incOutputPos();
               if (status.isOutgoingBatchFull()) {
-                // Leave iterators at their current positions and markers.
-                // Don't mark on all subsequent doJoin iterations.
+                status.setHasMoreData(true);
                 status.disableMarking();
                 return true;
               }

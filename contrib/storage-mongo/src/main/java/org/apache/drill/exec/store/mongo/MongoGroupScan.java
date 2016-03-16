@@ -108,7 +108,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private Map<String, List<ChunkInfo>> chunksInverseMapping;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private boolean filterPushedDown = false;
 
@@ -499,12 +499,14 @@ public class MongoGroupScan extends AbstractGroupScan implements
     try{
       MongoClient client = storagePlugin.getClient();
       MongoDatabase db = client.getDatabase(scanSpec.getDbName());
-      MongoCollection<Document> collection = db.getCollection(scanSpec
-          .getCollectionName());
-      String json = collection.find().first().toJson();
-      float approxDiskCost = json.getBytes().length * collection.count();
-      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT,
-          collection.count(), 1, approxDiskCost);
+      MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
+      long numDocs = collection.count();
+      float approxDiskCost = 0;
+      if (numDocs != 0) {
+        String json = collection.find().first().toJson();
+        approxDiskCost = json.getBytes().length * numDocs;
+      }
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);
     } catch (Exception e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     }

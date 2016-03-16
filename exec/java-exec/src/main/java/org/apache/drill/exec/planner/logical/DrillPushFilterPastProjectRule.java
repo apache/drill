@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalFilter;
@@ -29,6 +30,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.util.Util;
@@ -88,17 +90,31 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     Filter filterRel = call.rel(0);
     Project projRel = call.rel(1);
 
-    // Don't push Filter past Project if the Filter is referencing an ITEM or a FLATTEN expression
-    // from the Project.
-    //\TODO: Ideally we should split up the filter conditions into ones that
-    // reference the ITEM expression and ones that don't and push the latter past the Project
-    if (findItemOrFlatten(filterRel.getCondition(), projRel.getProjects()) != null) {
+    // get a conjunctions of the filter condition. For each conjunction, if it refers to ITEM or FLATTEN expression
+    // then we could not pushed down. Otherwise, it's qualified to be pushed down.
+    final List<RexNode> predList = RelOptUtil.conjunctions(filterRel.getCondition());
+
+    final List<RexNode> qualifiedPredList = Lists.newArrayList();
+    final List<RexNode> unqualifiedPredList = Lists.newArrayList();
+
+
+    for (final RexNode pred : predList) {
+      if (findItemOrFlatten(pred, projRel.getProjects()) == null) {
+        qualifiedPredList.add(pred);
+      } else {
+        unqualifiedPredList.add(pred);
+      }
+    }
+
+    final RexNode qualifedPred =RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
+
+    if (qualifedPred == null) {
       return;
     }
 
     // convert the filter to one that references the child of the project
     RexNode newCondition =
-        RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projRel);
+        RelOptUtil.pushFilterPastProject(qualifedPred, projRel);
 
     Filter newFilterRel = LogicalFilter.create(projRel.getInput(), newCondition);
 
@@ -108,7 +124,21 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
             projRel.getNamedProjects(),
             false);
 
-    call.transformTo(newProjRel);
+    final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
+
+    if (unqualifiedPred == null) {
+      call.transformTo(newProjRel);
+    } else {
+      // if there are filters not qualified to be pushed down, then we have to put those filters on top of
+      // the new Project operator.
+      // Filter -- unqualified filters
+      //   \
+      //    Project
+      //     \
+      //      Filter  -- qualified filters
+      Filter filterNotPushed = LogicalFilter.create(newProjRel, unqualifiedPred);
+      call.transformTo(filterNotPushed);
+    }
   }
 
 }

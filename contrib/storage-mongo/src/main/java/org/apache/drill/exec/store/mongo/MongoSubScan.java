@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
-import com.mongodb.BasicDBObject;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -130,7 +130,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     protected Map<String, Object> minFilters;
     protected Map<String, Object> maxFilters;
 
-    protected BasicDBObject filter;
+    protected Document filter;
 
     @JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
@@ -138,7 +138,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
         @JsonProperty("hosts") List<String> hosts,
         @JsonProperty("minFilters") Map<String, Object> minFilters,
         @JsonProperty("maxFilters") Map<String, Object> maxFilters,
-        @JsonProperty("filters") BasicDBObject filters) {
+        @JsonProperty("filters") Document filters) {
       this.dbName = dbName;
       this.collectionName = collectionName;
       this.hosts = hosts;
@@ -196,11 +196,11 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       return this;
     }
 
-    public BasicDBObject getFilter() {
+    public Document getFilter() {
       return filter;
     }
 
-    public MongoSubScanSpec setFilter(BasicDBObject filter) {
+    public MongoSubScanSpec setFilter(Document filter) {
       this.filter = filter;
       return this;
     }

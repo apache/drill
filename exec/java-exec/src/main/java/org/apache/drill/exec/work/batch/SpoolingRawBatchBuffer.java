@@ -30,10 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData;
-import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -82,9 +80,10 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
   private Path path;
   private FSDataOutputStream outputStream;
 
-  public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId, int bufferIndex) throws IOException, OutOfMemoryException {
+  public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId, int bufferIndex) {
     super(context, fragmentCount);
-    this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION, true);
+    this.allocator = context.getNewChildAllocator(
+        "SpoolingRawBatchBufer", 100, ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
     this.oppositeId = oppositeId;
     this.bufferIndex = bufferIndex;
@@ -224,11 +223,10 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   @Override
   protected void upkeep(RawFragmentBatch batch) {
-    FragmentRecordBatch header = batch.getHeader();
-    if (header.getIsOutOfMemory()) {
+    if (context.isOverMemoryLimit()) {
       outOfMemory.set(true);
-      return;
     }
+
     DrillBuf body = batch.getBody();
     if (body != null) {
       currentSizeInMemory -= body.capacity();
@@ -376,8 +374,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     }
 
     public void writeToStream(FSDataOutputStream stream) throws IOException {
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
       available = false;
       check = ThreadLocalRandom.current().nextLong();
       start = stream.getPos();
@@ -423,8 +420,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
           final long check = stream.readLong();
           pos = stream.getPos();
           assert check == this.check : String.format("Check values don't match: %d %d, Position %d", this.check, check, currentPos);
-          Stopwatch watch = new Stopwatch();
-          watch.start();
+          Stopwatch watch = Stopwatch.createStarted();
           BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
           pos = stream.getPos();
           assert header != null : "header null after parsing from stream";

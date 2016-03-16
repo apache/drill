@@ -17,14 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -47,11 +48,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   private int recordCount;
   private long runningBatches;
   private SelectionVector4 sv4;
-  final PreAllocator svAllocator;
-  private boolean svAllocatorUsed = false;
+  private BufferAllocator allocator;
+  final AllocationReservation reservation;
 
   public SortRecordBatchBuilder(BufferAllocator a) {
-    this.svAllocator = a.getNewPreAllocator();
+    this.allocator = a;
+    this.reservation = a.newReservation();
   }
 
   private long getSize(VectorAccessible batch) {
@@ -84,12 +86,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     if (runningBatches >= Character.MAX_VALUE) {
       return false; // allowed in batch.
     }
-    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
+    if (!reservation.add(batch.getRecordCount() * 4)) {
       return false;  // sv allocation available.
     }
 
 
-    RecordBatchData bd = new RecordBatchData(batch);
+    RecordBatchData bd = new RecordBatchData(batch, allocator);
     runningBatches++;
     batches.put(batch.getSchema(), bd);
     recordCount += bd.getRecordCount();
@@ -103,11 +105,11 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
     if(runningBatches >= Character.MAX_VALUE) {
-      final String errMsg = String.format("Tried to add more than %d number of batches.", Character.MAX_VALUE);
+      final String errMsg = String.format("Tried to add more than %d number of batches.", (int) Character.MAX_VALUE);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
-    if(!svAllocator.preAllocate(rbd.getRecordCount()*4)) {
+    if (!reservation.add(rbd.getRecordCount() * 4)) {
       final String errMsg = String.format("Failed to pre-allocate memory for SV. " + "Existing recordCount*4 = %d, " +
           "incoming batch recordCount*4 = %d", recordCount * 4, rbd.getRecordCount() * 4);
       logger.error(errMsg);
@@ -150,11 +152,10 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
 
-    final DrillBuf svBuffer = svAllocator.getAllocation();
+    final DrillBuf svBuffer = reservation.allocateBuffer();
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
-    svAllocatorUsed = true;
     sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
@@ -220,13 +221,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
   @Override
   public void close() {
-    // Don't leak unused pre-allocated memory.
-    if (!svAllocatorUsed) {
-      final DrillBuf drillBuf = svAllocator.getAllocation();
-      if (drillBuf != null) {
-        drillBuf.release();
-      }
-    }
+    reservation.close();
   }
 
   public List<VectorContainer> getHeldRecordBatches() {

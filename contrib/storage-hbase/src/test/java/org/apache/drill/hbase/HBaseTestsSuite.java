@@ -61,6 +61,7 @@ public class HBaseTestsSuite {
   protected static final String TEST_TABLE_FLOAT_OB_DESC = "TestTableFloatOBDesc";
   protected static final String TEST_TABLE_BIGINT_OB_DESC = "TestTableBigIntOBDesc";
   protected static final String TEST_TABLE_INT_OB_DESC = "TestTableIntOBDesc";
+  protected static final String TEST_TABLE_NULL_STR = "TestTableNullStr";
 
   private static Configuration conf;
 
@@ -81,6 +82,8 @@ public class HBaseTestsSuite {
 
   @BeforeClass
   public static void initCluster() throws Exception {
+    GuavaPatcher.patch();
+
     if (initCount.get() == 0) {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {
@@ -157,16 +160,19 @@ public class HBaseTestsSuite {
            && admin.tableExists(TEST_TABLE_DOUBLE_OB_DESC)
            && admin.tableExists(TEST_TABLE_FLOAT_OB_DESC)
            && admin.tableExists(TEST_TABLE_BIGINT_OB_DESC)
-           && admin.tableExists(TEST_TABLE_INT_OB_DESC);
+           && admin.tableExists(TEST_TABLE_INT_OB_DESC)
+           && admin.tableExists(TEST_TABLE_NULL_STR);
   }
 
   private static void createTestTables() throws Exception {
+    // TODO(DRILL-3954):  Change number of regions from 1 to multiple for other
+    // tables and remaining problems not addressed by DRILL-2288 fixes.
     /*
      * We are seeing some issues with (Drill) Filter operator if a group scan span
      * multiple fragments. Hence the number of regions in the HBase table is set to 1.
      * Will revert to multiple region once the issue is resolved.
      */
-    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 1);
+    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 2);
     TestTableGenerator.generateHBaseDataset3(admin, TEST_TABLE_3, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyDate(admin, TEST_TABLE_COMPOSITE_DATE, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyTime(admin, TEST_TABLE_COMPOSITE_TIME, 1);
@@ -179,6 +185,7 @@ public class HBaseTestsSuite {
     TestTableGenerator.generateHBaseDatasetFloatOBDesc(admin, TEST_TABLE_FLOAT_OB_DESC, 1);
     TestTableGenerator.generateHBaseDatasetBigIntOBDesc(admin, TEST_TABLE_BIGINT_OB_DESC, 1);
     TestTableGenerator.generateHBaseDatasetIntOBDesc(admin, TEST_TABLE_INT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetNullStr(admin, TEST_TABLE_NULL_STR, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
@@ -208,6 +215,8 @@ public class HBaseTestsSuite {
     admin.deleteTable(TEST_TABLE_BIGINT_OB_DESC);
     admin.disableTable(TEST_TABLE_INT_OB_DESC);
     admin.deleteTable(TEST_TABLE_INT_OB_DESC);
+    admin.disableTable(TEST_TABLE_NULL_STR);
+    admin.deleteTable(TEST_TABLE_NULL_STR);
   }
 
   public static int getZookeeperPort() {

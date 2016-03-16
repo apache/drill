@@ -27,7 +27,6 @@ import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.io.Closeables;
 import com.google.protobuf.MessageLite;
 
 public class DataClientConnection extends RemoteConnection{
@@ -84,8 +83,5 @@ public class DataClientConnection extends RemoteConnection{
     return true;
   }
 
-  public void shutdownIfClient() {
-    Closeables.closeQuietly(client);
-  }
 
 }

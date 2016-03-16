@@ -24,6 +24,7 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
@@ -36,7 +37,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
 
   private SelectionVector2 vector2;
 
-  public void setup(FragmentContext context, SelectionVector2 vector2, RecordBatch incoming) throws SchemaChangeException{
+  public void setup(FragmentContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
     Preconditions.checkNotNull(vector2);
     this.vector2 = vector2;
     try {
@@ -49,8 +50,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   @Override
   public void sort(SelectionVector2 vector2){
     QuickSort qs = new QuickSort();
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     if (vector2.getCount() > 0) {
       qs.sort(this, 0, vector2.getCount());
     }
@@ -71,7 +71,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     return doEval(sv1, sv2);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract int doEval(@Named("leftIndex") char leftIndex, @Named("rightIndex") char rightIndex);
 
 }

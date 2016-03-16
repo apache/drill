@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -39,15 +39,17 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
     initMongoStoragePlugin();
   }
 
-  public static void initMongoStoragePlugin() throws ExecutionSetupException {
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext()
-        .getStorage();
-    storagePlugin = (MongoStoragePlugin) pluginRegistry
-        .getPlugin(MongoStoragePluginConfig.NAME);
+  public static void initMongoStoragePlugin() throws Exception {
+    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    storagePlugin = (MongoStoragePlugin) pluginRegistry.getPlugin(MongoStoragePluginConfig.NAME);
     storagePluginConfig = storagePlugin.getConfig();
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(MongoStoragePluginConfig.NAME,
-        storagePluginConfig, true);
+    pluginRegistry.createOrUpdate(MongoStoragePluginConfig.NAME, storagePluginConfig, true);
+    if (System.getProperty("drill.mongo.tests.bson.reader", "true").equalsIgnoreCase("false")) {
+      testNoResult(String.format("alter session set `%s` = false", ExecConstants.MONGO_BSON_RECORD_READER));
+    } else {
+      testNoResult(String.format("alter session set `%s` = true", ExecConstants.MONGO_BSON_RECORD_READER));
+    }
   }
 
   public List<QueryDataBatch> runMongoSQLWithResults(String sql)

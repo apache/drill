@@ -141,7 +141,7 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup() {
-            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
@@ -179,7 +179,7 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup() {
-            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
@@ -218,7 +218,7 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup() {
-            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
             buffer = buffer.reallocIfNeeded(size);
             tempResult = new int[${type.storage} * ${type.storage}];
             outputPrecision = Integer.MIN_VALUE;
@@ -387,7 +387,7 @@ public class ${type.name}Functions {
         @Workspace int outputPrecision;
 
         public void setup() {
-            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
@@ -424,7 +424,7 @@ public class ${type.name}Functions {
         @Workspace int outputPrecision;
 
         public void setup() {
-            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }

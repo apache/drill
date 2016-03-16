@@ -72,8 +72,7 @@ public class ImplCreator {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
     final ImplCreator creator = new ImplCreator();
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
 
     try {
       final RootExec rootExec = creator.getRootExec(root, context);
@@ -90,13 +89,9 @@ public class ImplCreator {
 
       return rootExec;
     } catch(Exception e) {
-      e.printStackTrace();
+      AutoCloseables.close(e, creator.getOperators());
       context.fail(e);
-      for(final CloseableRecordBatch crb : creator.getOperators()) {
-        AutoCloseables.close(crb, logger);
-      }
     }
-
     return null;
   }
 
@@ -157,7 +152,7 @@ public class ImplCreator {
 
   /** Helper method to get OperatorCreator (RootCreator or BatchCreator) for given PhysicalOperator (root or non-root) */
   private Object getOpCreator(PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
-    final Class opClass = op.getClass();
+    final Class<? extends PhysicalOperator> opClass = op.getClass();
     Object opCreator = context.getDrillbitContext().getOperatorCreatorRegistry().getOperatorCreator(opClass);
     if (opCreator == null) {
       throw new UnsupportedOperationException(

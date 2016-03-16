@@ -17,14 +17,17 @@
  */
 package org.apache.drill.exec.test;
 
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.hamcrest.CoreMatchers.equalTo;
+
+import org.junit.Test;
 
 
 public class Drill2130JavaExecHamcrestConfigurationTest {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger(Drill2130JavaExecHamcrestConfigurationTest.class);
   @SuppressWarnings("unused")
   private org.hamcrest.MatcherAssert forCompileTimeCheckForNewEnoughHamcrest;
 
@@ -36,9 +39,8 @@ public class Drill2130JavaExecHamcrestConfigurationTest {
     catch ( NoSuchMethodError e ) {
       fail( "Class search path seems broken re new JUnit and old Hamcrest."
              + "  Got NoSuchMethodError;  e: " + e );
-    }
-    catch ( AssertionError e ) {
-      System.out.println( "Class path seems fine re new JUnit vs. old Hamcrest."
+    } catch (AssertionError e) {
+      logger.debug("Class path seems fine re new JUnit vs. old Hamcrest."
                           + " (Got AssertionError, not NoSuchMethodError.)" );
     }
   }

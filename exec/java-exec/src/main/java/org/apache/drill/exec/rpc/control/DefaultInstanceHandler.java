@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.control;
 
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.BitControl.BitStatus;
+import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -46,7 +47,8 @@ public class DefaultInstanceHandler {
       return BitStatus.getDefaultInstance();
     case RpcType.RESP_QUERY_STATUS_VALUE:
       return QueryProfile.getDefaultInstance();
-
+    case RpcType.RESP_CUSTOM_VALUE:
+      return CustomMessage.getDefaultInstance();
     default:
       throw new UnsupportedOperationException();
     }

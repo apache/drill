@@ -22,8 +22,10 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 
@@ -60,17 +62,27 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null);
-          Statement s = c.createStatement();
-          ResultSet result = s.executeQuery("select * from (VALUES 1)");) {
-        while (result.next()) {
-          System.out.println(result.getObject(1));
-        }
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
+        String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
+        printQuery(c, "select * from dfs.`" + path + "`");
       }
     } catch (Exception ex) {
       throw ex;
     }
 
+  }
+
+  private static void printQuery(Connection c, String query) throws SQLException {
+    try (Statement s = c.createStatement(); ResultSet result = s.executeQuery(query)) {
+      while (result.next()) {
+        final int columnCount = result.getMetaData().getColumnCount();
+        for(int i = 1; i < columnCount+1; i++){
+          System.out.print(result.getObject(i));
+          System.out.print('\t');
+        }
+        System.out.println(result.getObject(1));
+      }
+    }
   }
 
 
@@ -96,7 +108,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       return classes.size();
     } catch (Exception e) {
       System.out.println("Failure while loading class count.");
@@ -108,7 +120,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       for (Class<?> c : classes) {
         System.out.println(prefix + ": " + c.getName());
       }

@@ -67,12 +67,8 @@ public class TestWriteToDisk extends ExecTest {
       bit.run();
       final DrillbitContext context = bit.getContext();
 
-      final MaterializedField intField = MaterializedField.create(
-          new SchemaPath("int", ExpressionPosition.UNKNOWN),
-          Types.required(TypeProtos.MinorType.INT));
-      final MaterializedField binField = MaterializedField.create(
-          new SchemaPath("binary", ExpressionPosition.UNKNOWN),
-          Types.required(TypeProtos.MinorType.VARBINARY));
+      final MaterializedField intField = MaterializedField.create("int", Types.required(TypeProtos.MinorType.INT));
+      final MaterializedField binField = MaterializedField.create("binary", Types.required(TypeProtos.MinorType.VARBINARY));
       try (final IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, context.getAllocator());
           final VarBinaryVector binVector =
               (VarBinaryVector) TypeHelper.getNewVector(binField, context.getAllocator())) {

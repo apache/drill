@@ -17,17 +17,15 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.util.AssertionUtil;
-
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
+
+import org.apache.drill.exec.memory.BoundsChecking;
 
 import com.google.common.primitives.UnsignedLongs;
 
 public final class XXHash {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
-
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
 
   static final long PRIME64_1 = UnsignedLongs.decode("11400714785074694791");
   static final long PRIME64_2 = UnsignedLongs.decode("14029467366897019727");
@@ -168,7 +166,7 @@ public final class XXHash {
   }
 
   public static long hash64(int start, int end, DrillBuf buffer, long seed){
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buffer.checkBytes(start, end);
     }
 
@@ -180,23 +178,36 @@ public final class XXHash {
 
   /* 32 bit variations */
   public static int hash32(int val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(long val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(float val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(double val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(int start, int end, DrillBuf buffer, long seed){
-    return (int) hash64(start, end, buffer, seed);
+    return convert64To32(hash64(start, end, buffer, seed));
+  }
+
+  /**
+   * Convert a 64 bit hash value to a 32 bit by taking the XOR of the
+   * most significant 4 bytes with the least significant 4 bytes.
+   * @param val the input 64 bit hash value
+   * @return converted 32 bit hash value
+   */
+  private static int convert64To32(long val) {
+
+    int msb = (int) ((val >>> 32) & 0xFFFFFFFF);
+    int lsb = (int) (val);
+    return (msb ^ lsb);
   }
 
 }

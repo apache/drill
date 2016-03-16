@@ -47,7 +47,7 @@ public class WindowDataBatch implements VectorAccessible {
       if (v.isHyper()) {
         throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
       }
-      TransferPair tp = v.getValueVector().getTransferPair();
+      TransferPair tp = v.getValueVector().getTransferPair(oContext.getAllocator());
       tp.transfer();
       vectors.add(tp.getTo());
     }

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -104,7 +104,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       }
 
       // Check if schema has changed
-      if (callBack.getSchemaChange()) {
+      if (callBack.getSchemaChangedAndReset()) {
         return IterOutcome.OK_NEW_SCHEMA;
       }
 

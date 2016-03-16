@@ -73,6 +73,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         currentDefinitionLevel = -1;
         definitionLevelsRead = 0;
         recordsReadInThisIteration = 0;
+        readStartInBytes = 0;
       }
 
       nullRunLength = 0;
@@ -153,10 +154,10 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
 
         writeCount += runLength;
         valuesReadInCurrentPass += runLength;
+        pageReader.readPosInBytes = readStartInBytes + readLength;
       }
 
       pageReader.valuesRead += recordsReadInThisIteration;
-      pageReader.readPosInBytes = readStartInBytes + readLength;
 
       totalValuesRead += runLength + nullRunLength;
 

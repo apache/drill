@@ -17,41 +17,64 @@
  */
 package org.apache.drill.common;
 
-import org.slf4j.Logger;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * Utilities for AutoCloseable classes.
  */
 public class AutoCloseables {
-  /**
-   * Close an {@link AutoCloseable}, catching and logging any exceptions at
-   * INFO level.
-   *
-   * <p>This can be dangerous if there is any possibility of recovery. See
-   * the <a href="https://code.google.com/p/guava-libraries/issues/detail?id=1118">
-   * notes regarding the deprecation of Guava's
-   * {@link com.google.common.io.Closeables#closeQuietly}</a>.
-   *
-   * @param ac the AutoCloseable to close
-   * @param logger the logger to use to record the exception if there was one
-   */
-  public static void close(final AutoCloseable ac, final Logger logger) {
-    if (ac == null) {
-      return;
-    }
 
+  public static AutoCloseable all(final Collection<? extends AutoCloseable> autoCloseables) {
+    return new AutoCloseable() {
+      @Override
+      public void close() throws Exception {
+        AutoCloseables.close(autoCloseables);
+      }
+    };
+  }
+
+  /**
+   * Closes all autoCloseables if not null and suppresses exceptions by adding them to t
+   * @param t the throwable to add suppressed exception to
+   * @param autoCloseables the closeables to close
+   */
+  public static void close(Throwable t, AutoCloseable... autoCloseables) {
+    close(t, Arrays.asList(autoCloseables));
+  }
+
+  /**
+   * Closes all autoCloseables if not null and suppresses exceptions by adding them to t
+   * @param t the throwable to add suppressed exception to
+   * @param autoCloseables the closeables to close
+   */
+  public static void close(Throwable t, Collection<? extends AutoCloseable> autoCloseables) {
     try {
-      ac.close();
-    } catch(Exception e) {
-      logger.warn("Failure on close(): {}", e);
+      close(autoCloseables);
+    } catch (Exception e) {
+      t.addSuppressed(e);
     }
   }
 
-  public static void close(AutoCloseable[] ac) throws Exception {
+  /**
+   * Closes all autoCloseables if not null and suppresses subsequent exceptions if more than one
+   * @param autoCloseables the closeables to close
+   */
+  public static void close(AutoCloseable... autoCloseables) throws Exception {
+    close(Arrays.asList(autoCloseables));
+  }
+
+  /**
+   * Closes all autoCloseables if not null and suppresses subsequent exceptions if more than one
+   * @param autoCloseables the closeables to close
+   */
+  public static void close(Iterable<? extends AutoCloseable> ac) throws Exception {
     Exception topLevelException = null;
     for (AutoCloseable closeable : ac) {
       try {
-        closeable.close();
+        if (closeable != null) {
+          closeable.close();
+        }
       } catch (Exception e) {
         if (topLevelException == null) {
           topLevelException = e;

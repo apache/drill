@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.planner.sql.logical;
 
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PartitionDescriptor;
@@ -27,6 +29,7 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.sql.HivePartitionDescriptor;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveScan;
@@ -42,8 +45,8 @@ public abstract class HivePushPartitionFilterIntoScan {
         optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+        return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
 
@@ -52,14 +55,18 @@ public abstract class HivePushPartitionFilterIntoScan {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for Hive based partition pruning
-        return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
+        final DrillFilterRel filterRel =  call.rel(0);
+        final DrillProjectRel projectRel = call.rel(1);
+        final DrillScanRel scanRel = call.rel(2);
         doOnMatch(call, filterRel, projectRel, scanRel);
       }
     };
@@ -72,8 +79,8 @@ public abstract class HivePushPartitionFilterIntoScan {
         "HivePushPartitionFilterIntoScan:Filter_On_Scan_Hive", optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
+        return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
 
@@ -82,13 +89,17 @@ public abstract class HivePushPartitionFilterIntoScan {
         final DrillScanRel scan = (DrillScanRel) call.rel(1);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for Hive based partition pruning
-        return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+        final DrillFilterRel filterRel = call.rel(0);
+        final DrillScanRel scanRel = call.rel(1);
         doOnMatch(call, filterRel, null, scanRel);
       }
     };

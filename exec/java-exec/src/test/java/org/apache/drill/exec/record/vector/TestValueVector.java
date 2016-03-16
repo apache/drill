@@ -20,16 +20,12 @@ package org.apache.drill.exec.record.vector;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
@@ -47,10 +43,11 @@ import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.UInt1Holder;
 import org.apache.drill.exec.expr.holders.UInt4Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -60,6 +57,7 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
@@ -67,10 +65,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+
+import io.netty.buffer.DrillBuf;
+
 public class TestValueVector extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
-  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
+  private final static String EMPTY_SCHEMA_PATH = "";
 
   private DrillConfig drillConfig;
   private BufferAllocator allocator;
@@ -156,11 +159,11 @@ public class TestValueVector extends ExecTest {
     final int expectedOffsetSize = 10;
     try {
       vector.allocateNew(expectedAllocationInBytes, 10);
-      assertEquals(expectedOffsetSize, vector.getValueCapacity());
-      assertEquals(expectedAllocationInBytes, vector.getBuffer().capacity());
+      assertTrue(expectedOffsetSize <= vector.getValueCapacity());
+      assertTrue(expectedAllocationInBytes <= vector.getBuffer().capacity());
       vector.reAlloc();
-      assertEquals(expectedOffsetSize * 2, vector.getValueCapacity());
-      assertEquals(expectedAllocationInBytes * 2, vector.getBuffer().capacity());
+      assertTrue(expectedOffsetSize * 2 <= vector.getValueCapacity());
+      assertTrue(expectedAllocationInBytes * 2 <= vector.getBuffer().capacity());
     } finally {
       vector.close();
     }
@@ -666,8 +669,11 @@ the interface to load has changed
       for (int i = 0; i < valueVectors.length; i++) {
         final ValueVector vv = valueVectors[i];
         final int vvCapacity = vv.getValueCapacity();
-        assertEquals(String.format("Incorrect value capacity for %s [%d]", vv.getField(), vvCapacity),
-            initialCapacity, vvCapacity);
+
+        // this can't be equality because Nullables will be allocated using power of two sized buffers (thus need 1025
+        // spots in one vector > power of two is 2048, available capacity will be 2048 => 2047)
+        assertTrue(String.format("Incorrect value capacity for %s [%d]", vv.getField(), vvCapacity),
+            initialCapacity <= vvCapacity);
       }
     } finally {
       AutoCloseables.close(valueVectors);
@@ -741,7 +747,7 @@ the interface to load has changed
     final VectorVerifier noChild = new ChildVerifier();
     final VectorVerifier offsetChild = new ChildVerifier(UInt4Holder.TYPE);
 
-    final ImmutableMap.Builder<Class, VectorVerifier> builder = ImmutableMap.builder();
+    final ImmutableMap.Builder<Class<? extends ValueVector>, VectorVerifier> builder = ImmutableMap.builder();
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
@@ -749,14 +755,14 @@ the interface to load has changed
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
-    final ImmutableMap<Class, VectorVerifier> children = builder.build();
+    final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
 
     testVectors(new VectorVerifier() {
 
       @Override
       public void verify(ValueVector vector) throws Exception {
 
-        final Class klazz = vector.getClass();
+        final Class<?> klazz = vector.getClass();
         final VectorVerifier verifier = children.get(klazz);
         verifier.verify(vector);
       }
@@ -785,4 +791,23 @@ the interface to load has changed
       }
     });
   }
+
+  @Test
+  public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
+            Types.optional(TypeProtos.MinorType.LIST));
+    ListVector vector = new ListVector(field, allocator, null);
+    ListVector vectorFrom = new ListVector(field, allocator, null);
+    vectorFrom.allocateNew();
+
+    for (int i = 0; i < 10000; i++) {
+      vector.allocateNew();
+      vector.copyFromSafe(0, 0, vectorFrom);
+      vector.clear();
+    }
+
+    vectorFrom.clear();
+    vector.clear();
+  }
+
 }

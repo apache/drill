@@ -32,14 +32,16 @@ import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-
+/**
+ * Holds record batch loaded from record batch message.
+ */
 public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapper<?>>{
   private final static Logger logger = LoggerFactory.getLogger(RecordBatchLoader.class);
 
@@ -48,6 +50,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   private int valueCount;
   private BatchSchema schema;
 
+
+  /**
+   * Constructs a loader using the given allocator for vector buffer allocation.
+   */
   public RecordBatchLoader(BufferAllocator allocator) {
     this.allocator = Preconditions.checkNotNull(allocator);
   }
@@ -72,10 +78,15 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     valueCount = def.getRecordCount();
     boolean schemaChanged = schema == null;
 
-    final Map<MaterializedField, ValueVector> oldFields = Maps.newHashMap();
+    // Load vectors from the batch buffer, while tracking added and/or removed
+    // vectors (relative to the previous call) in order to determine whether the
+    // the schema has changed since the previous call.
+
+    // Set up to recognize previous fields that no longer exist.
+    final Map<String, ValueVector> oldFields = Maps.newHashMap();
     for(final VectorWrapper<?> wrapper : container) {
       final ValueVector vector = wrapper.getValueVector();
-      oldFields.put(vector.getField(), vector);
+      oldFields.put(vector.getField().getPath(), vector);
     }
 
     final VectorContainer newVectors = new VectorContainer();
@@ -84,18 +95,21 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       int bufOffset = 0;
       for(final SerializedField field : fields) {
         final MaterializedField fieldDef = MaterializedField.create(field);
-        ValueVector vector = oldFields.remove(fieldDef);
+        ValueVector vector = oldFields.remove(fieldDef.getPath());
 
         if (vector == null) {
+          // Field did not exist previously--is schema change.
           schemaChanged = true;
           vector = TypeHelper.getNewVector(fieldDef, allocator);
         } else if (!vector.getField().getType().equals(fieldDef.getType())) {
+          // Field had different type before--is schema change.
           // clear previous vector
           vector.clear();
           schemaChanged = true;
           vector = TypeHelper.getNewVector(fieldDef, allocator);
         }
 
+        // Load the vector.
         if (field.getValueCount() == 0) {
           AllocationHelper.allocate(vector, 0, 0, 0);
         } else {
@@ -105,7 +119,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         newVectors.add(vector);
       }
 
-      Preconditions.checkArgument(buf == null || bufOffset == buf.capacity());
 
       // rebuild the schema.
       final SchemaBuilder builder = BatchSchema.newBuilder();
@@ -179,10 +192,23 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return schema;
   }
 
-  public void clear() {
-    container.clear();
+  public void resetRecordCount() {
+    valueCount = 0;
   }
 
+  /**
+   * Clears this loader, which clears the internal vector container (see
+   * {@link VectorContainer#clear}) and resets the record count to zero.
+   */
+  public void clear() {
+    container.clear();
+    resetRecordCount();
+  }
+
+  /**
+   * Sorts vectors into canonical order (by field name).  Updates schema and
+   * internal vector container.
+   */
   public void canonicalize() {
     //logger.debug( "RecordBatchLoader : before schema " + schema);
     container = VectorContainer.canonicalize(container);

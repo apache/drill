@@ -34,13 +34,13 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
@@ -102,6 +102,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private JoinWorker worker;
   private boolean areNullsEqual = false; // whether nulls compare equal
 
+
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
 
@@ -112,7 +113,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
     this.left = left;
-    this.leftIterator = new RecordIterator(left, this, oContext, 0);
+    this.leftIterator = new RecordIterator(left, this, oContext, 0, false);
     this.right = right;
     this.rightIterator = new RecordIterator(right, this, oContext, 1);
     this.joinType = popConfig.getJoinType();
@@ -381,13 +382,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void allocateBatch(boolean newSchema) {
-    // allocate new batch space.
-    container.zeroVectors();
-
     boolean leftAllowed = status.getLeftStatus() != IterOutcome.NONE;
     boolean rightAllowed = status.getRightStatus() != IterOutcome.NONE;
 
     if (newSchema) {
+      container.clear();
       // add fields from both batches
       if (leftAllowed) {
         for (VectorWrapper<?> w : leftIterator) {
@@ -423,6 +422,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           }
         }
       }
+    } else {
+      container.zeroVectors();
     }
     for (VectorWrapper w : container) {
       AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
@@ -477,9 +478,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   private LogicalExpression materializeExpression(LogicalExpression expression, IterOutcome lastStatus,
                                                   VectorAccessible input, ErrorCollector collector) throws ClassTransformationException {
-    LogicalExpression materializedExpr = null;
+    LogicalExpression materializedExpr;
     if (lastStatus != IterOutcome.NONE) {
-      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry());
+      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry(), unionTypeEnabled);
     } else {
       materializedExpr = new TypedNullConstant(Types.optional(MinorType.INT));
     }

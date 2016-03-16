@@ -18,9 +18,13 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -40,22 +44,28 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 import com.google.common.collect.Lists;
@@ -76,30 +86,42 @@ public class HiveRecordReader extends AbstractRecordReader {
   protected List<String> selectedPartitionNames = Lists.newArrayList();
   protected List<TypeInfo> selectedPartitionTypes = Lists.newArrayList();
   protected List<Object> selectedPartitionValues = Lists.newArrayList();
-  protected List<String> tableColumns; // all columns in table (not including partition columns)
-  protected SerDe serde;
-  protected StructObjectInspector sInspector;
-  protected Object key, value;
-  protected org.apache.hadoop.mapred.RecordReader reader;
+
+  // SerDe of the reading partition (or table if the table is non-partitioned)
+  protected SerDe partitionSerDe;
+
+  // ObjectInspector to read data from partitionSerDe (for a non-partitioned table this is same as the table
+  // ObjectInspector).
+  protected StructObjectInspector partitionOI;
+
+  // Final ObjectInspector. We may not use the partitionOI directly if there are schema changes between the table and
+  // partition. If there are no schema changes then this is same as the partitionOI.
+  protected StructObjectInspector finalOI;
+
+  // Converter which converts data from partition schema to table schema.
+  private Converter partTblObjectInspectorConverter;
+
+  protected Object key;
+  protected RecordReader<Object, Object> reader;
   protected List<ValueVector> vectors = Lists.newArrayList();
   protected List<ValueVector> pVectors = Lists.newArrayList();
-  protected Object redoRecord;
   protected boolean empty;
-  private Map<String, String> hiveConfigOverride;
+  private HiveConf hiveConf;
   private FragmentContext fragmentContext;
   private String defaultPartitionValue;
   private final UserGroupInformation proxyUgi;
+  private SkipRecordsInspector skipRecordsInspector;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-                          FragmentContext context, Map<String, String> hiveConfigOverride,
+                          FragmentContext context, final HiveConf hiveConf,
                           UserGroupInformation proxyUgi) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
     this.empty = (inputSplit == null && partition == null);
-    this.hiveConfigOverride = hiveConfigOverride;
+    this.hiveConf = hiveConf;
     this.fragmentContext = context;
     this.proxyUgi = proxyUgi;
     this.managedBuffer = fragmentContext.getManagedBuffer().reallocIfNeeded(256);
@@ -107,78 +129,67 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   private void init() throws ExecutionSetupException {
-    Properties properties;
-    JobConf job = new JobConf();
-    if (partition != null) {
-      properties = MetaStoreUtils.getPartitionMetadata(partition, table);
-
-      // SerDe expects properties from Table, but above call doesn't add Table properties.
-      // Include Table properties in final list in order to not to break SerDes that depend on
-      // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
-      for (Map.Entry<String, String> entry : table.getParameters().entrySet()) {
-        if (entry.getKey() != null && entry.getKey() != null) {
-          properties.put(entry.getKey(), entry.getValue());
-        }
-      }
-    } else {
-      properties = MetaStoreUtils.getTableMetadata(table);
-    }
-    for (Object obj : properties.keySet()) {
-      job.set((String) obj, (String) properties.get(obj));
-    }
-    for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-      job.set(entry.getKey(), entry.getValue());
-    }
+    final JobConf job = new JobConf(hiveConf);
 
     // Get the configured default val
-    defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(hiveConfigOverride);
+    defaultPartitionValue = hiveConf.get(ConfVars.DEFAULTPARTITIONNAME.varname);
 
-    InputFormat format;
-    String sLib = (partition == null) ? table.getSd().getSerdeInfo().getSerializationLib() : partition.getSd().getSerdeInfo().getSerializationLib();
-    String inputFormatName = (partition == null) ? table.getSd().getInputFormat() : partition.getSd().getInputFormat();
+    Properties tableProperties;
     try {
-      format = (InputFormat) Class.forName(inputFormatName).getConstructor().newInstance();
-      Class<?> c = Class.forName(sLib);
-      serde = (SerDe) c.getConstructor().newInstance();
-      serde.initialize(job, properties);
-    } catch (ReflectiveOperationException | SerDeException e) {
-      throw new ExecutionSetupException("Unable to instantiate InputFormat", e);
-    }
-    job.setInputFormat(format.getClass());
+      tableProperties = MetaStoreUtils.getTableMetadata(table);
+      final Properties partitionProperties =
+          (partition == null) ?  tableProperties :
+              HiveUtilities.getPartitionMetadata(partition, table);
+      HiveUtilities.addConfToJob(job, partitionProperties);
 
-    List<FieldSchema> partitionKeys = table.getPartitionKeys();
-    List<String> partitionNames = Lists.newArrayList();
-    for (FieldSchema field : partitionKeys) {
-      partitionNames.add(field.getName());
-    }
+      final SerDe tableSerDe = createSerDe(job, table.getSd().getSerdeInfo().getSerializationLib(), tableProperties);
+      final StructObjectInspector tableOI = getStructOI(tableSerDe);
 
-    try {
-      ObjectInspector oi = serde.getObjectInspector();
-      if (oi.getCategory() != ObjectInspector.Category.STRUCT) {
-        throw new UnsupportedOperationException(String.format("%s category not supported", oi.getCategory()));
+      if (partition != null) {
+        partitionSerDe = createSerDe(job, partition.getSd().getSerdeInfo().getSerializationLib(), partitionProperties);
+        partitionOI = getStructOI(partitionSerDe);
+
+        finalOI = (StructObjectInspector)ObjectInspectorConverters.getConvertedOI(partitionOI, tableOI);
+        partTblObjectInspectorConverter = ObjectInspectorConverters.getConverter(partitionOI, finalOI);
+        job.setInputFormat(HiveUtilities.getInputFormatClass(job, partition.getSd(), table));
+      } else {
+        // For non-partitioned tables, there is no need to create converter as there are no schema changes expected.
+        partitionSerDe = tableSerDe;
+        partitionOI = tableOI;
+        partTblObjectInspectorConverter = null;
+        finalOI = tableOI;
+        job.setInputFormat(HiveUtilities.getInputFormatClass(job, table.getSd(), table));
       }
-      sInspector = (StructObjectInspector) oi;
-      StructTypeInfo sTypeInfo = (StructTypeInfo) TypeInfoUtils.getTypeInfoFromObjectInspector(sInspector);
-      List<Integer> columnIds = Lists.newArrayList();
+
+      // Get list of partition column names
+      final List<String> partitionNames = Lists.newArrayList();
+      for (FieldSchema field : table.getPartitionKeys()) {
+        partitionNames.add(field.getName());
+      }
+
+      // We should always get the columns names from ObjectInspector. For some of the tables (ex. avro) metastore
+      // may not contain the schema, instead it is derived from other sources such as table properties or external file.
+      // SerDe object knows how to get the schema with all the config and table properties passed in initialization.
+      // ObjectInspector created from the SerDe object has the schema.
+      final StructTypeInfo sTypeInfo = (StructTypeInfo) TypeInfoUtils.getTypeInfoFromObjectInspector(finalOI);
+      final List<String> tableColumnNames = sTypeInfo.getAllStructFieldNames();
+
+      // Select list of columns for project pushdown into Hive SerDe readers.
+      final List<Integer> columnIds = Lists.newArrayList();
       if (isStarQuery()) {
-        selectedColumnNames = sTypeInfo.getAllStructFieldNames();
-        tableColumns = selectedColumnNames;
+        selectedColumnNames = tableColumnNames;
         for(int i=0; i<selectedColumnNames.size(); i++) {
           columnIds.add(i);
         }
+        selectedPartitionNames = partitionNames;
       } else {
-        tableColumns = sTypeInfo.getAllStructFieldNames();
         selectedColumnNames = Lists.newArrayList();
         for (SchemaPath field : getColumns()) {
           String columnName = field.getRootSegment().getPath();
-          if (!tableColumns.contains(columnName)) {
-            if (partitionNames.contains(columnName)) {
-              selectedPartitionNames.add(columnName);
-            } else {
-              throw new ExecutionSetupException(String.format("Column %s does not exist", columnName));
-            }
+          if (partitionNames.contains(columnName)) {
+            selectedPartitionNames.add(columnName);
           } else {
-            columnIds.add(tableColumns.indexOf(columnName));
+            columnIds.add(tableColumnNames.indexOf(columnName));
             selectedColumnNames.add(columnName);
           }
         }
@@ -186,16 +197,12 @@ public class HiveRecordReader extends AbstractRecordReader {
       ColumnProjectionUtils.appendReadColumns(job, columnIds, selectedColumnNames);
 
       for (String columnName : selectedColumnNames) {
-        ObjectInspector fieldOI = sInspector.getStructFieldRef(columnName).getFieldObjectInspector();
+        ObjectInspector fieldOI = finalOI.getStructFieldRef(columnName).getFieldObjectInspector();
         TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(fieldOI.getTypeName());
 
         selectedColumnObjInspectors.add(fieldOI);
         selectedColumnTypes.add(typeInfo);
         selectedColumnFieldConverters.add(HiveFieldConverter.create(typeInfo, fragmentContext));
-      }
-
-      if (isStarQuery()) {
-        selectedPartitionNames = partitionNames;
       }
 
       for (int i = 0; i < table.getPartitionKeys().size(); i++) {
@@ -216,17 +223,36 @@ public class HiveRecordReader extends AbstractRecordReader {
 
     if (!empty) {
       try {
-        reader = format.getRecordReader(inputSplit, job, Reporter.NULL);
-      } catch (IOException e) {
+        reader = (org.apache.hadoop.mapred.RecordReader<Object, Object>) job.getInputFormat().getRecordReader(inputSplit, job, Reporter.NULL);
+      } catch (Exception e) {
         throw new ExecutionSetupException("Failed to get o.a.hadoop.mapred.RecordReader from Hive InputFormat", e);
       }
       key = reader.createKey();
-      value = reader.createValue();
+      skipRecordsInspector = new SkipRecordsInspector(tableProperties, reader);
     }
   }
 
+  /**
+   * Utility method which creates a SerDe object for given SerDe class name and properties.
+   */
+  private static SerDe createSerDe(final JobConf job, final String sLib, final Properties properties) throws Exception {
+    final Class<? extends SerDe> c = Class.forName(sLib).asSubclass(SerDe.class);
+    final SerDe serde = c.getConstructor().newInstance();
+    serde.initialize(job, properties);
+
+    return serde;
+  }
+
+  private static StructObjectInspector getStructOI(final SerDe serDe) throws Exception {
+    ObjectInspector oi = serDe.getObjectInspector();
+    if (oi.getCategory() != ObjectInspector.Category.STRUCT) {
+      throw new UnsupportedOperationException(String.format("%s category not supported", oi.getCategory()));
+    }
+    return (StructObjectInspector) oi;
+  }
+
   @Override
-  public void setup(@SuppressWarnings("unused") OperatorContext context, OutputMutator output)
+  public void setup(OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
     // initializes "reader"
     final Callable<Void> readerInitializer = new Callable<Void>() {
@@ -252,15 +278,15 @@ public class HiveRecordReader extends AbstractRecordReader {
       final OptionManager options = fragmentContext.getOptions();
       for (int i = 0; i < selectedColumnNames.size(); i++) {
         MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), options);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedColumnNames.get(i)), type);
-        Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
+        MaterializedField field = MaterializedField.create(selectedColumnNames.get(i), type);
+        Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
         vectors.add(output.addField(field, vvClass));
       }
 
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i), options);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedPartitionNames.get(i)), type);
-        Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        MaterializedField field = MaterializedField.create(selectedPartitionNames.get(i), type);
+        Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         pVectors.add(output.addField(field, vvClass));
       }
     } catch(SchemaChangeException e) {
@@ -268,6 +294,16 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
+  /**
+   * To take into account Hive "skip.header.lines.count" property first N values from file are skipped.
+   * Since file can be read in batches (depends on TARGET_RECORD_COUNT), additional checks are made
+   * to determine if it's new file or continuance.
+   *
+   * To take into account Hive "skip.footer.lines.count" property values are buffered in queue
+   * until queue size exceeds number of footer lines to skip, then first value in queue is retrieved.
+   * Buffer of value objects is used to re-use value objects in order to reduce number of created value objects.
+   * For each new file queue is cleared to drop footer lines from previous file.
+   */
   @Override
   public int next() {
     for (ValueVector vv : vectors) {
@@ -279,49 +315,43 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
 
     try {
+      skipRecordsInspector.reset();
       int recordCount = 0;
-
-      if (redoRecord != null) {
-        // Try writing the record that didn't fit into the last RecordBatch
-        Object deSerializedValue = serde.deserialize((Writable) redoRecord);
-        boolean status = readHiveRecordAndInsertIntoRecordBatch(deSerializedValue, recordCount);
-        if (!status) {
-          throw new DrillRuntimeException("Current record is too big to fit into allocated ValueVector buffer");
+      Object value;
+      while (recordCount < TARGET_RECORD_COUNT && reader.next(key, value = skipRecordsInspector.getNextValue())) {
+        if (skipRecordsInspector.doSkipHeader(recordCount++)) {
+          continue;
         }
-        redoRecord = null;
-        recordCount++;
+        Object bufferedValue = skipRecordsInspector.bufferAdd(value);
+        if (bufferedValue != null) {
+          Object deSerializedValue = partitionSerDe.deserialize((Writable) bufferedValue);
+          if (partTblObjectInspectorConverter != null) {
+            deSerializedValue = partTblObjectInspectorConverter.convert(deSerializedValue);
+          }
+          readHiveRecordAndInsertIntoRecordBatch(deSerializedValue, skipRecordsInspector.getActualCount());
+          skipRecordsInspector.incrementActualCount();
+        }
+        skipRecordsInspector.incrementTempCount();
       }
 
-      while (recordCount < TARGET_RECORD_COUNT && reader.next(key, value)) {
-        Object deSerializedValue = serde.deserialize((Writable) value);
-        boolean status = readHiveRecordAndInsertIntoRecordBatch(deSerializedValue, recordCount);
-        if (!status) {
-          redoRecord = value;
-          setValueCountAndPopulatePartitionVectors(recordCount);
-          return recordCount;
-        }
-        recordCount++;
-      }
-
-      setValueCountAndPopulatePartitionVectors(recordCount);
-      return recordCount;
+      setValueCountAndPopulatePartitionVectors(skipRecordsInspector.getActualCount());
+      skipRecordsInspector.updateContinuance();
+      return skipRecordsInspector.getActualCount();
     } catch (IOException | SerDeException e) {
       throw new DrillRuntimeException(e);
     }
   }
 
-  private boolean readHiveRecordAndInsertIntoRecordBatch(Object deSerializedValue, int outputRecordIndex) {
+  private void readHiveRecordAndInsertIntoRecordBatch(Object deSerializedValue, int outputRecordIndex) {
     for (int i = 0; i < selectedColumnNames.size(); i++) {
-      String columnName = selectedColumnNames.get(i);
-      Object hiveValue = sInspector.getStructFieldData(deSerializedValue, sInspector.getStructFieldRef(columnName));
+      final String columnName = selectedColumnNames.get(i);
+      Object hiveValue = finalOI.getStructFieldData(deSerializedValue, finalOI.getStructFieldRef(columnName));
 
       if (hiveValue != null) {
         selectedColumnFieldConverters.get(i).setSafeValue(selectedColumnObjInspectors.get(i), hiveValue,
             vectors.get(i), outputRecordIndex);
       }
     }
-
-    return true;
   }
 
   private void setValueCountAndPopulatePartitionVectors(int recordCount) {
@@ -358,6 +388,128 @@ public class HiveRecordReader extends AbstractRecordReader {
       }
 
       vector.getMutator().setValueCount(recordCount);
+    }
+  }
+
+  /**
+   * SkipRecordsInspector encapsulates logic to skip header and footer from file.
+   * Logic is applicable only for predefined in constructor file formats.
+   */
+  private class SkipRecordsInspector {
+
+    private final Set<Object> fileFormats;
+    private int headerCount;
+    private int footerCount;
+    private Queue<Object> footerBuffer;
+    // indicates if we continue reading the same file
+    private boolean continuance;
+    private int holderIndex;
+    private List<Object> valueHolder;
+    private int actualCount;
+    // actualCount without headerCount, used to determine holderIndex
+    private int tempCount;
+
+    private SkipRecordsInspector(Properties tableProperties, RecordReader reader) {
+      this.fileFormats = new HashSet<Object>(Arrays.asList(org.apache.hadoop.mapred.TextInputFormat.class.getName()));
+      this.headerCount = retrievePositiveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, 0);
+      this.footerCount = retrievePositiveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, 0);
+      this.footerBuffer = Lists.newLinkedList();
+      this.continuance = false;
+      this.holderIndex = -1;
+      this.valueHolder = initializeValueHolder(reader, footerCount);
+      this.actualCount = 0;
+      this.tempCount = 0;
+    }
+
+    private boolean doSkipHeader(int recordCount) {
+      return !continuance && recordCount < headerCount;
+    }
+
+    private void reset() {
+      tempCount = holderIndex + 1;
+      actualCount = 0;
+      if (!continuance) {
+        footerBuffer.clear();
+      }
+    }
+
+    private Object bufferAdd(Object value) throws SerDeException {
+      footerBuffer.add(value);
+      if (footerBuffer.size() <= footerCount) {
+        return null;
+      }
+      return footerBuffer.poll();
+    }
+
+    private Object getNextValue() {
+      holderIndex = tempCount % getHolderSize();
+      return valueHolder.get(holderIndex);
+    }
+
+    private int getHolderSize() {
+      return valueHolder.size();
+    }
+
+    private void updateContinuance() {
+      this.continuance = actualCount != 0;
+    }
+
+    private int incrementTempCount() {
+      return ++tempCount;
+    }
+
+    private int getActualCount() {
+      return actualCount;
+    }
+
+    private int incrementActualCount() {
+      return ++actualCount;
+    }
+
+    /**
+     * Retrieves positive numeric property from Properties object by name.
+     * Return default value if
+     * 1. file format is absent in predefined file formats list
+     * 2. property doesn't exist in table properties
+     * 3. property value is negative
+     * otherwise casts value to int.
+     *
+     * @param tableProperties property holder
+     * @param propertyName    name of the property
+     * @param defaultValue    default value
+     * @return property numeric value
+     * @throws NumberFormatException if property value is non-numeric
+     */
+    private int retrievePositiveIntProperty(Properties tableProperties, String propertyName, int defaultValue) {
+      int propertyIntValue = defaultValue;
+      if (!fileFormats.contains(tableProperties.get(hive_metastoreConstants.FILE_INPUT_FORMAT))) {
+        return propertyIntValue;
+      }
+      Object propertyObject = tableProperties.get(propertyName);
+      if (propertyObject != null) {
+        try {
+          propertyIntValue = Integer.valueOf((String) propertyObject);
+        } catch (NumberFormatException e) {
+          throw new NumberFormatException(String.format("Hive table property %s value '%s' is non-numeric", propertyName, propertyObject.toString()));
+        }
+      }
+      return propertyIntValue < 0 ? defaultValue : propertyIntValue;
+    }
+
+    /**
+     * Creates buffer of objects to be used as values, so these values can be re-used.
+     * Objects number depends on number of lines to skip in the end of the file plus one object.
+     *
+     * @param reader          RecordReader to return value object
+     * @param skipFooterLines number of lines to skip at the end of the file
+     * @return list of objects to be used as values
+     */
+    private List<Object> initializeValueHolder(RecordReader reader, int skipFooterLines) {
+      List<Object> valueHolder = new ArrayList<>(skipFooterLines + 1);
+      for (int i = 0; i <= skipFooterLines; i++) {
+        valueHolder.add(reader.createValue());
+      }
+      return valueHolder;
     }
   }
 }

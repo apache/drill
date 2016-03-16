@@ -18,26 +18,15 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.calcite.config.Lex;
-import org.apache.calcite.rel.rules.ProjectToWindowRule;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.ValidationException;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.planner.logical.DrillConstExecutor;
-import org.apache.drill.exec.planner.logical.DrillRuleSets;
-import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
@@ -45,24 +34,10 @@ import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
-import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
-import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.calcite.rel.RelCollationTraitDef;
-import org.apache.calcite.rel.rules.ReduceExpressionsRule;
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.RelOptCostFactory;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -70,94 +45,29 @@ public class DrillSqlWorker {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DrillSqlWorker.class);
 
-  private final Planner planner;
-  private final HepPlanner hepPlanner;
-  public final static int LOGICAL_RULES = 0;
-  public final static int PHYSICAL_MEM_RULES = 1;
-  public final static int LOGICAL_CONVERT_RULES = 2;
-
-  private final QueryContext context;
-
-  public DrillSqlWorker(QueryContext context) {
-    final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
-
-    traitDefs.add(ConventionTraitDef.INSTANCE);
-    traitDefs.add(DrillDistributionTraitDef.INSTANCE);
-    traitDefs.add(RelCollationTraitDef.INSTANCE);
-    this.context = context;
-    RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
-        null : new DrillCostBase.DrillCostFactory() ;
-    int idMaxLength = (int)context.getPlannerSettings().getIdentifierMaxLength();
-
-    FrameworkConfig config = Frameworks.newConfigBuilder() //
-        .parserConfig(SqlParser.configBuilder()
-            .setLex(Lex.MYSQL)
-            .setIdentifierMaxLength(idMaxLength)
-            .setParserFactory(DrillParserWithCompoundIdConverter.FACTORY)
-            .build()) //
-        .defaultSchema(context.getNewDefaultSchema()) //
-        .operatorTable(context.getDrillOperatorTable()) //
-        .traitDefs(traitDefs) //
-        .convertletTable(new DrillConvertletTable()) //
-        .context(context.getPlannerSettings()) //
-        .ruleSets(getRules(context)) //
-        .costFactory(costFactory) //
-        .executor(new DrillConstExecutor(context.getFunctionRegistry(), context, context.getPlannerSettings()))
-        .typeSystem(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM) //
-        .build();
-    this.planner = Frameworks.getPlanner(config);
-    HepProgramBuilder builder = new HepProgramBuilder();
-    builder.addRuleClass(ReduceExpressionsRule.class);
-    builder.addRuleClass(ProjectToWindowRule.class);
-    this.hepPlanner = new HepPlanner(builder.build());
-    hepPlanner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
-    hepPlanner.addRule(ProjectToWindowRule.PROJECT);
+  private DrillSqlWorker() {
   }
 
-  private RuleSet[] getRules(QueryContext context) {
-    StoragePluginRegistry storagePluginRegistry = context.getStorage();
-    RuleSet drillLogicalRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getJoinPermRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
-    RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getPhysicalRules(context),
-        storagePluginRegistry.getStoragePluginRuleSet(context));
-
-    // Following is used in LOPT join OPT.
-    RuleSet logicalConvertRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
-
-    RuleSet[] allRules = new RuleSet[] {drillLogicalRules, drillPhysicalMem, logicalConvertRules};
-
-    return allRules;
+  public static PhysicalPlan getPlan(QueryContext context, String sql) throws SqlParseException, ValidationException,
+      ForemanSetupException {
+    return getPlan(context, sql, null);
   }
 
-  public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, ForemanSetupException{
-    return getPlan(sql, null);
-  }
+  public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan)
+      throws ForemanSetupException {
 
-  public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws ForemanSetupException {
-    final PlannerSettings ps = this.context.getPlannerSettings();
+    final SqlConverter parser = new SqlConverter(
+        context.getPlannerSettings(),
+        context.getNewDefaultSchema(),
+        context.getDrillOperatorTable(),
+        (UdfUtilities) context,
+        context.getFunctionRegistry());
 
-    SqlNode sqlNode;
-    try {
-      injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
-      sqlNode = planner.parse(sql);
-    } catch (SqlParseException e) {
-      throw UserException
-        .parseError(e)
-        .addContext(
-            "while parsing SQL query:\n" +
-            formatSQLParsingError(sql, e.getPos()))
-        .build(logger);
-    }
+    injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
+    final SqlNode sqlNode = parser.parse(sql);
+    final AbstractSqlHandler handler;
+    final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
-    AbstractSqlHandler handler;
-    SqlHandlerConfig config = new SqlHandlerConfig(hepPlanner, planner, context);
-
-    // TODO: make this use path scanning or something similar.
     switch(sqlNode.getKind()){
     case EXPLAIN:
       handler = new ExplainHandler(config);
@@ -198,25 +108,5 @@ public class DrillSqlWorker {
     }
   }
 
-  /**
-   *
-   * @param sql the SQL sent to the server
-   * @param pos the position of the error
-   * @return The sql with a ^ character under the error
-   */
-  static String formatSQLParsingError(String sql, SqlParserPos pos) {
-    StringBuilder sb = new StringBuilder();
-    String[] lines = sql.split("\n");
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      sb.append(line).append("\n");
-      if (i == (pos.getLineNum() - 1)) {
-        for (int j = 0; j < pos.getColumnNum() - 1; j++) {
-          sb.append(" ");
-        }
-        sb.append("^\n");
-      }
-    }
-    return sb.toString();
-  }
+
 }

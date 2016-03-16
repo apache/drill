@@ -174,6 +174,9 @@ public class JoinUtils {
       TypeProtos.MinorType rightType = rightExpression.getMajorType().getMinorType();
       TypeProtos.MinorType leftType = leftExpression.getMajorType().getMinorType();
 
+      if (rightType == TypeProtos.MinorType.UNION || leftType == TypeProtos.MinorType.UNION) {
+        continue;
+      }
       if (rightType != leftType) {
 
         // currently we only support implicit casts if the input types are numeric or varchar/varbinary

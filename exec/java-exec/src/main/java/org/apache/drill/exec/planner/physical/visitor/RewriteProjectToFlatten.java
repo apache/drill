@@ -17,14 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.physical.visitor;
 
-import com.google.common.collect.Lists;
-import org.apache.calcite.tools.RelConversionException;
-import org.apache.drill.exec.planner.physical.FlattenPrel;
-import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
-import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -32,9 +27,15 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.drill.exec.planner.physical.FlattenPrel;
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
+import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelConversionException> {
 
@@ -64,7 +65,7 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
-    List<RelDataTypeField> relDataTypes = new ArrayList();
+    List<RelDataTypeField> relDataTypes = new ArrayList<>();
     int i = 0;
     RexNode flatttenExpr = null;
     for (RexNode rex : project.getChildExps()) {
@@ -72,7 +73,6 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
       if (rex instanceof RexCall) {
         RexCall function = (RexCall) rex;
         String functionName = function.getOperator().getName();
-        int nArgs = function.getOperands().size();
 
         if (functionName.equalsIgnoreCase("flatten") ) {
           rewrite = true;

@@ -26,18 +26,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import com.carrotsearch.hppc.cursors.ObjectLongCursor;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.DrillbitContext;
 
+import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.server.DrillbitContext;
+import com.google.common.collect.Maps;
 
 /**
  * The AssignmentCreator is responsible for assigning a set of work units to the available slices.
@@ -96,7 +96,7 @@ public class AssignmentCreator<T extends CompleteWork> {
     if (useOldAssignmentCode) {
       return OldAssignmentCreator.getMappings(incomingEndpoints, units);
     } else {
-      AssignmentCreator<T> creator = new AssignmentCreator(incomingEndpoints, units);
+      AssignmentCreator<T> creator = new AssignmentCreator<>(incomingEndpoints, units);
       return creator.getMappings();
     }
   }
@@ -106,8 +106,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return the minor fragment id to work units mapping
    */
   private ListMultimap<Integer, T> getMappings() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     maxWork = (int) Math.ceil(units.size() / ((float) incomingEndpoints.size()));
     LinkedList<WorkEndpointListPair<T>> workList = getWorkList();
     LinkedList<WorkEndpointListPair<T>> unassignedWorkList;
@@ -179,28 +178,27 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return the list of WorkEndpointListPairs
    */
   private LinkedList<WorkEndpointListPair<T>> getWorkList() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     LinkedList<WorkEndpointListPair<T>> workList = Lists.newLinkedList();
     for (T work : units) {
       List<Map.Entry<DrillbitEndpoint,Long>> entries = Lists.newArrayList();
       for (ObjectLongCursor<DrillbitEndpoint> cursor : work.getByteMap()) {
         final DrillbitEndpoint ep = cursor.key;
         final Long val = cursor.value;
-        Map.Entry<DrillbitEndpoint,Long> entry = new Entry() {
+        Map.Entry<DrillbitEndpoint,Long> entry = new Entry<DrillbitEndpoint, Long>() {
 
           @Override
-          public Object getKey() {
+          public DrillbitEndpoint getKey() {
             return ep;
           }
 
           @Override
-          public Object getValue() {
+          public Long getValue() {
             return val;
           }
 
           @Override
-          public Object setValue(Object value) {
+          public Long setValue(Long value) {
             throw new UnsupportedOperationException();
           }
         };
@@ -236,8 +234,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return
    */
   private Map<DrillbitEndpoint,FragIteratorWrapper> getEndpointIterators() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     Map<DrillbitEndpoint,FragIteratorWrapper> map = Maps.newLinkedHashMap();
     Map<DrillbitEndpoint,List<Integer>> mmap = Maps.newLinkedHashMap();
     for (int i = 0; i < incomingEndpoints.size(); i++) {

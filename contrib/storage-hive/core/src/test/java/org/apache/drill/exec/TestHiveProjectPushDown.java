@@ -98,11 +98,19 @@ public class TestHiveProjectPushDown extends HiveTestBase {
   }
 
   @Test
+  public void testHiveCountStar() throws Exception {
+    String query = "SELECT count(*) as cnt FROM hive.`default`.kv";
+    String expectedColNames = "\"columns\" : [ ]";
+
+    testHelper(query, 1, expectedColNames);
+  }
+
+  @Test
   public void projectPushDownOnHiveParquetTable() throws Exception {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
       String query = "SELECT boolean_field, boolean_part, int_field, int_part FROM hive.readtest_parquet";
-      String expectedColNames = "\"columns\" : [ \"`boolean_field`\", \"`dir1`\", \"`int_field`\", \"`dir10`\" ]";
+      String expectedColNames = "\"columns\" : [ \"`boolean_field`\", \"`dir0`\", \"`int_field`\", \"`dir9`\" ]";
 
       testHelper(query, 2, expectedColNames, "hive-drill-native-parquet-scan");
     } finally {

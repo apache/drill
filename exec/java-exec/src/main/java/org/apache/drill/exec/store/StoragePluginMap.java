@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.google.common.collect.LinkedListMultimap;
@@ -36,7 +37,7 @@ import com.google.common.collect.Multimaps;
  * This is inspired by ConcurrentMap but provides a secondary key mapping that allows an alternative lookup mechanism.
  * The class is responsible for internally managing consistency between the two maps. This class is threadsafe.
  */
-class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>> {
+class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>>, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginMap.class);
 
   private final ConcurrentMap<String, StoragePlugin> nameMap = Maps.newConcurrentMap();
@@ -71,6 +72,18 @@ class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>> {
       configMap.remove(oldPlugin.getConfig(), oldPlugin);
     }
     return ok;
+  }
+
+  public void put(String name, StoragePlugin plugin) {
+    StoragePlugin oldPlugin = nameMap.put(name, plugin);
+    configMap.put(plugin.getConfig(), plugin);
+    if (oldPlugin != null) {
+      try {
+        oldPlugin.close();
+      } catch (Exception e) {
+        logger.warn("Failure while closing plugin replaced by injection.", e);
+      }
+    }
   }
 
   public StoragePlugin putIfAbsent(String name, StoragePlugin plugin) {
@@ -115,6 +128,11 @@ class StoragePluginMap implements Iterable<Entry<String, StoragePlugin>> {
 
   public Iterable<StoragePlugin> plugins() {
     return nameMap.values();
+  }
+
+  @Override
+  public void close() throws Exception {
+    AutoCloseables.close(configMap.values());
   }
 
 }

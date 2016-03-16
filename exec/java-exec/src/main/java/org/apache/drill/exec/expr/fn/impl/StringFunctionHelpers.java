@@ -22,7 +22,7 @@ import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.util.AssertionUtil;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
@@ -30,13 +30,11 @@ import com.google.common.base.Charsets;
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
-
   static final int RADIX = 10;
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varCharToLong(final int start, final int end, DrillBuf buffer){
+  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeL(start, end, buffer);
@@ -97,7 +95,7 @@ public class StringFunctionHelpers {
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varCharToInt(final int start, final int end, DrillBuf buffer){
+  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeI(start, end, buffer);
@@ -212,7 +210,7 @@ public class StringFunctionHelpers {
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
   public static long getDate(DrillBuf buf, int start, int end){
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buf.checkBytes(start, end);
     }
     return memGetDate(buf.memoryAddress(), start, end);

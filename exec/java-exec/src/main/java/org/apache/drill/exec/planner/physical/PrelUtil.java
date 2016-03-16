@@ -17,31 +17,18 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.PathSegment.ArraySegment;
-import org.apache.drill.common.expression.PathSegment.NameSegment;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -52,8 +39,16 @@ import org.apache.calcite.rex.RexLocalRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.ArraySegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.data.Order.Ordering;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-import com.carrotsearch.hppc.IntIntOpenHashMap;
+import com.carrotsearch.hppc.IntIntHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -198,7 +193,7 @@ public class PrelUtil {
 
       this.fieldNames = Lists.newArrayListWithCapacity(desiredFields.size());
       this.types = Lists.newArrayListWithCapacity(desiredFields.size());
-      IntIntOpenHashMap oldToNewIds = new IntIntOpenHashMap();
+      IntIntHashMap oldToNewIds = new IntIntHashMap();
 
       int i =0;
       for (DesiredField f : desiredFields) {
@@ -229,7 +224,7 @@ public class PrelUtil {
   }
 
   // Simple visitor class to determine the last used reference in the expression
-  private static class LastUsedRefVisitor extends RexVisitorImpl {
+  private static class LastUsedRefVisitor extends RexVisitorImpl<Void> {
 
     int lastUsedRef = -1;
 
@@ -261,7 +256,7 @@ public class PrelUtil {
     final Set<SchemaPath> columns = Sets.newLinkedHashSet();
     final private List<String> fieldNames;
     final private List<RelDataTypeField> fields;
-    final private Set<DesiredField> desiredFields = Sets.newHashSet();
+    final private Set<DesiredField> desiredFields = Sets.newLinkedHashSet();
 
     public RefFieldsVisitor(RelDataType rowType) {
       super(true);
@@ -352,9 +347,9 @@ public class PrelUtil {
 
   public static class InputRewriter extends RexShuttle {
 
-    final IntIntOpenHashMap map;
+    final IntIntHashMap map;
 
-    public InputRewriter(IntIntOpenHashMap map) {
+    public InputRewriter(IntIntHashMap map) {
       super();
       this.map = map;
     }

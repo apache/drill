@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.common;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
@@ -34,7 +35,11 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
 
   public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
     super(cluster, traits, table);
-    this.drillTable = table.unwrap(DrillTable.class);
+    DrillTable unwrap = table.unwrap(DrillTable.class);
+    if (unwrap == null) {
+      unwrap = table.unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
+    this.drillTable = unwrap;
     assert drillTable != null;
   }
 

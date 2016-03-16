@@ -27,7 +27,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -50,14 +50,11 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
-import org.apache.drill.exec.store.parquet.Metadata.ParquetFileMetadata;
-import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadata_v1;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 
@@ -210,39 +207,14 @@ public class ParquetFormatPlugin implements FormatPlugin{
     public DrillTable isReadable(DrillFileSystem fs, FileSelection selection,
         FileSystemPlugin fsPlugin, String storageEngineName, String userName)
         throws IOException {
-      // TODO: we only check the first file for directory reading.  This is because
+      // TODO: we only check the first file for directory reading.
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
           return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
-              new FormatSelection(plugin.getConfig(), expandSelection(fs, selection)));
+              new FormatSelection(plugin.getConfig(), selection));
         }
       }
       return super.isReadable(fs, selection, fsPlugin, storageEngineName, userName);
-    }
-
-    private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
-      if (metaDataFileExists(fs, selection.getFirstPath(fs))) {
-        FileStatus metaRootDir = selection.getFirstPath(fs);
-        Path metaFilePath = getMetadataPath(metaRootDir);
-
-        // get the metadata for the directory by reading the metadata file
-        ParquetTableMetadata_v1 metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
-        List<String> fileNames = Lists.newArrayList();
-        for (ParquetFileMetadata file : metadata.files) {
-          fileNames.add(file.path);
-        }
-        // when creating the file selection, set the selection root in the form /a/b instead of
-        // file:/a/b.  The reason is that the file names above have been created in the form
-        // /a/b/c.parquet and the format of the selection root must match that of the file names
-        // otherwise downstream operations such as partition pruning can break.
-        Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
-        return new FileSelection(fileNames, metaRootPath.toString(), metadata, /* save metadata for future use */
-            selection.getFileStatusList(fs));
-      } else {
-        // don't expand yet; ParquetGroupScan's metadata gathering operation
-        // does that.
-        return selection;
-      }
     }
 
     private Path getMetadataPath(FileStatus dir) {

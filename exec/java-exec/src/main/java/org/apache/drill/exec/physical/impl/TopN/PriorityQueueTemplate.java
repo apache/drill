@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -66,16 +67,21 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     BatchSchema schema = container.getSchema();
     VectorContainer newContainer = new VectorContainer();
     for (MaterializedField field : schema) {
-      int[] ids = container.getValueVectorId(field.getPath()).getFieldIds();
+      int[] ids = container.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds();
       newContainer.add(container.getValueAccessorById(field.getValueClass(), ids).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
+    // Cleanup before recreating hyperbatch and sv4.
+    cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
+    // Reset queue size (most likely to be set to limit).
+    queueSize = 0;
     for (int i = 0; i < v4.getTotalCount(); i++) {
       heapSv4.set(i, v4.get(i));
+      ++queueSize;
     }
     v4.clear();
     doSetup(context, hyperBatch, null);
@@ -83,8 +89,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException{
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     if (hyperBatch == null) {
       hyperBatch = new ExpandableHyperContainer(batch.getContainer());
     } else {
@@ -119,8 +124,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void generate() throws SchemaChangeException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
     finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
@@ -146,8 +150,15 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void cleanup() {
-    heapSv4.clear();
-    hyperBatch.clear();
+    if (heapSv4 != null) {
+      heapSv4.clear();
+    }
+    if (hyperBatch != null) {
+      hyperBatch.clear();
+    }
+    if (finalSv4 != null) {
+      finalSv4.clear();
+    }
   }
 
   private void siftUp() {

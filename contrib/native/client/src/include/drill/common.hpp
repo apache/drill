@@ -45,6 +45,11 @@
 #define MEM_CHUNK_SIZE 64*1024; // 64K
 #define MAX_MEM_ALLOC_SIZE 256*1024*1024; // 256 MB
 
+#define MAX_BATCH_SIZE  65536; // see RecordBatch.java 
+#define ENABLE_CONNECTION_POOL_ENV  "DRILL_ENABLE_CONN_POOL"
+#define DEFAULT_MAX_CONCURRENT_CONNECTIONS 10
+#define MAX_CONCURRENT_CONNECTIONS_ENV  "DRILL_MAX_CONN"
+
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING
 #define CODER_DEBUGGING
@@ -110,7 +115,9 @@ typedef enum{
     CONN_HOSTNAME_RESOLUTION_ERROR=6,
     CONN_AUTH_FAILED=7,
     CONN_BAD_RPC_VER=8,
-    CONN_DEAD=9
+    CONN_DEAD=9,
+    CONN_NOTCONNECTED=10,
+    CONN_ALREADYCONNECTED=11
 } connectionStatus_t;
 
 typedef enum{
@@ -140,6 +147,7 @@ typedef enum{
 #define USERPROP_USESSL   "useSSL"        // Not implemented yet
 #define USERPROP_FILEPATH "pemLocation"   // Not implemented yet
 #define USERPROP_FILENAME "pemFile"       // Not implemented yet
+#define USERPROP_IMPERSONATION_TARGET "impersonation_target"
 
 // Bitflags to describe user properties
 // Used in DrillUserProperties::USER_PROPERTIES

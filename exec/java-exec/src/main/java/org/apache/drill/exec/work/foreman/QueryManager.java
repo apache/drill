@@ -19,15 +19,18 @@ package org.apache.drill.exec.work.foreman;
 
 import io.netty.buffer.ByteBuf;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.coord.store.TransientStore;
+import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -39,19 +42,21 @@ import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,20 +64,18 @@ import com.google.common.collect.Maps;
 /**
  * Each Foreman holds its own QueryManager.  This manages the events associated with execution of a particular query across all fragments.
  */
-public class QueryManager {
+public class QueryManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
 
-  public static final PStoreConfig<QueryProfile> QUERY_PROFILE = PStoreConfig.
+  public static final PersistentStoreConfig<QueryProfile> QUERY_PROFILE = PersistentStoreConfig.
           newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE)
       .name("profiles")
       .blob()
-      .max(100)
       .build();
 
-  public static final PStoreConfig<QueryInfo> RUNNING_QUERY_INFO = PStoreConfig.
-          newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE)
+  public static final TransientStoreConfig<QueryInfo> RUNNING_QUERY_INFO = TransientStoreConfig
+      .newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE)
       .name("running")
-      .ephemeral()
       .build();
 
   private final Map<DrillbitEndpoint, NodeTracker> nodeMap = Maps.newHashMap();
@@ -86,12 +89,12 @@ public class QueryManager {
    * Doesn't need to be thread safe as fragmentDataMap is generated in a single thread and then
    * accessed by multiple threads for reads only.
    */
-  private final IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>> fragmentDataMap =
-      new IntObjectOpenHashMap<>();
+  private final IntObjectHashMap<IntObjectHashMap<FragmentData>> fragmentDataMap =
+      new IntObjectHashMap<>();
   private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
-  private final PStore<QueryProfile> profilePStore;
-  private final PStore<QueryInfo> profileEStore;
+  private final PersistentStore<QueryProfile> profileStore;
+  private final TransientStore<QueryInfo> transientProfiles;
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
@@ -104,8 +107,8 @@ public class QueryManager {
   // How many fragments have finished their execution.
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
 
-  public QueryManager(final QueryId queryId, final RunQuery runQuery, final PStoreProvider pStoreProvider,
-      final StateListener stateListener, final Foreman foreman) {
+  public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
+      final ClusterCoordinator coordinator, final StateListener stateListener, final Foreman foreman) {
     this.queryId =  queryId;
     this.runQuery = runQuery;
     this.stateListener = stateListener;
@@ -113,11 +116,11 @@ public class QueryManager {
 
     stringQueryId = QueryIdHelper.getQueryId(queryId);
     try {
-      profilePStore = pStoreProvider.getStore(QUERY_PROFILE);
-      profileEStore = pStoreProvider.getStore(RUNNING_QUERY_INFO);
-    } catch (final IOException e) {
+      profileStore = storeProvider.getOrCreateStore(QUERY_PROFILE);
+    } catch (final Exception e) {
       throw new DrillRuntimeException(e);
     }
+    transientProfiles = coordinator.getOrCreateTransientStore(RUNNING_QUERY_INFO);
   }
 
   private static boolean isTerminal(final FragmentState state) {
@@ -163,9 +166,9 @@ public class QueryManager {
     final int majorFragmentId = fragmentHandle.getMajorFragmentId();
     final int minorFragmentId = fragmentHandle.getMinorFragmentId();
 
-    IntObjectOpenHashMap<FragmentData> minorMap = fragmentDataMap.get(majorFragmentId);
+    IntObjectHashMap<FragmentData> minorMap = fragmentDataMap.get(majorFragmentId);
     if (minorMap == null) {
-      minorMap = new IntObjectOpenHashMap<>();
+      minorMap = new IntObjectHashMap<>();
       fragmentDataMap.put(majorFragmentId, minorMap);
     }
     minorMap.put(minorFragmentId, fragmentData);
@@ -237,11 +240,14 @@ public class QueryManager {
     }
   }
 
+  @Override
+  public void close() throws Exception { }
+
   /*
-   * This assumes that the FragmentStatusListener implementation takes action when it hears
-   * that the target fragment has acknowledged the signal. As a result, this listener doesn't do anything
-   * but log messages.
-   */
+     * This assumes that the FragmentStatusListener implementation takes action when it hears
+     * that the target fragment has acknowledged the signal. As a result, this listener doesn't do anything
+     * but log messages.
+     */
   private static class SignalListener extends EndpointListener<Ack, FragmentHandle> {
     /**
      * An enum of possible signals that {@link SignalListener} listens to.
@@ -277,17 +283,18 @@ public class QueryManager {
 
   QueryState updateEphemeralState(final QueryState queryState) {
     switch (queryState) {
-      case PENDING:
+      case ENQUEUED:
+      case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
-        profileEStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        transientProfiles.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
         break;
 
       case COMPLETED:
       case CANCELED:
       case FAILED:
         try {
-          profileEStore.delete(stringQueryId);
+          transientProfiles.remove(stringQueryId);
         } catch(final Exception e) {
           logger.warn("Failure while trying to delete the estore profile for this query.", e);
         }
@@ -304,7 +311,7 @@ public class QueryManager {
   void writeFinalProfile(UserException ex) {
     try {
       // TODO(DRILL-2362) when do these ever get deleted?
-      profilePStore.put(stringQueryId, getQueryProfile(ex));
+      profileStore.put(stringQueryId, getQueryProfile(ex));
     } catch (Exception e) {
       logger.error("Failure while storing Query Profile", e);
     }
@@ -350,24 +357,41 @@ public class QueryManager {
       profileBuilder.setPlan(planText);
     }
 
-    for (int i = 0; i < fragmentDataMap.allocated.length; i++) {
-      if (fragmentDataMap.allocated[i]) {
-        final int majorFragmentId = fragmentDataMap.keys[i];
-        final IntObjectOpenHashMap<FragmentData> minorMap =
-            (IntObjectOpenHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
-        final MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder()
-            .setMajorFragmentId(majorFragmentId);
-        for (int v = 0; v < minorMap.allocated.length; v++) {
-          if (minorMap.allocated[v]) {
-            final FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
-            fb.addMinorFragmentProfile(data.getProfile());
-          }
-        }
-        profileBuilder.addFragmentProfile(fb);
-      }
-    }
+    fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
     return profileBuilder.build();
+  }
+
+  private class OuterIter implements IntObjectPredicate<IntObjectHashMap<FragmentData>> {
+    private final QueryProfile.Builder profileBuilder;
+
+    public OuterIter(Builder profileBuilder) {
+      this.profileBuilder = profileBuilder;
+    }
+
+    @Override
+    public boolean apply(final int majorFragmentId, final IntObjectHashMap<FragmentData> minorMap) {
+      final MajorFragmentProfile.Builder builder = MajorFragmentProfile.newBuilder().setMajorFragmentId(majorFragmentId);
+      minorMap.forEach(new InnerIter(builder));
+      profileBuilder.addFragmentProfile(builder);
+      return true;
+    }
+
+  }
+
+  private class InnerIter implements IntObjectPredicate<FragmentData> {
+    private final MajorFragmentProfile.Builder builder;
+
+    public InnerIter(MajorFragmentProfile.Builder fb) {
+      this.builder = fb;
+    }
+
+    @Override
+    public boolean apply(int key, FragmentData data) {
+      builder.addMinorFragmentProfile(data.getProfile());
+      return true;
+    }
+
   }
 
   void setPlanText(final String planText) {

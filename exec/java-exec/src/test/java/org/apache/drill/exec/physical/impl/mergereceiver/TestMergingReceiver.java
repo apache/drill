@@ -101,7 +101,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
           final MaterializedField materializedField = vv.getField();
           final int numValues = va.getValueCount();
           for(int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
-            if (materializedField.getAsSchemaPath().getRootSegment().getPath().equals("blue")) {
+            if (materializedField.getPath().equals("blue")) {
               final long longValue = ((Long) va.getObject(valueIdx)).longValue();
               // check that order is ascending
               if (lastBlueValue != null) {

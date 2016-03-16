@@ -76,11 +76,11 @@ class FieldVarCharOutput extends TextOutput {
   public FieldVarCharOutput(OutputMutator outputMutator, String [] fieldNames, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
 
     int totalFields = fieldNames.length;
-    this.selectedFields = new boolean[totalFields];
-    this.vectors = new VarCharVector[totalFields];
+    List<String> outputColumns = new ArrayList<>(Arrays.asList(fieldNames));
 
     if (isStarQuery) {
       maxField = totalFields - 1;
+      this.selectedFields = new boolean[totalFields];
       Arrays.fill(selectedFields, true);
     } else {
       List<Integer> columnIds = new ArrayList<Integer>();
@@ -90,25 +90,38 @@ class FieldVarCharOutput extends TextOutput {
       for (SchemaPath path : columns) {
         pathStr = path.getRootSegment().getPath();
         if (pathStr.equals(COL_NAME) && path.getRootSegment().getChild() != null) {
-          //TODO: support both field names and columns index in predicate pushdown
-          index = path.getRootSegment().getChild().getArraySegment().getIndex();
+          //TODO: support both field names and columns index along with predicate pushdown
+          throw UserException
+              .unsupportedError()
+              .message("With extractHeader enabled, only header names are supported")
+              .addContext("column name", pathStr)
+              .addContext("column index", path.getRootSegment().getChild())
+              .build(logger);
         } else {
-          index = Arrays.asList(fieldNames).indexOf(pathStr);
+          index = outputColumns.indexOf(pathStr);
+          if (index < 0) {
+            // found col that is not a part of fieldNames, add it
+            // this col might be part of some another scanner
+            index = totalFields++;
+            outputColumns.add(pathStr);
+          }
         }
-        assert index >= 0 && index < totalFields : "Invalid column index encountered";
         columnIds.add(index);
       }
       Collections.sort(columnIds);
 
+      this.selectedFields = new boolean[totalFields];
       for(Integer i : columnIds) {
         selectedFields[i] = true;
         maxField = i;
       }
     }
 
+    this.vectors = new VarCharVector[totalFields];
+
     for (int i = 0; i <= maxField; i++) {
       if (selectedFields[i]) {
-        MaterializedField field = MaterializedField.create(fieldNames[i], Types.required(TypeProtos.MinorType.VARCHAR));
+        MaterializedField field = MaterializedField.create(outputColumns.get(i), Types.required(TypeProtos.MinorType.VARCHAR));
         this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
       }
     }

@@ -17,13 +17,20 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.List;
+
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
-import com.google.common.io.Closeables;
+import com.google.common.collect.Lists;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 
 /**
  * Manages communication tunnels between nodes.
@@ -36,13 +43,16 @@ public class ControllerImpl implements Controller {
   private final BootStrapContext context;
   private final ConnectionManagerRegistry connectionRegistry;
   private final boolean allowPortHunting;
+  private final CustomHandlerRegistry handlerRegistry;
 
-  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, boolean allowPortHunting) {
+  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, BufferAllocator allocator,
+      boolean allowPortHunting) {
     super();
     this.handler = handler;
     this.context = context;
-    this.connectionRegistry = new ConnectionManagerRegistry(handler, context);
+    this.connectionRegistry = new ConnectionManagerRegistry(allocator, handler, context);
     this.allowPortHunting = allowPortHunting;
+    this.handlerRegistry = handler.getHandlerRegistry();
   }
 
   @Override
@@ -52,6 +62,7 @@ public class ControllerImpl implements Controller {
     port = server.bind(port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
     connectionRegistry.setEndpoint(completeEndpoint);
+    handlerRegistry.setEndpoint(completeEndpoint);
     return completeEndpoint;
   }
 
@@ -60,11 +71,37 @@ public class ControllerImpl implements Controller {
     return new ControlTunnel(endpoint, connectionRegistry.getConnectionManager(endpoint));
   }
 
-  public void close() {
-    Closeables.closeQuietly(server);
-    for (ControlConnectionManager bt : connectionRegistry) {
-      bt.close();
-    }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <REQUEST extends MessageLite, RESPONSE extends MessageLite> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler, Parser<REQUEST> parser) {
+    handlerRegistry.registerCustomHandler(
+        messageTypeId,
+        handler,
+        new ControlTunnel.ProtoSerDe<REQUEST>(parser),
+        (CustomSerDe<RESPONSE>) new ControlTunnel.ProtoSerDe<Message>(null));
   }
+
+  @Override
+  public <REQUEST, RESPONSE> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler,
+      CustomSerDe<REQUEST> requestSerde,
+      CustomSerDe<RESPONSE> responseSerde) {
+    handlerRegistry.registerCustomHandler(messageTypeId, handler, requestSerde, responseSerde);
+  }
+
+
+  public void close() throws Exception {
+    List<AutoCloseable> closeables = Lists.newArrayList();
+    closeables.add(server);
+
+    for (ControlConnectionManager bt : connectionRegistry) {
+      closeables.add(bt);
+    }
+
+    AutoCloseables.close(closeables);
+  }
+
 
 }

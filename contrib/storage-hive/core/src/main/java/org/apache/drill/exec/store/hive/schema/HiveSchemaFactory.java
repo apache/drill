@@ -19,9 +19,15 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -48,37 +54,47 @@ public class HiveSchemaFactory implements SchemaFactory {
 
   // MetaStoreClient created using process user credentials
   private final DrillHiveMetaStoreClient processUserMetastoreClient;
+  // MetasStoreClient created using SchemaConfig credentials
+  private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
+
   private final HiveStoragePlugin plugin;
-  private final Map<String, String> hiveConfigOverride;
   private final String schemaName;
   private final HiveConf hiveConf;
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
-  public HiveSchemaFactory(HiveStoragePlugin plugin, String name, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final HiveConf hiveConf) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
 
-    this.hiveConfigOverride = hiveConfigOverride;
-    hiveConf = new HiveConf();
-    if (hiveConfigOverride != null) {
-      for (Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-        final String property = entry.getKey();
-        final String value = entry.getValue();
-        hiveConf.set(property, value);
-        logger.trace("HiveConfig Override {}={}", property, value);
-      }
-    }
-
+    this.hiveConf = hiveConf;
     isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
+          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
+
+    metaStoreClientLoadingCache = CacheBuilder
+        .newBuilder()
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .maximumSize(5) // Up to 5 clients for impersonation-enabled.
+        .removalListener(new RemovalListener<String, DrillHiveMetaStoreClient>() {
+          @Override
+          public void onRemoval(RemovalNotification<String, DrillHiveMetaStoreClient> notification) {
+            DrillHiveMetaStoreClient client = notification.getValue();
+            client.close();
+          }
+        })
+        .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
+          @Override
+          public DrillHiveMetaStoreClient load(String userName) throws Exception {
+            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf, userName);
+          }
+        });
   }
 
   /**
@@ -94,9 +110,8 @@ public class HiveSchemaFactory implements SchemaFactory {
     DrillHiveMetaStoreClient mClientForSchemaTree = processUserMetastoreClient;
     if (isDrillImpersonationEnabled) {
       try {
-        mClientForSchemaTree = DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
-            hiveConfigOverride, schemaConfig.getUserName(), schemaConfig.getIgnoreAuthErrors());
-      } catch (final TException e) {
+        mClientForSchemaTree = metaStoreClientLoadingCache.get(schemaConfig.getUserName());
+      } catch (final ExecutionException e) {
         throw new IOException("Failure setting up Hive metastore client.", e);
       }
     }
@@ -120,15 +135,13 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public AbstractSchema getSubSchema(String name) {
-      List<String> tables;
       try {
-        List<String> dbs = mClient.getDatabases();
+        List<String> dbs = mClient.getDatabases(schemaConfig.getIgnoreAuthErrors());
         if (!dbs.contains(name)) {
           logger.debug("Database '{}' doesn't exists in Hive storage '{}'", name, schemaName);
           return null;
         }
-        tables = mClient.getTableNames(name);
-        HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, name);
+        HiveDatabaseSchema schema = getSubSchemaKnownExists(name);
         if (name.equals("default")) {
           this.defaultSchema = schema;
         }
@@ -137,12 +150,17 @@ public class HiveSchemaFactory implements SchemaFactory {
         logger.warn("Failure while attempting to access HiveDatabase '{}'.", name, e.getCause());
         return null;
       }
+    }
 
+    /** Help method to get subschema when we know it exists (already checks the existence) */
+    private HiveDatabaseSchema getSubSchemaKnownExists(String name) {
+      HiveDatabaseSchema schema = new HiveDatabaseSchema(this, name, mClient, schemaConfig);
+      return schema;
     }
 
     void setHolder(SchemaPlus plusOfThis) {
       for (String s : getSubSchemaNames()) {
-        plusOfThis.add(s, getSubSchema(s));
+        plusOfThis.add(s, getSubSchemaKnownExists(s));
       }
     }
 
@@ -154,7 +172,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     @Override
     public Set<String> getSubSchemaNames() {
       try {
-        List<String> dbs = mClient.getDatabases();
+        List<String> dbs = mClient.getDatabases(schemaConfig.getIgnoreAuthErrors());
         return Sets.newHashSet(dbs);
       } catch (final TException e) {
         logger.warn("Failure while getting Hive database list.", e);
@@ -199,7 +217,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         dbName = "default";
       }
       try{
-        return mClient.getHiveReadEntry(dbName, t);
+        return mClient.getHiveReadEntry(dbName, t, schemaConfig.getIgnoreAuthErrors());
       }catch(final TException e) {
         logger.warn("Exception occurred while trying to read table. {}.{}", dbName, t, e.getCause());
         return null;
@@ -214,13 +232,6 @@ public class HiveSchemaFactory implements SchemaFactory {
     @Override
     public String getTypeName() {
       return HiveStoragePluginConfig.NAME;
-    }
-
-    @Override
-    public void close() throws Exception {
-      if (mClient != null) {
-        mClient.close();
-      }
     }
   }
 

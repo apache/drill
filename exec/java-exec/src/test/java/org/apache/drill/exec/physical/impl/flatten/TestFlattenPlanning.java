@@ -24,7 +24,40 @@ public class TestFlattenPlanning extends PlanTestBase {
 
   @Test
   public void testFlattenPlanningAvoidUnnecessaryProject() throws Exception {
-    testPlanSubstrPatterns("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`",
-        new String[]{"Project(EXPR$0=[$1], rownum=[$0])"}, new String[]{"Project(EXPR$0=[$0], EXPR$1=[$1], EXPR$3=[$1])"});
+    // Because of Java7 vs Java8 map ordering differences, we check for both cases
+    // See DRILL-4331 for details
+    testPlanMatchingPatterns("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`",
+        new String[]{"\\QProject(EXPR$0=[$1], rownum=[$0])\\E|\\QProject(EXPR$0=[$0], rownum=[$1])\\E"},
+        new String[]{"\\QProject(EXPR$0=[$0], EXPR$1=[$1], EXPR$3=[$1])\\E|\\QProject(EXPR$0=[$1], EXPR$1=[$0], EXPR$3=[$0])\\E"});
   }
+
+  @Test // DRILL-4121 : push partial filter past projects.
+  public void testPushFilterPastProjectWithFlatten() throws Exception {
+    final String query =
+        " select comp, rownum " +
+        " from (select flatten(complex) comp, rownum " +
+        "      from cp.`/store/json/test_flatten_mappify2.json`) " +
+        " where comp > 1 " +   // should not be pushed down
+        "   and rownum = 100"; // should be pushed down.
+
+    final String[] expectedPlans = {"(?s)Filter.*>.*Flatten.*Filter.*=.*"};
+    final String[] excludedPlans = {"Filter.*AND.*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
+  }
+
+  @Test // DRILL-4121 : push partial filter past projects : neg test case
+  public void testPushFilterPastProjectWithFlattenNeg() throws Exception {
+    final String query =
+        " select comp, rownum " +
+            " from (select flatten(complex) comp, rownum " +
+            "      from cp.`/store/json/test_flatten_mappify2.json`) " +
+            " where comp > 1 " +   // should NOT be pushed down
+            "   OR rownum = 100";  // should NOT be pushed down.
+
+    final String[] expectedPlans = {"(?s)Filter.*OR.*Flatten"};
+    final String[] excludedPlans = {"(?s)Filter.*Flatten.*Filter.*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
+  }
+
+
 }

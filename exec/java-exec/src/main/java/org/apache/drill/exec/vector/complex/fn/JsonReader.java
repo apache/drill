@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class JsonReader extends BaseJsonProcessor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
@@ -48,7 +50,6 @@ public class JsonReader extends BaseJsonProcessor {
   private final WorkingBuffer workingBuffer;
   private final List<SchemaPath> columns;
   private final boolean allTextMode;
-  private boolean atLeastOneWrite = false;
   private final MapVectorOutput mapOutput;
   private final ListVectorOutput listOutput;
   private final boolean extended = true;
@@ -76,7 +77,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
     super(managedBuf);
-    assert Preconditions.checkNotNull(columns).size() > 0 : "json record reader requires at least a column";
+    assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
     this.selection = FieldSelection.getFieldSelection(columns);
     this.workingBuffer = new WorkingBuffer(managedBuf);
     this.skipOuterList = skipOuterList;
@@ -90,16 +91,51 @@ public class JsonReader extends BaseJsonProcessor {
 
   @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
-    if (!atLeastOneWrite) {
-      // if we had no columns, create one empty one so we can return some data for count purposes.
-      SchemaPath sp = columns.get(0);
-      PathSegment root = sp.getRootSegment();
+    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
+    List<PathSegment> fieldPathList = Lists.newArrayList();
+    BitSet emptyStatus = new BitSet(columns.size());
+
+    // first pass: collect which fields are empty
+    for (int i = 0; i < columns.size(); i++) {
+      SchemaPath sp = columns.get(i);
+      PathSegment fieldPath = sp.getRootSegment();
       BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-      while (root.getChild() != null && !root.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-        root = root.getChild();
+      while (fieldPath.getChild() != null && ! fieldPath.getChild().isArray()) {
+        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        fieldPath = fieldPath.getChild();
       }
-      fieldWriter.integer(root.getNameSegment().getPath());
+      writerList.add(fieldWriter);
+      fieldPathList.add(fieldPath);
+      if (fieldWriter.isEmptyMap()) {
+        emptyStatus.set(i, true);
+      }
+      if (i == 0 && !allTextMode) {
+        // when allTextMode is false, there is not much benefit to producing all the empty
+        // fields; just produce 1 field.  The reason is that the type of the fields is
+        // unknown, so if we produce multiple Integer fields by default, a subsequent batch
+        // that contains non-integer fields will error out in any case.  Whereas, with
+        // allTextMode true, we are sure that all fields are going to be treated as varchar,
+        // so it makes sense to produce all the fields, and in fact is necessary in order to
+        // avoid schema change exceptions by downstream operators.
+        break;
+      }
+
+    }
+
+    // second pass: create default typed vectors corresponding to empty fields
+    // Note: this is not easily do-able in 1 pass because the same fieldWriter may be
+    // shared by multiple fields whereas we want to keep track of all fields independently,
+    // so we rely on the emptyStatus.
+    for (int j = 0; j < fieldPathList.size(); j++) {
+      BaseWriter.MapWriter fieldWriter = writerList.get(j);
+      PathSegment fieldPath = fieldPathList.get(j);
+      if (emptyStatus.get(j)) {
+        if (allTextMode) {
+          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
+        } else {
+          fieldWriter.integer(fieldPath.getNameSegment().getPath());
+        }
+      }
     }
   }
 
@@ -315,12 +351,10 @@ public class JsonReader extends BaseJsonProcessor {
 
         case VALUE_FALSE: {
           map.bit(fieldName).writeBit(0);
-          atLeastOneWrite = true;
           break;
         }
         case VALUE_TRUE: {
           map.bit(fieldName).writeBit(1);
-          atLeastOneWrite = true;
           break;
         }
         case VALUE_NULL:
@@ -328,7 +362,6 @@ public class JsonReader extends BaseJsonProcessor {
           break;
         case VALUE_NUMBER_FLOAT:
           map.float8(fieldName).writeFloat8(parser.getDoubleValue());
-          atLeastOneWrite = true;
           break;
         case VALUE_NUMBER_INT:
           if (this.readNumbersAsDouble) {
@@ -336,11 +369,9 @@ public class JsonReader extends BaseJsonProcessor {
           } else {
             map.bigInt(fieldName).writeBigInt(parser.getLongValue());
           }
-          atLeastOneWrite = true;
           break;
         case VALUE_STRING:
           handleString(parser, map, fieldName);
-          atLeastOneWrite = true;
           break;
 
         default:
@@ -406,7 +437,6 @@ public class JsonReader extends BaseJsonProcessor {
       case VALUE_NUMBER_INT:
       case VALUE_STRING:
         handleString(parser, map, fieldName);
-        atLeastOneWrite = true;
         break;
       case VALUE_NULL:
         // do nothing as we don't have a type.
@@ -433,7 +463,6 @@ public class JsonReader extends BaseJsonProcessor {
    */
   private boolean writeMapDataIfTyped(MapWriter writer, String fieldName) throws IOException {
     if (extended) {
-      atLeastOneWrite = true;
       return mapOutput.run(writer, fieldName);
     } else {
       parser.nextToken();
@@ -449,7 +478,6 @@ public class JsonReader extends BaseJsonProcessor {
    */
   private boolean writeListDataIfTyped(ListWriter writer) throws IOException {
     if (extended) {
-      atLeastOneWrite = true;
       return listOutput.run(writer);
     } else {
       parser.nextToken();
@@ -486,12 +514,10 @@ public class JsonReader extends BaseJsonProcessor {
       case VALUE_EMBEDDED_OBJECT:
       case VALUE_FALSE: {
         list.bit().writeBit(0);
-        atLeastOneWrite = true;
         break;
       }
       case VALUE_TRUE: {
         list.bit().writeBit(1);
-        atLeastOneWrite = true;
         break;
       }
       case VALUE_NULL:
@@ -502,7 +528,6 @@ public class JsonReader extends BaseJsonProcessor {
           .build(logger);
       case VALUE_NUMBER_FLOAT:
         list.float8().writeFloat8(parser.getDoubleValue());
-        atLeastOneWrite = true;
         break;
       case VALUE_NUMBER_INT:
         if (this.readNumbersAsDouble) {
@@ -511,11 +536,9 @@ public class JsonReader extends BaseJsonProcessor {
         else {
           list.bigInt().writeBigInt(parser.getLongValue());
         }
-        atLeastOneWrite = true;
         break;
       case VALUE_STRING:
         handleString(parser, list);
-        atLeastOneWrite = true;
         break;
       default:
         throw UserException.dataReadError()
@@ -555,7 +578,6 @@ public class JsonReader extends BaseJsonProcessor {
       case VALUE_NUMBER_INT:
       case VALUE_STRING:
         handleString(parser, list);
-        atLeastOneWrite = true;
         break;
       default:
         throw

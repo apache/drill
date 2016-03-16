@@ -43,6 +43,7 @@ class BitControlHandshake;
 class BitStatus;
 class FragmentStatus;
 class InitializeFragments;
+class CustomMessage;
 class PlanFragment;
 class Collector;
 class QueryContextInformation;
@@ -61,14 +62,16 @@ enum RpcType {
   REQ_QUERY_STATUS = 10,
   REQ_QUERY_CANCEL = 15,
   REQ_UNPAUSE_FRAGMENT = 16,
+  REQ_CUSTOM = 17,
   RESP_FRAGMENT_HANDLE = 11,
   RESP_FRAGMENT_STATUS = 12,
   RESP_BIT_STATUS = 13,
-  RESP_QUERY_STATUS = 14
+  RESP_QUERY_STATUS = 14,
+  RESP_CUSTOM = 18
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = REQ_UNPAUSE_FRAGMENT;
+const RpcType RpcType_MAX = RESP_CUSTOM;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -450,6 +453,103 @@ class InitializeFragments : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static InitializeFragments* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CustomMessage : public ::google::protobuf::Message {
+ public:
+  CustomMessage();
+  virtual ~CustomMessage();
+
+  CustomMessage(const CustomMessage& from);
+
+  inline CustomMessage& operator=(const CustomMessage& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CustomMessage& default_instance();
+
+  void Swap(CustomMessage* other);
+
+  // implements Message ----------------------------------------------
+
+  CustomMessage* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CustomMessage& from);
+  void MergeFrom(const CustomMessage& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::google::protobuf::int32 type() const;
+  inline void set_type(::google::protobuf::int32 value);
+
+  // optional bytes message = 2;
+  inline bool has_message() const;
+  inline void clear_message();
+  static const int kMessageFieldNumber = 2;
+  inline const ::std::string& message() const;
+  inline void set_message(const ::std::string& value);
+  inline void set_message(const char* value);
+  inline void set_message(const void* value, size_t size);
+  inline ::std::string* mutable_message();
+  inline ::std::string* release_message();
+  inline void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:exec.bit.control.CustomMessage)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_message();
+  inline void clear_has_message();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* message_;
+  ::google::protobuf::int32 type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitControl_2eproto();
+  friend void protobuf_AssignDesc_BitControl_2eproto();
+  friend void protobuf_ShutdownFile_BitControl_2eproto();
+
+  void InitAsDefaultInstance();
+  static CustomMessage* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1345,6 +1445,102 @@ InitializeFragments::fragment() const {
 inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
 InitializeFragments::mutable_fragment() {
   return &fragment_;
+}
+
+// -------------------------------------------------------------------
+
+// CustomMessage
+
+// optional int32 type = 1;
+inline bool CustomMessage::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CustomMessage::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CustomMessage::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CustomMessage::clear_type() {
+  type_ = 0;
+  clear_has_type();
+}
+inline ::google::protobuf::int32 CustomMessage::type() const {
+  return type_;
+}
+inline void CustomMessage::set_type(::google::protobuf::int32 value) {
+  set_has_type();
+  type_ = value;
+}
+
+// optional bytes message = 2;
+inline bool CustomMessage::has_message() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CustomMessage::set_has_message() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CustomMessage::clear_has_message() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CustomMessage::clear_message() {
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    message_->clear();
+  }
+  clear_has_message();
+}
+inline const ::std::string& CustomMessage::message() const {
+  return *message_;
+}
+inline void CustomMessage::set_message(const ::std::string& value) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(value);
+}
+inline void CustomMessage::set_message(const char* value) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(value);
+}
+inline void CustomMessage::set_message(const void* value, size_t size) {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  message_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CustomMessage::mutable_message() {
+  set_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    message_ = new ::std::string;
+  }
+  return message_;
+}
+inline ::std::string* CustomMessage::release_message() {
+  clear_has_message();
+  if (message_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = message_;
+    message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CustomMessage::set_allocated_message(::std::string* message) {
+  if (message_ != &::google::protobuf::internal::kEmptyString) {
+    delete message_;
+  }
+  if (message) {
+    set_has_message();
+    message_ = message;
+  } else {
+    clear_has_message();
+    message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------

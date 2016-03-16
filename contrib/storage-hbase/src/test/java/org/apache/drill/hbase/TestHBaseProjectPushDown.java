@@ -28,7 +28,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
-        , 7);
+        , 8);
   }
 
   @Test
@@ -45,10 +45,14 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
   public void testRowKeyAndColumnPushDown() throws Exception{
     setColumnWidths(new int[] {8, 9, 6, 2, 6});
     runHBaseSQLVerifyCount("SELECT\n"
-        + "row_key, t.f.c1*31 as `t.f.c1*31`, t.f.c2 as `t.f.c2`, 5 as `5`, 'abc' as `'abc'`\n"
+        // Note:  Can't currently use period in column alias (not even with
+        // qualified identifier) because Drill internals don't currently encode
+        // names sufficiently.
+        + "row_key, t.f.c1 * 31 as `t dot f dot c1 * 31`, "
+        + "t.f.c2 as `t dot f dot c2`, 5 as `5`, 'abc' as `'abc'`\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` t"
-        , 7);
+        , 8);
   }
 
   @Test
@@ -58,7 +62,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key, f, f2\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
-        , 7);
+        , 8);
   }
 
 }

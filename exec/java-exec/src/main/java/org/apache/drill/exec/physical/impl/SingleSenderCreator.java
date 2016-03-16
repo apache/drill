@@ -20,8 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -66,7 +65,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     }
 
     public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
-      super(context, context.newOperatorContext(config, null, false), config);
+      super(context, context.newOperatorContext(config, null), config);
       this.incoming = batch;
       assert incoming != null;
       handle = context.getHandle();
@@ -98,7 +97,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 //      logger.debug("Outcome of sender next {}", out);
       switch (out) {
       case OUT_OF_MEMORY:
-        throw new OutOfMemoryRuntimeException();
+        throw new OutOfMemoryException();
       case STOP:
       case NONE:
         // if we didn't do anything yet, send an empty schema.
@@ -121,7 +120,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         final FragmentWritableBatch batch = new FragmentWritableBatch(
             false, handle.getQueryId(), handle.getMajorFragmentId(),
             handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(),
-            incoming.getWritableBatch());
+            incoming.getWritableBatch().transfer(oContext.getAllocator()));
         updateStats(batch);
         stats.startWait();
         try {

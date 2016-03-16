@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import java.util.concurrent.TimeUnit;
+
+import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -26,11 +32,25 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.FutureBitCommand;
 import org.apache.drill.exec.rpc.ListeningCommand;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.control.Controller.CustomSerDe;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 
 
 public class ControlTunnel {
@@ -176,4 +196,238 @@ public class ControlTunnel {
       connection.send(outcomeListener, RpcType.REQ_QUERY_CANCEL, queryId, Ack.class);
     }
   }
+
+  @SuppressWarnings("unchecked")
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> CustomTunnel<SEND, RECEIVE> getCustomTunnel(
+      int messageTypeId, Class<SEND> clazz, Parser<RECEIVE> parser) {
+    return new CustomTunnel<SEND, RECEIVE>(
+        messageTypeId,
+        ((CustomSerDe<SEND>) new ProtoSerDe<Message>(null)),
+        new ProtoSerDe<RECEIVE>(parser));
+  }
+
+  public <SEND, RECEIVE> CustomTunnel<SEND, RECEIVE> getCustomTunnel(
+      int messageTypeId, CustomSerDe<SEND> send, CustomSerDe<RECEIVE> receive) {
+    return new CustomTunnel<SEND, RECEIVE>(messageTypeId, send, receive);
+  }
+
+
+  private static class CustomMessageSender extends ListeningCommand<CustomMessage, ControlConnection> {
+
+    private CustomMessage message;
+    private ByteBuf[] dataBodies;
+
+    public CustomMessageSender(RpcOutcomeListener<CustomMessage> listener, CustomMessage message, ByteBuf[] dataBodies) {
+      super(listener);
+      this.message = message;
+      this.dataBodies = dataBodies;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+    }
+
+  }
+
+  private static class SyncCustomMessageSender extends FutureBitCommand<CustomMessage, ControlConnection> {
+
+    private CustomMessage message;
+    private ByteBuf[] dataBodies;
+
+    public SyncCustomMessageSender(CustomMessage message, ByteBuf[] dataBodies) {
+      super();
+      this.message = message;
+      this.dataBodies = dataBodies;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+    }
+  }
+
+  /**
+   * A class used to return a synchronous future when doing custom rpc messages.
+   * @param <RECEIVE>
+   *          The type of message that will be returned.
+   */
+  public class CustomFuture<RECEIVE> {
+
+    private final CustomSerDe<RECEIVE> serde;
+    private final DrillRpcFuture<CustomMessage> future;
+
+    public CustomFuture(CustomSerDe<RECEIVE> serde, DrillRpcFuture<CustomMessage> future) {
+      super();
+      this.serde = serde;
+      this.future = future;
+    }
+
+    public RECEIVE get() throws Exception {
+      CustomMessage message = future.checkedGet();
+      return serde.deserializeReceived(message.getMessage().toByteArray());
+    }
+
+    public RECEIVE get(long timeout, TimeUnit unit) throws Exception,
+        InvalidProtocolBufferException {
+      CustomMessage message = future.checkedGet(timeout, unit);
+      return serde.deserializeReceived(message.getMessage().toByteArray());
+    }
+
+    public DrillBuf getBuffer() throws RpcException {
+      return (DrillBuf) future.getBuffer();
+    }
+
+  }
+
+
+  /**
+   * A special tunnel that can be used for custom types of messages. Its lifecycle is tied to the underlying
+   * ControlTunnel.
+   * @param <SEND>
+   *          The type of message the control tunnel will be able to send.
+   * @param <RECEIVE>
+   *          The expected response the control tunnel expects to receive.
+   */
+  public class CustomTunnel<SEND, RECEIVE> {
+    private int messageTypeId;
+    private CustomSerDe<SEND> send;
+    private CustomSerDe<RECEIVE> receive;
+
+    private CustomTunnel(int messageTypeId, CustomSerDe<SEND> send, CustomSerDe<RECEIVE> receive) {
+      super();
+      this.messageTypeId = messageTypeId;
+      this.send = send;
+      this.receive = receive;
+    }
+
+    /**
+     * Send a message and receive a future for monitoring the outcome.
+     * @param messageToSend
+     *          The structured message to send.
+     * @param dataBodies
+     *          One or more optional unstructured messages to append to the structure message.
+     * @return The CustomFuture that can be used to wait for the response.
+     */
+    public CustomFuture<RECEIVE> send(SEND messageToSend, ByteBuf... dataBodies) {
+      final CustomMessage customMessage = CustomMessage.newBuilder()
+          .setMessage(ByteString.copyFrom(send.serializeToSend(messageToSend)))
+          .setType(messageTypeId)
+          .build();
+      final SyncCustomMessageSender b = new SyncCustomMessageSender(customMessage, dataBodies);
+      manager.runCommand(b);
+      DrillRpcFuture<CustomMessage> innerFuture = b.getFuture();
+      return new CustomFuture<RECEIVE>(receive, innerFuture);
+    }
+
+    /**
+     * Send a message using a custom listener.
+     * @param listener
+     *          The listener to inform of the outcome of the sent message.
+     * @param messageToSend
+     *          The structured message to send.
+     * @param dataBodies
+     *          One or more optional unstructured messages to append to the structure message.
+     */
+    public void send(RpcOutcomeListener<RECEIVE> listener, SEND messageToSend, ByteBuf... dataBodies) {
+      final CustomMessage customMessage = CustomMessage.newBuilder()
+          .setMessage(ByteString.copyFrom(send.serializeToSend(messageToSend)))
+          .setType(messageTypeId)
+          .build();
+      manager.runCommand(new CustomMessageSender(new CustomTunnelListener(listener), customMessage, dataBodies));
+    }
+
+    private class CustomTunnelListener implements RpcOutcomeListener<CustomMessage> {
+      final RpcOutcomeListener<RECEIVE> innerListener;
+
+      public CustomTunnelListener(RpcOutcomeListener<RECEIVE> innerListener) {
+        super();
+        this.innerListener = innerListener;
+      }
+
+      @Override
+      public void failed(RpcException ex) {
+        innerListener.failed(ex);
+      }
+
+      @Override
+      public void success(CustomMessage value, ByteBuf buffer) {
+        try {
+          RECEIVE message = receive.deserializeReceived(value.getMessage().toByteArray());
+          innerListener.success(message, buffer);
+        } catch (Exception e) {
+          innerListener.failed(new RpcException("Failure while parsing message locally.", e));
+        }
+
+      }
+
+      @Override
+      public void interrupted(InterruptedException e) {
+        innerListener.interrupted(e);
+      }
+
+    }
+
+  }
+
+
+
+
+  public static class ProtoSerDe<MSG extends MessageLite> implements CustomSerDe<MSG> {
+    private final Parser<MSG> parser;
+
+    ProtoSerDe(Parser<MSG> parser) {
+      this.parser = parser;
+    }
+
+    @Override
+    public byte[] serializeToSend(MSG send) {
+      return send.toByteArray();
+    }
+
+    @Override
+    public MSG deserializeReceived(byte[] bytes) throws Exception {
+      return parser.parseFrom(bytes);
+    }
+
+  }
+
+  public static class JacksonSerDe<MSG> implements CustomSerDe<MSG> {
+
+    private final ObjectWriter writer;
+    private final ObjectReader reader;
+
+    public JacksonSerDe(Class<MSG> clazz) {
+      ObjectMapper mapper = new ObjectMapper();
+      writer = mapper.writerFor(clazz);
+      reader = mapper.readerFor(clazz);
+    }
+
+    public JacksonSerDe(Class<MSG> clazz, JsonSerializer<MSG> serializer, JsonDeserializer<MSG> deserializer) {
+      ObjectMapper mapper = new ObjectMapper();
+      SimpleModule module = new SimpleModule();
+      mapper.registerModule(module);
+      module.addSerializer(clazz, serializer);
+      module.addDeserializer(clazz, deserializer);
+      writer = mapper.writerFor(clazz);
+      reader = mapper.readerFor(clazz);
+    }
+
+    @Override
+    public byte[] serializeToSend(MSG send) {
+      try {
+        return writer.writeValueAsBytes(send);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public MSG deserializeReceived(byte[] bytes) throws Exception {
+      return (MSG) reader.readValue(bytes);
+    }
+
+  }
+
 }

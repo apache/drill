@@ -26,11 +26,11 @@ import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -153,7 +153,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     for (final VectorWrapper<?> vw : incoming) {
       for (final ValueVector vv : vw.getValueVectors()) {
-        final TransferPair pair = vv.getTransferPair();
+        final TransferPair pair = vv.getTransferPair(oContext.getAllocator());
         container.add(pair.getTo());
         transfers.add(pair);
       }

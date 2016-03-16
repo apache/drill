@@ -54,7 +54,7 @@ import com.google.common.collect.Maps;
 
 public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
 
-    private static final boolean IS_COMPRESSIBLE = true;
+    private static final boolean IS_COMPRESSIBLE = false;
     private static final String DEFAULT_NAME = "xml";
     private Boolean keepPrefix = true;
     private XMLFormatConfig xmlConfig;
@@ -100,6 +100,7 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
 
         public List<String> extensions;
         public List<String> xsds;
+        public List<String> dtds;
         public boolean keepPrefix = true;
 
         private static final List<String> DEFAULT_EXTS = ImmutableList.of("xml");
@@ -117,6 +118,12 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
         public List<String> getXsds() {
 
             return xsds;
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        public List<String> getDtds() {
+
+            return dtds;
         }
 
         @JsonInclude(JsonInclude.Include.NON_DEFAULT)

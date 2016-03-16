@@ -19,10 +19,8 @@ package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.jar.Manifest;
 
 import com.google.common.io.Resources;
 import org.apache.drill.common.util.DrillVersionInfo;
@@ -46,7 +44,7 @@ public class VersionIterator implements Iterator<Object>{
         URL u = Resources.getResource("git.properties");
         if(u != null){
           Properties p = new Properties();
-          p.load(Resources.newInputStreamSupplier(u).getInput());
+          p.load(Resources.asByteSource(u).openStream());
           commit_id = p.getProperty("git.commit.id");
           build_email = p.getProperty("git.build.user.email");
           commit_time = p.getProperty("git.commit.time");

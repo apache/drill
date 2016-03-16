@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.io.IOException;
-import java.util.List;
+import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
+import java.io.IOException;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
@@ -28,17 +28,9 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillWriterRel;
-import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
-import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -46,10 +38,7 @@ import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.parquet.Metadata;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
 public class RefreshMetadataHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RefreshMetadataHandler.class);
@@ -72,7 +61,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
     try {
 
-      final SchemaPlus schema = findSchema(context.getNewDefaultSchema(),
+      final SchemaPlus schema = findSchema(config.getConverter().getDefaultSchema(),
           refreshTable.getSchemaPath());
 
       final String tableName = refreshTable.getName();

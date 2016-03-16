@@ -37,9 +37,10 @@ public class VectorUtil {
   public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
 
     int rows = va.getRecordCount();
+    System.out.println(rows + " row(s):");
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
+      columns.add(vw.getValueVector().getField().getPath());
     }
 
     int width = columns.size();
@@ -54,7 +55,7 @@ public class VectorUtil {
         try{
           o = vw.getValueVector().getAccessor().getObject(row);
         }catch(Exception e){
-          throw new RuntimeException("failure while trying to read column " + vw.getField().getPath().toExpr());
+          throw new RuntimeException("failure while trying to read column " + vw.getField().getPath());
         }
         if (o == null) {
           //null value
@@ -82,7 +83,7 @@ public class VectorUtil {
     if (includeHeader) {
       List<String> columns = Lists.newArrayList();
       for (VectorWrapper<?> vw : va) {
-        columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
+        columns.add(vw.getValueVector().getField().getPath());
       }
 
       formattedResults.append(Joiner.on(delimiter).join(columns));
@@ -133,11 +134,12 @@ public class VectorUtil {
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
       MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
+      columns.add(field.getPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
     }
 
     int rows = va.getRecordCount();
+    System.out.println(rows + " row(s):");
     for (int row = 0; row < rows; row++) {
       // header, every 50 rows.
       if (row%50 == 0) {

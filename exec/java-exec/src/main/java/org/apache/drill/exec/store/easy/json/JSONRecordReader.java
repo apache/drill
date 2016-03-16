@@ -21,13 +21,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -45,6 +47,8 @@ import com.google.common.collect.ImmutableList;
 
 public class JSONRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
+
+  public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
 
   private VectorContainerWriter writer;
 
@@ -66,7 +70,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param fragmentContext
    * @param inputPath
    * @param fileSystem
-   * @param columns
+   * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(final FragmentContext fragmentContext, final String inputPath, final DrillFileSystem fileSystem,
@@ -79,7 +83,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param fragmentContext
    * @param embeddedContent
    * @param fileSystem
-   * @param columns
+   * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(final FragmentContext fragmentContext, final JsonNode embeddedContent,
@@ -114,6 +118,14 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   @Override
+  public String toString() {
+    return super.toString()
+        + "[hadoopPath = " + hadoopPath
+        + ", recordCount = " + recordCount
+        + ", runningRecordCount = " + runningRecordCount + ", ...]";
+  }
+
+  @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
     try{
       if (hadoopPath != null) {
@@ -130,6 +142,10 @@ public class JSONRecordReader extends AbstractRecordReader {
     }catch(final Exception e){
       handleAndRaise("Failure reading JSON file", e);
     }
+  }
+
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return ImmutableList.of();
   }
 
   private void setupParser() throws IOException {
@@ -178,7 +194,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     ReadState write = null;
 //    Stopwatch p = new Stopwatch().start();
     try{
-      outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
+      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH) {
         writer.setPosition(recordCount);
         write = jsonReader.write(writer);
 

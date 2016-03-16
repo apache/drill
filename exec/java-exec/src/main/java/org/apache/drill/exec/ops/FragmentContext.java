@@ -30,18 +30,18 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
@@ -158,9 +158,12 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     // Add the fragment context to the root allocator.
     // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
     try {
-      allocator = context.getAllocator().getChildAllocator(this, fragment.getMemInitial(), fragment.getMemMax(), true);
+      allocator = context.getAllocator().newChildAllocator(
+          "frag:" + QueryIdHelper.getFragmentId(fragment.getHandle()),
+          fragment.getMemInitial(),
+          fragment.getMemMax());
       Preconditions.checkNotNull(allocator, "Unable to acuqire allocator");
-    } catch(final OutOfMemoryException | OutOfMemoryRuntimeException e) {
+    } catch (final OutOfMemoryException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())
         .build(logger);
@@ -169,7 +172,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     }
 
     stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
-    bufferManager = new BufferManager(this.allocator, this);
+    bufferManager = new BufferManagerImpl(this.allocator);
   }
 
   /**
@@ -270,8 +273,6 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return frag;
   }
 
-
-
   /**
    * Get this fragment's allocator.
    * @return the allocator
@@ -284,10 +285,19 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return allocator;
   }
 
-  public BufferAllocator getNewChildAllocator(final long initialReservation,
-                                              final long maximumReservation,
-                                              final boolean applyFragmentLimit) throws OutOfMemoryException {
-    return allocator.getChildAllocator(this, initialReservation, maximumReservation, applyFragmentLimit);
+  public BufferAllocator getNewChildAllocator(final String operatorName,
+      final int operatorId,
+      final long initialReservation,
+      final long maximumReservation) throws OutOfMemoryException {
+    return allocator.newChildAllocator(
+        "op:" + QueryIdHelper.getFragmentId(fragment.getHandle()) + ":" + operatorId + ":" + operatorName,
+        initialReservation,
+        maximumReservation
+        );
+  }
+
+  public boolean isOverMemoryLimit() {
+    return allocator.isOverLimit();
   }
 
   public <T> T getImplementationClass(final ClassGenerator<T> cg)
@@ -330,16 +340,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return buffers;
   }
 
-  public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats, boolean applyFragmentLimit)
+  public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats)
       throws OutOfMemoryException {
-    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats, applyFragmentLimit);
+    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats);
     contexts.add(context);
     return context;
   }
 
-  public OperatorContext newOperatorContext(PhysicalOperator popConfig, boolean applyFragmentLimit)
+  public OperatorContext newOperatorContext(PhysicalOperator popConfig)
       throws OutOfMemoryException {
-    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, applyFragmentLimit);
+    OperatorContextImpl context = new OperatorContextImpl(popConfig, this);
     contexts.add(context);
     return context;
   }
@@ -365,7 +375,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   public void setFragmentLimit(final long limit) {
-    allocator.setFragmentLimit(limit);
+    allocator.setLimit(limit);
   }
 
   public ExecutionControls getExecutionControls() {

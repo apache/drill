@@ -74,6 +74,24 @@ public class TestPartitionFilter extends PlanTestBase {
     testExcludeFilter(query, 1, "Filter", 10);
   }
 
+  @Test  //Json: basic test with dir0 and dir1 filters
+  public void testPartitionFilter1_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1='Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test  //Json: basic test with dir0 = and dir1 is null filters
+  public void testPartitionFilterIsNull_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1 is null", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 5);
+  }
+
+  @Test  //Json: basic test with dir0 = and dir1 is not null filters
+  public void testPartitionFilterIsNotNull_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1 is not null", TEST_RES_PATH);
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
   @Test  //CSV: basic test with dir0 and dir1 filters in
   public void testPartitionFilter1_Csv() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/csv` where dir0=1994 and dir1='Q1'", TEST_RES_PATH);
@@ -239,7 +257,8 @@ public class TestPartitionFilter extends PlanTestBase {
   public void testMainQueryFalseCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994') t where 1 = 0", root);
-    testExcludeFilter(query, 4, "Filter", 0);
+    // the 1 = 0 becomes limit 0, which will require to read only one parquet file, in stead of 4 for year '1994'.
+    testExcludeFilter(query, 1, "Filter", 0);
   }
 
   @Test // see DRILL-2712
@@ -295,5 +314,52 @@ public class TestPartitionFilter extends PlanTestBase {
     testExcludeFilter(query, 1, "Filter", 1);
   }
 
+  // Coalesce filter is on the non directory column. DRILL-4071
+  @Test
+  public void testPartitionWithCoalesceFilter_1() throws Exception {
+    String query = String.format("select 1 from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1' and coalesce(o_custkey, 0) = 890", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
+
+  // Coalesce filter is on the directory column
+  @Test
+  public void testPartitionWithCoalesceFilter_2() throws Exception {
+    String query = String.format("select 1 from dfs_test.`%s/multilevel/parquet` where dir0=1994 and o_custkey = 890 and coalesce(dir1, 'NA') = 'Q1'", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
+
+  @Test  //DRILL-4021: Json with complex type and nested flatten functions: dir0 and dir1 filters plus filter involves filter refering to output from nested flatten functions.
+  public void testPartitionFilter_Json_WithFlatten() throws Exception {
+    // this query expects to have the partition filter pushded.
+    // With partition pruning, we will end with one file, and one row returned from the query.
+    final String query = String.format(
+        " select dir0, dir1, o_custkey, o_orderdate, provider from " +
+        "   ( select dir0, dir1, o_custkey, o_orderdate, flatten(items['providers']) as provider " +
+            " from (" +
+            "   select dir0, dir1, o_custkey, o_orderdate, flatten(o_items) items " +
+            "     from dfs_test.`%s/multilevel/jsoncomplex`) ) " +
+            " where dir0=1995 " +   // should be pushed down and used as partitioning filter
+            "   and dir1='Q1' " +   // should be pushed down and used as partitioning filter
+            "   and provider = 'BestBuy'", // should NOT be pushed down.
+        TEST_RES_PATH);
+
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
+
+  @Test
+  public void testLogicalDirPruning() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test
+  public void testLogicalDirPruning2() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995 and o_custkey > 0", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 10);
+  }
 
 }

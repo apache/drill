@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -36,7 +36,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.File;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.List;
@@ -44,27 +43,39 @@ import java.util.List;
 
 public class XMLRecordReader extends JSONRecordReader {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLRecordReader.class);
-    private String filePath;
-    FileDescriptor fd;
-    XMLSaxParser handler;
-    SAXParser xmlParser;
-    JsonNode node;
+    private XMLSaxParser handler;
+    private SAXParser xmlParser;
+    boolean validate;
+    private List<String> xsds;
+    private List<String> dtds;
+    private JsonNode node;
 
     public XMLRecordReader(FragmentContext fragmentContext, String inputPath, DrillFileSystem fileSystem, List<SchemaPath> columns, XMLFormatPlugin.XMLFormatConfig xmlConfig) throws OutOfMemoryException {
         super(fragmentContext, inputPath, fileSystem, columns);
-
-
-
         try {
             FSDataInputStream fsStream = fileSystem.open(new Path(inputPath));
             SAXParserFactory parserFactor = SAXParserFactory.newInstance();
             xmlParser = parserFactor.newSAXParser();
             handler = new XMLSaxParser();
-
             handler.setRemoveNameSpace(xmlConfig.getKeepPrefix() == true ? false : true);
+            if(xmlConfig.getXsds() != null) {
+                //xsds = new ArrayList<String>();
+                //xsds.addAll(xmlConfig.getXsds());
+            }
+
+            if(xmlConfig.getDtds() != null) {
+                //dtds =  new ArrayList<String>();
+                //dtds.addAll(xmlConfig.getDtds());
+            }
+
+            //parserFactor.setNamespaceAware(true);
+            //parserFactor.setValidating(true);
+
+
             xmlParser.parse(fsStream.getWrappedStream(), handler);
-            ObjectMapper objectM = new ObjectMapper();
-            node = objectM.valueToTree(handler.getVal());
+            ObjectMapper mapper = new ObjectMapper();
+            node = mapper.valueToTree(handler.getVal());
+            //System.out.println(handler.getVal().toJSONString());
             xmlParser = null;
             handler = null;
             parserFactor = null;

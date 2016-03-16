@@ -60,6 +60,12 @@ public class TestMongoQueries extends MongoTestBase {
   }
 
   @Test
+  public void testEmptyCollection() throws Exception {
+    String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB, EMPLOYEE_DB, EMPTY_COLLECTION);
+    runMongoSQLVerifyCount(queryString, 0);
+  }
+
+  @Test
   public void testUnShardedDBInShardedClusterWithProjectionAndFilter() throws Exception {
     String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER,
         DONUTS_DB, DONUTS_COLLECTION);

@@ -118,6 +118,12 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c8".getBytes(), "5".getBytes());
     p.add("f2".getBytes(), "c9".getBytes(), "6".getBytes());
     table.put(p);
+
+    p = new Put("b7".getBytes());
+    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    table.put(p);
+
     table.flushCommits();
     table.close();
   }
@@ -603,5 +609,32 @@ public class TestTableGenerator {
     table.close();
 
     admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetNullStr(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor("f"));
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    Put p = new Put("a1".getBytes());
+    p.add("f".getBytes(), "c1".getBytes(), "".getBytes());
+    p.add("f".getBytes(), "c2".getBytes(), "".getBytes());
+    p.add("f".getBytes(), "c3".getBytes(), "5".getBytes());
+    p.add("f".getBytes(), "c4".getBytes(), "".getBytes());
+    table.put(p);
+
+    table.flushCommits();
+    table.close();
   }
 }

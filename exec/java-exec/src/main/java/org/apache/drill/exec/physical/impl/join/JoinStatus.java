@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.RecordIterator;
@@ -41,6 +42,7 @@ public final class JoinStatus {
   private boolean allowMarking;
 
   public boolean ok = true;
+  public boolean hasMoreData = false;
 
   public JoinStatus(RecordIterator left, RecordIterator right, MergeJoinBatch output) {
     this.left = left;
@@ -99,6 +101,7 @@ public final class JoinStatus {
   }
 
   public final boolean isOutgoingBatchFull() {
+    Preconditions.checkArgument(outputPosition <= OUTPUT_BATCH_SIZE);
     return outputPosition == OUTPUT_BATCH_SIZE;
   }
 
@@ -118,6 +121,14 @@ public final class JoinStatus {
     return allowMarking;
   }
 
+  public boolean isHasMoreData() {
+    return hasMoreData;
+  }
+
+  public void setHasMoreData(boolean hasMoreData) {
+    this.hasMoreData = hasMoreData;
+  }
+
   /**
    * Return state of join based on status of left and right iterator.
    * @return
@@ -129,6 +140,9 @@ public final class JoinStatus {
   public JoinOutcome getOutcome() {
     if (!ok) {
       return JoinOutcome.FAILURE;
+    }
+    if (hasMoreData) {
+      return JoinOutcome.BATCH_RETURNED;
     }
     if (bothMatches(IterOutcome.NONE) ||
       (joinType == JoinRelType.INNER && eitherMatches(IterOutcome.NONE)) ||

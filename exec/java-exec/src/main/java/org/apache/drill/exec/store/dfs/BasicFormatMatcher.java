@@ -138,9 +138,19 @@ public class BasicFormatMatcher extends FormatMatcher{
     }
 
     public boolean matches(DrillFileSystem fs, FileStatus status) throws IOException{
-      if (ranges.isEmpty()) {
+      if (ranges.isEmpty() || status.isDirectory()) {
         return false;
       }
+      // walk all the way down in the symlinks until a hard entry is reached
+      FileStatus current = status;
+      while (current.isSymlink()) {
+        current = fs.getFileStatus(status.getSymlink());
+      }
+      // if hard entry is not a file nor can it be a symlink then it is not readable simply deny matching.
+      if (!current.isFile()) {
+        return false;
+      }
+
       final Range<Long> fileRange = Range.closedOpen( 0L, status.getLen());
 
       try (FSDataInputStream is = fs.open(status.getPath())) {

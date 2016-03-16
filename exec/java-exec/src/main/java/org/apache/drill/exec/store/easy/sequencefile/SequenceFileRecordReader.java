@@ -56,8 +56,8 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
   private static final MajorType KEY_TYPE = Types.optional(TypeProtos.MinorType.VARBINARY);
   private static final MajorType VALUE_TYPE = Types.optional(TypeProtos.MinorType.VARBINARY);
 
-  private final SchemaPath keySchema = SchemaPath.getSimplePath("binary_key");
-  private final SchemaPath valueSchema = SchemaPath.getSimplePath("binary_value");
+  private final String keySchema = "binary_key";
+  private final String valueSchema = "binary_value";
 
   private NullableVarBinaryVector keyVector;
   private NullableVarBinaryVector valueVector;
@@ -74,8 +74,8 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
                                   final String queryUserName,
                                   final String opUserName) {
     final List<SchemaPath> columns = new ArrayList<>();
-    columns.add(keySchema);
-    columns.add(valueSchema);
+    columns.add(SchemaPath.getSimplePath(keySchema));
+    columns.add(SchemaPath.getSimplePath(valueSchema));
     setColumns(columns);
     this.dfs = dfs;
     this.split = split;
@@ -124,8 +124,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     if (keyVector != null) {
       keyVector.clear();
       keyVector.allocateNew();

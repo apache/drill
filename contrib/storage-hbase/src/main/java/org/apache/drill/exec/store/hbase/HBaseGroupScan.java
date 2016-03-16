@@ -85,7 +85,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private HBaseStoragePlugin storagePlugin;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private Map<Integer, List<HBaseSubScanSpec>> endpointFragmentMapping;
 
@@ -114,7 +114,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
-    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
+    this.columns = columns == null ? ALL_COLUMNS : columns;
     init();
   }
 
@@ -124,7 +124,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
    */
   private HBaseGroupScan(HBaseGroupScan that) {
     super(that);
-    this.columns = that.columns;
+    this.columns = that.columns == null ? ALL_COLUMNS : that.columns;
     this.hbaseScanSpec = that.hbaseScanSpec;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.regionsToScan = that.regionsToScan;
@@ -139,7 +139,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     HBaseGroupScan newScan = new HBaseGroupScan(this);
-    newScan.columns = columns;
+    newScan.columns = columns == null ? ALL_COLUMNS : columns;;
     newScan.verifyColumns();
     return newScan;
   }

@@ -25,12 +25,14 @@ enum RpcType {
   REQ_QUERY_STATUS = 10;
   REQ_QUERY_CANCEL = 15;
   REQ_UNPAUSE_FRAGMENT = 16; // send a resume message for a fragment, returns Ack
+  REQ_CUSTOM = 17;
 
   // bit responses
   RESP_FRAGMENT_HANDLE = 11;
   RESP_FRAGMENT_STATUS = 12;
   RESP_BIT_STATUS = 13;
   RESP_QUERY_STATUS = 14;
+  RESP_CUSTOM = 18;
 }
 
 message BitControlHandshake{
@@ -50,6 +52,11 @@ message FragmentStatus {
 
 message InitializeFragments {
   repeated PlanFragment fragment = 1;
+}
+
+message CustomMessage {
+  optional int32 type = 1;
+  optional bytes message = 2;
 }
 
 message PlanFragment {

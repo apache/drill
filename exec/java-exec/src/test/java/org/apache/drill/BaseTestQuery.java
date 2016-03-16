@@ -18,7 +18,6 @@
 package org.apache.drill;
 
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -45,8 +44,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -249,7 +248,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   @AfterClass
-  public static void closeClient() throws IOException {
+  public static void closeClient() throws Exception {
     if (client != null) {
       client.close();
     }
@@ -365,15 +364,17 @@ public class BaseTestQuery extends ExecTest {
    * @param expectedErrorMsg Expected error message.
    */
   protected static void errorMsgTestHelper(final String testSqlQuery, final String expectedErrorMsg) throws Exception {
-    UserException expException = null;
     try {
       test(testSqlQuery);
-    } catch (final UserException ex) {
-      expException = ex;
+      fail("Expected a UserException when running " + testSqlQuery);
+    } catch (final UserException actualException) {
+      try {
+        assertThat("message of UserException when running " + testSqlQuery, actualException.getMessage(), containsString(expectedErrorMsg));
+      } catch (AssertionError e) {
+        e.addSuppressed(actualException);
+        throw e;
+      }
     }
-
-    assertNotNull("Expected a UserException", expException);
-    assertThat(expException.getMessage(), containsString(expectedErrorMsg));
   }
 
   /**
@@ -474,9 +475,6 @@ public class BaseTestQuery extends ExecTest {
       loader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
       // SchemaChangeException, so check/clean throw clause above.
-      if (loader.getRecordCount() <= 0) {
-        continue;
-      }
       VectorUtil.showVectorAccessibleContent(loader, columnWidths);
       loader.clear();
       result.release();
