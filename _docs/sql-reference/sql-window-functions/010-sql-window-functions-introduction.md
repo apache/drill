@@ -1,6 +1,6 @@
 ---
 title: "SQL Window Functions Introduction"
-date: 2016-03-16 00:19:15 UTC
+date: 2016-03-16 00:27:40 UTC
 parent: "SQL Window Functions"
 ---
 
@@ -147,7 +147,7 @@ and *frame_end* is one of the following choices:
        CURRENT ROW  
        UNBOUNDED FOLLOWING  
 
-{% include startnote.html %}The *frame\_end* choice cannot appear earlier than the *frame\_start* choice and defaults to CURRENT ROW if not explicitly included.{% include endnote.html %}
+{% include startnote.html %}The `frame_end` choice cannot appear earlier than the `frame_start` choice and defaults to CURRENT ROW if not explicitly included.{% include endnote.html %}
 
 
 ## Arguments  
