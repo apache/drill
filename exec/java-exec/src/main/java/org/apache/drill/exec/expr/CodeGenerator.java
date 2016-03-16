@@ -145,7 +145,7 @@ public class CodeGenerator<T> {
     if (getClass() != obj.getClass()){
       return false;
     }
-    CodeGenerator other = (CodeGenerator) obj;
+    CodeGenerator<?> other = (CodeGenerator<?>) obj;
     if (definition == null) {
       if (other.definition != null){
         return false;

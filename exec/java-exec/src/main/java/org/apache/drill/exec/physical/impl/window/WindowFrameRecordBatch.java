@@ -212,7 +212,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final boolean frameEndReached = partitionEndReached || !framers[0].isPeer(currentSize - 1, current, lastSize - 1, last);
 
     for (final WindowFunction function : functions) {
-      if (!function.canDoWork(batches.size(), hasOrderBy, frameEndReached, partitionEndReached)) {
+      if (!function.canDoWork(batches.size(), popConfig, frameEndReached, partitionEndReached)) {
         return false;
       }
     }
@@ -279,7 +279,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       final WindowFunction winfun = WindowFunction.fromExpression(call);
       if (winfun.materialize(ne, container, context.getFunctionRegistry())) {
         functions.add(winfun);
-        requireFullPartition |= winfun.requiresFullPartition(hasOrderBy);
+        requireFullPartition |= winfun.requiresFullPartition(popConfig);
 
         if (winfun.supportsCustomFrames()) {
           useCustomFrame = true;
@@ -311,13 +311,13 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     int index = 0;
     if (useDefaultFrame) {
       framers[index] = generateFramer(keyExprs, orderExprs, functions, false);
-      framers[index].setup(batches, container, oContext, requireFullPartition);
+      framers[index].setup(batches, container, oContext, requireFullPartition, popConfig);
       index++;
     }
 
     if (useCustomFrame) {
       framers[index] = generateFramer(keyExprs, orderExprs, functions, true);
-      framers[index].setup(batches, container, oContext, requireFullPartition);
+      framers[index].setup(batches, container, oContext, requireFullPartition, popConfig);
     }
   }
 

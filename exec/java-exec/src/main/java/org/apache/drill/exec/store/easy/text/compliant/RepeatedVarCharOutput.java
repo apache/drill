@@ -47,7 +47,6 @@ class RepeatedVarCharOutput extends TextOutput {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedVarCharOutput.class);
 
   static final String COL_NAME = "columns";
-  static final FieldReference REF = new FieldReference(COL_NAME);
   static final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
   public static final int MAXIMUM_NUMBER_COLUMNS = 64 * 1024;
 
@@ -122,7 +121,7 @@ class RepeatedVarCharOutput extends TextOutput {
   public RepeatedVarCharOutput(OutputMutator outputMutator, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
     super();
 
-    MaterializedField field = MaterializedField.create(REF, Types.repeated(TypeProtos.MinorType.VARCHAR));
+    MaterializedField field = MaterializedField.create(COL_NAME, Types.repeated(TypeProtos.MinorType.VARCHAR));
     this.vector = outputMutator.addField(field, RepeatedVarCharVector.class);
 
     this.mutator = vector.getMutator();

@@ -195,7 +195,7 @@ public class ChainedHashTable {
      */
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       i++;

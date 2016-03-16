@@ -51,12 +51,12 @@ public class TestLoad extends ExecTest {
   @Test
   public void testLoadValueVector() throws Exception {
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
-    final ValueVector fixedV = new IntVector(MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN),
+    final ValueVector fixedV = new IntVector(MaterializedField.create("ints",
         Types.required(MinorType.INT)), allocator);
     final ValueVector varlenV = new VarCharVector(MaterializedField.create(
-        new SchemaPath("chars", ExpressionPosition.UNKNOWN), Types.required(MinorType.VARCHAR)), allocator);
-    final ValueVector nullableVarlenV = new NullableVarCharVector(MaterializedField.create(new SchemaPath("chars",
-        ExpressionPosition.UNKNOWN), Types.optional(MinorType.VARCHAR)), allocator);
+        "chars", Types.required(MinorType.VARCHAR)), allocator);
+    final ValueVector nullableVarlenV = new NullableVarCharVector(MaterializedField.create("chars",
+        Types.optional(MinorType.VARCHAR)), allocator);
 
     final List<ValueVector> vectors = Lists.newArrayList(fixedV, varlenV, nullableVarlenV);
     for (final ValueVector v : vectors) {
@@ -88,7 +88,7 @@ public class TestLoad extends ExecTest {
       } else {
         System.out.print("\t");
       }
-      System.out.print(v.getField().toExpr());
+      System.out.print(v.getField().getPath());
       System.out.print("[");
       System.out.print(v.getField().getType().getMinorType());
       System.out.print("]");

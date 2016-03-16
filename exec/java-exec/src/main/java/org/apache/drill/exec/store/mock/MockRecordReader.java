@@ -29,7 +29,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
@@ -62,7 +61,7 @@ public class MockRecordReader extends AbstractRecordReader {
 
   private MaterializedField getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    final MaterializedField f = MaterializedField.create(SchemaPath.getSimplePath(name), type);
+    final MaterializedField f = MaterializedField.create(name, type);
     return f;
   }
 
@@ -76,7 +75,7 @@ public class MockRecordReader extends AbstractRecordReader {
       for (int i = 0; i < config.getTypes().length; i++) {
         final MajorType type = config.getTypes()[i].getMajorType();
         final MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
-        final Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }
     } catch (SchemaChangeException e) {
@@ -101,7 +100,7 @@ public class MockRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
       for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);

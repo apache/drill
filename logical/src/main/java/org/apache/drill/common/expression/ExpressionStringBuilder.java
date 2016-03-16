@@ -56,6 +56,13 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     expr.accept(INSTANCE, sb);
   }
 
+  public static String escapeSingleQuote(String input) {
+    return input.replaceAll("(['\\\\])", "\\\\$1");
+  }
+
+  public static String escapeBackTick(String input) {
+    return input.replaceAll("([`\\\\])", "\\\\$1");
+  }
 
   @Override
   public Void visitFunctionCall(FunctionCall call, StringBuilder sb) throws RuntimeException {
@@ -119,14 +126,14 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
       throw new IllegalStateException("Drill doesn't currently support top level arrays");
     }
     sb.append('`');
-    sb.append(seg.getNameSegment().getPath());
+    sb.append(escapeBackTick(seg.getNameSegment().getPath()));
     sb.append('`');
 
     while ( (seg = seg.getChild()) != null) {
       if (seg.isNamed()) {
         sb.append('.');
         sb.append('`');
-        sb.append(seg.getNameSegment().getPath());
+        sb.append(escapeBackTick(seg.getNameSegment().getPath()));
         sb.append('`');
       } else {
         sb.append('[');
@@ -224,7 +231,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   @Override
   public Void visitQuotedStringConstant(QuotedString e, StringBuilder sb) throws RuntimeException {
     sb.append("'");
-    sb.append(e.value);
+    sb.append(escapeSingleQuote(e.value));
     sb.append("'");
     return null;
   }

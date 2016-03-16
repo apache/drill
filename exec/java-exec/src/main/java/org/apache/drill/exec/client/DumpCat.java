@@ -253,7 +253,7 @@ public class DumpCat {
       for (final VectorWrapper w : vectorContainer) {
         final MaterializedField field = w.getValueVector().getField();
         System.out.println (String.format("name : %s, minor_type : %s, data_mode : %s",
-                                          field.toExpr(),
+                                          field.getPath(),
                                           field.getType().getMinorType().toString(),
                                           field.isNullable() ? "nullable":"non-nullable"
                           ));

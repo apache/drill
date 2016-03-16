@@ -17,7 +17,16 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import com.google.common.base.Charsets;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
@@ -27,31 +36,18 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Charsets;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.drill.exec.util.Text;
 
 /**
  * Utilities for generating Avro test data.
  */
 public class AvroTestUtil {
 
-  public static final int RECORD_COUNT = 10;
-
-  public static class AvroTestSetup {
-    private String filePath;
-    private List<Map> expectedRecords;
-
-    public AvroTestSetup(String filePath, List<Map> expectedRecords) {
-      this.filePath = filePath;
-      this.expectedRecords = expectedRecords;
-    }
-  }
+  public static final int RECORD_COUNT = 10_000;
+  public static int ARRAY_SIZE = 20;
 
   /**
    * Class to write records to an Avro file while simultaneously
@@ -59,43 +55,68 @@ public class AvroTestUtil {
    * by the Drill test builder to describe expected results.
    */
   public static class AvroTestRecordWriter implements Closeable {
-    private final List<Map> expectedRecords;
+    private final List<Map<String, Object>> expectedRecords;
     GenericData.Record currentAvroRecord;
-    Map<String, Object> currentExpectedRecord;
+    TreeMap<String, Object> currentExpectedRecord;
     private Schema schema;
-    private final DataFileWriter writer;
+    private final DataFileWriter<GenericData.Record> writer;
     private final String filePath;
 
     private AvroTestRecordWriter(Schema schema, File file) {
-      writer = new DataFileWriter(new GenericDatumWriter(schema));
+      writer = new DataFileWriter<GenericData.Record>(new GenericDatumWriter<GenericData.Record>(schema));
       try {
         writer.create(schema, file);
       } catch (IOException e) {
         throw new RuntimeException("Error creating file in Avro test setup.", e);
       }
       this.schema = schema;
-      currentExpectedRecord = new HashMap<>();
+      currentExpectedRecord = new TreeMap<>();
       expectedRecords = new ArrayList<>();
       filePath = file.getAbsolutePath();
     }
 
     public void startRecord() {
       currentAvroRecord = new GenericData.Record(schema);
-      currentExpectedRecord = new HashMap<>();
+      currentExpectedRecord = new TreeMap<>();
     }
 
     public void put(String key, Object value) {
       currentAvroRecord.put(key, value);
       // convert binary values into byte[], the format they will be given
       // in the Drill result set in the test framework
+      currentExpectedRecord.put("`" + key + "`", convertAvroValToDrill(value, true));
+    }
+
+    // TODO - fix this the test wrapper to prevent the need for this hack
+    // to make the root behave differently than nested fields for String vs. Text
+    private Object convertAvroValToDrill(Object value, boolean root) {
       if (value instanceof ByteBuffer) {
         ByteBuffer bb = ((ByteBuffer)value);
         byte[] drillVal = new byte[((ByteBuffer)value).remaining()];
         bb.get(drillVal);
         bb.position(0);
-        value = new String(drillVal, Charsets.UTF_8);
+        value = drillVal;
+      } else if (!root && value instanceof CharSequence) {
+        value = new Text(value.toString());
+      } else if (value instanceof GenericData.Array) {
+        GenericData.Array array = ((GenericData.Array) value);
+        final JsonStringArrayList<Object> drillList = new JsonStringArrayList<>();
+        for (Object o : array) {
+          drillList.add(convertAvroValToDrill(o, false));
+        }
+        value = drillList;
+      } else if (value instanceof GenericData.EnumSymbol) {
+        value = value.toString();
+      } else if (value instanceof GenericData.Record) {
+        GenericData.Record rec = ((GenericData.Record) value);
+        final JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
+        for (Schema.Field field : rec.getSchema().getFields()) {
+          Object val = rec.get(field.name());
+          newRecord.put(field.name(), convertAvroValToDrill(val, false));
+        }
+        value = newRecord;
       }
-      currentExpectedRecord.put("`" + key + "`", value);
+      return value;
     }
 
     public void endRecord() throws IOException {
@@ -112,7 +133,7 @@ public class AvroTestUtil {
       return filePath;
     }
 
-    public List<Map>getExpectedRecords() {
+    public List<Map<String, Object>>getExpectedRecords() {
       return expectedRecords;
     }
   }
@@ -142,10 +163,11 @@ public class AvroTestUtil {
 
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      ByteBuffer bb = ByteBuffer.allocate(1);
+      ByteBuffer bb = ByteBuffer.allocate(2);
       bb.put(0, (byte) 'a');
 
       for (int i = 0; i < numRecords; i++) {
+        bb.put(1, (byte) ('0' + (i % 10)));
         bb.position(0);
         record.startRecord();
         record.put("a_string", "a_" + i);
@@ -165,7 +187,7 @@ public class AvroTestUtil {
     return record;
   }
 
-  public static String generateUnionSchema_WithNullValues() throws Exception {
+  public static AvroTestRecordWriter generateUnionSchema_WithNullValues() throws Exception {
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
@@ -184,15 +206,14 @@ public class AvroTestUtil {
     final File file = File.createTempFile("avro-primitive-test", ".avro");
     file.deleteOnExit();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
 
       ByteBuffer bb = ByteBuffer.allocate(1);
       bb.put(0, (byte) 1);
 
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
         record.put("c_long", (long) i);
@@ -202,16 +223,16 @@ public class AvroTestUtil {
         record.put("g_null", null);
         record.put("h_boolean", (i % 2 == 0));
         record.put("i_union", (i % 2 == 0 ? (double) i : null));
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateUnionSchema_WithNonNullValues() throws Exception {
+  public static AvroTestRecordWriter generateUnionSchema_WithNonNullValues() throws Exception {
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
@@ -230,15 +251,14 @@ public class AvroTestUtil {
     final File file = File.createTempFile("avro-primitive-test", ".avro");
     file.deleteOnExit();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
 
       ByteBuffer bb = ByteBuffer.allocate(1);
       bb.put(0, (byte) 1);
 
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
         record.put("c_long", (long) i);
@@ -248,16 +268,16 @@ public class AvroTestUtil {
         record.put("g_null", null);
         record.put("h_boolean", (i % 2 == 0));
         record.put("i_union", (i % 2 == 0 ? (double) i : (long) i));
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateSimpleEnumSchema_NoNullValues() throws Exception {
+  public static AvroTestRecordWriter generateSimpleEnumSchema_NoNullValues() throws Exception {
 
     final String[] symbols = { "E_SYM_A", "E_SYM_B", "E_SYM_C", "E_SYM_D" };
 
@@ -273,27 +293,25 @@ public class AvroTestUtil {
 
     final Schema enumSchema = schema.getField("b_enum").schema();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
 
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         final GenericData.EnumSymbol symbol =
                 new GenericData.EnumSymbol(enumSchema, symbols[(i + symbols.length) % symbols.length]);
         record.put("b_enum", symbol);
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateSimpleArraySchema_NoNullValues() throws Exception {
+  public static AvroTestRecordWriter generateSimpleArraySchema_NoNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-array-test", ".avro");
     file.deleteOnExit();
@@ -308,43 +326,43 @@ public class AvroTestUtil {
             .name("e_float_array").type().array().items().floatType().noDefault()
             .endRecord();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
-
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
-
-        GenericArray array = new GenericData.Array<String>(RECORD_COUNT, schema.getField("c_string_array").schema());
-        for (int j = 0; j < RECORD_COUNT; j++) {
-          array.add(j, "c_string_array_" + i + "_" + j);
+        {
+          GenericArray<String> array = new GenericData.Array<>(ARRAY_SIZE, schema.getField("c_string_array").schema());
+          for (int j = 0; j < ARRAY_SIZE; j++) {
+            array.add(j, "c_string_array_" + i + "_" + j);
+          }
+          record.put("c_string_array", array);
         }
-        record.put("c_string_array", array);
-
-        array = new GenericData.Array<String>(RECORD_COUNT, schema.getField("d_int_array").schema());
-        for (int j = 0; j < RECORD_COUNT; j++) {
-          array.add(j, i * j);
+        {
+          GenericArray<Integer> array = new GenericData.Array<>(ARRAY_SIZE, schema.getField("d_int_array").schema());
+          for (int j = 0; j < ARRAY_SIZE; j++) {
+            array.add(j, i * j);
+          }
+          record.put("d_int_array", array);
         }
-        record.put("d_int_array", array);
-
-        array = new GenericData.Array<String>(RECORD_COUNT, schema.getField("e_float_array").schema());
-        for (int j = 0; j < RECORD_COUNT; j++) {
-          array.add(j, (float) (i * j));
+        {
+          GenericArray<Float> array = new GenericData.Array<>(ARRAY_SIZE, schema.getField("e_float_array").schema());
+          for (int j = 0; j < ARRAY_SIZE; j++) {
+            array.add(j, (float) (i * j));
+          }
+          record.put("e_float_array", array);
         }
-        record.put("e_float_array", array);
-
-        writer.append(record);
+        record.endRecord();
       }
 
     } finally {
-      writer.close();
+      record.close();
     }
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateSimpleNestedSchema_NoNullValues() throws Exception {
+  public static AvroTestRecordWriter generateSimpleNestedSchema_NoNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-nested-test", ".avro");
     file.deleteOnExit();
@@ -365,12 +383,10 @@ public class AvroTestUtil {
 
     final Schema nestedSchema = schema.getField("c_record").schema();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
@@ -379,16 +395,16 @@ public class AvroTestUtil {
         nestedRecord.put("nested_1_int", i * i);
 
         record.put("c_record", nestedRecord);
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateUnionNestedArraySchema_withNullValues() throws Exception {
+  public static AvroTestRecordWriter generateUnionNestedArraySchema_withNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-nested-test", ".avro");
     file.deleteOnExit();
@@ -409,33 +425,31 @@ public class AvroTestUtil {
     final Schema arraySchema = nestedSchema.getTypes().get(1);
     final Schema itemSchema = arraySchema.getElementType();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
         if (i % 2 == 0) {
-          GenericArray array = new GenericData.Array<String>(1, arraySchema);
+          GenericArray<GenericRecord> array = new GenericData.Array<>(1, arraySchema);
           final GenericRecord nestedRecord = new GenericData.Record(itemSchema);
           nestedRecord.put("nested_1_string", "nested_1_string_" +  i);
           nestedRecord.put("nested_1_int", i * i);
           array.add(nestedRecord);
           record.put("c_array", array);
         }
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateMapSchema_withNullValues() throws Exception {
+  public static AvroTestRecordWriter generateMapSchema_withNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-nested-test", ".avro");
     file.deleteOnExit();
@@ -448,12 +462,10 @@ public class AvroTestUtil {
             .name("c_map").type().optional().map().values(Schema.create(Type.STRING))
             .endRecord();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
@@ -463,16 +475,16 @@ public class AvroTestUtil {
           strMap.put("key2", "nested_1_string_" +  (i + 1 ));
           record.put("c_map", strMap);
         }
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateMapSchemaComplex_withNullValues() throws Exception {
+  public static AvroTestRecordWriter generateMapSchemaComplex_withNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-nested-test", ".avro");
     file.deleteOnExit();
@@ -489,12 +501,10 @@ public class AvroTestUtil {
     final Schema arrayMapSchema = schema.getField("d_map").schema();
     final Schema arrayItemSchema = arrayMapSchema.getTypes().get(1).getValueType();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
@@ -504,9 +514,9 @@ public class AvroTestUtil {
           c_map.put("key2", "nested_1_string_" +  (i + 1 ));
           record.put("c_map", c_map);
         } else {
-          Map<String, GenericArray> d_map = new HashMap<>();
-          GenericArray array = new GenericData.Array<String>(RECORD_COUNT, arrayItemSchema);
-          for (int j = 0; j < RECORD_COUNT; j++) {
+          Map<String, GenericArray<Double>> d_map = new HashMap<>();
+          GenericArray<Double> array = new GenericData.Array<>(ARRAY_SIZE, arrayItemSchema);
+          for (int j = 0; j < ARRAY_SIZE; j++) {
             array.add((double)j);
           }
           d_map.put("key1", array);
@@ -514,16 +524,16 @@ public class AvroTestUtil {
 
           record.put("d_map", d_map);
         }
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateUnionNestedSchema_withNullValues() throws Exception {
+  public static AvroTestRecordWriter generateUnionNestedSchema_withNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-nested-test", ".avro");
     file.deleteOnExit();
@@ -543,12 +553,10 @@ public class AvroTestUtil {
     final Schema nestedSchema = schema.getField("c_record").schema();
     final Schema optionalSchema = nestedSchema.getTypes().get(1);
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
@@ -558,16 +566,16 @@ public class AvroTestUtil {
           nestedRecord.put("nested_1_int", i * i);
           record.put("c_record", nestedRecord);
         }
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  public static String generateDoubleNestedSchema_NoNullValues() throws Exception {
+  public static AvroTestRecordWriter generateDoubleNestedSchema_NoNullValues() throws Exception {
 
     final File file = File.createTempFile("avro-double-nested-test", ".avro");
     file.deleteOnExit();
@@ -596,12 +604,10 @@ public class AvroTestUtil {
     final Schema nestedSchema = schema.getField("c_record").schema();
     final Schema doubleNestedSchema = nestedSchema.getField("nested_1_record").schema();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
-    writer.create(schema, file);
-
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
 
@@ -616,16 +622,15 @@ public class AvroTestUtil {
         nestedRecord.put("nested_1_record", doubleNestedRecord);
         record.put("c_record", nestedRecord);
 
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   public static String generateLinkedList() throws Exception {
 
     final File file = File.createTempFile("avro-linkedlist", ".avro");
@@ -639,7 +644,7 @@ public class AvroTestUtil {
             .name("next").type().optional().type("LongList")
             .endRecord();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(schema));
     writer.create(schema, file);
     GenericRecord previousRecord = null;
     try {
@@ -661,7 +666,7 @@ public class AvroTestUtil {
     return file.getAbsolutePath();
   }
 
-  public static String generateStringAndUtf8Data() throws Exception {
+  public static AvroTestRecordWriter generateStringAndUtf8Data() throws Exception {
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
@@ -673,23 +678,22 @@ public class AvroTestUtil {
     final File file = File.createTempFile("avro-primitive-test", ".avro");
     file.deleteOnExit();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
 
       ByteBuffer bb = ByteBuffer.allocate(1);
       bb.put(0, (byte) 1);
 
       for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_utf8", "b_" + i);
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 }

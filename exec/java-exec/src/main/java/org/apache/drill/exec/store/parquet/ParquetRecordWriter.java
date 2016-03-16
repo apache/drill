@@ -181,7 +181,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private void newSchema() throws IOException {
     List<Type> types = Lists.newArrayList();
     for (MaterializedField field : batchSchema) {
-      if (field.getPath().equals(SchemaPath.getSimplePath(WriterPrel.PARTITION_COMPARATOR_FIELD))) {
+      if (field.getPath().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
         continue;
       }
       types.add(getType(field));

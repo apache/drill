@@ -17,10 +17,20 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.fail;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
@@ -28,17 +38,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-
-import static java.sql.ResultSetMetaData.columnNoNulls;
-import static java.sql.ResultSetMetaData.columnNullable;
-
-import java.sql.SQLException;
-import java.sql.Types;
 
 // NOTE: TestInformationSchemaColumns and DatabaseMetaDataGetColumnsTest
 // have identical sections.  (Cross-maintain them for now; factor out later.)
@@ -1155,7 +1154,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
-    assertThat( getIntOrNull( mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH" ), equalTo( 1 ) );
+    assertThat(getIntOrNull(mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH"), equalTo(65536));
   }
 
   @Test
@@ -1319,7 +1318,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
     assertThat( getIntOrNull( mdrOptVARCHAR, "CHARACTER_OCTET_LENGTH" ),
-                equalTo( 1    /* chars. (default of 1) */
+        equalTo(65536 /* chars. (default of 65536) */
                          * 4  /* max. UTF-8 bytes per char. */ ) );
   }
 

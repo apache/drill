@@ -150,7 +150,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.minorFragmentSampleCount = cache.getCounter(mapKey);
 
     SchemaPath outputPath = popConfig.getRef();
-    MaterializedField outputField = MaterializedField.create(outputPath, Types.required(TypeProtos.MinorType.INT));
+    MaterializedField outputField = MaterializedField.create(outputPath.getAsNamePart().getName(), Types.required(TypeProtos.MinorType.INT));
     this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
 
   }
@@ -430,7 +430,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType())
           .clearMode().setMode(TypeProtos.DataMode.REQUIRED);
       TypeProtos.MajorType newType = builder.build();
-      MaterializedField outputField = MaterializedField.create(schemaPath, newType);
+      MaterializedField outputField = MaterializedField.create(schemaPath.getAsUnescapedPath(), newType);
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format(
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));

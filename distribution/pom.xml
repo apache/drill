@@ -9,13 +9,12 @@
   License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
   OF ANY KIND, either express or implied. See the License for the specific 
   language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -233,10 +232,6 @@
         </dependency>
         <dependency>
           <groupId>com.mapr.fs</groupId>
-          <artifactId>libprotodefs</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>com.mapr.fs</groupId>
           <artifactId>mapr-hbase</artifactId>
           <exclusions>
             <exclusion>
@@ -246,10 +241,30 @@
           </exclusions>
         </dependency>
         <dependency>
+          <groupId>com.mapr.db</groupId>
+          <artifactId>maprdb</artifactId>
+        </dependency>
+        <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-winutils</artifactId>
           <version>2.7.0-mapr-1506</version>
           <type>zip</type>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-client</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-annotations</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-common</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-protocol</artifactId>
         </dependency>
       </dependencies>
       <build>

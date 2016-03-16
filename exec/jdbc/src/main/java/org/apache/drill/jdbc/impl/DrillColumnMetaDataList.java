@@ -69,7 +69,7 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
       final MaterializedField field = schema.getColumn(colOffset);
       Class<?> objectClass = getObjectClasses.get( colOffset );
 
-      final String columnName = field.getPath().getRootSegment().getPath();
+      final String columnName = field.getPath();
 
       final MajorType rpcDataType = field.getType();
       final AvaticaType bundledSqlDataType = getAvaticaType(rpcDataType);

@@ -55,7 +55,7 @@ public class Limit extends SingleInputOperator {
   }
 
   @Override
-  public NodeBuilder nodeBuilder() {
+  public NodeBuilder<Limit> nodeBuilder() {
     return new LimitNodeBuilder();  //To change body of implemented methods use File | Settings | File Templates.
   }
 

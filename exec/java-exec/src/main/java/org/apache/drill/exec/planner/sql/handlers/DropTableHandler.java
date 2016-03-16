@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.io.IOException;
+
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -28,8 +30,6 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.store.AbstractSchema;
-
-import java.io.IOException;
 
 // SqlHandler for dropping a table.
 public class DropTableHandler extends DefaultSqlHandler {
@@ -55,7 +55,7 @@ public class DropTableHandler extends DefaultSqlHandler {
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
     SqlIdentifier tableIdentifier = dropTableNode.getTableIdentifier();
 
-    SchemaPlus defaultSchema = context.getNewDefaultSchema();
+    SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     AbstractSchema drillSchema = null;
 
     if (tableIdentifier != null) {

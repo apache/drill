@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector;
 import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
@@ -185,7 +184,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    Preconditions.checkArgument(this.field.matches(metadata), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
+    Preconditions.checkArgument(this.field.getPath().equals(metadata.getNamePart().getName()), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int valueCount = metadata.getValueCount();
     final int expectedLength = getSizeFromCount(valueCount);
     final int actualLength = metadata.getBufferLength();
@@ -213,7 +212,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new TransferImpl(getField().withPath(ref), allocator);
   }
 

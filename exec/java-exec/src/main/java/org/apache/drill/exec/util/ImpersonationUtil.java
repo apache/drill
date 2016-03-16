@@ -130,9 +130,6 @@ public class ImpersonationUtil {
   /**
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for give user name.
    *
-   * TODO: we may want to cache the {@link org.apache.hadoop.security.UserGroupInformation} instances as we try to
-   * create different instances for the same user which is an unnecessary overhead.
-   *
    * @param proxyUserName Proxy user name (must be valid)
    * @return
    */
@@ -255,5 +252,9 @@ public class ImpersonationUtil {
     }
 
     return false;
+  }
+
+  // avoid instantiation
+  private ImpersonationUtil() {
   }
 }

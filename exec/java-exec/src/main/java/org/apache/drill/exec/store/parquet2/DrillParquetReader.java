@@ -39,7 +39,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
@@ -189,7 +188,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
       for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
@@ -219,7 +218,7 @@ public class DrillParquetReader extends AbstractRecordReader {
           nullFilledVectors = new ArrayList<>();
           for(SchemaPath col: columnsNotFound){
             nullFilledVectors.add(
-              (NullableIntVector)output.addField(MaterializedField.create(col,
+              (NullableIntVector)output.addField(MaterializedField.create(col.getAsUnescapedPath(),
                   org.apache.drill.common.types.Types.optional(TypeProtos.MinorType.INT)),
                 (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT,
                   TypeProtos.DataMode.OPTIONAL)));

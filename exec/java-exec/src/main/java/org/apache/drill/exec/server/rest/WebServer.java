@@ -25,9 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.rest.auth.AnonymousAuthenticator;
-import org.apache.drill.exec.server.rest.auth.AnonymousLoginService;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -149,8 +146,10 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    servletContextHandler.setSecurityHandler(createSecurityHandler());
-    servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    }
 
     embeddedJetty.start();
   }
@@ -190,25 +189,13 @@ public class WebServer implements AutoCloseable {
    * @return {@link SecurityHandler} with appropriate {@link LoginService}, {@link Authenticator} and constraints.
    */
   private ConstraintSecurityHandler createSecurityHandler() {
-    final LoginService loginService;
-    final Authenticator authenticator;
-
-    final DrillbitContext drillbitContext = workManager.getContext();
-    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
-      loginService = new DrillRestLoginService(drillbitContext);
-      authenticator = new FormAuthenticator("/login", "/login", true);
-    } else {
-      loginService = new AnonymousLoginService(drillbitContext);
-      authenticator = new AnonymousAuthenticator();
-    }
-
     ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 
     Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
     security.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
 
-    security.setAuthenticator(authenticator);
-    security.setLoginService(loginService);
+    security.setAuthenticator(new FormAuthenticator("/login", "/login", true));
+    security.setLoginService(new DrillRestLoginService(workManager.getContext()));
 
     return security;
   }

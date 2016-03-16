@@ -33,7 +33,7 @@ import com.google.common.collect.Maps;
 /**
  * This class manages the projection pushdown for a complex path.
  */
-class FieldSelection {
+public class FieldSelection {
 
   public static final FieldSelection INVALID_NODE = new FieldSelection(null, ValidityMode.NEVER_VALID);
   public static final FieldSelection ALL_VALID = new FieldSelection(null, ValidityMode.ALWAYS_VALID);

@@ -94,7 +94,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   class MajorFragmentStat {
     private double maxRows = 0d;
     private int maxWidth = Integer.MAX_VALUE;
-    private boolean enforceWidth = false;
+    private boolean isMultiSubScan = false;
 
     public void add(Prel prel) {
       maxRows = Math.max(prel.getRows(), maxRows);
@@ -106,13 +106,13 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
     public void addScan(ScanPrel prel) {
       maxWidth = Math.min(maxWidth, prel.getGroupScan().getMaxParallelizationWidth());
-      enforceWidth = prel.getGroupScan().enforceWidth();
+      isMultiSubScan = prel.getGroupScan().getMinParallelizationWidth() > 1;
       add(prel);
     }
 
     public boolean isSingular() {
-      // do not remove exchanges when a scan enforces width (e.g. SystemTableScan)
-      if (enforceWidth) {
+      // do not remove exchanges when a scan has more than one subscans (e.g. SystemTableScan)
+      if (isMultiSubScan) {
         return false;
       }
 

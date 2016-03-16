@@ -17,8 +17,9 @@
   */
 package org.apache.drill.exec.planner.logical.partition;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
@@ -35,8 +36,8 @@ import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Rewrites an expression tree, replacing OR and AND operators with more than 2 operands with a chained operators
@@ -81,7 +82,7 @@ import java.util.List;
     RelDataType type = call.getType();
     if (kind == SqlKind.OR || kind == SqlKind.AND) {
       if (call.getOperands().size() > 2) {
-        List<RexNode> children = new ArrayList(call.getOperands());
+        List<RexNode> children = new ArrayList<>(call.getOperands());
         RexNode left = children.remove(0).accept(this);
         RexNode right = builder.makeCall(type, op, children).accept(this);
         return builder.makeCall(type, op, ImmutableList.of(left, right));

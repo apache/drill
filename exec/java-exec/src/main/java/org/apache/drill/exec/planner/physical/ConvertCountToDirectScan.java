@@ -117,6 +117,24 @@ public class ConvertCountToDirectScan extends Prule {
       } else if (aggCall.getArgList().size() == 1) {
       // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
         int index = aggCall.getArgList().get(0);
+
+        if (proj != null) {
+          // project in the middle of Agg and Scan : Only when input of AggCall is a RexInputRef in Project, we find the index of Scan's field.
+          // For instance,
+          // Agg - count($0)
+          //  \
+          //  Proj - Exp={$1}
+          //    \
+          //   Scan (col1, col2).
+          // return count of "col2" in Scan's metadata, if found.
+
+          if (proj.getProjects().get(index) instanceof RexInputRef) {
+            index = ((RexInputRef) proj.getProjects().get(index)).getIndex();
+          } else {
+            return;  // do not apply for all other cases.
+          }
+        }
+
         String columnName = scan.getRowType().getFieldNames().get(index).toLowerCase();
 
         cnt = oldGrpScan.getColumnValueCount(SchemaPath.getSimplePath(columnName));
@@ -149,7 +167,7 @@ public class ConvertCountToDirectScan extends Prule {
    * Class to represent the count aggregate result.
    */
   public static class CountQueryResult {
-    public Long count;
+    public long count;
 
     public CountQueryResult(long cnt) {
       this.count = cnt;

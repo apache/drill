@@ -170,7 +170,6 @@ public class KuduRecordReader extends AbstractRecordReader {
     return rowCount;
   }
 
-  @SuppressWarnings("unchecked")
   private void initCols(Schema schema) throws SchemaChangeException {
     ImmutableList.Builder<ProjectedColumnInfo> pciBuilder = ImmutableList.builder();
 

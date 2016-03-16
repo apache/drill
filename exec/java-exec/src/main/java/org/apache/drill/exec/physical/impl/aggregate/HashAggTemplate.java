@@ -263,7 +263,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       FieldReference ref =
           new FieldReference("dummy", ExpressionPosition.UNKNOWN, valueFieldIds.get(0).getIntermediateType());
       for (TypedFieldId id : valueFieldIds) {
-        materializedValueFields[i++] = MaterializedField.create(ref, id.getIntermediateType());
+        materializedValueFields[i++] = MaterializedField.create(ref.getAsNamePart().getName(), id.getIntermediateType());
       }
     }
 

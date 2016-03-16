@@ -19,14 +19,16 @@ package org.apache.drill.exec.rpc.user;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.ValidationException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
@@ -37,14 +39,16 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
 import com.google.common.collect.Maps;
 
 public class UserSession {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
 
   public static final String SCHEMA = "schema";
   public static final String USER = "user";
   public static final String PASSWORD = "password";
+  public static final String IMPERSONATION_TARGET = "impersonation_target";
 
-  private DrillUser user;
-  private boolean enableExchanges = true;
+  // known property names in lower case
+  private static final Set<String> knownProperties = ImmutableSet.of(SCHEMA, USER, PASSWORD, IMPERSONATION_TARGET);
+
   private boolean supportComplexTypes = false;
   private UserCredentials credentials;
   private Map<String, String> properties;
@@ -81,8 +85,13 @@ public class UserSession {
       userSession.properties = Maps.newHashMap();
       if (properties != null) {
         for (int i = 0; i < properties.getPropertiesCount(); i++) {
-          Property prop = properties.getProperties(i);
-          userSession.properties.put(prop.getKey(), prop.getValue());
+          final Property property = properties.getProperties(i);
+          final String propertyName = property.getKey().toLowerCase();
+          if (knownProperties.contains(propertyName)) {
+            userSession.properties.put(propertyName, property.getValue());
+          } else {
+            logger.warn("Ignoring unknown property: {}", propertyName);
+          }
         }
       }
       return this;
@@ -116,12 +125,26 @@ public class UserSession {
     return sessionOptions;
   }
 
-  public DrillUser getUser() {
-    return user;
-  }
-
   public UserCredentials getCredentials() {
     return credentials;
+  }
+
+  /**
+   * Replace current user credentials with the given user's credentials. Meant to be called only by a
+   * {@link InboundImpersonationManager impersonation manager}.
+   *
+   * @param impersonationManager impersonation manager making this call
+   * @param newCredentials user credentials to change to
+   */
+  public void replaceUserCredentials(final InboundImpersonationManager impersonationManager,
+                                     final UserCredentials newCredentials) {
+    Preconditions.checkNotNull(impersonationManager, "User credentials can only be replaced by an" +
+        " impersonation manager.");
+    credentials = newCredentials;
+  }
+
+  public String getTargetUserName() {
+    return properties.get(IMPERSONATION_TARGET);
   }
 
   public String getDefaultSchemaName() {

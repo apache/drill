@@ -121,6 +121,15 @@ public class DrillHiveTable extends DrillTable{
         );
       }
 
+      case CHAR: {
+        int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
+        return typeFactory.createTypeWithCharsetAndCollation(
+            typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
+            Charset.forName("ISO-8859-1"), /*unicode char set*/
+            SqlCollation.IMPLICIT
+        );
+      }
+
       case UNKNOWN:
       case VOID:
       default:
@@ -175,7 +184,7 @@ public class DrillHiveTable extends DrillTable{
     errMsg.append(System.getProperty("line.separator"));
     errMsg.append("Following Hive data types are supported in Drill INFORMATION_SCHEMA: ");
     errMsg.append("BOOLEAN, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, " +
-        "VARCHAR, LIST, MAP, STRUCT and UNION");
+        "VARCHAR, CHAR, LIST, MAP, STRUCT and UNION");
 
     throw new RuntimeException(errMsg.toString());
   }

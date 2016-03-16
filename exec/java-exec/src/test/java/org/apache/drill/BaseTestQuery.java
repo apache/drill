@@ -248,7 +248,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   @AfterClass
-  public static void closeClient() throws IOException {
+  public static void closeClient() throws Exception {
     if (client != null) {
       client.close();
     }

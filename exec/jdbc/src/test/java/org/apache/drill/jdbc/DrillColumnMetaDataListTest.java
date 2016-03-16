@@ -70,13 +70,13 @@ public class DrillColumnMetaDataListTest {
     // Create mock columns
     final MaterializedField exampleIntField = mock(MaterializedField.class);
     MajorType exampleIntType = MajorType.newBuilder().setMinorType(MinorType.INT).build();
-    when(exampleIntField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testInt"));
+    when(exampleIntField.getPath()).thenReturn("/path/to/testInt");
     when(exampleIntField.getType()).thenReturn(exampleIntType);
     when(exampleIntField.getDataMode()).thenReturn(DataMode.OPTIONAL);
 
     final MaterializedField exampleStringField = mock(MaterializedField.class);
     MajorType exampleStringType = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).build();
-    when(exampleStringField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testString"));
+    when(exampleStringField.getPath()).thenReturn("/path/to/testString");
     when(exampleStringField.getType()).thenReturn(exampleStringType);
     when(exampleStringField.getDataMode()).thenReturn(DataMode.REQUIRED);
 

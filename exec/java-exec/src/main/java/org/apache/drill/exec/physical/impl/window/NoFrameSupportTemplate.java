@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.window;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -53,7 +54,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
   @Override
   public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
-                    final boolean requireFullPartition) throws SchemaChangeException {
+                    final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException {
     this.container = container;
     this.batches = batches;
 

@@ -207,39 +207,14 @@ public class ParquetFormatPlugin implements FormatPlugin{
     public DrillTable isReadable(DrillFileSystem fs, FileSelection selection,
         FileSystemPlugin fsPlugin, String storageEngineName, String userName)
         throws IOException {
-      // TODO: we only check the first file for directory reading.  This is because
+      // TODO: we only check the first file for directory reading.
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
           return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
-              new FormatSelection(plugin.getConfig(), expandSelection(fs, selection)));
+              new FormatSelection(plugin.getConfig(), selection));
         }
       }
       return super.isReadable(fs, selection, fsPlugin, storageEngineName, userName);
-    }
-
-    private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
-      if (metaDataFileExists(fs, selection.getFirstPath(fs))) {
-        FileStatus metaRootDir = selection.getFirstPath(fs);
-        Path metaFilePath = getMetadataPath(metaRootDir);
-
-        // get the metadata for the directory by reading the metadata file
-        Metadata.ParquetTableMetadataBase metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
-        List<String> fileNames = Lists.newArrayList();
-        for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
-          fileNames.add(file.getPath());
-        }
-        // when creating the file selection, set the selection root in the form /a/b instead of
-        // file:/a/b.  The reason is that the file names above have been created in the form
-        // /a/b/c.parquet and the format of the selection root must match that of the file names
-        // otherwise downstream operations such as partition pruning can break.
-        final Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
-        final FileSelection newSelection = FileSelection.create(null, fileNames, metaRootPath.toString());
-        return ParquetFileSelection.create(newSelection, metadata);
-      } else {
-        // don't expand yet; ParquetGroupScan's metadata gathering operation
-        // does that.
-        return selection;
-      }
     }
 
     private Path getMetadataPath(FileStatus dir) {

@@ -17,10 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.physical.visitor;
 
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
@@ -34,9 +33,10 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexVisitorImpl;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
+import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
 public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
 
@@ -50,7 +50,7 @@ public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
     super(true);
     this.factory = factory;
     this.funcReg = funcReg;
-    this.complexExprs = new ArrayList();
+    this.complexExprs = new ArrayList<>();
     this.lastUsedIndex = firstUnused;
   }
 
@@ -83,11 +83,12 @@ public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
     return correlVariable;
   }
 
+  @Override
   public RexNode visitCall(RexCall call) {
 
     String functionName = call.getOperator().getName();
 
-    List<RexNode> newOps = new ArrayList();
+    List<RexNode> newOps = new ArrayList<>();
     for (RexNode operand : call.operands) {
       newOps.add(operand.accept(this));
     }

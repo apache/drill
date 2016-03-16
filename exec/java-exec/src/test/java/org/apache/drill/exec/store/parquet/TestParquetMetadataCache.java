@@ -161,6 +161,22 @@ public class TestParquetMetadataCache extends PlanTestBase {
     Assert.assertEquals(25, rowCount);
   }
 
+  @Test
+  public void testFix4449() throws Exception {
+    runSQL("CREATE TABLE dfs_test.tmp.`4449` PARTITION BY(l_discount) AS SELECT l_orderkey, l_discount FROM cp.`tpch/lineitem.parquet`");
+    runSQL("REFRESH TABLE METADATA dfs_test.tmp.`4449`");
+
+    testBuilder()
+      .sqlQuery("SELECT COUNT(*) cnt FROM (" +
+        "SELECT l_orderkey FROM dfs_test.tmp.`4449` WHERE l_discount < 0.05" +
+        " UNION ALL" +
+        " SELECT l_orderkey FROM dfs_test.tmp.`4449` WHERE l_discount > 0.02)")
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(71159L)
+      .go();
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);

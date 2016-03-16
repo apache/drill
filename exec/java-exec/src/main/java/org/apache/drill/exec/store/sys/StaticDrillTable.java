@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.RecordDataType;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.pojo.PojoDataType;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 
 /**
  * A {@link org.apache.drill.exec.planner.logical.DrillTable} with a defined schema

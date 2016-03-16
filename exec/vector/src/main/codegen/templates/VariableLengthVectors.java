@@ -179,7 +179,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator){
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator){
     return new TransferImpl(getField().withPath(ref), allocator);
   }
 

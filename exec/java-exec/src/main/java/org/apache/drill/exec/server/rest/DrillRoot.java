@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -41,13 +42,14 @@ import com.google.common.collect.Lists;
 public class DrillRoot {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject SecurityContext sc;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStats() {
-    return ViewableWithPermissions.create("/rest/index.ftl", sc, getStatsJSON());
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getStatsJSON());
   }
 
   @GET

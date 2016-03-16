@@ -154,7 +154,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       logger.warn("Hive metastore cache expire policy is set to {}", expireAfterWrite? "expireAfterWrite" : "expireAfterAccess");
     }
 
-    final CacheBuilder cacheBuilder = CacheBuilder
+    final CacheBuilder<Object, Object> cacheBuilder = CacheBuilder
         .newBuilder();
 
     if (expireAfterWrite) {

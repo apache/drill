@@ -224,7 +224,7 @@ public class PrelUtil {
   }
 
   // Simple visitor class to determine the last used reference in the expression
-  private static class LastUsedRefVisitor extends RexVisitorImpl {
+  private static class LastUsedRefVisitor extends RexVisitorImpl<Void> {
 
     int lastUsedRef = -1;
 
@@ -256,7 +256,7 @@ public class PrelUtil {
     final Set<SchemaPath> columns = Sets.newLinkedHashSet();
     final private List<String> fieldNames;
     final private List<RelDataTypeField> fields;
-    final private Set<DesiredField> desiredFields = Sets.newHashSet();
+    final private Set<DesiredField> desiredFields = Sets.newLinkedHashSet();
 
     public RefFieldsVisitor(RelDataType rowType) {
       super(true);

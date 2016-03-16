@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 import static org.apache.parquet.column.Encoding.valueOf;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,13 +32,11 @@ import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.Dictionary;
 import org.apache.parquet.column.Encoding;
 import org.apache.parquet.column.ValuesType;
 import org.apache.parquet.column.page.DictionaryPage;
-import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.column.values.dictionary.DictionaryValuesReader;
 import org.apache.parquet.format.PageHeader;
@@ -56,13 +51,16 @@ import org.apache.parquet.schema.PrimitiveType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 // class to keep track of the read position of variable length columns
 final class PageReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReader.class);
 
   public static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
 
-  private final ColumnReader parentColumnReader;
+  private final ColumnReader<?> parentColumnReader;
   private final ColumnDataReader dataReader;
 
   // buffer to store bytes of current page
@@ -242,9 +240,6 @@ final class PageReader {
 
     currentPageCount = pageHeader.data_page_header.num_values;
 
-    final int uncompressedPageSize = pageHeader.uncompressed_page_size;
-    final Statistics<?> stats = fromParquetStatistics(pageHeader.data_page_header.getStatistics(), parentColumnReader
-        .getColumnDescriptor().getType());
     final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.repetition_level_encoding);
 
     final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);

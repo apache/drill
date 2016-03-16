@@ -37,7 +37,7 @@ public class BatchPrinter {
     List<ValueVector> vectors = Lists.newArrayList();
     int numBatches = 0;
     for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVectors()[0].getField().getAsSchemaPath().toExpr());
+      columns.add(vw.getValueVectors()[0].getField().getPath());
       numBatches = vw.getValueVectors().length;
     }
     int width = columns.size();
@@ -71,7 +71,7 @@ public class BatchPrinter {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
     for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
+      columns.add(vw.getValueVector().getField().getPath());
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
@@ -106,7 +106,7 @@ public class BatchPrinter {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
     for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
+      columns.add(vw.getValueVector().getField().getPath());
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
