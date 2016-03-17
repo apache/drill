@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.sql;
 
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
@@ -35,11 +34,11 @@ import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.drill.exec.expr.fn.HiveFunctionRegistry;
 
 public class HiveUDFOperator extends SqlFunction {
-
-  public HiveUDFOperator(String name) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new ArgChecker(), null,
+  public HiveUDFOperator(String name, HiveFunctionRegistry.HiveSqlReturnTypeInference hiveSqlReturnTypeInference) {
+    super(new SqlIdentifier(name, SqlParserPos.ZERO), hiveSqlReturnTypeInference, null, new ArgChecker(), null,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
@@ -51,19 +50,7 @@ public class HiveUDFOperator extends SqlFunction {
     return false;
   }
 
-  @Override
-  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    RelDataTypeFactory factory = validator.getTypeFactory();
-    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
-  }
-
-  @Override
-  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-    RelDataTypeFactory factory = opBinding.getTypeFactory();
-    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
-  }
-
-    /** Argument Checker for variable number of arguments */
+  /** Argument Checker for variable number of arguments */
   public static class ArgChecker implements SqlOperandTypeChecker {
 
     public static ArgChecker INSTANCE = new ArgChecker();

@@ -135,7 +135,7 @@ public class ExpressionTreeMaterializer {
     List<LogicalExpression> args = Lists.newArrayList();
     args.add(fromExpr);
     FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
-    FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
+    FunctionResolver resolver = FunctionResolverFactory.getResolver();
 
     DrillFuncHolder matchedConvertToNullableFuncHolder = functionLookupContext.findDrillFunction(resolver, funcCall);
     if (matchedConvertToNullableFuncHolder == null) {
@@ -177,7 +177,7 @@ public class ExpressionTreeMaterializer {
     if (exactResolver) {
       resolver = FunctionResolverFactory.getExactResolver(castCall);
     } else {
-      resolver = FunctionResolverFactory.getResolver(castCall);
+      resolver = FunctionResolverFactory.getResolver();
     }
     DrillFuncHolder matchedCastFuncHolder = functionLookupContext.findDrillFunction(resolver, castCall);
 
@@ -279,7 +279,7 @@ public class ExpressionTreeMaterializer {
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
-      FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
+      FunctionResolver resolver = FunctionResolverFactory.getResolver();
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
 
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
@@ -602,7 +602,7 @@ public class ExpressionTreeMaterializer {
         FunctionLookupContext functionLookupContext) {
       String funcName = "convertToNullable" + minorType.toString();
       FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
-      FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
+      FunctionResolver resolver = FunctionResolverFactory.getResolver();
 
       DrillFuncHolder matchedConvertToNullableFuncHolder = functionLookupContext.findDrillFunction(resolver, funcCall);
 

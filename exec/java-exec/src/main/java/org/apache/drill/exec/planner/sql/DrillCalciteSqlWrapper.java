@@ -15,27 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.planner.sql;
 
-package org.apache.drill.exec.resolver;
-
-import org.apache.drill.common.expression.FunctionCall;
-
-public class FunctionResolverFactory {
-  @Deprecated // The choice of FunctionResolver does not depend on FunctionCall, no reason to pass it in
-  public static FunctionResolver getResolver(FunctionCall call) {
-    return getResolver();
-  }
-
-  public static FunctionResolver getResolver() {
-    return new DefaultFunctionResolver();
-  }
-
-  @Deprecated // The choice of FunctionResolver does not depend on FunctionCall, no reason to pass it in
-  public static FunctionResolver getExactResolver(FunctionCall call) {
-    return getExactResolver();
-  }
-
-  public static FunctionResolver getExactResolver() {
-    return new ExactFunctionResolver();
-  }
+import org.apache.calcite.sql.SqlOperator;
+/**
+ * This interface is meant for the users of the wrappers, {@link DrillCalciteSqlOperatorWrapper},
+ * {@link DrillCalciteSqlFunctionWrapper} and {@link DrillCalciteSqlAggFunctionWrapper}, to access the wrapped Calcite
+ * {@link SqlOperator} without knowing exactly which wrapper it is.
+ */
+public interface DrillCalciteSqlWrapper {
+  /**
+   * Get the wrapped {@link SqlOperator}
+   *
+   * @return SqlOperator get the wrapped {@link SqlOperator}
+   */
+  SqlOperator getOperator();
 }

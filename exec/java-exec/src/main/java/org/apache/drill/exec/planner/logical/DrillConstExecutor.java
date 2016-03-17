@@ -58,6 +58,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -69,34 +70,6 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConstExecutor.class);
 
   private final PlannerSettings plannerSettings;
-
-  public static ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING =
-      ImmutableMap.<TypeProtos.MinorType, SqlTypeName> builder()
-      .put(TypeProtos.MinorType.INT, SqlTypeName.INTEGER)
-      .put(TypeProtos.MinorType.BIGINT, SqlTypeName.BIGINT)
-      .put(TypeProtos.MinorType.FLOAT4, SqlTypeName.FLOAT)
-      .put(TypeProtos.MinorType.FLOAT8, SqlTypeName.DOUBLE)
-      .put(TypeProtos.MinorType.VARCHAR, SqlTypeName.VARCHAR)
-      .put(TypeProtos.MinorType.BIT, SqlTypeName.BOOLEAN)
-      .put(TypeProtos.MinorType.DATE, SqlTypeName.DATE)
-      .put(TypeProtos.MinorType.DECIMAL9, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL18, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL28SPARSE, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.DECIMAL38SPARSE, SqlTypeName.DECIMAL)
-      .put(TypeProtos.MinorType.TIME, SqlTypeName.TIME)
-      .put(TypeProtos.MinorType.TIMESTAMP, SqlTypeName.TIMESTAMP)
-      .put(TypeProtos.MinorType.VARBINARY, SqlTypeName.VARBINARY)
-      .put(TypeProtos.MinorType.INTERVALYEAR, SqlTypeName.INTERVAL_YEAR_MONTH)
-      .put(TypeProtos.MinorType.INTERVALDAY, SqlTypeName.INTERVAL_DAY_TIME)
-      .put(TypeProtos.MinorType.MAP, SqlTypeName.MAP)
-      .put(TypeProtos.MinorType.LIST, SqlTypeName.ARRAY)
-      .put(TypeProtos.MinorType.LATE, SqlTypeName.ANY)
-      // These are defined in the Drill type system but have been turned off for now
-      .put(TypeProtos.MinorType.TINYINT, SqlTypeName.TINYINT)
-      .put(TypeProtos.MinorType.SMALLINT, SqlTypeName.SMALLINT)
-      // Calcite types currently not supported by Drill, nor defined in the Drill type list:
-      //      - CHAR, SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST
-      .build();
 
   // This is a list of all types that cannot be folded at planning time for various reasons, most of the types are
   // currently not supported at all. The reasons for the others can be found in the evaluation code in the reduce method
@@ -132,30 +105,6 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
     this.plannerSettings = plannerSettings;
   }
 
-  private RelDataType createCalciteTypeWithNullability(RelDataTypeFactory typeFactory,
-                                                       SqlTypeName sqlTypeName,
-                                                       boolean isNullable) {
-    RelDataType type;
-    if (sqlTypeName == SqlTypeName.INTERVAL_DAY_TIME) {
-      type = typeFactory.createSqlIntervalType(
-          new SqlIntervalQualifier(
-              TimeUnit.DAY,
-              TimeUnit.MINUTE,
-              SqlParserPos.ZERO));
-    } else if (sqlTypeName == SqlTypeName.INTERVAL_YEAR_MONTH) {
-      type = typeFactory.createSqlIntervalType(
-          new SqlIntervalQualifier(
-              TimeUnit.YEAR,
-              TimeUnit.MONTH,
-             SqlParserPos.ZERO));
-    } else if (sqlTypeName == SqlTypeName.VARCHAR) {
-      type = typeFactory.createSqlType(sqlTypeName, TypeHelper.VARCHAR_DEFAULT_CAST_LEN);
-    } else {
-      type = typeFactory.createSqlType(sqlTypeName);
-    }
-    return typeFactory.createTypeWithNullability(type, isNullable);
-  }
-
   @Override
   public void reduce(RexBuilder rexBuilder, List<RexNode> constExps, List<RexNode> reducedValues) {
     for (RexNode newCall : constExps) {
@@ -183,7 +132,7 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
       RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
 
       if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL && TypeHelper.isNull(output)) {
-        SqlTypeName sqlTypeName = DRILL_TO_CALCITE_TYPE_MAPPING.get(materializedExpr.getMajorType().getMinorType());
+        SqlTypeName sqlTypeName = TypeInferenceUtils.getCalciteTypeFromDrillType(materializedExpr.getMajorType().getMinorType());
         if (sqlTypeName == null) {
           String message = String.format("Error reducing constant expression, unsupported type: %s.",
               materializedExpr.getMajorType().getMinorType());
@@ -198,25 +147,25 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
           case INT:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(((IntHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTEGER, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTEGER, newCall.getType().isNullable()),
                 false));
             break;
           case BIGINT:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(((BigIntHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.BIGINT, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BIGINT, newCall.getType().isNullable()),
                 false));
             break;
           case FLOAT4:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(((Float4Holder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()),
                 false));
             break;
           case FLOAT8:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(((Float8Holder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()),
                 false));
             break;
           case VARCHAR:
@@ -226,25 +175,25 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
           case BIT:
             reducedValues.add(rexBuilder.makeLiteral(
                 ((BitHolder)output).value == 1 ? true : false,
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.BOOLEAN, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BOOLEAN, newCall.getType().isNullable()),
                 false));
             break;
           case DATE:
             reducedValues.add(rexBuilder.makeLiteral(
                 new DateTime(((DateHolder) output).value, DateTimeZone.UTC).toCalendar(null),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()),
                 false));
             break;
           case DECIMAL9:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(BigInteger.valueOf(((Decimal9Holder) output).value), ((Decimal9Holder)output).scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
                 false));
             break;
           case DECIMAL18:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(BigInteger.valueOf(((Decimal18Holder) output).value), ((Decimal18Holder)output).scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
                 false));
             break;
           case DECIMAL28SPARSE:
@@ -255,7 +204,7 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
                     decimal28Out.start * 20,
                     5,
                     decimal28Out.scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
                 false
             ));
             break;
@@ -267,14 +216,14 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
                     decimal38Out.start * 24,
                     6,
                     decimal38Out.scale),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DECIMAL, newCall.getType().isNullable()),
                 false));
             break;
 
           case TIME:
             reducedValues.add(rexBuilder.makeLiteral(
                 new DateTime(((TimeHolder)output).value, DateTimeZone.UTC).toCalendar(null),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIME, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIME, newCall.getType().isNullable()),
                 false));
             break;
           case TIMESTAMP:
@@ -284,14 +233,14 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
           case INTERVALYEAR:
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(((IntervalYearHolder)output).value),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_YEAR_MONTH, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_YEAR_MONTH, newCall.getType().isNullable()),
                 false));
             break;
           case INTERVALDAY:
             IntervalDayHolder intervalDayOut = (IntervalDayHolder) output;
             reducedValues.add(rexBuilder.makeLiteral(
                 new BigDecimal(intervalDayOut.days * DateUtility.daysToStandardMillis + intervalDayOut.milliseconds),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY_TIME, newCall.getType().isNullable()),
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY_TIME, newCall.getType().isNullable()),
                 false));
             break;
           // The list of known unsupported types is used to trigger this behavior of re-using the input expression
