@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ package org.apache.drill.exec.store.easy.xml;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-import org.slf4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -34,24 +33,18 @@ import java.util.Stack;
 
 public class XMLSaxParser extends DefaultHandler {
 
-
-    private Logger log;
-
-
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLSaxParser.class);
     private JSONObject val = new JSONObject();
     private JSONObject newVal;
     private String content;
     private Stack stk = new Stack();
     private boolean removeNameSpace = false;
-
     public boolean isRemoveNameSpace() {
         return removeNameSpace;
     }
-
     public void setRemoveNameSpace(boolean removeNameSpace) {
         this.removeNameSpace = removeNameSpace;
     }
-
     public JSONObject getVal() {
         return val;
     }
@@ -61,40 +54,30 @@ public class XMLSaxParser extends DefaultHandler {
         super.startElement(uri, localName, qName, attributes);
 
         JSONObject tag = new JSONObject();
-        JSONArray array = new JSONArray();
         content = null;
 
         int length = attributes.getLength();
-        for(int i = 0; i<  length; i++) {
+        for (int i = 0; i < length; i++) {
             JSONObject temp = new JSONObject();
             String qNameVal = attributes.getQName(i);
             String valueVal = attributes.getValue(i);
 
-            if(qNameVal != null) {
-                qNameVal = cleanQName(qNameVal);
+            if (qNameVal != null) {
+                qNameVal = '@' + cleanQName(qNameVal);
             }
-            if(valueVal.trim().length() > 0) {
+            if (valueVal.trim().length() > 0) {
                 tag.put(qNameVal, valueVal);
-                //array.add(temp);
             }
         }
 
-        if(array.size() > 0) {
-            tag.put("attributes", array);
-            // tag.put("qName",cleanQName(qName));
-        }
-        //log.info("After clean:" + cleanQName(qName));
         stk.push(tag);
     }
 
 
     public String cleanQName(String qName) {
         if (isRemoveNameSpace() == true) {
-            //log.info("Before: " + qName);
-
             int pos = qName.lastIndexOf(":");
-            //log.info("pos:" + pos);
-            return qName.substring(pos+1);
+            return qName.substring(pos + 1);
 
         }
 
@@ -107,70 +90,66 @@ public class XMLSaxParser extends DefaultHandler {
 
         String cleanQName = cleanQName(qName);
 
-        if(stk.empty() == true) {
-            //System.out.println("Stack empty");
+        if (stk.empty() == true) {
             stk.push(val);
         }
-        newVal =(JSONObject) stk.pop();
-        if(content != null) {
 
-            newVal.put("value", content);
-            content=null;
+        newVal = (JSONObject) stk.pop();
+        if (content != null) {
+
+            newVal.put("#value", content);
+            content = null;
         }
 
-        if(stk.empty() == false) {
+        if (stk.empty() == false) {
+            // Get the parent from the stack
             JSONObject parent = (JSONObject) stk.pop();
 
-            if(parent.containsKey(cleanQName) == true ) {
-                if(parent.get(cleanQName) instanceof JSONObject ) {
-                    JSONObject old_val = (JSONObject) parent.get(cleanQName);
-                    if(newVal.size() > 0) {
-                        JSONArray new_array = new JSONArray();
+            if (parent.containsKey(cleanQName) == true) {
 
-                        if(old_val.size() == 1 && old_val.containsKey("value") &&
-                                newVal.size()==1 && newVal.containsKey("value")) {
-                            new_array.add(old_val.get("value"));
-                            new_array.add(newVal.get("value"));
-                        } else {
-                            new_array.add(old_val);
-                            new_array.add(newVal);
-                        }
+                logger.debug("Tag Name: " + cleanQName + " value: " + newVal.get("#value") + " parent type:" + parent.get(cleanQName).getClass().toString());
+                if (parent.get(cleanQName) instanceof JSONObject) {
+                    JSONObject old_val = (JSONObject) parent.get(cleanQName);
+                    if (old_val.size() > 0 && newVal.size() > 0) {
+                        JSONArray new_array = new JSONArray();
+                        new_array.add(old_val);
+                        new_array.add(newVal);
                         parent.put(cleanQName, new_array);
                     }
 
                     stk.push(parent);
-                }
-                else
-                if(parent.get(cleanQName) instanceof JSONValue) {
+
+                } else if (parent.get(cleanQName) instanceof JSONValue) {
                     JSONValue old_val = (JSONValue) parent.get(cleanQName);
                     JSONArray new_array = new JSONArray();
                     new_array.add(old_val);
                     new_array.add(newVal);
-
-
                     parent.put(cleanQName, new_array);
                     stk.push(parent);
 
 
-                } else if(parent.get(cleanQName) instanceof JSONArray) {
+                } else if (parent.get(cleanQName) instanceof JSONArray) {
                     JSONArray old_val = (JSONArray) parent.get(cleanQName);
-                    if(newVal.size() == 1 && newVal.containsKey("value")) {
-                        old_val.add(newVal.get("value"));
-                    } else {
-                        old_val.add(newVal);
-                    }
+                    old_val.add(newVal);
                     stk.push(parent);
                 } else {
-                    String old_val = (String) parent.get(cleanQName);
-                    JSONArray new_array = new JSONArray();
-                    new_array.add(old_val);
-                    new_array.add(newVal);
 
-                    parent.put(cleanQName, new_array);
+
+                    String old_val = (String) parent.get(cleanQName);
+                    JSONObject new_obj = new JSONObject();
+                    new_obj.put(cleanQName, old_val);
+                    new_obj.put(cleanQName, newVal);
+
+                    parent.put(cleanQName, new_obj);
                     stk.push(parent);
                 }
             } else {
-                parent.put(cleanQName, newVal);
+                logger.debug("Tag Name processed: " + cleanQName + " value: " + newVal.get("#value") + " parent type:" + parent.getClass().toString());
+                if (newVal.size() == 1 && newVal.containsKey("#value"))
+                    parent.put(cleanQName, newVal.get("#value"));
+                else
+                    parent.put(cleanQName, newVal);
+
                 stk.push(parent);
             }
         }
@@ -185,8 +164,11 @@ public class XMLSaxParser extends DefaultHandler {
         } else {
             content += new String(ch, start, length);
         }
-    }
+        content = content.trim().replace("\n", "");
+        if (content.length() == 0)
+            content = null;
 
+    }
 
 
     @Override

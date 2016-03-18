@@ -99,8 +99,6 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
     public static class XMLFormatConfig implements FormatPluginConfig {
 
         public List<String> extensions;
-        public List<String> xsds;
-        public List<String> dtds;
         public boolean keepPrefix = true;
 
         private static final List<String> DEFAULT_EXTS = ImmutableList.of("xml");
@@ -112,18 +110,6 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
                 return DEFAULT_EXTS;
             }
             return extensions;
-        }
-
-        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public List<String> getXsds() {
-
-            return xsds;
-        }
-
-        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public List<String> getDtds() {
-
-            return dtds;
         }
 
         @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -150,6 +136,4 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
             return false;
         }
     }
-
-
 }

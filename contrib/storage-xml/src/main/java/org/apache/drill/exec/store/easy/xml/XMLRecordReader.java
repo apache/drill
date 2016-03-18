@@ -32,11 +32,9 @@ import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.xml.sax.SAXException;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.List;
 
@@ -45,40 +43,24 @@ public class XMLRecordReader extends JSONRecordReader {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLRecordReader.class);
     private XMLSaxParser handler;
     private SAXParser xmlParser;
-    boolean validate;
-    private List<String> xsds;
-    private List<String> dtds;
     private JsonNode node;
 
     public XMLRecordReader(FragmentContext fragmentContext, String inputPath, DrillFileSystem fileSystem, List<SchemaPath> columns, XMLFormatPlugin.XMLFormatConfig xmlConfig) throws OutOfMemoryException {
         super(fragmentContext, inputPath, fileSystem, columns);
         try {
             FSDataInputStream fsStream = fileSystem.open(new Path(inputPath));
-            SAXParserFactory parserFactor = SAXParserFactory.newInstance();
-            xmlParser = parserFactor.newSAXParser();
+            SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+            xmlParser = saxParserFactory.newSAXParser();
             handler = new XMLSaxParser();
             handler.setRemoveNameSpace(xmlConfig.getKeepPrefix() == true ? false : true);
-            if(xmlConfig.getXsds() != null) {
-                //xsds = new ArrayList<String>();
-                //xsds.addAll(xmlConfig.getXsds());
-            }
-
-            if(xmlConfig.getDtds() != null) {
-                //dtds =  new ArrayList<String>();
-                //dtds.addAll(xmlConfig.getDtds());
-            }
-
-            //parserFactor.setNamespaceAware(true);
-            //parserFactor.setValidating(true);
-
-
             xmlParser.parse(fsStream.getWrappedStream(), handler);
             ObjectMapper mapper = new ObjectMapper();
+
             node = mapper.valueToTree(handler.getVal());
-            //System.out.println(handler.getVal().toJSONString());
+            logger.debug("XML Plugin, Produced JSON:" + handler.getVal().toJSONString());
             xmlParser = null;
             handler = null;
-            parserFactor = null;
+            saxParserFactory = null;
             super.stream = null;
             super.embeddedContent = node;
             super.hadoopPath = null;
@@ -88,11 +70,11 @@ public class XMLRecordReader extends JSONRecordReader {
 
         }
         catch (ParserConfigurationException e) {
-            logger.debug(e.getMessage());
+            logger.debug("XML Plugin:" + e.getMessage());
 
         }
         catch(IOException e) {
-            logger.debug(e.getMessage());
+            logger.debug("XML Plugin:" + e.getMessage());
 
         }
 
