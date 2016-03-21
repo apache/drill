@@ -287,6 +287,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0) &&
             FindHardDistributionScans.canForceSingleMode(convertedRelNodeWithSum0)) {
           context.getPlannerSettings().forceSingleMode();
+          if (context.getOptions().getOption(ExecConstants.LATE_LIMIT0_OPT)) {
+            return FindLimit0Visitor.addLimitOnTopOfLeafNodes(drillRel);
+          }
         }
 
         return drillRel;

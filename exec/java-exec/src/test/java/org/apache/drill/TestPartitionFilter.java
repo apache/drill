@@ -280,7 +280,9 @@ public class TestPartitionFilter extends PlanTestBase {
   public void testMainQueryFilterRegularColumn() throws Exception {
     String query = "select * from (select dir0, o_custkey from dfs.`multilevel/parquet` where dir0='1994' and o_custkey = 10) t limit 0";
     // with Parquet RG filter pushdown, reduce to 1 file ( o_custkey all > 10).
-    testIncludeFilter(query, 1, "Filter\\(", 0);
+    // There is a LIMIT(0) inserted on top of SCAN, so filter push down is not applied.
+    // Since this is a LIMIT 0 query, not pushing down the filter should not cause a perf. regression.
+    testIncludeFilter(query, 4, "Filter", 0);
   }
 
   @Test // see DRILL-2852 and DRILL-3591

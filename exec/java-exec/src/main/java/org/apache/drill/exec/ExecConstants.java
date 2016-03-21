@@ -453,6 +453,9 @@ public final class ExecConstants {
   public static final String EARLY_LIMIT0_OPT_KEY = "planner.enable_limit0_optimization";
   public static final BooleanValidator EARLY_LIMIT0_OPT = new BooleanValidator(EARLY_LIMIT0_OPT_KEY);
 
+  public static final String LATE_LIMIT0_OPT_KEY = "planner.enable_limit0_on_scan";
+  public static final BooleanValidator LATE_LIMIT0_OPT = new BooleanValidator(LATE_LIMIT0_OPT_KEY);
+
   public static final String ENABLE_MEMORY_ESTIMATION_KEY = "planner.memory.enable_memory_estimation";
   public static final OptionValidator ENABLE_MEMORY_ESTIMATION = new BooleanValidator(ENABLE_MEMORY_ESTIMATION_KEY);
 
