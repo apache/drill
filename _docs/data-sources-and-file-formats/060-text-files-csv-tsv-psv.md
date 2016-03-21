@@ -1,6 +1,6 @@
 ---
 title: "Text Files: CSV, TSV, PSV"
-date: 2016-03-21 19:16:15 UTC
+date: 2016-03-21 19:27:17 UTC
 parent: "Data Sources and File Formats"
 ---
 
@@ -45,7 +45,7 @@ Text files that include empty strings might produce unacceptable results. Common
 
 
 ### Use a Distributed File System
-Using a distributed file system, such as HDFS, instead of a local file system to query files improves performance because Drill attempts to split files on block boundaries. i
+Using a distributed file system, such as HDFS, instead of a local file system to query files improves performance because Drill attempts to split files on block boundaries.
 
 ## Configuring Drill to Read Text Files
 In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/docs/plugin-configuration-basics/#list-of-attributes-and-definitions) that affect how Drill reads CSV, TSV, PSV (comma-, tab-, pipe-separated) files:  
