@@ -709,4 +709,19 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-4525
+  public void testBetweenDateAndTimeStamp() throws Exception {
+    final String query = "select count(*) as col \n" +
+        "from cp.`employee.json` \n" +
+        "where birth_date BETWEEN cast('1970-01-01' AS DATE) AND (cast('1999-01-01' AS DATE) + INTERVAL '60' day)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col")
+        .baselineValues(36l)
+        .build()
+        .run();
+  }
 }
