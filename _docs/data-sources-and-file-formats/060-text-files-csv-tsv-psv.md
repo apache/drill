@@ -1,6 +1,6 @@
 ---
 title: "Text Files: CSV, TSV, PSV"
-date:  
+date: 2016-03-21 19:16:15 UTC
 parent: "Data Sources and File Formats"
 ---
 
@@ -12,15 +12,15 @@ Best practices for reading text files are:
 
 ### Select Data from Particular Columns
 
-Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text file have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
+Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text files have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
 
     CREATE TABLE parquet_users AS SELECT CAST(COLUMNS[0] AS INT) AS user_id,
     COLUMNS[1] AS username, CAST(COLUMNS[2] AS TIMESTAMP) AS registration_date
     FROM `users.csv1`;
 
-You need to select particular columns instead of using SELECT * for performance reasons. Drill reads CSV, TSV, and PSV files into a list of VARCHARS, rather than individual columns. While parquet supports and Drill reads lists, as of this release of Drill, the read path for complex data is not optimized. 
+You need to select particular columns instead of using SELECT * for performance reasons. Drill reads CSV, TSV, and PSV files into a list of VARCHARS, rather than individual columns. 
 
-If your text file have headers, you can enable extractHeader and select particular columns by name. For example:
+If your text files have headers, you can enable extractHeader and select particular columns by name. For example:
 
     CREATE TABLE parquet_users AS SELECT CAST(user_id AS INT) AS user_id,
     username, CAST(registration_date AS TIMESTAMP) AS registration_date
@@ -45,7 +45,7 @@ Text files that include empty strings might produce unacceptable results. Common
 
 
 ### Use a Distributed File System
-Using a distributed file system, such as HDFS, instead of a local file system to query the files also improves performance because currently Drill does not split files on block splits.
+Using a distributed file system, such as HDFS, instead of a local file system to query files improves performance because Drill attempts to split files on block boundaries. i
 
 ## Configuring Drill to Read Text Files
 In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/docs/plugin-configuration-basics/#list-of-attributes-and-definitions) that affect how Drill reads CSV, TSV, PSV (comma-, tab-, pipe-separated) files:  
