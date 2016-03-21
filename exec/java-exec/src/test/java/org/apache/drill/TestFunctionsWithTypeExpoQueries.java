@@ -740,4 +740,48 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
   }
+
+  @Test // DRILL-4525
+  public void testBetweenDateAndTimeStamp() throws Exception {
+    final String query = "select count(*) as col \n" +
+        "from cp.`employee.json` \n" +
+        "where cast(birth_date as DATE) BETWEEN cast('1970-01-01' AS DATE) AND (cast('1999-01-01' AS DATE) + INTERVAL '60' day) \n" +
+        "limit 0";
+
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-4525
+  public void testBetweenDecimalAndDouble() throws Exception {
+    final String query = "select cast(r_regionkey as Integer) as col \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "where cast(r_regionkey as double) BETWEEN 1.1 AND 4.5 \n" +
+        "limit 0";
+
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
 }
