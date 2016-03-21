@@ -21,8 +21,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlPrefixOperator;
+import org.apache.calcite.sql.fun.SqlBetweenOperator;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
@@ -159,10 +161,23 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
         wrapper = new DrillCalciteSqlFunctionWrapper((SqlFunction) calciteOperator,
             getFunctionListWithInference(calciteOperator.getName()),
             optionManager);
+      } else if(calciteOperator instanceof SqlBetweenOperator) {
+        // During the procedure of converting to RexNode,
+        // StandardConvertletTable.convertBetween expects the SqlOperator to be a subclass of SqlBetweenOperator
+        final SqlBetweenOperator sqlBetweenOperator = (SqlBetweenOperator) calciteOperator;
+        wrapper = new DrillCalciteSqlBetweenOperatorWrapper(sqlBetweenOperator);
       } else {
-        final String drillOpName = FunctionCallFactory.replaceOpWithFuncName(calciteOperator.getName());
+        final String drillOpName;
+        // For UNARY_MINUS (-) or UNARY_PLUS (+), we do not rename them as function_add or function_subtract.
+        // Otherwise, Calcite will mix them up with binary operator subtract (-) or add (+)
+        if(calciteOperator == SqlStdOperatorTable.UNARY_MINUS || calciteOperator == SqlStdOperatorTable.UNARY_PLUS) {
+          drillOpName = calciteOperator.getName();
+        } else {
+          drillOpName = FunctionCallFactory.replaceOpWithFuncName(calciteOperator.getName());
+        }
+
         final List<DrillFuncHolder> drillFuncHolders = getFunctionListWithInference(drillOpName);
-        if(drillFuncHolders.isEmpty() || calciteOperator == SqlStdOperatorTable.UNARY_MINUS || calciteOperator == SqlStdOperatorTable.UNARY_PLUS) {
+        if(drillFuncHolders.isEmpty()) {
           continue;
         }
 
