@@ -58,7 +58,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
 
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.FLOAT8)
-        .setMode(TypeProtos.DataMode.REQUIRED)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
         .build();
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();

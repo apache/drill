@@ -291,6 +291,7 @@ public class PlanTestBase extends BaseTestQuery {
     final List<QueryDataBatch> results = testSqlWithResults(sql);
     final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     final StringBuilder builder = new StringBuilder();
+    final boolean silent = config != null && config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT);
 
     for (final QueryDataBatch b : results) {
       if (!b.hasData()) {
@@ -308,12 +309,16 @@ public class PlanTestBase extends BaseTestQuery {
         throw new Exception("Looks like you did not provide an explain plan query, please add EXPLAIN PLAN FOR to the beginning of your query.");
       }
 
-      System.out.println(vw.getValueVector().getField().getPath());
+      if (!silent) {
+        System.out.println(vw.getValueVector().getField().getPath());
+      }
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
         final Object o = vv.getAccessor().getObject(i);
         builder.append(o);
-        System.out.println(vv.getAccessor().getObject(i));
+        if (!silent) {
+          System.out.println(o);
+        }
       }
       loader.clear();
       b.release();

@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.logical.LogicalAggregate;
@@ -25,10 +29,27 @@ import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.planner.logical.DrillDirectScanRel;
 import org.apache.drill.exec.planner.logical.DrillLimitRel;
+import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.direct.DirectGroupScan;
+
+import java.util.List;
 
 /**
  * Visitor that will identify whether the root portion of the RelNode tree contains a limit 0 pattern. In this case, we
@@ -36,15 +57,67 @@ import org.apache.drill.exec.planner.logical.DrillLimitRel;
  * executing a schema-only query.
  */
 public class FindLimit0Visitor extends RelShuttleImpl {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FindLimit0Visitor.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FindLimit0Visitor.class);
 
-  private boolean contains = false;
+  // Some types are excluded in this set:
+  // + DECIMAL type is not fully supported in general.
+  // + VARBINARY is not fully tested.
+  // + MAP, ARRAY are currently not exposed to the planner.
+  // + TINYINT, SMALLINT are defined in the Drill type system but have been turned off for now.
+  // + SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST are Calcite types
+  //   currently not supported by Drill, nor defined in the Drill type list.
+  // + ANY is the late binding type.
+  private static final ImmutableSet<SqlTypeName> TYPES =
+      ImmutableSet.<SqlTypeName>builder()
+          .add(SqlTypeName.INTEGER, SqlTypeName.BIGINT, SqlTypeName.FLOAT, SqlTypeName.DOUBLE,
+              SqlTypeName.VARCHAR, SqlTypeName.BOOLEAN, SqlTypeName.DATE, SqlTypeName.TIME,
+              SqlTypeName.TIMESTAMP, SqlTypeName.INTERVAL_YEAR_MONTH, SqlTypeName.INTERVAL_DAY_TIME,
+              SqlTypeName.CHAR)
+          .build();
 
+  /**
+   * If all field types of the given node are {@link #TYPES recognized types} and honored by execution, then this
+   * method returns the tree: DrillDirectScanRel(field types). Otherwise, the method returns null.
+   *
+   * @param rel calcite logical rel tree
+   * @return drill logical rel tree
+   */
+  public static DrillRel getDirectScanRelIfFullySchemaed(RelNode rel) {
+    final List<RelDataTypeField> fieldList = rel.getRowType().getFieldList();
+    final List<SqlTypeName> columnTypes = Lists.newArrayList();
+    final List<TypeProtos.DataMode> dataModes = Lists.newArrayList();
+
+    for (final RelDataTypeField field : fieldList) {
+      final SqlTypeName sqlTypeName = field.getType().getSqlTypeName();
+      if (!TYPES.contains(sqlTypeName)) {
+        return null;
+      } else {
+        columnTypes.add(sqlTypeName);
+        dataModes.add(field.getType().isNullable() ?
+            TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED);
+      }
+    }
+
+    final RelTraitSet traits = rel.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
+    final RelDataTypeReader reader = new RelDataTypeReader(rel.getRowType().getFieldNames(), columnTypes,
+        dataModes);
+    return new DrillDirectScanRel(rel.getCluster(), traits,
+        new DirectGroupScan(reader, ScanStats.ZERO_RECORD_TABLE), rel.getRowType());
+  }
+
+  /**
+   * Check if the root portion of the tree contains LIMIT(0).
+   *
+   * @param rel rel node tree
+   * @return true if the root portion of the tree contains LIMIT(0)
+   */
   public static boolean containsLimit0(RelNode rel) {
     FindLimit0Visitor visitor = new FindLimit0Visitor();
     rel.accept(visitor);
     return visitor.isContains();
   }
+
+  private boolean contains = false;
 
   private FindLimit0Visitor() {
   }
@@ -53,7 +126,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     return contains;
   }
 
-  private boolean isLimit0(RexNode fetch) {
+  private static boolean isLimit0(RexNode fetch) {
     if (fetch != null && fetch.isA(SqlKind.LITERAL)) {
       RexLiteral l = (RexLiteral) fetch;
       switch (l.getTypeName()) {
@@ -115,5 +188,50 @@ public class FindLimit0Visitor extends RelShuttleImpl {
   @Override
   public RelNode visit(LogicalUnion union) {
     return union;
+  }
+
+  /**
+   * Reader for column names and types.
+   */
+  public static class RelDataTypeReader extends AbstractRecordReader {
+
+    public final List<String> columnNames;
+    public final List<SqlTypeName> columnTypes;
+    public final List<TypeProtos.DataMode> dataModes;
+
+    public RelDataTypeReader(List<String> columnNames, List<SqlTypeName> columnTypes,
+                             List<TypeProtos.DataMode> dataModes) {
+      Preconditions.checkArgument(columnNames.size() == columnTypes.size() &&
+          columnTypes.size() == dataModes.size());
+      this.columnNames = columnNames;
+      this.columnTypes = columnTypes;
+      this.dataModes = dataModes;
+    }
+
+    @Override
+    public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+      for (int i = 0; i < columnNames.size(); i++) {
+        final TypeProtos.MajorType type = TypeProtos.MajorType.newBuilder()
+            .setMode(dataModes.get(i))
+            .setMinorType(TypeInferenceUtils.getDrillTypeFromCalciteType(columnTypes.get(i)))
+            .build();
+        final MaterializedField field = MaterializedField.create(columnNames.get(i), type);
+        final Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
+        try {
+          output.addField(field, vvClass);
+        } catch (SchemaChangeException e) {
+          throw new ExecutionSetupException(e);
+        }
+      }
+    }
+
+    @Override
+    public int next() {
+      return 0;
+    }
+
+    @Override
+    public void close() throws Exception {
+    }
   }
 }
