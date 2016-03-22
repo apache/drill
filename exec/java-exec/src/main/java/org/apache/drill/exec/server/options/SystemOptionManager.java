@@ -116,6 +116,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.SMALL_QUEUE_SIZE,
       ExecConstants.MIN_HASH_TABLE_SIZE,
       ExecConstants.MAX_HASH_TABLE_SIZE,
+      ExecConstants.EARLY_LIMIT0_OPT,
       ExecConstants.ENABLE_MEMORY_ESTIMATION,
       ExecConstants.MAX_QUERY_MEMORY_PER_NODE,
       ExecConstants.NON_BLOCKING_OPERATORS_MEMORY,

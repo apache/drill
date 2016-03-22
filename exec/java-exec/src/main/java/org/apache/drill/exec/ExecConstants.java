@@ -202,6 +202,9 @@ public interface ExecConstants {
   String AFFINITY_FACTOR_KEY = "planner.affinity_factor";
   OptionValidator AFFINITY_FACTOR = new DoubleValidator(AFFINITY_FACTOR_KEY, 1.2d);
 
+  String EARLY_LIMIT0_OPT_KEY = "planner.enable_limit0_optimization";
+  BooleanValidator EARLY_LIMIT0_OPT = new BooleanValidator(EARLY_LIMIT0_OPT_KEY, false);
+
   String ENABLE_MEMORY_ESTIMATION_KEY = "planner.memory.enable_memory_estimation";
   OptionValidator ENABLE_MEMORY_ESTIMATION = new BooleanValidator(ENABLE_MEMORY_ESTIMATION_KEY, false);
 

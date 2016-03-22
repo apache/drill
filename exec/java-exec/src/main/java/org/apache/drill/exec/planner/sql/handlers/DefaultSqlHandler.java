@@ -206,6 +206,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @throws RelConversionException
    */
   protected DrillRel convertToDrel(final RelNode relNode) throws SqlUnsupportedException, RelConversionException {
+    if (context.getOptions().getOption(ExecConstants.EARLY_LIMIT0_OPT) &&
+        context.getPlannerSettings().isTypeInferenceEnabled() &&
+        FindLimit0Visitor.containsLimit0(relNode)) {
+      // disable distributed mode
+      context.getPlannerSettings().forceSingleMode();
+      // if the schema is known, return the schema directly
+      final DrillRel shorterPlan;
+      if ((shorterPlan = FindLimit0Visitor.getDirectScanRelIfFullySchemaed(relNode)) != null) {
+        return shorterPlan;
+      }
+    }
+
     try {
       final RelNode convertedRelNode;
 
