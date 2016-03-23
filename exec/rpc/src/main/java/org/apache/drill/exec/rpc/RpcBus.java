@@ -159,19 +159,15 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
       String msg;
-      if(local!=null) {
+      if(local != null) {
         msg = String.format("Channel closed %s <--> %s.", local, remote);
       }else{
         msg = String.format("Channel closed %s <--> %s.", future.channel().localAddress(), future.channel().remoteAddress());
       }
 
-      if (RpcBus.this.isClient()) {
-        if(local != null) {
-          logger.info(String.format(msg));
-        }
-      } else {
-        queue.channelClosed(new ChannelClosedException(msg));
-      }
+      logger.info(msg); // should we leave this at info level ?
+
+      queue.channelClosed(new ChannelClosedException(msg));
 
       clientConnection.close();
     }
