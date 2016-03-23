@@ -42,6 +42,7 @@ import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.RuleSets;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.logical.DrillAggregateRule;
+import org.apache.drill.exec.planner.logical.DrillFilterAggregateTransposeRule;
 import org.apache.drill.exec.planner.logical.DrillFilterJoinRules;
 import org.apache.drill.exec.planner.logical.DrillFilterRule;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
@@ -253,7 +254,7 @@ public enum PlannerPhase {
       DrillPushFilterPastProjectRule.INSTANCE,
       // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
       //FilterSetOpTransposeRule.INSTANCE,
-      FilterAggregateTransposeRule.INSTANCE,
+      DrillFilterAggregateTransposeRule.INSTANCE,
 
       FilterMergeRule.INSTANCE,
       AggregateRemoveRule.INSTANCE,

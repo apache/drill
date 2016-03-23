@@ -491,4 +491,38 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+
+  @Test // DRILL-4531
+  public void testPushFilterDown() throws Exception {
+    final String sql =
+        "SELECT  cust.custAddress, \n"
+            + "       lineitem.provider \n"
+            + "FROM ( \n"
+            + "      SELECT cast(c_custkey AS bigint) AS custkey, \n"
+            + "             c_address                 AS custAddress \n"
+            + "      FROM   cp.`tpch/customer.parquet` ) cust \n"
+            + "LEFT JOIN \n"
+            + "  ( \n"
+            + "    SELECT DISTINCT l_linenumber, \n"
+            + "           CASE \n"
+            + "             WHEN l_partkey IN (1, 2) THEN 'Store1'\n"
+            + "             WHEN l_partkey IN (5, 6) THEN 'Store2'\n"
+            + "           END AS provider \n"
+            + "    FROM  cp.`tpch/lineitem.parquet` \n"
+            + "    WHERE ( l_orderkey >=20160101 AND l_partkey <=20160301) \n"
+            + "      AND   l_partkey IN (1,2, 5, 6) ) lineitem\n"
+            + "ON        cust.custkey = lineitem.l_linenumber \n"
+            + "WHERE     provider IS NOT NULL \n"
+            + "GROUP BY  cust.custAddress, \n"
+            + "          lineitem.provider \n"
+            + "ORDER BY  cust.custAddress, \n"
+            + "          lineitem.provider";
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)(Join).*inner"}; // With filter pushdown, left join will be converted into inner join
+    final String[] excludedPatterns = {"(?s)(Join).*(left)"};
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPatterns);
+  }
+
 }
