@@ -141,9 +141,6 @@ public class XMLSaxParser extends DefaultHandler {
                         break;
                 }
             } else {
-               //if (newVal.size() == 1 && newVal.containsKey("#value"))
-                 //   parent.put(cleanQName, newVal.get("#value"));
-                //else
                 if(newVal.size() == 0){
                     parent.put(cleanQName, newVal);
                    // Tracking empty nodes so we can clean them out
