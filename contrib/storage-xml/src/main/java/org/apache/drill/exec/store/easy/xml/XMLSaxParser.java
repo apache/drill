@@ -141,9 +141,10 @@ public class XMLSaxParser extends DefaultHandler {
                         break;
                 }
             } else {
-               if (newVal.size() == 1 && newVal.containsKey("#value"))
-                    parent.put(cleanQName, newVal.get("#value"));
-                else if(newVal.size() == 0){
+               //if (newVal.size() == 1 && newVal.containsKey("#value"))
+                 //   parent.put(cleanQName, newVal.get("#value"));
+                //else
+                if(newVal.size() == 0){
                     parent.put(cleanQName, newVal);
                    // Tracking empty nodes so we can clean them out
                    // to help drill with schema consolidation
@@ -185,7 +186,7 @@ public class XMLSaxParser extends DefaultHandler {
         if(old instanceof JSONArray) {
             JSONArray old_array = (JSONArray) old;
             JSONObject newVal = (JSONObject) new_val;
-            if(newVal.containsKey("#value"))
+            if(newVal.size() == 1  && newVal.containsKey("#value"))
                 old_array.add(newVal.get("#value"));
             else {
                 old_array.add(newVal);
@@ -198,13 +199,13 @@ public class XMLSaxParser extends DefaultHandler {
             JSONArray new_array = new JSONArray();
             JSONObject newVal = (JSONObject) new_val;
 
-            if(old_val.containsKey("#value"))
+            if(old_val.size() == 1 && old_val.containsKey("#value"))
                 new_array.add(old_val.get("#value"));
             else {
                 new_array.add(old_val);
             }
 
-            if(newVal.containsKey("#value"))
+            if(newVal.size() == 1 && newVal.containsKey("#value"))
                 new_array.add(newVal.get("#value"));
             else {
                 new_array.add(newVal);
@@ -216,7 +217,10 @@ public class XMLSaxParser extends DefaultHandler {
             String old_val = (String) old;
             new_array.add(old_val);
             parent.remove(cleanQName);
-            new_array.add(newVal.get("#value"));
+            if(newVal.size() == 1)
+                new_array.add(newVal.get("#value"));
+            else
+                new_array.add(newVal);
             parent.put(cleanQNameArray, new_array);
         }
         stk.push(parent);
