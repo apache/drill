@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.easy.xml;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -52,10 +53,9 @@ public class XMLRecordReader extends JSONRecordReader {
             SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
             xmlParser = saxParserFactory.newSAXParser();
             handler = new XMLSaxParser();
-            handler.setRemoveNameSpace(xmlConfig.getKeepPrefix() == true ? false : true);
+            handler.setRemoveNameSpace(!xmlConfig.getKeepPrefix());
             xmlParser.parse(fsStream.getWrappedStream(), handler);
             ObjectMapper mapper = new ObjectMapper();
-
             node = mapper.valueToTree(handler.getVal());
             logger.debug("XML Plugin, Produced JSON:" + handler.getVal().toJSONString());
             xmlParser = null;
@@ -64,22 +64,11 @@ public class XMLRecordReader extends JSONRecordReader {
             super.stream = null;
             super.embeddedContent = node;
             super.hadoopPath = null;
-
-        } catch(SAXException e) {
-            logger.debug(e.getMessage());
-
         }
-        catch (ParserConfigurationException e) {
+        catch (SAXException | ParserConfigurationException | IOException e) {
             logger.debug("XML Plugin:" + e.getMessage());
 
         }
-        catch(IOException e) {
-            logger.debug("XML Plugin:" + e.getMessage());
-
-        }
-
-
-
     }
 
 
