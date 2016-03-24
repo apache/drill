@@ -174,7 +174,7 @@ public class XMLSaxParser extends DefaultHandler {
 
     private int addNodeToArray(JSONObject parent,String cleanQName, Object old, Object new_val) {
         String cleanQNameArray = cleanQName.trim()+"_array";
-        if(key_stack.empty()) {
+        if(!key_stack.empty()) {
             String old_objkey = (String) key_stack.peek();
             if (cleanQName.equals(old_objkey)) {
                 key_stack.pop();
