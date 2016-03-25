@@ -84,6 +84,10 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
   private final BitSet dirs;
 
+  // The Scan could be projecting several dirN columns but we are only interested in the
+  // ones that are referenced by the Filter, so keep track of such referenced dirN columns.
+  private final BitSet referencedDirs;
+
   private final List<PushDirFilter> pushStatusStack =  Lists.newArrayList();
   private final Deque<OpState> opStack = new ArrayDeque<OpState>();
 
@@ -103,6 +107,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
     // go deep
     super(true);
     this.dirs = dirs;
+    this.referencedDirs = new BitSet(dirs.size());
   }
 
   public FindPartitionConditions(BitSet dirs, RexBuilder builder) {
@@ -110,6 +115,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
     super(true);
     this.dirs = dirs;
     this.builder = builder;
+    this.referencedDirs = new BitSet(dirs.size());
   }
 
   public void analyze(RexNode exp) {
@@ -129,6 +135,10 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
   public RexNode getFinalCondition() {
     return resultCondition;
+  }
+
+  public BitSet getReferencedDirs() {
+    return referencedDirs;
   }
 
   private Void pushVariable() {
@@ -222,6 +232,8 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
     if(dirs.get(inputRef.getIndex())){
       pushStatusStack.add(PushDirFilter.PUSH);
       addResult(inputRef);
+      referencedDirs.set(inputRef.getIndex());
+
     }else{
       pushStatusStack.add(PushDirFilter.NO_PUSH);
     }

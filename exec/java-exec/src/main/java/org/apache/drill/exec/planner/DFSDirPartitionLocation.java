@@ -67,4 +67,16 @@ public class DFSDirPartitionLocation implements PartitionLocation {
     return true;
   }
 
+  @Override
+  public String getCompositePartitionPath() {
+    String path = "";
+    for (int i=0; i < dirs.length; i++) {
+      if (dirs[i] == null) { // get the prefix
+        break;
+      }
+      path += "/" + dirs[i];
+    }
+    return path;
+  }
+
 }
