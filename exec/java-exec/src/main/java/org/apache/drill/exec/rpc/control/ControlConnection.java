@@ -32,44 +32,39 @@ import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import com.google.protobuf.MessageLite;
 
 public class ControlConnection extends RemoteConnection {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnection.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnection.class);
 
   private final RpcBus<RpcType, ControlConnection> bus;
   private final BufferAllocator allocator;
-  private volatile DrillbitEndpoint endpoint;
+  private volatile DrillbitEndpoint remoteEndpoint;
   private volatile boolean active = false;
   private final UUID id;
 
   public ControlConnection(String name, SocketChannel channel, RpcBus<RpcType, ControlConnection> bus,
-      BufferAllocator allocator) {
+                           BufferAllocator allocator) {
     super(channel, name);
     this.bus = bus;
     this.id = UUID.randomUUID();
     this.allocator = allocator;
   }
 
-  void setEndpoint(DrillbitEndpoint endpoint) {
-    assert this.endpoint == null : "Endpoint should only be set once (only in the case in incoming server requests).";
-    this.endpoint = endpoint;
+  void setEndpoint(DrillbitEndpoint remoteEndpoint) {
+    assert this.remoteEndpoint == null :
+        "Endpoint should only be set once (only in the case in incoming server requests).";
+    this.remoteEndpoint = remoteEndpoint;
     active = true;
   }
 
-  protected DrillbitEndpoint getEndpoint() {
-    return endpoint;
-  }
-
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener,
-      RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(
+      RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+      ByteBuf... dataBodies) {
     bus.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void sendUnsafe(RpcOutcomeListener<RECEIVE> outcomeListener,
-      RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void sendUnsafe(
+      RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+      ByteBuf... dataBodies) {
     bus.send(outcomeListener, this, rpcType, protobufBody, clazz, true, dataBodies);
-  }
-
-  public void disable() {
-    active = false;
   }
 
   @Override
@@ -81,7 +76,7 @@ public class ControlConnection extends RemoteConnection {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
+    result = prime * result + id.hashCode();
     return result;
   }
 
@@ -97,14 +92,7 @@ public class ControlConnection extends RemoteConnection {
       return false;
     }
     ControlConnection other = (ControlConnection) obj;
-    if (id == null) {
-      if (other.id != null) {
-        return false;
-      }
-    } else if (!id.equals(other.id)) {
-      return false;
-    }
-    return true;
+    return id.equals(other.id);
   }
 
   @Override

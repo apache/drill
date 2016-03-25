@@ -36,7 +36,7 @@ import com.google.protobuf.Parser;
  * Manages communication tunnels between nodes.
  */
 public class ControllerImpl implements Controller {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControllerImpl.class);
 
   private volatile ControlServer server;
   private final ControlMessageHandler handler;
@@ -60,17 +60,18 @@ public class ControllerImpl implements Controller {
     server = new ControlServer(handler, context, connectionRegistry);
     int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     port = server.bind(port, allowPortHunting);
-    DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
+    final DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder()
+        .setControlPort(port)
+        .build();
     connectionRegistry.setEndpoint(completeEndpoint);
     handlerRegistry.setEndpoint(completeEndpoint);
     return completeEndpoint;
   }
 
   @Override
-  public ControlTunnel getTunnel(DrillbitEndpoint endpoint) {
-    return new ControlTunnel(endpoint, connectionRegistry.getConnectionManager(endpoint));
+  public ControlTunnel getTunnel(DrillbitEndpoint remoteEndpoint) {
+    return new ControlTunnel(connectionRegistry.getOrCreateConnectionManager(remoteEndpoint));
   }
-
 
   @SuppressWarnings("unchecked")
   @Override
@@ -91,7 +92,7 @@ public class ControllerImpl implements Controller {
     handlerRegistry.registerCustomHandler(messageTypeId, handler, requestSerde, responseSerde);
   }
 
-
+  @Override
   public void close() throws Exception {
     List<AutoCloseable> closeables = Lists.newArrayList();
     closeables.add(server);
@@ -102,6 +103,5 @@ public class ControllerImpl implements Controller {
 
     AutoCloseables.close(closeables);
   }
-
 
 }

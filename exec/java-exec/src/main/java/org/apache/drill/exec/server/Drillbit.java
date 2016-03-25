@@ -146,6 +146,7 @@ public class Drillbit implements AutoCloseable {
     }
 
     try {
+      // Note: this order is important
       AutoCloseables.close(
           webServer,
           engine,

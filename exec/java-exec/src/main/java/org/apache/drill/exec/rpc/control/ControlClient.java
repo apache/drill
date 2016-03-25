@@ -30,7 +30,6 @@ import org.apache.drill.exec.rpc.BasicClient;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
-import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.BootStrapContext;
@@ -38,8 +37,7 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.protobuf.MessageLite;
 
-public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake>{
-
+public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake> {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
 
   private final ControlMessageHandler handler;
@@ -50,8 +48,8 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   private final BufferAllocator allocator;
 
   public ControlClient(BufferAllocator allocator, DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint,
-      ControlMessageHandler handler,
-      BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
+                       ControlMessageHandler handler, BootStrapContext context,
+                       ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         allocator.getAsByteBufAllocator(),
         context.getControlLoopGroup(),
@@ -66,20 +64,26 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   }
 
   public void connect(RpcConnectionHandler<ControlConnection> connectionHandler) {
-    connectAsClient(connectionHandler, BitControlHandshake.newBuilder().setRpcVersion(ControlRpcConfig.RPC_VERSION).setEndpoint(localIdentity).build(), remoteEndpoint.getAddress(), remoteEndpoint.getControlPort());
+    connectAsClient(connectionHandler,
+        BitControlHandshake.newBuilder()
+            .setRpcVersion(ControlRpcConfig.RPC_VERSION)
+            .setEndpoint(localIdentity)
+            .build(),
+        remoteEndpoint.getAddress(),
+        remoteEndpoint.getControlPort());
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public ControlConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    this.connection = new ControlConnection("control client", channel,
-        (RpcBus<RpcType, ControlConnection>) (RpcBus<?, ?>) this, allocator);
+    this.connection = new ControlConnection("control client", channel, this, allocator);
     return connection;
   }
 
   @Override
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel ch, ControlConnection clientConnection) {
+  protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel ch,
+                                                                 ControlConnection clientConnection) {
     return closeHandlerFactory.getHandler(clientConnection, super.getCloseHandler(ch, clientConnection));
   }
 
@@ -89,14 +93,16 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   }
 
   @Override
-  protected Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  protected Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody)
+      throws RpcException {
     return handler.handle(connection, rpcType, pBody, dBody);
   }
 
   @Override
   protected void validateHandshake(BitControlHandshake handshake) throws RpcException {
     if (handshake.getRpcVersion() != ControlRpcConfig.RPC_VERSION) {
-      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", handshake.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
+      throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.",
+          handshake.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
     }
   }
 

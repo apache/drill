@@ -24,14 +24,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.Lists;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -254,7 +252,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
       // Notify the drillbit listener for newly unregistered bits. For now, we only care when drillbits are down / unregistered.
       if (! (unregisteredBits.isEmpty()) ) {
-        drillbitUnregistered(unregisteredBits);
+        drillbitsUnregistered(unregisteredBits);
       }
 
     } catch (Exception e) {

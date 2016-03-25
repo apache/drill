@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.coord;
 
-import java.io.Closeable;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,28 +27,42 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 
 /**
- * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities
- * as well as understand other node's existence and capabilities.
+ * Pluggable interface built to manage cluster coordination. Allows a {@link org.apache.drill.exec.server.Drillbit} or
+ * a {@link org.apache.drill.exec.client.DrillClient} to register its capabilities as well as understand other
+ * node's existence and capabilities.
  **/
 public abstract class ClusterCoordinator implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
 
-  protected ConcurrentHashMap<DrillbitStatusListener, DrillbitStatusListener> listeners = new ConcurrentHashMap<>(
-      16, 0.75f, 16);
+  protected final ConcurrentHashMap<DrillbitStatusListener, DrillbitStatusListener> listeners =
+      new ConcurrentHashMap<>(16, 0.75f, 16);
 
   /**
-   * Start the cluster coordinator.  Millis to wait is
-   * @param millisToWait The maximum time to wait before throwing an exception if the cluster coordination service has not successfully started.  Use 0 to wait indefinitely.
-   * @throws Exception
+   * Start the cluster coordinator.
+   *
+   * @param millisToWait The maximum time to wait before throwing an exception if the cluster coordination service
+   *                     has not successfully started. Use 0 to wait indefinitely.
    */
   public abstract void start(long millisToWait) throws Exception;
 
-  public abstract RegistrationHandle register(DrillbitEndpoint data);
+  /**
+   * Register a new drillbit to this coordinator.
+   *
+   * @param endpoint drillbit endpoint
+   * @return registration handle (used to unregister)
+   */
+  public abstract RegistrationHandle register(DrillbitEndpoint endpoint);
 
+  /**
+   * Unregister a drillbit from this coordinator using the {@link RegistrationHandle handle} provided during
+   * {@link #register(DrillbitEndpoint) registration}.
+   *
+   * @param handle registration handle
+   */
   public abstract void unregister(RegistrationHandle handle);
 
   /**
-   * Get a collection of avialable Drillbit endpoints, Thread-safe.
+   * Get a collection of available Drillbit endpoints, Thread-safe.
    * Could be slightly out of date depending on refresh policy.
    *
    * @return A collection of available endpoints.
@@ -72,33 +85,44 @@ public abstract class ClusterCoordinator implements AutoCloseable {
   public abstract <V> TransientStore<V> getOrCreateTransientStore(TransientStoreConfig<V> config);
 
   /**
-   * Actions to take when there are a set of new de-active drillbits.
-   * @param unregisteredBits
+   * Default callback to invoke when a set of drillbits unregisters from this coordinator;
+   * {@link DrillbitStatusListener#drillbitRegistered fires} all listeners.
+   *
+   * @param unregisteredBits set of unregistered drillbits
    */
-  protected void drillbitUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
+  protected void drillbitsUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
       listener.drillbitUnregistered(unregisteredBits);
     }
   }
 
-  protected void drillbitRegistered(Set<DrillbitEndpoint> registeredBits) {
+  /**
+   * Default callback to invoke when a set of drillbits registers to this coordinator;
+   * {@link DrillbitStatusListener#drillbitUnregistered fires} all listeners.
+   *
+   * @param registeredBits set of registered drillbits
+   */
+  protected void drillbitsRegistered(Set<DrillbitEndpoint> registeredBits) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
       listener.drillbitRegistered(registeredBits);
     }
   }
 
   /**
-   * Register a DrillbitStatusListener.
-   * Note : the listeners are not guaranteed to be called in the order in which they call this method, since all the listeners are in a ConcurrentHashMap.
-   * @param listener
+   * Add a {@link DrillbitStatusListener status listener} that observes for changes in the active endpoints.
+   *
+   * The listeners are not guaranteed to be called in the order in which they call this method.
+   *
+   * @param listener the listener to add
    */
   public void addDrillbitStatusListener(DrillbitStatusListener listener) {
     listeners.putIfAbsent(listener, listener);
   }
 
   /**
-   * Unregister a DrillbitStatusListener.
-   * @param listener
+   * Remove a {@link DrillbitStatusListener status listener}.
+   *
+   * @param listener the listener to remove
    */
   public void removeDrillbitStatusListener(DrillbitStatusListener listener) {
     listeners.remove(listener);

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-
 import org.apache.drill.exec.proto.CoordinationProtos;
 
 import java.util.Set;
@@ -35,7 +34,8 @@ public interface DrillbitStatusListener {
 
   /**
    * The action to taken when a set of new drillbits are registered to the cluster.
-   * @param  registeredDrillbits the set of newly registered drillbits. Note: the complete set of currently registered bits could be different.
+   * @param  registeredDrillbits the set of newly registered drillbits. Note: the complete set of currently
+   *                             registered bits could be different.
    */
   void drillbitRegistered(Set<CoordinationProtos.DrillbitEndpoint> registeredDrillbits);
 

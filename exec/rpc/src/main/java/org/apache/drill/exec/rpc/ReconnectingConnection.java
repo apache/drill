@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.base.Strings;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
 
@@ -43,8 +44,8 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
   private final OUTBOUND_HANDSHAKE handshake;
 
   public ReconnectingConnection(OUTBOUND_HANDSHAKE handshake, String host, int port) {
-    Preconditions.checkNotNull(host);
-    Preconditions.checkArgument(port > 0);
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(host), "Endpoint address cannot be null or empty.");
+    Preconditions.checkArgument(port > 0, "Port must be set to a port between 1 and 65k. Was set to: " + port);
     this.host = host;
     this.port = port;
     this.handshake = handshake;

@@ -18,5 +18,12 @@
 package org.apache.drill.exec.rpc;
 
 public interface ConnectionThrottle {
-  public void setAutoRead(boolean enableAutoRead);
+
+  /**
+   * From {@link io.netty.channel.ChannelConfig#setAutoRead(boolean)}, sets if
+   * {@link io.netty.channel.ChannelHandlerContext#read()} will be invoked automatically so that a user application
+   * doesn't need to call it at all. The default value is {@code true}.
+   */
+  void setAutoRead(boolean enableAutoRead);
+
 }

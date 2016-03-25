@@ -255,7 +255,8 @@ public class WorkManager implements AutoCloseable {
 
     /**
      * Currently used to start a root fragment that is blocked on data, and intermediate fragments. This method is
-     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataResponseHandlerImpl#handle}
+     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataServer}.
+     *
      * @param fragmentManager the manager for the fragment
      */
     public void startFragmentPendingRemote(final FragmentManager fragmentManager) {

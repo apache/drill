@@ -61,6 +61,7 @@ public class TestFragmentExecutorCancel extends BaseTestQuery {
 
     try {
       closeClient();
+      client = null; // so that client is not closed again (since #closeClient has @AfterClass annotation)
     } catch (IllegalStateException ex) {
       fail("failed to close the drillbits properly");
     }

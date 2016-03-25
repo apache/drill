@@ -35,15 +35,16 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.protobuf.MessageLite;
 
-public class ControlServer extends BasicServer<RpcType, ControlConnection>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlServer.class);
+public class ControlServer extends BasicServer<RpcType, ControlConnection> {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlServer.class);
 
   private final ControlMessageHandler handler;
   private final ConnectionManagerRegistry connectionRegistry;
   private volatile ProxyCloseHandler proxyCloseHandler;
   private BufferAllocator allocator;
 
-  public ControlServer(ControlMessageHandler handler, BootStrapContext context, ConnectionManagerRegistry connectionRegistry) {
+  public ControlServer(ControlMessageHandler handler, BootStrapContext context,
+                       ConnectionManagerRegistry connectionRegistry) {
     super(
         ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         context.getAllocator().getAsByteBufAllocator(),
@@ -59,7 +60,8 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   }
 
   @Override
-  protected Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  protected Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody)
+      throws RpcException {
     return handler.handle(connection, rpcType, pBody, dBody);
   }
 
@@ -84,18 +86,23 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
       public MessageLite getHandshakeResponse(BitControlHandshake inbound) throws Exception {
 //        logger.debug("Handling handshake from other bit. {}", inbound);
         if (inbound.getRpcVersion() != ControlRpcConfig.RPC_VERSION) {
-          throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
+          throw new RpcException(String.format("Invalid rpc version. Expected %d, actual %d.",
+              inbound.getRpcVersion(), ControlRpcConfig.RPC_VERSION));
         }
-        if (!inbound.hasEndpoint() || inbound.getEndpoint().getAddress().isEmpty() || inbound.getEndpoint().getControlPort() < 1) {
-          throw new RpcException(String.format("RPC didn't provide valid counter endpoint information.  Received %s.", inbound.getEndpoint()));
+        if (!inbound.hasEndpoint() ||
+            inbound.getEndpoint().getAddress().isEmpty() ||
+            inbound.getEndpoint().getControlPort() < 1) {
+          throw new RpcException(String.format("RPC didn't provide valid counter endpoint information. Received %s.",
+              inbound.getEndpoint()));
         }
         connection.setEndpoint(inbound.getEndpoint());
 
         // add the
-        ControlConnectionManager manager = connectionRegistry.getConnectionManager(inbound.getEndpoint());
+        ControlConnectionManager manager = connectionRegistry.getOrCreateConnectionManager(inbound.getEndpoint());
 
         // update the close handler.
-        proxyCloseHandler.setHandler(manager.getCloseHandlerCreator().getHandler(connection, proxyCloseHandler.getHandler()));
+        proxyCloseHandler.setHandler(manager.getCloseHandlerCreator()
+            .getHandler(connection, proxyCloseHandler.getHandler()));
 
         // add to the connection manager.
         manager.addExternalConnection(connection);

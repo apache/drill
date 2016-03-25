@@ -50,11 +50,7 @@ public class TransportCheck {
 
     String name = SystemPropertyUtil.get("os.name").toLowerCase(Locale.US).trim();
 
-    if (name.startsWith("linux") && SystemPropertyUtil.getBoolean(USE_LINUX_EPOLL, false)) {
-      SUPPORTS_EPOLL = true;
-    } else {
-      SUPPORTS_EPOLL = false;
-    }
+    SUPPORTS_EPOLL = name.startsWith("linux") && SystemPropertyUtil.getBoolean(USE_LINUX_EPOLL, false);
   }
 
   public static Class<? extends ServerSocketChannel> getServerSocketChannel(){

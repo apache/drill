@@ -36,7 +36,7 @@ import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcConfig;
 
 public class ControlRpcConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlRpcConfig.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlRpcConfig.class);
 
   public static RpcConfig getMapping(DrillConfig config, Executor executor) {
     return RpcConfig.newBuilder()
@@ -59,4 +59,8 @@ public class ControlRpcConfig {
 
   public static final Response OK = new Response(RpcType.ACK, Acks.OK);
   public static final Response FAIL = new Response(RpcType.ACK, Acks.FAIL);
+
+  // prevents instantiation
+  private ControlRpcConfig() {
+  }
 }

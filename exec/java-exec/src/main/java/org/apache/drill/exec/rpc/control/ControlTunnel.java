@@ -27,7 +27,6 @@ import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
 import org.apache.drill.exec.proto.BitControl.RpcType;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -52,20 +51,13 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
-
 public class ControlTunnel {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlTunnel.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlTunnel.class);
 
   private final ControlConnectionManager manager;
-  private final DrillbitEndpoint endpoint;
 
-  public ControlTunnel(DrillbitEndpoint endpoint, ControlConnectionManager manager) {
+  public ControlTunnel(ControlConnectionManager manager) {
     this.manager = manager;
-    this.endpoint = endpoint;
-  }
-
-  public DrillbitEndpoint getEndpoint(){
-    return manager.getEndpoint();
   }
 
   public void sendFragments(RpcOutcomeListener<Ack> outcomeListener, InitializeFragments fragments){
@@ -106,7 +98,6 @@ public class ControlTunnel {
     return b.getFuture();
   }
 
-
   public static class SendFragmentStatus extends FutureBitCommand<Ack, ControlConnection> {
     final FragmentStatus status;
 
@@ -119,12 +110,10 @@ public class ControlTunnel {
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
       connection.sendUnsafe(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
     }
-
   }
 
-
-  public static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection> {
-    final FinishedReceiver finishedReceiver;
+  private static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection> {
+    private final FinishedReceiver finishedReceiver;
 
     public ReceiverFinished(RpcOutcomeListener<Ack> listener, FinishedReceiver finishedReceiver) {
       super(listener);
@@ -137,9 +126,9 @@ public class ControlTunnel {
     }
   }
 
-  public static class SignalFragment extends ListeningCommand<Ack, ControlConnection> {
-    final FragmentHandle handle;
-    final RpcType type;
+  private static class SignalFragment extends ListeningCommand<Ack, ControlConnection> {
+    private final FragmentHandle handle;
+    private final RpcType type;
 
     public SignalFragment(RpcOutcomeListener<Ack> listener, FragmentHandle handle, RpcType type) {
       super(listener);
@@ -151,11 +140,10 @@ public class ControlTunnel {
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
       connection.sendUnsafe(outcomeListener, type, handle, Ack.class);
     }
-
   }
 
-  public static class SendFragment extends ListeningCommand<Ack, ControlConnection> {
-    final InitializeFragments fragments;
+  private static class SendFragment extends ListeningCommand<Ack, ControlConnection> {
+    private final InitializeFragments fragments;
 
     public SendFragment(RpcOutcomeListener<Ack> listener, InitializeFragments fragments) {
       super(listener);
@@ -166,11 +154,10 @@ public class ControlTunnel {
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
       connection.send(outcomeListener, RpcType.REQ_INITIALIZE_FRAGMENTS, fragments, Ack.class);
     }
-
   }
 
-  public static class RequestProfile extends FutureBitCommand<QueryProfile, ControlConnection> {
-    final QueryId queryId;
+  private static class RequestProfile extends FutureBitCommand<QueryProfile, ControlConnection> {
+    private final QueryId queryId;
 
     public RequestProfile(QueryId queryId) {
       super();
@@ -183,8 +170,8 @@ public class ControlTunnel {
     }
   }
 
-  public static class CancelQuery extends FutureBitCommand<Ack, ControlConnection> {
-    final QueryId queryId;
+  private static class CancelQuery extends FutureBitCommand<Ack, ControlConnection> {
+    private final QueryId queryId;
 
     public CancelQuery(QueryId queryId) {
       super();
@@ -210,7 +197,6 @@ public class ControlTunnel {
       int messageTypeId, CustomSerDe<SEND> send, CustomSerDe<RECEIVE> receive) {
     return new CustomTunnel<SEND, RECEIVE>(messageTypeId, send, receive);
   }
-
 
   private static class CustomMessageSender extends ListeningCommand<CustomMessage, ControlConnection> {
 
@@ -370,9 +356,6 @@ public class ControlTunnel {
 
   }
 
-
-
-
   public static class ProtoSerDe<MSG extends MessageLite> implements CustomSerDe<MSG> {
     private final Parser<MSG> parser;
 
@@ -389,11 +372,9 @@ public class ControlTunnel {
     public MSG deserializeReceived(byte[] bytes) throws Exception {
       return parser.parseFrom(bytes);
     }
-
   }
 
   public static class JacksonSerDe<MSG> implements CustomSerDe<MSG> {
-
     private final ObjectWriter writer;
     private final ObjectReader reader;
 
@@ -427,7 +408,5 @@ public class ControlTunnel {
     public MSG deserializeReceived(byte[] bytes) throws Exception {
       return (MSG) reader.readValue(bytes);
     }
-
   }
-
 }
