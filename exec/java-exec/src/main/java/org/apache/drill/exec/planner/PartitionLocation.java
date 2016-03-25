@@ -54,4 +54,5 @@ public interface PartitionLocation {
    * Returns if this is a simple or composite partition.
    */
   public boolean isCompositePartition();
+
 }

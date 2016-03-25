@@ -55,4 +55,9 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
     return locationSuperList.iterator();
   }
 
+  @Override
+  public boolean supportsSinglePartOptimization() {
+    return false;
+  }
+
 }

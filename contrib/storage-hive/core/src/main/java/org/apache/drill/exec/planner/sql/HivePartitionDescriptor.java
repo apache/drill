@@ -86,6 +86,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     return numPartitionLevels;
   }
 
+  @Override
   public String getBaseTableLocation() {
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
     return origEntry.table.getTable().getSd().getLocation();
@@ -151,7 +152,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitions) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot) throws Exception {
     GroupScan newGroupScan = createNewGroupScan(newPartitions);
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),

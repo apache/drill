@@ -38,7 +38,7 @@ public abstract class AbstractFileGroupScan extends AbstractGroupScan implements
   }
 
   @Override
-  public FileGroupScan clone(FileSelection selection) throws IOException {
+  public FileGroupScan clone(FileSelection selection, String cacheFileRoot) throws IOException {
     throw new UnsupportedOperationException();
   }
 

@@ -265,7 +265,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   }
 
   @Override
-  public FileGroupScan clone(FileSelection selection) throws IOException {
+  public FileGroupScan clone(FileSelection selection, String cacheFileRoot /* ignored */) throws IOException {
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.initFromSelection(selection, formatPlugin);
     newScan.mappings = null; /* the mapping will be created later when we get specific scan

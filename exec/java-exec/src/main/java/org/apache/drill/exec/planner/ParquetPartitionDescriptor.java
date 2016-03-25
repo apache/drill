@@ -80,9 +80,9 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return partitionColumns.size();
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
+  private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot) throws IOException {
     final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection, cacheFileRoot);
     return newScan;
   }
 
@@ -113,7 +113,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return ((ParquetGroupScan) scanRel.getGroupScan()).getTypeForColumn(column);
   }
 
-  private String getBaseTableLocation() {
+  @Override
+  public String getBaseTableLocation() {
     final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
@@ -130,13 +131,13 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot) throws Exception {
     List<String> newFiles = Lists.newArrayList();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
 
-    final GroupScan newGroupScan = createNewGroupScan(newFiles);
+    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot);
 
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),

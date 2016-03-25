@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +30,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FileStatus;
@@ -47,16 +47,25 @@ public class FileSelection {
   private List<FileStatus> statuses;
 
   public List<String> files;
+  /**
+   * root path for the selections
+   */
   public final String selectionRoot;
+  /**
+   * root path for the metadata cache file (if any)
+   */
+  public final String cacheFileRoot;
 
   private enum StatusType {
     NOT_CHECKED,         // initial state
     NO_DIRS,             // no directories in this selection
     HAS_DIRS,            // directories were found in the selection
-    EXPANDED             // whether this selection has been expanded to files
+    EXPANDED_FULLY,      // whether selection fully expanded to files
+    EXPANDED_PARTIAL     // whether selection partially expanded to only directories (not files)
   }
 
   private StatusType dirStatus;
+  private boolean hadWildcard = false;   // whether this selection previously had a wildcard
 
   /**
    * Creates a {@link FileSelection selection} out of given file statuses/files and selection root.
@@ -66,10 +75,20 @@ public class FileSelection {
    * @param selectionRoot  root path for selections
    */
   public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot) {
+    this(statuses, files, selectionRoot, null, StatusType.NOT_CHECKED);
+  }
+
+  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot, final String cacheFileRoot) {
+    this(statuses, files, selectionRoot, cacheFileRoot, StatusType.NOT_CHECKED);
+  }
+
+  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot,
+      final String cacheFileRoot, final StatusType dirStatus) {
     this.statuses = statuses;
     this.files = files;
     this.selectionRoot = Preconditions.checkNotNull(selectionRoot);
-    this.dirStatus = StatusType.NOT_CHECKED;
+    this.dirStatus = dirStatus;
+    this.cacheFileRoot = cacheFileRoot;
   }
 
   /**
@@ -81,6 +100,7 @@ public class FileSelection {
     this.files = selection.files;
     this.selectionRoot = selection.selectionRoot;
     this.dirStatus = selection.dirStatus;
+    this.cacheFileRoot = selection.cacheFileRoot;
   }
 
   public String getSelectionRoot() {
@@ -128,7 +148,7 @@ public class FileSelection {
   }
 
   public FileSelection minusDirectories(DrillFileSystem fs) throws IOException {
-    if (isExpanded()) {
+    if (isExpandedFully()) {
       return this;
     }
     Stopwatch timer = Stopwatch.createStarted();
@@ -152,7 +172,7 @@ public class FileSelection {
 
     // fileSel will be null if we query an empty folder
     if (fileSel != null) {
-      fileSel.setExpanded();
+      fileSel.setExpandedFully();
     }
 
     return fileSel;
@@ -162,12 +182,24 @@ public class FileSelection {
     return getStatuses(fs).get(0);
   }
 
-  public void setExpanded() {
-    this.dirStatus = StatusType.EXPANDED;
+  public void setExpandedFully() {
+    this.dirStatus = StatusType.EXPANDED_FULLY;
   }
 
-  public boolean isExpanded() {
-    return dirStatus == StatusType.EXPANDED;
+  public boolean isExpandedFully() {
+    return dirStatus == StatusType.EXPANDED_FULLY;
+  }
+
+  public void setExpandedPartial() {
+    this.dirStatus = StatusType.EXPANDED_PARTIAL;
+  }
+
+  public boolean isExpandedPartial() {
+    return dirStatus == StatusType.EXPANDED_PARTIAL;
+  }
+
+  public StatusType getDirStatus() {
+    return dirStatus;
   }
 
   private static String commonPath(final List<FileStatus> statuses) {
@@ -229,13 +261,16 @@ public class FileSelection {
 
   public static FileSelection create(final DrillFileSystem fs, final String parent, final String path) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
+    boolean hasWildcard = path.contains(WILD_CARD);
+
     final Path combined = new Path(parent, removeLeadingSlash(path));
-    final FileStatus[] statuses = fs.globStatus(combined);
+    final FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
     if (statuses == null) {
       return null;
     }
     final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
     logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    fileSel.setHadWildcard(hasWildcard);
     return fileSel;
 
   }
@@ -275,6 +310,34 @@ public class FileSelection {
     return new FileSelection(statuses, files, selectionRoot);
   }
 
+  public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection) {
+    final String root = selection.getSelectionRoot();
+    if (Strings.isNullOrEmpty(root)) {
+      throw new DrillRuntimeException("Selection root is null or empty" + root);
+    }
+    if (dirPaths == null || dirPaths.isEmpty()) {
+      throw new DrillRuntimeException("List of directories is null or empty");
+    }
+
+    List<String> dirs = Lists.newArrayList();
+
+    if (selection.hadWildcard()) { // for wildcard the directory list should have already been expanded
+      for (FileStatus status : selection.getFileStatuses()) {
+        dirs.add(status.getPath().toString());
+      }
+    } else {
+      for (String s : dirPaths) {
+        dirs.add(s);
+      }
+    }
+
+    final Path rootPath = handleWildCard(root);
+    // final URI uri = dirPaths.get(0).toUri();
+    final URI uri = selection.getFileStatuses().get(0).getPath().toUri();
+    final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
+    return new FileSelection(null, dirs, path.toString());
+  }
+
   private static Path handleWildCard(final String root) {
     if (root.contains(WILD_CARD)) {
       int idx = root.indexOf(WILD_CARD); // first wild card in the path
@@ -300,7 +363,15 @@ public class FileSelection {
   }
 
   public boolean supportDirPrunig() {
-    return isExpanded(); // currently we only support pruning if the directories have been expanded (this may change in the future)
+    return isExpandedFully() || isExpandedPartial();
+  }
+
+  public void setHadWildcard(boolean wc) {
+    this.hadWildcard = wc;
+  }
+
+  public boolean hadWildcard() {
+    return this.hadWildcard;
   }
 
 }
