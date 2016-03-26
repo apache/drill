@@ -28,7 +28,6 @@ import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
-import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
@@ -38,7 +37,7 @@ import com.google.protobuf.MessageLite;
 
 public class DataClient extends BasicClient<RpcType, DataClientConnection, BitClientHandshake, BitServerHandshake>{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
 
   private volatile DataClientConnection connection;
   private final BufferAllocator allocator;
@@ -100,6 +99,6 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
 
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new DataProtobufLengthDecoder.Client(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
+    return new DataProtobufLengthDecoder.Client(allocator);
   }
 }

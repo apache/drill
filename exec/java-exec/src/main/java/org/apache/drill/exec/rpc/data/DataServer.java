@@ -37,7 +37,6 @@ import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicServer;
-import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
@@ -191,18 +190,8 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   }
 
   @Override
-  public OutOfMemoryHandler getOutOfMemoryHandler() {
-    return new OutOfMemoryHandler() {
-      @Override
-      public void handle() {
-        logger.error("Out of memory in RPC layer.");
-      }
-    };
-  }
-
-  @Override
-  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
-    return new DataProtobufLengthDecoder.Server(allocator, outOfMemoryHandler);
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
+    return new DataProtobufLengthDecoder.Server(allocator);
   }
 
 }

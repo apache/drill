@@ -26,7 +26,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.rpc.BasicServer;
-import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
@@ -107,8 +106,8 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   }
 
   @Override
-  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
-    return new ControlProtobufLengthDecoder(allocator, outOfMemoryHandler);
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
+    return new ControlProtobufLengthDecoder(allocator);
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {

@@ -27,7 +27,6 @@ import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
-import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcBus;
@@ -111,7 +110,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
 
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new ControlProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
+    return new ControlProtobufLengthDecoder(allocator);
   }
 
 }
