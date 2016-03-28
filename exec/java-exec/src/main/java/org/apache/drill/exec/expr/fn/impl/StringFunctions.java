@@ -151,7 +151,7 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer))).matcher("");
     }
 
     @Override
@@ -200,7 +200,7 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer)).matcher("");
     }
 
     @Override
@@ -212,6 +212,33 @@ public class StringFunctions{
       out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
       out.buffer.setBytes(out.start, bytea);
       out.end = bytea.length;
+    }
+  }
+
+  /*
+   * Match the given input against a regular expression.
+   *
+   * This differs from the "similar" function in that accepts a standard regex, rather than a SQL regex.
+   */
+  @FunctionTemplate(name = "regexp_matches", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class RegexpMatches implements DrillSimpleFunc {
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Inject DrillBuf buffer;
+    @Workspace java.util.regex.Matcher matcher;
+    @Output BitHolder out;
+
+    @Override
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+    }
+
+    @Override
+    public void eval() {
+      final String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
     }
   }
 
@@ -299,6 +326,70 @@ public class StringFunctions{
       } else {
         //Count the # of characters. (one char could have 1-4 bytes)
         out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(str.buffer, str.start, pos) + 1;
+      }
+    }
+
+  }
+
+
+  @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class SplitPart implements DrillSimpleFunc {
+    @Param  VarCharHolder str;
+    @Param  VarCharHolder splitter;
+    @Param  IntHolder index;
+
+    @Output VarCharHolder out;
+
+    @Override
+    public void setup() {}
+
+    @Override
+    public void eval() {
+      if (index.value < 1) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+            .message("Index in split_part must be positive, value provided was " + index.value).build();
+      }
+      int bufPos = str.start;
+      out.start = bufPos;
+      boolean beyondLastIndex = false;
+      int splitterLen = (splitter.end - splitter.start);
+      for (int i = 1; i < index.value + 1; i++) {
+        //Do string match.
+        final int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(str.buffer,
+            bufPos, str.end,
+            splitter.buffer, splitter.start, splitter.end);
+        if (pos < 0) {
+          // this is the last iteration, it is okay to hit the end of the string
+          if (i == index.value) {
+            bufPos = str.end;
+            // when the output is terminated by the end of the string we do not want
+            // to subtract the length of the splitter from the output at the end of
+            // the function below
+            splitterLen = 0;
+            break;
+          } else {
+            beyondLastIndex = true;
+            break;
+          }
+        } else {
+          // Count the # of characters. (one char could have 1-4 bytes)
+          // unlike the position function don't add 1, we are not translating the positions into SQL user level 1 based indices
+          bufPos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(str.buffer, str.start, pos)
+              + splitterLen;
+          // if this is the second to last iteration, store the position again, as the start and end of the
+          // string to be returned need to be available
+          if (i == index.value - 1) {
+            out.start = bufPos;
+          }
+        }
+      }
+      if (beyondLastIndex) {
+        out.start = 0;
+        out.end = 0;
+        out.buffer = str.buffer;
+      } else {
+        out.buffer = str.buffer;
+        out.end = bufPos - splitterLen;
       }
     }
 

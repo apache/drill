@@ -20,7 +20,98 @@ package org.apache.drill.exec.expr.fn.impl;
 import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 public class TestStringFunctions extends BaseTestQuery {
+
+  @Test
+  public void testStrPosMultiByte() throws Exception {
+    testBuilder()
+        .sqlQuery("select `position`('a', 'abc') res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues(1l)
+        .go();
+
+    testBuilder()
+        .sqlQuery("select `position`('\\u11E9', '\\u11E9\\u0031') res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues(1l)
+        .go();
+  }
+
+  @Test
+  public void testSplitPart() throws Exception {
+    testBuilder()
+        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', 1) res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("abc")
+        .go();
+
+    testBuilder()
+        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', 2) res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("def")
+        .go();
+
+    // invalid index
+    boolean expectedErrorEncountered;
+    try {
+      testBuilder()
+          .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', 0) res1 from (values(1))")
+          .ordered()
+          .baselineColumns("res1")
+          .baselineValues("abc")
+          .go();
+      expectedErrorEncountered = false;
+    } catch (Exception ex) {
+      assertTrue(ex.getMessage().contains("Index in split_part must be positive, value provided was 0"));
+      expectedErrorEncountered = true;
+    }
+    if (!expectedErrorEncountered) {
+      throw new RuntimeException("Missing expected error on invalid index for split_part function");
+    }
+
+    // with a multi-byte splitter
+    testBuilder()
+        .sqlQuery("select split_part('abc\\u1111drill\\u1111ghi', '\\u1111', 2) res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("drill")
+        .go();
+
+    // going beyond the last available index, returns empty string
+    testBuilder()
+        .sqlQuery("select split_part('a,b,c', ',', 4) res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("")
+        .go();
+
+    // if the delimiter does not appear in the string, 1 returns the whole string
+    testBuilder()
+        .sqlQuery("select split_part('a,b,c', ' ', 1) res1 from (values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("a,b,c")
+        .go();
+  }
+
+  @Test
+  public void testRegexpMatches() throws Exception {
+    testBuilder()
+        .sqlQuery("select regexp_matches(a, '^a.*') res1, regexp_matches(b, '^a.*') res2 " +
+                  "from (values('abc', 'bcd'), ('bcd', 'abc')) as t(a,b)")
+        .unOrdered()
+        .baselineColumns("res1", "res2")
+        .baselineValues(true, false)
+        .baselineValues(false, true)
+        .build()
+        .run();
+  }
 
   @Test
   public void testILike() throws Exception {
