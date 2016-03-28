@@ -38,6 +38,10 @@
   <url>http://drill.apache.org/</url>
 
   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.12</dep.junit.version>
@@ -471,8 +475,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
           <maxmem>2048m</maxmem>
           <useIncrementalCompilation>false</useIncrementalCompilation>
           <fork>true</fork>
@@ -1682,25 +1684,15 @@
               <failOnError>false</failOnError>
             </configuration>
           </plugin>
-          <!-- override the parent assembly execution to customize the assembly
-            descriptor and final name -->
+          <!-- override the parent assembly execution to customize the assembly final name -->
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <executions>
               <execution>
                 <id>source-release-assembly</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
                 <configuration>
-                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                   <appendAssemblyId>false</appendAssemblyId>
-                  <descriptors>
-                    <descriptor>src/main/resources/assemblies/source-assembly.xml</descriptor>
-                  </descriptors>
                   <finalName>apache-drill-${project.version}-src</finalName>
-                  <tarLongFileMode>gnu</tarLongFileMode>
                 </configuration>
               </execution>
             </executions>
