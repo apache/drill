@@ -55,8 +55,9 @@ public class XMLSaxParser extends DefaultHandler {
             if(val.size() > 0) {
                 logger.info("XmlPlugin Parser: Object:" + val.toJSONString() + "Not null which is not expected.");
             }
-            else
+            else {
                 o.remove(stringkey);
+            }
         }
         return val;
     }
@@ -140,8 +141,9 @@ public class XMLSaxParser extends DefaultHandler {
                         }
                         break;
                 }
-            } else {
-                if(newVal.size() == 0){
+            }
+            else {
+                if(newVal.size() == 0) {
                     parent.put(cleanQName, newVal);
                    // Tracking empty nodes so we can clean them out
                    // to help drill with schema consolidation
@@ -165,8 +167,9 @@ public class XMLSaxParser extends DefaultHandler {
             content += new String(ch, start, length);
         }
         content = content.trim().replace("\n", "");
-        if (content.length() == 0)
+        if (content.length() == 0) {
             content = null;
+        }
 
     }
 
@@ -183,12 +186,13 @@ public class XMLSaxParser extends DefaultHandler {
         if(old instanceof JSONArray) {
             JSONArray old_array = (JSONArray) old;
             JSONObject newVal = (JSONObject) new_val;
-            if(newVal.size() == 1  && newVal.containsKey("#value"))
+            if(newVal.size() == 1  && newVal.containsKey("#value")) {
                 old_array.add(newVal.get("#value"));
+            }
             else {
                 old_array.add(newVal);
             }
-            parent.put(cleanQNameArray,old_array);
+            parent.put(cleanQNameArray, old_array);
 
         }
         else if(old instanceof JSONObject) {
@@ -196,28 +200,31 @@ public class XMLSaxParser extends DefaultHandler {
             JSONArray new_array = new JSONArray();
             JSONObject newVal = (JSONObject) new_val;
 
-            if(old_val.size() == 1 && old_val.containsKey("#value"))
+            if(old_val.size() == 1 && old_val.containsKey("#value")) {
                 new_array.add(old_val.get("#value"));
+            }
             else {
                 new_array.add(old_val);
             }
 
-            if(newVal.size() == 1 && newVal.containsKey("#value"))
+            if(newVal.size() == 1 && newVal.containsKey("#value")) {
                 new_array.add(newVal.get("#value"));
+            }
             else {
                 new_array.add(newVal);
             }
-            parent.put(cleanQNameArray,new_array);
+            parent.put(cleanQNameArray, new_array);
         }
         else if(old instanceof String) {
             JSONArray new_array = new JSONArray();
             String old_val = (String) old;
             new_array.add(old_val);
             parent.remove(cleanQName);
-            if(newVal.size() == 1)
+            if(newVal.size() == 1) {
                 new_array.add(newVal.get("#value"));
-            else
+            } else {
                 new_array.add(newVal);
+            }
             parent.put(cleanQNameArray, new_array);
         }
         stk.push(parent);
