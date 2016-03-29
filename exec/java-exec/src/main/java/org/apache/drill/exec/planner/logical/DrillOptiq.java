@@ -360,11 +360,6 @@ public class DrillOptiq {
         trimArgs.add(args.get(1));
 
         return FunctionCallFactory.createExpression(trimFunc, trimArgs);
-      } else if (functionName.equals("ltrim") || functionName.equals("rtrim") || functionName.equals("btrim")) {
-        if (argsSize == 1) {
-          args.add(ValueExpressions.getChar(" "));
-        }
-        return FunctionCallFactory.createExpression(functionName, args);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
@@ -427,13 +422,6 @@ public class DrillOptiq {
       } else if ((functionName.equals("convert_from") || functionName.equals("convert_to"))
                     && args.get(1) instanceof QuotedString) {
         return FunctionCallFactory.createConvert(functionName, ((QuotedString)args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
-      } else if ((functionName.equalsIgnoreCase("rpad")) || functionName.equalsIgnoreCase("lpad")) {
-        // If we have only two arguments for rpad/lpad append a default QuotedExpression as an argument which will be used to pad the string
-        if (argsSize == 2) {
-          String spaceFill = " ";
-          LogicalExpression fill = ValueExpressions.getChar(spaceFill);
-          args.add(fill);
-        }
       }
 
       return FunctionCallFactory.createExpression(functionName, args);

@@ -19,7 +19,9 @@ package org.apache.drill.exec.planner.sql;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
@@ -37,18 +39,23 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import org.apache.calcite.sql.validate.AggregatingSelectScope;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.exceptions.UserException;
@@ -183,6 +190,8 @@ public class SqlConverter {
   }
 
   private class DrillValidator extends SqlValidatorImpl {
+    private final Set<SqlValidatorScope> identitySet = Sets.newIdentityHashSet();
+
     protected DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory, SqlConformance conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
@@ -218,7 +227,7 @@ public class SqlConverter {
 
   public RelNode toRel(
       final SqlNode validatedNode) {
-    final RexBuilder rexBuilder = new RexBuilder(typeFactory);
+    final RexBuilder rexBuilder = new DrillRexBuilder(typeFactory);
     if (planner == null) {
       planner = new VolcanoPlanner(costFactory, settings);
       planner.setExecutor(new DrillConstExecutor(functions, util, settings));
@@ -364,4 +373,21 @@ public class SqlConverter {
     }
   }
 
+  private static class DrillRexBuilder extends RexBuilder {
+    private DrillRexBuilder(RelDataTypeFactory typeFactory) {
+      super(typeFactory);
+    }
+
+    /**
+     * Since Drill has different mechanism and rules for implicit casting,
+     * ensureType() is overridden to avoid conflicting cast functions being added to the expressions.
+     */
+    @Override
+    public RexNode ensureType(
+        RelDataType type,
+        RexNode node,
+        boolean matchNullability) {
+      return node;
+    }
+  }
 }

@@ -26,7 +26,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -834,10 +835,10 @@ public class TypeCastRules {
    * implicit cast > 0: cost associated with implicit cast. ==0: parms are
    * exactly same type of arg. No need of implicit.
    */
-  public static int getCost(FunctionCall call, DrillFuncHolder holder) {
+  public static int getCost(List<MajorType> argumentTypes, DrillFuncHolder holder) {
     int cost = 0;
 
-    if (call.args.size() != holder.getParamCount()) {
+    if (argumentTypes.size() != holder.getParamCount()) {
       return -1;
     }
 
@@ -852,14 +853,21 @@ public class TypeCastRules {
      * the function can fit the precision that we need based on the input types.
      */
     if (holder.checkPrecisionRange() == true) {
-      if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) < holder.getReturnType(call.args).getPrecision()) {
+      List<LogicalExpression> logicalExpressions = Lists.newArrayList();
+      for(MajorType majorType : argumentTypes) {
+        logicalExpressions.add(
+            new MajorTypeInLogicalExpression(majorType));
+      }
+
+      if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) <
+          holder.getReturnType(logicalExpressions).getPrecision()) {
         return -1;
       }
     }
 
     final int numOfArgs = holder.getParamCount();
     for (int i = 0; i < numOfArgs; i++) {
-      final MajorType argType = call.args.get(i).getMajorType();
+      final MajorType argType = argumentTypes.get(i);
       final MajorType parmType = holder.getParmMajorType(i);
 
       //@Param FieldReader will match any type

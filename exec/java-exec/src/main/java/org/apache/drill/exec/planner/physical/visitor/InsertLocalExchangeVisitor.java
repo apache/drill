@@ -58,7 +58,7 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
     @Override
     public RexNode createCall(String funcName, List<RexNode> inputFields) {
       final DrillSqlOperator op =
-          new DrillSqlOperator(funcName, inputFields.size(), MajorType.getDefaultInstance(), true);
+          new DrillSqlOperator(funcName, inputFields.size(), true);
       return rexBuilder.makeCall(op, inputFields);
     }
   }

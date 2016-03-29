@@ -56,4 +56,89 @@ public class TestStringFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test
+  public void testLpadTwoArgConvergeToLpad() throws Exception {
+    final String query_1 = "SELECT lpad(r_name, 25) \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+
+    final String query_2 = "SELECT lpad(r_name, 25, ' ') \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query_1)
+        .unOrdered()
+        .sqlBaselineQuery(query_2)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testRpadTwoArgConvergeToRpad() throws Exception {
+    final String query_1 = "SELECT rpad(r_name, 25) \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+
+    final String query_2 = "SELECT rpad(r_name, 25, ' ') \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query_1)
+        .unOrdered()
+        .sqlBaselineQuery(query_2)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testLtrimOneArgConvergeToLtrim() throws Exception {
+    final String query_1 = "SELECT ltrim(concat(' ', r_name, ' ')) \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+
+    final String query_2 = "SELECT ltrim(concat(' ', r_name, ' '), ' ') \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query_1)
+        .unOrdered()
+        .sqlBaselineQuery(query_2)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testRtrimOneArgConvergeToRtrim() throws Exception {
+    final String query_1 = "SELECT rtrim(concat(' ', r_name, ' ')) \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+
+    final String query_2 = "SELECT rtrim(concat(' ', r_name, ' '), ' ') \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query_1)
+        .unOrdered()
+        .sqlBaselineQuery(query_2)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testBtrimOneArgConvergeToBtrim() throws Exception {
+    final String query_1 = "SELECT btrim(concat(' ', r_name, ' ')) \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+
+    final String query_2 = "SELECT btrim(concat(' ', r_name, ' '), ' ') \n" +
+        "FROM cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query_1)
+        .unOrdered()
+        .sqlBaselineQuery(query_2)
+        .build()
+        .run();
+  }
 }

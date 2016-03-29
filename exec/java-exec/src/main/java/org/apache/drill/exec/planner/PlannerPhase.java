@@ -65,6 +65,7 @@ import org.apache.drill.exec.planner.logical.DrillWindowRule;
 import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
+import org.apache.drill.exec.planner.physical.DirectScanPrule;
 import org.apache.drill.exec.planner.physical.FilterPrule;
 import org.apache.drill.exec.planner.physical.HashAggPrule;
 import org.apache.drill.exec.planner.physical.HashJoinPrule;
@@ -130,6 +131,16 @@ public enum PlannerPhase {
               DRILL_JOIN_TO_MULTIJOIN_RULE,
               DRILL_LOPT_OPTIMIZE_JOIN_RULE,
               ProjectRemoveRule.INSTANCE),
+          getStorageRules(context, plugins, this)
+          );
+    }
+  },
+
+  SUM_CONVERSION("Convert SUM to $SUM0") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          RuleSets.ofList(
+              DrillReduceAggregatesRule.INSTANCE_SUM),
           getStorageRules(context, plugins, this)
           );
     }
@@ -381,6 +392,7 @@ public enum PlannerPhase {
     ruleList.add(LimitUnionExchangeTransposeRule.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
+    ruleList.add(DirectScanPrule.INSTANCE);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

@@ -17,8 +17,14 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestInbuiltHiveUDFs extends HiveTestBase {
 
@@ -42,5 +48,26 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .baselineValues("varcharfield".getBytes())
         .baselineValues(new Object[] { null })
         .go();
+  }
+
+  @Test
+  public void testXpath_Double() throws Exception {
+    final String query = "select xpath_double ('<a><b>20</b><c>40</c></a>', 'a/b * a/c') as col \n" +
+        "from hive.kv \n" +
+        "limit 0";
+
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
   }
 }
