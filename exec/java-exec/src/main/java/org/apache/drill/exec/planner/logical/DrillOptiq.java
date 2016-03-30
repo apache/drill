@@ -318,26 +318,7 @@ public class DrillOptiq {
        * extract(year, date '2008-2-23') ---> extractYear(date '2008-2-23')
        */
       if (functionName.equals("extract")) {
-
-        // Assert that the first argument to extract is a QuotedString
-        assert args.get(0) instanceof ValueExpressions.QuotedString;
-
-        // Get the unit of time to be extracted
-        String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value;
-
-        switch (timeUnitStr){
-          case ("YEAR"):
-          case ("MONTH"):
-          case ("DAY"):
-          case ("HOUR"):
-          case ("MINUTE"):
-          case ("SECOND"):
-            String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
-            functionName += functionPostfix;
-            return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
-          default:
-            throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
-        }
+        return handleExtractFunction(args);
       } else if (functionName.equals("trim")) {
         String trimFunc = null;
         List<LogicalExpression> trimArgs = Lists.newArrayList();
@@ -428,6 +409,37 @@ public class DrillOptiq {
       }
 
       return FunctionCallFactory.createExpression(functionName, args);
+    }
+
+    private LogicalExpression handleExtractFunction(final List<LogicalExpression> args) {
+      // Assert that the first argument to extract is a QuotedString
+      assert args.get(0) instanceof ValueExpressions.QuotedString;
+
+      // Get the unit of time to be extracted
+      String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value;
+
+      switch (timeUnitStr){
+        case ("YEAR"):
+        case ("MONTH"):
+        case ("DAY"):
+        case ("HOUR"):
+        case ("MINUTE"):
+        case ("SECOND"):
+        case ("DOW"):
+        case ("DOY"):
+        case ("WEEK"):
+        case ("DECADE"):
+        case ("CENTURY"):
+        case ("MILLENNIUM"):
+        case ("QUARTER"):
+        case ("EPOCH"):
+          String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
+          String functionName = "extract" + functionPostfix;
+          return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
+        default:
+          throw new UnsupportedOperationException("extract function supports the following time units: " +
+              "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK, DOW, DOY, DECADE, CENTURY, MILLENNIUM, QUARTER, EPOCH");
+      }
     }
 
     private LogicalExpression handleDateTruncFunction(final List<LogicalExpression> args) {

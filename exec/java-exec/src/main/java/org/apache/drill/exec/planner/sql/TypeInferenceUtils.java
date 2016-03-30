@@ -661,7 +661,15 @@ public class TypeInferenceUtils {
       case "DAY":
       case "HOUR":
       case "MINUTE":
+      case "CENTURY":
+      case "DECADE":
+      case "DOW":
+      case "DOY":
+      case "MILLENNIUM":
+      case "QUARTER":
+      case "WEEK":
         return SqlTypeName.BIGINT;
+      case "EPOCH":
       case "SECOND":
         return SqlTypeName.DOUBLE;
       default:

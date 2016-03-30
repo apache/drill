@@ -18,4 +18,6 @@
     {intervals: ["Interval", "IntervalDay", "IntervalYear", "Int", "BigInt"] },
     {truncInputTypes: ["Date", "TimeStamp", "Time", "Interval", "IntervalDay", "IntervalYear"] },
     {truncUnits : ["Second", "Minute", "Hour", "Day", "Month", "Year", "Week", "Quarter", "Decade", "Century", "Millennium" ] },
+    {extractInputTypes: [Date, Time, TimeStamp, Interval, IntervalDay, IntervalYear] },
+    {extractUnits : [Second, Minute, Hour, Day, Month, Year, Century, Decade, DOW, DOY, Epoch, Millennium, Quarter, Week] }
 }

@@ -126,13 +126,6 @@ public class TestDateTruncFunctions extends BaseTestQuery {
   }
 
   @Test
-  public void test() throws Exception {
-    org.joda.time.MutableDateTime dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
-    dateTime.setMillis(formatDate.parseDateTime("2001-01-01"));
-    dateTime.setRounding(dateTime.getChronology().centuryOfEra());
-  }
-
-  @Test
   public void dateTruncOnDateMillennium() throws Exception {
     // TODO: It would be good to have some tests on dates in BC period, but looks like currently Calcite parser is
     // not accepting date literals in BC.
