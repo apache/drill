@@ -263,6 +263,7 @@ public enum PlannerPhase {
 
       AggregateExpandDistinctAggregatesRule.JOIN,
       DrillReduceAggregatesRule.INSTANCE,
+      DrillReduceAggregatesRule.INSTANCE_QUANTILE,
 
       /*
        Projection push-down related rules

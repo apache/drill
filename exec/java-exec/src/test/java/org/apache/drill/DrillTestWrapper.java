@@ -99,12 +99,15 @@ public class DrillTestWrapper {
   // and translated into a map in the builder
   private List<Map<String, Object>> baselineRecords;
 
+  private Map<String, Float> baselineTolerances;
+
   private int expectedNumBatches;
 
   public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, String query, QueryType queryType,
                           String baselineOptionSettingQueries, String testOptionSettingQueries,
                           QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
-                          List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
+                          List<Map<String, Object>> baselineRecords, int expectedNumBatches,
+                          Map<String,Float> baselineTolerances) {
     this.testBuilder = testBuilder;
     this.allocator = allocator;
     this.query = query;
@@ -116,6 +119,7 @@ public class DrillTestWrapper {
     this.highPerformanceComparison = highPerformanceComparison;
     this.baselineRecords = baselineRecords;
     this.expectedNumBatches = expectedNumBatches;
+    this.baselineTolerances = baselineTolerances;
   }
 
   public void run() throws Exception {
@@ -578,6 +582,16 @@ public class DrillTestWrapper {
         return true;
       }
     }
+    if (baselineTolerances != null && baselineTolerances.get(column) != null) {
+      if (!approximatelyEqual(expected, actual, baselineTolerances.get(column))) {
+        return false;
+      } else {
+        if (VERBOSE_DEBUG) {
+          logger.debug("at position " + counter + " column '" + column + "' matched value:  " + expected );
+        }
+      }
+      return true;
+    }
     if (!expected.equals(actual)) {
       return false;
     } else {
@@ -586,6 +600,22 @@ public class DrillTestWrapper {
       }
     }
     return true;
+  }
+
+  private boolean approximatelyEqual(Object expected, Object actual, float tolerance) {
+    if (expected instanceof Float) {
+      if (!(actual instanceof Float)) {
+        return false;
+      }
+      return Math.abs(((Float) expected - (Float) actual) / (Float) expected) < tolerance;
+    }
+    if (expected instanceof Double) {
+      if (!(actual instanceof Double)) {
+        return false;
+      }
+      return Math.abs(((Double) expected - (Double) actual) / (Double) expected) < tolerance;
+    }
+    return expected.equals(actual);
   }
 
   /**

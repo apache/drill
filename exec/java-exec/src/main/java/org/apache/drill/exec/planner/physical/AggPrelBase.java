@@ -93,6 +93,36 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
   }
 
+  public class SqlTDigestMergeAggFunction extends SqlAggFunction {
+
+    private final RelDataType type;
+
+    public SqlTDigestMergeAggFunction(RelDataType type) {
+      super("TDIGEST_MERGE",
+              SqlKind.OTHER_FUNCTION,
+              ReturnTypes.ARG0, // use the inferred return type of SqlCountAggFunction
+              null,
+              OperandTypes.BINARY,
+              SqlFunctionCategory.USER_DEFINED_FUNCTION);
+
+      this.type = type;
+    }
+
+    public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
+      return ImmutableList.of(type);
+    }
+
+    public RelDataType getType() {
+      return type;
+    }
+
+    public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
+      return type;
+    }
+
+  }
+
+
   public AggPrelBase(RelOptCluster cluster,
                      RelTraitSet traits,
                      RelNode child,
@@ -143,13 +173,23 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           // If we are doing a COUNT aggregate in Phase1of2, then in Phase2of2 we should SUM the COUNTs,
           SqlAggFunction sumAggFun = new SqlSumCountAggFunction(aggCall.e.getType());
           AggregateCall newAggCall =
-              new AggregateCall(
-                  sumAggFun,
-                  aggCall.e.isDistinct(),
-                  Collections.singletonList(aggExprOrdinal),
-                  aggCall.e.getType(),
-                  aggCall.e.getName());
+                  new AggregateCall(
+                          sumAggFun,
+                          aggCall.e.isDistinct(),
+                          Collections.singletonList(aggExprOrdinal),
+                          aggCall.e.getType(),
+                          aggCall.e.getName());
 
+          phase2AggCallList.add(newAggCall);
+        } else if (aggCall.e.getAggregation().getName().equals("TDIGEST")) {
+          SqlAggFunction tDigestMergeFunction = new SqlTDigestMergeAggFunction(aggCall.e.getType());
+          AggregateCall newAggCall =
+                  new AggregateCall(
+                          tDigestMergeFunction,
+                          aggCall.e.isDistinct(),
+                          Collections.singletonList(aggExprOrdinal),
+                          aggCall.e.getType(),
+                          aggCall.e.getName());
           phase2AggCallList.add(newAggCall);
         } else {
           AggregateCall newAggCall =
