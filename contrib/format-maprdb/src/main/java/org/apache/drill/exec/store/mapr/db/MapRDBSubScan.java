@@ -44,37 +44,37 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBSubScan.class);
 
   @JsonProperty
-  public final StoragePluginConfig storage;
+  public final StoragePluginConfig storageConfig;
   @JsonIgnore
-  private final MapRDBFormatPluginConfig fsFormatPluginConfig;
-  private final FileSystemPlugin fsStoragePlugin;
+  private final MapRDBFormatPluginConfig formatPluginConfig;
+  private final FileSystemPlugin storagePlugin;
   private final List<MapRDBSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
   private final String tableType;
+
+  private final MapRDBFormatPlugin formatPlugin;
 
   @JsonCreator
   public MapRDBSubScan(@JacksonInject StoragePluginRegistry registry,
                        @JsonProperty("userName") String userName,
                        @JsonProperty("formatPluginConfig") MapRDBFormatPluginConfig formatPluginConfig,
-                       @JsonProperty("storage") StoragePluginConfig storage,
+                       @JsonProperty("storageConfig") StoragePluginConfig storage,
                        @JsonProperty("regionScanSpecList") List<MapRDBSubScanSpec> regionScanSpecList,
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("tableType") String tableType) throws ExecutionSetupException {
-    super(userName);
-    this.fsFormatPluginConfig = formatPluginConfig;
-    this.fsStoragePlugin = (FileSystemPlugin) registry.getPlugin(storage);
-    this.regionScanSpecList = regionScanSpecList;
-    this.storage = storage;
-    this.columns = columns;
-    this.tableType = tableType;
+    this(userName, formatPluginConfig,
+        (FileSystemPlugin) registry.getPlugin(storage),
+        storage, regionScanSpecList, columns, tableType);
   }
 
-  public MapRDBSubScan(String userName, MapRDBFormatPluginConfig formatPluginConfig, FileSystemPlugin storagePlugin, StoragePluginConfig config,
+  public MapRDBSubScan(String userName, MapRDBFormatPluginConfig formatPluginConfig, FileSystemPlugin storagePlugin, StoragePluginConfig storageConfig,
       List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, String tableType) {
     super(userName);
-    fsFormatPluginConfig = formatPluginConfig;
-    fsStoragePlugin = storagePlugin;
-    storage = config;
+    this.storageConfig = storageConfig;
+    this.storagePlugin = storagePlugin;
+    this.formatPluginConfig = formatPluginConfig;
+    this.formatPlugin = (MapRDBFormatPlugin) storagePlugin.getFormatPlugin(formatPluginConfig);
+
     this.regionScanSpecList = maprSubScanSpecs;
     this.columns = columns;
     this.tableType = tableType;
@@ -101,7 +101,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MapRDBSubScan(getUserName(), fsFormatPluginConfig, fsStoragePlugin, storage, regionScanSpecList, columns, tableType);
+    return new MapRDBSubScan(getUserName(), formatPluginConfig, storagePlugin, storageConfig, regionScanSpecList, columns, tableType);
   }
 
   @Override
@@ -119,7 +119,12 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   }
 
   public MapRDBFormatPluginConfig getFormatPluginConfig() {
-    return fsFormatPluginConfig;
+    return formatPluginConfig;
+  }
+
+  @JsonIgnore
+  public MapRDBFormatPlugin getFormatPlugin() {
+    return formatPlugin;
   }
 
 }

@@ -21,8 +21,6 @@ import static org.apache.drill.exec.store.mapr.db.util.CommonFns.isNullOrEmpty;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -45,11 +43,12 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.mapr.db.MapRDBTableStats;
 import org.apache.drill.exec.store.mapr.db.TabletFragmentInfo;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.ServerName;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.RegionLocator;
 import org.codehaus.jackson.annotate.JsonCreator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -112,23 +111,22 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
 
   private void init() {
     logger.debug("Getting region locations");
-    try {
-      Configuration conf = HBaseConfiguration.create();
-      HTable table = new HTable(conf, hbaseScanSpec.getTableName());
-      tableStats = new MapRDBTableStats(conf, hbaseScanSpec.getTableName());
-      this.hTableDesc = table.getTableDescriptor();
-      NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
-      table.close();
+    TableName tableName = TableName.valueOf(hbaseScanSpec.getTableName());
+    try (Admin admin = formatPlugin.getConnection().getAdmin();
+         RegionLocator locator = formatPlugin.getConnection().getRegionLocator(tableName)) {
+      hTableDesc = admin.getTableDescriptor(tableName);
+      tableStats = new MapRDBTableStats(getHBaseConf(), hbaseScanSpec.getTableName());
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<TabletFragmentInfo, String>();
-      for (Entry<HRegionInfo, ServerName> mapEntry : regionsMap.entrySet()) {
-        HRegionInfo regionInfo = mapEntry.getKey();
+      List<HRegionLocation> regionLocations = locator.getAllRegionLocations();
+      for (HRegionLocation regionLocation : regionLocations) {
+        HRegionInfo regionInfo = regionLocation.getRegionInfo();
         if (!foundStartRegion && hbaseScanSpec.getStartRow() != null && hbaseScanSpec.getStartRow().length != 0 && !regionInfo.containsRow(hbaseScanSpec.getStartRow())) {
           continue;
         }
         foundStartRegion = true;
-        regionsToScan.put(new TabletFragmentInfo(regionInfo), mapEntry.getValue().getHostname());
+        regionsToScan.put(new TabletFragmentInfo(regionInfo), regionLocation.getHostname());
         if (hbaseScanSpec.getStopRow() != null && hbaseScanSpec.getStopRow().length != 0 && regionInfo.containsRow(hbaseScanSpec.getStopRow())) {
           break;
         }
@@ -191,7 +189,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
 
   @JsonIgnore
   public Configuration getHBaseConf() {
-    return HBaseConfiguration.create();
+    return getFormatPlugin().getHBaseConf();
   }
 
   @JsonIgnore

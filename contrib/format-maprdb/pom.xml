@@ -32,7 +32,7 @@
 
   <properties>
     <maprdb-storage-plugin.mapr.version>5.1.0.37817-mapr</maprdb-storage-plugin.mapr.version>
-    <maprdb-storage-plugin.hbase.version>0.98.12-mapr-1506</maprdb-storage-plugin.hbase.version>
+    <maprdb-storage-plugin.hbase.version>1.1.1-mapr-1602-m7-5.1.0</maprdb-storage-plugin.hbase.version>
     <maprdb-storage-plugin.hadoop.version>2.7.0-mapr-1602</maprdb-storage-plugin.hadoop.version>
     <maprdb.TestSuite>**/MaprDBTestsSuite.class</maprdb.TestSuite>
   </properties>

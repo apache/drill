@@ -35,6 +35,9 @@ import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
@@ -44,11 +47,16 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBFormatPlugin.class);
 
   private final MapRDBFormatMatcher matcher;
+  private final Configuration hbaseConf;
+  private final Connection connection;
 
   public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-      StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig) {
+      StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig) throws IOException {
     super(name, context, fsConf, storageConfig, formatConfig);
     matcher = new MapRDBFormatMatcher(this);
+    hbaseConf = HBaseConfiguration.create(fsConf);
+    hbaseConf.set(ConnectionFactory.DEFAULT_DB, ConnectionFactory.MAPR_ENGINE2);
+    connection = ConnectionFactory.createConnection(hbaseConf);
   }
 
   @Override
@@ -77,6 +85,16 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
       HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);
       return new BinaryTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
     }
+  }
+
+  @JsonIgnore
+  public Configuration getHBaseConf() {
+    return hbaseConf;
+  }
+
+  @JsonIgnore
+  public Connection getConnection() {
+    return connection;
   }
 
 }

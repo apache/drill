@@ -49,9 +49,9 @@ import com.google.common.collect.Sets;
 public abstract class MapRDBGroupScan extends AbstractGroupScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBGroupScan.class);
 
-  private FileSystemPlugin storagePlugin;
+  protected FileSystemPlugin storagePlugin;
 
-  private MapRDBFormatPlugin formatPlugin;
+  protected MapRDBFormatPlugin formatPlugin;
 
   protected MapRDBFormatPluginConfig formatPluginConfig;
 
