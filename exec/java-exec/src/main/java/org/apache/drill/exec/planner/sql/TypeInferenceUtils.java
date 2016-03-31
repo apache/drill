@@ -23,6 +23,9 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.runtime.CalciteException;
+import org.apache.calcite.runtime.Resources;
+import org.apache.calcite.sql.ExplicitOperatorBinding;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlDynamicParam;
@@ -38,6 +41,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 
+import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionCallFactory;
@@ -48,9 +52,11 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import java.util.List;
 
@@ -124,7 +130,6 @@ public class TypeInferenceUtils {
 
   private static final ImmutableMap<String, SqlReturnTypeInference> funcNameToInference = ImmutableMap.<String, SqlReturnTypeInference> builder()
       .put("DATE_PART", DrillDatePartSqlReturnTypeInference.INSTANCE)
-      .put("SUM", DrillSumSqlReturnTypeInference.INSTANCE)
       .put("COUNT", DrillCountSqlReturnTypeInference.INSTANCE)
       .put("CONCAT", DrillConcatSqlReturnTypeInference.INSTANCE)
       .put("LENGTH", DrillLengthSqlReturnTypeInference.INSTANCE)
@@ -154,10 +159,6 @@ public class TypeInferenceUtils {
 
       // NTILE
       .put("NTILE", DrillNTILESqlReturnTypeInference.INSTANCE)
-
-      // LEAD, LAG
-      .put("LEAD", DrillLeadLagSqlReturnTypeInference.INSTANCE)
-      .put("LAG", DrillLeadLagSqlReturnTypeInference.INSTANCE)
 
       // FIRST_VALUE, LAST_VALUE
       .put("FIRST_VALUE", DrillFirstLastValueSqlReturnTypeInference.INSTANCE)
@@ -206,21 +207,31 @@ public class TypeInferenceUtils {
    */
   public static SqlReturnTypeInference getDrillSqlReturnTypeInference(
       final String name,
-      final List<DrillFuncHolder> functions) {
-
+      final List<DrillFuncHolder> functions,
+      final OptionManager optionManager) {
     final String nameCap = name.toUpperCase();
     if(funcNameToInference.containsKey(nameCap)) {
       return funcNameToInference.get(nameCap);
     } else {
-      return new DrillDefaultSqlReturnTypeInference(functions);
+      switch (name) {
+        case "SUM":
+          return new DrillSumSqlReturnTypeInference(optionManager);
+        case "LEAD":
+        case "LAG":
+          return new DrillLeadLagSqlReturnTypeInference(optionManager);
+        default:
+          return new DrillDefaultSqlReturnTypeInference(functions, optionManager);
+      }
     }
   }
 
   private static class DrillDefaultSqlReturnTypeInference implements SqlReturnTypeInference {
     private final List<DrillFuncHolder> functions;
+    private final OptionManager optionManager;
 
-    public DrillDefaultSqlReturnTypeInference(List<DrillFuncHolder> functions) {
+    public DrillDefaultSqlReturnTypeInference(List<DrillFuncHolder> functions, OptionManager optionManager) {
       this.functions = functions;
+      this.optionManager = optionManager;
     }
 
     @Override
@@ -231,6 +242,13 @@ public class TypeInferenceUtils {
             factory.createSqlType(SqlTypeName.ANY),
             true);
       }
+
+      // Only the operand types are useful in the type inference.
+      // Also, since Decimal literals are treated as DOUBLE in Drill's execution,
+      // if the option `planner.enable_decimal_data_type` is off,
+      // inference algorithm treats them as DOUBLE also
+      opBinding = convertDecimalLiteralToDouble(opBinding,
+          optionManager.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val);
 
       // The following logic is just a safe play:
       // Even if any of the input arguments has ANY type,
@@ -338,7 +356,10 @@ public class TypeInferenceUtils {
   }
 
   private static class DrillSumSqlReturnTypeInference implements SqlReturnTypeInference {
-    private static final DrillSumSqlReturnTypeInference INSTANCE = new DrillSumSqlReturnTypeInference();
+    private final OptionManager optionManager;
+    public DrillSumSqlReturnTypeInference(OptionManager optionManager) {
+      this.optionManager = optionManager;
+    }
 
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
@@ -348,6 +369,13 @@ public class TypeInferenceUtils {
       // Otherwise, the output is nullable.
       final boolean isNullable = opBinding.getGroupCount() == 0
           || opBinding.getOperandType(0).isNullable();
+
+      // Only the operand types are useful in the type inference.
+      // Also, since Decimal literals are treated as DOUBLE in Drill's execution,
+      // if the option `planner.enable_decimal_data_type` is off,
+      // inference algorithm treats them as DOUBLE also
+      opBinding = convertDecimalLiteralToDouble(opBinding,
+          optionManager.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val);
 
       if(getDrillTypeFromCalciteType(opBinding.getOperandType(0)) == TypeProtos.MinorType.LATE) {
         return createCalciteTypeWithNullability(
@@ -607,9 +635,19 @@ public class TypeInferenceUtils {
   }
 
   private static class DrillLeadLagSqlReturnTypeInference implements SqlReturnTypeInference {
-    private static final DrillLeadLagSqlReturnTypeInference INSTANCE = new DrillLeadLagSqlReturnTypeInference();
+    private final OptionManager optionManager;
+    public DrillLeadLagSqlReturnTypeInference(OptionManager optionManager) {
+      this.optionManager = optionManager;
+    }
+
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      // Only the operand types are useful in the type inference.
+      // Also, since Decimal literals are treated as DOUBLE in Drill's execution,
+      // if the option `planner.enable_decimal_data_type` is off,
+      // inference algorithm treats them as DOUBLE also
+      opBinding = convertDecimalLiteralToDouble(opBinding, optionManager.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val);
+
       return createCalciteTypeWithNullability(
           opBinding.getTypeFactory(),
           opBinding.getOperandType(0).getSqlTypeName(),
@@ -743,6 +781,51 @@ public class TypeInferenceUtils {
         args,
         ExpressionPosition.UNKNOWN);
     return functionCall;
+  }
+
+  /**
+   * Based on whether decimal type should be replaced by double type or not,
+   * this method creates an ExplicitOperatorBinding which interprets the type of decimal literals or
+   * just return the original SqlOperatorBinding.
+   */
+  public static SqlOperatorBinding convertDecimalLiteralToDouble(final SqlOperatorBinding sqlOperatorBinding, final boolean isDecimalSupported) {
+    final List<RelDataType> types = Lists.newArrayList();
+    // In case there is no Decimal type to Double type replacement,
+    // just return the old SqlOperatorBinding directly
+    boolean isReplacementNeeded = false;
+    for(int i = 0; i < sqlOperatorBinding.getOperandCount(); ++i) {
+      final RelDataType relDataType;
+      if(isDecimalLiteral(sqlOperatorBinding, i) && !isDecimalSupported) {
+        relDataType = createCalciteTypeWithNullability(
+            sqlOperatorBinding.getTypeFactory(),
+            SqlTypeName.DOUBLE,
+            sqlOperatorBinding.getOperandType(i).isNullable());
+        isReplacementNeeded = true;
+      } else {
+        relDataType = sqlOperatorBinding.getOperandType(i);
+      }
+      types.add(relDataType);
+    }
+
+    if(isReplacementNeeded) {
+      return new ExplicitOperatorBinding(sqlOperatorBinding.getTypeFactory(), sqlOperatorBinding.getOperator(), types);
+    } else {
+      return sqlOperatorBinding;
+    }
+  }
+
+  private static boolean isDecimalLiteral(final SqlOperatorBinding sqlOperatorBinding, final int index) {
+    if(sqlOperatorBinding.getOperandType(index).getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return false;
+    }
+
+    final boolean isLiteral;
+    try {
+      isLiteral = sqlOperatorBinding.getOperandLiteralValue(index) != null;
+    } catch (AssertionError e) {
+      return false;
+    }
+    return isLiteral;
   }
 
   /**

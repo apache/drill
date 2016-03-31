@@ -22,11 +22,20 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 
 public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
+  @BeforeClass
+  public static void setup() throws Exception {
+    test("alter session set `planner.enable_limit0_optimization` = true");
+  }
+
   @Test
   public void testConcatWithMoreThanTwoArgs() throws Exception {
     final String query = "select concat(r_name, r_name, r_name, 'f') as col \n" +
@@ -208,6 +217,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   }
 
   @Test
+  @Ignore("DRILL-4656")
   public void tesIsNull() throws Exception {
     final String query = "select r_name is null as col from cp.`tpch/region.parquet` limit 0";
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -718,5 +728,75 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     final String[] expectedPlan = {"\\$SUM0"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+  }
+
+  @Test // DRILL-4552
+  public void testDecimalPlusWhenDecimalEnabled() throws Exception {
+    final String query = "select cast('99' as decimal(9,0)) + cast('99' as decimal(9,0)) as col \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "limit 0";
+
+    try {
+      final TypeProtos.MajorType majorTypeDouble = TypeProtos.MajorType.newBuilder()
+          .setMinorType(TypeProtos.MinorType.FLOAT8)
+          .setMode(TypeProtos.DataMode.REQUIRED)
+          .build();
+
+      final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchemaDouble = Lists.newArrayList();
+      expectedSchemaDouble.add(Pair.of(SchemaPath.getSimplePath("col"), majorTypeDouble));
+
+      testBuilder()
+          .sqlQuery(query)
+          .optionSettingQueriesForTestQuery("alter session set `planner.enable_decimal_data_type` = false")
+          .schemaBaseLine(expectedSchemaDouble)
+          .build()
+          .run();
+
+      test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+
+      final TypeProtos.MajorType majorTypeDecimal9 = TypeProtos.MajorType.newBuilder()
+          .setMinorType(TypeProtos.MinorType.DECIMAL18)
+          .setMode(TypeProtos.DataMode.REQUIRED)
+          .setPrecision(10)
+          .setScale(0)
+          .build();
+
+      final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchemaDecimal = Lists.newArrayList();
+      expectedSchemaDecimal.add(Pair.of(SchemaPath.getSimplePath("col"), majorTypeDecimal9));
+
+      testBuilder()
+          .sqlQuery(query)
+          .schemaBaseLine(expectedSchemaDecimal)
+          .build()
+          .run();
+    } finally {
+      test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+    }
+  }
+
+  @Test // DRILL-4507
+  public void testCreateViewWithToTimestamp() throws Exception {
+    final String createView = "CREATE VIEW testCreateViewWithToTimestamp_timestamp_test AS \n" +
+        "SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') as col FROM (VALUES(1))";
+    final String query = "DESCRIBE testCreateViewWithToTimestamp_timestamp_test";
+    test("use dfs_test.tmp");
+
+    try {
+    test(createView);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("col", "TIMESTAMP", "NO")
+        .build()
+        .run();
+    } finally {
+      test("drop view testCreateViewWithToTimestamp_timestamp_test");
+    }
+  }
+
+  @AfterClass
+  public static void shutdown() throws Exception {
+    test("alter session set `planner.enable_limit0_optimization` = false");
   }
 }

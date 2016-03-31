@@ -25,6 +25,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,14 +45,15 @@ public class DrillSqlAggOperator extends SqlAggFunction {
     this.functions = functions;
   }
 
-  private DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax) {
+  private DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, OptionManager optionManager) {
     this(name,
         functions,
         argCountMin,
         argCountMax,
         TypeInferenceUtils.getDrillSqlReturnTypeInference(
             name,
-            functions));
+            functions,
+            optionManager));
   }
 
   public List<DrillFuncHolder> getFunctions() {
@@ -63,6 +65,12 @@ public class DrillSqlAggOperator extends SqlAggFunction {
     private final List<DrillFuncHolder> functions = Lists.newArrayList();
     private int argCountMin = Integer.MAX_VALUE;
     private int argCountMax = Integer.MIN_VALUE;
+    private OptionManager optionManager = null;
+
+    public DrillSqlAggOperatorBuilder setOptionManager(OptionManager optionManager) {
+      this.optionManager = optionManager;
+      return this;
+    }
 
     public DrillSqlAggOperatorBuilder setName(final String name) {
       this.name = name;
@@ -82,13 +90,15 @@ public class DrillSqlAggOperator extends SqlAggFunction {
 
     public DrillSqlAggOperator build() {
       if(name == null || functions.isEmpty()) {
-        throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
+        throw new AssertionError("The fields, name, functions and option manager, need to be set before build DrillSqlAggOperator");
       }
+
       return new DrillSqlAggOperator(
           name,
           functions,
           argCountMin,
-          argCountMax);
+          argCountMax,
+          optionManager);
     }
   }
 }
