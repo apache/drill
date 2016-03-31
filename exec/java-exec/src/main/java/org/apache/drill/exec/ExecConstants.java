@@ -303,4 +303,9 @@ public interface ExecConstants {
   StringValidator IMPERSONATION_POLICY_VALIDATOR =
       new InboundImpersonationManager.InboundImpersonationPolicyValidator(IMPERSONATION_POLICIES_KEY, "[]");
 
+  /**
+   * Web settings
+   */
+  String WEB_LOGS_MAX_LINES = "web.logs.max_lines";
+  OptionValidator WEB_LOGS_MAX_LINES_VALIDATOR = new PositiveLongValidator(WEB_LOGS_MAX_LINES, Integer.MAX_VALUE, 10000);
 }

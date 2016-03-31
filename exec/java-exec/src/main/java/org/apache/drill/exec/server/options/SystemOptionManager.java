@@ -135,7 +135,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
       ExecConstants.ENABLE_NEW_TEXT_READER,
-      ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST
+      ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
+      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {
