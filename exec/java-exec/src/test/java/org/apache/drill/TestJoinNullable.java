@@ -20,10 +20,9 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.TestTools;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestJoinNullable extends BaseTestQuery{
+public class TestJoinNullable extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJoinNullable.class);
 
   static final String WORKING_PATH = TestTools.getWorkingPath();
@@ -36,16 +35,27 @@ public class TestJoinNullable extends BaseTestQuery{
     test("alter session set `planner.slice_target` = 1");
   }
 
+  private static void resetJoinOptions() throws Exception {
+    test("alter session set `planner.enable_hashjoin` = true");
+    test("alter session set `planner.enable_mergejoin` = false");
+  }
+
+  private static void testHelper(String query, int expectedRecordCount, boolean enableHJ, boolean enableMJ) throws Exception {
+    try {
+      enableJoin(enableHJ, enableMJ);
+      final int actualRecordCount = testSql(query);
+      assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
   /** InnerJoin on nullable cols, HashJoin */
   @Test
   public void testHashInnerJoinOnNullableColumns() throws Exception {
     String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1, " +
                    " dfs_test.`%s/jsoninput/nullable2.json` t2 where t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 1;
-
-    enableJoin(true, false);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 1, true, false);
   }
 
   /** LeftOuterJoin on nullable cols, HashJoin */
@@ -55,11 +65,7 @@ public class TestJoinNullable extends BaseTestQuery{
                       " left outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
                       " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
 
-    final int expectedRecordCount = 2;
-
-    enableJoin(true, false);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 2, true, false);
   }
 
   /** RightOuterJoin on nullable cols, HashJoin */
@@ -69,11 +75,7 @@ public class TestJoinNullable extends BaseTestQuery{
                       " right outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
                       " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
 
-    final int expectedRecordCount = 4;
-
-    enableJoin(true, false);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 4, true, false);
   }
 
   /** FullOuterJoin on nullable cols, HashJoin */
@@ -83,11 +85,7 @@ public class TestJoinNullable extends BaseTestQuery{
                       " full outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
                       " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
 
-    final int expectedRecordCount = +5;
-
-    enableJoin(true, false);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 5, true, false);
   }
 
   /** InnerJoin on nullable cols, MergeJoin */
@@ -99,11 +97,8 @@ public class TestJoinNullable extends BaseTestQuery{
             + "  from dfs_test.`%s/jsoninput/nullable1.json` t1, "
             + "       dfs_test.`%s/jsoninput/nullable2.json` t2 "
             + " where t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 1;
 
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 1, false, true);
   }
 
   /** LeftOuterJoin on nullable cols, MergeJoin */
@@ -112,12 +107,7 @@ public class TestJoinNullable extends BaseTestQuery{
     String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
                       " left outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
                       " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
-
-    final int expectedRecordCount = 2;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 2, false, true);
   }
 
   /** RightOuterJoin on nullable cols, MergeJoin */
@@ -126,12 +116,7 @@ public class TestJoinNullable extends BaseTestQuery{
     String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
                       " right outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
                       " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
-
-    final int expectedRecordCount = 4;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 4, false, true);
   }
 
 
@@ -145,11 +130,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "   left outer join dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
             + "      using ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered right, ASC NULLS FIRST (nulls low). */
@@ -165,11 +146,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "        ORDER BY 1 ASC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col.  - ordered right, ASC NULLS LAST (nulls high). */
@@ -185,11 +162,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "        ORDER BY 1 ASC NULLS LAST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered right, DESC NULLS FIRST (nulls high). */
@@ -205,11 +178,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "        ORDER BY 1 DESC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered right, DESC NULLS LAST (nulls low). */
@@ -225,14 +194,8 @@ public class TestJoinNullable extends BaseTestQuery{
             + "        ORDER BY 1 DESC NULLS LAST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
-
-
 
   /** Left outer join, merge, nullable col. - ordered inputs, both ASC NULLS FIRST (nulls low). */
   @Test
@@ -249,11 +212,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, different null order. */
@@ -271,11 +230,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, other different null order. */
@@ -293,11 +248,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, both ASC NULLS LAST (nulls high) */
@@ -315,11 +266,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, DESC vs. ASC, NULLS
@@ -338,11 +285,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, DESC vs. ASC, NULLS
@@ -361,11 +304,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, DESC vs. ASC, NULLS
@@ -384,11 +323,7 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
   /** Left outer join, merge, nullable col. - ordered inputs, DESC vs. ASC, NULLS
@@ -407,11 +342,51 @@ public class TestJoinNullable extends BaseTestQuery{
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
             + "    USING ( key )",
             TEST_RES_PATH, TEST_RES_PATH);
-    final int expectedRecordCount = 6;
-
-    enableJoin(false, true);
-    final int actualRecordCount = testSql(query);
-    assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
+    testHelper(query, 6, false, true);
   }
 
+  @Test
+  public void withDistinctFromJoinConditionHashJoin() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM " +
+            "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+            "cp.`jsonInput/nullableOrdered2.json` t2 " +
+            "ON t1.key IS NOT DISTINCT FROM t2.key")
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues(null, "L_null_1", "R_null_1", null)
+        .baselineValues(null, "L_null_2", "R_null_1", null)
+        .baselineValues("A", "L_A_1", "R_A_1", "A")
+        .baselineValues("A", "L_A_2", "R_A_1", "A")
+        .baselineValues(null, "L_null_1", "R_null_2", null)
+        .baselineValues(null, "L_null_2", "R_null_2", null)
+        .baselineValues(null, "L_null_1", "R_null_3", null)
+        .baselineValues(null, "L_null_2", "R_null_3", null)
+        .go();
+  }
+
+  @Test
+  public void withDistinctFromJoinConditionMergeJoin() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("SELECT * FROM " +
+              "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+              "cp.`jsonInput/nullableOrdered2.json` t2 " +
+              "ON t1.key IS NOT DISTINCT FROM t2.key")
+          .unOrdered()
+          .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+          .baselineColumns("key", "data", "data0", "key0")
+          .baselineValues(null, "L_null_1", "R_null_1", null)
+          .baselineValues(null, "L_null_2", "R_null_1", null)
+          .baselineValues("A", "L_A_1", "R_A_1", "A")
+          .baselineValues("A", "L_A_2", "R_A_1", "A")
+          .baselineValues(null, "L_null_1", "R_null_2", null)
+          .baselineValues(null, "L_null_2", "R_null_2", null)
+          .baselineValues(null, "L_null_1", "R_null_3", null)
+          .baselineValues(null, "L_null_2", "R_null_3", null)
+          .go();
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
 }

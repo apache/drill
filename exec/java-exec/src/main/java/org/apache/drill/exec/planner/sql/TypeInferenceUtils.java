@@ -141,6 +141,8 @@ public class TypeInferenceUtils {
       .put("FLATTEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("KVGEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_FROM", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
+      .put("IS DISTINCT FROM", DrillIsDistinctFromSqlReturnTypeInference.INSTANCE)
+      .put("IS NOT DISTINCT FROM", DrillIsDistinctFromSqlReturnTypeInference.INSTANCE)
 
       // Window Functions
       // RANKING
@@ -488,6 +490,16 @@ public class TypeInferenceUtils {
           factory,
           sqlTypeName,
           isNullable);
+    }
+  }
+
+  private static class DrillIsDistinctFromSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillIsDistinctFromSqlReturnTypeInference INSTANCE = new DrillIsDistinctFromSqlReturnTypeInference();
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      // The result of IS [NOT] DISTINCT FROM is NOT NULL because it can only return TRUE or FALSE.
+      return opBinding.getTypeFactory().createSqlType(SqlTypeName.BOOLEAN);
     }
   }
 

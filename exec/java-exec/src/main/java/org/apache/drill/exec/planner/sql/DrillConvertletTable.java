@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.util.HashMap;
+import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlOperator;
@@ -30,20 +31,21 @@ import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
 
 public class DrillConvertletTable implements SqlRexConvertletTable{
-
-  public static HashMap<SqlOperator, SqlRexConvertlet> map = new HashMap<>();
-
   public static SqlRexConvertletTable INSTANCE = new DrillConvertletTable();
 
-  static {
-    // Use custom convertlet for extract function
-    map.put(SqlStdOperatorTable.EXTRACT, DrillExtractConvertlet.INSTANCE);
-    map.put(SqlStdOperatorTable.AVG, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.AVG));
-    map.put(SqlStdOperatorTable.STDDEV_POP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.STDDEV_POP));
-    map.put(SqlStdOperatorTable.STDDEV_SAMP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.STDDEV_SAMP));
-    map.put(SqlStdOperatorTable.VAR_POP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.VAR_POP));
-    map.put(SqlStdOperatorTable.VAR_SAMP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.VAR_SAMP));
-  }
+  private static final Map<SqlOperator, SqlRexConvertlet> map =
+      ImmutableMap.<SqlOperator, SqlRexConvertlet>builder()
+          .put(SqlStdOperatorTable.EXTRACT, DrillExtractConvertlet.INSTANCE)
+          .put(SqlStdOperatorTable.IS_DISTINCT_FROM, DrillDistinctFromConvertlet.INSTANCE)
+          .put(SqlStdOperatorTable.IS_NOT_DISTINCT_FROM, DrillDistinctFromConvertlet.INSTANCE)
+          .put(SqlStdOperatorTable.AVG, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.AVG))
+          .put(SqlStdOperatorTable.STDDEV_POP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.STDDEV_POP))
+          .put(SqlStdOperatorTable.STDDEV_SAMP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.STDDEV_SAMP))
+          .put(SqlStdOperatorTable.VAR_POP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.VAR_POP))
+          .put(SqlStdOperatorTable.VAR_SAMP, new DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype.VAR_SAMP))
+      .build();
+
+  private DrillConvertletTable() {}
 
   /*
    * Lookup the hash table to see if we have a custom convertlet for a given
@@ -72,6 +74,4 @@ public class DrillConvertletTable implements SqlRexConvertletTable{
     return StandardConvertletTable.INSTANCE.get(call);
   }
 
-  private DrillConvertletTable() {
-  }
 }
