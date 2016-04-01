@@ -114,7 +114,10 @@ public class BaseTestImpersonation extends PlanTestBase {
   protected static void startDrillCluster(final boolean isImpersonationEnabled) throws Exception {
     final Properties props = cloneDefaultTestConfigProperties();
     props.setProperty(ExecConstants.IMPERSONATION_ENABLED, Boolean.toString(isImpersonationEnabled));
+    startDrillCluster(props);
+  }
 
+  protected static void startDrillCluster(final Properties props) throws Exception {
     updateTestCluster(1, DrillConfig.create(props));
   }
 

@@ -20,15 +20,17 @@ package org.apache.drill.exec.server.rest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AnonDrillUserPrincipal;
 import org.apache.drill.exec.server.rest.profile.ProfileResources;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
@@ -57,7 +59,10 @@ public class DrillRestServer extends ResourceConfig {
     register(MultiPartFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
-    if (workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+    final boolean isAuthEnabled =
+        workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+
+    if (isAuthEnabled) {
       register(LogInLogOutResources.class);
       register(AuthDynamicFeature.class);
       register(RolesAllowedDynamicFeature.class);
@@ -80,9 +85,14 @@ public class DrillRestServer extends ResourceConfig {
       protected void configure() {
         bind(workManager).to(WorkManager.class);
         bind(workManager.getContext().getLpPersistence().getMapper()).to(ObjectMapper.class);
-        bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
+        bind(workManager.getContext().getStoreProvider()).to(PersistentStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
-        bindFactory(DrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
+        bind(new UserAuthEnabled(isAuthEnabled)).to(UserAuthEnabled.class);
+        if (isAuthEnabled) {
+          bindFactory(DrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
+        } else {
+          bindFactory(AnonDrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
+        }
       }
     });
   }
@@ -100,6 +110,36 @@ public class DrillRestServer extends ResourceConfig {
     @Override
     public void dispose(DrillUserPrincipal principal) {
       // No-Op
+    }
+  }
+
+  // Provider which creates and cleanups DrillUserPrincipal for anonymous (auth disabled) mode
+  public static class AnonDrillUserPrincipalProvider implements Factory<DrillUserPrincipal> {
+    @Inject WorkManager workManager;
+
+    @RequestScoped
+    @Override
+    public DrillUserPrincipal provide() {
+      return new AnonDrillUserPrincipal(workManager.getContext());
+    }
+
+    @Override
+    public void dispose(DrillUserPrincipal principal) {
+      // If this worked it would have been clean to free the resources here, but there are various scenarios
+      // where dispose never gets called due to bugs in jersey.
+    }
+  }
+
+  // Returns whether auth is enabled or not in config
+  public static class UserAuthEnabled {
+    private boolean value;
+
+    public UserAuthEnabled(boolean value) {
+      this.value = value;
+    }
+
+    public boolean get() {
+      return value;
     }
   }
 }

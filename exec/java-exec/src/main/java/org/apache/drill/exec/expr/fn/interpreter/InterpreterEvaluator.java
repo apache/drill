@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.interpreter;
 
-import com.google.common.base.Preconditions;
-import io.netty.buffer.DrillBuf;
-
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import javax.inject.Inject;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
@@ -52,8 +52,9 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
-import javax.inject.Inject;
-import java.lang.reflect.Method;
+import com.google.common.base.Preconditions;
+
+import io.netty.buffer.DrillBuf;
 
 public class InterpreterEvaluator {
 
@@ -111,7 +112,7 @@ public class InterpreterEvaluator {
         for (Field f : fields) {
           if ( f.getAnnotation(Inject.class) != null ) {
             f.setAccessible(true);
-            Class fieldType = f.getType();
+            Class<?> fieldType = f.getType();
             if (UdfUtilities.INJECTABLE_GETTER_METHODS.get(fieldType) != null) {
               Method method = udfUtilities.getClass().getMethod(UdfUtilities.INJECTABLE_GETTER_METHODS.get(fieldType));
               f.set(interpreter, method.invoke(udfUtilities));
@@ -427,7 +428,6 @@ public class InterpreterEvaluator {
     private ValueHolder visitBooleanAnd(BooleanOperator op, Integer inIndex) {
       ValueHolder [] args = new ValueHolder [op.args.size()];
       boolean hasNull = false;
-      ValueHolder out = null;
       for (int i = 0; i < op.args.size(); i++) {
         args[i] = op.args.get(i).accept(this, inIndex);
 

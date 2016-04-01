@@ -87,9 +87,6 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           newColumns.add(column);
         }
       }
-      if (newColumns.isEmpty()) {
-        newColumns = GroupScan.ALL_COLUMNS;
-      }
       final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),

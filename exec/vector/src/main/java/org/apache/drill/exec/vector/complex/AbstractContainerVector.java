@@ -21,14 +21,12 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -45,7 +43,7 @@ import com.google.common.collect.Sets;
 public abstract class AbstractContainerVector implements ValueVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
-  protected final MaterializedField field;
+  protected MaterializedField field;
   protected final BufferAllocator allocator;
   protected final CallBack callBack;
 
@@ -109,10 +107,6 @@ public abstract class AbstractContainerVector implements ValueVector {
       return (T) v;
     }
     throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
-  }
-
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    return FieldIdUtil.getFieldIdIfMatches(this, builder, addToBreadCrumb, seg);
   }
 
   MajorType getLastPathType() {

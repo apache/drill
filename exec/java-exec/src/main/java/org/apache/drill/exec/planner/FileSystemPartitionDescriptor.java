@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
-import java.io.IOException;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +30,12 @@ import com.google.common.collect.Maps;
 
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.prepare.RelOptTableImpl;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.base.FileGroupScan;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -47,6 +44,7 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -157,7 +155,20 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   protected void createPartitionSublists() {
-    List<String> fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
+    Collection<String> fileLocations = null;
+    if (scanRel instanceof DrillScanRel) {
+      // If a particular GroupScan provides files, get the list of files from there rather than
+      // DrillTable because GroupScan would have the updated version of the selection
+      final DrillScanRel drillScan = (DrillScanRel) scanRel;
+      if (drillScan.getGroupScan().hasFiles()) {
+        fileLocations = drillScan.getGroupScan().getFiles();
+      } else {
+        fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
+      }
+    } else if (scanRel instanceof EnumerableTableScan) {
+      fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
+    }
+
     List<PartitionLocation> locations = new LinkedList<>();
     for (String file: fileLocations) {
       locations.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));

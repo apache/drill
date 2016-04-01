@@ -163,8 +163,8 @@ public class Foreman implements Runnable {
     closeFuture.addListener(closeListener);
 
     queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
-    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
-        stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
+    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
+        drillbitContext.getClusterCoordinator(), stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
     final OptionManager optionManager = queryContext.getOptions();
     queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
@@ -768,6 +768,12 @@ public class Foreman implements Runnable {
       bee.retireForeman(Foreman.this);
 
       try {
+        queryManager.close();
+      } catch (final Exception e) {
+        logger.warn("unable to close query manager", e);
+      }
+
+      try {
         releaseLease();
       } finally {
         isClosed = true;
@@ -917,9 +923,8 @@ public class Foreman implements Runnable {
     // them together such that it is easy to search based on query id
     logger.info("Query text for query id {}: {}", this.queryIdString, sql);
 
-    final DrillSqlWorker sqlWorker = new DrillSqlWorker(queryContext);
     final Pointer<String> textPlan = new Pointer<>();
-    final PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
+    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
     queryManager.setPlanText(textPlan.value);
     runPhysicalPlan(plan);
   }

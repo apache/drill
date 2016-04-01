@@ -145,7 +145,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       // when creating reader (order of first appearance in query).
       for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
-          MaterializedField field = MaterializedField.create(column, ROW_KEY_TYPE);
+          MaterializedField field = MaterializedField.create(column.getAsNamePart().getName(), ROW_KEY_TYPE);
           rowKeyVector = outputMutator.addField(field, VarBinaryVector.class);
         } else {
           getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
@@ -246,7 +246,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       MapVector v = familyVectorMap.get(familyName);
       if(v == null) {
         SchemaPath column = SchemaPath.getSimplePath(familyName);
-        MaterializedField field = MaterializedField.create(column, COLUMN_FAMILY_TYPE);
+        MaterializedField field = MaterializedField.create(column.getAsNamePart().getName(), COLUMN_FAMILY_TYPE);
         v = outputMutator.addField(field, MapVector.class);
         if (allocateOnCreate) {
           v.allocateNew();

@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.base;
 
-
 public class ScanStats {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanStats.class);
-
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanStats.class);
 
   public static final ScanStats TRIVIAL_TABLE = new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, 20, 1, 1);
+
+  public static final ScanStats ZERO_RECORD_TABLE = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, 0, 1, 1);
 
   private final long recordCount;
   private final float cpuCost;

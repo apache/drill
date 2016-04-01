@@ -66,6 +66,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   final UserWorker worker;
   final BufferAllocator alloc;
   final UserAuthenticator authenticator;
+  final InboundImpersonationManager impersonationManager;
 
   public UserServer(DrillConfig config, ScanResult classpathScan, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
       UserWorker worker, Executor executor) throws DrillbitStartupException {
@@ -79,6 +80,11 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       authenticator = UserAuthenticatorFactory.createAuthenticator(config, classpathScan);
     } else {
       authenticator = null;
+    }
+    if (config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
+      impersonationManager = new InboundImpersonationManager();
+    } else {
+      impersonationManager = null;
     }
   }
 
@@ -151,6 +157,10 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
           .withUserProperties(inbound.getProperties())
           .setSupportComplexTypes(inbound.getSupportComplexTypes())
           .build();
+      final String targetName = session.getTargetUserName();
+      if (impersonationManager != null && targetName != null) {
+        impersonationManager.replaceUserOnSession(targetName, session);
+      }
     }
 
     public UserSession getSession(){

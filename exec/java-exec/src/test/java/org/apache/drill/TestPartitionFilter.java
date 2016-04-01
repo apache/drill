@@ -257,7 +257,8 @@ public class TestPartitionFilter extends PlanTestBase {
   public void testMainQueryFalseCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
     String query = String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994') t where 1 = 0", root);
-    testExcludeFilter(query, 4, "Filter", 0);
+    // the 1 = 0 becomes limit 0, which will require to read only one parquet file, in stead of 4 for year '1994'.
+    testExcludeFilter(query, 1, "Filter", 0);
   }
 
   @Test // see DRILL-2712

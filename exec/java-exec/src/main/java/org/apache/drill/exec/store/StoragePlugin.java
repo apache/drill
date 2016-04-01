@@ -46,6 +46,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific physical optimizer rules.
    */
+  @Deprecated
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**

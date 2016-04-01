@@ -37,10 +37,10 @@ import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.CachingStoreProvider;
-import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.CachingPersistentStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 
@@ -63,7 +63,7 @@ public class Drillbit implements AutoCloseable {
 
   private final ClusterCoordinator coord;
   private final ServiceEngine engine;
-  private final PStoreProvider storeProvider;
+  private final PersistentStoreProvider storeProvider;
   private final WorkManager manager;
   private final BootStrapContext context;
   private final WebServer webServer;
@@ -93,10 +93,10 @@ public class Drillbit implements AutoCloseable {
 
     if (serviceSet != null) {
       coord = serviceSet.getCoordinator();
-      storeProvider = new CachingStoreProvider(new LocalPStoreProvider(config));
+      storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
     } else {
       coord = new ZKClusterCoordinator(config);
-      storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
+      storeProvider = new PersistentStoreRegistry(this.coord, config).newPStoreProvider();
     }
     logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }

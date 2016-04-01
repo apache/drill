@@ -63,7 +63,7 @@ public class ITTestShadedJar {
     try {
       Driver driver = (Driver) clazz.newInstance();
       try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
-        String path = Paths.get("").toAbsolutePath().toString() + "/../src/test/resources/types.json";
+        String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
         printQuery(c, "select * from dfs.`" + path + "`");
       }
     } catch (Exception ex) {
@@ -108,7 +108,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       return classes.size();
     } catch (Exception e) {
       System.out.println("Failure while loading class count.");
@@ -120,7 +120,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       for (Class<?> c : classes) {
         System.out.println(prefix + ": " + c.getName());
       }

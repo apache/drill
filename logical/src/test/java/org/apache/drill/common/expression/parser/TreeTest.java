@@ -32,6 +32,18 @@ public class TreeTest extends DrillTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TreeTest.class);
 
   @Test
+  public void escapeStringLiteral() throws Exception {
+    String expr = "func(`identifier`, '\\\\d+', 0, 'fjds')";
+    testExpressionParsing(expr);
+  }
+
+  @Test
+  public void escapeQuotedIdentifier() throws Exception {
+    String expr = "`a\\\\b` + `c'd`";
+    testExpressionParsing(expr);
+  }
+
+  @Test
   public void testIfWithCase() throws Exception{
     testExpressionParsing("if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end");
   }

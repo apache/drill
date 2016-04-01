@@ -22,6 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -295,6 +296,7 @@ public class DrillOptiq {
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         case "BOOLEAN": castType = Types.required(MinorType.BIT); break;
+        case "BINARY": castType = Types.required(MinorType.VARBINARY).toBuilder().setWidth(call.getType().getPrecision()).build(); break;
         case "ANY": return arg; // Type will be same as argument.
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
@@ -359,11 +361,6 @@ public class DrillOptiq {
         trimArgs.add(args.get(1));
 
         return FunctionCallFactory.createExpression(trimFunc, trimArgs);
-      } else if (functionName.equals("ltrim") || functionName.equals("rtrim") || functionName.equals("btrim")) {
-        if (argsSize == 1) {
-          args.add(ValueExpressions.getChar(" "));
-        }
-        return FunctionCallFactory.createExpression(functionName, args);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
@@ -426,17 +423,40 @@ public class DrillOptiq {
       } else if ((functionName.equals("convert_from") || functionName.equals("convert_to"))
                     && args.get(1) instanceof QuotedString) {
         return FunctionCallFactory.createConvert(functionName, ((QuotedString)args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
-      } else if ((functionName.equalsIgnoreCase("rpad")) || functionName.equalsIgnoreCase("lpad")) {
-        // If we have only two arguments for rpad/lpad append a default QuotedExpression as an argument which will be used to pad the string
-        if (argsSize == 2) {
-          String spaceFill = " ";
-          LogicalExpression fill = ValueExpressions.getChar(spaceFill);
-          args.add(fill);
-        }
+      } else if (functionName.equals("date_trunc")) {
+        return handleDateTruncFunction(args);
       }
 
       return FunctionCallFactory.createExpression(functionName, args);
     }
+
+    private LogicalExpression handleDateTruncFunction(final List<LogicalExpression> args) {
+      // Assert that the first argument to extract is a QuotedString
+      assert args.get(0) instanceof ValueExpressions.QuotedString;
+
+      // Get the unit of time to be extracted
+      String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value.toUpperCase();
+
+      switch (timeUnitStr){
+        case ("YEAR"):
+        case ("MONTH"):
+        case ("DAY"):
+        case ("HOUR"):
+        case ("MINUTE"):
+        case ("SECOND"):
+        case ("WEEK"):
+        case ("QUARTER"):
+        case ("DECADE"):
+        case ("CENTURY"):
+        case ("MILLENNIUM"):
+          final String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
+          return FunctionCallFactory.createExpression("date_trunc_" + functionPostfix, args.subList(1, 2));
+      }
+
+      throw new UnsupportedOperationException("date_trunc function supports the following time units: " +
+          "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK, QUARTER, DECADE, CENTURY, MILLENNIUM");
+    }
+
 
     @Override
     public LogicalExpression visitLiteral(RexLiteral literal) {

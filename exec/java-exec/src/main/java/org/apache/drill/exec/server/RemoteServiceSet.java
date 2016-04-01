@@ -17,15 +17,12 @@
  */
 package org.apache.drill.exec.server;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
 
-public class RemoteServiceSet implements Closeable {
+public class RemoteServiceSet implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
 
   private final ClusterCoordinator coordinator;
@@ -41,7 +38,7 @@ public class RemoteServiceSet implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() throws Exception {
     coordinator.close();
   }
 

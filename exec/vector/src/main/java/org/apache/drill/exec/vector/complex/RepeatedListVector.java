@@ -24,8 +24,6 @@ import io.netty.buffer.DrillBuf;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -64,7 +62,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
       @Override
       public Object getObject(int index) {
-        final List<Object> list = new JsonStringArrayList();
+        final List<Object> list = new JsonStringArrayList<>();
         final int start = offsets.getAccessor().get(index);
         final int until = offsets.getAccessor().get(index+1);
         for (int i = start; i < until; i++) {
@@ -172,7 +170,7 @@ public class RepeatedListVector extends AbstractContainerVector
       }
     }
 
-    public DelegateRepeatedVector(SchemaPath path, BufferAllocator allocator) {
+    public DelegateRepeatedVector(String path, BufferAllocator allocator) {
       this(MaterializedField.create(path, TYPE), allocator);
     }
 
@@ -189,7 +187,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
       return makeTransferPair(new DelegateRepeatedVector(ref, allocator));
     }
 
@@ -250,7 +248,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
   }
 
-  public RepeatedListVector(SchemaPath path, BufferAllocator allocator, CallBack callBack) {
+  public RepeatedListVector(String path, BufferAllocator allocator, CallBack callBack) {
     this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
@@ -315,6 +313,7 @@ public class RepeatedListVector extends AbstractContainerVector
     if (result.isCreated() && callBack != null) {
       callBack.doWork();
     }
+    this.field = delegate.getField();
     return result;
   }
 
@@ -349,7 +348,7 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new RepeatedListTransferPair(delegate.getTransferPair(ref, allocator));
   }
 

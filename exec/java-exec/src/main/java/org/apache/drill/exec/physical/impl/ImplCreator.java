@@ -152,7 +152,7 @@ public class ImplCreator {
 
   /** Helper method to get OperatorCreator (RootCreator or BatchCreator) for given PhysicalOperator (root or non-root) */
   private Object getOpCreator(PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
-    final Class opClass = op.getClass();
+    final Class<? extends PhysicalOperator> opClass = op.getClass();
     Object opCreator = context.getDrillbitContext().getOperatorCreatorRegistry().getOperatorCreator(opClass);
     if (opCreator == null) {
       throw new UnsupportedOperationException(

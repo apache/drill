@@ -17,7 +17,7 @@
  */
 package org.apache.parquet.hadoop;
 
-import io.netty.buffer.ByteBuf;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,13 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.store.parquet.ColumnDataReader;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.page.DataPage;
@@ -50,7 +48,7 @@ import org.apache.parquet.hadoop.CodecFactory.BytesDecompressor;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.util.CompatibilityUtil;
 
-import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+import io.netty.buffer.ByteBuf;
 
 
 public class ColumnChunkIncReadStore implements PageReadStore {
@@ -62,7 +60,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
   private FileSystem fs;
   private Path path;
   private long rowCount;
-  private List<FSDataInputStream> streams = new ArrayList();
+  private List<FSDataInputStream> streams = new ArrayList<>();
 
   public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, BufferAllocator allocator,
       FileSystem fs, Path path) {
@@ -239,7 +237,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     }
   }
 
-  private Map<ColumnDescriptor, ColumnChunkIncPageReader> columns = new HashMap();
+  private Map<ColumnDescriptor, ColumnChunkIncPageReader> columns = new HashMap<>();
 
   public void addColumn(ColumnDescriptor descriptor, ColumnChunkMetaData metaData) throws IOException {
     FSDataInputStream in = fs.open(path);

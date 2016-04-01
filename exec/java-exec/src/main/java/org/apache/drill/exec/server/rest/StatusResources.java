@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -42,13 +43,12 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
-
 @Path("/")
 @PermitAll
 public class StatusResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject SecurityContext sc;
 
@@ -56,14 +56,14 @@ public class StatusResources {
   @Path("/status")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
-    return ViewableWithPermissions.create("/rest/status.ftl", sc, "Running!");
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, "Running!");
   }
 
   @GET
   @Path("/options.json")
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.APPLICATION_JSON)
-  public List getSystemOptionsJSON() {
+  public List<OptionWrapper> getSystemOptionsJSON() {
     List<OptionWrapper> options = new LinkedList<>();
     for (OptionValue option : work.getContext().getOptionManager()) {
       options.add(new OptionWrapper(option.name, option.getValue(), option.type, option.kind));
@@ -76,7 +76,7 @@ public class StatusResources {
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
   public Viewable getSystemOptions() {
-    return ViewableWithPermissions.create("/rest/options.ftl", sc, getSystemOptionsJSON());
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/options.ftl", sc, getSystemOptionsJSON());
   }
 
   @POST

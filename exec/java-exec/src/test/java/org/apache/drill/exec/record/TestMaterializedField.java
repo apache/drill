@@ -66,7 +66,7 @@ public class TestMaterializedField {
 
     for (final MaterializedField field:new MaterializedField[]{parent, child}) {
       for (Object[] args:matrix) {
-        final SchemaPath path = SchemaPath.getSimplePath(args[0].toString());
+        final String path = args[0].toString();
         final TypeProtos.MajorType type = TypeProtos.MajorType.class.cast(args[1]);
 
         final MaterializedField clone = field.withPathAndType(path, type);

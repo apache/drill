@@ -54,7 +54,7 @@ public class SchemaUtil {
 
     for (BatchSchema s : schemas) {
       for (MaterializedField field : s) {
-        SchemaPath path = field.getPath();
+        SchemaPath path = SchemaPath.getSimplePath(field.getPath());
         Set<MinorType> currentTypes = typeSetMap.get(path);
         if (currentTypes == null) {
           currentTypes = Sets.newHashSet();
@@ -83,10 +83,10 @@ public class SchemaUtil {
         for (MinorType t : types) {
           builder.addSubType(t);
         }
-        MaterializedField field = MaterializedField.create(path, builder.build());
+        MaterializedField field = MaterializedField.create(path.getAsUnescapedPath(), builder.build());
         fields.add(field);
       } else {
-        MaterializedField field = MaterializedField.create(path, Types.optional(types.iterator().next()));
+        MaterializedField field = MaterializedField.create(path.getAsUnescapedPath(), Types.optional(types.iterator().next()));
         fields.add(field);
       }
     }
@@ -153,7 +153,7 @@ public class SchemaUtil {
   public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, OperatorContext context) {
     int recordCount = in.getRecordCount();
     boolean isHyper = false;
-    Map<SchemaPath, Object> vectorMap = Maps.newHashMap();
+    Map<String, Object> vectorMap = Maps.newHashMap();
     for (VectorWrapper w : in) {
       if (w.isHyper()) {
         isHyper = true;

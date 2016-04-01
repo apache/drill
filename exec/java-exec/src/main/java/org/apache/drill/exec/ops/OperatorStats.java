@@ -22,12 +22,15 @@ import java.util.Iterator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
+import org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 
 import com.carrotsearch.hppc.IntDoubleHashMap;
 import com.carrotsearch.hppc.IntLongHashMap;
 import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 import com.carrotsearch.hppc.cursors.IntLongCursor;
+import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
+import com.carrotsearch.hppc.procedures.IntLongProcedure;
 
 public class OperatorStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
@@ -216,19 +219,45 @@ public class OperatorStats {
     }
   }
 
+  private class LongProc implements IntLongProcedure {
+
+    private final OperatorProfile.Builder builder;
+
+    public LongProc(Builder builder) {
+      super();
+      this.builder = builder;
+    }
+
+    @Override
+    public void apply(int key, long value) {
+      builder.addMetric(MetricValue.newBuilder().setMetricId(key).setLongValue(value));
+    }
+
+  }
+
   public void addLongMetrics(OperatorProfile.Builder builder) {
-    for (int i = 0; i < longMetrics.keys.length; i++) {
-      if (longMetrics.keys[i] != 0) {
-        builder.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
-      }
+    if (longMetrics.size() > 0) {
+      longMetrics.forEach(new LongProc(builder));
     }
   }
 
+  private class DoubleProc implements IntDoubleProcedure {
+    private final OperatorProfile.Builder builder;
+
+    public DoubleProc(Builder builder) {
+      super();
+      this.builder = builder;
+    }
+
+    @Override
+    public void apply(int key, double value) {
+      builder.addMetric(MetricValue.newBuilder().setMetricId(key).setDoubleValue(value));
+    }
+
+  }
   public void addDoubleMetrics(OperatorProfile.Builder builder) {
-    for (int i = 0; i < longMetrics.keys.length; i++) {
-      if (doubleMetrics.keys[i] != 0) {
-        builder.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
-      }
+    if (doubleMetrics.size() > 0) {
+      doubleMetrics.forEach(new DoubleProc(builder));
     }
   }
 

@@ -22,7 +22,19 @@ project(drillclient)
 message("Project Dir = ${PROJECT_SOURCE_DIR}")
 message("Source Dir = ${CMAKE_SOURCE_DIR} ")
 
+cmake_policy(SET CMP0043 NEW)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmakeModules/")
+
+# Get the latest git commit properties of the working branch
+execute_process(
+    COMMAND git log -1 --format="\\nCommit: %H \\nDescription: %s \\nAuthor: %aN Date: %ai"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_PROP
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+add_definitions("-DGIT_COMMIT_PROP=${GIT_COMMIT_PROP}")
+
 
 
 # Find Boost
@@ -36,7 +48,7 @@ else()
     set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread )
+find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
 include_directories(${Boost_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -62,6 +74,16 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #Find Zookeeper
 find_package(Zookeeper  REQUIRED )
+
+
+# Generated sources
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/clientlib/env.h.in
+    ${CMAKE_BINARY_DIR}/generated/env.h
+    )
+
+include_directories(${CMAKE_BINARY_DIR}/generated)
+
 
 #
 #   TARGETS

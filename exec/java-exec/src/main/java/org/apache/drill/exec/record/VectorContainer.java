@@ -116,7 +116,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
-    final TypedFieldId id = getValueVectorId(field.getPath());
+    final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getPath()));
     final ValueVector vector;
     final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
@@ -183,7 +183,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     // Sort list of VectorWrapper alphabetically based on SchemaPath.
     Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
       public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
-        return v1.getField().getPath().toExpr().compareTo(v2.getField().getPath().toExpr());
+        return v1.getField().getPath().compareTo(v2.getField().getPath());
       }
     });
 

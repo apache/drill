@@ -157,9 +157,9 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       //   1. Fragment unique id.
       //   2. Summary: currently contains number of records written.
       final MaterializedField fragmentIdField =
-          MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
+          MaterializedField.create("Fragment", Types.required(MinorType.VARCHAR));
       final MaterializedField summaryField =
-          MaterializedField.create(SchemaPath.getSimplePath("Number of records written"),
+          MaterializedField.create("Number of records written",
               Types.required(MinorType.BIGINT));
 
       container.addOrGet(fragmentIdField);

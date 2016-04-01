@@ -34,7 +34,7 @@ public class StringFunctionHelpers {
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varCharToLong(final int start, final int end, DrillBuf buffer){
+  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeL(start, end, buffer);
@@ -95,7 +95,7 @@ public class StringFunctionHelpers {
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varCharToInt(final int start, final int end, DrillBuf buffer){
+  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeI(start, end, buffer);
@@ -213,11 +213,35 @@ public class StringFunctionHelpers {
     if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buf.checkBytes(start, end);
     }
-    return memGetDate(buf.memoryAddress(), start, end);
+    int[] dateFields = memGetDate(buf.memoryAddress(), start, end);
+    return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
   }
 
+  /**
+   * Takes a string value, specified as a buffer with a start and end and
+   * returns true if the value can be read as a date.
+   *
+   * @param buf
+   * @param start
+   * @param end
+   * @return true iff the string value can be read as a date
+   */
+  public static boolean isReadableAsDate(DrillBuf buf, int start, int end){
+    // Tried looking for a method that would do this check without relying on
+    // an exception in the failure case (for better performance). Joda does
+    // not appear to provide such a function, so the try/catch block
+    // was chosen for compatibility with the getDate() method that actually
+    // returns the result of parsing.
+    try {
+      getDate(buf, start, end);
+      // the parsing from the line above succeeded, this was a valid date
+      return true;
+    } catch(IllegalArgumentException ex) {
+      return false;
+    }
+  }
 
-  private static long memGetDate(long memoryAddress, int start, int end){
+  private static int[] memGetDate(long memoryAddress, int start, int end){
     long index = memoryAddress + start;
     final long endIndex = memoryAddress + end;
     int digit = 0;
@@ -255,7 +279,6 @@ public class StringFunctionHelpers {
         dateFields[0] += 1900;
       }
     }
-
-    return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
+    return dateFields;
   }
 }

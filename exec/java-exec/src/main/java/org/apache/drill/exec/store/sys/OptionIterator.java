@@ -21,15 +21,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 
 public class OptionIterator implements Iterator<Object> {

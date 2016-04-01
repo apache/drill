@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,9 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -38,6 +41,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+/**
+ * This class offers the registry for functions. Notably, in addition to Drill its functions
+ * (in {@link DrillFunctionRegistry}), other PluggableFunctionRegistry (e.g., {@link org.apache.drill.exec.expr.fn.HiveFunctionRegistry})
+ * is also registered in this class
+ */
 public class FunctionImplementationRegistry implements FunctionLookupContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
@@ -115,15 +123,16 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   // Check if this Function Replacement is needed; if yes, return a new name. otherwise, return the original name
   private String functionReplacement(FunctionCall functionCall) {
     String funcName = functionCall.getName();
-    if (optionManager != null
-        && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val
-        && functionCall.args.size() > 0
-        && CastFunctions.isReplacementNeeded(functionCall.args.get(0).getMajorType().getMinorType(),
-                                             funcName)) {
-      org.apache.drill.common.types.TypeProtos.DataMode dataMode =
-          functionCall.args.get(0).getMajorType().getMode();
-      funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode);
-    }
+      if (functionCall.args.size() > 0) {
+          MajorType majorType =  functionCall.args.get(0).getMajorType();
+          DataMode dataMode = majorType.getMode();
+          MinorType minorType = majorType.getMinorType();
+          if (optionManager != null
+              && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val
+              && CastFunctions.isReplacementNeeded(funcName, minorType)) {
+              funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode, minorType);
+          }
+      }
 
     return funcName;
   }

@@ -51,8 +51,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -119,6 +117,8 @@ public class HiveUtilities {
         case STRING:
         case VARCHAR:
           return value.getBytes();
+        case CHAR:
+          return value.trim().getBytes();
         case TIMESTAMP:
           return Timestamp.valueOf(value);
         case DATE:
@@ -345,6 +345,7 @@ public class HiveUtilities {
         return TypeProtos.MinorType.BIGINT;
       case STRING:
       case VARCHAR:
+      case CHAR:
         return TypeProtos.MinorType.VARCHAR;
       case TIMESTAMP:
         return TypeProtos.MinorType.TIMESTAMP;
@@ -364,7 +365,7 @@ public class HiveUtilities {
    * @param table Table object
    * @throws Exception
    */
-  public static Class<? extends InputFormat> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
+  public static Class<? extends InputFormat<?, ?>> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
       final Table table) throws Exception {
     final String inputFormatName = sd.getInputFormat();
     if (Strings.isNullOrEmpty(inputFormatName)) {
@@ -374,9 +375,9 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
-      return storageHandler.getInputFormatClass();
+      return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
-      return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+      return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
     }
   }
 
@@ -422,7 +423,7 @@ public class HiveUtilities {
     errMsg.append(System.getProperty("line.separator"));
     errMsg.append("Following Hive data types are supported in Drill for querying: ");
     errMsg.append(
-        "BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, and VARCHAR");
+        "BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
 
     throw UserException.unsupportedError()
         .message(errMsg.toString())

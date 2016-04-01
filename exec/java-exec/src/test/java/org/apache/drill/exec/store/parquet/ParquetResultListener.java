@@ -126,12 +126,12 @@ public class ParquetResultListener implements UserResultsListener {
 
     for (final VectorWrapper vw : batchLoader) {
       final ValueVector vv = vw.getValueVector();
-      currentField = props.fields.get(vv.getField().getPath().getRootSegment().getPath());
-      if (!valuesChecked.containsKey(vv.getField().getPath().getRootSegment().getPath())) {
-        valuesChecked.put(vv.getField().getPath().getRootSegment().getPath(), 0);
+      currentField = props.fields.get(vv.getField().getPath());
+      if (!valuesChecked.containsKey(vv.getField().getPath())) {
+        valuesChecked.put(vv.getField().getPath(), 0);
         columnValCounter = 0;
       } else {
-        columnValCounter = valuesChecked.get(vv.getField().getPath().getRootSegment().getPath());
+        columnValCounter = valuesChecked.get(vv.getField().getPath());
       }
       printColumnMajor(vv);
 
@@ -145,9 +145,9 @@ public class ParquetResultListener implements UserResultsListener {
         columnValCounter += vv.getAccessor().getValueCount();
       }
 
-      valuesChecked.remove(vv.getField().getPath().getRootSegment().getPath());
+      valuesChecked.remove(vv.getField().getPath());
       assertEquals("Mismatched value count for vectors in the same batch.", valueCount, vv.getAccessor().getValueCount());
-      valuesChecked.put(vv.getField().getPath().getRootSegment().getPath(), columnValCounter);
+      valuesChecked.put(vv.getField().getPath(), columnValCounter);
     }
 
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -184,7 +184,7 @@ public class ParquetResultListener implements UserResultsListener {
 
   public void printColumnMajor(ValueVector vv) {
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-      System.out.println("\n" + vv.getField().getAsSchemaPath().getRootSegment().getPath());
+      System.out.println("\n" + vv.getField().getPath());
     }
     for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
       if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -211,7 +211,7 @@ public class ParquetResultListener implements UserResultsListener {
         System.out.println();
         for (VectorWrapper vw : batchLoader) {
           ValueVector v = vw.getValueVector();
-          System.out.print(Strings.padStart(v.getField().getAsSchemaPath().getRootSegment().getPath(), 20, ' ') + " ");
+          System.out.print(Strings.padStart(v.getField().getPath(), 20, ' ') + " ");
 
         }
         System.out.println();

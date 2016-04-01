@@ -26,8 +26,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -60,7 +58,7 @@ public class MapVector extends AbstractMapVector {
   private int valueCount;
 
   public MapVector(String path, BufferAllocator allocator, CallBack callBack){
-    this(MaterializedField.create(SchemaPath.getSimplePath(path), TYPE), allocator, callBack);
+    this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
   public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
@@ -153,7 +151,7 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new MapTransferPair(this, ref, allocator);
   }
 
@@ -162,7 +160,7 @@ public class MapVector extends AbstractMapVector {
     private final MapVector from;
     private final MapVector to;
 
-    public MapTransferPair(MapVector from, SchemaPath path, BufferAllocator allocator) {
+    public MapTransferPair(MapVector from, String path, BufferAllocator allocator) {
       this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
     }
 

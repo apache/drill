@@ -29,8 +29,8 @@ import org.junit.Test;
  */
 public class TestSort extends BaseTestQuery {
 
-  private static final JsonStringHashMap x = new JsonStringHashMap();
-  private static final JsonStringArrayList<JsonStringHashMap> repeated_map = new JsonStringArrayList<>();
+  private static final JsonStringHashMap<String, Object> x = new JsonStringHashMap<>();
+  private static final JsonStringArrayList<JsonStringHashMap<String, Object>> repeated_map = new JsonStringArrayList<>();
 
   static {
     x.put("c", 1l);

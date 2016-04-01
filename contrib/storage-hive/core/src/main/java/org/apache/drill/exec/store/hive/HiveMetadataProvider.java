@@ -249,7 +249,7 @@ public class HiveMetadataProvider {
 
           if (fs.exists(path)) {
             FileInputFormat.addInputPath(job, path);
-            final InputFormat format = job.getInputFormat();
+            final InputFormat<?, ?> format = job.getInputFormat();
             for (final InputSplit split : format.getSplits(job, 1)) {
               splits.add(new InputSplitWrapper(split, partition));
             }

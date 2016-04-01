@@ -79,7 +79,7 @@ public class EventBasedRecordWriter {
     try {
       int fieldId = 0;
       for (VectorWrapper w : batch) {
-        if (w.getField().getPath().equals(SchemaPath.getSimplePath(WriterPrel.PARTITION_COMPARATOR_FIELD))) {
+        if (w.getField().getPath().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
           continue;
         }
         FieldReader reader = w.getValueVector().getReader();
