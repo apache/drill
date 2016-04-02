@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 
 import java.util.Map;
@@ -33,13 +34,13 @@ public class CoordinationQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoordinationQueue.class);
 
   private final PositiveAtomicInteger circularInt = new PositiveAtomicInteger();
-  private final Map<Integer, RpcOutcome<?>> map;
+  private final Map<Integer, RpcListener<?>> map;
 
   public CoordinationQueue(int segmentSize, int segmentCount) {
-    map = new ConcurrentHashMap<Integer, RpcOutcome<?>>(segmentSize, 0.75f, segmentCount);
+    map = new ConcurrentHashMap<>(segmentSize, 0.75f, segmentCount);
   }
 
-  void channelClosed(Throwable ex) {
+  void channelClosed(Throwable ex, final Channel channel) {
     if (ex != null) {
       RpcException e;
       if (ex instanceof RpcException) {
@@ -47,15 +48,17 @@ public class CoordinationQueue {
       } else {
         e = new RpcException(ex);
       }
-      for (RpcOutcome<?> f : map.values()) {
-        f.setException(e);
+      for (RpcListener<?> f : map.values()) {
+        if (f.connection.getChannel().equals(channel)) {
+          f.setException(e);
+        }
       }
     }
   }
 
   public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz, RemoteConnection connection) {
     int i = circularInt.getNext();
-    RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
+    RpcListener<V> future = new RpcListener<>(handler, clazz, i, connection);
     Object old = map.put(i, future);
     if (old != null) {
       throw new IllegalStateException(
