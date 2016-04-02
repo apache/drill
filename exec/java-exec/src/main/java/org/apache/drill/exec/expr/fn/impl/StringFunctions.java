@@ -55,17 +55,22 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -78,18 +83,23 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder escape;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer))).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -101,18 +111,23 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)),
           java.util.regex.Pattern.CASE_INSENSITIVE).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -125,6 +140,7 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder escape;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
@@ -132,12 +148,16 @@ public class StringFunctions{
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer)),
           java.util.regex.Pattern.CASE_INSENSITIVE).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -148,16 +168,21 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer))).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -169,18 +194,23 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder escape;
     @Output BitHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer),
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(escape.start,  escape.end,  escape.buffer))).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -196,19 +226,25 @@ public class StringFunctions{
     @Param VarCharHolder replacement;
     @Inject DrillBuf buffer;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
     @Output VarCharHolder out;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer)).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
       out.start = 0;
-      final String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       final String r = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(replacement.start, replacement.end, replacement.buffer);
-      final byte [] bytea = matcher.reset(i).replaceAll(r).getBytes(java.nio.charset.Charset.forName("UTF-8"));
+      final byte [] bytea = matcher.replaceAll(r).getBytes(java.nio.charset.Charset.forName("UTF-8"));
       out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
       out.buffer.setBytes(out.start, bytea);
       out.end = bytea.length;
@@ -227,17 +263,22 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Inject DrillBuf buffer;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
     @Output BitHolder out;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      final String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       out.value = matcher.matches()? 1:0;
     }
   }
@@ -566,18 +607,23 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Output NullableVarCharHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))
           .matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
     public void eval() {
-      final String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      matcher.reset(i);
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      // This saves one method call since reset(CharSequence) calls reset()
+      matcher.reset();
       if (matcher.find()) {
         out.isSet = 1;
         out.buffer = input.buffer;
@@ -593,12 +639,15 @@ public class StringFunctions{
     @Param(constant=true) VarCharHolder pattern;
     @Output NullableVarCharHolder out;
     @Workspace java.util.regex.Matcher matcher;
+    @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
 
     @Override
     public void setup() {
       matcher = java.util.regex.Pattern.compile(
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))
           .matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
     }
 
     @Override
@@ -606,8 +655,10 @@ public class StringFunctions{
       if (input.isSet == 0) {
         out.isSet = 0;
       } else {
-        final String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-        matcher.reset(i);
+        charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+        // Reusing same charSequenceWrapper, no need to pass it in.
+        // This saves one method call since reset(CharSequence) calls reset()
+        matcher.reset();
         if (matcher.find()) {
           out.isSet = 1;
           out.buffer = input.buffer;
