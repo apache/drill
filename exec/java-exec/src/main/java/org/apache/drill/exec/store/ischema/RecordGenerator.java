@@ -31,7 +31,10 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
@@ -47,6 +50,11 @@ import com.google.common.collect.Lists;
  */
 public abstract class RecordGenerator {
   protected InfoSchemaFilter filter;
+
+  protected OptionManager optionManager;
+  public RecordGenerator(OptionManager optionManager) {
+    this.optionManager = optionManager;
+  }
 
   public void setInfoSchemaFilter(InfoSchemaFilter filter) {
     this.filter = filter;
@@ -124,29 +132,37 @@ public abstract class RecordGenerator {
 
     // Visit this schema and if requested ...
     if (shouldVisitSchema(schemaPath, schema) && visitSchema(schemaPath, schema)) {
-      // ... do for each of the schema's tables.
-      for (String tableName: schema.getTableNames()) {
-        Table table = schema.getTable(tableName);
+      visitTables(schemaPath, schema);
+    }
+  }
 
-        if (table == null) {
-          // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
-          // tables as INFO SCHEMA is about showing tables which the use has access to query.
-          continue;
-        }
-
-        // Visit the table, and if requested ...
-        if (shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
-          // ... do for each of the table's fields.
-          RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
-          for (RelDataTypeField field: tableRow.getFieldList()) {
-            visitField(schemaPath,  tableName, field);
-          }
+  /**
+   * Visit the tables in the given schema. The
+   * @param  schemaPath  the path to the given schema
+   * @param  schema  the given schema
+   */
+  public void visitTables(String schemaPath, SchemaPlus schema) {
+    final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+    final List<String> tableNames = Lists.newArrayList(schema.getTableNames());
+    for(Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(tableNames)) {
+      final String tableName = tableNameToTable.getKey();
+      final Table table = tableNameToTable.getValue();
+      // Visit the table, and if requested ...
+      if(shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
+        // ... do for each of the table's fields.
+        final RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
+        for (RelDataTypeField field: tableRow.getFieldList()) {
+          visitField(schemaPath, tableName, field);
         }
       }
     }
   }
 
   public static class Catalogs extends RecordGenerator {
+    public Catalogs(OptionManager optionManager) {
+      super(optionManager);
+    }
+
     @Override
     public RecordReader getRecordReader() {
       Records.Catalog catalogRecord =
@@ -158,6 +174,10 @@ public abstract class RecordGenerator {
 
   public static class Schemata extends RecordGenerator {
     List<Records.Schema> records = Lists.newArrayList();
+
+    public Schemata(OptionManager optionManager) {
+      super(optionManager);
+    }
 
     @Override
     public RecordReader getRecordReader() {
@@ -176,9 +196,35 @@ public abstract class RecordGenerator {
   public static class Tables extends RecordGenerator {
     List<Records.Table> records = Lists.newArrayList();
 
+    public Tables(OptionManager optionManager) {
+      super(optionManager);
+    }
+
     @Override
     public RecordReader getRecordReader() {
       return new PojoRecordReader<>(Records.Table.class, records.iterator());
+    }
+
+    @Override
+    public void visitTables(String schemaPath, SchemaPlus schema) {
+      final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+
+      final List<String> tableNames = Lists.newArrayList(schema.getTableNames());
+      final List<Pair<String, ? extends Table>> tableNameToTables;
+      if(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST)) {
+        tableNameToTables = drillSchema.getTablesByNamesByBulkLoad(tableNames);
+      } else {
+        tableNameToTables = drillSchema.getTablesByNames(tableNames);
+      }
+
+      for(Pair<String, ? extends Table> tableNameToTable : tableNameToTables) {
+        final String tableName = tableNameToTable.getKey();
+        final Table table = tableNameToTable.getValue();
+        // Visit the table, and if requested ...
+        if(shouldVisitTable(schemaPath, tableName)) {
+          visitTable(schemaPath, tableName, table);
+        }
+      }
     }
 
     @Override
@@ -198,6 +244,10 @@ public abstract class RecordGenerator {
   public static class Views extends RecordGenerator {
     List<Records.View> records = Lists.newArrayList();
 
+    public Views(OptionManager optionManager) {
+      super(optionManager);
+    }
+
     @Override
     public RecordReader getRecordReader() {
       return new PojoRecordReader<>(Records.View.class, records.iterator());
@@ -215,6 +265,9 @@ public abstract class RecordGenerator {
 
   public static class Columns extends RecordGenerator {
     List<Records.Column> records = Lists.newArrayList();
+    public Columns(OptionManager optionManager) {
+      super(optionManager);
+    }
 
     @Override
     public RecordReader getRecordReader() {

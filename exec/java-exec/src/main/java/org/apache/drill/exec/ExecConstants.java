@@ -270,6 +270,9 @@ public interface ExecConstants {
   String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE, false);
 
+  String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
+  BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY, false);
+
   /**
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
    * such as changing system options.
