@@ -24,7 +24,9 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.Text;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -163,4 +165,27 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
       test("set `planner.enable_constant_folding` = true;");
     }
   }
+
+  @Test
+  public void testOneArgQueryDirFunctions() throws Exception {
+    //Initially update the location of dfs_test.tmp workspace with "path" temp directory just for use in this UTest
+    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    try {
+      TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, path);
+
+      //Results comparison of using Query Directory Functions (MAXDIR, IMAXDIR, MINDIR, IMINDIR) with one and two arguments
+      String queryWithTwoArgFunc = "select * from dfs.`" + path + "/*/*.csv` where dir0 = %s('dfs.root','" + path + "')";
+      String queryWithOneArgFunc = "select * from dfs.`" + path + "/*/*.csv` where dir0 = %s('dfs_test.tmp')";
+      for (ConstantFoldingTestConfig config : tests) {
+        testBuilder()
+            .sqlQuery(String.format(queryWithOneArgFunc, config.funcName))
+            .unOrdered()
+            .sqlBaselineQuery(String.format(queryWithTwoArgFunc, config.funcName))
+            .go();
+      }
+    } finally {
+        TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, getDfsTestTmpSchemaLocation());
+    }
+  }
+
 }
