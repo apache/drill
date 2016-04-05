@@ -20,6 +20,7 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.TestTools;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestJoinNullable extends PlanTestBase {
@@ -37,7 +38,7 @@ public class TestJoinNullable extends PlanTestBase {
 
   private static void resetJoinOptions() throws Exception {
     test("alter session set `planner.enable_hashjoin` = true");
-    test("alter session set `planner.enable_mergejoin` = false");
+    test("alter session set `planner.enable_mergejoin` = true");
   }
 
   private static void testHelper(String query, int expectedRecordCount, boolean enableHJ, boolean enableMJ) throws Exception {
@@ -347,11 +348,121 @@ public class TestJoinNullable extends PlanTestBase {
 
   @Test
   public void withDistinctFromJoinConditionHashJoin() throws Exception {
-    testBuilder()
-        .sqlQuery("SELECT * FROM " +
+    final String query = "SELECT * FROM " +
             "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
             "cp.`jsonInput/nullableOrdered2.json` t2 " +
-            "ON t1.key IS NOT DISTINCT FROM t2.key")
+            "ON t1.key IS NOT DISTINCT FROM t2.key AND t1.data is NOT null";
+    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
+    nullEqualJoinHelper(query);
+  }
+
+  @Test
+  public void withDistinctFromJoinConditionMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM " +
+              "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+              "cp.`jsonInput/nullableOrdered2.json` t2 " +
+              "ON t1.key IS NOT DISTINCT FROM t2.key";
+      testPlanSubstrPatterns(query, new String[] { "MergeJoin", "IS NOT DISTINCT FROM" }, null);
+      nullEqualJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  @Test
+  public void withNullEqualHashJoin() throws Exception {
+    final String query = "SELECT * FROM " +
+            "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+            "cp.`jsonInput/nullableOrdered2.json` t2 " +
+            "ON t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
+    nullEqualJoinHelper(query);
+  }
+
+  @Test
+  public void withNullEqualMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+          "cp.`jsonInput/nullableOrdered2.json` t2 " +
+          "ON t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+      testPlanSubstrPatterns(query, new String[] { "MergeJoin", "IS NOT DISTINCT FROM" }, null);
+      nullEqualJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  @Test
+  public void withNullEqualInWhereConditionHashJoin() throws Exception {
+    final String query = "SELECT * FROM " +
+        "cp.`jsonInput/nullableOrdered1.json` t1, " +
+        "cp.`jsonInput/nullableOrdered2.json` t2 " +
+        "WHERE t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
+    nullEqualJoinHelper(query);
+  }
+
+  @Test
+  public void withNullEqualInWhereConditionMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullableOrdered1.json` t1, " +
+          "cp.`jsonInput/nullableOrdered2.json` t2 " +
+          "WHERE t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+      testPlanSubstrPatterns(query, new String[] { "MergeJoin", "IS NOT DISTINCT FROM" }, null);
+      nullEqualJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  @Test
+  public void withNullEqualInWhereConditionNegative() throws Exception {
+    final String query = "SELECT * FROM " +
+        "cp.`jsonInput/nullableOrdered1.json` t1, " +
+        "cp.`jsonInput/nullableOrdered2.json` t2, " +
+        "cp.`jsonInput/nullableOrdered3.json` t3 " +
+        "WHERE t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+    errorMsgTestHelper(query,
+        "This query cannot be planned possibly due to either a cartesian join or an inequality join");
+  }
+
+  @Test
+  public void withNullEqualInWhereConditionThreeTableHashJoin() throws Exception {
+    final String query = "SELECT * FROM " +
+        "cp.`jsonInput/nullableOrdered1.json` t1, " +
+        "cp.`jsonInput/nullableOrdered2.json` t2, " +
+        "cp.`jsonInput/nullableOrdered3.json` t3 " +
+        "WHERE (t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)) AND" +
+        "(t2.key = t3.key OR (t2.key IS NULL AND t3.key IS NULL))";
+    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
+  }
+
+  @Test
+  public void withNullEqualInWhereConditionThreeTableMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullableOrdered1.json` t1, " +
+          "cp.`jsonInput/nullableOrdered2.json` t2, " +
+          "cp.`jsonInput/nullableOrdered3.json` t3 " +
+          "WHERE (t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)) AND" +
+          "(t2.key = t3.key OR (t2.key IS NULL AND t3.key IS NULL))";
+      testPlanSubstrPatterns(query, new String[]{"MergeJoin", "IS NOT DISTINCT FROM"}, null);
+      nullEqual3WayJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  public void nullEqualJoinHelper(final String query) throws Exception {
+    testBuilder()
+        .sqlQuery(query)
         .unOrdered()
         .baselineColumns("key", "data", "data0", "key0")
         .baselineValues(null, "L_null_1", "R_null_1", null)
@@ -365,28 +476,59 @@ public class TestJoinNullable extends PlanTestBase {
         .go();
   }
 
+  public void nullEqual3WayJoinHelper(final String query) throws Exception {
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0", "data1", "key1")
+        .baselineValues(null, "L_null_1", "R_null_1", null, "RR_null_1", null)
+        .baselineValues(null, "L_null_2", "R_null_1", null, "RR_null_1", null)
+        .baselineValues("A", "L_A_1", "R_A_1", "A", "RR_A_1", "A")
+        .baselineValues("A", "L_A_2", "R_A_1", "A", "RR_A_1", "A")
+        .baselineValues("A", "L_A_1", "R_A_1", "A", "RR_A_2", "A")
+        .baselineValues("A", "L_A_2", "R_A_1", "A", "RR_A_2", "A")
+        .baselineValues(null, "L_null_1", "R_null_2", null, "RR_null_1", null)
+        .baselineValues(null, "L_null_2", "R_null_2", null, "RR_null_1", null)
+        .baselineValues(null, "L_null_1", "R_null_3", null, "RR_null_1", null)
+        .baselineValues(null, "L_null_2", "R_null_3", null, "RR_null_1", null)
+        .go();
+  }
+
   @Test
-  public void withDistinctFromJoinConditionMergeJoin() throws Exception {
-    try {
-      testBuilder()
-          .sqlQuery("SELECT * FROM " +
-              "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
-              "cp.`jsonInput/nullableOrdered2.json` t2 " +
-              "ON t1.key IS NOT DISTINCT FROM t2.key")
-          .unOrdered()
-          .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
-          .baselineColumns("key", "data", "data0", "key0")
-          .baselineValues(null, "L_null_1", "R_null_1", null)
-          .baselineValues(null, "L_null_2", "R_null_1", null)
-          .baselineValues("A", "L_A_1", "R_A_1", "A")
-          .baselineValues("A", "L_A_2", "R_A_1", "A")
-          .baselineValues(null, "L_null_1", "R_null_2", null)
-          .baselineValues(null, "L_null_2", "R_null_2", null)
-          .baselineValues(null, "L_null_1", "R_null_3", null)
-          .baselineValues(null, "L_null_2", "R_null_3", null)
-          .go();
-    } finally {
-      test("alter session set `planner.enable_hashjoin` = true");
-    }
+  public void withNullEqualAdditionFilter() throws Exception {
+    final String query = "SELECT * FROM " +
+        "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+        "cp.`jsonInput/nullableOrdered2.json` t2 " +
+        "ON (t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)) AND t1.data LIKE '%1%'";
+
+    testPlanSubstrPatterns(query,
+        new String[] {
+            "HashJoin(condition=[IS NOT DISTINCT FROM($1, $5)], joinType=[inner])",
+            "Filter(condition=[$3])", // 'like' is pushed into project
+            "[LIKE($2, '%1%')]"
+        },
+        null);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues(null, "L_null_1", "R_null_1", null)
+        .baselineValues("A", "L_A_1", "R_A_1", "A")
+        .baselineValues(null, "L_null_1", "R_null_2", null)
+        .baselineValues(null, "L_null_1", "R_null_3", null)
+        .go();
+  }
+
+  @Ignore("Currently HashJoin/MergeJoin don't seem to support mixed comparators")
+  @Test
+  public void withCombinationOfEqualAndIsNotDistinct() throws Exception {
+    final String query = "SELECT * FROM " +
+        "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
+        "cp.`jsonInput/nullableOrdered2.json` t2 " +
+        "ON t1.key = t2.key " +
+        "WHERE t1.data is not distinct from t2.data";
+    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
+    nullEqualJoinHelper(query);
   }
 }

@@ -28,9 +28,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.cost.DrillRelOptCost;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
@@ -48,7 +46,14 @@ import com.google.common.collect.Lists;
  */
 public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   protected List<Integer> leftKeys = Lists.newArrayList();
-  protected List<Integer> rightKeys = Lists.newArrayList() ;
+  protected List<Integer> rightKeys = Lists.newArrayList();
+
+  /**
+   * The join key positions for which null values will not match. null values only match for the
+   * "is not distinct from" condition.
+   */
+  protected List<Boolean> filterNulls = Lists.newArrayList();
+
   private final double joinRowFactor;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
@@ -59,7 +64,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    JoinCategory category = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    JoinCategory category = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
     if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
       if (PrelUtil.getPlannerSettings(planner).isNestedLoopJoinEnabled()) {
         if (PrelUtil.getPlannerSettings(planner).isNlJoinForScalarOnly()) {
