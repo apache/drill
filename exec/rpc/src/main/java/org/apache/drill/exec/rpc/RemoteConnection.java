@@ -21,21 +21,21 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 public abstract class RemoteConnection implements ConnectionThrottle, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
   private final Channel channel;
   private final WriteManager writeManager;
-  private String name;
+  private final RequestIdMap requestIdMap = new RequestIdMap();
   private final String clientName;
 
-  public boolean inEventLoop(){
+  private String name;
+
+  public boolean inEventLoop() {
     return channel.eventLoop().inEventLoop();
   }
 
@@ -45,19 +45,10 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     this.clientName = name;
     this.writeManager = new WriteManager();
     channel.pipeline().addLast(new BackPressureHandler());
-    channel.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
-      public void operationComplete(Future<? super Void> future) throws Exception {
-        // this could possibly overrelease but it doesn't matter since we're only going to do this to ensure that we
-        // fail out any pending messages
-        writeManager.disable();
-        writeManager.setWritable(true);
-      }
-    });
-
   }
 
   public String getName() {
-    if(name == null){
+    if (name == null) {
       name = String.format("%s <--> %s (%s)", channel.localAddress(), channel.remoteAddress(), clientName);
     }
     return name;
@@ -69,14 +60,15 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     return channel;
   }
 
-  public boolean blockOnNotWritable(RpcOutcomeListener<?> listener){
-    try{
+  public boolean blockOnNotWritable(RpcOutcomeListener<?> listener) {
+    try {
       writeManager.waitForWritable();
       return true;
-    }catch(final InterruptedException e){
+    } catch (final InterruptedException e) {
       listener.interrupted(e);
 
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // Preserve evidence that the interruption occurred so that code higher up
+      // on the call stack can learn of the
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
 
@@ -84,31 +76,33 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     }
   }
 
-  public void setAutoRead(boolean enableAutoRead){
+  public void setAutoRead(boolean enableAutoRead) {
     channel.config().setAutoRead(enableAutoRead);
   }
 
-  public boolean isActive(){
+  public boolean isActive() {
     return channel.isActive();
   }
 
   /**
-   * The write manager is responsible for controlling whether or not a write can be sent.  It controls whether or not to block a sender if we have tcp backpressure on the receive side.
+   * The write manager is responsible for controlling whether or not a write can
+   * be sent. It controls whether or not to block a sender if we have tcp
+   * backpressure on the receive side.
    */
-  private static class WriteManager{
+  private static class WriteManager {
     private final ResettableBarrier barrier = new ResettableBarrier();
     private volatile boolean disabled = false;
 
-    public WriteManager(){
+    public WriteManager() {
       barrier.openBarrier();
     }
 
-    public void waitForWritable() throws InterruptedException{
+    public void waitForWritable() throws InterruptedException {
       barrier.await();
     }
 
-    public void setWritable(boolean isWritable){
-      if(isWritable){
+    public void setWritable(boolean isWritable) {
+      if (isWritable) {
         barrier.openBarrier();
       } else if (!disabled) {
         barrier.closeBarrier();
@@ -121,17 +115,73 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     }
   }
 
-  private class BackPressureHandler extends ChannelInboundHandlerAdapter{
+  private class BackPressureHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-//      logger.debug("Channel writability changed.", ctx.channel().isWritable());
       writeManager.setWritable(ctx.channel().isWritable());
       ctx.fireChannelWritabilityChanged();
     }
 
   }
 
+  /**
+   * For incoming messages, remove the outcome listener and return it. Can only be done once per coordinationId
+   * creation. CoordinationId's are recycled so they will show up once we run through all 4B of them.
+   * @param rpcType The rpc type associated with the coordination.
+   * @param coordinationId The coordination id that was returned with the listener was created.
+   * @param clazz The class that is expected in response.
+   * @return An RpcOutcome associated with the provided coordinationId.
+   */
+  <V> RpcOutcome<V> getAndRemoveRpcOutcome(int rpcType, int coordinationId, Class<V> clazz) {
+    return requestIdMap.getAndRemoveRpcOutcome(rpcType, coordinationId, clazz);
+  }
+
+  /**
+   * Create a new rpc listener that will be notified when the response is returned.
+   * @param handler The outcome handler to be notified when the response arrives.
+   * @param clazz The Class associated with the response object.
+   * @return The new listener. Also carries the coordination id for use in the rpc message.
+   */
+  <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz) {
+    return requestIdMap.createNewRpcListener(handler, clazz, this);
+  }
+
+  /**
+   * Inform the local outcome listener that the remote operation could not be handled.
+   * @param coordinationId The id that failed.
+   * @param failure The failure that occurred.
+   */
+  void recordRemoteFailure(int coordinationId, DrillPBError failure) {
+    requestIdMap.recordRemoteFailure(coordinationId, failure);
+  }
+
+  /**
+   * Called from the RpcBus's channel close handler to close all remaining
+   * resources associated with this connection. Ensures that any pending
+   * back-pressure items are also unblocked so they can be thrown away.
+   *
+   * @param ex
+   *          The exception that caused the channel to close.
+   */
+  void channelClosed(RpcException ex) {
+    // this could possibly overrelease but it doesn't matter since we're only
+    // going to do this to ensure that we
+    // fail out any pending messages
+    writeManager.disable();
+    writeManager.setWritable(true);
+
+    // ensure outstanding requests are cleaned up.
+    requestIdMap.channelClosed(ex);
+  }
+
+  /**
+   * Connection consumer wants to close connection. Initiate connection close
+   * and complete. This is a blocking call that ensures that the connection is
+   * closed before returning. As part of this call, the channel close handler
+   * will be triggered which will call channelClosed() above. The latter will
+   * happen in a separate thread while this method is blocking.
+   */
   @Override
   public void close() {
     try {
@@ -141,7 +191,8 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     } catch (final InterruptedException | ExecutionException e) {
       logger.warn("Caught exception while closing channel.", e);
 
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // Preserve evidence that the interruption occurred so that code higher up
+      // on the call stack can learn of the
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
     }

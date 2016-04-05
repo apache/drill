@@ -133,11 +133,6 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
 
-  @Override
-  public boolean isClient() {
-    return false;
-  }
-
   protected abstract ServerHandshakeHandler<?> getHandshakeHandler(C connection);
 
   protected static abstract class ServerHandshakeHandler<T extends MessageLite> extends AbstractHandshakeHandler<T> {
