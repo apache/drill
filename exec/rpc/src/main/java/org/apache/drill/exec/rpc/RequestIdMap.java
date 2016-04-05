@@ -20,51 +20,82 @@ package org.apache.drill.exec.rpc;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
+import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.procedures.IntObjectProcedure;
+import com.google.common.base.Preconditions;
+
 /**
- * Manages the creation of rpc futures for a particular socket.
+ * Manages the creation of rpc futures for a particular socket <--> socket
+ * connection. Generally speaking, there will be two threads working with this
+ * class (the socket thread and the Request generating thread). Synchronization
+ * is simple with the map being the only thing that is protected. Everything
+ * else works via Atomic variables.
  */
-public class CoordinationQueue {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoordinationQueue.class);
+class RequestIdMap {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestIdMap.class);
 
-  private final PositiveAtomicInteger circularInt = new PositiveAtomicInteger();
-  private final Map<Integer, RpcOutcome<?>> map;
+  private final AtomicInteger value = new AtomicInteger();
+  private final AtomicBoolean acceptMessage = new AtomicBoolean(true);
 
-  public CoordinationQueue(int segmentSize, int segmentCount) {
-    map = new ConcurrentHashMap<Integer, RpcOutcome<?>>(segmentSize, 0.75f, segmentCount);
+  /** Access to map must be protected. **/
+  private final IntObjectHashMap<RpcOutcome<?>> map;
+
+  public RequestIdMap() {
+    map = new IntObjectHashMap<RpcOutcome<?>>();
   }
 
   void channelClosed(Throwable ex) {
+    acceptMessage.set(false);
     if (ex != null) {
-      RpcException e;
-      if (ex instanceof RpcException) {
-        e = (RpcException) ex;
-      } else {
-        e = new RpcException(ex);
-      }
-      for (RpcOutcome<?> f : map.values()) {
-        f.setException(e);
+      final RpcException e = RpcException.mapException(ex);
+      synchronized (map) {
+        map.forEach(new Closer(e));
+        map.clear();
       }
     }
   }
 
-  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz, RemoteConnection connection) {
-    int i = circularInt.getNext();
-    RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
-    Object old = map.put(i, future);
-    if (old != null) {
-      throw new IllegalStateException(
-          "You attempted to reuse a coordination id when the previous coordination id has not been removed.  This is likely rpc future callback memory leak.");
+  private class Closer implements IntObjectProcedure<RpcOutcome<?>> {
+    final RpcException exception;
+
+    public Closer(RpcException exception) {
+      this.exception = exception;
     }
+
+    @Override
+    public void apply(int key, RpcOutcome<?> value) {
+      try{
+        value.setException(exception);
+      }catch(Exception e){
+        logger.warn("Failure while attempting to fail rpc response.", e);
+      }
+    }
+
+  }
+
+  public <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz,
+      RemoteConnection connection) {
+    int i = value.incrementAndGet();
+    RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
+    final Object old;
+    synchronized (map) {
+      Preconditions.checkArgument(acceptMessage.get(),
+          "Attempted to send a message when connection is no longer valid.");
+      old = map.put(i, future);
+    }
+    Preconditions.checkArgument(old == null,
+        "You attempted to reuse a coordination id when the previous coordination id has not been removed.  "
+        + "This is likely rpc future callback memory leak.");
     return future;
   }
 
-  private class RpcListener<T> implements ChannelListenerWithCoordinationId, RpcOutcome<T>{
+  private class RpcListener<T> implements ChannelListenerWithCoordinationId, RpcOutcome<T> {
     final RpcOutcomeListener<T> handler;
     final Class<T> clazz;
     final int coordinationId;
@@ -84,7 +115,7 @@ public class CoordinationQueue {
       if (!future.isSuccess()) {
         removeFromMap(coordinationId);
         if (future.channel().isActive()) {
-           throw new RpcException("Future failed") ;
+          throw new RpcException("Future failed");
         } else {
           setException(new ChannelClosedException());
         }
@@ -95,7 +126,7 @@ public class CoordinationQueue {
     @Override
     public void set(Object value, ByteBuf buffer) {
       assert clazz.isAssignableFrom(value.getClass());
-      handler.success( (T) value, buffer);
+      handler.success((T) value, buffer);
     }
 
     @Override
@@ -116,7 +147,10 @@ public class CoordinationQueue {
   }
 
   private RpcOutcome<?> removeFromMap(int coordinationId) {
-    RpcOutcome<?> rpc = map.remove(coordinationId);
+    final RpcOutcome<?> rpc;
+    synchronized (map) {
+      rpc = map.remove(coordinationId);
+    }
     if (rpc == null) {
       throw new IllegalStateException(
           "Attempting to retrieve an rpc that wasn't first stored in the rpc coordination queue.  This would most likely happen if you're opposite endpoint sent multiple messages on the same coordination id.");
@@ -124,21 +158,19 @@ public class CoordinationQueue {
     return rpc;
   }
 
-  public <V> RpcOutcome<V> getFuture(int rpcType, int coordinationId, Class<V> clazz) {
+  public <V> RpcOutcome<V> getAndRemoveRpcOutcome(int rpcType, int coordinationId, Class<V> clazz) {
 
     RpcOutcome<?> rpc = removeFromMap(coordinationId);
     // logger.debug("Got rpc from map {}", rpc);
     Class<?> outcomeClass = rpc.getOutcomeType();
 
-    if (outcomeClass != clazz) {
-      throw new IllegalStateException(
-          String
-              .format(
-                  "RPC Engine had a submission and response configuration mismatch.  The RPC request that you submitted was defined with an expected response type of %s.  However, "
-                      + "when the response returned, a call to getResponseDefaultInstance() with Rpc number %d provided an expected class of %s.  This means either your submission uses the wrong type definition"
-                      + "or your getResponseDefaultInstance() method responds the wrong instance type ",
-                  clazz.getCanonicalName(), rpcType, outcomeClass.getCanonicalName()));
-    }
+    Preconditions.checkArgument(outcomeClass == clazz,
+        "RPC Engine had a submission and response configuration mismatch.  The RPC request that you submitted "
+        + "was defined with an expected response type of %s.  However, when the response returned, a call to "
+        + "getResponseDefaultInstance() with Rpc number %d provided an expected class of %s.  This means either "
+        + "your submission uses the wrong type definition or your getResponseDefaultInstance() method responds "
+        + "the wrong instance type ", clazz.getCanonicalName(), rpcType, outcomeClass.getCanonicalName());
+
 
     @SuppressWarnings("unchecked")
     RpcOutcome<V> crpc = (RpcOutcome<V>) rpc;
@@ -147,12 +179,12 @@ public class CoordinationQueue {
     return crpc;
   }
 
-  public void updateFailedFuture(int coordinationId, DrillPBError failure) {
+  public void recordRemoteFailure(int coordinationId, DrillPBError failure) {
     // logger.debug("Updating failed future.");
     try {
       RpcOutcome<?> rpc = removeFromMap(coordinationId);
       rpc.setException(new UserRemoteException(failure));
-    } catch(Exception ex) {
+    } catch (Exception ex) {
       logger.warn("Failed to remove from map.  Not a problem since we were updating on failed future.", ex);
     }
   }
