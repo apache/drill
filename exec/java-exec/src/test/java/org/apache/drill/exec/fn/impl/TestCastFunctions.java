@@ -68,7 +68,7 @@ public class TestCastFunctions extends BaseTestQuery {
 
   @Test // DRILL-3769
   public void testToDateForTimeStamp() throws Exception {
-    final String query = "select to_date(to_timestamp(-1)) as col \n" +
+    final String query = "select to_date(to_timestamp('1969-12-31 23:59:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z')) as col \n" +
         "from (values(1))";
 
     testBuilder()
