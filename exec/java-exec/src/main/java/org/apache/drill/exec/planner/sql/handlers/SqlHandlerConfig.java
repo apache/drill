@@ -19,15 +19,19 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.calcite.tools.RuleSet;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.PlannerCallback;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.sql.SqlConverter;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePlugin;
 
 import com.google.common.collect.Lists;
+
 
 public class SqlHandlerConfig {
 
@@ -45,11 +49,28 @@ public class SqlHandlerConfig {
   }
 
   public RuleSet getRules(PlannerPhase phase) {
+    return phase.getRules(context, getPlugins());
+  }
+
+  public PlannerCallback getPlannerCallback(PlannerPhase phase){
+    List<PlannerCallback> callbacks = Lists.newArrayList();
+    for(StoragePlugin plugin: getPlugins()){
+      if(plugin instanceof AbstractStoragePlugin){
+        PlannerCallback callback = ((AbstractStoragePlugin)plugin).getPlannerCallback(context, phase);
+        if(callback != null){
+          callbacks.add(callback);
+        }
+      }
+    }
+    return PlannerCallback.merge(callbacks);
+  }
+
+  private Collection<StoragePlugin> getPlugins(){
     Collection<StoragePlugin> plugins = Lists.newArrayList();
     for (Entry<String, StoragePlugin> k : context.getStorage()) {
       plugins.add(k.getValue());
     }
-    return phase.getRules(context, plugins);
+    return plugins;
   }
 
   public SqlConverter getConverter() {
