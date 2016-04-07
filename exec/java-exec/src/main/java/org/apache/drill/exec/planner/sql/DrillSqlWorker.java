@@ -70,7 +70,7 @@ public class DrillSqlWorker {
 
     switch(sqlNode.getKind()){
     case EXPLAIN:
-      handler = new ExplainHandler(config);
+      handler = new ExplainHandler(config, textPlan);
       break;
     case SET_OPTION:
       handler = new SetOptionHandler(context);
