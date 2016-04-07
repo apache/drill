@@ -267,9 +267,6 @@ public interface ExecConstants {
   OptionValidator NEW_VIEW_DEFAULT_PERMS_VALIDATOR =
       new StringValidator(NEW_VIEW_DEFAULT_PERMS_KEY, "700");
 
-  String USE_OLD_ASSIGNMENT_CREATOR = "exec.schedule.assignment.old";
-  OptionValidator USE_OLD_ASSIGNMENT_CREATOR_VALIDATOR = new BooleanValidator(USE_OLD_ASSIGNMENT_CREATOR, false);
-
   String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE, false);
 

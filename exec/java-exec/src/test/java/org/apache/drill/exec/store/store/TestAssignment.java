@@ -63,7 +63,7 @@ public class TestAssignment {
       incomingEndpoints.add(incomingEndpointsIterator.next());
     }
 
-    ListMultimap<Integer, CompleteFileWork> mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks, null);
+    ListMultimap<Integer, CompleteFileWork> mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
     System.out.println(mappings.keySet().size());
     for (int i = 0; i < width; i++) {
       Assert.assertTrue("no mapping for entry " + i, mappings.get(i) != null && mappings.get(i).size() > 0);
