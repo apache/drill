@@ -31,8 +31,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.FormatPluginConfigBase;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableSignature;
+import org.apache.drill.exec.store.dfs.TableInstance.TableSignature;
 import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;

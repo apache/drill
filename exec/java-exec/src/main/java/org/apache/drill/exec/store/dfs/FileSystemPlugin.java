@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import static org.apache.drill.exec.store.dfs.FileSystemSchemaFactory.DEFAULT_WS_NAME;
-
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -35,17 +33,13 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
-import org.apache.drill.exec.store.ClassPathFileSystem;
-import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,
@@ -56,67 +50,77 @@ import com.google.common.collect.Maps;
 public class FileSystemPlugin extends AbstractStoragePlugin{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
 
-  private final FileSystemSchemaFactory schemaFactory;
-  private final FormatCreator formatCreator;
-  private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
-  private final FileSystemConfig config;
-  private final Configuration fsConf;
+  /**
+   * Default {@link Configuration} instance. Use this instance to create new copies of {@link Configuration} objects.
+   * ex.
+   *   Configuration newConf = new Configuration(FileSystemPlugin.DEFAULT_CONFIGURATION);
+   *   newConf.set("my.special.property", "my.special.value");
+   *
+   * It saves the time taken for costly classpath scanning of *-site.xml files for each new {@link Configuration}
+   * object created.
+   *
+   * Note: Don't modify the DEFAULT_CONFIGURATION. Currently there is no way to make the {@link Configuration} object
+   * immutable.
+   */
+  public static final Configuration DEFAULT_CONFIGURATION = new Configuration();
+
   private final LogicalPlanPersistence lpPersistance;
+  private final FileSystemPluginImplementationProvider provider;
+  private final FileSystemConfig config;
+  private final String storageName;
 
-  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
-    this.config = config;
-    this.lpPersistance = context.getLpPersistence();
-    try {
+  private Configuration fsConf;
+  private FormatCreator formatCreator;
+  private FileSystemSchemaFactory schemaFactory;
 
-      fsConf = new Configuration();
-      if (config.config != null) {
-        for (String s : config.config.keySet()) {
-          fsConf.set(s, config.config.get(s));
-        }
-      }
-      fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
-      fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
-      fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
-
-      formatCreator = newFormatCreator(config, context, fsConf);
-      List<FormatMatcher> matchers = Lists.newArrayList();
-      formatPluginsByConfig = Maps.newHashMap();
-      for (FormatPlugin p : formatCreator.getConfiguredFormatPlugins()) {
-        matchers.add(p.getMatcher());
-        formatPluginsByConfig.put(p.getConfig(), p);
-      }
-
-      final boolean noWorkspace = config.workspaces == null || config.workspaces.isEmpty();
-      List<WorkspaceSchemaFactory> factories = Lists.newArrayList();
-      if (!noWorkspace) {
-        for (Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()) {
-          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, space.getValue(), matchers, context.getLpPersistence(), context.getClasspathScan()));
-        }
-      }
-
-      // if the "default" workspace is not given add one.
-      if (noWorkspace || !config.workspaces.containsKey(DEFAULT_WS_NAME)) {
-        factories.add(new WorkspaceSchemaFactory(this, DEFAULT_WS_NAME, name, WorkspaceConfig.DEFAULT, matchers, context.getLpPersistence(), context.getClasspathScan()));
-      }
-
-      this.schemaFactory = new FileSystemSchemaFactory(name, factories);
-    } catch (IOException e) {
-      throw new ExecutionSetupException("Failure setting up file system plugin.", e);
-    }
+  /**
+   * Create a default implementation of {@link FileSystemPlugin}
+   * @param config
+   * @param dContext
+   * @param storageName
+   * @throws ExecutionSetupException
+   */
+  public FileSystemPlugin(final FileSystemConfig config, final DrillbitContext dContext, final String storageName)
+      throws ExecutionSetupException {
+    this(storageName, config, dContext, new FileSystemPluginImplementationProvider(dContext, storageName, config));
   }
 
   /**
-   * Creates a new FormatCreator instance.
-   *
-   * To be used by subclasses to return custom formats if required.
-   * Note that this method is called by the constructor, which fields may not be initialized yet.
-   *
-   * @param config the plugin configuration
-   * @param context the drillbit context
-   * @return a new FormatCreator instance
+   * Create a {@link FileSystemPlugin} instance with given {@link FileSystemPluginImplementationProvider}.
+   * @param name
+   * @param config
+   * @param dContext
+   * @param provider
+   * @throws ExecutionSetupException
    */
-  protected FormatCreator newFormatCreator(FileSystemConfig config, DrillbitContext context, Configuration fsConf) {
-    return new FormatCreator(context, fsConf, config, context.getClasspathScan());
+  public FileSystemPlugin(final String name, final FileSystemConfig config, final DrillbitContext dContext,
+      final FileSystemPluginImplementationProvider provider) throws ExecutionSetupException {
+    this.storageName = name;
+    this.config = config;
+    this.lpPersistance = dContext.getLpPersistence();
+    this.provider = provider;
+  }
+
+  @Override
+  public void start() throws IOException {
+    try {
+      this.fsConf = new Configuration(DEFAULT_CONFIGURATION);
+      if (config.getConfig() != null) {
+        for (Entry<String, String> prop : config.getConfig().entrySet()) {
+          fsConf.set(prop.getKey(), prop.getValue());
+        }
+      }
+      fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getConnection());
+
+      for(Entry<String, String> prop : provider.getFsProps().entrySet()) {
+        fsConf.set(prop.getKey(), prop.getValue());
+      }
+
+      this.formatCreator = provider.getFormatCreator(fsConf);
+      this.schemaFactory = provider.createSchemaFactory(this, formatCreator, fsConf);
+    } catch (IOException | ExecutionSetupException e) {
+      throw new IOException("Failure starting up file system plugin.", e);
+    }
   }
 
   @Override
@@ -132,17 +136,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
-    FormatSelection formatSelection = selection.getWith(lpPersistance, FormatSelection.class);
-    FormatPlugin plugin;
-    if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
-      plugin = formatCreator.getFormatPluginByName( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
-    } else {
-      plugin = formatPluginsByConfig.get(formatSelection.getFormat());
-    }
+    FileSystemReadEntry fileSystemReadEntry = selection.getWith(lpPersistance, FileSystemReadEntry.class);
+    FormatPlugin plugin = formatCreator.getFormatPluginByConfig(fileSystemReadEntry.getFormat());
     if (plugin == null) {
-      plugin = formatCreator.newFormatPlugin(formatSelection.getFormat());
+      plugin = formatCreator.newFormatPlugin(fileSystemReadEntry.getFormat());
     }
-    return plugin.getGroupScan(userName, formatSelection.getSelection(), columns);
+    return plugin.getGroupScan(userName, this, fileSystemReadEntry.getWorkspace(), fileSystemReadEntry.getSelection(), columns);
   }
 
   @Override
@@ -155,11 +154,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   }
 
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
-    if (config instanceof NamedFormatPluginConfig) {
-      return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
-    } else {
-      return formatPluginsByConfig.get(config);
-    }
+    return formatCreator.getFormatPluginByConfig(config);
   }
 
   @Override
@@ -174,7 +169,20 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     return setBuilder.build();
   }
 
+  /**
+   * Get {@link Configuration} for given workspace.
+   * @param workspace
+   * @return
+   */
+  public Configuration getFsConf(String workspace) {
+    return schemaFactory.getWorkspaceSchemaFactory(workspace).getFsConf();
+  }
+
   public Configuration getFsConf() {
     return fsConf;
+  }
+
+  public String getStorageName() {
+    return storageName;
   }
 }

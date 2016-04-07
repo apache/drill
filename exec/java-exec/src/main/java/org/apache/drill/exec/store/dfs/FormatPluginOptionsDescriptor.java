@@ -28,9 +28,8 @@ import java.util.Map;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableParamDef;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableSignature;
+import org.apache.drill.exec.store.dfs.TableInstance.TableParamDef;
+import org.apache.drill.exec.store.dfs.TableInstance.TableSignature;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

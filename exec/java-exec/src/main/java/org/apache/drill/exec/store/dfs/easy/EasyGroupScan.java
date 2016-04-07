@@ -36,6 +36,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.BlockMapBuilder;
@@ -58,6 +59,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyGroupScan.class);
 
   private FileSelection selection;
+  private final FileSystemPlugin plugin;
+  private final String workspace;
   private final EasyFormatPlugin<?> formatPlugin;
   private int maxWidth;
   private List<SchemaPath> columns;
@@ -72,6 +75,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
       @JsonProperty("userName") String userName,
       @JsonProperty("files") List<String> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
+      @JsonProperty("workspace") String workspace, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns,
@@ -79,24 +83,30 @@ public class EasyGroupScan extends AbstractFileGroupScan{
       ) throws IOException, ExecutionSetupException {
         this(ImpersonationUtil.resolveUserName(userName),
             FileSelection.create(null, files, selectionRoot),
+            (FileSystemPlugin)engineRegistry.getPlugin(storageConfig),
+            workspace,
             (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
             columns,
             selectionRoot);
   }
 
-  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
-      throws IOException {
-    this(userName, selection, formatPlugin, ALL_COLUMNS, selectionRoot);
+  public EasyGroupScan(String userName, FileSelection selection, FileSystemPlugin plugin, String workspace,
+      EasyFormatPlugin<?> formatPlugin, String selectionRoot) throws IOException {
+    this(userName, selection, plugin, workspace, formatPlugin, ALL_COLUMNS, selectionRoot);
   }
 
   public EasyGroupScan(
       String userName,
       FileSelection selection, //
+      FileSystemPlugin plugin,
+      String workspace,
       EasyFormatPlugin<?> formatPlugin, //
       List<SchemaPath> columns,
       String selectionRoot
       ) throws IOException{
     super(userName);
+    this.plugin = plugin;
+    this.workspace = workspace;
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
@@ -117,6 +127,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   private EasyGroupScan(final EasyGroupScan that) {
     super(that.getUserName());
     selection = that.selection;
+    plugin = that.plugin;
+    workspace = that.workspace;
     formatPlugin = that.formatPlugin;
     columns = that.columns;
     selectionRoot = that.selectionRoot;
@@ -127,7 +139,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
   }
 
   private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
-    final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
+    final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), plugin.getFsConf(workspace));
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
     this.chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
@@ -166,6 +178,15 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     return columns;
   }
 
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
+  }
+
+  @JsonIgnore
+  public FileSystemPlugin getPlugin() {
+    return plugin;
+  }
 
   @JsonIgnore
   public FileSelection getFileSelection() {
@@ -220,7 +241,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin, columns, selectionRoot);
+    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), workspace, formatPlugin, columns, selectionRoot);
     subScan.setOperatorId(this.getOperatorId());
     return subScan;
   }
@@ -235,7 +256,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig() {
-    return formatPlugin.getStorageConfig();
+    return plugin.getConfig();
   }
 
   @JsonProperty("format")

@@ -48,11 +48,13 @@ public interface FormatPlugin {
 
   public FormatMatcher getMatcher();
 
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
+  public AbstractWriter getWriter(PhysicalOperator child, String location, FileSystemPlugin plugin,
+      String workspace, List<String> partitionColumns) throws IOException;
 
   public Set<StoragePluginOptimizerRule> getOptimizerRules();
 
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException;
+  public AbstractGroupScan getGroupScan(String userName, FileSystemPlugin plugin, String workspace,
+      FileSelection selection, List<SchemaPath> columns) throws IOException;
 
   public FormatPluginConfig getConfig();
   public StoragePluginConfig getStorageConfig();

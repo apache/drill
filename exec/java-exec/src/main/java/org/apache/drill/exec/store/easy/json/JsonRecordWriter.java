@@ -28,6 +28,7 @@ import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.JSONOutputRecordWriter;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.vector.complex.fn.BasicJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
@@ -74,7 +75,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     this.useExtendedOutput = Boolean.parseBoolean(writerOptions.get("extended"));
     final boolean uglify = Boolean.parseBoolean(writerOptions.get("uglify"));
 
-    Configuration conf = new Configuration();
+    Configuration conf = new Configuration(FileSystemPlugin.DEFAULT_CONFIGURATION);
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     this.fs = FileSystem.get(conf);
 

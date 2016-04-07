@@ -73,16 +73,18 @@ public class BasicFormatMatcher extends FormatMatcher{
   }
 
   @Override
-  public DrillTable isReadable(DrillFileSystem fs,
+  public DrillTable isReadable(DrillFileSystem fs, String workspace,
       FileSelection selection, FileSystemPlugin fsPlugin,
       String storageEngineName, String userName) throws IOException {
     if (isFileReadable(fs, selection.getFirstPath(fs))) {
       if (plugin.getName() != null) {
         NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
         namedConfig.name = plugin.getName();
-        return new DynamicDrillTable(fsPlugin, storageEngineName, userName, new FormatSelection(namedConfig, selection));
+        return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+            new FileSystemReadEntry(namedConfig, workspace, selection));
       } else {
-        return new DynamicDrillTable(fsPlugin, storageEngineName, userName, new FormatSelection(plugin.getConfig(), selection));
+        return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+            new FileSystemReadEntry(plugin.getConfig(), workspace, selection));
       }
     }
     return null;

@@ -40,13 +40,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 
 // Class containing information for reading a single parquet row group form HDFS
 @JsonTypeName("parquet-row-group-scan")
 public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRowGroupScan.class);
 
-  public final ParquetFormatConfig formatConfig;
+  private final FileSystemPlugin plugin;
+  private final String workspace;
   private final ParquetFormatPlugin formatPlugin;
   private final List<RowGroupReadEntry> rowGroupReadEntries;
   private final List<SchemaPath> columns;
@@ -57,18 +59,22 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
       @JacksonInject StoragePluginRegistry registry, //
       @JsonProperty("userName") String userName, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
+      @JsonProperty("workspace") String workspace, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JsonProperty("entries") LinkedList<RowGroupReadEntry> rowGroupReadEntries, //
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot //
   ) throws ExecutionSetupException {
-    this(userName, (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig),
+    this(userName, (FileSystemPlugin)registry.getPlugin(storageConfig), workspace,
+        (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig),
             formatConfig == null ? new ParquetFormatConfig() : formatConfig),
         rowGroupReadEntries, columns, selectionRoot);
   }
 
   public ParquetRowGroupScan( //
       String userName, //
+      FileSystemPlugin plugin,
+      String workspace,
       ParquetFormatPlugin formatPlugin, //
       List<RowGroupReadEntry> rowGroupReadEntries, //
       List<SchemaPath> columns, //
@@ -76,7 +82,8 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   ) {
     super(userName);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin);
-    this.formatConfig = formatPlugin.getConfig();
+    this.plugin = plugin;
+    this.workspace = workspace;
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.columns = columns == null ? GroupScan.ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
@@ -92,6 +99,11 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
     return formatPlugin.getStorageConfig();
   }
 
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
+  }
+
   public String getSelectionRoot() {
     return selectionRoot;
   }
@@ -102,7 +114,12 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   }
 
   @JsonIgnore
-  public ParquetFormatPlugin getStorageEngine() {
+  public FileSystemPlugin getStorageEngine() {
+    return plugin;
+  }
+
+  @JsonIgnore
+  public ParquetFormatPlugin getFormatPlugin() {
     return formatPlugin;
   }
 
@@ -114,7 +131,7 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new ParquetRowGroupScan(getUserName(), formatPlugin, rowGroupReadEntries, columns, selectionRoot);
+    return new ParquetRowGroupScan(getUserName(), plugin, workspace, formatPlugin, rowGroupReadEntries, columns, selectionRoot);
   }
 
   @Override

@@ -27,7 +27,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -114,7 +114,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   private String getBaseTableLocation() {
-    final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
+    final FileSystemReadEntry origSelection = (FileSystemReadEntry) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
 

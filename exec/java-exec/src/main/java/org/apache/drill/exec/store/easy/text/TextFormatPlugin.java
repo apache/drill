@@ -94,12 +94,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
-      throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
-  }
-
-  @Override
   protected ScanStats getScanStats(final PlannerSettings settings, final EasyGroupScan scan) {
     long data = 0;
     for (final CompleteFileWork work : scan.getWorkIterable()) {
@@ -121,7 +115,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     options.put("prefix", fragmentId);
 
     options.put("separator", ((TextFormatConfig)getConfig()).getFieldDelimiterAsString());
-    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
+    options.put(FileSystem.FS_DEFAULT_NAME_KEY, writer.getFsConf().get(FileSystem.FS_DEFAULT_NAME_KEY));
 
     options.put("extension", ((TextFormatConfig)getConfig()).getExtensions().get(0));
 

@@ -27,6 +27,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -63,7 +64,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
 
-    Configuration conf = new Configuration();
+    Configuration conf = new Configuration(FileSystemPlugin.DEFAULT_CONFIGURATION);
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     this.fs = FileSystem.get(conf);
 

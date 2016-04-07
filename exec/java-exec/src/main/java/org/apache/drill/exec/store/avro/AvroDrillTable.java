@@ -32,7 +32,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.collect.Lists;
@@ -45,12 +45,12 @@ public class AvroDrillTable extends DrillTable {
   public AvroDrillTable(String storageEngineName,
                        FileSystemPlugin plugin,
                        String userName,
-                       FormatSelection selection) {
+                       FileSystemReadEntry selection) {
     super(storageEngineName, plugin, userName, selection);
     List<String> asFiles = selection.getAsFiles();
     Path path = new Path(asFiles.get(0));
     try {
-      reader = new DataFileReader<>(new FsInput(path, plugin.getFsConf()), new GenericDatumReader<GenericContainer>());
+      reader = new DataFileReader<>(new FsInput(path, plugin.getFsConf(selection.getWorkspace())), new GenericDatumReader<GenericContainer>());
     } catch (IOException e) {
       throw UserException.dataReadError(e).build(logger);
     }

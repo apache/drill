@@ -25,24 +25,27 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
-public class FormatSelection {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatSelection.class);
+public class FileSystemReadEntry {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemReadEntry.class);
 
   private FormatPluginConfig format;
   private FileSelection selection;
+  private String workspace;
 
-  public FormatSelection(){}
+  public FileSystemReadEntry(){}
 
   @JsonCreator
-  public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<String> files){
+  public FileSystemReadEntry(@JsonProperty("format") FormatPluginConfig format,
+      @JsonProperty("workspace") String workspace, @JsonProperty("files") List<String> files){
     this.format = format;
     this.selection = FileSelection.create(null, files, null);
+    this.workspace = workspace;
   }
 
-  public FormatSelection(FormatPluginConfig format, FileSelection selection) {
+  public FileSystemReadEntry(FormatPluginConfig format, String workspace, FileSelection selection) {
     super();
     this.format = format;
+    this.workspace = workspace;
     this.selection = selection;
   }
 
@@ -54,6 +57,11 @@ public class FormatSelection {
   @JsonProperty("files")
   public List<String> getAsFiles(){
     return selection.getFiles();
+  }
+
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
   }
 
   @JsonIgnore

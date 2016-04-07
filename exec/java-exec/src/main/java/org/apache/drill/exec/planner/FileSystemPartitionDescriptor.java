@@ -46,7 +46,7 @@ import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -140,7 +140,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   private String getBaseTableLocation() {
-    final FormatSelection origSelection = (FormatSelection) table.getSelection();
+    final FileSystemReadEntry origSelection = (FileSystemReadEntry) table.getSelection();
     return origSelection.getSelection().selectionRoot;
   }
 
@@ -189,10 +189,10 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
       if (drillScan.getGroupScan().hasFiles()) {
         fileLocations = drillScan.getGroupScan().getFiles();
       } else {
-        fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
+        fileLocations = ((FileSystemReadEntry) table.getSelection()).getAsFiles();
       }
     } else if (scanRel instanceof EnumerableTableScan) {
-      fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
+      fileLocations = ((FileSystemReadEntry) table.getSelection()).getAsFiles();
     }
     return fileLocations;
   }
@@ -230,13 +230,13 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   private TableScan createNewTableScanFromSelection(EnumerableTableScan oldScan, List<String> newFiles) {
     final RelOptTableImpl t = (RelOptTableImpl) oldScan.getTable();
-    final FormatSelection formatSelection = (FormatSelection) table.getSelection();
+    final FileSystemReadEntry fileSystemReadEntry = (FileSystemReadEntry) table.getSelection();
     final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation());
-    final FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
+    final FileSystemReadEntry newFileSystemReadEntry =
+        new FileSystemReadEntry(fileSystemReadEntry.getFormat(), fileSystemReadEntry.getWorkspace(), newFileSelection);
     final DrillTranslatableTable newTable = new DrillTranslatableTable(
             new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
-            table.getUserName(),
-            newFormatSelection));
+                table.getUserName(), newFileSystemReadEntry));
     final RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable);
 
     return EnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl);

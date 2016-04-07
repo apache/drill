@@ -34,7 +34,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.parquet.Metadata;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
@@ -90,22 +90,22 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       final DrillTable drillTable = (DrillTable) table;
 
       final Object selection = drillTable.getSelection();
-      if( !(selection instanceof FormatSelection) ){
+      if( !(selection instanceof FileSystemReadEntry) ){
         return notSupported(tableName);
       }
 
-      FormatSelection formatSelection = (FormatSelection) selection;
+      FileSystemReadEntry fileSystemReadEntry = (FileSystemReadEntry) selection;
 
-      FormatPluginConfig formatConfig = formatSelection.getFormat();
+      FormatPluginConfig formatConfig = fileSystemReadEntry.getFormat();
       if (!((formatConfig instanceof ParquetFormatConfig) ||
           ((formatConfig instanceof NamedFormatPluginConfig) && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
         return notSupported(tableName);
       }
 
       FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
-      DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(formatSelection.getFormat()).getFsConf());
+      DrillFileSystem fs = new DrillFileSystem(plugin.getFsConf(fileSystemReadEntry.getWorkspace()));
 
-      String selectionRoot = formatSelection.getSelection().selectionRoot;
+      String selectionRoot = fileSystemReadEntry.getSelection().selectionRoot;
       if (!fs.getFileStatus(new Path(selectionRoot)).isDirectory()) {
         return notSupported(tableName);
       }

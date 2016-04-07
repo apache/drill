@@ -39,6 +39,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -89,7 +90,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   public static DrillFileSystem getFileSystem(DrillConfig config, Path root) throws IOException{
     Path blobRoot = root == null ? getLogDir() : root;
-    Configuration fsConf = new Configuration();
+    Configuration fsConf = new Configuration(FileSystemPlugin.DEFAULT_CONFIGURATION);
     if(blobRoot.toUri().getScheme() != null){
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, blobRoot.toUri().toString());
     }

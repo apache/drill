@@ -19,29 +19,42 @@ package org.apache.drill.exec.store.dfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.Map;
 
 /**
  * Stores the workspace related config. A workspace has:
  *  - location which is a path.
  *  - writable flag to indicate whether the location supports creating new tables.
  *  - default storage format for new tables created in this workspace.
+ *  - optional configuration override properties to access files in this workspace
  */
 @JsonIgnoreProperties(value = {"storageformat"})
 public class WorkspaceConfig {
 
   /** Default workspace is a root directory which supports read, but not write. */
-  public static final WorkspaceConfig DEFAULT = new WorkspaceConfig("/", false, null);
+  public static final WorkspaceConfig DEFAULT = new WorkspaceConfig("/", false, null, null);
 
   private final String location;
   private final boolean writable;
   private final String defaultInputFormat;
+  private final Map<String, String> config;
 
   public WorkspaceConfig(@JsonProperty("location") String location,
                          @JsonProperty("writable") boolean writable,
-                         @JsonProperty("defaultInputFormat") String defaultInputFormat) {
+                         @JsonProperty("defaultInputFormat") String defaultInputFormat,
+                         @JsonProperty("config") Map<String, String> config) {
     this.location = location;
     this.writable = writable;
     this.defaultInputFormat = defaultInputFormat;
+    this.config = config == null ? ImmutableMap.<String, String>of() : ImmutableMap.copyOf(config);
+  }
+
+  public WorkspaceConfig(String location,
+      boolean writable,
+      String defaultInputFormat) {
+    this(location, writable, defaultInputFormat, null);
   }
 
   public String getLocation() {
@@ -56,6 +69,10 @@ public class WorkspaceConfig {
     return defaultInputFormat;
   }
 
+  public Map<String, String> getConfig() {
+    return config;
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -63,6 +80,7 @@ public class WorkspaceConfig {
     result = prime * result + ((defaultInputFormat == null) ? 0 : defaultInputFormat.hashCode());
     result = prime * result + ((location == null) ? 0 : location.hashCode());
     result = prime * result + (writable ? 1231 : 1237);
+    result = prime & result + ((config == null) ? 0 : config.hashCode());
     return result;
   }
 
@@ -93,6 +111,13 @@ public class WorkspaceConfig {
       return false;
     }
     if (writable != other.writable) {
+      return false;
+    }
+    if (config == null) {
+      if (other.config != null) {
+        return false;
+      }
+    } else if (!config.equals(other.config)) {
       return false;
     }
     return true;

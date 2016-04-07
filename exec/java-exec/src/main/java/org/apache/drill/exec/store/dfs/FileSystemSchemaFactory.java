@@ -24,18 +24,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -51,13 +47,17 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   public static final String DEFAULT_WS_NAME = "default";
 
-  private List<WorkspaceSchemaFactory> factories;
+  private Map<String, WorkspaceSchemaFactory> factories;
   private String schemaName;
 
-  public FileSystemSchemaFactory(String schemaName, List<WorkspaceSchemaFactory> factories) {
+  public FileSystemSchemaFactory(String schemaName, Map<String, WorkspaceSchemaFactory> factories) {
     super();
     this.schemaName = schemaName;
     this.factories = factories;
+  }
+
+  public WorkspaceSchemaFactory getWorkspaceSchemaFactory(String workspace) {
+    return factories.get(workspace);
   }
 
   @Override
@@ -74,7 +74,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     public FileSystemSchema(String name, SchemaConfig schemaConfig) throws IOException {
       super(ImmutableList.<String>of(), name);
-      for(WorkspaceSchemaFactory f :  factories){
+      for(WorkspaceSchemaFactory f :  factories.values()){
         if (f.accessible(schemaConfig.getUserName())) {
           WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
           schemaMap.put(s.getName(), s);

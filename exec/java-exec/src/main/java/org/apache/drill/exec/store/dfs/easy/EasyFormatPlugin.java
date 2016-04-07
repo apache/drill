@@ -49,6 +49,7 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
@@ -153,8 +154,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
         newColumns.add(AbstractRecordReader.STAR_COLUMN);
       }
       // Create a new sub scan object with the new set of columns;
-      EasySubScan newScan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-          newColumns, scan.getSelectionRoot());
+      EasySubScan newScan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getWorkspace(),
+          scan.getFormatPlugin(), newColumns, scan.getSelectionRoot());
       newScan.setOperatorId(scan.getOperatorId());
       scan = newScan;
     }
@@ -216,14 +217,15 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException {
-    return new EasyWriter(child, location, partitionColumns, this);
+  public AbstractWriter getWriter(PhysicalOperator child, String location, FileSystemPlugin plugin,
+      String workspace, List<String> partitionColumns) throws IOException {
+    return new EasyWriter(child, location, partitionColumns, plugin, workspace, this);
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
+  public AbstractGroupScan getGroupScan(String userName, FileSystemPlugin plugin, String workspace, FileSelection selection, List<SchemaPath> columns)
       throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
+    return new EasyGroupScan(userName, selection, plugin, workspace, this, columns, selection.selectionRoot);
   }
 
   @Override

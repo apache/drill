@@ -43,11 +43,10 @@ import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.hadoop.conf.Configuration;
@@ -121,8 +120,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   @Override
-  public AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException {
-    return new ParquetWriter(child, location, partitionColumns, this);
+  public AbstractWriter getWriter(PhysicalOperator child, String location, FileSystemPlugin plugin,
+      String workspace, List<String> partitionColumns) throws IOException {
+    return new ParquetWriter(child, location, partitionColumns, plugin, workspace, this);
   }
 
   public RecordWriter getRecordWriter(FragmentContext context, ParquetWriter writer) throws IOException, OutOfMemoryException {
@@ -134,7 +134,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
 
-    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
+    options.put(FileSystem.FS_DEFAULT_NAME_KEY, writer.getFsConf().get(FileSystem.FS_DEFAULT_NAME_KEY));
 
     options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
     options.put(ExecConstants.PARQUET_PAGE_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_PAGE_SIZE).num_val.toString());
@@ -162,9 +162,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   @Override
-  public ParquetGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
-      throws IOException {
-    return new ParquetGroupScan(userName, selection, this, selection.selectionRoot, columns);
+  public ParquetGroupScan getGroupScan(String userName, FileSystemPlugin plugin,
+      String workspace, FileSelection selection, List<SchemaPath> columns) throws IOException {
+    return new ParquetGroupScan(userName, selection, plugin, workspace, this, selection.selectionRoot, columns);
   }
 
   @Override
@@ -204,17 +204,17 @@ public class ParquetFormatPlugin implements FormatPlugin{
     }
 
     @Override
-    public DrillTable isReadable(DrillFileSystem fs, FileSelection selection,
+    public DrillTable isReadable(DrillFileSystem fs, String workspace, FileSelection selection,
         FileSystemPlugin fsPlugin, String storageEngineName, String userName)
         throws IOException {
       // TODO: we only check the first file for directory reading.
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
           return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
-              new FormatSelection(plugin.getConfig(), selection));
+              new FileSystemReadEntry(plugin.getConfig(), workspace, selection));
         }
       }
-      return super.isReadable(fs, selection, fsPlugin, storageEngineName, userName);
+      return super.isReadable(fs, workspace, selection, fsPlugin, storageEngineName, userName);
     }
 
     private Path getMetadataPath(FileStatus dir) {

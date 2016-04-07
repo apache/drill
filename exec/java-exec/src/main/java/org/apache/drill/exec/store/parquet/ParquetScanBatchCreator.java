@@ -90,13 +90,14 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       final int id = rowGroupScan.getOperatorId();
       // Create the new row group scan with the new columns
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),
-          rowGroupScan.getRowGroupReadEntries(), newColumns, rowGroupScan.getSelectionRoot());
+          rowGroupScan.getWorkspace(), rowGroupScan.getFormatPlugin(), rowGroupScan.getRowGroupReadEntries(),
+          newColumns, rowGroupScan.getSelectionRoot());
       rowGroupScan.setOperatorId(id);
     }
 
     DrillFileSystem fs;
     try {
-      fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf(rowGroupScan.getWorkspace()));
     } catch(IOException e) {
       throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
     }

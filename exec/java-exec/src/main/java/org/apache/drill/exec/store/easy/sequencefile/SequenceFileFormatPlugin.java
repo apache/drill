@@ -56,13 +56,6 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
     return true;
   }
 
-
-  @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
-    throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
-  }
-
   @Override
   public RecordReader getRecordReader(FragmentContext context,
                                       DrillFileSystem dfs,

@@ -76,7 +76,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     options.put("prefix", fragmentId);
 
     options.put("separator", " ");
-    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
+    options.put(FileSystem.FS_DEFAULT_NAME_KEY, writer.getFsConf().get(FileSystem.FS_DEFAULT_NAME_KEY));
 
     options.put("extension", "json");
     options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
@@ -35,6 +34,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.hadoop.conf.Configuration;
 
 @JsonTypeName("parquet-writer")
 public class ParquetWriter extends AbstractWriter {
@@ -42,6 +43,8 @@ public class ParquetWriter extends AbstractWriter {
 
   private final String location;
   private final List<String> partitionColumns;
+  private final FileSystemPlugin plugin;
+  private final String workspace;
   private final ParquetFormatPlugin formatPlugin;
 
   @JsonCreator
@@ -49,22 +52,24 @@ public class ParquetWriter extends AbstractWriter {
           @JsonProperty("child") PhysicalOperator child,
           @JsonProperty("location") String location,
           @JsonProperty("partitionColumns") List<String> partitionColumns,
+          @JsonProperty("workspace") String workspace,
           @JsonProperty("storage") StoragePluginConfig storageConfig,
           @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
 
     super(child);
+    this.plugin = (FileSystemPlugin) engineRegistry.getPlugin(storageConfig);
+    this.workspace = workspace;
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, new ParquetFormatConfig());
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
     this.partitionColumns = partitionColumns;
   }
 
-  public ParquetWriter(PhysicalOperator child,
-                       String location,
-                       List<String> partitionColumns,
-                       ParquetFormatPlugin formatPlugin) {
-
+  public ParquetWriter(PhysicalOperator child, String location, List<String> partitionColumns,
+      FileSystemPlugin plugin, String workspace, ParquetFormatPlugin formatPlugin) {
     super(child);
+    this.plugin = plugin;
+    this.workspace = workspace;
     this.formatPlugin = formatPlugin;
     this.location = location;
     this.partitionColumns = partitionColumns;
@@ -78,6 +83,16 @@ public class ParquetWriter extends AbstractWriter {
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig(){
     return formatPlugin.getStorageConfig();
+  }
+
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
+  }
+
+  @JsonIgnore
+  public Configuration getFsConf() {
+    return plugin.getFsConf(workspace);
   }
 
   @JsonProperty("partitionColumns")
@@ -97,7 +112,7 @@ public class ParquetWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new ParquetWriter(child, location, partitionColumns, formatPlugin);
+    return new ParquetWriter(child, location, partitionColumns, plugin, workspace, formatPlugin);
   }
 
   @Override

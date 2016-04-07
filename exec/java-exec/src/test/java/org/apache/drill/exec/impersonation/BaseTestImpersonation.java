@@ -128,14 +128,12 @@ public class BaseTestImpersonation extends PlanTestBase {
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs_test").getConfig();
 
-    final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
-    miniDfsPluginConfig.connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
-
     createAndAddWorkspace("tmp", "/tmp", (short)0777, processUser, processUser, workspaces);
 
-    miniDfsPluginConfig.workspaces = workspaces;
-    miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
-    miniDfsPluginConfig.setEnabled(true);
+    final FileSystemConfig miniDfsPluginConfig =
+        new FileSystemConfig(dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY),
+            ImmutableMap.<String, String>of(),
+            workspaces, lfsPluginConfig.getFormats());
 
     pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
   }

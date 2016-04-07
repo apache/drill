@@ -41,6 +41,7 @@ public class EasySubScan extends AbstractSubScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasySubScan.class);
 
   private final List<FileWorkImpl> files;
+  private final String workspace;
   private final EasyFormatPlugin<?> formatPlugin;
   private final List<SchemaPath> columns;
   private String selectionRoot;
@@ -50,12 +51,14 @@ public class EasySubScan extends AbstractSubScan{
       @JsonProperty("userName") String userName,
       @JsonProperty("files") List<FileWorkImpl> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
+      @JsonProperty("workspace") String workspace, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
     super(userName);
+    this.workspace = workspace;
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
@@ -63,9 +66,10 @@ public class EasySubScan extends AbstractSubScan{
     this.selectionRoot = selectionRoot;
   }
 
-  public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns,
+  public EasySubScan(String userName, List<FileWorkImpl> files, String workspace, EasyFormatPlugin<?> plugin, List<SchemaPath> columns,
       String selectionRoot){
     super(userName);
+    this.workspace = workspace;
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;
@@ -90,6 +94,11 @@ public class EasySubScan extends AbstractSubScan{
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig(){
     return formatPlugin.getStorageConfig();
+  }
+
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
   }
 
   @JsonProperty("format")

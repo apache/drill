@@ -35,7 +35,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -102,15 +102,18 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
     @Override
     public DrillTable isReadable(DrillFileSystem fs,
+        String workspace,
         FileSelection selection, FileSystemPlugin fsPlugin,
         String storageEngineName, String userName) throws IOException {
       if (isFileReadable(fs, selection.getFirstPath(fs))) {
         if (plugin.getName() != null) {
           NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
           namedConfig.name = plugin.getName();
-          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(namedConfig, selection));
+          return new AvroDrillTable(storageEngineName, fsPlugin, userName,
+              new FileSystemReadEntry(namedConfig, workspace, selection));
         } else {
-          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(plugin.getConfig(), selection));
+          return new AvroDrillTable(storageEngineName, fsPlugin, userName,
+              new FileSystemReadEntry(plugin.getConfig(), workspace, selection));
         }
       }
       return null;

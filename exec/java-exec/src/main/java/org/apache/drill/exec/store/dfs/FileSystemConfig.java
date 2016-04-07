@@ -19,20 +19,36 @@ package org.apache.drill.exec.store.dfs;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.htrace.fasterxml.jackson.annotation.JsonCreator;
 
+/**
+ * {@link StoragePluginConfig} for {@link FileSystemPlugin}
+ */
 @JsonTypeName(FileSystemConfig.NAME)
 public class FileSystemConfig extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemConfig.class);
   public static final String NAME = "file";
-  public String connection;
-  public Map<String, String> config;
-  public Map<String, WorkspaceConfig> workspaces;
-  public Map<String, FormatPluginConfig> formats;
+
+  private String connection;
+  private Map<String, String> config;
+  private Map<String, WorkspaceConfig> workspaces;
+  private Map<String, FormatPluginConfig> formats;
+
+  @JsonCreator
+  public FileSystemConfig(
+      @JsonProperty("connection") String connection,
+      @JsonProperty("config") Map<String, String> config,
+      @JsonProperty("workspaces") Map<String, WorkspaceConfig> workspaces,
+      @JsonProperty("format") Map<String, FormatPluginConfig> formats) {
+    this.connection = connection;
+    this.config = config;
+    this.workspaces = workspaces;
+    this.formats = formats;
+  }
 
   @Override
   public int hashCode() {
@@ -43,6 +59,38 @@ public class FileSystemConfig extends StoragePluginConfig {
     result = prime * result + ((formats == null) ? 0 : formats.hashCode());
     result = prime * result + ((workspaces == null) ? 0 : workspaces.hashCode());
     return result;
+  }
+
+  public String getConnection() {
+    return connection;
+  }
+
+  public void setConnection(String connection) {
+    this.connection = connection;
+  }
+
+  public Map<String, String> getConfig() {
+    return config;
+  }
+
+  public void setConfig(Map<String, String> config) {
+    this.config = config;
+  }
+
+  public Map<String, WorkspaceConfig> getWorkspaces() {
+    return workspaces;
+  }
+
+  public void setWorkspaces(Map<String, WorkspaceConfig> workspaces) {
+    this.workspaces = workspaces;
+  }
+
+  public Map<String, FormatPluginConfig> getFormats() {
+    return formats;
+  }
+
+  public void setFormats(Map<String, FormatPluginConfig> formats) {
+    this.formats = formats;
   }
 
   @Override

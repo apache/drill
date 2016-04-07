@@ -48,6 +48,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -101,7 +102,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
 
   private final List<ReadEntryWithPath> entries;
+  private final FileSystemPlugin plugin;
   private final ParquetFormatPlugin formatPlugin;
+  private final String workspace;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;
   private String selectionRoot;
@@ -132,6 +135,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       @JsonProperty("userName") String userName,
       @JsonProperty("entries") List<ReadEntryWithPath> entries,//
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
+      @JsonProperty("workspace") String workspace, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns, //
@@ -144,9 +148,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
+    this.workspace = workspace;
+    this.plugin = (FileSystemPlugin) engineRegistry.getPlugin(storageConfig);
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(formatPlugin);
-    this.fs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
+    this.fs = ImpersonationUtil.createFileSystem(getUserName(),
+        ((FileSystemPlugin)engineRegistry.getPlugin(storageConfig)).getFsConf(workspace));
     this.formatConfig = formatPlugin.getConfig();
     this.entries = entries;
     this.selectionRoot = selectionRoot;
@@ -157,6 +164,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   public ParquetGroupScan( //
       String userName,
       FileSelection selection, //
+      FileSystemPlugin plugin,
+      String workspace,
       ParquetFormatPlugin formatPlugin, //
       String selectionRoot,
       List<SchemaPath> columns) //
@@ -165,8 +174,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.formatPlugin = formatPlugin;
     this.columns = columns;
     this.formatConfig = formatPlugin.getConfig();
-    this.fs = ImpersonationUtil.createFileSystem(userName, formatPlugin.getFsConf());
-
+    this.fs = ImpersonationUtil.createFileSystem(userName, plugin.getFsConf(workspace));
+    this.workspace = workspace;
+    this.plugin = plugin;
     this.selectionRoot = selectionRoot;
 
     final FileSelection fileSelection = expandIfNecessary(selection);
@@ -189,6 +199,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.endpointAffinities = that.endpointAffinities == null ? null : Lists.newArrayList(that.endpointAffinities);
     this.entries = that.entries == null ? null : Lists.newArrayList(that.entries);
     this.formatConfig = that.formatConfig;
+    this.plugin = that.plugin;
+    this.workspace = that.workspace;
     this.formatPlugin = that.formatPlugin;
     this.fs = that.fs;
     this.mappings = that.mappings == null ? null : ArrayListMultimap.create(that.mappings);
@@ -237,6 +249,16 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   @JsonProperty("storage")
   public StoragePluginConfig getEngineConfig() {
     return this.formatPlugin.getStorageConfig();
+  }
+
+  @JsonProperty("workspace")
+  public String getWorkspace() {
+    return workspace;
+  }
+
+  @JsonIgnore
+  public FileSystemPlugin getPlugin() {
+    return plugin;
   }
 
   public String getSelectionRoot() {
@@ -795,8 +817,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     Preconditions.checkArgument(!rowGroupsForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    return new ParquetRowGroupScan(
-        getUserName(), formatPlugin, convertToReadEntries(rowGroupsForMinor), columns, selectionRoot);
+    return new ParquetRowGroupScan(getUserName(),
+        plugin, workspace, formatPlugin, convertToReadEntries(rowGroupsForMinor), columns, selectionRoot);
   }
 
   private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups) {

@@ -22,19 +22,18 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.exec.store.ischema.Records;
 
 /**
  * Implements <code>CreateTableEntry</code> interface to create new tables in FileSystem storage.
@@ -43,29 +42,31 @@ import org.apache.drill.exec.store.ischema.Records;
 public class FileSystemCreateTableEntry implements CreateTableEntry {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemCreateTableEntry.class);
 
-  private FileSystemConfig storageConfig;
+  private FileSystemPlugin plugin;
+  private String workspace;
   private FormatPlugin formatPlugin;
   private String location;
   private final List<String> partitionColumns;
 
   @JsonCreator
   public FileSystemCreateTableEntry(@JsonProperty("storageConfig") FileSystemConfig storageConfig,
+                                    @JsonProperty("workspace") String workspace,
                                     @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
                                     @JsonProperty("location") String location,
                                     @JsonProperty("partitionColumn") List<String> partitionColumns,
                                     @JacksonInject StoragePluginRegistry engineRegistry)
       throws ExecutionSetupException {
-    this.storageConfig = storageConfig;
+    this.plugin = (FileSystemPlugin) engineRegistry.getPlugin(storageConfig);
+    this.workspace = workspace;
     this.formatPlugin = engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     this.location = location;
     this.partitionColumns = partitionColumns;
   }
 
-  public FileSystemCreateTableEntry(FileSystemConfig storageConfig,
-                                    FormatPlugin formatPlugin,
-                                    String location,
-                                    List<String> partitionColumns) {
-    this.storageConfig = storageConfig;
+  public FileSystemCreateTableEntry(FileSystemPlugin plugin, String workspace, FormatPlugin formatPlugin,
+      String location, List<String> partitionColumns) {
+    this.plugin = plugin;
+    this.workspace = workspace;
     this.formatPlugin = formatPlugin;
     this.location = location;
     this.partitionColumns = partitionColumns;
@@ -73,7 +74,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
 
   @JsonProperty("storageConfig")
   public FileSystemConfig getStorageConfig() {
-    return storageConfig;
+    return (FileSystemConfig)formatPlugin.getStorageConfig();
   }
 
   @JsonProperty("formatConfig")
@@ -89,7 +90,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
           formatPlugin.getName())).build(logger);
     }
 
-    return formatPlugin.getWriter(child, location, partitionColumns);
+    return formatPlugin.getWriter(child, location, plugin, workspace, partitionColumns);
   }
 
   @Override

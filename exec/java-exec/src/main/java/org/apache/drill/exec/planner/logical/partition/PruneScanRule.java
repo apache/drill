@@ -59,8 +59,7 @@ import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.dfs.FileSystemReadEntry;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -382,8 +381,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         drillTable = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
       }
       final Object selection = drillTable.getSelection();
-      if (selection instanceof FormatSelection
-          && ((FormatSelection)selection).supportDirPruning()) {
+      if (selection instanceof FileSystemReadEntry
+          && ((FileSystemReadEntry)selection).supportDirPruning()) {
         return true;  // Do directory-based pruning in Calcite logical
       } else {
         return false; // Do not do directory-based pruning in Calcite logical

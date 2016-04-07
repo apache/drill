@@ -26,6 +26,7 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * This class contains utility methods to speed up tests. Some of the production code currently calls this method
@@ -66,12 +67,14 @@ public class TestUtilities {
       throws ExecutionSetupException {
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsTestPluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    final WorkspaceConfig tmpWSConfig = pluginConfig.workspaces.get(dfsTestTmpSchema);
+    final Map<String, WorkspaceConfig> workspaces = pluginConfig.getWorkspaces();
+    final WorkspaceConfig tmpWSConfig = workspaces.get(dfsTestTmpSchema);
 
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(tmpDirPath, true, tmpWSConfig.getDefaultInputFormat());
+    final WorkspaceConfig newTmpWSConfig =
+        new WorkspaceConfig(tmpDirPath, true, tmpWSConfig.getDefaultInputFormat(), tmpWSConfig.getConfig());
 
-    pluginConfig.workspaces.remove(dfsTestTmpSchema);
-    pluginConfig.workspaces.put(dfsTestTmpSchema, newTmpWSConfig);
+    workspaces.remove(dfsTestTmpSchema);
+    workspaces.put(dfsTestTmpSchema, newTmpWSConfig);
 
     pluginRegistry.createOrUpdate(dfsTestPluginName, pluginConfig, true);
   }
@@ -83,13 +86,15 @@ public class TestUtilities {
   public static void makeDfsTmpSchemaImmutable(final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     final FileSystemPlugin dfsPlugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsPluginName);
     final FileSystemConfig dfsPluginConfig = (FileSystemConfig) dfsPlugin.getConfig();
-    final WorkspaceConfig tmpWSConfig = dfsPluginConfig.workspaces.get(dfsTmpSchema);
+    final Map<String, WorkspaceConfig> workspaces = dfsPluginConfig.getWorkspaces();
+    final WorkspaceConfig tmpWSConfig = workspaces.get(dfsTmpSchema);
 
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(tmpWSConfig.getLocation(), false,
-        tmpWSConfig.getDefaultInputFormat());
+    final WorkspaceConfig newTmpWSConfig =
+        new WorkspaceConfig(tmpWSConfig.getLocation(), false, tmpWSConfig.getDefaultInputFormat(),
+            tmpWSConfig.getConfig());
 
-    dfsPluginConfig.workspaces.remove(dfsTmpSchema);
-    dfsPluginConfig.workspaces.put(dfsTmpSchema, newTmpWSConfig);
+    workspaces.remove(dfsTmpSchema);
+    workspaces.put(dfsTmpSchema, newTmpWSConfig);
 
     pluginRegistry.createOrUpdate(dfsPluginName, dfsPluginConfig, true);
   }
