@@ -1245,8 +1245,8 @@
             "next_title": "Query Data", 
             "next_url": "/docs/query-data/", 
             "parent": "Using Drill with BI Tools", 
-            "previous_title": "Using Apache Drill with Tableau 9 Server", 
-            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+            "previous_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+            "previous_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/090-configuring-jreport-with-drill.md", 
             "title": "Configuring JReport with Drill", 
             "url": "/docs/configuring-jreport-with-drill/"
@@ -5734,8 +5734,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring JReport with Drill", 
-                            "next_url": "/docs/configuring-jreport-with-drill/", 
+                            "next_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "next_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
@@ -5755,11 +5755,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Data", 
-                            "next_url": "/docs/query-data/", 
+                            "next_title": "Configuring JReport with Drill", 
+                            "next_url": "/docs/configuring-jreport-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Server", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/075-using-apache-drill-with-webfocus.md", 
+                            "title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "url": "/docs/using-information-builders-webfocus-with-apache-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "previous_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/090-configuring-jreport-with-drill.md", 
                             "title": "Configuring JReport with Drill", 
                             "url": "/docs/configuring-jreport-with-drill/"
@@ -11550,8 +11571,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring JReport with Drill", 
-            "next_url": "/docs/configuring-jreport-with-drill/", 
+            "next_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+            "next_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
             "parent": "Using Drill with BI Tools", 
             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
@@ -11824,8 +11845,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring JReport with Drill", 
-                    "next_url": "/docs/configuring-jreport-with-drill/", 
+                    "next_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                    "next_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                     "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
@@ -11845,11 +11866,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
+                    "next_title": "Configuring JReport with Drill", 
+                    "next_url": "/docs/configuring-jreport-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using Apache Drill with Tableau 9 Server", 
                     "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/075-using-apache-drill-with-webfocus.md", 
+                    "title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                    "url": "/docs/using-information-builders-webfocus-with-apache-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                    "previous_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/090-configuring-jreport-with-drill.md", 
                     "title": "Configuring JReport with Drill", 
                     "url": "/docs/configuring-jreport-with-drill/"
@@ -11884,6 +11926,27 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/010-using-odbc-with-bi-tools-introduction.md", 
             "title": "Using Drill with BI Tools Introduction", 
             "url": "/docs/using-drill-with-bi-tools-introduction/"
+        }, 
+        "Using Information Builders\u2019 WebFOCUS with Apache Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring JReport with Drill", 
+            "next_url": "/docs/configuring-jreport-with-drill/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Apache Drill with Tableau 9 Server", 
+            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/075-using-apache-drill-with-webfocus.md", 
+            "title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+            "url": "/docs/using-information-builders-webfocus-with-apache-drill/"
         }, 
         "Using JDBC with SQuirreL on Windows": {
             "breadcrumbs": [
@@ -13926,8 +13989,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring JReport with Drill", 
-                            "next_url": "/docs/configuring-jreport-with-drill/", 
+                            "next_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "next_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
@@ -13947,11 +14010,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Data", 
-                            "next_url": "/docs/query-data/", 
+                            "next_title": "Configuring JReport with Drill", 
+                            "next_url": "/docs/configuring-jreport-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Server", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/075-using-apache-drill-with-webfocus.md", 
+                            "title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "url": "/docs/using-information-builders-webfocus-with-apache-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Information Builders\u2019 WebFOCUS with Apache Drill", 
+                            "previous_url": "/docs/using-information-builders-webfocus-with-apache-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/090-configuring-jreport-with-drill.md", 
                             "title": "Configuring JReport with Drill", 
                             "url": "/docs/configuring-jreport-with-drill/"
