@@ -687,7 +687,8 @@ public class Foreman implements Runnable {
             new Date(queryContext.getQueryContextInfo().getQueryStartTime()),
             new Date(System.currentTimeMillis()),
             state,
-            queryContext.getSession().getCredentials().getUserName());
+            queryContext.getSession().getCredentials().getUserName(),
+            initiatingClient.getChannel().remoteAddress());
         queryLogger.info(MAPPER.writeValueAsString(q));
       } catch (Exception e) {
         logger.error("Failure while recording query information to query log.", e);
