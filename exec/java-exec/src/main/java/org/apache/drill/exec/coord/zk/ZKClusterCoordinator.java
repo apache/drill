@@ -247,6 +247,8 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
           builder.append(bit.getControlPort());
           builder.append(':');
           builder.append(bit.getDataPort());
+          builder.append(". Version - ");
+          builder.append(bit.getVersion());
           builder.append('\n');
         }
         logger.debug(builder.toString());

@@ -10,6 +10,7 @@ message DrillbitEndpoint{
   optional int32 control_port = 3;
   optional int32 data_port = 4;
   optional Roles roles = 5;
+  optional string version = 6;
 }
 
 message DrillServiceInstance{
