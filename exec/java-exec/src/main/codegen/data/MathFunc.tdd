@@ -391,6 +391,19 @@ trigoMathFunctions : [
       {input: "UInt4"},
       {input: "UInt8"}
     ]
+ },
+ {className: "Cot", funcName: "cot", javaFunc : "1.0/java.lang.Math.tan", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+    ]
  }
 ]
 }
