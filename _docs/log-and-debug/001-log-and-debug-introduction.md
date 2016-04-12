@@ -1,12 +1,12 @@
 ---
 title: "Log and Debug Introduction"
-date:  
+date: 2016-04-12 21:54:25 UTC
 parent: "Log and Debug"
 ---
 
-You can use the Drill logs in conjunction with query profiles to troubleshoot issues that you encounter. Drill uses Logback as its default logging system. Logback behavior is defined by configurations set in <drill_installation_directory>/conf/logback.xml. 
+You can use the Drill logs in conjunction with query profiles to troubleshoot issues that you encounter. Drill uses Logback as its default logging system. Logback behavior is defined by configurations set in `<drill_installation_directory>/conf/logback.xml`. 
 
-You can configure Logback to enable specific loggers for particular components. You can also enable Logback to output log messages to Lilith, a desktop application that you can use for socket logging. By default, Drill outputs log files to /var/log/drill.
+You can configure Logback to enable specific loggers for particular components. You can also enable Logback to output log messages to Lilith, a desktop application that you can use for socket logging. By default, Drill outputs log files to `/var/log/drill`.
 
 Drill provides two standard output files:  
 
