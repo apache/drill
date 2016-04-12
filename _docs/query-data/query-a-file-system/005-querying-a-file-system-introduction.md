@@ -1,6 +1,6 @@
 ---
 title: "Querying a File System Introduction"
-date:  
+date: 2016-04-12 18:29:30 UTC
 parent: "Querying a File System"
 ---
 Files and directories are like standard SQL tables to Drill. You can specify a
@@ -27,7 +27,7 @@ Drill supports the following file types:
     * Tab-separated values (TSV, type: text)
     * Pipe-separated values (PSV, type: text)
   * Structured data files:
-    * Avro(type: avro)
+    * Avro (type: avro) (This file type is experimental. See [Querying Avro Files]({{site.baseurl}}/docs/querying-avro-files/).)
     * JSON (type: json)
     * Parquet (type: parquet)
 
