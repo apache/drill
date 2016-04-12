@@ -6690,8 +6690,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying JSON Files", 
-                            "next_url": "/docs/querying-json-files/", 
+                            "next_title": "Querying Avro Files", 
+                            "next_url": "/docs/querying-avro-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System", 
                             "previous_url": "/docs/querying-a-file-system/", 
@@ -6711,11 +6711,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying Parquet Files", 
-                            "next_url": "/docs/querying-parquet-files/", 
+                            "next_title": "Querying JSON Files", 
+                            "next_url": "/docs/querying-json-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System Introduction", 
                             "previous_url": "/docs/querying-a-file-system-introduction/", 
+                            "relative_path": "_docs/query-data/query-a-file-system/009-querying-avro-files.md", 
+                            "title": "Querying Avro Files", 
+                            "url": "/docs/querying-avro-files/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying a File System", 
+                                    "url": "/docs/querying-a-file-system/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying Parquet Files", 
+                            "next_url": "/docs/querying-parquet-files/", 
+                            "parent": "Querying a File System", 
+                            "previous_title": "Querying Avro Files", 
+                            "previous_url": "/docs/querying-avro-files/", 
                             "relative_path": "_docs/query-data/query-a-file-system/010-querying-json-files.md", 
                             "title": "Querying JSON Files", 
                             "url": "/docs/querying-json-files/"
@@ -7357,6 +7378,27 @@
             "title": "Query Stages", 
             "url": "/docs/query-stages/"
         }, 
+        "Querying Avro Files": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying a File System", 
+                    "url": "/docs/querying-a-file-system/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Querying JSON Files", 
+            "next_url": "/docs/querying-json-files/", 
+            "parent": "Querying a File System", 
+            "previous_title": "Querying a File System Introduction", 
+            "previous_url": "/docs/querying-a-file-system-introduction/", 
+            "relative_path": "_docs/query-data/query-a-file-system/009-querying-avro-files.md", 
+            "title": "Querying Avro Files", 
+            "url": "/docs/querying-avro-files/"
+        }, 
         "Querying Complex Data": {
             "breadcrumbs": [
                 {
@@ -7592,8 +7634,8 @@
             "next_title": "Querying Parquet Files", 
             "next_url": "/docs/querying-parquet-files/", 
             "parent": "Querying a File System", 
-            "previous_title": "Querying a File System Introduction", 
-            "previous_url": "/docs/querying-a-file-system-introduction/", 
+            "previous_title": "Querying Avro Files", 
+            "previous_url": "/docs/querying-avro-files/", 
             "relative_path": "_docs/query-data/query-a-file-system/010-querying-json-files.md", 
             "title": "Querying JSON Files", 
             "url": "/docs/querying-json-files/"
@@ -7698,8 +7740,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Querying JSON Files", 
-                    "next_url": "/docs/querying-json-files/", 
+                    "next_title": "Querying Avro Files", 
+                    "next_url": "/docs/querying-avro-files/", 
                     "parent": "Querying a File System", 
                     "previous_title": "Querying a File System", 
                     "previous_url": "/docs/querying-a-file-system/", 
@@ -7719,11 +7761,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Querying Parquet Files", 
-                    "next_url": "/docs/querying-parquet-files/", 
+                    "next_title": "Querying JSON Files", 
+                    "next_url": "/docs/querying-json-files/", 
                     "parent": "Querying a File System", 
                     "previous_title": "Querying a File System Introduction", 
                     "previous_url": "/docs/querying-a-file-system-introduction/", 
+                    "relative_path": "_docs/query-data/query-a-file-system/009-querying-avro-files.md", 
+                    "title": "Querying Avro Files", 
+                    "url": "/docs/querying-avro-files/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying a File System", 
+                            "url": "/docs/querying-a-file-system/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Querying Parquet Files", 
+                    "next_url": "/docs/querying-parquet-files/", 
+                    "parent": "Querying a File System", 
+                    "previous_title": "Querying Avro Files", 
+                    "previous_url": "/docs/querying-avro-files/", 
                     "relative_path": "_docs/query-data/query-a-file-system/010-querying-json-files.md", 
                     "title": "Querying JSON Files", 
                     "url": "/docs/querying-json-files/"
@@ -7834,8 +7897,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Querying JSON Files", 
-            "next_url": "/docs/querying-json-files/", 
+            "next_title": "Querying Avro Files", 
+            "next_url": "/docs/querying-avro-files/", 
             "parent": "Querying a File System", 
             "previous_title": "Querying a File System", 
             "previous_url": "/docs/querying-a-file-system/", 
@@ -14100,8 +14163,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying JSON Files", 
-                            "next_url": "/docs/querying-json-files/", 
+                            "next_title": "Querying Avro Files", 
+                            "next_url": "/docs/querying-avro-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System", 
                             "previous_url": "/docs/querying-a-file-system/", 
@@ -14121,11 +14184,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying Parquet Files", 
-                            "next_url": "/docs/querying-parquet-files/", 
+                            "next_title": "Querying JSON Files", 
+                            "next_url": "/docs/querying-json-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying a File System Introduction", 
                             "previous_url": "/docs/querying-a-file-system-introduction/", 
+                            "relative_path": "_docs/query-data/query-a-file-system/009-querying-avro-files.md", 
+                            "title": "Querying Avro Files", 
+                            "url": "/docs/querying-avro-files/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying a File System", 
+                                    "url": "/docs/querying-a-file-system/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying Parquet Files", 
+                            "next_url": "/docs/querying-parquet-files/", 
+                            "parent": "Querying a File System", 
+                            "previous_title": "Querying Avro Files", 
+                            "previous_url": "/docs/querying-avro-files/", 
                             "relative_path": "_docs/query-data/query-a-file-system/010-querying-json-files.md", 
                             "title": "Querying JSON Files", 
                             "url": "/docs/querying-json-files/"
