@@ -93,7 +93,7 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
       // to convert them to use sum and count. Here, we make the cost of the original functions high
       // enough such that the planner does not choose them and instead chooses the rewritten functions.
       if (name.equals("AVG") || name.equals("STDDEV_POP") || name.equals("STDDEV_SAMP")
-          || name.equals("VAR_POP") || name.equals("VAR_SAMP")) {
+          || name.equals("VAR_POP") || name.equals("VAR_SAMP") || name.equals("MEDIAN") || name.equals("QUANTILE")) {
         return ((DrillCostBase.DrillCostFactory)planner.getCostFactory()).makeHugeCost();
       }
     }

@@ -27,14 +27,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.sql.SqlFunctionCategory;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlCountAggFunction;
+import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.type.SqlOperandTypeInference;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.trace.CalciteTrace;
@@ -79,6 +90,15 @@ public class DrillReduceAggregatesRule extends RelOptRule {
    */
   public static final DrillReduceAggregatesRule INSTANCE =
       new DrillReduceAggregatesRule(operand(LogicalAggregate.class, any()));
+
+  /**
+   * Instance of rule which matches Aggregate on top of Project. This pattern is required to reduce the Quantile syntax:
+   * quantile(p, x) -> tdigest_quantile(p, tdigest(x))
+   * where p is a literal between 0.0 and 1.0, and x is a field reference
+   */
+  public static final DrillReduceAggregatesRule INSTANCE_QUANTILE =
+          new DrillReduceAggregatesRule(operand(LogicalAggregate.class, operand(Project.class, any())),
+                  "DrillReduceQuantile");
   public static final DrillConvertSumToSumZero INSTANCE_SUM =
       new DrillConvertSumToSumZero(operand(DrillAggregateRel.class, any()));
 
@@ -97,6 +117,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
 
   protected DrillReduceAggregatesRule(RelOptRuleOperand operand) {
     super(operand);
+  }
+
+  protected DrillReduceAggregatesRule(RelOptRuleOperand operand, String description) {
+    super(operand, description);
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -125,7 +149,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     for (AggregateCall call : aggCallList) {
       SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getAggregation());
       if (sqlAggFunction instanceof SqlAvgAggFunction
-          || sqlAggFunction instanceof SqlSumAggFunction) {
+          || sqlAggFunction instanceof SqlSumAggFunction
+              || sqlAggFunction.getName().equals("MEDIAN")
+              || sqlAggFunction.getName().equals("QUANTILE")) {
         return true;
       }
     }
@@ -187,7 +213,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     for (AggregateCall oldCall : oldCalls) {
       projList.add(
           reduceAgg(
-              oldAggRel, oldCall, newCalls, aggCallMapping, inputExprs));
+              ruleCall, oldCall, newCalls, aggCallMapping, inputExprs));
     }
 
     final int extraArgCount =
@@ -217,16 +243,25 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   }
 
   private RexNode reduceAgg(
-      Aggregate oldAggRel,
+      RelOptRuleCall ruleCall,
       AggregateCall oldCall,
       List<AggregateCall> newCalls,
       Map<AggregateCall, RexNode> aggCallMapping,
       List<RexNode> inputExprs) {
+    final Aggregate oldAggRel = (Aggregate) ruleCall.rels[0];
     final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(oldCall.getAggregation());
     if (sqlAggFunction instanceof SqlSumAggFunction) {
       // replace original SUM(x) with
       // case COUNT(x) when 0 then null else SUM0(x) end
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
+    }
+    if (sqlAggFunction.getName().equals("MEDIAN")) {
+      return reduceMedian(oldAggRel, oldCall, newCalls, aggCallMapping);
+    }
+    if (sqlAggFunction.getName().equals("QUANTILE")) {
+      if (ruleCall.rels.length == 2 && ruleCall.rels[1] instanceof Project) {
+        return reduceQuantile(ruleCall, oldCall, newCalls, aggCallMapping);
+      }
     }
     if (sqlAggFunction instanceof SqlAvgAggFunction) {
       final SqlAvgAggFunction.Subtype subtype = ((SqlAvgAggFunction) sqlAggFunction).getSubtype();
@@ -395,6 +430,107 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               denominatorRef);
       return rexBuilder.makeCast(
           typeFactory.createSqlType(SqlTypeName.ANY), divideRef);
+    }
+  }
+
+  private RexNode reduceMedian(
+          Aggregate oldAggRel,
+          AggregateCall oldCall,
+          List<AggregateCall> newCalls,
+          Map<AggregateCall, RexNode> aggCallMapping) {
+    final PlannerSettings plannerSettings = (PlannerSettings) oldAggRel.getCluster().getPlanner().getContext();
+    final boolean isInferenceEnabled = plannerSettings.isTypeInferenceEnabled();
+    final int nGroups = oldAggRel.getGroupCount();
+    RelDataTypeFactory typeFactory = oldAggRel.getCluster().getTypeFactory();
+    RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
+    int arg = oldCall.getArgList().get(0);
+    RelDataType argType = getFieldType(oldAggRel.getInput(), arg);
+    final RelDataType tDigestType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARBINARY), true);
+    SqlAggFunction tDigestAgg = new DrillTDigestAggFunction();
+    if(isInferenceEnabled) {
+      tDigestAgg = new DrillCalciteSqlAggFunctionWrapper(tDigestAgg, tDigestType);
+    }
+    AggregateCall tDigestCall =
+            new AggregateCall(
+                    tDigestAgg,
+                    oldCall.isDistinct(),
+                    oldCall.getArgList(),
+                    tDigestType,
+                    null);
+
+    // NOTE:  these references are with respect to the output
+    // of newAggRel
+    RexNode medianRef =
+            rexBuilder.addAggCall(
+                    tDigestCall,
+                    nGroups,
+                    oldAggRel.indicator,
+                    newCalls,
+                    aggCallMapping,
+                    ImmutableList.of(argType));
+    DrillSqlOperator op = new DrillSqlOperator("TDIGEST_MEDIAN", 1, true);
+    return rexBuilder.makeCall(op, medianRef);
+  }
+
+  private RexNode reduceQuantile(
+          RelOptRuleCall ruleCall,
+          AggregateCall oldCall,
+          List<AggregateCall> newCalls,
+          Map<AggregateCall, RexNode> aggCallMapping) {
+
+    final Aggregate oldAggRel = (Aggregate) ruleCall.rels[0];
+    final Project project = (Project) ruleCall.rels[1];
+    final PlannerSettings plannerSettings = (PlannerSettings) oldAggRel.getCluster().getPlanner().getContext();
+    final boolean isInferenceEnabled = plannerSettings.isTypeInferenceEnabled();
+    final int nGroups = oldAggRel.getGroupCount();
+    RelDataTypeFactory typeFactory = oldAggRel.getCluster().getTypeFactory();
+    RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
+    int literalArg = oldCall.getArgList().get(0);
+    int aggArg = oldCall.getArgList().get(1);
+    List<RexNode> rexNodes = project.getChildExps();
+    String message = "QUANTILE requires a numeric value between 0.0 and 1.0 as the first parameter";
+    Preconditions.checkArgument(rexNodes.get(literalArg) instanceof RexLiteral, message);
+    RexLiteral literal = (RexLiteral) rexNodes.get(literalArg);
+    Preconditions.checkArgument(literal.getValue() instanceof BigDecimal, message);
+    BigDecimal value = (BigDecimal) literal.getValue();
+    Preconditions.checkArgument(value.compareTo(new BigDecimal(0)) >= 0, message);
+    Preconditions.checkArgument(value.compareTo(new BigDecimal(1)) <= 0, message);
+    RelDataType argType = getFieldType(oldAggRel.getInput(), aggArg);
+    final RelDataType tDigestType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARBINARY), true);
+    SqlAggFunction tDigestAgg = new DrillTDigestAggFunction();
+    if(isInferenceEnabled) {
+      tDigestAgg = new DrillCalciteSqlAggFunctionWrapper(tDigestAgg, tDigestType);
+    }
+    AggregateCall tDigestCall =
+            new AggregateCall(
+                    tDigestAgg,
+                    oldCall.isDistinct(),
+                    ImmutableList.of(oldCall.getArgList().get(1)),
+                    tDigestType,
+                    null);
+
+    RexNode tDigestRef =
+            rexBuilder.addAggCall(
+                    tDigestCall,
+                    nGroups,
+                    oldAggRel.indicator,
+                    newCalls,
+                    aggCallMapping,
+                    ImmutableList.of(argType));
+
+    DrillSqlOperator op = new DrillSqlOperator("TDIGEST_QUANTILE", 2, true);
+    return rexBuilder.makeCall(op, literal, tDigestRef);
+  }
+
+  private static class DrillTDigestAggFunction extends SqlAggFunction {
+
+    protected DrillTDigestAggFunction() {
+      super("TDIGEST",
+              SqlKind.OTHER_FUNCTION,
+              ReturnTypes.ARG0, // use the inferred return type of SqlCountAggFunction
+              null,
+              OperandTypes.BINARY,
+              SqlFunctionCategory.USER_DEFINED_FUNCTION);
     }
   }
 
