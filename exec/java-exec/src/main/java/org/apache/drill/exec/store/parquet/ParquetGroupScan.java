@@ -34,7 +34,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
@@ -46,7 +45,6 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -59,7 +57,6 @@ import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadataBase;
 import org.apache.drill.exec.store.parquet.Metadata.RowGroupMetadata;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
-import org.apache.drill.exec.store.schedule.BlockMapBuilder;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
@@ -87,14 +84,12 @@ import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.joda.time.DateTimeUtils;
 
-import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -104,12 +99,8 @@ import com.google.common.collect.Sets;
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractFileGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
-  static final MetricRegistry metrics = DrillMetrics.getInstance();
-  static final String READ_FOOTER_TIMER = MetricRegistry.name(ParquetGroupScan.class, "readFooter");
-
 
   private final List<ReadEntryWithPath> entries;
-  private final Stopwatch watch = Stopwatch.createUnstarted();
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;
@@ -716,8 +707,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
               if (column.getNulls() != null) {
                 Long newCount = rowCount - column.getNulls();
                 columnValueCounts.put(schemaPath, columnValueCounts.get(schemaPath) + newCount);
-              } else {
-
               }
             }
           } else {
@@ -790,36 +779,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
   }
 
-  private class BlockMapper extends TimedRunnable<Void> {
-    private final BlockMapBuilder bmb;
-    private final RowGroupInfo rgi;
-
-    public BlockMapper(BlockMapBuilder bmb, RowGroupInfo rgi) {
-      super();
-      this.bmb = bmb;
-      this.rgi = rgi;
-    }
-
-    @Override
-    protected Void runInner() throws Exception {
-      EndpointByteMap ebm = bmb.getEndpointByteMap(rgi);
-      rgi.setEndpointByteMap(ebm);
-      return null;
-    }
-
-    @Override
-    protected IOException convertToIOException(Exception e) {
-      return new IOException(String.format(
-          "Failure while trying to get block locations for file %s starting at %d.", rgi.getPath(),
-          rgi.getStart()));
-    }
-
-  }
-
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) throws PhysicalOperatorSetupException {
 
-    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos, formatPlugin.getContext());
+    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos);
   }
 
   @Override public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {

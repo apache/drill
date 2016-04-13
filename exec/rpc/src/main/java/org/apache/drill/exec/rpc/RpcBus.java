@@ -59,8 +59,6 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   private static final OutboundRpcMessage PONG = new OutboundRpcMessage(RpcMode.PONG, 0, 0, Acks.OK);
   private static final boolean ENABLE_SEPARATE_THREADS = "true".equals(System.getProperty("drill.enable_rpc_offload"));
 
-  protected final CoordinationQueue queue = new CoordinationQueue(16, 16);
-
   protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
 
   protected void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException{
@@ -68,8 +66,6 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   }
 
   protected abstract Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException;
-
-  public abstract boolean isClient();
 
   protected final RpcConfig rpcConfig;
 
@@ -120,7 +116,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
 
       Preconditions.checkNotNull(protobufBody);
-      ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz, connection);
+      ChannelListenerWithCoordinationId futureListener = connection.createNewRpcListener(listener, clazz);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
       ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
       channelFuture.addListener(futureListener);
@@ -129,6 +125,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     } catch (Exception | AssertionError e) {
       listener.failed(new RpcException("Failure sending message.", e));
     } finally {
+
       if (!completed) {
         if (pBuffer != null) {
           pBuffer.release();
@@ -158,22 +155,16 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      String msg;
+      final String msg;
+
       if(local!=null) {
         msg = String.format("Channel closed %s <--> %s.", local, remote);
       }else{
         msg = String.format("Channel closed %s <--> %s.", future.channel().localAddress(), future.channel().remoteAddress());
       }
 
-      if (RpcBus.this.isClient()) {
-        if(local != null) {
-          logger.info(String.format(msg));
-        }
-      } else {
-        queue.channelClosed(new ChannelClosedException(msg));
-      }
-
-      clientConnection.close();
+      final ChannelClosedException ex = future.cause() != null ? new ChannelClosedException(msg, future.cause()) : new ChannelClosedException(msg);
+      clientConnection.channelClosed(ex);
     }
 
   }
@@ -182,9 +173,6 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     return new ChannelClosedHandler(clientConnection, channel);
   }
 
-  private interface Recyclable {
-    public void recycle();
-  }
 
   private class ResponseSenderImpl implements ResponseSender {
 
@@ -261,6 +249,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     public InboundHandler(C connection) {
       super();
+      Preconditions.checkNotNull(connection);
       this.connection = connection;
       final Executor underlyingExecutor = ENABLE_SEPARATE_THREADS ? rpcConfig.getExecutor() : new SameExecutor();
       this.exec = new RpcEventHandler(underlyingExecutor);
@@ -286,13 +275,13 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           break;
 
         case RESPONSE:
-          ResponseEvent respEvent = new ResponseEvent(msg.rpcType, msg.coordinationId, msg.pBody, msg.dBody);
+          ResponseEvent respEvent = new ResponseEvent(connection, msg.rpcType, msg.coordinationId, msg.pBody, msg.dBody);
           exec.execute(respEvent);
           break;
 
         case RESPONSE_FAILURE:
           DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-          queue.updateFailedFuture(msg.coordinationId, failure);
+          connection.recordRemoteFailure(msg.coordinationId, failure);
           if (RpcConstants.EXTRA_DEBUGGING) {
             logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
           }
@@ -398,12 +387,14 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     private final int coordinationId;
     private final ByteBuf pBody;
     private final ByteBuf dBody;
+    private final C connection;
 
-    public ResponseEvent(int rpcType, int coordinationId, ByteBuf pBody, ByteBuf dBody) {
+    public ResponseEvent(C connection, int rpcType, int coordinationId, ByteBuf pBody, ByteBuf dBody) {
       this.rpcType = rpcType;
       this.coordinationId = coordinationId;
       this.pBody = pBody;
       this.dBody = dBody;
+      this.connection = connection;
 
       if(pBody != null){
         pBody.retain();
@@ -418,7 +409,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       try {
         MessageLite m = getResponseDefaultInstance(rpcType);
         assert rpcConfig.checkReceive(rpcType, m.getClass());
-        RpcOutcome<?> rpcFuture = queue.getFuture(rpcType, coordinationId, m.getClass());
+        RpcOutcome<?> rpcFuture = connection.getAndRemoveRpcOutcome(rpcType, coordinationId, m.getClass());
         Parser<?> parser = m.getParserForType();
         Object value = parser.parseFrom(new ByteBufInputStream(pBody, pBody.readableBytes()));
         rpcFuture.set(value, dBody);

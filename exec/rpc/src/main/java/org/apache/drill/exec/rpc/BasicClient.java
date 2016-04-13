@@ -41,6 +41,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
@@ -95,7 +96,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             pipe.addLast("protocol-decoder", getDecoder(connection.getAllocator()));
             pipe.addLast("message-decoder", new RpcDecoder("c-" + rpcConfig.getName()));
             pipe.addLast("protocol-encoder", new RpcEncoder("c-" + rpcConfig.getName()));
-            pipe.addLast("handshake-handler", new ClientHandshakeHandler());
+            pipe.addLast("handshake-handler", new ClientHandshakeHandler(connection));
 
             if(pingHandler != null){
               pipe.addLast("idle-state-handler", pingHandler);
@@ -166,11 +167,6 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     return super.send(connection, rpcType, protobufBody, clazz, dataBodies);
-  }
-
-  @Override
-  public boolean isClient() {
-    return true;
   }
 
   protected void connectAsClient(RpcConnectionHandler<R> connectionListener, HANDSHAKE_SEND handshakeValue,
@@ -282,15 +278,19 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
   private class ClientHandshakeHandler extends AbstractHandshakeHandler<HANDSHAKE_RESPONSE> {
 
-    public ClientHandshakeHandler() {
+    private final R connection;
+
+    public ClientHandshakeHandler(R connection) {
       super(BasicClient.this.handshakeType, BasicClient.this.handshakeParser);
+      Preconditions.checkNotNull(connection);
+      this.connection = connection;
     }
 
     @Override
     protected final void consumeHandshake(ChannelHandlerContext ctx, HANDSHAKE_RESPONSE msg) throws Exception {
       // remove the handshake information from the queue so it doesn't sit there forever.
-      RpcOutcome<HANDSHAKE_RESPONSE> response = queue.getFuture(handshakeType.getNumber(), coordinationId,
-          responseClass);
+      final RpcOutcome<HANDSHAKE_RESPONSE> response =
+          connection.getAndRemoveRpcOutcome(handshakeType.getNumber(), coordinationId, responseClass);
       response.set(msg, null);
     }
 

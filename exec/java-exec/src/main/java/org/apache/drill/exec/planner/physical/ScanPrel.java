@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.AbstractRelNode;
@@ -160,5 +161,10 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   @Override
   public boolean needsFinalColumnReordering() {
     return true;
+  }
+
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return groupScan.getDistributionAffinity();
   }
 }

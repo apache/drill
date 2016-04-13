@@ -15,26 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
 
+package org.apache.drill.exec.planner;
 
-import org.apache.drill.exec.planner.fragment.DistributionAffinity;
+import com.google.common.collect.ImmutableList;
 
-public abstract class AbstractStore extends AbstractSingle implements Store, Root{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStore.class);
+import java.util.List;
 
-  public AbstractStore(PhysicalOperator child) {
-    super(child);
+/**
+ * Abstract class for simple partition. It contains the
+ * location of the entire partition and also stores the
+ * value of the individual partition keys for this partition.
+ */
+public abstract  class SimplePartitionLocation implements PartitionLocation{
+  @Override
+  public boolean isCompositePartition() {
+    return false;
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
-    return physicalVisitor.visitStore(this, value);
+  public List<SimplePartitionLocation> getPartitionLocationRecursive() {
+    return ImmutableList.of(this);
   }
 
-
-  @Override
-  public DistributionAffinity getDistributionAffinity() {
-    return DistributionAffinity.SOFT;
-  }
 }
