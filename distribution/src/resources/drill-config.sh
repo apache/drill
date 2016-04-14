@@ -20,6 +20,9 @@
 #
 # Environment Variables:
 #
+#   DRILL_HOME                 Drill home (defaults based on this
+#                              script's path.)
+#
 #   JAVA_HOME                  The java implementation to use.
 #
 #   DRILL_CLASSPATH            Extra Java CLASSPATH entries.
@@ -50,63 +53,89 @@ home=`cd "$bin/..">/dev/null; pwd`
 this="$home/bin/$script"
 
 # the root of the drill installation
-if [ -z "$DRILL_HOME" ]; then
-  DRILL_HOME="$home"
+DRILL_HOME=${DRILL_HOME:-$home}
+
+# Standarize error messages
+
+fatal_error() {
+  echo "ERROR: $@" 1>&2
+  exit 1
+}
+
+# Check to see if the conf dir or drill home are given as an optional arguments
+# Must be the first arguments on the command line.
+
+if [ "--config" = "$1" ]; then
+  shift
+  DRILL_CONF_DIR=$1
+  shift
 fi
 
-#check to see if the conf dir or drill home are given as an optional arguments
-while [ $# -gt 1 ]; do
-  if [ "--config" = "$1" ]; then
-    shift
-    confdir=$1
-    shift
-    DRILL_CONF_DIR=$confdir
-  else
-    # Presume we are at end of options and break
-    break
+# If config dir is given, it must exist.
+
+if [ -n "$DRILL_CONF_DIR" ]; then
+  if [ ! -d "$DRILL_CONF_DIR" ]; then
+    fatal_error "Config dir does not exist:" $DRILL_CONF_DIR
   fi
-done
+else
 
-# Allow alternate drill conf dir location.
-DRILL_CONF_DIR="${DRILL_CONF_DIR:-/etc/drill/conf}"
+  # Allow alternate drill conf dir location.
+  DRILL_CONF_DIR="${DRILL_CONF_DIR:-/etc/drill/conf}"
 
-if [ ! -d $DRILL_CONF_DIR ]; then
-  DRILL_CONF_DIR=$DRILL_HOME/conf
+  # Otherwise, use the default
+  if [ ! -d "$DRILL_CONF_DIR" ]; then
+    DRILL_CONF_DIR="$DRILL_HOME/conf"
+  fi
+fi
+
+# However we got the config dir, it must contain a config
+# file, and that file must be readable.
+
+override="$DRILL_CONF_DIR/drill-override.conf"
+if [[ ! -a "$override" ]]; then
+  fatal_error "Drill config file missing: $override -- Wrong config dir?"
+fi
+if [[ ! -r "$override" ]]; then
+  fatal_error "Drill config file not readable: $override - Wrong user?"
 fi
 
 # Source drill-env.sh for any user configured values
-. "${DRILL_CONF_DIR}/drill-env.sh"
+# (Because the file is in the conf directory, this is either
+# the per-node config for the Classic install, or the site-wide
+# options for YARN install. Classic site-wide options were achieved
+# by copy/paste into each drill-env.sh file on each node.)
+# File is optional.
+
+confFile="${DRILL_CONF_DIR}/drill-env.sh"
+if [[ -r "$confFile" ]]; then
+  . "$confFile"
+fi
 
 # get log directory
-if [ "x${DRILL_LOG_DIR}" = "x" ]; then
-  export DRILL_LOG_DIR=/var/log/drill
+if [ -z "$DRILL_LOG_DIR" ]; then
+  # Try the optional location
+  DRILL_LOG_DIR=/var/log/drill
+  if [[ ! -d "$DRILL_LOG_DIR" ]] && [[ ! -w "$DRILL_LOG_DIR" ]]; then
+    # Default to the drill home folder. Create the directory
+    # if not present.
+
+    DRILL_LOG_DIR=$DRILL_HOME/log
+  fi
 fi
 
-touch "$DRILL_LOG_DIR/sqlline.log" &> /dev/null
-TOUCH_EXIT_CODE=$?
-if [ "$TOUCH_EXIT_CODE" = "0" ]; then
-  if [ "x$DRILL_LOG_DEBUG" = "x1" ]; then
-    echo "Drill log directory: $DRILL_LOG_DIR"
-  fi
-  DRILL_LOG_DIR_FALLBACK=0
-else
-  #Force DRILL_LOG_DIR to fall back
-  DRILL_LOG_DIR_FALLBACK=1
-fi
+# Regardless of how we got the directory, it must exist
+# and be writable.
 
-if [ ! -d "$DRILL_LOG_DIR" ] || [ "$DRILL_LOG_DIR_FALLBACK" = "1" ]; then
-  if [ "x$DRILL_LOG_DEBUG" = "x1" ]; then
-    echo "Drill log directory $DRILL_LOG_DIR does not exist or is not writable, defaulting to $DRILL_HOME/log"
-  fi
-  DRILL_LOG_DIR=$DRILL_HOME/log
-  mkdir -p $DRILL_LOG_DIR
+mkdir -p "$DRILL_LOG_DIR"
+if [[ ! -d "$DRILL_LOG_DIR" ]] && [[ ! -w "$DRILL_LOG_DIR" ]]; then
+  fatal_error "Log directory does not exist or is not writable: $DRILL_LOG_DIR"
 fi
 
 # Add Drill conf folder at the beginning of the classpath
 CP=$DRILL_CONF_DIR
 
 # Followed by any user specified override jars
-if [ "${DRILL_CLASSPATH_PREFIX}x" != "x" ]; then
+if [ -n "${DRILL_CLASSPATH_PREFIX}" ]; then
   CP=$CP:$DRILL_CLASSPATH_PREFIX
 fi
 
@@ -117,12 +146,12 @@ CP=$CP:$DRILL_HOME/jars/*
 CP=$CP:$DRILL_HOME/jars/ext/*
 
 # Followed by Hadoop's jar
-if [ "${HADOOP_CLASSPATH}x" != "x" ]; then
+if [ -n "${HADOOP_CLASSPATH}" ]; then
   CP=$CP:$HADOOP_CLASSPATH
 fi
 
 # Followed by HBase' jar
-if [ "${HBASE_CLASSPATH}x" != "x" ]; then
+if [ -n "${HBASE_CLASSPATH}" ]; then
   CP=$CP:$HBASE_CLASSPATH
 fi
 
@@ -131,7 +160,7 @@ CP=$CP:$DRILL_HOME/jars/3rdparty/*
 CP=$CP:$DRILL_HOME/jars/classb/*
 
 # Finally any user specified 
-if [ "${DRILL_CLASSPATH}x" != "x" ]; then
+if [ -n "${DRILL_CLASSPATH}" ]; then
   CP=$CP:$DRILL_CLASSPATH
 fi
 
@@ -152,20 +181,15 @@ if [ -z "$JAVA_HOME" ]; then
     while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
       DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
       SOURCE="$(readlink "$SOURCE")"
-      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+      # if $SOURCE was a relative symlink, we need to resolve it relative
+      # to the path where the symlink file was located
+      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
     done
     JAVA_HOME="$( cd -P "$( dirname "$SOURCE" )" && cd .. && pwd )"
   fi
   # if we didn't set it
   if [ -z "$JAVA_HOME" ]; then
-    cat 1>&2 <<EOF
-+======================================================================+
-|      Error: JAVA_HOME is not set and Java could not be found         |
-+----------------------------------------------------------------------+
-| Apache Drill requires Java 1.7 or later.                             |
-+======================================================================+
-EOF
-    exit 1
+    fatal_error "JAVA_HOME is not set and Java could not be found"
   fi
 fi
 # Now, verify that 'java' binary exists and is suitable for Drill.
@@ -176,14 +200,12 @@ else
 fi
 JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
 if [ ! -e "$JAVA" ]; then
-  echo "Java not found at JAVA_HOME=$JAVA_HOME."
-  exit 1
+  fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
 fi
 # Ensure that Java version is at least 1.7
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1.4|1.5|1.6" > /dev/null
 if [ $? -eq 0 ]; then
-  echo "Java 1.7 or later is required to run Apache Drill."
-  exit 1
+  fatal_error "Java 1.7 or later is required to run Apache Drill."
 fi
 
 # Adjust paths for CYGWIN
@@ -193,7 +215,7 @@ if $is_cygwin; then
   DRILL_LOG_DIR=`cygpath -w "$DRILL_LOG_DIR"`
   CP=`cygpath -w -p "$CP"`
   if [ -z "$HADOOP_HOME" ]; then
-    HADOOP_HOME=${DRILL_HOME}/winutils
+    export HADOOP_HOME=${DRILL_HOME}/winutils
   fi
 fi
 
@@ -205,9 +227,11 @@ export MALLOC_TOP_PAD_=131072
 export MALLOC_MMAP_MAX_=65536
 
 # Variables exported form this script
-export HADOOP_HOME
+# export HADOOP_HOME Only if set. See above.
 export is_cygwin
 export DRILL_HOME
 export DRILL_CONF_DIR
 export DRILL_LOG_DIR
 export CP
+export JAVA_HOME
+export JAVA
