@@ -58,6 +58,7 @@ import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.work.WorkManager;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -74,26 +75,26 @@ public class TestOptiqPlans extends ExecTest {
   @Test
   public void orderBy(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
-      @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, controller, workBus);
+      @Injectable Controller controller, @Injectable WorkEventBus workBus, @Injectable WorkManager workManager) throws Throwable {
+    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, controller, workBus, workManager);
   }
 
   @Test
   public void stringFilter(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
-      @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, controller, workBus);
+      @Injectable Controller controller, @Injectable WorkEventBus workBus, @Injectable WorkManager workManager) throws Throwable {
+    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, controller, workBus, workManager);
   }
 
   @Test
   public void groupBy(@Injectable final BootStrapContext bitContext, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
-      @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    final SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, controller, workBus);
+      @Injectable Controller controller, @Injectable WorkEventBus workBus, @Injectable WorkManager workManager) throws Throwable {
+    final SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, controller, workBus, workManager);
   }
 
   private SimpleRootExec doLogicalTest(final BootStrapContext context, UserClientConnection connection, String file,
-      ClusterCoordinator coord, DataConnectionCreator com, Controller controller, WorkEventBus workBus) throws Exception {
+      ClusterCoordinator coord, DataConnectionCreator com, Controller controller, WorkEventBus workBus, WorkManager workManager) throws Exception {
     new NonStrictExpectations() {
       {
         context.getMetrics();
@@ -112,7 +113,8 @@ public class TestOptiqPlans extends ExecTest {
         controller,
         com,
         workBus,
-        new LocalPersistentStoreProvider(config));
+        new LocalPersistentStoreProvider(config),
+        workManager);
     final QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
         bitContext, QueryId.getDefaultInstance());
     final PhysicalPlanReader reader = bitContext.getPlanReader();

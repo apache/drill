@@ -30,6 +30,7 @@ import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.ThreadStatCollector;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
+import org.apache.drill.exec.work.WorkManager;
 
 public class DrillbitContext implements AutoCloseable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -61,6 +63,7 @@ public class DrillbitContext implements AutoCloseable {
   private final CodeCompiler compiler;
   private final ScanResult classpathScan;
   private final LogicalPlanPersistence lpPersistence;
+  private final WorkManager workManager;
 
 
   public DrillbitContext(
@@ -70,7 +73,8 @@ public class DrillbitContext implements AutoCloseable {
       Controller controller,
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
-      PersistentStoreProvider provider) {
+      PersistentStoreProvider provider,
+      WorkManager workManager) {
     this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
@@ -79,6 +83,7 @@ public class DrillbitContext implements AutoCloseable {
     this.connectionsPool = checkNotNull(connectionsPool);
     this.endpoint = checkNotNull(endpoint);
     this.provider = provider;
+    this.workManager = workManager;
     this.lpPersistence = new LogicalPlanPersistence(context.getConfig(), classpathScan);
 
     // TODO remove escaping "this".
@@ -172,12 +177,20 @@ public class DrillbitContext implements AutoCloseable {
     return context.getExecutor();
   }
 
+  public ThreadStatCollector getThreadStatCollector() {
+    return context.getThreadStatCollector();
+  }
+
   public LogicalPlanPersistence getLpPersistence() {
     return lpPersistence;
   }
 
   public ScanResult getClasspathScan() {
     return classpathScan;
+  }
+
+  public WorkManager getWorkManager() {
+    return workManager;
   }
 
   @Override
