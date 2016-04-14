@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.util.List;
-
+import java.util.Collection;
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -28,14 +27,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.google.common.collect.Lists;
 
 @Path("/")
 @PermitAll
@@ -48,51 +47,130 @@ public class DrillRoot {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getStats() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getStatsJSON());
+  public Viewable getClusterInfo() {
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getClusterInfoJSON());
   }
 
   @GET
-  @Path("/stats.json")
+  @Path("/cluster.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Stat> getStatsJSON() {
-    List<Stat> stats = Lists.newLinkedList();
-    stats.add(new Stat("Number of Drill Bits", work.getContext().getBits().size()));
-    int number = 0;
-    for (CoordinationProtos.DrillbitEndpoint bit : work.getContext().getBits()) {
-      String initialized = bit.isInitialized() ? " initialized" : " not initialized";
-      stats.add(new Stat("Bit #" + number, bit.getAddress() + initialized));
-      ++number;
-    }
-    stats.add(new Stat("Data Port Address", work.getContext().getEndpoint().getAddress() +
-      ":" + work.getContext().getEndpoint().getDataPort()));
-    stats.add(new Stat("User Port Address", work.getContext().getEndpoint().getAddress() +
-      ":" + work.getContext().getEndpoint().getUserPort()));
-    stats.add(new Stat("Control Port Address", work.getContext().getEndpoint().getAddress() +
-      ":" + work.getContext().getEndpoint().getControlPort()));
-    stats.add(new Stat("Maximum Direct Memory", DrillConfig.getMaxDirectMemory()));
+  public ClusterInfo getClusterInfoJSON() {
+    final Collection<DrillbitInfo> drillbits = Sets.newTreeSet();
+    final Collection<String> mismatchedVersions = Sets.newTreeSet();
 
-    return stats;
+    final DrillbitEndpoint currentDrillbit = work.getContext().getEndpoint();
+    final String currentVersion = currentDrillbit.getVersion();
+
+    for (DrillbitEndpoint endpoint : work.getContext().getBits()) {
+      final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
+              currentDrillbit.equals(endpoint),
+              currentVersion.equals(endpoint.getVersion()));
+      if (!drillbit.isVersionMatch()) {
+        mismatchedVersions.add(drillbit.getVersion());
+      }
+      drillbits.add(drillbit);
+    }
+
+    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions);
   }
 
   @XmlRootElement
-  public class Stat {
-    private String name;
-    private Object value;
+  public static class ClusterInfo {
+    private final Collection<DrillbitInfo> drillbits;
+    private final String currentVersion;
+    private final Collection<String> mismatchedVersions;
 
     @JsonCreator
-    public Stat(String name, Object value) {
-      this.name = name;
-      this.value = value;
+    public ClusterInfo(Collection<DrillbitInfo> drillbits,
+                       String currentVersion,
+                       Collection<String> mismatchedVersions) {
+      this.drillbits = Sets.newTreeSet(drillbits);
+      this.currentVersion = currentVersion;
+      this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
     }
 
-    public String getName() {
-      return name;
+    public Collection<DrillbitInfo> getDrillbits() {
+      return Sets.newTreeSet(drillbits);
     }
 
-    public Object getValue() {
-      return value;
+    public String getCurrentVersion() {
+      return currentVersion;
     }
 
+    public Collection<String> getMismatchedVersions() {
+      return Sets.newTreeSet(mismatchedVersions);
+    }
   }
+
+  public static class DrillbitInfo implements Comparable<DrillbitInfo> {
+    private final String address;
+    private final String userPort;
+    private final String controlPort;
+    private final String dataPort;
+    private final String version;
+    private final boolean current;
+    private final boolean versionMatch;
+
+    @JsonCreator
+    public DrillbitInfo(DrillbitEndpoint drillbit, boolean current, boolean versionMatch) {
+      this.address = drillbit.getAddress();
+      this.userPort = String.valueOf(drillbit.getUserPort());
+      this.controlPort = String.valueOf(drillbit.getControlPort());
+      this.dataPort = String.valueOf(drillbit.getDataPort());
+      this.version = Strings.isNullOrEmpty(drillbit.getVersion()) ? "Undefined" : drillbit.getVersion();
+      this.current = current;
+      this.versionMatch = versionMatch;
+    }
+
+    public String getAddress() {
+      return address;
+    }
+
+    public String getUserPort() { return userPort; }
+
+    public String getControlPort() { return controlPort; }
+
+    public String getDataPort() { return dataPort; }
+
+    public String getVersion() {
+      return version;
+    }
+
+    public boolean isCurrent() {
+      return current;
+    }
+
+    public boolean isVersionMatch() {
+      return versionMatch;
+    }
+
+    /**
+     * Method used to sort drillbits. Current drillbit goes first.
+     * Then drillbits with matching versions, after them drillbits with mismatching versions.
+     * Matching drillbits are sorted according address natural order,
+     * mismatching drillbits are sorted according version, address natural order.
+     *
+     * @param drillbitToCompare drillbit to compare against
+     * @return -1 if drillbit should be before, 1 if after in list
+     */
+    @Override
+    public int compareTo(DrillbitInfo drillbitToCompare) {
+      if (this.isCurrent()) {
+        return -1;
+      }
+
+      if (drillbitToCompare.isCurrent()) {
+        return 1;
+      }
+
+      if (this.isVersionMatch() == drillbitToCompare.isVersionMatch()) {
+        if (this.version.equals(drillbitToCompare.getVersion())) {
+          return this.address.compareTo(drillbitToCompare.getAddress());
+        }
+        return this.version.compareTo(drillbitToCompare.getVersion());
+      }
+      return this.versionMatch ? -1 : 1;
+    }
+  }
+
 }
