@@ -1,16 +1,16 @@
 ---
 title: "Ports Used by Drill"
-date:  
+date: 2016-04-14 00:26:52 UTC
 parent: "Configure Drill"
 ---
-The following table provides a list of the ports that Drill uses, the port
-type, and a description of how Drill uses the port:
 
-| Port  | Type | Description                                                                                                                                                                    |
-|-------|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 8047  | TCP  | Needed for the Drill Web Console.                                                                                                                                                   |
-| 31010 | TCP  | User port address. Used between nodes in a Drill cluster. Needed for an external client, such as Tableau, to connect into the cluster nodes. Also needed for the Drill Web Console. |
-| 31011 | TCP  | Control port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                               |
-| 31012 | TCP  | Data port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                                  |
-| 46655 | UDP  | Used for JGroups and Infinispan. Needed for multi-node installation of Apache Drill.                                                                                           |
+The table below lists the default ports that Drill uses and provides descriptions for each, as well as the corresponding configuration option. You can modify the configuration options in `<drill_home>/conf/drill-override.conf` to change the ports that Drill uses. See [Start-Up Options]({{site.baseurl}}/docs/start-up-options/) for more information. 
 
+
+| Default Port | Type | Configuration Option               | Description                                                                                                                                                                         |
+|--------------|------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 8047         | TCP  | drill.exec.http.port               | Needed for the Drill Web Console.                                                                                                                                                   |
+| 31010        | TCP  | drill.exec.rpc.user.server.port    | User port address. Used between nodes in a Drill cluster. Needed for an external client, such as Tableau, to connect into the cluster nodes. Also needed for the Drill Web Console. |
+| 31011        | TCP  | drill.exec.rpc.bit.server.port     | Control port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                                    |
+| 31012        | TCP  | drill.exec.rpc.bit.server.port + 1 | Data port address. Used between nodes in a Drill cluster. Needed for multi-node installation of Apache Drill.                                                                       |
+<!---| 46655        | UDP  |                                    | Used for JGroups and Infinispan. Needed for multi-node installation of Apache Drill.                                                                                                |--->
