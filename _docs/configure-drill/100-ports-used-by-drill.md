@@ -1,10 +1,10 @@
 ---
 title: "Ports Used by Drill"
-date: 2016-04-14 00:46:15 UTC
+date: 2016-04-14 00:51:25 UTC
 parent: "Configure Drill"
 ---
 
-The table below lists the default ports that Drill uses and provides descriptions for each, as well as the corresponding configuration option. You can modify the configuration options in `<drill_home>/conf/drill-override.conf` to change the ports that Drill uses. See [Start-Up Options]({{site.baseurl}}/docs/start-up-options/) for more information. 
+The table below lists the default ports that Drill uses and provides descriptions for each, as well as the corresponding configuration options. You can modify the configuration options in `<drill_home>/conf/drill-override.conf` to change the ports that Drill uses. See [Start-Up Options]({{site.baseurl}}/docs/start-up-options/) for more information. 
 
 
 | Default Port | Type | Configuration Option               | Description                                                                                                                                                                         |
