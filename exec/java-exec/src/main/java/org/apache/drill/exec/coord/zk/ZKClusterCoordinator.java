@@ -243,15 +243,13 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
         builder.append("Active drillbit set changed.  Now includes ");
         builder.append(newDrillbitSet.size());
         builder.append(" total bits. New active drillbits:\n");
+        builder.append("Address | User Port | Control Port | Data Port | Version |\n");
         for (DrillbitEndpoint bit: newDrillbitSet) {
-          builder.append('\t');
-          builder.append(bit.getAddress());
-          builder.append(':');
-          builder.append(bit.getUserPort());
-          builder.append(':');
-          builder.append(bit.getControlPort());
-          builder.append(':');
-          builder.append(bit.getDataPort());
+          builder.append(bit.getAddress()).append(" | ");
+          builder.append(bit.getUserPort()).append(" | ");
+          builder.append(bit.getControlPort()).append(" | ");
+          builder.append(bit.getDataPort()).append(" | ");
+          builder.append(bit.getVersion()).append(" |");
           builder.append('\n');
         }
         logger.debug(builder.toString());

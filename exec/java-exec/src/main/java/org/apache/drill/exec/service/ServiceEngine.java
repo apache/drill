@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -158,6 +159,7 @@ public class ServiceEngine implements AutoCloseable {
         .setAddress(address)
         //.setAddress("localhost")
         .setUserPort(userPort)
+        .setVersion(DrillVersionInfo.getVersion())
         .build();
 
     partialEndpoint = controller.start(partialEndpoint);
