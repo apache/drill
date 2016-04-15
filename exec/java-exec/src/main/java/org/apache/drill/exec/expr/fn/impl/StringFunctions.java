@@ -1280,6 +1280,43 @@ public class StringFunctions{
     } // end of eval
   }
 
+  @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Split implements DrillSimpleFunc {
+    @Param  VarCharHolder input;
+    @Param  VarCharHolder delimiter;
+
+    @Workspace char splitChar;
+    @Inject DrillBuf buffer;
+
+    @Output org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter writer;
+
+    @Override
+    public void setup() {
+      int len = delimiter.end - delimiter.start;
+      if (len != 1) {
+        throw new IllegalArgumentException("Only single character delimiters are supportted for split()");
+      }
+      splitChar = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
+          toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer).charAt(0);
+    }
+
+    @Override
+    public void eval() {
+      Iterable<String> tokens = com.google.common.base.Splitter.on(splitChar).split(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer));
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
+      list.startList();
+      for (String token : tokens) {
+        final byte[] strBytes = token.getBytes(com.google.common.base.Charsets.UTF_8);
+        buffer = buffer.reallocIfNeeded(strBytes.length);
+        buffer.setBytes(0, strBytes);
+        list.varChar().writeVarChar(0, strBytes.length, buffer);
+      }
+      list.endList();
+    }
+
+  }
+
   @FunctionTemplate(name = "concatOperator", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class ConcatOperator implements DrillSimpleFunc {
     @Param  VarCharHolder left;
