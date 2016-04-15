@@ -22,6 +22,7 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -43,7 +44,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -98,10 +99,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final RecordIterator rightIterator;
   private final JoinStatus status;
   private final List<JoinCondition> conditions;
+  private final List<Comparator> comparators;
   private final JoinRelType joinType;
   private JoinWorker worker;
-  private boolean areNullsEqual = false; // whether nulls compare equal
-
 
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
@@ -120,12 +120,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     this.status = new JoinStatus(leftIterator, rightIterator, this);
     this.conditions = popConfig.getConditions();
 
-    JoinComparator comparator = JoinComparator.NONE;
+    this.comparators = Lists.newArrayListWithExpectedSize(conditions.size());
     for (JoinCondition condition : conditions) {
-      comparator = JoinUtils.checkAndSetComparison(condition, comparator);
+      this.comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(condition));
     }
-    assert comparator != JoinComparator.NONE;
-    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM);
   }
 
   public JoinRelType getJoinType() {
@@ -461,7 +459,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         // If not 0, it means not equal.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.
         if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()
-          && ! areNullsEqual) {
+          && comparators.get(i) == Comparator.EQUALS) {
           JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
             cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
           jc._then()._return(JExpr.lit(1));

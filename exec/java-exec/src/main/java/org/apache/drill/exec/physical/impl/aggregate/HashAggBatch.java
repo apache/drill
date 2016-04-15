@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -40,6 +42,7 @@ import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -64,6 +67,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private LogicalExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds;
   private TypedFieldId[] aggrOutFieldIds;      // field ids for the outgoing batch
+  private final List<Comparator> comparators;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
       GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */,
@@ -82,6 +86,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException {
     super(popConfig, context);
     this.incoming = incoming;
+
+    final int numGrpByExprs = popConfig.getGroupByExprs().size();
+    comparators = Lists.newArrayListWithExpectedSize(numGrpByExprs);
+    for (int i=0; i<numGrpByExprs; i++) {
+      // nulls are equal in group by case
+      comparators.add(Comparator.IS_NOT_DISTINCT_FROM);
+    }
   }
 
   @Override
@@ -241,7 +252,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     HashTableConfig htConfig =
         // TODO - fix the validator on this option
         new HashTableConfig((int)context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-            HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */);
+            HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */, comparators);
 
     agg.setup(popConfig, htConfig, context, this.stats,
         oContext.getAllocator(), incoming, this,

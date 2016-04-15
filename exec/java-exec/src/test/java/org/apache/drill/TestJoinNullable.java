@@ -20,7 +20,6 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.TestTools;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestJoinNullable extends PlanTestBase {
@@ -520,15 +519,79 @@ public class TestJoinNullable extends PlanTestBase {
         .go();
   }
 
-  @Ignore("Currently HashJoin/MergeJoin don't seem to support mixed comparators")
   @Test
-  public void withCombinationOfEqualAndIsNotDistinct() throws Exception {
-    final String query = "SELECT * FROM " +
-        "cp.`jsonInput/nullableOrdered1.json` t1 JOIN " +
-        "cp.`jsonInput/nullableOrdered2.json` t2 " +
-        "ON t1.key = t2.key " +
-        "WHERE t1.data is not distinct from t2.data";
-    testPlanSubstrPatterns(query, new String[] { "HashJoin", "IS NOT DISTINCT FROM" }, null);
-    nullEqualJoinHelper(query);
+  public void withMixedEqualAndIsNotDistinctHashJoin() throws Exception {
+    enableJoin(true, false);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsonInput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key AND t1.data is not distinct from t2.data";
+      testPlanOneExpectedPattern(query, "HashJoin.*condition.*AND\\(=\\(.*IS NOT DISTINCT FROM*");
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void withMixedEqualAndIsNotDistinctMergeJoin() throws Exception {
+    enableJoin(false, true);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsonInput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key AND t1.data is not distinct from t2.data";
+      testPlanOneExpectedPattern(query, "MergeJoin.*condition.*AND\\(=\\(.*IS NOT DISTINCT FROM*");
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void withMixedEqualAndIsNotDistinctFilterHashJoin() throws Exception {
+    enableJoin(true, false);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsonInput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "WHERE t1.data is not distinct from t2.data";
+      // Expected the filter to be pushed into the join
+      testPlanOneExpectedPattern(query, "HashJoin.*condition.*AND\\(=\\(.*IS NOT DISTINCT FROM*");
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void withMixedEqualAndIsNotDistinctFilterMergeJoin() throws Exception {
+    enableJoin(false, true);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsonInput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsonInput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "WHERE t1.data is not distinct from t2.data";
+      // Expected the filter to be pushed into the join
+      testPlanOneExpectedPattern(query, "MergeJoin.*condition.*AND\\(=\\(.*IS NOT DISTINCT FROM*");
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  public void nullMixedComparatorEqualJoinHelper(final String query) throws Exception {
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues("A", "L_A_1", "L_A_1", "A")
+        .baselineValues("A", null, null, "A")
+        .baselineValues("B", null, null, "B")
+        .baselineValues("B", "L_B_1", "L_B_1", "B")
+        .go();
   }
 }
