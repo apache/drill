@@ -49,7 +49,10 @@ public class TestDecimal extends PopUnitTestBase{
          */
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -94,7 +97,10 @@ public class TestDecimal extends PopUnitTestBase{
         // Function checks for casting from Float, Double to Decimal data types
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -139,7 +145,10 @@ public class TestDecimal extends PopUnitTestBase{
         // Function checks arithmetic operations on Decimal18
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -190,7 +199,10 @@ public class TestDecimal extends PopUnitTestBase{
          */
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -233,7 +245,10 @@ public class TestDecimal extends PopUnitTestBase{
         // Function checks if sort output on complex decimal type works
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -282,7 +297,10 @@ public class TestDecimal extends PopUnitTestBase{
 
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+         DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       // run query.
       bit.run();

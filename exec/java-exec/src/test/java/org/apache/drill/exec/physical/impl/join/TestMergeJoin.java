@@ -283,7 +283,10 @@ public class TestMergeJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();
@@ -307,7 +310,10 @@ public class TestMergeJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();
@@ -331,7 +337,10 @@ public class TestMergeJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();
@@ -355,7 +364,10 @@ public class TestMergeJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();

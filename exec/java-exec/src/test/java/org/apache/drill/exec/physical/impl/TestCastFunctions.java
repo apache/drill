@@ -355,7 +355,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastFromNullablCol() throws Throwable {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     try(final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+        final DrillClient client = DrillClient.newBuilder()
+            .setConfig(CONFIG)
+            .setClusterCoordinator(serviceSet.getCoordinator())
+            .build()) {
       bit.run();
 
       client.connect();

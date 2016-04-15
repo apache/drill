@@ -37,7 +37,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class TestMergingReceiver extends PopUnitTestBase {
@@ -48,8 +47,11 @@ public class TestMergingReceiver extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       bit2.run();
       client.connect();
@@ -76,8 +78,11 @@ public class TestMergingReceiver extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       bit2.run();
@@ -123,8 +128,11 @@ public class TestMergingReceiver extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       bit2.run();

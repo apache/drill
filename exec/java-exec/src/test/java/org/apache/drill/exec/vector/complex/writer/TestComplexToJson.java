@@ -39,7 +39,10 @@ public class TestComplexToJson extends BaseTestQuery {
     List<QueryDataBatch> results;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
 
-    client = new DrillClient(config, serviceSet.getCoordinator());
+    client = DrillClient.newBuilder()
+        .setConfig(config)
+        .setClusterCoordinator(serviceSet.getCoordinator())
+        .build();
     client.setSupportComplexTypes(false);
     client.connect();
     results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
@@ -55,7 +58,10 @@ public class TestComplexToJson extends BaseTestQuery {
     }
     client.close();
 
-    client = new DrillClient(config, serviceSet.getCoordinator());
+    client = DrillClient.newBuilder()
+        .setConfig(config)
+        .setClusterCoordinator(serviceSet.getCoordinator())
+        .build();
     client.setSupportComplexTypes(true);
     client.connect();
     results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
