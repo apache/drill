@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.util.Text;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.ImmutableList;
 
 public class TestStringFunctions extends BaseTestQuery {
 
@@ -232,4 +235,16 @@ public class TestStringFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test
+  public void testSplit() throws Exception {
+    testBuilder()
+        .sqlQuery("select split(n_name, ' ') words from cp.`tpch/nation.parquet` where n_nationkey = 24")
+        .unOrdered()
+        .baselineColumns("words")
+        .baselineValues(ImmutableList.of(new Text("UNITED"), new Text("STATES")))
+        .build()
+        .run();
+  }
+
 }
