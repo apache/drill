@@ -60,6 +60,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.store.ImplicitColumnExplorer;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -72,7 +73,6 @@ import com.google.common.collect.Maps;
 
 public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
-
   private Projector projector;
   private List<ValueVector> allocationVectors;
   private List<ComplexWriter> complexWriters;
@@ -324,6 +324,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               if (name == EMPTY_STRING) {
                 continue;
               }
+
+              if (isImplicitFileColumn(vvIn)) {
+                continue;
+              }
+
               final FieldReference ref = new FieldReference(name);
               final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref.getAsNamePart().getName(), vvIn.getField().getType()), callBack);
               final TransferPair tp = vvIn.makeTransferPair(vvOut);
@@ -339,6 +344,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               }
               final String name = result.outputNames.get(k++);  // get the renamed column names
               if (name == EMPTY_STRING) {
+                continue;
+              }
+
+              if (isImplicitFileColumn(vvIn)) {
                 continue;
               }
 
@@ -451,6 +460,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     } else {
       return false;
     }
+  }
+
+  private boolean isImplicitFileColumn(ValueVector vvIn) {
+    return ImplicitColumnExplorer.initImplicitFileColumns(context.getOptions()).get(vvIn.getField().getName()) != null;
   }
 
   private List<NamedExpression> getExpressionList() {

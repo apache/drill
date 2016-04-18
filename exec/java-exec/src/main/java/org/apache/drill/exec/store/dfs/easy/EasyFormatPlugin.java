@@ -19,16 +19,15 @@ package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.base.Functions;
+import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -42,7 +41,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.ImplicitColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -53,7 +52,6 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -125,41 +123,14 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       List<SchemaPath> columns, String userName) throws ExecutionSetupException;
 
   CloseableRecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
-    String partitionDesignator = context.getOptions()
-      .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<SchemaPath> columns = scan.getColumns();
-    List<RecordReader> readers = Lists.newArrayList();
-    List<String[]> partitionColumns = Lists.newArrayList();
-    List<Integer> selectedPartitionColumns = Lists.newArrayList();
-    boolean selectAllColumns = false;
+    final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(context, scan.getColumns());
 
-    if (columns == null || columns.size() == 0 || AbstractRecordReader.isStarQuery(columns)) {
-      selectAllColumns = true;
-    } else {
-      List<SchemaPath> newColumns = Lists.newArrayList();
-      Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
-      for (SchemaPath column : columns) {
-        Matcher m = pattern.matcher(column.getAsUnescapedPath());
-        if (m.matches()) {
-          selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
-        } else {
-          newColumns.add(column);
-        }
-      }
-
-      // We must make sure to pass a table column(not to be confused with partition column) to the underlying record
-      // reader.
-      if (newColumns.size()==0) {
-        newColumns.add(AbstractRecordReader.STAR_COLUMN);
-      }
-      // Create a new sub scan object with the new set of columns;
-      EasySubScan newScan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-          newColumns, scan.getSelectionRoot());
-      newScan.setOperatorId(scan.getOperatorId());
-      scan = newScan;
+    if (!columnExplorer.isSelectAllColumns()) {
+      scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
+          columnExplorer.getTableColumns(), scan.getSelectionRoot());
+      scan.setOperatorId(scan.getOperatorId());
     }
 
-    int numParts = 0;
     OperatorContext oContext = context.newOperatorContext(scan);
     final DrillFileSystem dfs;
     try {
@@ -168,30 +139,26 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
     }
 
-    for(FileWork work : scan.getWorkUnits()){
-      readers.add(getRecordReader(context, dfs, work, scan.getColumns(), scan.getUserName()));
-      if (scan.getSelectionRoot() != null) {
-        String[] r = Path.getPathWithoutSchemeAndAuthority(new Path(scan.getSelectionRoot())).toString().split("/");
-        String[] p = Path.getPathWithoutSchemeAndAuthority(new Path(work.getPath())).toString().split("/");
-        if (p.length > r.length) {
-          String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
-          partitionColumns.add(q);
-          numParts = Math.max(numParts, q.length);
-        } else {
-          partitionColumns.add(new String[] {});
-        }
-      } else {
-        partitionColumns.add(new String[] {});
+    List<RecordReader> readers = Lists.newArrayList();
+    List<Map<String, String>> implicitColumns = Lists.newArrayList();
+    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
+    for(FileWork work : scan.getWorkUnits()) {
+      RecordReader recordReader = getRecordReader(context, dfs, work, scan.getColumns(), scan.getUserName());
+      readers.add(recordReader);
+      Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(work, scan.getSelectionRoot());
+      implicitColumns.add(implicitValues);
+      if (implicitValues.size() > mapWithMaxColumns.size()) {
+        mapWithMaxColumns = implicitValues;
       }
     }
 
-    if (selectAllColumns) {
-      for (int i = 0; i < numParts; i++) {
-        selectedPartitionColumns.add(i);
-      }
+    // all readers should have the same number of implicit columns, add missing ones with value null
+    Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    for (Map<String, String> map : implicitColumns) {
+      map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
     }
 
-    return new ScanBatch(scan, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    return new ScanBatch(scan, context, oContext, readers.iterator(), implicitColumns);
   }
 
   public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;
