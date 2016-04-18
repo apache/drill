@@ -137,7 +137,11 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
       ExecConstants.ENABLE_NEW_TEXT_READER,
       ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
-      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR
+      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR,
+      ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {

@@ -20,10 +20,10 @@ package org.apache.drill.exec.store.hive;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Functions;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -67,17 +67,15 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     final List<SchemaPath> columns = config.getColumns();
     final String partitionDesignator = context.getOptions()
         .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<Map<String, String>> implicitColumns = Lists.newLinkedList();
+    boolean selectAllQuery = AbstractRecordReader.isStarQuery(columns);
 
     final boolean hasPartitions = (partitions != null && partitions.size() > 0);
 
     final List<String[]> partitionColumns = Lists.newArrayList();
     final List<Integer> selectedPartitionColumns = Lists.newArrayList();
     List<SchemaPath> newColumns = columns;
-    if (AbstractRecordReader.isStarQuery(columns)) {
-      for (int i = 0; i < table.getPartitionKeys().size(); i++) {
-        selectedPartitionColumns.add(i);
-      }
-    } else {
+    if (!selectAllQuery) {
       // Separate out the partition and non-partition columns. Non-partition columns are passed directly to the
       // ParquetRecordReader. Partition columns are passed to ScanBatch.
       newColumns = Lists.newArrayList();
@@ -86,7 +84,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         Matcher m = pattern.matcher(column.getAsUnescapedPath());
         if (m.matches()) {
           selectedPartitionColumns.add(
-              Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+              Integer.parseInt(column.getAsUnescapedPath().substring(partitionDesignator.length())));
         } else {
           newColumns.add(column);
         }
@@ -103,6 +101,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     // TODO: In future we can get this cache from Metadata cached on filesystem.
     final Map<String, ParquetMetadata> footerCache = Maps.newHashMap();
 
+    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
     try {
       for (InputSplit split : splits) {
         final FileSplit fileSplit = (FileSplit) split;
@@ -128,10 +127,19 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
                   parquetMetadata,
                   newColumns)
           );
+          Map<String, String> implicitValues = Maps.newLinkedHashMap();
 
           if (hasPartitions) {
-            Partition p = partitions.get(currentPartitionIndex);
-            partitionColumns.add(p.getValues().toArray(new String[0]));
+            List<String> values = partitions.get(currentPartitionIndex).getValues();
+            for (int i = 0; i < values.size(); i++) {
+              if (selectAllQuery || selectedPartitionColumns.contains(i)) {
+                implicitValues.put(partitionDesignator + i, values.get(i));
+              }
+            }
+          }
+          implicitColumns.add(implicitValues);
+          if (implicitValues.size() > mapWithMaxColumns.size()) {
+            mapWithMaxColumns = implicitValues;
           }
         }
         currentPartitionIndex++;
@@ -141,6 +149,12 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
       throw new ExecutionSetupException("Failed to create RecordReaders. " + e.getMessage(), e);
     }
 
+    // all readers should have the same number of implicit columns, add missing ones with value null
+    mapWithMaxColumns = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    for (Map<String, String> map : implicitColumns) {
+      map.putAll(Maps.difference(map, mapWithMaxColumns).entriesOnlyOnRight());
+    }
+
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
@@ -148,7 +162,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
-    return new ScanBatch(config, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    return new ScanBatch(config, context, oContext, readers.iterator(), implicitColumns);
   }
 
   /**
