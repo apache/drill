@@ -65,7 +65,7 @@ public class DataConnectionCreator implements AutoCloseable {
   }
 
   public DataTunnel getTunnel(DrillbitEndpoint endpoint) {
-    DataConnectionManager newManager = new DataConnectionManager(endpoint, context);
+    DataConnectionManager newManager = new DataConnectionManager(endpoint, context, dataAllocator);
     DataConnectionManager oldManager = connectionManager.putIfAbsent(endpoint, newManager);
     if(oldManager != null){
       newManager = oldManager;

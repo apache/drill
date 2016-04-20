@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
@@ -29,6 +30,7 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
 
   private final DrillbitEndpoint endpoint;
   private final BootStrapContext context;
+  private final BufferAllocator dataAllocator;
 
   private final static BitClientHandshake HANDSHAKE = BitClientHandshake //
       .newBuilder() //
@@ -36,15 +38,16 @@ public class DataConnectionManager extends ReconnectingConnection<DataClientConn
       .setChannel(RpcChannel.BIT_DATA) //
       .build();
 
-  public DataConnectionManager(DrillbitEndpoint endpoint, BootStrapContext context) {
+  public DataConnectionManager(DrillbitEndpoint endpoint, BootStrapContext context, BufferAllocator allocator) {
     super(HANDSHAKE, endpoint.getAddress(), endpoint.getDataPort());
     this.endpoint = endpoint;
     this.context = context;
+    dataAllocator = allocator;
   }
 
   @Override
   protected DataClient getNewClient() {
-    return new DataClient(endpoint, context, new CloseHandlerCreator());
+    return new DataClient(endpoint, context, new CloseHandlerCreator(), dataAllocator);
   }
 
 }

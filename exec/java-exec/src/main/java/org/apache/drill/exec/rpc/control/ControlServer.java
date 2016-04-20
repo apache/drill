@@ -40,16 +40,17 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   private final ControlMessageHandler handler;
   private final ConnectionManagerRegistry connectionRegistry;
   private volatile ProxyCloseHandler proxyCloseHandler;
-  private BufferAllocator allocator;
+  private BufferAllocator controlAllocator;
 
-  public ControlServer(ControlMessageHandler handler, BootStrapContext context, ConnectionManagerRegistry connectionRegistry) {
+  public ControlServer(ControlMessageHandler handler, BootStrapContext context,
+                       ConnectionManagerRegistry connectionRegistry, BufferAllocator allocator) {
     super(
         ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         context.getAllocator().getAsByteBufAllocator(),
         context.getBitLoopGroup());
     this.handler = handler;
     this.connectionRegistry = connectionRegistry;
-    this.allocator = context.getAllocator();
+    this.controlAllocator = allocator;
   }
 
   @Override
@@ -71,7 +72,7 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   @Override
   public ControlConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    return new ControlConnection("control server", channel, this, allocator);
+    return new ControlConnection("control server", channel, this, controlAllocator);
   }
 
 

@@ -40,11 +40,12 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataClient.class);
 
   private volatile DataClientConnection connection;
-  private final BufferAllocator allocator;
+  private final BufferAllocator dataAllocator;
   private final DataConnectionManager.CloseHandlerCreator closeHandlerFactory;
 
 
-  public DataClient(DrillbitEndpoint remoteEndpoint, BootStrapContext context, DataConnectionManager.CloseHandlerCreator closeHandlerFactory) {
+  public DataClient(DrillbitEndpoint remoteEndpoint, BootStrapContext context,
+                    DataConnectionManager.CloseHandlerCreator closeHandlerFactory, BufferAllocator allocator) {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         context.getAllocator().getAsByteBufAllocator(),
@@ -53,7 +54,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
         BitServerHandshake.class,
         BitServerHandshake.PARSER);
     this.closeHandlerFactory = closeHandlerFactory;
-    this.allocator = context.getAllocator();
+    this.dataAllocator = allocator;
   }
 
   @Override
@@ -79,7 +80,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   }
 
   BufferAllocator getAllocator() {
-    return allocator;
+    return dataAllocator;
   }
 
   @Override

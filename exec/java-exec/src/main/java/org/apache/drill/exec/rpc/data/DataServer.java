@@ -52,19 +52,18 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataServer.class);
 
   private volatile ProxyCloseHandler proxyCloseHandler;
-  private final BootStrapContext context;
   private final WorkEventBus workBus;
   private final WorkerBee bee;
+  private final BufferAllocator dataAllocator;
 
-  public DataServer(BootStrapContext context, BufferAllocator alloc, WorkEventBus workBus,
-      WorkerBee bee) {
+  public DataServer(BootStrapContext context, BufferAllocator alloc, WorkEventBus workBus, WorkerBee bee) {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         alloc.getAsByteBufAllocator(),
         context.getBitLoopGroup());
-    this.context = context;
     this.workBus = workBus;
     this.bee = bee;
+    this.dataAllocator = alloc;
   }
 
   @Override
@@ -81,7 +80,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   @Override
   public BitServerConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    return new BitServerConnection(channel, context.getAllocator());
+    return new BitServerConnection(channel, dataAllocator);
   }
 
   @Override

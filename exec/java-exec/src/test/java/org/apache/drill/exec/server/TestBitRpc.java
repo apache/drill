@@ -31,8 +31,6 @@ import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -66,7 +64,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 public class TestBitRpc extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
 
   @Test
   public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
@@ -121,7 +119,7 @@ public class TestBitRpc extends ExecTest {
 
     port = server.bind(port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
-    DataConnectionManager manager = new DataConnectionManager(ep, c2);
+    DataConnectionManager manager = new DataConnectionManager(ep, c2, c.getAllocator());
     DataTunnel tunnel = new DataTunnel(manager);
     AtomicLong max = new AtomicLong(0);
     for (int i = 0; i < 40; i++) {
@@ -129,7 +127,6 @@ public class TestBitRpc extends ExecTest {
       tunnel.sendRecordBatch(new TimingOutcome(max), new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1,
           1, 1, 1, getRandomBatch(c.getAllocator(), 5000)));
       System.out.println(System.currentTimeMillis() - t1);
-      // System.out.println("sent.");
     }
     System.out.println(String.format("Max time: %d", max.get()));
     assertTrue(max.get() > 2700);

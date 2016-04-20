@@ -44,6 +44,7 @@ public class ControllerImpl implements Controller {
   private final ConnectionManagerRegistry connectionRegistry;
   private final boolean allowPortHunting;
   private final CustomHandlerRegistry handlerRegistry;
+  private final BufferAllocator controlAllocator;
 
   public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, BufferAllocator allocator,
       boolean allowPortHunting) {
@@ -53,11 +54,12 @@ public class ControllerImpl implements Controller {
     this.connectionRegistry = new ConnectionManagerRegistry(allocator, handler, context);
     this.allowPortHunting = allowPortHunting;
     this.handlerRegistry = handler.getHandlerRegistry();
+    controlAllocator = allocator;
   }
 
   @Override
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
-    server = new ControlServer(handler, context, connectionRegistry);
+    server = new ControlServer(handler, context, connectionRegistry, controlAllocator);
     int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     port = server.bind(port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
