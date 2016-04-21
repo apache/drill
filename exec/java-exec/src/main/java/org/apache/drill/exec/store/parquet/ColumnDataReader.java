@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -56,7 +56,7 @@ public class ColumnDataReader {
     return new HadoopBytesInput(b);
   }
 
-  public void loadPage(DrillBuf target, int pageLength) throws IOException {
+  public void loadPage(ArrowBuf target, int pageLength) throws IOException {
     target.clear();
     ByteBuffer directBuffer = target.nioBuffer(0, pageLength);
     int lengthLeftToRead = pageLength;

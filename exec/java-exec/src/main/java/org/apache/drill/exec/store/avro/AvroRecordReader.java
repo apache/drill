@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.avro;
 
+import io.netty.buffer.ArrowBuf;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.arrow.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
@@ -37,7 +40,6 @@ import org.apache.avro.mapred.FsInput;
 import org.apache.avro.util.Utf8;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -46,16 +48,13 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
-import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.arrow.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
-
-import io.netty.buffer.DrillBuf;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -70,7 +69,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   private final long start;
   private final long end;
   private final FieldSelection fieldSelection;
-  private DrillBuf buffer;
+  private ArrowBuf buffer;
   private VectorContainerWriter writer;
 
   private DataFileReader<GenericContainer> reader = null;

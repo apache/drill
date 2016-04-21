@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -87,7 +87,7 @@ public class HashHelper {
     return MurmurHash3.hash64(val, (int)seed);
   }
 
-  public static long hash64(long start, long end, DrillBuf buffer, long seed){
+  public static long hash64(long start, long end, ArrowBuf buffer, long seed){
     return MurmurHash3.hash64(start, end, buffer, (int)seed);
   }
 
@@ -96,7 +96,7 @@ public class HashHelper {
     return MurmurHash3.hash32(val, (int)seed);
   }
 
-  public static int hash32(int start, int end, DrillBuf buffer, int seed){
+  public static int hash32(int start, int end, ArrowBuf buffer, int seed){
     return MurmurHash3.hash32(start, end, buffer, seed);
   }
 

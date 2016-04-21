@@ -19,10 +19,10 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
 
+import org.apache.arrow.vector.BaseDataValueVector;
+import org.apache.arrow.vector.NullableVectorDefinitionSetter;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;

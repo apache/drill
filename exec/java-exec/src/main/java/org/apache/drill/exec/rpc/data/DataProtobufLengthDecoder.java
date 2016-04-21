@@ -22,7 +22,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 import java.util.List;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 

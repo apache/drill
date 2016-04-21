@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.schema;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 
 import com.google.common.base.Objects;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class NamedField extends Field {
     final MajorType keyType;

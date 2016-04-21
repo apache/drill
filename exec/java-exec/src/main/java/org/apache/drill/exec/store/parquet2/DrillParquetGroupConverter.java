@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,46 +25,46 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.arrow.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.DateHolder;
-import org.apache.drill.exec.expr.holders.Decimal18Holder;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.IntervalHolder;
-import org.apache.drill.exec.expr.holders.TimeHolder;
-import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.DateHolder;
+import org.apache.arrow.vector.holders.Decimal18Holder;
+import org.apache.arrow.vector.holders.Decimal28SparseHolder;
+import org.apache.arrow.vector.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.holders.Decimal9Holder;
+import org.apache.arrow.vector.holders.Float4Holder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.IntervalHolder;
+import org.apache.arrow.vector.holders.TimeHolder;
+import org.apache.arrow.vector.holders.TimeStampHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
-import org.apache.drill.exec.vector.complex.writer.BitWriter;
-import org.apache.drill.exec.vector.complex.writer.DateWriter;
-import org.apache.drill.exec.vector.complex.writer.Decimal18Writer;
-import org.apache.drill.exec.vector.complex.writer.Decimal28SparseWriter;
-import org.apache.drill.exec.vector.complex.writer.Decimal38SparseWriter;
-import org.apache.drill.exec.vector.complex.writer.Decimal9Writer;
-import org.apache.drill.exec.vector.complex.writer.Float4Writer;
-import org.apache.drill.exec.vector.complex.writer.Float8Writer;
-import org.apache.drill.exec.vector.complex.writer.IntWriter;
-import org.apache.drill.exec.vector.complex.writer.IntervalWriter;
-import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
-import org.apache.drill.exec.vector.complex.writer.TimeWriter;
-import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
-import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
+import org.apache.arrow.vector.util.DecimalUtility;
+import org.apache.arrow.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.arrow.vector.complex.writer.BigIntWriter;
+import org.apache.arrow.vector.complex.writer.BitWriter;
+import org.apache.arrow.vector.complex.writer.DateWriter;
+import org.apache.arrow.vector.complex.writer.Decimal18Writer;
+import org.apache.arrow.vector.complex.writer.Decimal28SparseWriter;
+import org.apache.arrow.vector.complex.writer.Decimal38SparseWriter;
+import org.apache.arrow.vector.complex.writer.Decimal9Writer;
+import org.apache.arrow.vector.complex.writer.Float4Writer;
+import org.apache.arrow.vector.complex.writer.Float8Writer;
+import org.apache.arrow.vector.complex.writer.IntWriter;
+import org.apache.arrow.vector.complex.writer.IntervalWriter;
+import org.apache.arrow.vector.complex.writer.TimeStampWriter;
+import org.apache.arrow.vector.complex.writer.TimeWriter;
+import org.apache.arrow.vector.complex.writer.VarBinaryWriter;
+import org.apache.arrow.vector.complex.writer.VarCharWriter;
 import org.joda.time.DateTimeUtils;
 
 import org.apache.parquet.io.api.Binary;
@@ -449,10 +449,10 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
   public static class DrillVarBinaryConverter extends PrimitiveConverter {
     private VarBinaryWriter writer;
-    private DrillBuf buf;
+    private ArrowBuf buf;
     private VarBinaryHolder holder = new VarBinaryHolder();
 
-    public DrillVarBinaryConverter(VarBinaryWriter writer, DrillBuf buf) {
+    public DrillVarBinaryConverter(VarBinaryWriter writer, ArrowBuf buf) {
       this.writer = writer;
       this.buf = buf;
     }
@@ -470,9 +470,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillVarCharConverter extends PrimitiveConverter {
     private VarCharWriter writer;
     private VarCharHolder holder = new VarCharHolder();
-    private DrillBuf buf;
+    private ArrowBuf buf;
 
-    public DrillVarCharConverter(VarCharWriter writer,  DrillBuf buf) {
+    public DrillVarCharConverter(VarCharWriter writer,  ArrowBuf buf) {
       this.writer = writer;
       this.buf = buf;
     }
@@ -490,9 +490,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillBinaryToDecimal28Converter extends PrimitiveConverter {
     private Decimal28SparseWriter writer;
     private Decimal28SparseHolder holder = new Decimal28SparseHolder();
-    private DrillBuf buf;
+    private ArrowBuf buf;
 
-    public DrillBinaryToDecimal28Converter(Decimal28SparseWriter writer, int precision, int scale,  DrillBuf buf) {
+    public DrillBinaryToDecimal28Converter(Decimal28SparseWriter writer, int precision, int scale,  ArrowBuf buf) {
       this.writer = writer;
       this.buf = buf.reallocIfNeeded(28);
       holder.precision = precision;
@@ -511,9 +511,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
   public static class DrillBinaryToDecimal38Converter extends PrimitiveConverter {
     private Decimal38SparseWriter writer;
     private Decimal38SparseHolder holder = new Decimal38SparseHolder();
-    private DrillBuf buf;
+    private ArrowBuf buf;
 
-    public DrillBinaryToDecimal38Converter(Decimal38SparseWriter writer, int precision, int scale,  DrillBuf buf) {
+    public DrillBinaryToDecimal38Converter(Decimal38SparseWriter writer, int precision, int scale,  ArrowBuf buf) {
       this.writer = writer;
       this.buf = buf.reallocIfNeeded(38);
       holder.precision = precision;
@@ -554,7 +554,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     private VarBinaryWriter writer;
     private VarBinaryHolder holder = new VarBinaryHolder();
 
-    public DrillFixedBinaryToVarbinaryConverter(VarBinaryWriter writer, int length, DrillBuf buf) {
+    public DrillFixedBinaryToVarbinaryConverter(VarBinaryWriter writer, int length, ArrowBuf buf) {
       this.writer = writer;
       holder.buffer = buf = buf.reallocIfNeeded(length);
       holder.start = 0;

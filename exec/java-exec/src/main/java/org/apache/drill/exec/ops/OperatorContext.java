@@ -18,13 +18,13 @@
 package org.apache.drill.exec.ops;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -33,11 +33,11 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 public abstract class OperatorContext {
 
-  public abstract DrillBuf replace(DrillBuf old, int newSize);
+  public abstract ArrowBuf replace(ArrowBuf old, int newSize);
 
-  public abstract DrillBuf getManagedBuffer();
+  public abstract ArrowBuf getManagedBuffer();
 
-  public abstract DrillBuf getManagedBuffer(int size);
+  public abstract ArrowBuf getManagedBuffer(int size);
 
   public abstract BufferAllocator getAllocator();
 

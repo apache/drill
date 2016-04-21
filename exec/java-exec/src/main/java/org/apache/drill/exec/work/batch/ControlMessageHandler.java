@@ -19,7 +19,7 @@ package org.apache.drill.exec.work.batch;
 
 import static org.apache.drill.exec.rpc.RpcBus.get;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.CustomMessage;
@@ -75,7 +75,7 @@ public class ControlMessageHandler {
 
     case RpcType.REQ_CUSTOM_VALUE: {
       final CustomMessage customMessage = get(pBody, CustomMessage.PARSER);
-      return handlerRegistry.handle(customMessage, (DrillBuf) dBody);
+      return handlerRegistry.handle(customMessage, (ArrowBuf) dBody);
     }
 
     case RpcType.REQ_RECEIVER_FINISHED_VALUE: {

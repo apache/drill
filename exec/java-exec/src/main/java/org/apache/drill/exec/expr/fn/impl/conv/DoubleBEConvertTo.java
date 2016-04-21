@@ -18,15 +18,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl.conv;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 import javax.inject.Inject;
 
@@ -35,7 +35,7 @@ public class DoubleBEConvertTo implements DrillSimpleFunc {
 
   @Param Float8Holder in;
   @Output VarBinaryHolder out;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
 
 
   @Override

@@ -23,7 +23,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 /**
  * This and {@link DummyConvertTo} class merely act as a placeholder so that Optiq

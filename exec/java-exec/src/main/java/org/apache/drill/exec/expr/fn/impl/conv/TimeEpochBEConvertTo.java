@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import javax.inject.Inject;
 
@@ -27,15 +27,15 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.TimeHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.TimeHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 @FunctionTemplate(name = "convert_toTIME_EPOCH_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class TimeEpochBEConvertTo implements DrillSimpleFunc {
 
   @Param TimeHolder in;
   @Output VarBinaryHolder out;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
 
 
   @Override

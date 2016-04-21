@@ -17,16 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.Decimal18Vector;
+import org.apache.arrow.vector.Decimal9Vector;
+import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.Float8Vector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.TimeStampVector;
+import org.apache.arrow.vector.TimeVector;
+import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.Decimal18Vector;
-import org.apache.drill.exec.vector.Decimal9Vector;
-import org.apache.drill.exec.vector.Float4Vector;
-import org.apache.drill.exec.vector.Float8Vector;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.TimeStampVector;
-import org.apache.drill.exec.vector.TimeVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;

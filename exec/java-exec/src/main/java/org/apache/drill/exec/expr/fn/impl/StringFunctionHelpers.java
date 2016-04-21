@@ -18,11 +18,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BoundsChecking;
+import org.apache.arrow.vector.holders.VarCharHolder;
+import org.apache.arrow.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
@@ -34,7 +34,7 @@ public class StringFunctionHelpers {
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
+  public static long varTypesToLong(final int start, final int end, ArrowBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeL(start, end, buffer);
@@ -83,19 +83,19 @@ public class StringFunctionHelpers {
     return result;
   }
 
-  private static int nfeL(int start, int end, DrillBuf buffer){
+  private static int nfeL(int start, int end, ArrowBuf buffer){
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  private static int nfeI(int start, int end, DrillBuf buffer){
+  private static int nfeI(int start, int end, ArrowBuf buffer){
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
+  public static int varTypesToInt(final int start, final int end, ArrowBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeI(start, end, buffer);
@@ -145,7 +145,7 @@ public class StringFunctionHelpers {
 
   // Assumes Alpha as [A-Za-z0-9]
   // white space is treated as everything else.
-  public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
+  public static void initCap(int start, int end, ArrowBuf inBuf, ArrowBuf outBuf) {
     boolean capNext = true;
     int out = 0;
     for (int id = start; id < end; id++, out++) {
@@ -194,14 +194,14 @@ public class StringFunctionHelpers {
     return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
   }
 
-  public static String toStringFromUTF8(int start, int end, DrillBuf buffer) {
+  public static String toStringFromUTF8(int start, int end, ArrowBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
     String s = new String(buf, Charsets.UTF_8);
     return s;
   }
 
-  public static String toStringFromUTF16(int start, int end, DrillBuf buffer) {
+  public static String toStringFromUTF16(int start, int end, ArrowBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
     return new String(buf, Charsets.UTF_16);
@@ -209,7 +209,7 @@ public class StringFunctionHelpers {
 
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
-  public static long getDate(DrillBuf buf, int start, int end){
+  public static long getDate(ArrowBuf buf, int start, int end){
     if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buf.checkBytes(start, end);
     }
@@ -226,7 +226,7 @@ public class StringFunctionHelpers {
    * @param end
    * @return true iff the string value can be read as a date
    */
-  public static boolean isReadableAsDate(DrillBuf buf, int start, int end){
+  public static boolean isReadableAsDate(ArrowBuf buf, int start, int end){
     // Tried looking for a method that would do this check without relying on
     // an exception in the failure case (for better performance). Joda does
     // not appear to provide such a function, so the try/catch block

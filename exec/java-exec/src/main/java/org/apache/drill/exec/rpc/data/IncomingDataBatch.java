@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
@@ -32,7 +32,7 @@ import com.google.common.base.Preconditions;
 public class IncomingDataBatch {
 
   private final FragmentRecordBatch header;
-  private final DrillBuf body;
+  private final ArrowBuf body;
   private final AckSender sender;
 
   /**
@@ -45,7 +45,7 @@ public class IncomingDataBatch {
    * @param sender
    *          AckSender to use for underlying RawFragmentBatches.
    */
-  public IncomingDataBatch(FragmentRecordBatch header, DrillBuf body, AckSender sender) {
+  public IncomingDataBatch(FragmentRecordBatch header, ArrowBuf body, AckSender sender) {
     Preconditions.checkNotNull(header);
     Preconditions.checkNotNull(sender);
     this.header = header;
@@ -62,7 +62,7 @@ public class IncomingDataBatch {
    * @return The newly created RawFragmentBatch
    */
   public RawFragmentBatch newRawFragmentBatch(final BufferAllocator allocator) {
-    final DrillBuf transferredBuffer = body == null ? null : body.transferOwnership(allocator).buffer;
+    final ArrowBuf transferredBuffer = body == null ? null : body.transferOwnership(allocator).buffer;
     sender.increment();
     return new RawFragmentBatch(header, transferredBuffer, sender);
   }

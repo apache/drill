@@ -22,9 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.util.AssertionUtil;
 
@@ -41,7 +41,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
     final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
 
     for (DrillFuncHolder h : methods) {
-      final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
+      final List<MajorType> argumentTypes = Lists.newArrayList();
       for (LogicalExpression expression : call.args) {
         argumentTypes.add(expression.getMajorType());
       }

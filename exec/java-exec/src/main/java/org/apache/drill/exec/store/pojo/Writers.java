@@ -17,24 +17,24 @@
  */
 package org.apache.drill.exec.store.pojo;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.Float8Vector;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.NullableBitVector;
-import org.apache.drill.exec.vector.NullableFloat8Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableTimeStampVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.BitVector;
+import org.apache.arrow.vector.Float8Vector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.NullableBigIntVector;
+import org.apache.arrow.vector.NullableBitVector;
+import org.apache.arrow.vector.NullableFloat8Vector;
+import org.apache.arrow.vector.NullableIntVector;
+import org.apache.arrow.vector.NullableTimeStampVector;
+import org.apache.arrow.vector.NullableVarCharVector;
 
 import com.google.common.base.Charsets;
 
@@ -111,10 +111,10 @@ public class Writers {
   }
 
   private abstract static class AbstractStringWriter extends AbstractWriter<NullableVarCharVector>{
-    private DrillBuf data;
+    private ArrowBuf data;
     private final NullableVarCharHolder h = new NullableVarCharHolder();
 
-    public AbstractStringWriter(Field field, DrillBuf managedBuf) {
+    public AbstractStringWriter(Field field, ArrowBuf managedBuf) {
       super(field, Types.optional(MinorType.VARCHAR));
       this.data = managedBuf;
       ensureLength(100);
@@ -147,7 +147,7 @@ public class Writers {
   }
 
   public static class EnumWriter extends AbstractStringWriter{
-    public EnumWriter(Field field, DrillBuf managedBuf) {
+    public EnumWriter(Field field, ArrowBuf managedBuf) {
       super(field, managedBuf);
       if (!field.getType().isEnum()) {
         throw new IllegalStateException();
@@ -165,7 +165,7 @@ public class Writers {
   }
 
   public static class StringWriter extends AbstractStringWriter {
-    public StringWriter(Field field, DrillBuf managedBuf) {
+    public StringWriter(Field field, ArrowBuf managedBuf) {
       super(field, managedBuf);
       if (field.getType() != String.class) {
         throw new IllegalStateException();

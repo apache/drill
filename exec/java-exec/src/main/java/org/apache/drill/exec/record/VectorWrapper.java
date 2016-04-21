@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.memory.BufferAllocator;
 
 
 public interface VectorWrapper<T extends ValueVector> {

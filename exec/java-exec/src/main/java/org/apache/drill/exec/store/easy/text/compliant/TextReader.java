@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 
@@ -32,7 +32,7 @@ import com.univocity.parsers.csv.CsvParserSettings;
 
 /**
  * A byte-based Text parser implementation. Builds heavily upon the uniVocity parsers. Customized for UTF8 parsing and
- * DrillBuf support.
+ * ArrowBuf support.
  */
 final class TextReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextReader.class);
@@ -46,7 +46,7 @@ final class TextReader {
 
   private final TextInput input;
   private final TextOutput output;
-  private final DrillBuf workBuf;
+  private final ArrowBuf workBuf;
 
   private byte ch;
 
@@ -73,7 +73,7 @@ final class TextReader {
    * @param output  interface to produce output record batch
    * @param workBuf  working buffer to handle whitespaces
    */
-  public TextReader(TextParsingSettings settings, TextInput input, TextOutput output, DrillBuf workBuf) {
+  public TextReader(TextParsingSettings settings, TextInput input, TextOutput output, ArrowBuf workBuf) {
     this.context = new TextParsingContext(input, output);
     this.workBuf = workBuf;
     this.settings = settings;
@@ -265,7 +265,7 @@ final class TextReader {
     // For example, in tab-separated files (TSV files), '\t' is used as delimiter and should not be ignored
     // Content after whitespaces may be parsed if 'parseUnescapedQuotes' is enabled.
     if (ch != newLine && ch <= ' ' && ch != delimiter) {
-      final DrillBuf workBuf = this.workBuf;
+      final ArrowBuf workBuf = this.workBuf;
       workBuf.resetWriterIndex();
       do {
         // saves whitespaces after value

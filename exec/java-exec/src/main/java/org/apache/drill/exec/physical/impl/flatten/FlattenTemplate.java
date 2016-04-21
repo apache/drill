@@ -21,17 +21,17 @@ import java.util.List;
 
 import javax.inject.Named;
 
-import org.apache.drill.exec.exception.OversizedAllocationException;
+import org.apache.arrow.vector.complex.RepeatedValueVector;
+import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
+import org.apache.arrow.vector.util.TransferPair;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
 import java.util.ArrayList;
@@ -26,15 +26,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.arrow.vector.RepeatedVarCharVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.RepeatedVarCharVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 import com.google.common.base.Preconditions;
 
@@ -121,7 +122,7 @@ class RepeatedVarCharOutput extends TextOutput {
   public RepeatedVarCharOutput(OutputMutator outputMutator, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
     super();
 
-    MaterializedField field = MaterializedField.create(COL_NAME, Types.repeated(TypeProtos.MinorType.VARCHAR));
+    MaterializedField field = MaterializedField.create(COL_NAME, Types.repeated(MinorType.VARCHAR));
     this.vector = outputMutator.addField(field, RepeatedVarCharVector.class);
 
     this.mutator = vector.getMutator();
@@ -185,7 +186,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadRepeatedOffsetAddress(){
-    DrillBuf buf = vector.getOffsetVector().getBuffer();
+    ArrowBuf buf = vector.getOffsetVector().getBuffer();
     checkBuf(buf);
     this.repeatedOffset = buf.memoryAddress() + 4;
     this.repeatedOffsetOriginal = buf.memoryAddress() + 4;
@@ -193,7 +194,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharDataAddress(){
-    DrillBuf buf = vector.getDataVector().getBuffer();
+    ArrowBuf buf = vector.getDataVector().getBuffer();
     checkBuf(buf);
     this.characterData = buf.memoryAddress();
     this.characterDataOriginal = buf.memoryAddress();
@@ -201,7 +202,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharOffsetAddress(){
-    DrillBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
+    ArrowBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
     checkBuf(buf);
     this.charLengthOffset = buf.memoryAddress() + 4;
     this.charLengthOffsetOriginal = buf.memoryAddress() + 4; // add four as offsets conceptually start at 1. (first item is 0..1)
@@ -234,7 +235,7 @@ class RepeatedVarCharOutput extends TextOutput {
    * has a minimum reference count and has not been deallocated
    * @param b  working drill buffer
    */
-  private void checkBuf(DrillBuf b){
+  private void checkBuf(ArrowBuf b){
     if(b.refCnt() < 1){
       throw new IllegalStateException("Cannot access a dereferenced buffer.");
     }

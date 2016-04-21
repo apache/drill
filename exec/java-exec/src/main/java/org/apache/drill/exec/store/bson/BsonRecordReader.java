@@ -17,29 +17,29 @@
  */
 package org.apache.drill.exec.store.bson;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.arrow.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.arrow.vector.complex.writer.DateWriter;
+import org.apache.arrow.vector.complex.writer.TimeWriter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.DateWriter;
-import org.apache.drill.exec.vector.complex.writer.TimeWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.bson.BsonBinary;
 import org.bson.BsonReader;
 import org.bson.BsonType;
@@ -53,14 +53,14 @@ public class BsonRecordReader {
   private final List<SchemaPath> columns;
   private boolean atLeastOneWrite = false;
   private final boolean readNumbersAsDouble;
-  protected DrillBuf workBuf;
+  protected ArrowBuf workBuf;
   private String currentFieldName;
 
-  public BsonRecordReader(DrillBuf managedBuf, boolean allTextMode, boolean readNumbersAsDouble) {
+  public BsonRecordReader(ArrowBuf managedBuf, boolean allTextMode, boolean readNumbersAsDouble) {
     this(managedBuf, GroupScan.ALL_COLUMNS, readNumbersAsDouble);
   }
 
-  public BsonRecordReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean readNumbersAsDouble) {
+  public BsonRecordReader(ArrowBuf managedBuf, List<SchemaPath> columns, boolean readNumbersAsDouble) {
     assert Preconditions.checkNotNull(columns).size() > 0 : "bson record reader requires at least a column";
     this.readNumbersAsDouble = readNumbersAsDouble;
     this.workBuf = managedBuf;

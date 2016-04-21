@@ -18,14 +18,14 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl.conv;
 
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 @FunctionTemplate(name = "convert_fromBIGINT", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class BigIntConvertFrom implements DrillSimpleFunc {

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.ExecProtos;

@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.store;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.NullableVarBinaryHolder;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 import javax.inject.Inject;
 
@@ -48,7 +48,7 @@ public class NewValueFunction {
     @Workspace VarCharHolder previous;
     @Workspace Boolean initialized;
     @Output BitHolder out;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
 
     public void setup() {
       initialized = false;
@@ -60,7 +60,7 @@ public class NewValueFunction {
       int length = in.end - in.start;
 
       if (initialized) {
-        if (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0) {
+        if (org.apache.arrow.vector.util.ByteFunctionHelpers.compare(previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0) {
           out.value = 0;
         } else {
           previous.buffer = buf.reallocIfNeeded(length);
@@ -87,7 +87,7 @@ public class NewValueFunction {
     @Workspace NullableVarCharHolder previous;
     @Workspace Boolean initialized;
     @Output BitHolder out;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
 
     public void setup() {
       initialized = false;
@@ -100,7 +100,7 @@ public class NewValueFunction {
 
       if (initialized) {
         if (previous.isSet == 0 && in.isSet == 0 ||
-            (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
+            (org.apache.arrow.vector.util.ByteFunctionHelpers.compare(
                 previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0)) {
           out.value = 0;
         } else {
@@ -132,7 +132,7 @@ public class NewValueFunction {
     @Workspace VarBinaryHolder previous;
     @Workspace Boolean initialized;
     @Output BitHolder out;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
 
     public void setup() {
       initialized = false;
@@ -144,7 +144,7 @@ public class NewValueFunction {
       int length = in.end - in.start;
 
       if (initialized) {
-        if (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0) {
+        if (org.apache.arrow.vector.util.ByteFunctionHelpers.compare(previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0) {
           out.value = 0;
         } else {
           previous.buffer = buf.reallocIfNeeded(length);
@@ -171,7 +171,7 @@ public class NewValueFunction {
     @Workspace NullableVarBinaryHolder previous;
     @Workspace Boolean initialized;
     @Output BitHolder out;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
 
     public void setup() {
       initialized = false;
@@ -184,7 +184,7 @@ public class NewValueFunction {
 
       if (initialized) {
         if (previous.isSet == 0 && in.isSet == 0 ||
-            (org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
+            (org.apache.arrow.vector.util.ByteFunctionHelpers.compare(
                 previous.buffer, 0, previous.end, in.buffer, in.start, in.end) == 0)) {
           out.value = 0;
         } else {

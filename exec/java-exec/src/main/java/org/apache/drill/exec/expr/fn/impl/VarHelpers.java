@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.NullableVarBinaryHolder;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 public class VarHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarHelpers.class);

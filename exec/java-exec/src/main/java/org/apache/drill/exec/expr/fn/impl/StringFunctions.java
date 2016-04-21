@@ -19,7 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.charset.Charset;
 
@@ -32,12 +32,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
@@ -194,7 +194,7 @@ public class StringFunctions{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
     @Param VarCharHolder replacement;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace java.util.regex.Matcher matcher;
     @Output VarCharHolder out;
 
@@ -225,7 +225,7 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace java.util.regex.Matcher matcher;
     @Output BitHolder out;
 
@@ -427,7 +427,7 @@ public class StringFunctions{
   public static class LowerCase implements DrillSimpleFunc {
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -460,7 +460,7 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -709,7 +709,7 @@ public class StringFunctions{
   public static class InitCap implements DrillSimpleFunc {
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -731,7 +731,7 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  VarCharHolder from;
     @Param  VarCharHolder to;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Output VarCharHolder out;
 
     @Override
@@ -795,7 +795,7 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
     @Param  VarCharHolder fill;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Output VarCharHolder out;
 
@@ -869,7 +869,7 @@ public class StringFunctions{
   public static class LpadTwoArg implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Output VarCharHolder out;
     @Workspace byte spaceInByte;
@@ -929,7 +929,7 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
     @Param  VarCharHolder fill;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Output VarCharHolder out;
 
@@ -1006,7 +1006,7 @@ public class StringFunctions{
   public static class RpadTwoArg implements DrillSimpleFunc {
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Output VarCharHolder out;
     @Workspace byte spaceInByte;
@@ -1285,7 +1285,7 @@ public class StringFunctions{
     @Param  VarCharHolder left;
     @Param  VarCharHolder right;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1314,7 +1314,7 @@ public class StringFunctions{
     @Param  VarCharHolder left;
     @Param  VarCharHolder right;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1341,7 +1341,7 @@ public class StringFunctions{
     @Param  VarCharHolder left;
     @Param  NullableVarCharHolder right;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1370,7 +1370,7 @@ public class StringFunctions{
     @Param  NullableVarCharHolder left;
     @Param  VarCharHolder right;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1399,7 +1399,7 @@ public class StringFunctions{
     @Param  NullableVarCharHolder left;
     @Param  NullableVarCharHolder right;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1451,7 +1451,7 @@ public class StringFunctions{
     @Param  VarBinaryHolder in;
     @Output VarCharHolder   out;
     @Workspace Charset charset;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1494,7 +1494,7 @@ public class StringFunctions{
   public static class AsciiToChar implements DrillSimpleFunc {
     @Param  IntHolder in;
     @Output VarCharHolder out;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
 
     @Override
     public void setup() {
@@ -1519,7 +1519,7 @@ public class StringFunctions{
     @Param  VarCharHolder in;
     @Param IntHolder nTimes;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1547,7 +1547,7 @@ public class StringFunctions{
     @Param  VarCharHolder enc;
     @Output VarCharHolder out;
     @Workspace Charset inCharset;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {
@@ -1576,7 +1576,7 @@ public class StringFunctions{
   public static class ReverseString implements DrillSimpleFunc {
     @Param  VarCharHolder in;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
 
     @Override
     public void setup() {

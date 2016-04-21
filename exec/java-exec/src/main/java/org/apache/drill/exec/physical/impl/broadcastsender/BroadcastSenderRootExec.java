@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.broadcastsender;
 
 import java.util.List;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;

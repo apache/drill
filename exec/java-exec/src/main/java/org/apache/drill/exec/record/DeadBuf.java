@@ -20,7 +20,7 @@ package org.apache.drill.exec.record;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufProcessor;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +36,7 @@ public class DeadBuf extends ByteBuf {
 
   private static final String ERROR_MESSAGE = "Attemped to access a DeadBuf. This would happen if you attempted to interact with a buffer that has been moved or not yet initialized.";
 
-  public static final DrillBuf DEAD_BUFFER = null;
+  public static final ArrowBuf DEAD_BUFFER = null;
 
   private DeadBuf(){}
 

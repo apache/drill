@@ -20,11 +20,12 @@ package org.apache.drill.exec.util;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 
@@ -75,7 +76,7 @@ public class BatchPrinter {
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
-    int rows = vectors.get(0).getMetadata().getValueCount();
+    int rows = TypeHelper.getMetadata(vectors.get(0)).getValueCount();
     for (int row = 0; row < rows; row++) {
       if (row%50 == 0) {
         System.out.println(StringUtils.repeat("-", width * 17 + 1));
@@ -110,7 +111,7 @@ public class BatchPrinter {
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
-    int rows = vectors.get(0).getMetadata().getValueCount();
+    int rows = TypeHelper.getMetadata(vectors.get(0)).getValueCount();
     for (int i = 0; i < rows; i++) {
       if (i%50 == 0) {
         System.out.println(StringUtils.repeat("-", width * 17 + 1));

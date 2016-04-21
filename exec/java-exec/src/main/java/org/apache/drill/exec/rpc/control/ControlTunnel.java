@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.control;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.concurrent.TimeUnit;
 
@@ -274,8 +274,8 @@ public class ControlTunnel {
       return serde.deserializeReceived(message.getMessage().toByteArray());
     }
 
-    public DrillBuf getBuffer() throws RpcException {
-      return (DrillBuf) future.getBuffer();
+    public ArrowBuf getBuffer() throws RpcException {
+      return (ArrowBuf) future.getBuffer();
     }
 
   }

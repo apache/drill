@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.record;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,11 +28,11 @@ public class RawFragmentBatch {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RawFragmentBatch.class);
 
   private final FragmentRecordBatch header;
-  private final DrillBuf body;
+  private final ArrowBuf body;
   private final AckSender sender;
   private final AtomicBoolean ackSent = new AtomicBoolean(false);
 
-  public RawFragmentBatch(FragmentRecordBatch header, DrillBuf body, AckSender sender) {
+  public RawFragmentBatch(FragmentRecordBatch header, ArrowBuf body, AckSender sender) {
     this.header = header;
     this.sender = sender;
     this.body = body;
@@ -45,7 +45,7 @@ public class RawFragmentBatch {
     return header;
   }
 
-  public DrillBuf getBody() {
+  public ArrowBuf getBody() {
     return body;
   }
 

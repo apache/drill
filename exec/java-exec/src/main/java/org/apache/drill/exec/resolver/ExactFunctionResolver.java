@@ -18,6 +18,7 @@
 package org.apache.drill.exec.resolver;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -40,7 +41,7 @@ public class ExactFunctionResolver implements FunctionResolver {
     int currcost;
 
     for (DrillFuncHolder h : methods) {
-      final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
+      final List<MajorType> argumentTypes = Lists.newArrayList();
       for (LogicalExpression expression : call.args) {
         argumentTypes.add(expression.getMajorType());
       }

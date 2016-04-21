@@ -19,12 +19,11 @@ package org.apache.drill.exec.store;
 
 import java.util.Map;
 
+import org.apache.arrow.vector.ValueVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.ValueVector;
 
 public interface RecordReader extends AutoCloseable {
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;

@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.record.selection;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
@@ -31,7 +31,7 @@ public class SelectionVector2 implements AutoCloseable {
 
   private final BufferAllocator allocator;
   private int recordCount;
-  private DrillBuf buffer = DeadBuf.DEAD_BUFFER;
+  private ArrowBuf buffer = DeadBuf.DEAD_BUFFER;
 
   public static final int RECORD_SIZE = 2;
 
@@ -43,12 +43,12 @@ public class SelectionVector2 implements AutoCloseable {
     return recordCount;
   }
 
-  public DrillBuf getBuffer() {
+  public ArrowBuf getBuffer() {
     return getBuffer(true);
   }
 
-  public DrillBuf getBuffer(boolean clear) {
-    DrillBuf bufferHandle = this.buffer;
+  public ArrowBuf getBuffer(boolean clear) {
+    ArrowBuf bufferHandle = this.buffer;
 
     if (clear) {
       /* Increment the ref count for this buffer */
@@ -63,7 +63,7 @@ public class SelectionVector2 implements AutoCloseable {
     return bufferHandle;
   }
 
-  public void setBuffer(DrillBuf bufferHandle) {
+  public void setBuffer(ArrowBuf bufferHandle) {
       /* clear the existing buffer */
       clear();
 

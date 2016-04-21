@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.ops;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.arrow.memory.BufferManager;
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
@@ -31,7 +32,7 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -237,7 +238,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   }
 
   @Override
-  public DrillBuf getManagedBuffer() {
+  public ArrowBuf getManagedBuffer() {
     return bufferManager.getManagedBuffer();
   }
 

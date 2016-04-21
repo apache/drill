@@ -17,13 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 
+import org.apache.arrow.vector.VariableWidthVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.arrow.vector.ValueVector;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.Encoding;
@@ -50,7 +50,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     }
   }
 
-  public abstract boolean setSafe(int index, DrillBuf bytes, int start, int length);
+  public abstract boolean setSafe(int index, ArrowBuf bytes, int start, int length);
 
   @Override
   protected void readField(long recordToRead) {

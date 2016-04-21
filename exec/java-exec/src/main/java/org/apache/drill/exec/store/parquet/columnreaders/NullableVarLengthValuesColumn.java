@@ -17,12 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -40,7 +40,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   }
 
   @Override
-  public abstract boolean setSafe(int index, DrillBuf value, int start, int length);
+  public abstract boolean setSafe(int index, ArrowBuf value, int start, int length);
 
   @Override
   public abstract int capacity();

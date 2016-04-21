@@ -30,7 +30,7 @@ import org.apache.drill.common.SerializedExecutor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.FragmentContext.ExecutorState;
 import org.apache.drill.exec.physical.base.FragmentRoot;

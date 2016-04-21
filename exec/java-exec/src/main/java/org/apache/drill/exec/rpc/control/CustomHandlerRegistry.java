@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.control;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -74,7 +74,7 @@ public class CustomHandlerRegistry {
     }
   }
 
-  public Response handle(CustomMessage message, DrillBuf dBody) throws RpcException {
+  public Response handle(CustomMessage message, ArrowBuf dBody) throws RpcException {
     final ParsingHandler<?, ?> handler;
     try (AutoCloseableLock lock = read.open()) {
       handler = handlers.get(message.getType());
@@ -97,7 +97,7 @@ public class CustomHandlerRegistry {
         .setType(message.getType())
         .build();
     // make sure we don't pass in a null array.
-    final ByteBuf[] dBodies = customResponse.getBodies() == null ? new DrillBuf[0] : customResponse.getBodies();
+    final ByteBuf[] dBodies = customResponse.getBodies() == null ? new ArrowBuf[0] : customResponse.getBodies();
     return new Response(RpcType.RESP_CUSTOM, responseMessage, dBodies);
 
   }
@@ -121,7 +121,7 @@ public class CustomHandlerRegistry {
       return responseSerde;
     }
 
-    public CustomResponse<?> onMessage(ByteString pBody, DrillBuf dBody) throws UserRpcException {
+    public CustomResponse<?> onMessage(ByteString pBody, ArrowBuf dBody) throws UserRpcException {
 
       try {
         final REQUEST message = requestSerde.deserializeReceived(pBody.toByteArray());

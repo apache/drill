@@ -24,8 +24,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.SmallIntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.SmallIntHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 @FunctionTemplate(name = "convert_fromSMALLINT_BE", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class SmallIntBEConvertFrom implements DrillSimpleFunc {

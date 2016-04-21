@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import static org.apache.parquet.column.Encoding.valueOf;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -51,9 +53,6 @@ import org.apache.parquet.schema.PrimitiveType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
-
 // class to keep track of the read position of variable length columns
 final class PageReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReader.class);
@@ -64,7 +63,7 @@ final class PageReader {
   private final ColumnDataReader dataReader;
 
   // buffer to store bytes of current page
-  DrillBuf pageData;
+  ArrowBuf pageData;
 
   // for variable length data we need to keep track of our current position in the page data
   // as the values and lengths are intermixed, making random access to the length data impossible
@@ -148,7 +147,7 @@ final class PageReader {
     int compressedSize = pageHeader.getCompressed_page_size();
     int uncompressedSize = pageHeader.getUncompressed_page_size();
 
-    final DrillBuf dictionaryData = allocateDictionaryBuffer(uncompressedSize);
+    final ArrowBuf dictionaryData = allocateDictionaryBuffer(uncompressedSize);
     readPage(pageHeader, compressedSize, uncompressedSize, dictionaryData);
 
     DictionaryPage page = new DictionaryPage(
@@ -160,7 +159,7 @@ final class PageReader {
     this.dictionary = page.getEncoding().initDictionary(parentStatus.columnDescriptor, page);
   }
 
-  public void readPage(PageHeader pageHeader, int compressedSize, int uncompressedSize, DrillBuf dest) throws IOException {
+  public void readPage(PageHeader pageHeader, int compressedSize, int uncompressedSize, ArrowBuf dest) throws IOException {
     Stopwatch timer = Stopwatch.createUnstarted();
     long timeToRead;
     long start=inputStream.getPos();
@@ -170,7 +169,7 @@ final class PageReader {
       timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
       this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, uncompressedSize);
     } else {
-      final DrillBuf compressedData = allocateTemporaryBuffer(compressedSize);
+      final ArrowBuf compressedData = allocateTemporaryBuffer(compressedSize);
       try {
       timer.start();
       dataReader.loadPage(compressedData, compressedSize);
@@ -190,7 +189,7 @@ final class PageReader {
     }
   }
 
-  public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
+  public static BytesInput asBytesInput(ArrowBuf buf, int offset, int length) throws IOException {
     return BytesInput.from(buf.nioBuffer(offset, length), 0, length);
   }
 
@@ -306,7 +305,7 @@ final class PageReader {
   /**
    * Allocate a buffer which the user should release immediately. The reader does not manage release of these buffers.
    */
-  private DrillBuf allocateTemporaryBuffer(int size) {
+  private ArrowBuf allocateTemporaryBuffer(int size) {
     return parentColumnReader.parentReader.getOperatorContext().getAllocator().buffer(size);
   }
 
@@ -314,8 +313,8 @@ final class PageReader {
    * Allocate and return a dictionary buffer. These are maintained for the life of the reader and then released when the
    * reader is cleared.
    */
-  private DrillBuf allocateDictionaryBuffer(int size) {
-    DrillBuf buf = parentColumnReader.parentReader.getOperatorContext().getAllocator().buffer(size);
+  private ArrowBuf allocateDictionaryBuffer(int size) {
+    ArrowBuf buf = parentColumnReader.parentReader.getOperatorContext().getAllocator().buffer(size);
     allocatedDictionaryBuffers.add(buf);
     return buf;
   }

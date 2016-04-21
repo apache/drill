@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,10 +27,10 @@ public class QueryDataBatch {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryDataBatch.class);
 
   private final QueryData header;
-  private final DrillBuf data;
+  private final ArrowBuf data;
   private final AtomicBoolean released = new AtomicBoolean(false);
 
-  public QueryDataBatch(QueryData header, DrillBuf data) {
+  public QueryDataBatch(QueryData header, ArrowBuf data) {
     // logger.debug("New Result Batch with header {} and data {}", header, data);
     this.header = header;
     this.data = data;
@@ -43,7 +43,7 @@ public class QueryDataBatch {
     return header;
   }
 
-  public DrillBuf getData() {
+  public ArrowBuf getData() {
     return data;
   }
 

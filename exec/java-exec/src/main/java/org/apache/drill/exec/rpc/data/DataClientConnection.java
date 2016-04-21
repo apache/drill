@@ -22,7 +22,7 @@ import io.netty.channel.socket.SocketChannel;
 
 import java.util.UUID;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;

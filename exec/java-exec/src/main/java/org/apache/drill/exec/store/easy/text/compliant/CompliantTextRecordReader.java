@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
 
 import com.google.common.collect.Maps;
 import com.univocity.parsers.common.TextParsingException;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,11 +35,11 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.util.CallBack;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.hadoop.mapred.FileSplit;
 
 import com.google.common.base.Predicate;
@@ -61,9 +61,9 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   // text reader implementation
   private TextReader reader;
   // input buffer
-  private DrillBuf readBuffer;
+  private ArrowBuf readBuffer;
   // working buffer to handle whitespaces
-  private DrillBuf whitespaceBuffer;
+  private ArrowBuf whitespaceBuffer;
   private DrillFileSystem dfs;
   // operator context for OutputMutator
   private OperatorContext oContext;
@@ -256,7 +256,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     }
 
     @Override
-    public DrillBuf getManagedBuffer() {
+    public ArrowBuf getManagedBuffer() {
       return null;
     }
 

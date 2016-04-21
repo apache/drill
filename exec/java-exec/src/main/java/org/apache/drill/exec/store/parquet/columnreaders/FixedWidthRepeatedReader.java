@@ -19,10 +19,11 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
 
+import org.apache.arrow.vector.BaseDataValueVector;
+import org.apache.arrow.vector.UInt4Vector;
+import org.apache.arrow.vector.complex.RepeatedValueVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;

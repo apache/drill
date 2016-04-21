@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.concurrent.TimeUnit;
 
@@ -25,12 +25,12 @@ import javax.inject.Named;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -56,8 +56,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     this.limit = limit;
     this.context = context;
     this.allocator = allocator;
-    final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
-    heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
+    final ArrowBuf ArrowBuf = allocator.buffer(4 * (limit + 1));
+    heapSv4 = new SelectionVector4(ArrowBuf, limit, Character.MAX_VALUE);
     this.hasSv2 = hasSv2;
   }
 
@@ -75,8 +75,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
-    final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
-    heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
+    final ArrowBuf ArrowBuf = allocator.buffer(4 * (limit + 1));
+    heapSv4 = new SelectionVector4(ArrowBuf, limit, Character.MAX_VALUE);
     // Reset queue size (most likely to be set to limit).
     queueSize = 0;
     for (int i = 0; i < v4.getTotalCount(); i++) {
@@ -125,8 +125,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   @Override
   public void generate() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
-    final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
-    finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
+    final ArrowBuf ArrowBuf = allocator.buffer(4 * queueSize);
+    finalSv4 = new SelectionVector4(ArrowBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
       finalSv4.set(i, pop());
     }

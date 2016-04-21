@@ -28,16 +28,17 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.arrow.vector.NullableVarBinaryVector;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -53,8 +54,8 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
   private static final int PER_BATCH_RECORD_COUNT = 4096;
   private static final int PER_BATCH_BYTES = 256*1024;
 
-  private static final MajorType KEY_TYPE = Types.optional(TypeProtos.MinorType.VARBINARY);
-  private static final MajorType VALUE_TYPE = Types.optional(TypeProtos.MinorType.VARBINARY);
+  private static final MajorType KEY_TYPE = Types.optional(MinorType.VARBINARY);
+  private static final MajorType VALUE_TYPE = Types.optional(MinorType.VARBINARY);
 
   private final String keySchema = "binary_key";
   private final String valueSchema = "binary_value";

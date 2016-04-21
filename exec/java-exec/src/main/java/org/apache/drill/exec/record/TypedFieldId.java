@@ -19,11 +19,11 @@ package org.apache.drill.exec.record;
 
 import java.util.Arrays;
 
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.util.BasicTypeHelper;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.BasicTypeHelper;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 import com.carrotsearch.hppc.IntArrayList;
 import com.google.common.base.Preconditions;
@@ -106,7 +106,7 @@ public class TypedFieldId {
 
   public Class<? extends ValueVector> getIntermediateClass() {
     return (Class<? extends ValueVector>) BasicTypeHelper.getValueVectorClass(intermediateType.getMinorType(),
-        intermediateType.getMode());
+            intermediateType.getMode());
   }
 
   public MajorType getFinalType() {

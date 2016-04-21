@@ -27,7 +27,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -36,10 +35,15 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.physical.config.WindowPOP;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 public abstract class WindowFunction {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WindowFunction.class);
@@ -179,11 +183,11 @@ public abstract class WindowFunction {
       super(type);
     }
 
-    private TypeProtos.MajorType getMajorType() {
+    private MajorType getMajorType() {
       if (type == Type.CUME_DIST || type == Type.PERCENT_RANK) {
-        return Types.required(TypeProtos.MinorType.FLOAT8);
+        return Types.required(MinorType.FLOAT8);
       }
-      return Types.required(TypeProtos.MinorType.BIGINT);
+      return Types.required(MinorType.BIGINT);
     }
 
     private String getName() {
@@ -305,8 +309,8 @@ public abstract class WindowFunction {
       }
 
       // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
-      TypeProtos.MajorType majorType = input.getMajorType();
-      if (majorType.getMode() == TypeProtos.DataMode.REQUIRED) {
+      MajorType majorType = input.getMajorType();
+      if (majorType.getMode() == DataMode.REQUIRED) {
         majorType = Types.optional(majorType.getMinorType());
       }
 
@@ -353,8 +357,8 @@ public abstract class WindowFunction {
       }
 
       // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
-      TypeProtos.MajorType majorType = input.getMajorType();
-      if (majorType.getMode() == TypeProtos.DataMode.REQUIRED) {
+      MajorType majorType = input.getMajorType();
+      if (majorType.getMode() == DataMode.REQUIRED) {
         majorType = Types.optional(majorType.getMinorType());
       }
 

@@ -24,10 +24,10 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;

@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 
 import javax.inject.Inject;
 
@@ -53,7 +53,7 @@ public class Mappify {
   @FunctionTemplate(names = {"mappify", "kvgen"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL, isRandom = true)
   public static class ConvertMapToKeyValuePairs implements DrillSimpleFunc {
     @Param  FieldReader reader;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Output ComplexWriter writer;
 
     public void setup() {

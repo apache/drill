@@ -19,11 +19,11 @@ package org.apache.drill.exec.store.avro;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.Types;
 
 /**
  * Utility class for working with Avro data types.

@@ -23,7 +23,7 @@ import io.netty.channel.EventLoopGroup;
 import java.util.concurrent.Executor;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;

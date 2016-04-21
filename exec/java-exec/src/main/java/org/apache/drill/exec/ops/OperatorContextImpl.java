@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.ops;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.arrow.memory.BufferManager;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.OutOfMemoryException;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -83,15 +84,15 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     executor = context.getDrillbitContext().getExecutor();
   }
 
-  public DrillBuf replace(DrillBuf old, int newSize) {
+  public ArrowBuf replace(ArrowBuf old, int newSize) {
     return manager.replace(old, newSize);
   }
 
-  public DrillBuf getManagedBuffer() {
+  public ArrowBuf getManagedBuffer() {
     return manager.getManagedBuffer();
   }
 
-  public DrillBuf getManagedBuffer(int size) {
+  public ArrowBuf getManagedBuffer(int size) {
     return manager.getManagedBuffer(size);
   }
 

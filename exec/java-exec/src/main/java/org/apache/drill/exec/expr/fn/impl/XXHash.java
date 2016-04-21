@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.memory.BoundsChecking;
+import org.apache.arrow.memory.BoundsChecking;
 
 import com.google.common.primitives.UnsignedLongs;
 
@@ -165,7 +165,7 @@ public final class XXHash extends DrillHash{
     return hash64Internal(Double.doubleToLongBits(val), seed);
   }
 
-  public static long hash64(long start, long end, DrillBuf buffer, long seed){
+  public static long hash64(long start, long end, ArrowBuf buffer, long seed){
     if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buffer.checkBytes((int)start, (int)end);
     }
@@ -180,7 +180,7 @@ public final class XXHash extends DrillHash{
     return convert64To32(hash64(val, seed));
   }
 
-  public static int hash32(int start, int end, DrillBuf buffer, int seed){
+  public static int hash32(int start, int end, ArrowBuf buffer, int seed){
     return convert64To32(hash64(start, end, buffer, seed));
   }
 

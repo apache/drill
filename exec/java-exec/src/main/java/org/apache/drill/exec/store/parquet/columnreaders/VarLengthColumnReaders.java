@@ -17,23 +17,23 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
+import org.apache.arrow.vector.Decimal28SparseVector;
+import org.apache.arrow.vector.Decimal38SparseVector;
+import org.apache.arrow.vector.NullableDecimal28SparseVector;
+import org.apache.arrow.vector.NullableDecimal38SparseVector;
+import org.apache.arrow.vector.NullableVarBinaryVector;
+import org.apache.arrow.vector.NullableVarCharVector;
+import org.apache.arrow.vector.VarBinaryVector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.Decimal28SparseVector;
-import org.apache.drill.exec.vector.Decimal38SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.arrow.vector.holders.Decimal28SparseHolder;
+import org.apache.arrow.vector.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.util.DecimalUtility;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -54,9 +54,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf bytebuf, int start, int length) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, length,
           schemaElement.getScale());
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
@@ -84,9 +84,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf bytebuf, int start, int length) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, length,
           schemaElement.getScale());
       if (index >= nullableDecimal28Vector.getValueCapacity()) {
         return false;
@@ -115,9 +115,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf bytebuf, int start, int length) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, length,
           schemaElement.getScale());
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
@@ -145,9 +145,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf bytebuf, int start, int length) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, length,
           schemaElement.getScale());
       if (index >= nullableDecimal38Vector.getValueCapacity()) {
         return false;
@@ -180,7 +180,7 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf bytebuf, int start, int length) {
       if (index >= varCharVector.getValueCapacity()) {
         return false;
       }
@@ -218,7 +218,7 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf value, int start, int length) {
       if (index >= vector.getValueCapacity()) {
         return false;
       }
@@ -253,7 +253,7 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf value, int start, int length) {
       if (index >= varBinaryVector.getValueCapacity()) {
         return false;
       }
@@ -292,7 +292,7 @@ public class VarLengthColumnReaders {
 
 
     @Override
-    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+    public boolean setSafe(int index, ArrowBuf value, int start, int length) {
       if (index >= nullableVarBinaryVector.getValueCapacity()) {
         return false;
       }

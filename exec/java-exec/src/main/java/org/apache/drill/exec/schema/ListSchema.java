@@ -21,11 +21,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.DataMode;
 
 public class ListSchema implements RecordSchema {
     private List<Field> fields;

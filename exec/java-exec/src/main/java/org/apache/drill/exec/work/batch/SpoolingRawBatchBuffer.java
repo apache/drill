@@ -18,7 +18,7 @@
 package org.apache.drill.exec.work.batch;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.ExecProtos;
@@ -227,7 +227,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
       outOfMemory.set(true);
     }
 
-    DrillBuf body = batch.getBody();
+    ArrowBuf body = batch.getBody();
     if (body != null) {
       currentSizeInMemory -= body.capacity();
     }
@@ -414,7 +414,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
         Thread.sleep(duration);
 
         try(final FSDataInputStream stream = fs.open(path);
-            final DrillBuf buf = allocator.buffer(bodyLength)) {
+            final ArrowBuf buf = allocator.buffer(bodyLength)) {
           stream.seek(start);
           final long currentPos = stream.getPos();
           final long check = stream.readLong();

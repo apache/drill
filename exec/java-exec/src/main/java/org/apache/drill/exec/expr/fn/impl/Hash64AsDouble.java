@@ -22,22 +22,22 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.Decimal18Holder;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal18Holder;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal9Holder;
-import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
-import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.Decimal18Holder;
+import org.apache.arrow.vector.holders.Decimal28SparseHolder;
+import org.apache.arrow.vector.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.holders.Decimal9Holder;
+import org.apache.arrow.vector.holders.Float4Holder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.NullableBigIntHolder;
+import org.apache.arrow.vector.holders.NullableDecimal18Holder;
+import org.apache.arrow.vector.holders.NullableDecimal28SparseHolder;
+import org.apache.arrow.vector.holders.NullableDecimal38SparseHolder;
+import org.apache.arrow.vector.holders.NullableDecimal9Holder;
+import org.apache.arrow.vector.holders.NullableFloat4Holder;
+import org.apache.arrow.vector.holders.NullableFloat8Holder;
+import org.apache.arrow.vector.holders.NullableIntHolder;
 
 /*
  * Class contains hash64 function definitions for different data types.
@@ -274,7 +274,7 @@ public class Hash64AsDouble {
     }
 
     public void eval() {
-      java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+      java.math.BigDecimal input = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
       out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(input.doubleValue(), 0);
     }
@@ -294,7 +294,7 @@ public class Hash64AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+        java.math.BigDecimal input = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(input.doubleValue(), 0);
       }
@@ -312,7 +312,7 @@ public class Hash64AsDouble {
     }
 
     public void eval() {
-      java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+      java.math.BigDecimal input = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
       out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(input.doubleValue(), 0);
     }
@@ -332,7 +332,7 @@ public class Hash64AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+        java.math.BigDecimal input = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(input.doubleValue(), 0);
       }

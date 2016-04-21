@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

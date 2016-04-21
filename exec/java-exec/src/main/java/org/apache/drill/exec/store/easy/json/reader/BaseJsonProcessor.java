@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.reader;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,9 +38,9 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 
   protected JsonParser parser;
-  protected DrillBuf workBuf;
+  protected ArrowBuf workBuf;
 
-  public BaseJsonProcessor(DrillBuf workBuf) {
+  public BaseJsonProcessor(ArrowBuf workBuf) {
     workBuf = Preconditions.checkNotNull(workBuf);
   }
 

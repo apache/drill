@@ -17,41 +17,44 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ArrowBuf;
+
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
+import org.apache.arrow.vector.NullableBigIntVector;
+import org.apache.arrow.vector.NullableDateVector;
+import org.apache.arrow.vector.NullableDecimal18Vector;
+import org.apache.arrow.vector.NullableDecimal28SparseVector;
+import org.apache.arrow.vector.NullableDecimal38SparseVector;
+import org.apache.arrow.vector.NullableDecimal9Vector;
+import org.apache.arrow.vector.NullableFloat4Vector;
+import org.apache.arrow.vector.NullableFloat8Vector;
+import org.apache.arrow.vector.NullableIntVector;
+import org.apache.arrow.vector.NullableIntervalVector;
+import org.apache.arrow.vector.NullableTimeStampVector;
+import org.apache.arrow.vector.NullableTimeVector;
+import org.apache.arrow.vector.NullableVarBinaryVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.arrow.vector.holders.NullableDecimal28SparseHolder;
+import org.apache.arrow.vector.holders.NullableDecimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableDecimal18Vector;
-import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal9Vector;
-import org.apache.drill.exec.vector.NullableFloat4Vector;
-import org.apache.drill.exec.vector.NullableFloat8Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableIntervalVector;
-import org.apache.drill.exec.vector.NullableTimeStampVector;
-import org.apache.drill.exec.vector.NullableTimeVector;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.util.DecimalUtility;
+import org.apache.arrow.vector.ValueVector;
+import org.joda.time.DateTimeUtils;
+
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeUtils;
 
-import io.netty.buffer.DrillBuf;
 
 public class NullableFixedByteAlignedReaders {
 
   static class NullableFixedByteAlignedReader<V extends ValueVector> extends NullableColumnReader<V> {
-    protected DrillBuf bytebuf;
+    protected ArrowBuf bytebuf;
 
     NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                       ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -342,7 +345,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, dataTypeLengthInBytes,
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, valueVec.getBuffer(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
@@ -358,7 +361,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, dataTypeLengthInBytes,
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, valueVec.getBuffer(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);

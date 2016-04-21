@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.arrow.vector.holders.IntHolder;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.calcite.plan.RelOptPlanner;

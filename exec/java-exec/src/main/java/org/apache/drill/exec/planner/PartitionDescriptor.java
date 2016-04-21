@@ -22,7 +22,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import java.util.BitSet;
 import java.util.List;

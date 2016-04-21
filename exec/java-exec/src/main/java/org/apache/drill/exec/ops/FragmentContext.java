@@ -17,24 +17,25 @@
  */
 package org.apache.drill.exec.ops;
 
-import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.memory.BufferManager;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -420,16 +421,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     }
   }
 
-  public DrillBuf replace(final DrillBuf old, final int newSize) {
+  public ArrowBuf replace(final ArrowBuf old, final int newSize) {
     return bufferManager.replace(old, newSize);
   }
 
   @Override
-  public DrillBuf getManagedBuffer() {
+  public ArrowBuf getManagedBuffer() {
     return bufferManager.getManagedBuffer();
   }
 
-  public DrillBuf getManagedBuffer(final int size) {
+  public ArrowBuf getManagedBuffer(final int size) {
     return bufferManager.getManagedBuffer(size);
   }
 

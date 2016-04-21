@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.data;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
@@ -150,7 +150,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
     try {
 
-      final IncomingDataBatch batch = new IncomingDataBatch(fragmentBatch, (DrillBuf) body, ack);
+      final IncomingDataBatch batch = new IncomingDataBatch(fragmentBatch, (ArrowBuf) body, ack);
       final int targetCount = fragmentBatch.getReceivingMinorFragmentIdCount();
 
       // randomize who gets first transfer (and thus ownership) so memory usage is balanced when we're sharing amongst

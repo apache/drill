@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;

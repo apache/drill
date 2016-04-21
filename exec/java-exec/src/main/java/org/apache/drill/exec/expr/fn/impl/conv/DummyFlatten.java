@@ -18,12 +18,12 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
+import org.apache.arrow.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 /**
  * This and {@link DummyConvertTo} class merely act as a placeholder so that Optiq

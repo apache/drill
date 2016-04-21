@@ -19,7 +19,7 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import javax.inject.Inject;
 
@@ -30,9 +30,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class JsonConvertFrom {
 
@@ -44,7 +44,7 @@ public class JsonConvertFrom {
   public static class ConvertFromJson implements DrillSimpleFunc{
 
     @Param VarBinaryHolder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
 
     @Output ComplexWriter writer;
@@ -70,7 +70,7 @@ public class JsonConvertFrom {
   public static class ConvertFromJsonVarchar implements DrillSimpleFunc{
 
     @Param VarCharHolder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
 
     @Output ComplexWriter writer;

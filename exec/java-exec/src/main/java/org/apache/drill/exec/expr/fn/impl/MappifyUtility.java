@@ -19,18 +19,15 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import com.google.common.base.Charsets;
 
+import org.apache.arrow.vector.complex.writer.BaseWriter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-//import org.apache.drill.common.types.DataMode;
-import org.apache.drill.common.types.MinorType;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.exec.vector.complex.MapUtility;
-import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.Iterator;
 
@@ -40,9 +37,9 @@ public class MappifyUtility {
   public static final String fieldKey = "key";
   public static final String fieldValue = "value";
 
-  public static DrillBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, DrillBuf buffer) {
+  public static ArrowBuf mappify(FieldReader reader, BaseWriter.ComplexWriter writer, ArrowBuf buffer) {
     // Currently we expect single map as input
-    if (DataMode.REPEATED == reader.getType().getMode() || !(reader.getType().getMinorType() == TypeProtos.MinorType.MAP)) {
+    if (DataMode.REPEATED == reader.getType().getMode() || !(reader.getType().getMinorType() == MinorType.MAP)) {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
     }
     BaseWriter.ListWriter listWriter = writer.rootAsList();

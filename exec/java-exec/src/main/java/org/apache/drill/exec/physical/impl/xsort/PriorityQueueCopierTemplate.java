@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,12 +25,12 @@ import java.util.List;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.arrow.vector.AllocationHelper;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
@@ -50,8 +50,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     this.outgoing = outgoing;
     this.size = batchGroups.size();
 
-    final DrillBuf drillBuf = allocator.buffer(4 * size);
-    vector4 = new SelectionVector4(drillBuf, size, Character.MAX_VALUE);
+    final ArrowBuf ArrowBuf = allocator.buffer(4 * size);
+    vector4 = new SelectionVector4(ArrowBuf, size, Character.MAX_VALUE);
     doSetup(context, hyperBatch, outgoing);
 
     queueSize = 0;

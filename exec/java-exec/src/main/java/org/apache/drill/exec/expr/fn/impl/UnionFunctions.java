@@ -18,25 +18,24 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import com.google.common.collect.Sets;
-import io.netty.buffer.DrillBuf;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.NullableTinyIntHolder;
-import org.apache.drill.exec.expr.holders.NullableUInt1Holder;
-import org.apache.drill.exec.expr.holders.UnionHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.NullableIntHolder;
+import org.apache.arrow.vector.holders.NullableTinyIntHolder;
+import org.apache.arrow.vector.holders.NullableUInt1Holder;
+import org.apache.arrow.vector.holders.UnionHolder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.vector.complex.impl.UnionReader;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -68,17 +67,17 @@ public class UnionFunctions {
     public void setup() {}
 
     public void eval() {
-      org.apache.drill.common.types.TypeProtos.MinorType type1;
+      org.apache.arrow.vector.types.Types.MinorType type1;
       if (input1.isSet()) {
         type1 = input1.getType().getMinorType();
       } else {
-        type1 = org.apache.drill.common.types.TypeProtos.MinorType.NULL;
+        type1 = org.apache.arrow.vector.types.Types.MinorType.NULL;
       }
-      org.apache.drill.common.types.TypeProtos.MinorType type2;
+      org.apache.arrow.vector.types.Types.MinorType type2;
       if (input2.isSet()) {
         type2 = input2.getType().getMinorType();
       } else {
-        type2 = org.apache.drill.common.types.TypeProtos.MinorType.NULL;
+        type2 = org.apache.arrow.vector.types.Types.MinorType.NULL;
       }
 
       out.value = org.apache.drill.exec.expr.fn.impl.UnionFunctions.compareTypes(type1, type2);
@@ -130,7 +129,7 @@ public class UnionFunctions {
     case TIMESTAMP:
       return 5;
     default:
-      return 6 + type.getNumber();
+      return 6 + type.ordinal();
     }
   }
 
@@ -144,7 +143,7 @@ public class UnionFunctions {
     @Output
     VarCharHolder out;
     @Inject
-    DrillBuf buf;
+    ArrowBuf buf;
 
     public void setup() {}
 
@@ -154,7 +153,7 @@ public class UnionFunctions {
       if (input.isSet()) {
          type = input.getType().getMinorType().name().getBytes();
       } else {
-        type = org.apache.drill.common.types.TypeProtos.MinorType.NULL.name().getBytes();
+        type = org.apache.arrow.vector.types.Types.MinorType.NULL.name().getBytes();
       }
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
@@ -191,7 +190,7 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
-        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.LIST) {
+        if (in.reader.getType().getMinorType() != org.apache.arrow.vector.types.Types.MinorType.LIST) {
           throw new UnsupportedOperationException("The input is not a LIST type");
         }
         out.reader = in.reader;
@@ -212,7 +211,7 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
-        out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.LIST ? 1 : 0;
+        out.value = in.getType().getMinorType() == org.apache.arrow.vector.types.Types.MinorType.LIST ? 1 : 0;
       } else {
         out.value = 0;
       }
@@ -230,7 +229,7 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
-        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.MAP) {
+        if (in.reader.getType().getMinorType() != org.apache.arrow.vector.types.Types.MinorType.MAP) {
           throw new UnsupportedOperationException("The input is not a MAP type");
         }
         out.reader = in.reader;
@@ -251,7 +250,7 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
-        out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.MAP ? 1 : 0;
+        out.value = in.getType().getMinorType() == org.apache.arrow.vector.types.Types.MinorType.MAP ? 1 : 0;
       } else {
         out.value = 0;
       }

@@ -20,9 +20,9 @@ package org.apache.drill.exec.vector.complex.fn;
 import java.io.IOException;
 import java.math.BigDecimal;
 
+import org.apache.arrow.vector.complex.reader.FieldReader;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.util.DateUtility;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;

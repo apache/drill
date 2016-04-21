@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.arrow.vector.holders.IntHolder;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;

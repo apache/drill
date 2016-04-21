@@ -18,6 +18,9 @@
 package org.apache.drill.exec.planner.sql;
 
 import com.google.common.base.Preconditions;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
@@ -25,16 +28,15 @@ import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
 
 public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
-  private static final TypeProtos.MajorType NONE = TypeProtos.MajorType.getDefaultInstance();
-  private final TypeProtos.MajorType returnType;
+  private static final MajorType NONE = new MajorType(MinorType.LATE, DataMode.OPTIONAL);
+  private final MajorType returnType;
 
-  public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic) {
+  public DrillSqlOperatorWithoutInference(String name, int argCount, MajorType returnType, boolean isDeterminisitic) {
     super(name,
         new ArrayList< DrillFuncHolder>(),
         argCount,
@@ -45,7 +47,7 @@ public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
   }
 
   protected RelDataType getReturnDataType(final RelDataTypeFactory factory) {
-    if (TypeProtos.MinorType.BIT.equals(returnType.getMinorType())) {
+    if (MinorType.BIT.equals(returnType.getMinorType())) {
       return factory.createSqlType(SqlTypeName.BOOLEAN);
     }
     return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);

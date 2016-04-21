@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.arrow.vector.NullableBitVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.arrow.vector.ValueVector;
+
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;

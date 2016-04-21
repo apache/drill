@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.user;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
@@ -153,8 +153,8 @@ public class QueryResultHandler {
                             ByteBuf pBody, ByteBuf dBody ) throws RpcException {
     final QueryData queryData = RpcBus.get( pBody, QueryData.PARSER );
     // Current batch coming in.
-    final DrillBuf drillBuf = (DrillBuf) dBody;
-    final QueryDataBatch batch = new QueryDataBatch( queryData, drillBuf );
+    final ArrowBuf ArrowBuf = (ArrowBuf) dBody;
+    final QueryDataBatch batch = new QueryDataBatch( queryData, ArrowBuf );
 
     final QueryId queryId = queryData.getQueryId();
 

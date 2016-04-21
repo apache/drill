@@ -20,7 +20,7 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
 
@@ -46,7 +46,7 @@ public final class MurmurHash3 extends DrillHash{
   /*
   Take 64 bit of murmur3_128's output
    */
-  public static long murmur3_64(long bStart, long bEnd, DrillBuf buffer, int seed) {
+  public static long murmur3_64(long bStart, long bEnd, ArrowBuf buffer, int seed) {
 
     long h1 = seed & 0x00000000FFFFFFFFL;
     long h2 = seed & 0x00000000FFFFFFFFL;
@@ -155,7 +155,7 @@ public final class MurmurHash3 extends DrillHash{
 
   }
 
-  public static int murmur3_32(int bStart, int bEnd, DrillBuf buffer, int seed) {
+  public static int murmur3_32(int bStart, int bEnd, ArrowBuf buffer, int seed) {
 
     final long c1 = 0xcc9e2d51L;
     final long c2 = 0x1b873593L;
@@ -263,7 +263,7 @@ public final class MurmurHash3 extends DrillHash{
     return murmur3_64(Double.doubleToLongBits(val), (int)seed);
   }
 
-  public static long hash64(long start, long end, DrillBuf buffer, long seed){
+  public static long hash64(long start, long end, ArrowBuf buffer, long seed){
     return murmur3_64(start, end, buffer, (int)seed);
   }
 
@@ -272,7 +272,7 @@ public final class MurmurHash3 extends DrillHash{
     return (int)murmur3_64(Double.doubleToLongBits(val), (int)seed);
   }
 
-  public static int hash32(int start, int end, DrillBuf buffer, int seed){
+  public static int hash32(int start, int end, ArrowBuf buffer, int seed){
     return (int)murmur3_64(start, end, buffer, seed);
   }
 

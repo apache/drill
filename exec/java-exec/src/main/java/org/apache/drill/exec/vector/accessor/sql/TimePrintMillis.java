@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.accessor.sql;
 
 import java.sql.Time;
 
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 public class TimePrintMillis extends Time {
   private static final String[] leadingZeroes = {"", "0", "00"};

@@ -19,12 +19,12 @@ package org.apache.drill.exec.physical.impl.flatten;
 
 import java.util.List;
 
+import org.apache.arrow.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+import org.apache.arrow.vector.util.TransferPair;
 
 public interface Flattener {
   public void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;

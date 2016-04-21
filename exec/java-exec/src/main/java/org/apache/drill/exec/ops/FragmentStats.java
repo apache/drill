@@ -19,7 +19,7 @@ package org.apache.drill.exec.ops;
 
 import java.util.List;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 

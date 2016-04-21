@@ -20,13 +20,12 @@ package org.apache.drill.exec.store.easy.json.reader;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonToken;
-import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.store.easy.json.JsonProcessor;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.vector.complex.writer.BaseWriter;
 
 public class CountingJsonReader extends BaseJsonProcessor {
 
-  public CountingJsonReader(DrillBuf workBuf) {
+  public CountingJsonReader(ArrowBuf workBuf) {
     super(workBuf);
   }
 

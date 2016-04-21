@@ -42,7 +42,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
-import org.apache.drill.exec.util.Pointer;
+import org.apache.arrow.memory.util.Pointer;
 
 public class SqlCreateTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER) {

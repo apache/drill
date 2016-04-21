@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import org.apache.arrow.vector.types.Types.MajorType;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -24,7 +26,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 
 // TODO:  Doc.:  Document more of basics of pattern of contracts for getXxx(...):

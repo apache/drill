@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.util;
 
-import io.netty.buffer.DrillBuf;
 
 import java.io.DataInput;
 
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.common.util.DrillStringUtils;
 
 public class ByteBufUtil {
@@ -29,7 +29,7 @@ public class ByteBufUtil {
    * Verifies that the the space provided in the buffer is of specified size.
    * @throws IllegalArgumentException if the specified boundaries do not describe the expected size.
    */
-  public static void checkBufferLength(DrillBuf buffer, int start, int end, int requiredLen) {
+  public static void checkBufferLength(ArrowBuf buffer, int start, int end, int requiredLen) {
     int actualLen = (end - start);
     if (actualLen != requiredLen) {
       throw new IllegalArgumentException(String.format("Wrong length %d(%d-%d) in the buffer '%s', expected %d.",
@@ -39,7 +39,7 @@ public class ByteBufUtil {
 
   /**
    * Modeled after {@code org.apache.hadoop.io.WritableUtils}.
-   * We copy the code to avoid wrapping {@link DrillBuf} to/from {@link DataInput}.
+   * We copy the code to avoid wrapping {@link ArrowBuf} to/from {@link DataInput}.
    */
   public static class HadoopWritables {
     /**
@@ -53,10 +53,10 @@ public class ByteBufUtil {
      * is negative, with number of bytes that follow are -(v+124). Bytes are
      * stored in the high-non-zero-byte-first order.
      *
-     * @param buffer DrillBuf to read from
+     * @param buffer ArrowBuf to read from
      * @param i Integer to be serialized
      */
-    public static void writeVInt(DrillBuf buffer,  int start, int end, int i) {
+    public static void writeVInt(ArrowBuf buffer,  int start, int end, int i) {
       writeVLong(buffer, start, end, i);
     }
 
@@ -71,10 +71,10 @@ public class ByteBufUtil {
      * is negative, with number of bytes that follow are -(v+120). Bytes are
      * stored in the high-non-zero-byte-first order.
      *
-     * @param buffer DrillBuf to write to
+     * @param buffer ArrowBuf to write to
      * @param i Long to be serialized
      */
-    public static void writeVLong(DrillBuf buffer, int start, int end, long i) {
+    public static void writeVLong(ArrowBuf buffer, int start, int end, long i) {
       int availableBytes = (end-start);
       if (availableBytes < getVIntSize(i)) {
         throw new NumberFormatException("Expected " + getVIntSize(i) + " bytes but the buffer '"
@@ -113,10 +113,10 @@ public class ByteBufUtil {
 
     /**
      * Reads a zero-compressed encoded integer from input stream and returns it.
-     * @param buffer DrillBuf to read from
+     * @param buffer ArrowBuf to read from
      * @return deserialized integer from stream.
      */
-    public static int readVInt(DrillBuf buffer, int start, int end) {
+    public static int readVInt(ArrowBuf buffer, int start, int end) {
       long n = readVLong(buffer, start, end);
       if ((n > Integer.MAX_VALUE) || (n < Integer.MIN_VALUE)) {
         throw new NumberFormatException("Value " + n + " too long to fit in integer");
@@ -126,10 +126,10 @@ public class ByteBufUtil {
 
     /**
      * Reads a zero-compressed encoded long from input stream and returns it.
-     * @param buffer DrillBuf to read from
+     * @param buffer ArrowBuf to read from
      * @return deserialized long from stream.
      */
-    public static long readVLong(DrillBuf buffer, int start, int end) {
+    public static long readVLong(ArrowBuf buffer, int start, int end) {
       buffer.readerIndex(start);
       byte firstByte = buffer.readByte();
       int len = decodeVIntSize(firstByte);

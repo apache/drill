@@ -18,7 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 public interface OptimizerRulesContext extends UdfUtilities {

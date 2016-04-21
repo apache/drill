@@ -17,21 +17,21 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 import com.google.common.base.Charsets;
 
 class WorkingBuffer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkingBuffer.class);
 
-  private DrillBuf workBuf;
+  private ArrowBuf workBuf;
 
-  public WorkingBuffer(DrillBuf workBuf) {
+  public WorkingBuffer(ArrowBuf workBuf) {
     this.workBuf = workBuf;
   }
 
@@ -63,7 +63,7 @@ class WorkingBuffer {
     h.buffer = workBuf;
   }
 
-  public DrillBuf getBuf(){
+  public ArrowBuf getBuf(){
     return workBuf;
   }
 

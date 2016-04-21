@@ -23,7 +23,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 
 public class BatchSchema implements Iterable<MaterializedField> {
@@ -150,7 +151,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
     if (!t1.getMode().equals(t2.getMode())) {
       return false;
     }
-    if (!Sets.newHashSet(t1.getSubTypeList()).equals(Sets.newHashSet(t2.getSubTypeList()))) {
+    if (!Sets.newHashSet(t1.getSubTypes()).equals(Sets.newHashSet(t2.getSubTypes()))) {
       return false;
     }
     return true;

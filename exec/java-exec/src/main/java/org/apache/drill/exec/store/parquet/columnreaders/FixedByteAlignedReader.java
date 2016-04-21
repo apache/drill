@@ -17,30 +17,34 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ArrowBuf;
+
 import java.math.BigDecimal;
 
+import org.apache.arrow.vector.DateVector;
+import org.apache.arrow.vector.Decimal28SparseVector;
+import org.apache.arrow.vector.Decimal38SparseVector;
+import org.apache.arrow.vector.IntervalVector;
+import org.apache.arrow.vector.VariableWidthVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.holders.Decimal28SparseHolder;
+import org.apache.arrow.vector.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.holders.IntervalHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.DateVector;
-import org.apache.drill.exec.vector.Decimal28SparseVector;
-import org.apache.drill.exec.vector.Decimal38SparseVector;
-import org.apache.drill.exec.vector.IntervalVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.arrow.vector.util.DecimalUtility;
+import org.apache.arrow.vector.ValueVector;
+import org.joda.time.DateTimeUtils;
+
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.joda.time.DateTimeUtils;
 
-import io.netty.buffer.DrillBuf;
 
 class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
-  protected DrillBuf bytebuf;
+  protected ArrowBuf bytebuf;
 
 
   FixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
@@ -148,7 +152,7 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     @Override
     void addNext(int start, int index) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, dataTypeLengthInBytes,
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, valueVec.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
@@ -165,7 +169,7 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     @Override
     void addNext(int start, int index) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes,
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromArrowBuf(bytebuf, start, dataTypeLengthInBytes,
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, valueVec.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);

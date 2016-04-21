@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
+import org.apache.arrow.vector.ValueVector;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;

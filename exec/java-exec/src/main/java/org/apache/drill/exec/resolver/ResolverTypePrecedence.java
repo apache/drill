@@ -18,12 +18,12 @@
 
 package org.apache.drill.exec.resolver;
 
+import org.apache.arrow.vector.types.Types.MinorType;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class ResolverTypePrecedence {
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.materialize;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;

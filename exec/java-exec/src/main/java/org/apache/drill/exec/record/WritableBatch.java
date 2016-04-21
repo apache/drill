@@ -17,15 +17,16 @@
  */
 package org.apache.drill.exec.record;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.List;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -37,25 +38,25 @@ public class WritableBatch implements AutoCloseable {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WritableBatch.class);
 
   private final RecordBatchDef def;
-  private final DrillBuf[] buffers;
+  private final ArrowBuf[] buffers;
   private boolean cleared = false;
 
-  private WritableBatch(RecordBatchDef def, List<DrillBuf> buffers) {
+  private WritableBatch(RecordBatchDef def, List<ArrowBuf> buffers) {
     this.def = def;
-    this.buffers = buffers.toArray(new DrillBuf[buffers.size()]);
+    this.buffers = buffers.toArray(new ArrowBuf[buffers.size()]);
   }
 
-  private WritableBatch(RecordBatchDef def, DrillBuf[] buffers) {
+  private WritableBatch(RecordBatchDef def, ArrowBuf[] buffers) {
     super();
     this.def = def;
     this.buffers = buffers;
   }
 
   public WritableBatch transfer(BufferAllocator allocator) {
-    List<DrillBuf> newBuffers = Lists.newArrayList();
-    for (DrillBuf buf : buffers) {
+    List<ArrowBuf> newBuffers = Lists.newArrayList();
+    for (ArrowBuf buf : buffers) {
       int writerIndex = buf.writerIndex();
-      DrillBuf newBuf = buf.transferOwnership(allocator).buffer;
+      ArrowBuf newBuf = buf.transferOwnership(allocator).buffer;
       newBuf.writerIndex(writerIndex);
       newBuffers.add(newBuf);
     }
@@ -67,24 +68,24 @@ public class WritableBatch implements AutoCloseable {
     return def;
   }
 
-  public DrillBuf[] getBuffers() {
+  public ArrowBuf[] getBuffers() {
     return buffers;
   }
 
   public void reconstructContainer(BufferAllocator allocator, VectorContainer container) {
     Preconditions.checkState(!cleared,
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
-    if (buffers.length > 0) { /* If we have DrillBuf's associated with value vectors */
+    if (buffers.length > 0) { /* If we have ArrowBuf's associated with value vectors */
       int len = 0;
-      for (DrillBuf b : buffers) {
+      for (ArrowBuf b : buffers) {
         len += b.capacity();
       }
 
-      DrillBuf newBuf = allocator.buffer(len);
+      ArrowBuf newBuf = allocator.buffer(len);
       try {
         /* Copy data from each buffer into the compound buffer */
         int offset = 0;
-        for (DrillBuf buf : buffers) {
+        for (ArrowBuf buf : buffers) {
           newBuf.setBytes(offset, buf);
           offset += buf.capacity();
           buf.release();
@@ -102,7 +103,7 @@ public class WritableBatch implements AutoCloseable {
         for (VectorWrapper<?> vv : container) {
           SerializedField fmd = fields.get(vectorIndex);
           ValueVector v = vv.getValueVector();
-          DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
+          ArrowBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
           v.load(fmd, bb);
           vectorIndex++;
@@ -133,7 +134,7 @@ public class WritableBatch implements AutoCloseable {
     if(cleared) {
       return;
     }
-    for (DrillBuf buf : buffers) {
+    for (ArrowBuf buf : buffers) {
       buf.release();
     }
     cleared = true;
@@ -149,11 +150,11 @@ public class WritableBatch implements AutoCloseable {
   }
 
   public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
-    List<DrillBuf> buffers = Lists.newArrayList();
+    List<ArrowBuf> buffers = Lists.newArrayList();
     List<SerializedField> metadata = Lists.newArrayList();
 
     for (ValueVector vv : vectors) {
-      metadata.add(vv.getMetadata());
+      metadata.add(TypeHelper.getMetadata(vv));
 
       // don't try to get the buffers if we don't have any records. It is possible the buffers are dead buffers.
       if (recordCount == 0) {
@@ -161,7 +162,7 @@ public class WritableBatch implements AutoCloseable {
         continue;
       }
 
-      for (DrillBuf b : vv.getBuffers(true)) {
+      for (ArrowBuf b : vv.getBuffers(true)) {
         buffers.add(b);
       }
       // remove vv access to buffers.
@@ -184,15 +185,15 @@ public class WritableBatch implements AutoCloseable {
   }
 
   public void retainBuffers(final int increment) {
-    for (final DrillBuf buf : buffers) {
+    for (final ArrowBuf buf : buffers) {
       buf.retain(increment);
     }
   }
 
   @Override
   public void close() {
-    for(final DrillBuf drillBuf : buffers) {
-      drillBuf.release(1);
+    for(final ArrowBuf ArrowBuf : buffers) {
+      ArrowBuf.release(1);
     }
   }
 

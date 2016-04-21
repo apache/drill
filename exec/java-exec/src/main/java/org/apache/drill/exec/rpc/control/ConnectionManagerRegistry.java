@@ -20,7 +20,7 @@ package org.apache.drill.exec.rpc.control;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;

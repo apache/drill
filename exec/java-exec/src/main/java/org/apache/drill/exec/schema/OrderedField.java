@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.schema;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.base.Objects;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class OrderedField extends Field {
     private final int index;

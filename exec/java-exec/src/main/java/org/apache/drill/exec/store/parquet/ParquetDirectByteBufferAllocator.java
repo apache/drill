@@ -23,7 +23,7 @@ import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 
 import org.apache.parquet.bytes.ByteBufferAllocator;

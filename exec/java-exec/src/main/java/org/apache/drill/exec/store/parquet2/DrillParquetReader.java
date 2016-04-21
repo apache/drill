@@ -31,23 +31,25 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
-import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.NullableIntVector;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.VariableWidthVector;
+import org.apache.arrow.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
@@ -219,9 +221,9 @@ public class DrillParquetReader extends AbstractRecordReader {
           for(SchemaPath col: columnsNotFound){
             nullFilledVectors.add(
               (NullableIntVector)output.addField(MaterializedField.create(col.getAsUnescapedPath(),
-                  org.apache.drill.common.types.Types.optional(TypeProtos.MinorType.INT)),
-                (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT,
-                  TypeProtos.DataMode.OPTIONAL)));
+                              Types.optional(MinorType.INT)),
+                      (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(MinorType.INT,
+                              DataMode.OPTIONAL)));
           }
           if(columnsNotFound.size()==getColumns().size()){
             noColumnsFound=true;

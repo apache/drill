@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.xsort;
 
 import com.typesafe.config.ConfigException;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.Queue;
 
@@ -26,7 +26,7 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -73,7 +73,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
         throw new UnsupportedOperationException(String.format("Missing batch. batch: %d newBatch: %d", batch, newBatch));
       }
     }
-    final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
+    final ArrowBuf ArrowBuf = allocator.buffer(4 * totalCount);
 
     try {
       desiredRecordBatchCount = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
@@ -81,7 +81,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       // value not found, use default value instead
       desiredRecordBatchCount = Character.MAX_VALUE;
     }
-    aux = new SelectionVector4(drillBuf, totalCount, desiredRecordBatchCount);
+    aux = new SelectionVector4(ArrowBuf, totalCount, desiredRecordBatchCount);
   }
 
   /**

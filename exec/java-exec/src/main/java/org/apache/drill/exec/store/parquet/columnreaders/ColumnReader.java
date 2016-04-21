@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 
+import org.apache.arrow.vector.BaseDataValueVector;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -67,7 +67,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   int dataTypeLengthInBits;
   int bytesReadInCurrentPass;
 
-  protected DrillBuf vectorData;
+  protected ArrowBuf vectorData;
   // when reading definition levels for nullable columns, it is a one-way stream of integers
   // when reading var length data, where we don't know if all of the records will fit until we've read all of them
   // we must store the last definition level an use it in at the start of the next batch
@@ -226,7 +226,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   }
 
   // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
-  public static int readIntLittleEndian(DrillBuf in, int offset) {
+  public static int readIntLittleEndian(ArrowBuf in, int offset) {
     int ch4 = in.getByte(offset) & 0xff;
     int ch3 = in.getByte(offset + 1) & 0xff;
     int ch2 = in.getByte(offset + 2) & 0xff;

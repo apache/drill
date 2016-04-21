@@ -22,20 +22,20 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.RepeatedBigIntHolder;
-import org.apache.drill.exec.expr.holders.RepeatedBitHolder;
-import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
-import org.apache.drill.exec.expr.holders.RepeatedFloat8Holder;
-import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
-import org.apache.drill.exec.expr.holders.RepeatedTinyIntHolder;
-import org.apache.drill.exec.expr.holders.RepeatedVarCharHolder;
-import org.apache.drill.exec.expr.holders.TinyIntHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.Float4Holder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.RepeatedBigIntHolder;
+import org.apache.arrow.vector.holders.RepeatedBitHolder;
+import org.apache.arrow.vector.holders.RepeatedFloat4Holder;
+import org.apache.arrow.vector.holders.RepeatedFloat8Holder;
+import org.apache.arrow.vector.holders.RepeatedIntHolder;
+import org.apache.arrow.vector.holders.RepeatedTinyIntHolder;
+import org.apache.arrow.vector.holders.RepeatedVarCharHolder;
+import org.apache.arrow.vector.holders.TinyIntHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 public class SimpleRepeatedFunctions {
 

@@ -24,8 +24,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.UInt8Holder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.UInt8Holder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 @FunctionTemplate(name = "convert_fromUINT8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class UInt8ConvertFrom implements DrillSimpleFunc {

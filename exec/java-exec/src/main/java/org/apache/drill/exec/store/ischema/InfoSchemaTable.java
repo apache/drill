@@ -20,15 +20,15 @@ package org.apache.drill.exec.store.ischema;
 import java.util.List;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 /**
  * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,10 +31,10 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ListWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.MapWriter;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -71,11 +71,11 @@ public class JsonReader extends BaseJsonProcessor {
 
   private FieldSelection selection;
 
-  public JsonReader(DrillBuf managedBuf, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
+  public JsonReader(ArrowBuf managedBuf, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
     this(managedBuf, GroupScan.ALL_COLUMNS, allTextMode, skipOuterList, readNumbersAsDouble);
   }
 
-  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
+  public JsonReader(ArrowBuf managedBuf, List<SchemaPath> columns, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
     super(managedBuf);
     assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
     this.selection = FieldSelection.getFieldSelection(columns);
@@ -139,8 +139,8 @@ public class JsonReader extends BaseJsonProcessor {
     }
   }
 
-  public void setSource(int start, int end, DrillBuf buf) throws IOException {
-    setSource(DrillBufInputStream.getStream(start, end, buf));
+  public void setSource(int start, int end, ArrowBuf buf) throws IOException {
+    setSource(ArrowBufInputStream.getStream(start, end, buf));
   }
 
 
@@ -591,7 +591,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   }
 
-  public DrillBuf getWorkBuf() {
+  public ArrowBuf getWorkBuf() {
     return workingBuffer.getBuf();
   }
 

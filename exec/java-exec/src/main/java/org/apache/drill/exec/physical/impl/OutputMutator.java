@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.util.CallBack;
+import org.apache.arrow.vector.ValueVector;
 
 /**
  * Interface that allows a record reader to modify the current schema.
@@ -59,9 +59,9 @@ public interface OutputMutator {
 
   /**
    * Allows a scanner to request a set of managed block of memory.
-   * @return A DrillBuf that will be released at the end of the current query (and can be resized as desired during use).
+   * @return A ArrowBuf that will be released at the end of the current query (and can be resized as desired during use).
    */
-  public DrillBuf getManagedBuffer();
+  public ArrowBuf getManagedBuffer();
 
   /**
    *

@@ -19,7 +19,7 @@ package org.apache.drill.exec.rpc.data;
 
 import io.netty.channel.socket.SocketChannel;
 
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.RemoteConnection;
 
 public class BitServerConnection extends RemoteConnection{

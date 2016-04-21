@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.control;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -98,7 +98,7 @@ public interface Controller extends AutoCloseable {
      * @throws UserRpcException
      *           throw this exception if there is an RPC failure that should be communicated to the sender.
      */
-    public CustomResponse<RESPONSE> onMessage(REQUEST pBody, DrillBuf dBody) throws UserRpcException;
+    public CustomResponse<RESPONSE> onMessage(REQUEST pBody, ArrowBuf dBody) throws UserRpcException;
 
   }
 

@@ -33,7 +33,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
  * limitations under the License.
  ******************************************************************************/
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
 import java.io.EOFException;
@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.memory.BoundsChecking;
+import org.apache.arrow.memory.BoundsChecking;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Seekable;
@@ -80,7 +80,7 @@ final class TextInput {
   private final FSDataInputStream inputFS;
   private final InputStream input;
 
-  private final DrillBuf buffer;
+  private final ArrowBuf buffer;
   private final ByteBuffer underlyingBuffer;
   private final long bStart;
   private final long bStartMinus1;
@@ -110,7 +110,7 @@ final class TextInput {
    * @param lineSeparator the sequence of characters that represent a newline, as defined in {@link Format#getLineSeparator()}
    * @param normalizedLineSeparator the normalized newline character (as defined in {@link Format#getNormalizedNewline()}) that is used to replace any lineSeparator sequence found in the input.
    */
-  public TextInput(TextParsingSettings settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
+  public TextInput(TextParsingSettings settings, InputStream input, ArrowBuf readBuffer, long startPos, long endPos) {
     byte[] lineSeparator = settings.getNewLineDelimiter();
     byte normalizedLineSeparator = settings.getNormalizedNewLine();
     Preconditions.checkArgument(lineSeparator != null && (lineSeparator.length == 1 || lineSeparator.length == 2), "Invalid line separator. Expected 1 to 2 characters");

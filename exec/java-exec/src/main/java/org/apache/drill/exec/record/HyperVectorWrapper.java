@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.complex.AbstractMapVector;
+import org.apache.arrow.vector.complex.FieldIdUtil;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.FieldIdUtil;
 
 import com.google.common.base.Preconditions;
 

@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +43,7 @@ class FieldVarCharOutput extends TextOutput {
   static final String COL_NAME = "columns";
 
   // array of output vector
-  private final VarCharVector [] vectors;
+  private final VarCharVector[] vectors;
   // boolean array indicating which fields are selected (if star query entire array is set to true)
   private final boolean[] selectedFields;
   // current vector to which field will be added
@@ -121,7 +121,7 @@ class FieldVarCharOutput extends TextOutput {
 
     for (int i = 0; i <= maxField; i++) {
       if (selectedFields[i]) {
-        MaterializedField field = MaterializedField.create(outputColumns.get(i), Types.required(TypeProtos.MinorType.VARCHAR));
+        MaterializedField field = MaterializedField.create(outputColumns.get(i), Types.required(MinorType.VARCHAR));
         this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
       }
     }
