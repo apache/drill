@@ -182,7 +182,7 @@ export DRILLBIT_MAX_PERM=${DRILLBIT_MAX_PERM:-"512M"}
 export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
-export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=true"
+export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:MaxPermSize=$DRILLBIT_MAX_PERM"
 
 # Under YARN, the log directory is usually YARN-provided. Replace any
