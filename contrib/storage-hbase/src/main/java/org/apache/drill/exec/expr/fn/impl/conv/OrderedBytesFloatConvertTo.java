@@ -18,7 +18,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.expr.fn.impl.conv;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import javax.inject.Inject;
 
@@ -29,15 +29,15 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.Float4Holder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 @FunctionTemplate(name = "convert_toFLOAT_OB", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class OrderedBytesFloatConvertTo implements DrillSimpleFunc {
 
   @Param Float4Holder in;
   @Output VarBinaryHolder out;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Workspace byte[] bytes;
   @Workspace org.apache.hadoop.hbase.util.PositionedByteRange br;
 

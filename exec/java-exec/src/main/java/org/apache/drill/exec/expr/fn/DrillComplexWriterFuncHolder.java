@@ -23,7 +23,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.record.VectorAccessibleComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;

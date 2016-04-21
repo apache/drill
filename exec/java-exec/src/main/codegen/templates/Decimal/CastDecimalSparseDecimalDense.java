@@ -33,12 +33,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -47,13 +47,13 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+        int size = (${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -82,9 +82,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         int index = in.nDecimalDigits - 1;
         int actualDigits;
 
-        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)) > 0) {
+        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS)) > 0) {
 
-            int paddedDigits = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - actualDigits;
+            int paddedDigits = org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS - actualDigits;
 
             int paddedMask = (int) Math.pow(10, paddedDigits);
 
@@ -124,14 +124,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          */
 
           /* Allocate a byte array */
-          int size = (((intermediate.length - 1) * org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) + 1);
+          int size = (((intermediate.length - 1) * org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) + 1);
           byte[] intermediateBytes = new byte[size];
           java.nio.ByteBuffer wrapper = java.nio.ByteBuffer.wrap(intermediateBytes);
 
           wrapper.put((byte) intermediate[0]);
 
           for (int i = 1; i < intermediate.length; i++) {
-            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE).putInt(intermediate[i]).array());
+            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE).putInt(intermediate[i]).array());
           }
 
           final int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
@@ -139,21 +139,21 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
           int shiftOrder = 2;
 
           // Start just after the last integer and shift bits to the right
-          index = size - (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE+ 1);
+          index = size - (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE+ 1);
 
           while (index >= 0) {
 
               /* get the last bits that need to shifted to the next byte */
               byte shiftBits = (byte) ((intermediateBytes[index] & mask[maskIndex]) << (8 - shiftOrder));
 
-              int shiftOrder1 = ((index % org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) == 0) ? shiftOrder - 2 : shiftOrder;
+              int shiftOrder1 = ((index % org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) == 0) ? shiftOrder - 2 : shiftOrder;
 
               /* transfer the bits from the left to the right */
               intermediateBytes[index + 1] = (byte) (((intermediateBytes[index + 1] & 0xFF) >>> (shiftOrder1)) | shiftBits);
 
               index--;
 
-              if ((index % org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) == 0) {
+              if ((index % org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) == 0) {
                   /* We are on a border */
                   shiftOrder += 2;
                   maskIndex++;

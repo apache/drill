@@ -25,8 +25,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -38,7 +38,7 @@ import org.apache.drill.exec.util.VectorUtil;
 
 import com.google.common.base.Stopwatch;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 public class PrintingResultsListener implements UserResultsListener {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrintingResultsListener.class);
@@ -73,7 +73,7 @@ public class PrintingResultsListener implements UserResultsListener {
   @Override
   public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
     final QueryData header = result.getHeader();
-    final DrillBuf data = result.getData();
+    final ArrowBuf data = result.getData();
 
     if (data != null) {
       count.addAndGet(header.getRowCount());

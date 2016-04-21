@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 import org.apache.drill.exec.ops.ContextInformation;
 
 import javax.inject.Inject;
@@ -37,7 +37,7 @@ public class ContextFunctions {
   public static class User implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace int queryUserBytesLength;
 
     public void setup() {
@@ -61,7 +61,7 @@ public class ContextFunctions {
   public static class CurrentSchema implements DrillSimpleFunc {
     @Output VarCharHolder out;
     @Inject ContextInformation contextInfo;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace int currentSchemaBytesLength;
 
     public void setup() {

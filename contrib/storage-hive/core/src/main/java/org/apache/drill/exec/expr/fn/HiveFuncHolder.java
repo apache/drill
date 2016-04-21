@@ -19,12 +19,12 @@ package org.apache.drill.exec.expr.fn;
 
 import java.util.List;
 
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.HiveFuncHolderExpr;
@@ -137,7 +137,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
     workspaceJVars[2] = g.declareClassField("deferredObjects", g.getModel()._ref(DrillDeferredObject[].class));
     workspaceJVars[3] = g.declareClassField("arguments", g.getModel()._ref(DrillDeferredObject[].class));
     workspaceJVars[4] = g.declareClassField("returnValueHolder",
-      TypeHelper.getHolderType(g.getModel(), returnType.getMinorType(), TypeProtos.DataMode.OPTIONAL));
+      TypeHelper.getHolderType(g.getModel(), returnType.getMinorType(), DataMode.OPTIONAL));
 
     return workspaceJVars;
   }
@@ -182,14 +182,14 @@ public class HiveFuncHolder extends AbstractFuncHolder {
       JExpr.newArray(m._ref(ObjectInspector.class), argTypes.length));
 
     JClass oih = m.directClass(ObjectInspectorHelper.class.getCanonicalName());
-    JClass mt = m.directClass(TypeProtos.MinorType.class.getCanonicalName());
+    JClass mt = m.directClass(MinorType.class.getCanonicalName());
     JClass mode = m.directClass(DataMode.class.getCanonicalName());
     for(int i=0; i<argTypes.length; i++) {
       sub.assign(
         oiArray.component(JExpr.lit(i)),
         oih.staticInvoke("getDrillObjectInspector")
-          .arg(mode.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMode().getNumber())))
-          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().getNumber())))
+          .arg(mode.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMode().name())))
+          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().name())))
           .arg((((PrimitiveObjectInspector) returnOI).getPrimitiveCategory() ==
               PrimitiveObjectInspector.PrimitiveCategory.STRING) ? JExpr.lit(true) : JExpr.lit(false)));
     }

@@ -29,7 +29,7 @@
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -37,10 +37,10 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
@@ -48,7 +48,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Inject DrillBuf buffer;     
+  @Inject ArrowBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup() {

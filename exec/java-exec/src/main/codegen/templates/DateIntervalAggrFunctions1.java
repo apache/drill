@@ -37,7 +37,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 
 @SuppressWarnings("unused")
 
@@ -83,14 +83,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
     <#if type.outputType?ends_with("Interval")>
 
-    long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
-                       in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.months * org.apache.arrow.vector.util.DateUtility.monthsToMillis+
+                       in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
 
     <#elseif type.outputType?ends_with("IntervalDay")>
-    long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.min(value.value, inMS);
@@ -101,13 +101,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 	  <#elseif aggrtype.funcName == "max">
     <#if type.outputType?ends_with("Interval")>
-    long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
-                       in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.months * org.apache.arrow.vector.util.DateUtility.monthsToMillis+
+                       in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
     <#elseif type.outputType?ends_with("IntervalDay")>
-    long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    long inMS = (long) in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
@@ -142,13 +142,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       out.isSet = 1;
       <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
       <#if type.outputType?ends_with("Interval")>
-      out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
-      value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
-      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.months = (int) (value.value / org.apache.arrow.vector.util.DateUtility.monthsToMillis);
+      value.value = value.value % org.apache.arrow.vector.util.DateUtility.monthsToMillis;
+      out.days = (int) (value.value / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
       <#elseif type.outputType?ends_with("IntervalDay")>
-      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.days = (int) (value.value / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
       <#else>
       out.value = value.value;
       </#if>

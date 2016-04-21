@@ -17,10 +17,8 @@
  */
 package org.apache.drill.exec.expr;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
 import com.sun.codemodel.JBlock;
@@ -29,6 +27,8 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 public class GetSetVectorHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GetSetVectorHelper.class);
@@ -83,7 +83,7 @@ public class GetSetVectorHelper {
         return;
       case INTERVAL:{
         JVar start = eval.decl(model.INT, "start", JExpr.lit(TypeHelper.getSize(type)).mul(indexVariable));
-        JVar data = eval.decl(model.ref(DrillBuf.class), "data", vector.invoke("getBuffer"));
+        JVar data = eval.decl(model.ref(ArrowBuf.class), "data", vector.invoke("getBuffer"));
         eval.assign(out.getHolder().ref("months"), data.invoke("getInt").arg(start));
         eval.assign(out.getHolder().ref("days"), data.invoke("getInt").arg(start.plus(JExpr.lit(4))));
         eval.assign(out.getHolder().ref("milliseconds"), data.invoke("getInt").arg(start.plus(JExpr.lit(8))));

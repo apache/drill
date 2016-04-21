@@ -41,7 +41,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")

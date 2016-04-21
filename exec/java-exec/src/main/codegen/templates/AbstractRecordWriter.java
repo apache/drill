@@ -24,11 +24,11 @@ import java.lang.UnsupportedOperationException;
 
 package org.apache.drill.exec.store;
 
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.BitVector.Accessor;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.BitVector;
+import org.apache.arrow.vector.BitVector.Accessor;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;

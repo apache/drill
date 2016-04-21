@@ -35,12 +35,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -50,14 +50,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38")>
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     </#if>
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+        int size = (${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -88,8 +88,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         // store the decimal value as sequence of integers of base 1 billion.
         while (value > 0) {
 
-            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
-            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
+            value = value/org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
@@ -102,7 +102,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int shiftOrder = 2;
 
         // Start shifting bits just after the first integer
-        int byteIndex = in.WIDTH - (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE + 1);
+        int byteIndex = in.WIDTH - (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE + 1);
 
         while (byteIndex >= 0) {
 
@@ -140,7 +140,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
@@ -153,13 +153,13 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+        int size = (${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -189,16 +189,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         while(remainingScale > 0) {
 
-            int power = (remainingScale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
+            int power = (remainingScale % org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS);
             int padding = 1;
 
             if (power == 0) {
                 power = 9;
             } else {
-                padding = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - power)));
+                padding = (int) (org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen((int) (org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS - power)));
             }
 
-            int mask = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(power);
+            int mask = (int) org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen(power);
 
             out.setInteger(index, (int) ((value % mask) * padding), out.start, out.buffer);
 
@@ -210,14 +210,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         }
 
         while (value > 0) {
-            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
-            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
+            value = value/org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
         // Round up or down the scale
         if (in.scale != out.scale) {
-          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+          org.apache.arrow.vector.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
         // Set the sign
         out.setSign((in.value < 0), out.start, out.buffer);
@@ -240,7 +240,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
@@ -266,7 +266,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = in.value;
 
         // Truncate or pad additional zeroes if the output scale is different from input scale
-        out.value = (${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
+        out.value = (${type.javatype}) (org.apache.arrow.vector.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
     }
 }
 </#if>

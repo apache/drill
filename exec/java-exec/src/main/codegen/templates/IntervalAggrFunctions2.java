@@ -37,7 +37,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 
 @SuppressWarnings("unused")
 
@@ -78,11 +78,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     nonNullCount.value = 1;
 	  <#if aggrtype.funcName == "avg">
     <#if type.inputType.endsWith("Interval")>
-    sum.value += (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays +
-                          in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    sum.value += (long) in.months * org.apache.arrow.vector.util.DateUtility.monthToStandardDays +
+                          in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                           in.milliseconds;
     <#elseif type.inputType.endsWith("IntervalDay")>
-    sum.value += (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+    sum.value += (long) in.days * (org.apache.arrow.vector.util.DateUtility.daysToStandardMillis) +
                         in.milliseconds;
     <#else>
     sum.value += in.value;
@@ -103,14 +103,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       out.isSet = 1;
       double millis = sum.value / ((double) count.value);
       <#if type.inputType.endsWith("Interval") || type.inputType.endsWith("IntervalYear")>
-      out.months = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
-      millis = millis % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
-      out.days =(int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (millis % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.months = (int) (millis / org.apache.arrow.vector.util.DateUtility.monthsToMillis);
+      millis = millis % org.apache.arrow.vector.util.DateUtility.monthsToMillis;
+      out.days =(int) (millis / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (millis % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
       <#elseif type.inputType.endsWith("IntervalDay")>
       out.months = 0;
-      out.days = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-      out.milliseconds = (int) (millis % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.days = (int) (millis / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (millis % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
       </#if>
     } else {
       out.isSet = 0;

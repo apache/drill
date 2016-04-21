@@ -23,10 +23,11 @@ package org.apache.drill.exec.record;
 
 import com.google.common.collect.Lists;
 
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.vector.*;
+import org.apache.arrow.vector.holders.*;
+import org.apache.arrow.vector.*;
 
 /** Wrapper around VectorAccessible to iterate over the records and fetch fields within a record. */
 public class RecordValueAccessor {

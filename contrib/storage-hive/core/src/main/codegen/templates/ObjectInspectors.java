@@ -25,9 +25,9 @@
 
 package org.apache.drill.exec.expr.fn.impl.hive;
 
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.serde.serdeConstants;

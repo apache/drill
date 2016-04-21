@@ -31,7 +31,7 @@ package org.apache.drill.exec.expr.fn.impl.gcast;
 <#include "/@includes/vv_imports.ftl" />
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -40,12 +40,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
@@ -54,7 +54,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup() {
@@ -68,7 +68,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       String str = temp.toString();
       <#else>
       org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
+      String str = org.apache.arrow.vector.util.DateUtility.format${type.from}.print(temp);
       </#if>
       out.buffer = buffer;
       out.start = 0;

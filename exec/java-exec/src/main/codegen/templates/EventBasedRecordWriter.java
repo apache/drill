@@ -27,12 +27,11 @@ package org.apache.drill.exec.store;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.arrow.vector.complex.reader.FieldReader;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.complex.impl.UnionReader;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.util.List;

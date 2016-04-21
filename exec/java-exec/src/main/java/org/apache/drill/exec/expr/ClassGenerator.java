@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.sig.CodeGeneratorArgument;
 import org.apache.drill.exec.compile.sig.CodeGeneratorMethod;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -54,6 +51,9 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 public class ClassGenerator<T>{
 
@@ -450,7 +450,7 @@ public class ClassGenerator<T>{
       return type.getMode() == DataMode.REPEATED;
     }
 
-    public TypeProtos.MinorType getMinorType() {
+    public MinorType getMinorType() {
       return type.getMinorType();
     }
   }

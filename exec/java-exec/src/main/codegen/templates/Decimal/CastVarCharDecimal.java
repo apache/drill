@@ -38,13 +38,13 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -183,7 +183,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
 
         // Pad the number with zeroes if number of fractional digits is less than scale
         if (fractionalDigits < scale.value) {
-            out.value = (${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (scale.value - fractionalDigits)));
+            out.value = (${type.javatype}) (org.apache.arrow.vector.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (scale.value - fractionalDigits)));
         }
 
         // Negate the number if we saw a -ve sign
@@ -212,9 +212,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -230,7 +230,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc {
 </#if>
     @Param ${type.from}Holder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
 
@@ -241,7 +241,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
     </#if>
 
     public void setup() {
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
+        int size = ${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE);
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -365,8 +365,8 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
 
 
         // Compute the number of slots needed in the ByteBuf to store the integer and fractional part
-        int scaleRoundedUp   = org.apache.drill.exec.util.DecimalUtility.roundUp(out.scale);
-        int integerRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(integerDigits);
+        int scaleRoundedUp   = org.apache.arrow.vector.util.DecimalUtility.roundUp(out.scale);
+        int integerRoundedUp = org.apache.arrow.vector.util.DecimalUtility.roundUp(integerDigits);
 
         int ndigits = 0;
 
@@ -384,7 +384,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
 
             next = (byte) Character.digit(next, radix);
 
-            int value = (((int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex, out.start, out.buffer));
+            int value = (((int) org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex, out.start, out.buffer));
             out.setInteger(decimalBufferIndex, value, out.start, out.buffer);
 
             ndigits++;
@@ -392,7 +392,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
             /* We store the entire decimal as base 1 billion values, which has maximum of 9 digits (MAX_DIGITS)
              * Once we have stored MAX_DIGITS in a given slot move to the next slot.
              */
-            if (ndigits >= org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
+            if (ndigits >= org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS) {
                 ndigits = 0;
                 decimalBufferIndex--;
             }
@@ -406,7 +406,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
             while (scaleIndex < scaleEndIndex) {
 
                 // check if we have scanned MAX_DIGITS and we need to move to the next index
-                if (ndigits >= org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
+                if (ndigits >= org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS) {
                     ndigits = 0;
                     decimalBufferIndex++;
                 }
@@ -449,7 +449,7 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
             }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
             if (out.scale > 0) {
-              int padding = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - ndigits));
+              int padding = (int) org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen((int) (org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS - ndigits));
               out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex, out.start, out.buffer) * padding, out.start, out.buffer);
             }
 
@@ -457,9 +457,9 @@ public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc 
             do {
                 // propagate the carry
                 int tempValue = out.getInteger(decimalBufferIndex, out.start, out.buffer) + carry;
-                if (tempValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
-                    carry = tempValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
-                    tempValue = (tempValue % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                if (tempValue >= org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE) {
+                    carry = tempValue / org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE;
+                    tempValue = (tempValue % org.apache.arrow.vector.util.DecimalUtility.DIGITS_BASE);
                 } else {
                     carry = 0;
                 }

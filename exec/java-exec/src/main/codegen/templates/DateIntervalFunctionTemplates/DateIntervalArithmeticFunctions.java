@@ -36,12 +36,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 
 public class ${datetype}${intervaltype}Functions {
@@ -152,12 +152,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 public class ${datetype}${intervaltype}Functions {
 <#macro timeIntervalArithmeticBlock left right temp op output intervaltype>
@@ -171,7 +171,7 @@ public class ${datetype}${intervaltype}Functions {
     <#else>
     ${output} = ${left}.value ${op} ${right}.milliseconds;
     // Wrap around 24 hour clock if we exceeded it while adding the time component
-    ${output} = ${output} % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+    ${output} = ${output} % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis;
     </#if>
 </#macro>
 

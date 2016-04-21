@@ -25,8 +25,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.vector.holders.VarBinaryHolder;
 
 @FunctionTemplate(names = {"convert_fromDOUBLE_OB", "convert_fromDOUBLE_OBD"},
     scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)

@@ -32,19 +32,19 @@ package org.apache.drill.exec.store;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
 import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.util.DecimalUtility;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.io.api.Binary;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 
 
 import org.apache.drill.common.types.TypeProtos;
@@ -240,7 +240,7 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       //consumer.endField(fieldName, fieldId);
     <#else>
     reader.read(holder);
-    DrillBuf buf = holder.buffer;
+    ArrowBuf buf = holder.buffer;
     consumer.startField(fieldName, fieldId);
     consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
     consumer.endField(fieldName, fieldId);

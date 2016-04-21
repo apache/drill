@@ -34,7 +34,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
@@ -57,11 +57,11 @@ public static class G${type}Difference implements DrillSimpleFunc {
         <#if type == "Time">
         out.milliseconds = left.value - right.value;
         <#elseif type == "Date">
-        out.days = (int) ((left.value - right.value) / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.days = (int) ((left.value - right.value) / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
         <#elseif type == "TimeStamp">
         long difference = (left.value - right.value);
-        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-        out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.milliseconds = (int) (difference % org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
+        out.days = (int) (difference / org.apache.arrow.vector.util.DateUtility.daysToStandardMillis);
         </#if>
     }
 }

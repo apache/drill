@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl.hive;
 
-import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 

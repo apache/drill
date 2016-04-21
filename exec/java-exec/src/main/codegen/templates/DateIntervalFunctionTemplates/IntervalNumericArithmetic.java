@@ -28,18 +28,18 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.ByteBuf;
 
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 
 public class ${intervaltype}${numerictype}Functions {
@@ -79,12 +79,12 @@ public class ${intervaltype}${numerictype}Functions {
 
     // Transfer fractional part to days
     fractionalMonths = fractionalMonths - (long) fractionalMonths;
-    fractionalDays += fractionalMonths * org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays;
+    fractionalDays += fractionalMonths * org.apache.arrow.vector.util.DateUtility.monthToStandardDays;
     ${out}.days = (int) fractionalDays;
 
     // Transfer fractional part to millis
     fractionalDays = fractionalDays - (long) fractionalDays;
-    fractionalMillis += fractionalDays * org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
+    fractionalMillis += fractionalDays * org.apache.arrow.vector.util.DateUtility.daysToStandardMillis;
 
     ${out}.milliseconds = (int) fractionalMillis;
 </#macro>

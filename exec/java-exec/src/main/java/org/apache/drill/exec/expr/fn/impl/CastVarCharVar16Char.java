@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.charset.Charset;
 
@@ -29,9 +29,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.Var16CharHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.BigIntHolder;
+import org.apache.arrow.vector.holders.Var16CharHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castVAR16CHAR", "to_var16char", "to_string"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
@@ -40,7 +40,7 @@ public class CastVarCharVar16Char implements DrillSimpleFunc {
   @Param BigIntHolder length;
   @Output Var16CharHolder out;
   @Workspace Charset charset;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
 
   @Override
   public void setup() {

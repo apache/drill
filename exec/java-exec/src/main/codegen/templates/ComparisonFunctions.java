@@ -122,7 +122,7 @@
     <#if mode == "primitive">
       ${output} = left.value < right.value ? -1 : (left.value == right.value ? 0 : 1);
     <#elseif mode == "varString">
-      ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(
+      ${output} = org.apache.arrow.vector.util.ByteFunctionHelpers.compare(
           left.buffer, left.start, left.end, right.buffer, right.start, right.end );
     <#elseif mode == "intervalNameThis">
       <@intervalCompareBlock leftType=leftType rightType=rightType
@@ -163,11 +163,11 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.util.ByteFunctionHelpers;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 @SuppressWarnings("unused")
 public class GCompare${leftTypeBase}Vs${rightTypeBase} {
@@ -362,7 +362,7 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
         <#if typeGroup.mode == "primitive">
           out.value = left.value == right.value ? 1 : 0;
         <#elseif typeGroup.mode == "varString" >
-          out.value = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.equal(
+          out.value = org.apache.arrow.vector.util.ByteFunctionHelpers.equal(
               left.buffer, left.start, left.end, right.buffer, right.start, right.end);
         <#elseif typeGroup.mode == "intervalNameThis" || typeGroup.mode == "intervalDay" >
           int cmp;

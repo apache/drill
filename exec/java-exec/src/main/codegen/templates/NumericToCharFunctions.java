@@ -36,11 +36,11 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -51,7 +51,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
     @Param  VarCharHolder right;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace java.text.NumberFormat outputFormat;
     @Output VarCharHolder out;
 
@@ -69,10 +69,10 @@ public class G${type}ToChar implements DrillSimpleFunc {
         java.math.BigDecimal bigDecimal = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
         String str = outputFormat.format(bigDecimal);
         <#elseif type == "Decimal28Sparse" || type == "Decimal38Sparse">
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+        java.math.BigDecimal bigDecimal = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromArrowBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
         String str = outputFormat.format(bigDecimal);
         <#elseif type == "Decimal28Dense" || type == "Decimal38Dense">
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(left.buffer, left.start, left.nDecimalDigits, left.scale, left.maxPrecision, left.WIDTH);
+        java.math.BigDecimal bigDecimal = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromDense(left.buffer, left.start, left.nDecimalDigits, left.scale, left.maxPrecision, left.WIDTH);
         String str = outputFormat.format(bigDecimal);
         <#else>
         String str =  outputFormat.format(left.value);

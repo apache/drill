@@ -32,9 +32,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
@@ -52,7 +52,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
 
         // Divide the decimal with the scale to get the floating point value
-        out.value = ((${type.javatype}) (in.value)) / (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale));
+        out.value = ((${type.javatype}) (in.value)) / (org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen((int) in.scale));
     }
 }
 <#elseif type.major == "DecimalComplexFloat" || type.major == "DecimalComplexDouble"> <#-- Cast function template for conversion from Decimal9, Decimal18 to Float4 -->
@@ -70,9 +70,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
@@ -90,9 +90,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
 
         <#if type.from == "Decimal28Dense" || type.from == "Decimal38Dense">
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(in.buffer, in.start, in.nDecimalDigits, in.scale, in.maxPrecision, in.WIDTH);
+        java.math.BigDecimal bigDecimal = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromDense(in.buffer, in.start, in.nDecimalDigits, in.scale, in.maxPrecision, in.WIDTH);
         <#else>
-        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true);
+        java.math.BigDecimal bigDecimal = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromArrowBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true);
         </#if>
         out.value = bigDecimal.${type.javatype}Value();
     }

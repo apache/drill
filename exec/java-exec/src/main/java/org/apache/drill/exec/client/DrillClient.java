@@ -20,7 +20,7 @@ package org.apache.drill.exec.client;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.channel.EventLoopGroup;
 
 import java.io.Closeable;
@@ -41,9 +41,9 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
-import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.memory.OutOfMemoryException;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -458,7 +458,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     @Override
-    public DrillBuf getBuffer() {
+    public ArrowBuf getBuffer() {
       return null;
     }
   }

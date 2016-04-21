@@ -24,12 +24,12 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.arrow.vector.holders.VarCharHolder;
 
 import javax.inject.Inject;
 
@@ -52,7 +52,7 @@ public class DirectoryExplorers {
     @Param VarCharHolder schema;
     @Param  VarCharHolder table;
     @Output VarCharHolder out;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Inject org.apache.drill.exec.store.PartitionExplorer partitionExplorer;
 
     public void setup() {

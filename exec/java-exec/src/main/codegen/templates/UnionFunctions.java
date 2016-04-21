@@ -30,9 +30,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.record.RecordBatch;
 
 /*
@@ -62,7 +62,7 @@ public class GUnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
-        out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.${name?upper_case} ? 1 : 0;
+        out.value = in.getType().getMinorType() == org.apache.arrow.vector.types.Types.MinorType.${name?upper_case} ? 1 : 0;
       } else {
         out.value = 0;
       }

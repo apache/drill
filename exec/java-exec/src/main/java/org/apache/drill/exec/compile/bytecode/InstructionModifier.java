@@ -214,7 +214,7 @@ public class InstructionModifier extends MethodVisitor {
        *    L694
        *     LINENUMBER 1177 L694
        *     ALOAD 212
-       *     GETFIELD org/apache/drill/exec/expr/holders/VarCharHolder.buffer : Lio/netty/buffer/DrillBuf;
+       *     GETFIELD org/apache/drill/exec/expr/holders/VarCharHolder.buffer : Lio/netty/buffer/ArrowBuf;
        *     ALOAD 212
        *     DUP
        * >   GETFIELD org/apache/drill/exec/expr/holders/VarCharHolder.end : I
@@ -223,7 +223,7 @@ public class InstructionModifier extends MethodVisitor {
        * >   IADD
        * >   PUTFIELD org/apache/drill/exec/expr/holders/VarCharHolder.end : I
        *     ILOAD 217
-       *     INVOKEVIRTUAL io/netty/buffer/DrillBuf.setByte (II)Lio/netty/buffer/ByteBuf;
+       *     INVOKEVIRTUAL io/netty/buffer/ArrowBuf.setByte (II)Lio/netty/buffer/ByteBuf;
        *     POP
        *
        * This fragment includes the entirety of the line 1177 above, but we're only concerned with

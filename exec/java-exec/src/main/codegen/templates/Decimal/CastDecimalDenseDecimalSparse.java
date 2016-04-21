@@ -33,12 +33,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -47,13 +47,13 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+        int size = (${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -75,7 +75,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          * representation rearrange the bits so that we use 32 bits represent the digits.
          */
 
-        byte[] intermediateBytes = new byte[(in.nDecimalDigits * org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) + 1];
+        byte[] intermediateBytes = new byte[(in.nDecimalDigits * org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) + 1];
 
         int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
         int[] reverseMask = {0xFC, 0xF0, 0xC0, 0x00};
@@ -104,7 +104,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
             inputIndex++;
             intermediateIndex++;
 
-            if (((intermediateIndex - 1) % org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) == 0) {
+            if (((intermediateIndex - 1) % org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) == 0) {
                 shiftBits = (byte) ((shiftBits & 0xFF) >>> 2);
                 maskIndex++;
                 shiftOrder -= 2;
@@ -119,7 +119,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          * Now we transfer the bytes into a integer array and separate out the scale and
          * integer part of the decimal. Also pad the scale part with zeroes if needed
          */
-        int[] intermediate = new int[(intermediateBytes.length/org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) + 1];
+        int[] intermediate = new int[(intermediateBytes.length/org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE) + 1];
 
         java.nio.ByteBuffer wrapper = java.nio.ByteBuffer.wrap(intermediateBytes);
         intermediate[0] = wrapper.get(0);
@@ -136,9 +136,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         int dstIndex = out.nDecimalDigits - 1;
 
         // break the scale and integer part and pad zeroes
-        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)) > 0) {
+        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS)) > 0) {
 
-            int paddedDigits = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - actualDigits;
+            int paddedDigits = org.apache.arrow.vector.util.DecimalUtility.MAX_DIGITS - actualDigits;
             int padding = (int) (Math.pow(10, paddedDigits));
             int transferDigitMask = (int) (Math.pow(10, actualDigits));
 

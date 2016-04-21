@@ -36,13 +36,13 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -52,7 +52,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 @Param ${type.from}Holder in;
 <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-@Inject DrillBuf buffer;
+@Inject ArrowBuf buffer;
 </#if>
 @Param BigIntHolder precision;
 @Param BigIntHolder scale;
@@ -60,7 +60,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void setup() {
         <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
+        int size = ${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE);
         buffer = buffer.reallocIfNeeded(size);
         </#if>
     }
@@ -75,12 +75,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.buffer = buffer;
 
        // Assign the integer part of the decimal to the output holder
-        org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+        org.apache.arrow.vector.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
 
         <#elseif type.to.endsWith("Decimal9")>
-        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
+        out.value = org.apache.arrow.vector.util.DecimalUtility.getDecimal9FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
         <#elseif type.to.endsWith("Decimal18")>
-        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
+        out.value = org.apache.arrow.vector.util.DecimalUtility.getDecimal18FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
         </#if>
     }
 }

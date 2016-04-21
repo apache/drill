@@ -34,14 +34,14 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCateg
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
@@ -66,11 +66,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getDate(in.buffer, in.start, in.end);
 
       <#elseif type.to == "TimeStamp">
-      org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();
+      org.joda.time.format.DateTimeFormatter f = org.apache.arrow.vector.util.DateUtility.getDateTimeFormatter();
       out.value = org.joda.time.DateTime.parse(input, f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
 
       <#elseif type.to == "Time">
-      org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
+      org.joda.time.format.DateTimeFormatter f = org.apache.arrow.vector.util.DateUtility.getTimeFormatter();
       out.value = (int) ((f.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
       </#if>
 

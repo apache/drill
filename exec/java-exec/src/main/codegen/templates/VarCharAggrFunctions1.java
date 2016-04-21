@@ -39,8 +39,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.util.ByteFunctionHelpers;
+import org.apache.arrow.vector.holders.*;
 import javax.inject.Inject;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -61,7 +61,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ObjectHolder value;
   @Workspace UInt1Holder init;
   @Workspace BigIntHolder nonNullCount;
-  @Inject DrillBuf buf;
+  @Inject ArrowBuf buf;
   @Output ${type.outputType}Holder out;
 
   public void setup() {
@@ -94,7 +94,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       swap = true;
     } else {
       // Compare the bytes
-      cmp = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer, in.start, in.end, tmp.getBytes(), 0, tmp.getLength());
+      cmp = org.apache.arrow.vector.util.ByteFunctionHelpers.compare(in.buffer, in.start, in.end, tmp.getBytes(), 0, tmp.getLength());
 
 
       <#if aggrtype.className == "Min">

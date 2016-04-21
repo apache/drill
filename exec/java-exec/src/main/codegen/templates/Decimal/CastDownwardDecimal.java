@@ -33,13 +33,13 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.ByteBuffer;
 
@@ -61,12 +61,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
       out.value = (int) in.value;
       // Check if we need to truncate or round up
       if (out.scale > in.scale) {
-        out.value *= (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(out.scale - in.scale);
+        out.value *= (int) org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen(out.scale - in.scale);
       } else if (out.scale < in.scale) {
         // need to round up since we are truncating fractional part
-        int scaleFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale));
-        int newScaleFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) scale.value));
-        int truncScaleFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen( (int) (Math.abs(in.scale - scale.value))));
+        int scaleFactor = (int) (org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen((int) in.scale));
+        int newScaleFactor = (int) (org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen((int) scale.value));
+        int truncScaleFactor = (int) (org.apache.arrow.vector.util.DecimalUtility.getPowerOfTen( (int) (Math.abs(in.scale - scale.value))));
         int truncFactor = (int) (in.scale - scale.value);
 
         // Assign the integer part
@@ -76,11 +76,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int fractionalPart = (int) (in.value % scaleFactor);
 
         // From the entire fractional part extract the digits upto which rounding is needed
-        int newFractionalPart = (int) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(fractionalPart, truncFactor));
+        int newFractionalPart = (int) (org.apache.arrow.vector.util.DecimalUtility.adjustScaleDivide(fractionalPart, truncFactor));
         int truncatedFraction = fractionalPart % truncScaleFactor;
 
         // Get the truncated fractional part and extract the first digit to see if we need to add 1
-        int digit = Math.abs((int) org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(truncatedFraction, truncFactor - 1));
+        int digit = Math.abs((int) org.apache.arrow.vector.util.DecimalUtility.adjustScaleDivide(truncatedFraction, truncFactor - 1));
 
         if (digit > 4) {
           if (in.value > 0) {
@@ -107,9 +107,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -129,7 +129,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 
     public void eval() {
-      java.math.BigDecimal temp = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+      java.math.BigDecimal temp = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
       temp = temp.setScale((int) scale.value, java.math.BigDecimal.ROUND_HALF_UP);
       out.value = temp.unscaledValue().${type.javatype}Value();
       out.precision = (int) precision.value;
@@ -150,9 +150,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -166,22 +166,22 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Param ${type.from}Holder in;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Output ${type.to}Holder out;
 
     public void setup() {
-      int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
+      int size = (${type.arraySize} * (org.apache.arrow.vector.util.DecimalUtility.INTEGER_SIZE));
       buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
-      java.math.BigDecimal temp = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+      java.math.BigDecimal temp = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
       temp = temp.setScale((int) scale.value, java.math.BigDecimal.ROUND_HALF_UP);
       out.precision = (int) precision.value;
       out.scale = (int) scale.value;
       out.buffer = buffer;
       out.start = 0;
-      org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(temp, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+      org.apache.arrow.vector.util.DecimalUtility.getSparseFromBigDecimal(temp, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
     }
 }
 </#if> <#-- type.major -->

@@ -38,10 +38,10 @@
     import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
     import org.apache.drill.exec.expr.annotations.Output;
     import org.apache.drill.exec.expr.annotations.Param;
-    import org.apache.drill.exec.expr.holders.*;
+    import org.apache.arrow.vector.holders.*;
     import org.apache.drill.exec.record.RecordBatch;
     import javax.inject.Inject;
-    import io.netty.buffer.DrillBuf;
+    import io.netty.buffer.ArrowBuf;
 
 /**
  * This file is generated with Freemarker using the template exec/java-exec/src/main/codegen/templates/CastEmptyStringVarTypesToNullableNumeric.java

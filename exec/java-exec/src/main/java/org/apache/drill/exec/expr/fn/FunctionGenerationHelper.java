@@ -32,13 +32,14 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 
 public class FunctionGenerationHelper {
   public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";
@@ -148,7 +149,7 @@ public class FunctionGenerationHelper {
   private static boolean isComparableType(MajorType type) {
     if (type.getMinorType() == MinorType.MAP ||
         type.getMinorType() == MinorType.LIST ||
-        type.getMode() == TypeProtos.DataMode.REPEATED ) {
+        type.getMode() == DataMode.REPEATED ) {
       return false;
     } else {
       return true;

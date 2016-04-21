@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
@@ -209,19 +209,19 @@ public class GDateTimeTruncateFunctions {
         <#if toUnit == "Second"> <#--  Start UnitType -->
       out.months = right.months;
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.secondsToMillis))*
+          (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
         <#elseif toUnit == "Minute">
       out.months = right.months;
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.minutesToMillis))*
+          (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
         <#elseif toUnit == "Hour">
       out.months = right.months;
       out.days = right.days;
       out.milliseconds =
-          (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis))*
-              (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+          (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.hoursToMillis))*
+              (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
         <#elseif toUnit == "Day">
       out.months = right.months;
       out.days = right.days;
@@ -254,17 +254,17 @@ public class GDateTimeTruncateFunctions {
       <#elseif type == "IntervalDay">
         <#if toUnit == "Second"> <#--  Start UnitType -->
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis))*
-        (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.secondsToMillis))*
+        (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
         <#elseif toUnit == "Minute">
       out.days = right.days;
-      out.milliseconds = (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis))*
-          (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.milliseconds = (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.minutesToMillis))*
+          (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
         <#elseif toUnit == "Hour">
       out.days = right.days;
       out.milliseconds =
-          (right.milliseconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis))*
-              (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+          (right.milliseconds/(org.apache.arrow.vector.util.DateUtility.hoursToMillis))*
+              (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
         <#elseif toUnit == "Day">
       out.days = right.days;
       out.milliseconds = 0;

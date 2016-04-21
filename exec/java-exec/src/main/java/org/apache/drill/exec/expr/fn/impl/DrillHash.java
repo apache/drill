@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
 /**

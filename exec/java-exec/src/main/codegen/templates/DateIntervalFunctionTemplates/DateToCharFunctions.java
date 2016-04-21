@@ -36,11 +36,11 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "to_char", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -48,7 +48,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
     @Param  VarCharHolder right;
-    @Inject DrillBuf buffer;
+    @Inject ArrowBuf buffer;
     @Workspace org.joda.time.MutableDateTime temp;
     @Workspace org.joda.time.format.DateTimeFormatter format;
     @Output VarCharHolder out;

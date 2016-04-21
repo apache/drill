@@ -24,10 +24,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.arrow.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.scanner.persistence.FieldDescriptor;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -36,10 +37,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
-import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;

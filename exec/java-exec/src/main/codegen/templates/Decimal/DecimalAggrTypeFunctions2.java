@@ -44,9 +44,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
@@ -59,7 +59,7 @@ public class Decimal${aggrtype.className}Functions {
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Workspace ObjectHolder value;
   @Workspace ${type.countRunningType}Holder count;
   @Workspace IntHolder outputScale;
@@ -86,9 +86,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  </#if>
     count.value++;
    <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
-    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
+    java.math.BigDecimal currentValue = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
     <#else>
-    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    java.math.BigDecimal currentValue = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
     </#if>
     value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
     if (outputScale.value == Integer.MIN_VALUE) {
@@ -106,7 +106,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.scale = outputScale.value;
     out.precision = 38;
     java.math.BigDecimal average = ((java.math.BigDecimal)(value.obj)).divide(java.math.BigDecimal.valueOf(count.value, 0), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
-    org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+    org.apache.arrow.vector.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
   }
 
   @Override

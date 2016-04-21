@@ -34,7 +34,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 // This class is generated using freemarker template ToTimeStampFunction.java
@@ -64,7 +64,7 @@ public class G${numerics}ToTimeStamp implements DrillSimpleFunc {
         value = value.multiply(millisConstant);
         inputMillis = (new java.math.BigDecimal(value, left.scale)).longValue();
         <#elseif (numerics == "Decimal28Sparse") || (numerics == "Decimal38Sparse")>
-        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
+        java.math.BigDecimal input = org.apache.arrow.vector.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
         inputMillis = input.multiply(new java.math.BigDecimal(1000)).longValue();
         </#if>
         <#else>

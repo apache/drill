@@ -23,11 +23,11 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
 import com.sun.codemodel.JVar;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public abstract class AbstractFuncHolder implements FuncHolder {
 

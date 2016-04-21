@@ -30,7 +30,7 @@ package org.apache.drill.exec.expr.fn.impl.gcast;
 <#include "/@includes/vv_imports.ftl" />
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -39,12 +39,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
@@ -52,7 +52,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup() {
@@ -61,19 +61,19 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   public void eval() {
 
-      int years  = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      int years  = (in.months / org.apache.arrow.vector.util.DateUtility.yearsToMonths);
+      int months = (in.months % org.apache.arrow.vector.util.DateUtility.yearsToMonths);
 
       long millis = in.milliseconds;
 
-      long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      long hours  = millis / (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
+      millis     = millis % (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
 
-      long minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      long minutes = millis / (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
+      millis      = millis % (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
 
-      long seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long seconds = millis / (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
+      millis      = millis % (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
 
       String yearString = (Math.abs(years) == 1) ? " year " : " years ";
       String monthString = (Math.abs(months) == 1) ? " month " : " months ";
@@ -113,12 +113,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
@@ -126,7 +126,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup() {
@@ -134,8 +134,8 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   }
 
   public void eval() {
-      int years  = (in.value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      int years  = (in.value / org.apache.arrow.vector.util.DateUtility.yearsToMonths);
+      int months = (in.value % org.apache.arrow.vector.util.DateUtility.yearsToMonths);
 
       String yearString = (Math.abs(years) == 1) ? " year " : " years ";
       String monthString = (Math.abs(months) == 1) ? " month " : " months ";
@@ -170,14 +170,14 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.arrow.vector.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.arrow.vector.util.DateUtility;
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
@@ -186,7 +186,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Inject DrillBuf buffer;
+  @Inject ArrowBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup() {
@@ -196,14 +196,14 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   public void eval() {
       long millis = in.milliseconds;
 
-      long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      long hours  = millis / (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
+      millis     = millis % (org.apache.arrow.vector.util.DateUtility.hoursToMillis);
 
-      long minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      long minutes = millis / (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
+      millis      = millis % (org.apache.arrow.vector.util.DateUtility.minutesToMillis);
 
-      long seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long seconds = millis / (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
+      millis      = millis % (org.apache.arrow.vector.util.DateUtility.secondsToMillis);
 
       String dayString = (Math.abs(in.days) == 1) ? " day " : " days ";
 
