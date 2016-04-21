@@ -28,17 +28,20 @@ import java.util.Map;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.apache.arrow.vector.util.JsonStringArrayList;
+import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.drill.exec.util.JsonStringHashMap;
-import org.apache.drill.exec.util.Text;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.util.Text;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -57,7 +60,7 @@ public class TestBuilder {
   // ordering of the columns in the CSV file, or the default type inferences when reading JSON, this is used for the
   // case where results of the test query are adding type casts to the baseline queries, this saves a little bit of
   // setup in cases where strict type enforcement is not necessary for a given test
-  protected Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap;
+  protected Map<SchemaPath, MajorType> baselineTypeMap;
   // queries to run before the baseline or test queries, can be used to set options
   private String baselineOptionSettingQueries;
   private String testOptionSettingQueries;
@@ -86,7 +89,7 @@ public class TestBuilder {
   }
 
   public TestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
-                     boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                     boolean approximateEquality, Map<SchemaPath, MajorType> baselineTypeMap,
                      String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                      int expectedNumBatches) {
     this(allocator);
@@ -123,7 +126,7 @@ public class TestBuilder {
         getValidationQueryType(), ordered, highPerformanceComparison, baselineRecords, expectedNumBatches);
   }
 
-  public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
+  public List<Pair<SchemaPath, MajorType>> getExpectedSchema() {
     return null;
   }
 
@@ -233,7 +236,7 @@ public class TestBuilder {
         expectedNumBatches);
   }
 
-  public SchemaTestBuilder schemaBaseLine(List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
+  public SchemaTestBuilder schemaBaseLine(List<Pair<SchemaPath, MajorType>> expectedSchema) {
     assert expectedSchema != null : "The expected schema can be provided once";
     assert baselineColumns == null : "The column information should be captured in expected schema, not baselineColumns";
 
@@ -246,7 +249,7 @@ public class TestBuilder {
         expectedSchema);
   }
 
-  public TestBuilder baselineTypes(Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap) {
+  public TestBuilder baselineTypes(Map<SchemaPath, MajorType> baselineTypeMap) {
     this.baselineTypeMap = baselineTypeMap;
     return this;
   }
@@ -378,7 +381,7 @@ public class TestBuilder {
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
-  private String getDecimalPrecisionScaleInfo(TypeProtos.MajorType type) {
+  private String getDecimalPrecisionScaleInfo(MajorType type) {
     String precision = "";
     switch(type.getMinorType()) {
       case DECIMAL18:
@@ -401,10 +404,10 @@ public class TestBuilder {
     private String baselineFilePath;
     // use to cast the baseline file columns, if not set the types
     // that come out of the test query drive interpretation of baseline
-    private TypeProtos.MajorType[] baselineTypes;
+    private MajorType[] baselineTypes;
 
     CSVTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
-                   boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                   boolean approximateEquality, Map<SchemaPath, MajorType> baselineTypeMap,
                    String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                    int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
@@ -412,17 +415,17 @@ public class TestBuilder {
       this.baselineFilePath = baselineFile;
     }
 
-    public CSVTestBuilder baselineTypes(TypeProtos.MajorType... baselineTypes) {
+    public CSVTestBuilder baselineTypes(MajorType... baselineTypes) {
       this.baselineTypes = baselineTypes;
       this.baselineTypeMap = null;
       return this;
     }
 
     // convenience method to convert minor types to major types if no decimals with precisions are needed
-    public CSVTestBuilder baselineTypes(TypeProtos.MinorType ... baselineTypes) {
-      TypeProtos.MajorType[] majorTypes = new TypeProtos.MajorType[baselineTypes.length];
+    public CSVTestBuilder baselineTypes(MinorType... baselineTypes) {
+      MajorType[] majorTypes = new MajorType[baselineTypes.length];
       int i = 0;
-      for(TypeProtos.MinorType minorType : baselineTypes) {
+      for(MinorType minorType : baselineTypes) {
         majorTypes[i] = Types.required(minorType);
         i++;
       }
@@ -462,7 +465,7 @@ public class TestBuilder {
       String[] aliasedExpectedColumns = new String[baselineColumns.length];
       for (int i = 0; i < baselineColumns.length; i++) {
         aliasedExpectedColumns[i] = "columns[" + i + "] ";
-        TypeProtos.MajorType majorType;
+        MajorType majorType;
         if (baselineTypes != null) {
           majorType = baselineTypes[i];
         } else if (baselineTypeMap != null) {
@@ -475,12 +478,12 @@ public class TestBuilder {
         // to cast to varchar with length 1
         // set default cast size for varchar, the cast function will take the lesser of this passed value and the
         // length of the incoming data when choosing the length for the outgoing data
-        if (majorType.getMinorType() == TypeProtos.MinorType.VARCHAR ||
-            majorType.getMinorType() == TypeProtos.MinorType.VARBINARY) {
+        if (majorType.getMinorType() == MinorType.VARCHAR ||
+            majorType.getMinorType() == MinorType.VARBINARY) {
           precision = "(65000)";
         }
         aliasedExpectedColumns[i] = "cast(" + aliasedExpectedColumns[i] + " as " +
-            Types.getNameOfMinorType(majorType.getMinorType()) + precision +  " ) " + baselineColumns[i];
+            getNameOfMinorType(majorType.getMinorType()) + precision +  " ) " + baselineColumns[i];
       }
       String query = "select " + Joiner.on(", ").join(aliasedExpectedColumns) + " from cp.`" + baselineFilePath + "`";
       return query;
@@ -493,9 +496,9 @@ public class TestBuilder {
   }
 
   public class SchemaTestBuilder extends TestBuilder {
-    private List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema;
+    private List<Pair<SchemaPath, MajorType>> expectedSchema;
     SchemaTestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType,
-        String baselineOptionSettingQueries, String testOptionSettingQueries, List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
+        String baselineOptionSettingQueries, String testOptionSettingQueries, List<Pair<SchemaPath, MajorType>> expectedSchema) {
       super(allocator, query, queryType, false, false, null, baselineOptionSettingQueries, testOptionSettingQueries, false, -1);
       expectsEmptyResultSet();
       this.expectedSchema = expectedSchema;
@@ -525,7 +528,7 @@ public class TestBuilder {
     }
 
     @Override
-    public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
+    public List<Pair<SchemaPath, MajorType>> getExpectedSchema() {
       return expectedSchema;
     }
   }
@@ -536,7 +539,7 @@ public class TestBuilder {
     private String baselineFilePath;
 
     JSONTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
-                    boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                    boolean approximateEquality, Map<SchemaPath, MajorType> baselineTypeMap,
                     String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                     int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
@@ -564,7 +567,7 @@ public class TestBuilder {
 
     BaselineQueryTestBuilder(String baselineQuery, UserBitShared.QueryType baselineQueryType, BufferAllocator allocator,
                              String query, UserBitShared.QueryType queryType, Boolean ordered,
-                             boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                             boolean approximateEquality, Map<SchemaPath, MajorType> baselineTypeMap,
                              String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                              int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
@@ -626,5 +629,56 @@ public class TestBuilder {
       map.put(String.class.cast(keyValueSequence[i]), value);
     }
     return map;
+  }
+
+  public static String getNameOfMinorType(final org.apache.arrow.vector.types.Types.MinorType type) {
+    switch (type) {
+    case BIT:
+      return "bool";
+    case TINYINT:
+      return "tinyint";
+    case UINT1:
+      return "uint1";
+    case SMALLINT:
+      return "smallint";
+    case UINT2:
+      return "uint2";
+    case INT:
+      return "int";
+    case UINT4:
+      return "uint4";
+    case BIGINT:
+      return "bigint";
+    case UINT8:
+      return "uint8";
+    case FLOAT4:
+      return "float";
+    case FLOAT8:
+      return "double";
+    case DECIMAL9:
+      return "decimal";
+    case DECIMAL18:
+      return "decimal";
+    case DECIMAL28SPARSE:
+      return "decimal";
+    case DECIMAL38SPARSE:
+      return "decimal";
+    case VARCHAR:
+      return "varchar";
+    case VAR16CHAR:
+      return "utf16";
+    case DATE:
+      return "date";
+    case TIME:
+      return "time";
+    case TIMESTAMP:
+      return "timestamp";
+    case VARBINARY:
+      return "binary";
+    case LATE:
+      throw new DrillRuntimeException("The late type should never appear in execution or an SQL query, so it does not have a name to refer to it.");
+    default:
+      throw new DrillRuntimeException("Unrecognized type " + type);
+    }
   }
 }

@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class DrillDecimalSumAggFuncHolder extends DrillAggFuncHolder {
 
@@ -29,7 +31,7 @@ public class DrillDecimalSumAggFuncHolder extends DrillAggFuncHolder {
   }
 
   @Override
-  public TypeProtos.MajorType getReturnType(List<LogicalExpression> args) {
+  public MajorType getReturnType(List<LogicalExpression> args) {
 
     int scale = 0;
     int precision = 0;
@@ -40,6 +42,6 @@ public class DrillDecimalSumAggFuncHolder extends DrillAggFuncHolder {
       precision = Math.max(precision, e.getMajorType().getPrecision());
     }
 
-    return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(38).setMode(TypeProtos.DataMode.REQUIRED).build());
+    return new MajorType(returnValue.type.getMinorType(), DataMode.REQUIRED, 38, scale);
   }
 }

@@ -23,14 +23,13 @@ import java.util.Iterator;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.NamePart.Type;
@@ -40,6 +39,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class SchemaPath extends LogicalExpressionBase {
 
@@ -174,7 +175,7 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public MajorType getMajorType() {
-    return Types.LATE_BIND_TYPE;
+    return getArrowMajorType(Types.LATE_BIND_TYPE);
   }
 
   @Override

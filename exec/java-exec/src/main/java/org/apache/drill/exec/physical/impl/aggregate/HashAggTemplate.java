@@ -24,6 +24,9 @@ import java.util.List;
 
 import javax.inject.Named;
 
+import org.apache.arrow.vector.FixedWidthVector;
+import org.apache.arrow.vector.ObjectVector;
+import org.apache.arrow.vector.VariableWidthVector;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -34,7 +37,7 @@ import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -45,17 +48,15 @@ import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.ObjectVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.ValueVector;
 
 public abstract class HashAggTemplate implements HashAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
@@ -383,7 +384,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
     while (outgoingIter.hasNext()) {
       ValueVector vv = outgoingIter.next().getValueVector();
-      MajorType type = vv.getField().getType();
+      MajorType type = MajorTypeHelper.getDrillMajorType(vv.getField().getType());
 
       /*
        * In build schema we use the allocation model that specifies exact record count

@@ -18,11 +18,14 @@
 package org.apache.drill.exec.fn.impl;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -470,11 +473,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
   @Test
   public void testCountStarRequired() throws Exception {
     final String query = "select count(*) as col from cp.`tpch/region.parquet`";
-    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.BIGINT)
-        .setMode(TypeProtos.DataMode.REQUIRED)
-        .build();
+    List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList();
+    MajorType majorType = Types.required(MinorType.BIGINT);
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()

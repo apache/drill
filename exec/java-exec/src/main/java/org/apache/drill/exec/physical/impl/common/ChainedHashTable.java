@@ -19,15 +19,11 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -41,21 +37,22 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.physical.HashPrelUtil;
-import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 
 public class ChainedHashTable {
@@ -277,7 +274,7 @@ public class ChainedHashTable {
 
     int i = 0;
     for (LogicalExpression expr : keyExprs) {
-      boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
+      boolean useSetSafe = !Types.isFixedWidthType(getDrillMajorType(expr.getMajorType())) || Types.isRepeated(getDrillMajorType(expr.getMajorType()));
       ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
 
       cg.addExpr(vvwExpr, false); // this will write to the htContainer at htRowIdx
@@ -291,7 +288,7 @@ public class ChainedHashTable {
     if (outKeyFieldIds != null) {
       for (int i = 0; i < outKeyFieldIds.length; i++) {
         ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
-        boolean useSetSafe = !Types.isFixedWidthType(vvrExpr.getMajorType()) || Types.isRepeated(vvrExpr.getMajorType());
+        boolean useSetSafe = !Types.isFixedWidthType(getDrillMajorType(vvrExpr.getMajorType())) || Types.isRepeated(getDrillMajorType(vvrExpr.getMajorType()));
         ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, useSetSafe);
         cg.addExpr(vvwExpr, true);
       }

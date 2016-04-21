@@ -22,13 +22,15 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.common.collect.Iterators;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class ValueExpressions {
 
@@ -153,7 +155,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return Types.REQUIRED_BIT;
+      return getArrowMajorType(org.apache.drill.common.types.Types.REQUIRED_BIT);
     }
 
     @Override
@@ -258,7 +260,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      return new MajorType(MinorType.DECIMAL9, DataMode.REQUIRED, precision, scale, 0, null);
     }
 
     @Override
@@ -300,7 +302,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      return new MajorType(MinorType.DECIMAL18, DataMode.REQUIRED, precision, scale, 0, null);
     }
 
     @Override
@@ -331,7 +333,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      return new MajorType(MinorType.DECIMAL28SPARSE, DataMode.REQUIRED, bigDecimal.precision(), bigDecimal.scale(), 0, null);
     }
 
     @Override
@@ -361,7 +363,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      return new MajorType(MinorType.DECIMAL38SPARSE, DataMode.REQUIRED, bigDecimal.precision(), bigDecimal.scale(), 0, null);
     }
 
     @Override

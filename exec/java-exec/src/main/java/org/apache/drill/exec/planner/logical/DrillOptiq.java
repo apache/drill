@@ -36,9 +36,6 @@ import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -60,7 +57,14 @@ import org.apache.calcite.util.NlsString;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.exec.work.ExecErrorConstants;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 /**
  * Utilities for Drill's planner.
@@ -261,7 +265,7 @@ public class DrillOptiq {
       switch(call.getType().getSqlTypeName().getName()){
       case "VARCHAR":
       case "CHAR":
-        castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+        castType = new MajorType(MinorType.VARCHAR, DataMode.OPTIONAL, 0, 0, 0, call.getType().getPrecision(), null);
         break;
 
       case "INTEGER": castType = Types.required(MinorType.INT); break;
@@ -280,14 +284,14 @@ public class DrillOptiq {
         int scale = call.getType().getScale();
 
         if (precision <= 9) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
+          castType = new MajorType(MinorType.DECIMAL9, null, precision, scale);
         } else if (precision <= 18) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
+          castType = new MajorType(MinorType.DECIMAL18, null, precision, scale);
         } else if (precision <= 28) {
           // Inject a cast to SPARSE before casting to the dense type.
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
+          castType = new MajorType(MinorType.DECIMAL28SPARSE, null, precision, scale);
         } else if (precision <= 38) {
-          castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
+          castType = new MajorType(MinorType.DECIMAL38SPARSE, null, precision, scale);
         } else {
           throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
         }
@@ -296,11 +300,11 @@ public class DrillOptiq {
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         case "BOOLEAN": castType = Types.required(MinorType.BIT); break;
-        case "BINARY": castType = Types.required(MinorType.VARBINARY).toBuilder().setWidth(call.getType().getPrecision()).build(); break;
+        case "BINARY": castType = new MajorType(MinorType.VARBINARY, DataMode.REQUIRED, 0, 0, 0, call.getType().getPrecision(), null); break;
         case "ANY": return arg; // Type will be same as argument.
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
-      return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
+      return FunctionCallFactory.createCast(getDrillMajorType(castType), ExpressionPosition.UNKNOWN, arg);
     }
 
     private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {

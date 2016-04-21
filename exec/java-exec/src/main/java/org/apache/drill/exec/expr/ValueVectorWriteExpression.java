@@ -22,11 +22,13 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Iterators;
+import org.apache.arrow.vector.types.Types.MajorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class ValueVectorWriteExpression implements LogicalExpression {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorWriteExpression.class);
@@ -51,7 +53,7 @@ public class ValueVectorWriteExpression implements LogicalExpression {
 
   @Override
   public MajorType getMajorType() {
-    return Types.NULL;
+    return getArrowMajorType(Types.NULL);
   }
 
 

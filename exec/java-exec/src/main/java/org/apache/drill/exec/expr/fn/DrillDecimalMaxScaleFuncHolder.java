@@ -22,11 +22,12 @@ import java.util.Map;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder {
 
@@ -37,13 +38,13 @@ public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder {
     @Override
     public MajorType getReturnType(List<LogicalExpression> args) {
 
-        TypeProtos.DataMode mode = returnValue.type.getMode();
+        DataMode mode = returnValue.type.getMode();
         boolean nullInput = false;
         int scale = 0;
         int precision = 0;
 
         for (LogicalExpression e : args) {
-            if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
+            if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
                 nullInput = true;
             }
             scale = Math.max(scale, e.getMajorType().getScale());
@@ -51,9 +52,9 @@ public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder {
         }
 
         if (nullHandling == NullHandling.NULL_IF_NULL && nullInput) {
-            mode = TypeProtos.DataMode.OPTIONAL;
+            mode = DataMode.OPTIONAL;
         }
 
-        return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
+      return new MajorType(returnValue.type.getMinorType(), mode, precision, scale, 0, null);
     }
 }

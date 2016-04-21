@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner.sql;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -53,6 +55,10 @@ import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.List;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMinorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMinorType;
 
 public class TypeInferenceUtils {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeInferenceUtils.class);
@@ -240,7 +246,7 @@ public class TypeInferenceUtils {
           // this logic can validate and execute user queries seamlessly
           boolean allBooleanOutput = true;
           for (DrillFuncHolder function : functions) {
-            if (function.getReturnType().getMinorType() != TypeProtos.MinorType.BIT) {
+            if (function.getReturnType().getMinorType() != MinorType.BIT) {
               allBooleanOutput = false;
               break;
             }
@@ -269,16 +275,16 @@ public class TypeInferenceUtils {
 
       // least restrictive type (nullable ANY type)
       final RelDataType nullableAnyType = factory.createTypeWithNullability(
-          factory.createSqlType(SqlTypeName.ANY),
-          true);
+              factory.createSqlType(SqlTypeName.ANY),
+              true);
 
-      final TypeProtos.MajorType returnType = func.getReturnType();
+      final MajorType returnType = func.getReturnType();
       if (UNKNOWN_TYPE.equals(returnType)) {
         return nullableAnyType;
       }
 
-      final TypeProtos.MinorType minorType = returnType.getMinorType();
-      final SqlTypeName sqlTypeName = getCalciteTypeFromDrillType(minorType);
+      final MinorType minorType = returnType.getMinorType();
+      final SqlTypeName sqlTypeName = getCalciteTypeFromDrillType(getDrillMinorType(minorType));
       if (sqlTypeName == null) {
         return nullableAnyType;
       }
@@ -355,15 +361,15 @@ public class TypeInferenceUtils {
       }
 
       final RelDataType operandType = opBinding.getOperandType(0);
-      final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if(TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.BIGINT))
-          == TypeProtos.MinorType.BIGINT) {
+      final MinorType inputMinorType = getArrowMinorType(getDrillTypeFromCalciteType(operandType));
+      if(TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, MinorType.BIGINT))
+          == MinorType.BIGINT) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.BIGINT,
             isNullable);
-      } else if(TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
-          == TypeProtos.MinorType.FLOAT8) {
+      } else if(TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, MinorType.FLOAT8))
+          == MinorType.FLOAT8) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.DOUBLE,
@@ -722,7 +728,7 @@ public class TypeInferenceUtils {
         majorType = Types.required(minorType);
       }
 
-      args.add(new MajorTypeInLogicalExpression(majorType));
+      args.add(new MajorTypeInLogicalExpression(getArrowMajorType(majorType)));
     }
 
     final String drillFuncName = FunctionCallFactory.replaceOpWithFuncName(opBinding.getOperator().getName());

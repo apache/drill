@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowDataMode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.arrow.vector.NullableVarBinaryVector;
+import org.apache.arrow.vector.NullableVarCharVector;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
@@ -33,16 +36,15 @@ import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
-import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.vector.holders.NullableVarBinaryHolder;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -53,8 +55,9 @@ import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -74,67 +77,67 @@ public class TestSimpleFunctions extends ExecTest {
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
     // test required vs nullable Int input
     resolveHash(config,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
-        Types.optional(TypeProtos.MinorType.INT),
-        Types.required(TypeProtos.MinorType.INT),
+        new TypedNullConstant(Types.optional(MinorType.INT)),
+        Types.optional(MinorType.INT),
+        Types.required(MinorType.INT),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
     resolveHash(config,
         new ValueExpressions.IntExpression(1, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.INT),
-        Types.required(TypeProtos.MinorType.INT),
+        Types.required(MinorType.INT),
+        Types.required(MinorType.INT),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable float input
     resolveHash(config,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT4)),
-        Types.optional(TypeProtos.MinorType.FLOAT4),
-        Types.required(TypeProtos.MinorType.FLOAT4),
+        new TypedNullConstant(Types.optional(MinorType.FLOAT4)),
+        Types.optional(MinorType.FLOAT4),
+        Types.required(MinorType.FLOAT4),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
     resolveHash(config,
         new ValueExpressions.FloatExpression(5.0f, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.FLOAT4),
-        Types.required(TypeProtos.MinorType.FLOAT4),
+        Types.required(MinorType.FLOAT4),
+        Types.required(MinorType.FLOAT4),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable long input
     resolveHash(config,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.BIGINT)),
-        Types.optional(TypeProtos.MinorType.BIGINT),
-        Types.required(TypeProtos.MinorType.BIGINT),
+        new TypedNullConstant(Types.optional(MinorType.BIGINT)),
+        Types.optional(MinorType.BIGINT),
+        Types.required(MinorType.BIGINT),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
     resolveHash(config,
         new ValueExpressions.LongExpression(100L, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.BIGINT),
-        Types.required(TypeProtos.MinorType.BIGINT),
+        Types.required(MinorType.BIGINT),
+        Types.required(MinorType.BIGINT),
         TypeProtos.DataMode.REQUIRED,
         registry);
 
     // test required vs nullable double input
     resolveHash(config,
-        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Types.optional(TypeProtos.MinorType.FLOAT8),
-        Types.required(TypeProtos.MinorType.FLOAT8),
+        new TypedNullConstant(Types.optional(MinorType.FLOAT8)),
+        Types.optional(MinorType.FLOAT8),
+        Types.required(MinorType.FLOAT8),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
     resolveHash(config,
         new ValueExpressions.DoubleExpression(100.0, ExpressionPosition.UNKNOWN),
-        Types.required(TypeProtos.MinorType.FLOAT8),
-        Types.required(TypeProtos.MinorType.FLOAT8),
+        Types.required(MinorType.FLOAT8),
+        Types.required(MinorType.FLOAT8),
         TypeProtos.DataMode.REQUIRED,
         registry);
   }
 
-  public void resolveHash(DrillConfig config, LogicalExpression arg, TypeProtos.MajorType expectedArg,
-                                    TypeProtos.MajorType expectedOut, TypeProtos.DataMode expectedBestInputMode,
+  public void resolveHash(DrillConfig config, LogicalExpression arg, MajorType expectedArg,
+                                    MajorType expectedOut, TypeProtos.DataMode expectedBestInputMode,
                                     FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
     final List<LogicalExpression> args = new ArrayList<>();
     args.add(arg);
@@ -146,7 +149,7 @@ public class TestSimpleFunctions extends ExecTest {
     );
     final FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
     final DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
-    assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
+    assertEquals( getArrowDataMode(expectedBestInputMode), matchedFuncHolder.getParmMajorType(0).getMode());
   }
 
   @Test

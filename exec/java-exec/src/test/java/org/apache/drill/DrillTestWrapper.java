@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill;
 
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -35,24 +36,26 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.HyperVectorValueIterator;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.HyperVectorWrapper;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.arrow.vector.types.SerializedFieldHelper;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.util.Text;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.util.Text;
+import org.apache.arrow.vector.ValueVector;
 
 /**
  * An object to encapsulate the options for a Drill unit test, as well as the execution methods to perform the tests and
@@ -392,24 +395,24 @@ public class DrillTestWrapper {
       loader.load(batch.getHeader().getDef(), batch.getData());
 
       final BatchSchema schema = loader.getSchema();
-      final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = testBuilder.getExpectedSchema();
+      final List<Pair<SchemaPath, MajorType>> expectedSchema = testBuilder.getExpectedSchema();
       if(schema.getFieldCount() != expectedSchema.size()) {
         throw new Exception("Expected and actual numbers of columns do not match.");
       }
 
       for(int i = 0; i < schema.getFieldCount(); ++i) {
         final String actualSchemaPath = schema.getColumn(i).getPath();
-        final TypeProtos.MajorType actualMajorType = schema.getColumn(i).getType();
+        final MajorType actualMajorType = schema.getColumn(i).getType();
 
         final String expectedSchemaPath = expectedSchema.get(i).getLeft().getAsUnescapedPath();
-        final TypeProtos.MajorType expectedMajorType = expectedSchema.get(i).getValue();
+        final MajorType expectedMajorType = expectedSchema.get(i).getValue();
 
         if(!actualSchemaPath.equals(expectedSchemaPath)
             || !actualMajorType.equals(expectedMajorType)) {
           throw new Exception(String.format("Schema path or type mismatch for column #%d:\n" +
                   "Expected schema path: %s\nActual   schema path: %s\nExpected type: %s\nActual   type: %s",
-              i, expectedSchemaPath, actualSchemaPath, Types.toString(expectedMajorType),
-              Types.toString(actualMajorType)));
+              i, expectedSchemaPath, actualSchemaPath, Types.toString(getDrillMajorType(expectedMajorType)),
+              Types.toString(getDrillMajorType(actualMajorType))));
         }
       }
 
@@ -566,17 +569,17 @@ public class DrillTestWrapper {
 
   private void addTypeInfoIfMissing(QueryDataBatch batch, TestBuilder testBuilder) {
     if (! testBuilder.typeInfoSet()) {
-      Map<SchemaPath, TypeProtos.MajorType> typeMap = getTypeMapFromBatch(batch);
+      Map<SchemaPath, MajorType> typeMap = getTypeMapFromBatch(batch);
       testBuilder.baselineTypes(typeMap);
     }
 
   }
 
-  private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
-    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
+  private Map<SchemaPath, MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
+    Map<SchemaPath, MajorType> typeMap = new HashMap();
     for (int i = 0; i < batch.getHeader().getDef().getFieldCount(); i++) {
-      typeMap.put(SchemaPath.getSimplePath(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath()),
-          batch.getHeader().getDef().getField(i).getMajorType());
+      typeMap.put(SchemaPath.getSimplePath(SerializedFieldHelper.create(batch.getHeader().getDef().getField(i)).getPath()),
+          MajorTypeHelper.getArrowMajorType(batch.getHeader().getDef().getField(i).getMajorType()));
     }
     return typeMap;
   }

@@ -22,13 +22,16 @@ import java.util.Map;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.DecimalScalePrecisionAddFunction;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.util.DecimalUtility;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMinorType;
 
 public class DrillDecimalAddFuncHolder extends DrillSimpleFuncHolder{
 
@@ -44,13 +47,13 @@ public class DrillDecimalAddFuncHolder extends DrillSimpleFuncHolder{
   @Override
   public MajorType getReturnType(List<LogicalExpression> args) {
 
-    TypeProtos.DataMode mode = returnValue.type.getMode();
+    DataMode mode = returnValue.type.getMode();
 
     if (nullHandling == NullHandling.NULL_IF_NULL) {
       // if any one of the input types is nullable, then return nullable return type
       for (LogicalExpression e : args) {
-        if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
-          mode = TypeProtos.DataMode.OPTIONAL;
+        if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
+          mode = DataMode.OPTIONAL;
           break;
         }
       }
@@ -61,12 +64,13 @@ public class DrillDecimalAddFuncHolder extends DrillSimpleFuncHolder{
      * only two inputs
      */
     assert args.size() == 2;
+    int leftPrecision = args.get(0).getMajorType().getPrecision();
+    int leftScale = args.get(0).getMajorType().getScale();
+    int rightPrecision = args.get(1).getMajorType().getPrecision();
+    int rightScale = args.get(1).getMajorType().getScale();
 
-    DecimalScalePrecisionAddFunction outputScalePrec =
-        new DecimalScalePrecisionAddFunction(args.get(0).getMajorType().getPrecision(), args.get(0).getMajorType().getScale(),
-            args.get(1).getMajorType().getPrecision(), args.get(1).getMajorType().getScale());
-    return (TypeProtos.MajorType.newBuilder().setMinorType(DecimalUtility.getDecimalDataType(outputScalePrec.getOutputPrecision()))
-        .setScale(outputScalePrec.getOutputScale()).setPrecision(outputScalePrec.getOutputPrecision()).setMode(mode).build());
+    DecimalScalePrecisionAddFunction outputScalePrec = new DecimalScalePrecisionAddFunction(leftPrecision, leftScale, rightPrecision, rightScale);
+    return new MajorType(DecimalUtility.getDecimalDataType(outputScalePrec.getOutputPrecision()), mode, outputScalePrec.getOutputPrecision(), outputScalePrec.getOutputScale());
   }
 
   @Override

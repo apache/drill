@@ -21,8 +21,11 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 public class ConvertExpression extends LogicalExpressionBase implements Iterable<LogicalExpression>{
 
@@ -47,7 +50,7 @@ public class ConvertExpression extends LogicalExpressionBase implements Iterable
     this.input = input;
     this.convertFunction = CONVERT_FROM.equals(convertFunction.toLowerCase()) ? CONVERT_FROM : CONVERT_TO;
     this.encodingType = encodingType.toUpperCase();
-    this.type = Types.getMajorTypeFromName(encodingType.split("_", 2)[0].toLowerCase());
+    this.type = getArrowMajorType(Types.getMajorTypeFromName(encodingType.split("_", 2)[0].toLowerCase()));
   }
 
   @Override
@@ -79,7 +82,7 @@ public class ConvertExpression extends LogicalExpressionBase implements Iterable
 
   @Override
   public String toString() {
-    return "ConvertExpression [input=" + input + ", type=" + Types.toString(type) + ", convertFunction="
+    return "ConvertExpression [input=" + input + ", type=" + Types.toString(getDrillMajorType(type)) + ", convertFunction="
         + convertFunction + ", conversionType=" + encodingType + "]";
   }
 }

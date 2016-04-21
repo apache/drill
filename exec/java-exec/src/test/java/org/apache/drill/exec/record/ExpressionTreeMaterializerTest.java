@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -34,14 +35,14 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -51,9 +52,9 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializerTest.class);
 
-  final MajorType boolConstant = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIT).build();
-  final MajorType bigIntType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIGINT).build();
-  final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
+  final MajorType boolConstant = new MajorType(MinorType.BIT,DataMode.REQUIRED);
+  final MajorType bigIntType = new MajorType(MinorType.BIGINT,DataMode.REQUIRED);
+  final MajorType intType = new MajorType(MinorType.INT,DataMode.REQUIRED);
 
   DrillConfig c = DrillConfig.create();
   FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -143,8 +144,8 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       }
 
       @Override
-      public void addUnexpectedArgumentType(ExpressionPosition expr, String name, MajorType actual,
-          MajorType[] expected, int argumentIndex) {
+      public void addUnexpectedArgumentType(ExpressionPosition expr, String name, org.apache.drill.common.types.TypeProtos.MajorType actual,
+          org.apache.drill.common.types.TypeProtos.MajorType[] expected, int argumentIndex) {
         errorCount++;
       }
 
@@ -159,12 +160,12 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       }
 
       @Override
-      public void addNonNumericType(ExpressionPosition expr, MajorType actual) {
+      public void addNonNumericType(ExpressionPosition expr, org.apache.drill.common.types.TypeProtos.MajorType actual) {
         errorCount++;
       }
 
       @Override
-      public void addUnexpectedType(ExpressionPosition expr, int index, MajorType actual) {
+      public void addUnexpectedType(ExpressionPosition expr, int index, org.apache.drill.common.types.TypeProtos.MajorType actual) {
         errorCount++;
       }
 

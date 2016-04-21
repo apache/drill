@@ -18,12 +18,14 @@
 package org.apache.drill.exec.fn.hive;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.hive.HiveTestBase;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 
 import java.util.List;
@@ -58,12 +60,9 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         "from hive.kv \n" +
         "limit 0";
 
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.FLOAT8)
-        .setMode(TypeProtos.DataMode.OPTIONAL)
-        .build();
+    final MajorType majorType = Types.optional(MinorType.FLOAT8);
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()

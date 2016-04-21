@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 import static org.junit.Assert.assertEquals;
 import mockit.Expectations;
 import mockit.Injectable;
@@ -26,6 +27,7 @@ import mockit.NonStrictExpectations;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.apache.arrow.vector.IntVector;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -36,19 +38,18 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.impl.project.Projector;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.ValueVector;
 import org.junit.Test;
 
 public class ExpressionTest extends ExecTest {
@@ -74,7 +75,7 @@ public class ExpressionTest extends ExecTest {
 
   @Test
   public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
-    final TypeProtos.MajorType type = Types.optional(MinorType.INT);
+    final MajorType type = Types.optional(MinorType.INT);
     final TypedFieldId tfid = new TypedFieldId(type, false, 0);
 
     new NonStrictExpectations() {

@@ -32,7 +32,9 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
@@ -71,7 +73,7 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
       final String columnName = field.getPath();
 
-      final MajorType rpcDataType = field.getType();
+      final MajorType rpcDataType = getDrillMajorType(field.getType());
       final AvaticaType bundledSqlDataType = getAvaticaType(rpcDataType);
       final String columnClassName = objectClass.getName();
 

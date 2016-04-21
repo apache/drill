@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -63,13 +62,8 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.CoreDecimalUtility;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -89,6 +83,19 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+
+import static org.apache.drill.common.types.Types.isFixedWidthType;
+import static org.apache.drill.common.types.Types.isUnion;
+import static org.apache.drill.common.types.Types.softEquals;
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMinorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillDataMode;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMinorType;
 
 public class ExpressionTreeMaterializer {
 
@@ -159,7 +166,7 @@ public class ExpressionTreeMaterializer {
       return fromExpr;
     }
 
-    if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
+    if (!isFixedWidthType(getDrillMajorType(toType)) && !isUnion(getDrillMajorType(toType))) {
 
       /* We are implicitly casting to VARCHAR so we don't have a max length,
        * using an arbitrary value. We trim down the size of the stored bytes
@@ -167,7 +174,7 @@ public class ExpressionTreeMaterializer {
        */
       castArgs.add(new ValueExpressions.LongExpression(TypeHelper.VARCHAR_DEFAULT_CAST_LEN, null));
     }
-    else if (CoreDecimalUtility.isDecimalType(toType)) {
+    else if (CoreDecimalUtility.isDecimalType(getDrillMajorType(toType))) {
       // Add the scale and precision to the arguments of the implicit cast
       castArgs.add(new ValueExpressions.LongExpression(toType.getPrecision(), null));
       castArgs.add(new ValueExpressions.LongExpression(toType.getScale(), null));
@@ -197,7 +204,7 @@ public class ExpressionTreeMaterializer {
     sb.append("(");
     boolean first = true;
     for(LogicalExpression e : call.args) {
-      TypeProtos.MajorType mt = e.getMajorType();
+      MajorType mt = e.getMajorType();
       if (first) {
         first = false;
       } else {
@@ -295,25 +302,25 @@ public class ExpressionTreeMaterializer {
 
           LogicalExpression currentArg = call.args.get(i);
 
-          TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
+          MajorType parmType = matchedFuncHolder.getParmMajorType(i);
 
           //Case 1: If  1) the argument is NullExpression
           //            2) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangable).
           //        then replace NullExpression with a TypedNullConstant
           if (currentArg.equals(NullExpression.INSTANCE) &&
-            ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
+            ( parmType.getMode().equals(DataMode.OPTIONAL) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
+          } else if (softEquals(getDrillMajorType(parmType), getDrillMajorType(currentArg.getMajorType()), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
                      matchedFuncHolder.isFieldReader(i)) {
             //Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
             argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.
-            if (CoreDecimalUtility.isDecimalType(parmType)) {
+            if (CoreDecimalUtility.isDecimalType(getDrillMajorType(parmType))) {
               // We are implicitly promoting a decimal type, set the required scale and precision
-              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+              parmType = getArrowMajorType(TypeProtos.MajorType.newBuilder().setMinorType(getDrillMinorType(parmType.getMinorType())).setMode(getDrillDataMode(parmType.getMode())).
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build());
             }
             argsWithCast.add(addCastExpression(currentArg, parmType, functionLookupContext, errorCollector));
           }
@@ -330,16 +337,16 @@ public class ExpressionTreeMaterializer {
 
         for (int i = 0; i < call.args.size(); ++i) {
           LogicalExpression currentArg = call.args.get(i);
-          TypeProtos.MajorType parmType = matchedNonDrillFuncHolder.getParmMajorType(i);
+          MajorType parmType = matchedNonDrillFuncHolder.getParmMajorType(i);
 
-          if (Types.softEquals(parmType, currentArg.getMajorType(), true)) {
+          if (softEquals(getDrillMajorType(parmType), getDrillMajorType(currentArg.getMajorType()), true)) {
             extArgsWithCast.add(currentArg);
           } else {
             // Insert cast if param type is different from arg type.
-            if (CoreDecimalUtility.isDecimalType(parmType)) {
+            if (CoreDecimalUtility.isDecimalType(getDrillMajorType(parmType))) {
               // We are implicitly promoting a decimal type, set the required scale and precision
-              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+              parmType = getArrowMajorType(TypeProtos.MajorType.newBuilder().setMinorType(getDrillMinorType(parmType.getMinorType())).setMode(getDrillDataMode(parmType.getMode())).
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build());
             }
             extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, functionLookupContext, errorCollector));
           }
@@ -396,7 +403,7 @@ public class ExpressionTreeMaterializer {
           continue;
         }
 
-        List<MinorType> subTypes = majorType.getSubTypeList();
+        List<MinorType> subTypes = majorType.getSubTypes();
         Preconditions.checkState(subTypes.size() > 0, "Union type has no subtypes");
 
         Queue<IfCondition> ifConditions = Lists.newLinkedList();
@@ -502,23 +509,23 @@ public class ExpressionTreeMaterializer {
       if (unionTypeEnabled) {
         if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
-          MinorType leastRestrictive = MinorType.UNION;
-          MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
+          TypeProtos.MinorType leastRestrictive = TypeProtos.MinorType.UNION;
+          TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.UNION).setMode(TypeProtos.DataMode.OPTIONAL);
           if (thenType == MinorType.UNION) {
-            for (MinorType subType : conditions.expression.getMajorType().getSubTypeList()) {
+            for (TypeProtos.MinorType subType : getDrillMajorType(conditions.expression.getMajorType()).getSubTypeList()) {
               builder.addSubType(subType);
             }
           } else {
-            builder.addSubType(thenType);
+            builder.addSubType(getDrillMinorType(thenType));
           }
           if (elseType == MinorType.UNION) {
-            for (MinorType subType : newElseExpr.getMajorType().getSubTypeList()) {
+            for (TypeProtos.MinorType subType : getDrillMajorType(newElseExpr.getMajorType()).getSubTypeList()) {
               builder.addSubType(subType);
             }
           } else {
-            builder.addSubType(elseType);
+            builder.addSubType(getDrillMinorType(elseType));
           }
-          outputType = builder.build();
+          outputType = getArrowMajorType(builder.build());
           conditions = new IfExpression.IfCondition(newCondition,
                   addCastExpression(conditions.expression, outputType, functionLookupContext, errorCollector, false));
           newElseExpr = addCastExpression(newElseExpr, outputType, functionLookupContext, errorCollector, false);
@@ -563,7 +570,7 @@ public class ExpressionTreeMaterializer {
           new Predicate<LogicalExpression>() {
             @Override
             public boolean apply(LogicalExpression input) {
-              return !input.getMajorType().getMinorType().equals(TypeProtos.MinorType.NULL);
+              return !input.getMajorType().getMinorType().equals(MinorType.NULL);
             }
           }
         );
@@ -756,9 +763,9 @@ public class ExpressionTreeMaterializer {
         newArgs.add(input);  //input_expr
 
         //VarLen type
-        if (!Types.isFixedWidthType(type)) {
-          newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-        }  if (CoreDecimalUtility.isDecimalType(type)) {
+        if (!isFixedWidthType(getDrillMajorType(type))) {
+          newArgs.add(new ValueExpressions.LongExpression(getDrillMajorType(type).getWidth(), null));
+        }  if (CoreDecimalUtility.isDecimalType(getDrillMajorType(type))) {
             newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
             newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }
@@ -818,7 +825,7 @@ public class ExpressionTreeMaterializer {
         // 2) or "to" length is unknown (0 means unknown length?).
         // Case 1 and case 2 mean that cast will do nothing.
         // In other cases, cast is required to trim the "from" according to "to" length.
-        if ( (to.getWidth() >= from.getWidth() && from.getWidth() > 0) || to.getWidth() == 0) {
+        if ( (getDrillMajorType(to).getWidth() >= getDrillMajorType(from).getWidth() && getDrillMajorType(from).getWidth() > 0) || getDrillMajorType(to).getWidth() == 0) {
           return true;
         } else {
           return false;

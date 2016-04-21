@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,8 +25,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 
 import com.google.common.collect.Lists;
 
@@ -93,7 +93,7 @@ public class TestMemoryRetention {
       }
 
       logger.info("Starting alloc.");
-      final List<DrillBuf> bufs = Lists.newLinkedList();
+      final List<ArrowBuf> bufs = Lists.newLinkedList();
       for (final Integer i : ALLOCATIONS) {
         bufs.add(allocator.buffer(i));
       }
@@ -112,10 +112,10 @@ public class TestMemoryRetention {
   }
 
   private static class Dealloc extends Thread {
-    final List<DrillBuf> bufs;
+    final List<ArrowBuf> bufs;
     final BufferAllocator a;
 
-    public Dealloc(List<DrillBuf> bufs, BufferAllocator a) {
+    public Dealloc(List<ArrowBuf> bufs, BufferAllocator a) {
       this.bufs = bufs;
       this.a = a;
     }
@@ -125,7 +125,7 @@ public class TestMemoryRetention {
       try {
         Thread.sleep(8000);
         logger.info("Starting release.");
-        for (final DrillBuf buf : bufs) {
+        for (final ArrowBuf buf : bufs) {
           buf.release();
         }
         logger.info("Finished release.");

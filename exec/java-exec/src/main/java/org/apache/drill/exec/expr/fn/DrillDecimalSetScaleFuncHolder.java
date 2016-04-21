@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class DrillDecimalSetScaleFuncHolder extends DrillSimpleFuncHolder{
 
@@ -34,7 +35,7 @@ public class DrillDecimalSetScaleFuncHolder extends DrillSimpleFuncHolder{
   @Override
   public MajorType getReturnType(List<LogicalExpression> args) {
 
-    TypeProtos.DataMode mode = returnValue.type.getMode();
+    DataMode mode = returnValue.type.getMode();
     int scale = 0;
     int precision = 0;
     int i = 0;
@@ -44,8 +45,8 @@ public class DrillDecimalSetScaleFuncHolder extends DrillSimpleFuncHolder{
       for (LogicalExpression e : args) {
 
         precision = Math.max(precision, e.getMajorType().getPrecision());
-        if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
-          mode = TypeProtos.DataMode.OPTIONAL;
+        if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
+          mode = DataMode.OPTIONAL;
         }
       }
 
@@ -58,6 +59,6 @@ public class DrillDecimalSetScaleFuncHolder extends DrillSimpleFuncHolder{
       scale = ((ValueExpressions.IntExpression) args.get(1)).getInt();
     }
 
-    return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
+    return new MajorType(returnValue.type.getMinorType(), mode, precision, scale);
   }
 }

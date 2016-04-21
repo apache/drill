@@ -22,19 +22,17 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.complex.AbstractContainerVector;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -46,16 +44,19 @@ import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordIterator;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractContainerVector;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClass;
@@ -330,7 +331,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
         if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
-          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+          outputType = new MajorType(inputType.getMinorType(), DataMode.OPTIONAL, inputType.getPrecision(), inputType.getScale(), inputType.getTimezone(), inputType.getSubTypes());
         } else {
           outputType = inputType;
         }
@@ -338,7 +339,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft",
           new TypedFieldId(inputType, vectorId));
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(outputType,vectorId));
+          new TypedFieldId(outputType, vectorId));
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
           .arg(copyLeftMapping.getValueReadIndex())
@@ -358,7 +359,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
         if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
-          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+          outputType = new MajorType(inputType.getMinorType(), DataMode.OPTIONAL, inputType.getPrecision(), inputType.getScale(), inputType.getTimezone(), inputType.getSubTypes());
         } else {
           outputType = inputType;
         }
@@ -366,7 +367,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         JVar vvIn = cg.declareVectorValueSetupAndMember("incomingRight",
           new TypedFieldId(inputType, vectorId - rightVectorBase));
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-          new TypedFieldId(outputType,vectorId));
+          new TypedFieldId(outputType, vectorId));
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
           .arg(copyRightMappping.getValueReadIndex())
@@ -393,7 +394,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           MajorType inputType = w.getField().getType();
           MajorType outputType;
           if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
-            outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+            outputType = new MajorType(inputType.getMinorType(), DataMode.OPTIONAL, inputType.getPrecision(), inputType.getScale(), inputType.getTimezone(), inputType.getSubTypes());
           } else {
             outputType = inputType;
           }
@@ -410,7 +411,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           MajorType inputType = w.getField().getType();
           MajorType outputType;
           if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
-            outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+            outputType = new MajorType(inputType.getMinorType(), DataMode.OPTIONAL, inputType.getPrecision(), inputType.getScale(), inputType.getTimezone(), inputType.getSubTypes());
           } else {
             outputType = inputType;
           }

@@ -19,35 +19,35 @@ package org.apache.drill.exec.store.hive;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.holders.Decimal18Holder;
+import org.apache.arrow.vector.holders.Decimal28SparseHolder;
+import org.apache.arrow.vector.holders.Decimal38SparseHolder;
+import org.apache.arrow.vector.holders.Decimal9Holder;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.holders.Decimal18Holder;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.NullableBitVector;
-import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableDecimal18Vector;
-import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-import org.apache.drill.exec.vector.NullableDecimal9Vector;
-import org.apache.drill.exec.vector.NullableFloat4Vector;
-import org.apache.drill.exec.vector.NullableFloat8Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableTimeStampVector;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.util.DecimalUtility;
+import org.apache.arrow.vector.NullableBigIntVector;
+import org.apache.arrow.vector.NullableBitVector;
+import org.apache.arrow.vector.NullableDateVector;
+import org.apache.arrow.vector.NullableDecimal18Vector;
+import org.apache.arrow.vector.NullableDecimal28SparseVector;
+import org.apache.arrow.vector.NullableDecimal38SparseVector;
+import org.apache.arrow.vector.NullableDecimal9Vector;
+import org.apache.arrow.vector.NullableFloat4Vector;
+import org.apache.arrow.vector.NullableFloat8Vector;
+import org.apache.arrow.vector.NullableIntVector;
+import org.apache.arrow.vector.NullableTimeStampVector;
+import org.apache.arrow.vector.NullableVarBinaryVector;
+import org.apache.arrow.vector.NullableVarCharVector;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -134,9 +134,9 @@ public class HiveUtilities {
     return null;
   }
 
-  public static void populateVector(final ValueVector vector, final DrillBuf managedBuffer, final Object val,
+  public static void populateVector(final ValueVector vector, final ArrowBuf managedBuffer, final Object val,
       final int start, final int end) {
-    TypeProtos.MinorType type = vector.getField().getType().getMinorType();
+    MinorType type = vector.getField().getType().getMinorType();
 
     switch(type) {
       case VARBINARY: {
@@ -290,16 +290,13 @@ public class HiveUtilities {
       case PRIMITIVE: {
         PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
         MinorType minorType = HiveUtilities.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo, options);
-        MajorType.Builder typeBuilder = MajorType.newBuilder().setMinorType(minorType)
-            .setMode(DataMode.OPTIONAL); // Hive columns (both regular and partition) could have null values
 
         if (primitiveTypeInfo.getPrimitiveCategory() == PrimitiveCategory.DECIMAL) {
           DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-          typeBuilder.setPrecision(decimalTypeInfo.precision())
-              .setScale(decimalTypeInfo.scale()).build();
+          return new MajorType(minorType, DataMode.OPTIONAL, decimalTypeInfo.precision(), decimalTypeInfo.scale());
         }
 
-        return typeBuilder.build();
+        return new MajorType(minorType, DataMode.OPTIONAL);
       }
 
       case LIST:
@@ -313,13 +310,13 @@ public class HiveUtilities {
     return null;
   }
 
-  public static TypeProtos.MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo,
+  public static MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo,
                                                                            OptionManager options) {
     switch(primitiveTypeInfo.getPrimitiveCategory()) {
       case BINARY:
-        return TypeProtos.MinorType.VARBINARY;
+        return MinorType.VARBINARY;
       case BOOLEAN:
-        return TypeProtos.MinorType.BIT;
+        return MinorType.BIT;
       case DECIMAL: {
 
         if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
@@ -331,26 +328,26 @@ public class HiveUtilities {
         return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
       }
       case DOUBLE:
-        return TypeProtos.MinorType.FLOAT8;
+        return MinorType.FLOAT8;
       case FLOAT:
-        return TypeProtos.MinorType.FLOAT4;
+        return MinorType.FLOAT4;
       // TODO (DRILL-2470)
       // Byte and short (tinyint and smallint in SQL types) are currently read as integers
       // as these smaller integer types are not fully supported in Drill today.
       case SHORT:
       case BYTE:
       case INT:
-        return TypeProtos.MinorType.INT;
+        return MinorType.INT;
       case LONG:
-        return TypeProtos.MinorType.BIGINT;
+        return MinorType.BIGINT;
       case STRING:
       case VARCHAR:
       case CHAR:
-        return TypeProtos.MinorType.VARCHAR;
+        return MinorType.VARCHAR;
       case TIMESTAMP:
-        return TypeProtos.MinorType.TIMESTAMP;
+        return MinorType.TIMESTAMP;
       case DATE:
-        return TypeProtos.MinorType.DATE;
+        return MinorType.DATE;
     }
     throwUnsupportedHiveDataTypeError(primitiveTypeInfo.getPrimitiveCategory().toString());
     return null;

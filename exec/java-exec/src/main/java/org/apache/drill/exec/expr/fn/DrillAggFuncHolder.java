@@ -19,20 +19,15 @@ package org.apache.drill.exec.expr.fn;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.List;
-import java.util.Map;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.common.util.MajorTypeHelper;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.base.Preconditions;
@@ -44,8 +39,9 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JForLoop;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMod;
-import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 class DrillAggFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAggFuncHolder.class);
@@ -157,8 +153,8 @@ class DrillAggFuncHolder extends DrillFuncHolder {
         workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
         g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
       } else {
-        Preconditions.checkState(Types.isFixedWidthType(workspaceVars[i].majorType), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have variable length type.", workspaceVars[i].name, registeredNames[0]));
-        Preconditions.checkState(workspaceVars[i].majorType.getMode()==DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have null or repeated type.", workspaceVars[i].name, registeredNames[0]));
+        Preconditions.checkState(Types.isFixedWidthType(getDrillMajorType(workspaceVars[i].majorType)), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have variable length type.", workspaceVars[i].name, registeredNames[0]));
+        Preconditions.checkState(workspaceVars[i].majorType.getMode()== DataMode.REQUIRED, String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to have null or repeated type.", workspaceVars[i].name, registeredNames[0]));
 
         //workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType), JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
         workspaceJVars[i] = g.declareClassField("work", g.getHolderType(workspaceVars[i].majorType));
@@ -218,7 +214,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       //sub.assign(workspaceJVars[i], JExpr._new(g.getHolderType(workspaceVars[i].majorType)));
       //Access workspaceVar through workspace vector.
       JInvocation getValueAccessor = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getAccessor").invoke("get");
-      if (Types.usesHolderForGet(workspaceVars[i].majorType)) {
+      if (Types.usesHolderForGet(getDrillMajorType(workspaceVars[i].majorType))) {
         sub.add(getValueAccessor.arg(wsIndexVariable).arg(workspaceJVars[i]));
       } else {
         sub.assign(workspaceJVars[i].ref("value"), getValueAccessor.arg(wsIndexVariable));
@@ -240,10 +236,10 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       //Change workspaceVar through workspace vector.
       JInvocation setMeth;
       MajorType type = workspaceVars[i].majorType;
-      if (Types.usesHolderForGet(type)) {
+      if (Types.usesHolderForGet(getDrillMajorType(type))) {
           setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i]);
       }else{
-        if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
+        if (!Types.isFixedWidthType(getDrillMajorType(type)) || Types.isRepeated(getDrillMajorType(type))) {
           setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
         } else {
           setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("set").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));

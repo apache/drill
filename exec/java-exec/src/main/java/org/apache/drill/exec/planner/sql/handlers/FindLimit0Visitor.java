@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner.sql.handlers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -50,12 +52,14 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 
 import java.io.IOException;
 import java.util.List;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMinorType;
 
 /**
  * Visitor that will identify whether the root portion of the RelNode tree contains a limit 0 pattern. In this case, we
@@ -225,10 +229,10 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     @Override
     public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
       for (int i = 0; i < columnNames.size(); i++) {
-        final TypeProtos.MajorType type = TypeProtos.MajorType.newBuilder()
-            .setMode(dataModes.get(i))
-            .setMinorType(TypeInferenceUtils.getDrillTypeFromCalciteType(columnTypes.get(i)))
-            .build();
+        final MajorType type = getArrowMajorType(TypeProtos.MajorType.newBuilder()
+                .setMode(dataModes.get(i))
+                .setMinorType(TypeInferenceUtils.getDrillTypeFromCalciteType(columnTypes.get(i)))
+                .build());
         final MaterializedField field = MaterializedField.create(columnNames.get(i), type);
         final Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
         try {

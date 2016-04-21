@@ -19,14 +19,16 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import javax.inject.Named;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.AllocationHelper;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 
 public abstract class CopierTemplate2 implements Copier{
@@ -46,7 +48,7 @@ public abstract class CopierTemplate2 implements Copier{
   public int copyRecords(int index, int recordCount){
     for(VectorWrapper<?> out : outgoing){
       MajorType type = out.getField().getType();
-      if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {
+      if (!Types.isFixedWidthType(getDrillMajorType(type)) || Types.isRepeated(getDrillMajorType(type))) {
         out.getValueVector().allocateNew();
       } else {
         AllocationHelper.allocate(out.getValueVector(), recordCount, 1);

@@ -21,16 +21,17 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.FixedWidthVector;
+import org.apache.arrow.vector.SchemaChangeCallBack;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -41,21 +42,24 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.util.MajorTypeHelper;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
+import org.apache.arrow.vector.util.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.SchemaChangeCallBack;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.collect.Lists;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionAllRecordBatch.class);
@@ -166,10 +170,10 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     if(unionAllInput.isBothSideEmpty()) {
       for(int i = 0; i < outputFields.size(); ++i) {
         final String colName = outputFields.get(i).getPath();
-        final MajorType majorType = MajorType.newBuilder()
-            .setMinorType(MinorType.INT)
-            .setMode(DataMode.OPTIONAL)
-            .build();
+        final MajorType majorType = getArrowMajorType(TypeProtos.MajorType.newBuilder()
+                .setMinorType(TypeProtos.MinorType.INT)
+                .setMode(TypeProtos.DataMode.OPTIONAL)
+                .build());
 
         MaterializedField outputField = MaterializedField.create(colName, majorType);
         ValueVector vv = container.addOrGet(outputField, callBack);
@@ -598,10 +602,8 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
           dataModes.add(rightField.getType().getMode());
           DataMode dataMode = TypeCastRules.getLeastRestrictiveDataMode(dataModes);
 
-          MajorType.Builder builder = MajorType.newBuilder();
-          builder.setMinorType(outputMinorType);
-          builder.setMode(dataMode);
-          outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
+          MajorType mt = new MajorType(outputMinorType, dataMode);
+          outputFields.add(MaterializedField.create(leftField.getPath(), mt));
         }
         ++index;
       }

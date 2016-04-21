@@ -23,8 +23,9 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class DrillDecimalCastFuncHolder extends DrillSimpleFuncHolder {
 
@@ -35,13 +36,13 @@ public class DrillDecimalCastFuncHolder extends DrillSimpleFuncHolder {
     @Override
     public MajorType getReturnType(List<LogicalExpression> args) {
 
-        TypeProtos.DataMode mode = returnValue.type.getMode();
+        DataMode mode = returnValue.type.getMode();
 
         if (nullHandling == NullHandling.NULL_IF_NULL) {
             // if any one of the input types is nullable, then return nullable return type
             for (LogicalExpression e : args) {
-                if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
-                    mode = TypeProtos.DataMode.OPTIONAL;
+                if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
+                    mode = DataMode.OPTIONAL;
                     break;
                 }
             }
@@ -57,6 +58,6 @@ public class DrillDecimalCastFuncHolder extends DrillSimpleFuncHolder {
 
         int scale = (int) ((ValueExpressions.LongExpression)(args.get(args.size() - 1))).getLong();
         int precision = (int) ((ValueExpressions.LongExpression)(args.get(args.size() - 2))).getLong();
-        return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
+      return new MajorType(returnValue.type.getMinorType(), mode, precision, scale);
     }
 }

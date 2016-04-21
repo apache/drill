@@ -44,6 +44,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MinorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMajorType;
 
 public class JoinUtils {
   public static enum JoinComparator {
@@ -133,21 +136,21 @@ public class JoinUtils {
    * @param input2
    * @return true if implicit cast is allowed false otherwise
    */
-  private static boolean allowImplicitCast(TypeProtos.MinorType input1, TypeProtos.MinorType input2) {
+  private static boolean allowImplicitCast(MinorType input1, MinorType input2) {
     // allow implicit cast if both the input types are numeric
     if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)) {
       return true;
     }
 
     // allow implicit cast if input types are date/ timestamp
-    if ((input1 == TypeProtos.MinorType.DATE || input1 == TypeProtos.MinorType.TIMESTAMP) &&
-        (input2 == TypeProtos.MinorType.DATE || input2 == TypeProtos.MinorType.TIMESTAMP)) {
+    if ((input1 == MinorType.DATE || input1 == MinorType.TIMESTAMP) &&
+        (input2 == MinorType.DATE || input2 == MinorType.TIMESTAMP)) {
       return true;
     }
 
     // allow implicit cast if both the input types are varbinary/ varchar
-    if ((input1 == TypeProtos.MinorType.VARCHAR || input1 == TypeProtos.MinorType.VARBINARY) &&
-        (input2 == TypeProtos.MinorType.VARCHAR || input2 == TypeProtos.MinorType.VARBINARY)) {
+    if ((input1 == MinorType.VARCHAR || input1 == MinorType.VARBINARY) &&
+        (input2 == MinorType.VARCHAR || input2 == MinorType.VARBINARY)) {
       return true;
     }
 
@@ -171,10 +174,10 @@ public class JoinUtils {
     for (int i = 0; i < rightExpressions.length; i++) {
       LogicalExpression rightExpression = rightExpressions[i];
       LogicalExpression leftExpression = leftExpressions[i];
-      TypeProtos.MinorType rightType = rightExpression.getMajorType().getMinorType();
-      TypeProtos.MinorType leftType = leftExpression.getMajorType().getMinorType();
+      MinorType rightType = rightExpression.getMajorType().getMinorType();
+      MinorType leftType = leftExpression.getMajorType().getMinorType();
 
-      if (rightType == TypeProtos.MinorType.UNION || leftType == TypeProtos.MinorType.UNION) {
+      if (rightType == MinorType.UNION || leftType == MinorType.UNION) {
         continue;
       }
       if (rightType != leftType) {
@@ -187,10 +190,10 @@ public class JoinUtils {
         }
 
         // We need to add a cast to one of the expressions
-        List<TypeProtos.MinorType> types = new LinkedList<>();
+        List<MinorType> types = new LinkedList<>();
         types.add(rightType);
         types.add(leftType);
-        TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(types);
+        MinorType result = TypeCastRules.getLeastRestrictiveType(types);
         ErrorCollector errorCollector = new ErrorCollectorImpl();
 
         if (result == null) {

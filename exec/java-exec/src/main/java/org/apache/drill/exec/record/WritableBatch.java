@@ -105,7 +105,7 @@ public class WritableBatch implements AutoCloseable {
           ValueVector v = vv.getValueVector();
           ArrowBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
-          v.load(fmd, bb);
+          TypeHelper.load(v, fmd, bb);
           vectorIndex++;
           bufferOffset += fmd.getBufferLength();
         }

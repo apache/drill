@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.arrow.vector.holders.IntHolder;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;

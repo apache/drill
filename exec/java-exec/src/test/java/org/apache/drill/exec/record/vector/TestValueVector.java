@@ -17,50 +17,52 @@
  */
 package org.apache.drill.exec.record.vector;
 
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.ArrowBuf;
 
 import java.nio.charset.Charset;
 
+import org.apache.arrow.vector.BaseValueVector;
+import org.apache.arrow.vector.BitVector;
+import org.apache.arrow.vector.NullableFloat4Vector;
+import org.apache.arrow.vector.NullableUInt4Vector;
+import org.apache.arrow.vector.NullableVarCharVector;
+import org.apache.arrow.vector.RepeatedIntVector;
+import org.apache.arrow.vector.UInt4Vector;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.complex.ListVector;
+import org.apache.arrow.vector.complex.MapVector;
+import org.apache.arrow.vector.complex.RepeatedListVector;
+import org.apache.arrow.vector.complex.RepeatedMapVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.types.MinorType;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
-import org.apache.drill.exec.expr.holders.NullableUInt4Holder;
-import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
-import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
-import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.UInt1Holder;
-import org.apache.drill.exec.expr.holders.UInt4Holder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.vector.holders.BitHolder;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.NullableFloat4Holder;
+import org.apache.arrow.vector.holders.NullableUInt4Holder;
+import org.apache.arrow.vector.holders.NullableVar16CharHolder;
+import org.apache.arrow.vector.holders.NullableVarCharHolder;
+import org.apache.arrow.vector.holders.RepeatedFloat4Holder;
+import org.apache.arrow.vector.holders.RepeatedIntHolder;
+import org.apache.arrow.vector.holders.RepeatedVarBinaryHolder;
+import org.apache.arrow.vector.holders.UInt1Holder;
+import org.apache.arrow.vector.holders.UInt4Holder;
+import org.apache.arrow.vector.holders.VarCharHolder;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.NullableFloat4Vector;
-import org.apache.drill.exec.vector.NullableUInt4Vector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.RepeatedIntVector;
-import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.complex.ListVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +70,7 @@ import org.junit.Test;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 public class TestValueVector extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
@@ -234,18 +236,18 @@ public class TestValueVector extends ExecTest {
     }
   }
 
-  private static DrillBuf combineBuffers(final BufferAllocator allocator, final DrillBuf[] buffers) {
+  private static ArrowBuf combineBuffers(final BufferAllocator allocator, final ArrowBuf[] buffers) {
     // find the total size we'll need
     int size = 0;
-    for(final DrillBuf buffer : buffers) {
+    for(final ArrowBuf buffer : buffers) {
       size += buffer.readableBytes();
     }
 
     // create the new buffer
-    final DrillBuf newBuf = allocator.buffer(size);
-    final DrillBuf writeBuf = newBuf;
-    for(final DrillBuf buffer : buffers) {
-      final DrillBuf readBuf = (DrillBuf) buffer.slice();
+    final ArrowBuf newBuf = allocator.buffer(size);
+    final ArrowBuf writeBuf = newBuf;
+    for(final ArrowBuf buffer : buffers) {
+      final ArrowBuf readBuf = (ArrowBuf) buffer.slice();
       final int nBytes = readBuf.readableBytes();
       final byte[] bytes = new byte[nBytes];
       readBuf.readBytes(bytes);
@@ -289,8 +291,8 @@ public class TestValueVector extends ExecTest {
 /* TODO(cwestin)
 the interface to load has changed
     // Serialize, reify, and verify.
-    final DrillBuf[] buffers1 = vector1.getBuffers(false);
-    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final ArrowBuf[] buffers1 = vector1.getBuffers(false);
+    final ArrowBuf buffer1 = combineBuffers(allocator, buffers1);
     final RepeatedIntVector vector2 = new RepeatedIntVector(field, allocator);
     vector2.load(nRecords, nRecords * nElements, buffer1);
 
@@ -330,10 +332,10 @@ the interface to load has changed
     assertEquals(valueCount, vector1.getAccessor().getValueCount());
 
     // Combine the backing buffers so we can load them into a new vector.
-    final DrillBuf[] buffers1 = vector1.getBuffers(false);
-    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final ArrowBuf[] buffers1 = vector1.getBuffers(false);
+    final ArrowBuf buffer1 = combineBuffers(allocator, buffers1);
     final VarCharVector vector2 = new VarCharVector(field, allocator);
-    vector2.load(vector1.getMetadata(), buffer1);
+    TypeHelper.load(vector2, TypeHelper.getMetadata(vector1), buffer1);
 
     // Check the contents of the new vector.
     final VarCharVector.Accessor accessor = vector2.getAccessor();
@@ -387,10 +389,10 @@ the interface to load has changed
     }
 
     // Combine into a single buffer so we can load it into a new vector.
-    final DrillBuf[] buffers1 = vector1.getBuffers(false);
-    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final ArrowBuf[] buffers1 = vector1.getBuffers(false);
+    final ArrowBuf buffer1 = combineBuffers(allocator, buffers1);
     final NullableVarCharVector vector2 = new NullableVarCharVector(field, allocator);
-    vector2.load(vector1.getMetadata(), buffer1);
+    TypeHelper.load(vector2, TypeHelper.getMetadata(vector1), buffer1);
 
     // Check the vector's contents.
     final NullableVarCharVector.Accessor accessor2 = vector2.getAccessor();
@@ -685,9 +687,9 @@ the interface to load has changed
   }
 
   protected static class ChildVerifier implements VectorVerifier {
-    public final TypeProtos.MajorType[] types;
+    public final MajorType[] types;
 
-    public ChildVerifier(TypeProtos.MajorType... childTypes) {
+    public ChildVerifier(MajorType... childTypes) {
       this.types = Preconditions.checkNotNull(childTypes);
     }
 
@@ -695,14 +697,14 @@ the interface to load has changed
     public void verify(ValueVector vector) throws Exception {
       final String hint = String.format("%s failed the test case", vector.getClass().getSimpleName());
 
-      final UserBitShared.SerializedField metadata = vector.getMetadata();
+      final UserBitShared.SerializedField metadata = TypeHelper.getMetadata(vector);
       final int actual = metadata.getChildCount();
       assertEquals(hint, types.length, actual);
 
       for (int i = 0; i < types.length; i++) {
         final UserBitShared.SerializedField child = metadata.getChild(i);
 
-        assertEquals(hint, types[i], child.getMajorType());
+        assertEquals(hint, types[i], getArrowMajorType(child.getMajorType()));
       }
     }
   }
@@ -751,8 +753,8 @@ the interface to load has changed
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
-    builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.optional(TypeProtos.MinorType.VARCHAR)));
-    builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
+    builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.required(MinorType.VARCHAR)));
+    builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, new MajorType(MinorType.LATE, DataMode.REQUIRED)));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
     final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
@@ -771,18 +773,18 @@ the interface to load has changed
 
   @Test
   public void testVectorCanLoadEmptyBuffer() throws Exception {
-    final DrillBuf empty = allocator.getEmpty();
+    final ArrowBuf empty = allocator.getEmpty();
 
     testVectors(new VectorVerifier() {
 
       @Override
       public void verify(ValueVector vector) {
         final String hint = String.format("%s failed the test case", vector.getClass().getSimpleName());
-        final UserBitShared.SerializedField metadata = vector.getMetadata();
+        final UserBitShared.SerializedField metadata = TypeHelper.getMetadata(vector);
         assertEquals(hint, 0, metadata.getBufferLength());
         assertEquals(hint, 0, metadata.getValueCount());
 
-        vector.load(metadata, empty);
+        TypeHelper.load(vector, metadata, empty);
 
         assertEquals(hint, 0, vector.getValueCapacity());
         assertEquals(hint, 0, vector.getAccessor().getValueCount());
@@ -795,7 +797,7 @@ the interface to load has changed
   @Test
   public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
-            Types.optional(TypeProtos.MinorType.LIST));
+            Types.optional(MinorType.LIST));
     ListVector vector = new ListVector(field, allocator, null);
     ListVector vectorFrom = new ListVector(field, allocator, null);
     vectorFrom.allocateNew();

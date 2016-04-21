@@ -33,7 +33,7 @@ import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -41,7 +41,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -152,7 +152,7 @@ public class QueryWrapper {
             for (int i = 0; i < rows; ++i) {
               final Map<String, String> record = Maps.newHashMap();
               for (VectorWrapper<?> vw : loader) {
-                final String field = vw.getValueVector().getMetadata().getNamePart().getName();
+                final String field = vw.getValueVector().getField().getName();
                 final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
                 final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
                 final String display = value == null ? null : value.toString();

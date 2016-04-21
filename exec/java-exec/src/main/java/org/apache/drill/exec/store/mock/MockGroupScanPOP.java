@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.mock;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +26,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -42,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import org.apache.drill.common.util.MajorTypeHelper;
 
 @JsonTypeName("mock-scan")
 public class MockGroupScanPOP extends AbstractGroupScan {
@@ -84,7 +83,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       this.types = types;
       int size = 0;
       for (MockColumn dt : types) {
-        size += TypeHelper.getSize(dt.getMajorType());
+        size += TypeHelper.getSize(MajorTypeHelper.getArrowMajorType(dt.getMajorType()));
       }
       this.recordSize = size;
     }

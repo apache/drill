@@ -19,6 +19,8 @@ package org.apache.drill.exec.record;
 
 import io.netty.buffer.ByteBuf;
 
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.SerializedFieldHelper;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
@@ -78,7 +80,7 @@ public class FragmentWritableBatch{
     final RecordBatchDef.Builder def = RecordBatchDef.newBuilder();
     if (schema != null) {
       for (final MaterializedField field : schema) {
-        def.addField(field.getSerializedField());
+        def.addField(SerializedFieldHelper.getSerializedField(field));
       }
     }
     return new FragmentWritableBatch(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,

@@ -21,9 +21,11 @@ package org.apache.drill.common.expression;
 import java.util.List;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class BooleanOperator extends FunctionCall{
 
@@ -42,10 +44,10 @@ public class BooleanOperator extends FunctionCall{
     // Otherwise, it's non-nullable bit.
     for (LogicalExpression e : args) {
       if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
-        return Types.OPTIONAL_BIT;
+        return getArrowMajorType(Types.OPTIONAL_BIT);
       }
     }
-    return Types.REQUIRED_BIT;
+    return getArrowMajorType(Types.REQUIRED_BIT);
 
   }
 

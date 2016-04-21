@@ -23,7 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;

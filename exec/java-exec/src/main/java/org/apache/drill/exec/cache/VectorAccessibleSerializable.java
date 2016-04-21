@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.cache;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,16 +25,17 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.SerializedFieldHelper;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -108,13 +109,13 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     final List<SerializedField> fieldList = batchDef.getFieldList();
     for (SerializedField metaData : fieldList) {
       final int dataLength = metaData.getBufferLength();
-      final MaterializedField field = MaterializedField.create(metaData);
-      final DrillBuf buf = allocator.buffer(dataLength);
+      final MaterializedField field = SerializedFieldHelper.create(metaData);
+      final ArrowBuf buf = allocator.buffer(dataLength);
       final ValueVector vector;
       try {
         buf.writeBytes(input, dataLength);
         vector = TypeHelper.getNewVector(field, allocator);
-        vector.load(metaData, buf);
+        TypeHelper.load(vector, metaData, buf);
       } finally {
         buf.release();
       }
@@ -141,11 +142,11 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     Preconditions.checkNotNull(output);
     final Timer.Context timerContext = metrics.timer(WRITER_TIMER).time();
 
-    final DrillBuf[] incomingBuffers = batch.getBuffers();
+    final ArrowBuf[] incomingBuffers = batch.getBuffers();
     final UserBitShared.RecordBatchDef batchDef = batch.getDef();
 
-    /* DrillBuf associated with the selection vector */
-    DrillBuf svBuf = null;
+    /* ArrowBuf associated with the selection vector */
+    ArrowBuf svBuf = null;
     Integer svCount =  null;
 
     if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE) {
@@ -166,7 +167,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       }
 
       /* Dump the array of ByteBuf's associated with the value vectors */
-      for (DrillBuf buf : incomingBuffers) {
+      for (ArrowBuf buf : incomingBuffers) {
                 /* dump the buffer into the OutputStream */
         int bufLength = buf.readableBytes();
         buf.getBytes(0, output, bufLength);

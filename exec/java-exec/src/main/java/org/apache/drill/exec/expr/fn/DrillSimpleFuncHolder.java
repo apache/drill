@@ -21,8 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.codemodel.JOp;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -35,6 +33,8 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class DrillSimpleFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
@@ -114,7 +114,8 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
       if (e != null) {
         // if at least one expression must be checked, set up the conditional.
-        returnValueType = returnValue.type.toBuilder().setMode(DataMode.OPTIONAL).build();
+        returnValueType = new MajorType(returnValue.type.getMinorType(), DataMode.OPTIONAL, returnValue.type.getPrecision(),
+                returnValue.type.getScale(), returnValue.type.getTimezone(), returnValue.type.getSubTypes());
         out = g.declare(returnValueType);
         e = e.eq(JExpr.lit(0));
         JConditional jc = sub._if(e);

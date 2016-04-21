@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -35,7 +37,7 @@ import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
 import org.apache.drill.exec.store.hive.HiveTable;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.hadoop.hive.metastore.api.Partition;
 
 import java.util.BitSet;
@@ -49,6 +51,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
 import com.google.common.collect.Lists;
 
+import static org.apache.drill.common.util.MajorTypeHelper.getDrillMinorType;
+
 // Partition descriptor for hive tables
 public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
 
@@ -56,10 +60,10 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   private final int numPartitionLevels;
   private final DrillScanRel scanRel;
   private final String defaultPartitionValue;
-  private final DrillBuf managedBuffer;
+  private final ArrowBuf managedBuffer;
 
   public HivePartitionDescriptor(@SuppressWarnings("unused") final PlannerSettings settings, final DrillScanRel scanRel,
-      final DrillBuf managedBuffer, final String defaultPartitionValue) {
+      final ArrowBuf managedBuffer, final String defaultPartitionValue) {
     int i = 0;
     this.scanRel = scanRel;
     this.managedBuffer = managedBuffer.reallocIfNeeded(256);
@@ -129,8 +133,8 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     String hiveType = partitionNameTypeMap.get(partitionName);
     PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) TypeInfoUtils.getTypeInfoFromTypeString(hiveType);
 
-    TypeProtos.MinorType partitionType = HiveUtilities.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo,
-        plannerSettings.getOptions());
+    TypeProtos.MinorType partitionType = getDrillMinorType(HiveUtilities.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo,
+            plannerSettings.getOptions()));
     return TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(partitionType).build();
   }
 

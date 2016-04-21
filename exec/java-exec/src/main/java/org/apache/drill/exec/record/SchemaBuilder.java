@@ -19,6 +19,8 @@ package org.apache.drill.exec.record;
 
 import java.util.List;
 
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.types.SerializedFieldHelper;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -66,7 +68,7 @@ public class SchemaBuilder {
 
   public SchemaBuilder addSerializedFields(Iterable<SerializedField> fields) {
     for (SerializedField f : fields) {
-      addField(MaterializedField.create(f));
+      addField(SerializedFieldHelper.create(f));
     }
     return this;
   }

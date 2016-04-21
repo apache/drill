@@ -23,9 +23,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
+
+import static org.apache.drill.common.util.MajorTypeHelper.getArrowMajorType;
 
 public class FunctionCallFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionCallFactory.class);
@@ -77,8 +79,8 @@ public class FunctionCallFactory {
    *             ep   -- input expression position
    *             expr -- input expression
    */
-  public static LogicalExpression createCast(MajorType type, ExpressionPosition ep, LogicalExpression expr){
-    return new CastExpression(expr, type, ep);
+  public static LogicalExpression createCast(org.apache.drill.common.types.TypeProtos.MajorType type, ExpressionPosition ep, LogicalExpression expr){
+    return new CastExpression(expr, getArrowMajorType(type), ep);
   }
 
   public static LogicalExpression createConvert(String function, String conversionType, LogicalExpression expr, ExpressionPosition ep) {

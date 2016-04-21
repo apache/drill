@@ -25,9 +25,8 @@ package org.apache.drill.exec.expr.fn.impl.hive;
 
 import com.sun.codemodel.*;
 
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.types.Types.DataMode;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.DirectExpression;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -94,7 +93,7 @@ public class ObjectInspectorHelper {
         switch(poi.getPrimitiveCategory()) {
 <#list drillOI.map as entry>
           case ${entry.hiveType}:{
-            JType holderClass = TypeHelper.getHolderType(m, returnType, TypeProtos.DataMode.OPTIONAL);
+            JType holderClass = TypeHelper.getHolderType(m, returnType, DataMode.OPTIONAL);
             block.assign(returnValueHolder, JExpr._new(holderClass));
 
           <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY" || entry.hiveType == "CHAR">
