@@ -17,25 +17,26 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import io.netty.buffer.DrillBuf;
+import com.google.common.base.Preconditions;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.AllocationReservation;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.AllocationReservation;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -43,7 +44,8 @@ import com.google.common.collect.Lists;
 public class SortRecordBatchBuilder implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
 
-  private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
+  private final List<RecordBatchData> batches = new ArrayList<>();
+  private BatchSchema schema;
 
   private int recordCount;
   private long runningBatches;
@@ -93,7 +95,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
     RecordBatchData bd = new RecordBatchData(batch, allocator);
     runningBatches++;
-    batches.put(batch.getSchema(), bd);
+    if (schema == null) {
+      schema = batch.getSchema();
+    } else {
+      Preconditions.checkState(schema.equals(batch.getSchema()));
+    }
+    batches.add(bd);
     recordCount += bd.getRecordCount();
     return true;
   }
@@ -126,12 +133,17 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       return;
     }
     runningBatches++;
-    batches.put(rbd.getContainer().getSchema(), rbd);
+    if (schema == null) {
+      schema = rbd.getContainer().getSchema();
+    } else {
+      Preconditions.checkState(schema.equals(rbd.getContainer().getSchema()));
+    }
+    batches.add(rbd);
     recordCount += rbd.getRecordCount();
   }
 
   public void canonicalize() {
-    for (RecordBatchData batch : batches.values()) {
+    for (RecordBatchData batch : batches) {
       batch.canonicalize();
     }
   }
@@ -142,23 +154,19 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
   public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
     outputContainer.clear();
-    if (batches.keySet().size() > 1) {
-      throw new SchemaChangeException("Sort currently only supports a single schema.");
-    }
     if (batches.size() > Character.MAX_VALUE) {
       throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
     }
-    if (batches.keys().size() < 1) {
+    if (batches.size() < 1 && schema == null) {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
 
-    final DrillBuf svBuffer = reservation.allocateBuffer();
+    final ArrowBuf svBuffer = reservation.allocateBuffer();
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
     sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
-    BatchSchema schema = batches.keySet().iterator().next();
-    List<RecordBatchData> data = batches.get(schema);
+    List<RecordBatchData> data = batches;
 
     // now we're going to generate the sv4 pointers
     switch (schema.getSelectionVectorMode()) {
@@ -191,15 +199,15 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
     // next, we'll create lists of each of the vector types.
-    ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
-    for (RecordBatchData rbd : batches.values()) {
+    ArrayListMultimap<String, ValueVector> vectors = ArrayListMultimap.create();
+    for (RecordBatchData rbd : batches) {
       for (ValueVector v : rbd.getVectors()) {
-        vectors.put(v.getField(), v);
+        vectors.put(v.getField().getName(), v);
       }
     }
 
     for (MaterializedField f : schema) {
-      List<ValueVector> v = vectors.get(f);
+      List<ValueVector> v = vectors.get(f.getName());
       outputContainer.addHyperList(v, false);
     }
 
@@ -211,7 +219,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   public void clear() {
-    for (RecordBatchData d : batches.values()) {
+    for (RecordBatchData d : batches) {
       d.container.clear();
     }
     if (sv4 != null) {
@@ -226,12 +234,10 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
   public List<VectorContainer> getHeldRecordBatches() {
     ArrayList<VectorContainer> containerList = Lists.newArrayList();
-    for (BatchSchema bs : batches.keySet()) {
-      for (RecordBatchData bd : batches.get(bs)) {
-        VectorContainer c = bd.getContainer();
-        c.setRecordCount(bd.getRecordCount());
-        containerList.add(c);
-      }
+    for (RecordBatchData bd : batches) {
+      VectorContainer c = bd.getContainer();
+      c.setRecordCount(bd.getRecordCount());
+      containerList.add(c);
     }
     batches.clear();
     return containerList;

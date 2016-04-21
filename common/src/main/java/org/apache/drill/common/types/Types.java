@@ -448,6 +448,14 @@ public class Types {
     return MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(type).build();
   }
 
+  public static org.apache.arrow.vector.types.Types.MajorType optional(final org.apache.arrow.vector.types.Types.MinorType type) {
+    return new org.apache.arrow.vector.types.Types.MajorType(type, org.apache.arrow.vector.types.Types.DataMode.OPTIONAL);
+  }
+
+  public static org.apache.arrow.vector.types.Types.MajorType required(final org.apache.arrow.vector.types.Types.MinorType type) {
+    return new org.apache.arrow.vector.types.Types.MajorType(type, org.apache.arrow.vector.types.Types.DataMode.REQUIRED);
+  }
+
   public static MajorType overrideMinorType(final MajorType originalMajorType, final MinorType overrideMinorType) {
     switch (originalMajorType.getMode()) {
       case REPEATED:
@@ -536,7 +544,7 @@ public class Types {
     return withMode(getMinorTypeFromName(typeName), mode);
   }
 
-  public static String getNameOfMinorType(final MinorType type) {
+  public static String getNameOfMinorType(final org.apache.arrow.vector.types.Types.MinorType type) {
     switch (type) {
       case BIT:
         return "bool";

@@ -32,9 +32,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill.memory</groupId>
-      <artifactId>drill-memory-base</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>

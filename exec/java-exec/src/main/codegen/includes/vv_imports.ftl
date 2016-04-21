@@ -24,29 +24,27 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionUtil;
-import org.apache.drill.exec.memory.*;
+import org.apache.arrow.memory.*;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.*;
-import org.apache.drill.exec.vector.*;
 import org.apache.drill.common.exceptions.*;
 import org.apache.drill.exec.exception.*;
-import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.types.TypeProtos.*;
-import org.apache.drill.common.types.Types;
+import org.apache.arrow.vector.util.*;
+import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.complex.*;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.*;
+import org.apache.arrow.vector.holders.*;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.complex.*;
-import org.apache.drill.exec.vector.complex.reader.*;
-import org.apache.drill.exec.vector.complex.impl.*;
-import org.apache.drill.exec.vector.complex.writer.*;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.util.JsonStringArrayList;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JCodeModel;
@@ -70,8 +68,6 @@ import java.math.BigInteger;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-
-import org.apache.drill.exec.util.Text;
 
 import org.apache.drill.exec.vector.accessor.sql.TimePrintMillis;
 import javax.inject.Inject;

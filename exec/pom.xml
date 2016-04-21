@@ -45,9 +45,7 @@
 
 
   <modules>
-    <module>memory</module>
     <module>rpc</module>
-    <module>vector</module>
     <module>java-exec</module>
     <module>jdbc</module>
   </modules>

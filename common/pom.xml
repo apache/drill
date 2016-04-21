@@ -36,6 +36,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>vector</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

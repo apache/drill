@@ -27,13 +27,7 @@ package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.*;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
-import org.apache.drill.exec.util.CallBack;
 
 public class TypeHelper extends BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
@@ -60,7 +54,7 @@ public class TypeHelper extends BasicTypeHelper {
     case LIST:
       return new GenericAccessor(vector);
     }
-    throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
+    throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", (type)));
   }
   
   public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
@@ -89,7 +83,130 @@ public class TypeHelper extends BasicTypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException(buildErrorMessage("get holder type", type, mode));
+    throw new UnsupportedOperationException(buildErrorMessage("get holder type", type,mode));
   }
 
+  public static void load(ValueVector v, SerializedField metadata, ArrowBuf buffer) {
+    MinorType type = v.getField().getType().getMinorType();
+    DataMode mode = v.getField().getType().getMode();
+    switch(type) {
+    case LATE:
+      new ZeroVectorHelper((ZeroVector) v).load(metadata, buffer);
+      return;
+    case UNION:
+      new UnionVectorHelper((UnionVector) v).load(metadata, buffer);
+      return;
+    case LIST:
+      switch(mode) {
+      case REQUIRED:
+      case OPTIONAL:
+        new ListVectorHelper((ListVector) v).load(metadata, buffer);
+        return;
+      case REPEATED:
+        new RepeatedListVectorHelper((RepeatedListVector) v).load(metadata, buffer);
+        return;
+      }
+    case MAP:
+      switch(mode) {
+      case REQUIRED:
+      case OPTIONAL:
+        new MapVectorHelper((MapVector) v).load(metadata, buffer);
+        return;
+      case REPEATED:
+        new RepeatedMapVectorHelper((RepeatedMapVector) v).load(metadata, buffer);
+        return;
+      }
+    <#list vv.types as type>
+    <#list type.minor as minor>
+    case ${minor.class?upper_case}:
+      switch (mode) {
+      case REQUIRED:
+        new ${minor.class}VectorHelper((${minor.class}Vector) v).load(metadata, buffer);
+        return;
+      case OPTIONAL:
+        new Nullable${minor.class}VectorHelper((Nullable${minor.class}Vector) v).load(metadata, buffer);
+        return;
+      case REPEATED:
+        new Repeated${minor.class}VectorHelper((Repeated${minor.class}Vector) v).load(metadata, buffer);
+        return;
+      }
+    </#list>
+    </#list>
+    }
+  }
+
+  public static SerializedField.Builder getMetadataBuilder(ValueVector v) {
+    MinorType type = v.getField().getType().getMinorType();
+    DataMode mode = v.getField().getType().getMode();
+    switch(type) {
+    case UNION:
+      break;
+    case LIST:
+      switch(mode) {
+      case REQUIRED:
+      case OPTIONAL:
+        return new ListVectorHelper((ListVector) v).getMetadataBuilder();
+      case REPEATED:
+        break;
+      }
+      break;
+    case MAP:
+      break;
+    <#list vv.types as type>
+    <#list type.minor as minor>
+    case ${minor.class?upper_case}:
+      switch (mode) {
+      case REQUIRED:
+        return new ${minor.class}VectorHelper((${minor.class}Vector) v).getMetadataBuilder();
+      case OPTIONAL:
+        return new Nullable${minor.class}VectorHelper((Nullable${minor.class}Vector) v).getMetadataBuilder();
+      case REPEATED:
+        return new Repeated${minor.class}VectorHelper((Repeated${minor.class}Vector) v).getMetadataBuilder();
+      }
+    </#list>
+    </#list>
+    }
+    return null;
+  }
+
+  public static SerializedField getMetadata(ValueVector v) {
+    MinorType type = v.getField().getType().getMinorType();
+    DataMode mode = v.getField().getType().getMode();
+    switch(type) {
+    case LATE:
+      return new ZeroVectorHelper((ZeroVector) v).getMetadata();
+    case UNION:
+      return new UnionVectorHelper((UnionVector) v).getMetadata();
+    case LIST:
+      switch(mode) {
+      case REQUIRED:
+      case OPTIONAL:
+        return new ListVectorHelper((ListVector) v).getMetadata();
+      case REPEATED:
+        return new RepeatedListVectorHelper((RepeatedListVector) v).getMetadata();
+      }
+    case MAP:
+      switch(mode) {
+      case REQUIRED:
+      case OPTIONAL:
+        return new MapVectorHelper((MapVector) v).getMetadata();
+      case REPEATED:
+        return new RepeatedMapVectorHelper((RepeatedMapVector) v).getMetadata();
+      }
+    <#list vv.types as type>
+    <#list type.minor as minor>
+    case ${minor.class?upper_case}:
+      switch (mode) {
+      case REQUIRED:
+        return new ${minor.class}VectorHelper((${minor.class}Vector) v).getMetadata();
+      case OPTIONAL:
+        return new Nullable${minor.class}VectorHelper((Nullable${minor.class}Vector) v).getMetadata();
+      case REPEATED:
+        return new Repeated${minor.class}VectorHelper((Repeated${minor.class}Vector) v).getMetadata();
+      }
+    </#list>
+    </#list>
+    }
+    return null;
+  }
 }

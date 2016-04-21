@@ -40,6 +40,13 @@
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>vector</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
