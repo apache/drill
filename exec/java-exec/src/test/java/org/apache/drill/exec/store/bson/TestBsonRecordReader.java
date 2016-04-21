@@ -23,12 +23,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.arrow.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.store.TestOutputMutator;
-import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
-import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.complex.impl.VectorContainerWriter;
+import org.apache.arrow.vector.complex.reader.FieldReader;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;

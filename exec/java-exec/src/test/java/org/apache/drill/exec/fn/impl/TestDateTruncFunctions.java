@@ -22,9 +22,9 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.Test;
 
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTime;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+import static org.apache.arrow.vector.util.DateUtility.formatDate;
+import static org.apache.arrow.vector.util.DateUtility.formatTime;
+import static org.apache.arrow.vector.util.DateUtility.formatTimeStamp;
 
 public class TestDateTruncFunctions extends BaseTestQuery {
 

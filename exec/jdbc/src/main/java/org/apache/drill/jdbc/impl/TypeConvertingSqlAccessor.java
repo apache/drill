@@ -25,7 +25,7 @@ import java.sql.ResultSet;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.SQLConversionOverflowException;

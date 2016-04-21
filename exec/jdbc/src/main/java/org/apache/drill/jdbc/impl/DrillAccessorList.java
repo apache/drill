@@ -23,7 +23,7 @@ import net.hydromatic.avatica.Cursor.Accessor;
 
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.BoundCheckingAccessor;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.JdbcApiSqlException;

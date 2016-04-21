@@ -18,6 +18,8 @@
 package org.apache.drill.exec.physical.impl.limit;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
@@ -119,18 +121,18 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
   @Test
   public void simpleSelectLimit0() throws Exception {
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("employee_id"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("full_name"), Types.optional(TypeProtos.MinorType.VARCHAR)),
-        Pair.of(SchemaPath.getSimplePath("position_id"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("department_id"), Types.optional(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("birth_date"), Types.optional(TypeProtos.MinorType.DATE)),
-        Pair.of(SchemaPath.getSimplePath("hire_date"), Types.optional(TypeProtos.MinorType.TIMESTAMP)),
-        Pair.of(SchemaPath.getSimplePath("salary"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("fsalary"), Types.optional(TypeProtos.MinorType.FLOAT4)),
-        Pair.of(SchemaPath.getSimplePath("single"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("education_level"), Types.optional(TypeProtos.MinorType.VARCHAR)),
-        Pair.of(SchemaPath.getSimplePath("gender"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("employee_id"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("full_name"), Types.optional(MinorType.VARCHAR)),
+        Pair.of(SchemaPath.getSimplePath("position_id"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("department_id"), Types.optional(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("birth_date"), Types.optional(MinorType.DATE)),
+        Pair.of(SchemaPath.getSimplePath("hire_date"), Types.optional(MinorType.TIMESTAMP)),
+        Pair.of(SchemaPath.getSimplePath("salary"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("fsalary"), Types.optional(MinorType.FLOAT4)),
+        Pair.of(SchemaPath.getSimplePath("single"), Types.required(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("education_level"), Types.optional(MinorType.VARCHAR)),
+        Pair.of(SchemaPath.getSimplePath("gender"), Types.optional(MinorType.VARCHAR)));
 
     testBuilder()
         .sqlQuery(wrapLimit0(String.format("SELECT * FROM %s", viewName)))
@@ -167,12 +169,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = getAggQuery("SUM");
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(TypeProtos.MinorType.FLOAT8)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(MinorType.FLOAT8)));
 
     testBuilder()
         .sqlQuery(query)
@@ -194,12 +196,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = getAggQuery("COUNT");
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("e"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("d"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("s"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("f"), Types.required(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("e"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("d"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("s"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("f"), Types.required(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -220,12 +222,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = getAggQuery(functionName);
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(TypeProtos.MinorType.FLOAT4)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(MinorType.FLOAT4)));
 
     testBuilder()
         .sqlQuery(query)
@@ -257,12 +259,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = getAggQuery("AVG");
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(TypeProtos.MinorType.FLOAT8)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("f"), Types.optional(MinorType.FLOAT8)));
 
     testBuilder()
         .sqlQuery(query)
@@ -289,11 +291,11 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("a"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("c"), Types.required(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("a"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("c"), Types.required(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -316,8 +318,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "COUNT(CASE WHEN position_id = 1 THEN NULL ELSE position_id END) AS c FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("c"), Types.required(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("c"), Types.required(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -342,9 +344,9 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("c"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("c"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -366,8 +368,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = "SELECT CAST(SUM(position_id) AS INT) AS s FROM cp.`employee.json`";
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.INT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.INT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -389,8 +391,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = "SELECT SUM(CAST(position_id AS INT)) AS s FROM cp.`employee.json`";
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -418,12 +420,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         " FROM " + viewName + " GROUP BY department_id";
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("cs"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("c1"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("cc"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("s1"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("department_id"), Types.optional(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("cs"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("c1"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("cc"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("s1"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("department_id"), Types.optional(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -451,11 +453,11 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "GROUP BY CAST(n_regionkey AS INT)";
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s1"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("c1"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("cs"), Types.required(TypeProtos.MinorType.BIGINT)),
-        Pair.of(SchemaPath.getSimplePath("cc"), Types.required(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("s1"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("c1"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("cs"), Types.required(MinorType.BIGINT)),
+        Pair.of(SchemaPath.getSimplePath("cc"), Types.required(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -482,8 +484,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = "SELECT RANK() OVER(PARTITION BY employee_id ORDER BY employee_id) AS r FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("r"), Types.required(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("r"), Types.required(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -508,9 +510,9 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "CAST(employee_id AS BIGINT) AS e FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.FLOAT8)),
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(MinorType.FLOAT8)),
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -529,8 +531,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   public void concatTest(final String query) throws Exception {
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(MinorType.VARCHAR)));
 
     testBuilder()
         .sqlQuery(query)
@@ -562,8 +564,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     final String query = "SELECT EXTRACT(YEAR FROM hire_date) AS e FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIGINT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.BIGINT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -599,21 +601,21 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "position_id + position_id AS p FROM " + viewName;
 
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("b"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(TypeProtos.MinorType.VARCHAR)),
-        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("g"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("ge"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("i"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("l"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("le"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("m"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("mu"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("n"), Types.optional(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("o"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(TypeProtos.MinorType.INT)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("b"), Types.required(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(MinorType.VARCHAR)),
+        Pair.of(SchemaPath.getSimplePath("d"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("e"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("g"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("ge"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("i"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("l"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("le"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("m"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("mu"), Types.optional(MinorType.INT)),
+        Pair.of(SchemaPath.getSimplePath("n"), Types.optional(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("o"), Types.required(MinorType.BIT)),
+        Pair.of(SchemaPath.getSimplePath("p"), Types.optional(MinorType.INT)));
 
     testBuilder()
         .sqlQuery(query)
@@ -633,8 +635,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   public void substringTest(final String query) throws Exception {
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList(
+        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(MinorType.VARCHAR)));
 
     testBuilder()
         .sqlQuery(query)

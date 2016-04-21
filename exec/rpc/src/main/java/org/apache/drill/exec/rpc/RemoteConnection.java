@@ -21,10 +21,11 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+
 import java.util.concurrent.ExecutionException;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 public abstract class RemoteConnection implements ConnectionThrottle, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);

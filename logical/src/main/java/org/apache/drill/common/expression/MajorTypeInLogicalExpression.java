@@ -19,6 +19,7 @@ package org.apache.drill.common.expression;
 
 import java.util.Iterator;
 
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
 
@@ -26,14 +27,14 @@ import org.apache.drill.common.types.TypeProtos;
  * MajorTypeInLogicalExpression is a LogicalExpression, which wraps a given @{TypeProtos.MajorType}
  */
 public class MajorTypeInLogicalExpression implements LogicalExpression {
-  private TypeProtos.MajorType majorType;
+  private MajorType majorType;
 
-  public MajorTypeInLogicalExpression(TypeProtos.MajorType majorType) {
+  public MajorTypeInLogicalExpression(MajorType majorType) {
     this.majorType = majorType;
   }
 
   @Override
-  public TypeProtos.MajorType getMajorType() {
+  public MajorType getMajorType() {
     return majorType;
   }
 

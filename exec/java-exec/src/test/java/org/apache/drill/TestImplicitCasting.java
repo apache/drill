@@ -17,9 +17,9 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -31,11 +31,11 @@ import static org.junit.Assert.assertEquals;
 public class TestImplicitCasting {
   @Test
   public void testTimeStampAndTime() {
-    final List<TypeProtos.MinorType> inputTypes = Lists.newArrayList();
-    inputTypes.add(TypeProtos.MinorType.TIME);
-    inputTypes.add(TypeProtos.MinorType.TIMESTAMP);
-    final TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(inputTypes);
+    final List<MinorType> inputTypes = Lists.newArrayList();
+    inputTypes.add(MinorType.TIME);
+    inputTypes.add(MinorType.TIMESTAMP);
+    final MinorType result = TypeCastRules.getLeastRestrictiveType(inputTypes);
 
-    assertEquals(result, TypeProtos.MinorType.TIME);
+    assertEquals(result, MinorType.TIME);
   }
 }

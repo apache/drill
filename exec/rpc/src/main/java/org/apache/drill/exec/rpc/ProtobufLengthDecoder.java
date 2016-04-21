@@ -24,10 +24,10 @@ import io.netty.handler.codec.CorruptedFrameException;
 
 import java.util.List;
 
-import org.apache.drill.exec.memory.BufferAllocator;
 
 import com.google.protobuf.CodedInputStream;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.OutOfMemoryException;
 
 /**
  * Modified version of {@link io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder} that avoids bytebuf copy.

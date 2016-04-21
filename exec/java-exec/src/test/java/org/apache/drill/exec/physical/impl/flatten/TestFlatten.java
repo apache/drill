@@ -21,13 +21,14 @@ import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
+import org.apache.arrow.vector.util.JsonStringHashMap;
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
-import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -321,7 +322,7 @@ public class TestFlatten extends BaseTestQuery {
   @Test
   public void testFilterFlattenedRecords2() throws Exception {
     // previously failed in generated code
-    //  "value" is neither a method, a field, nor a member class of "org.apache.drill.exec.expr.holders.RepeatedVarCharHolder" [ 42eb1fa1-0742-4e4f-8723-609215c18900 on 10.250.0.86:31010 ]
+    //  "value" is neither a method, a field, nor a member class of "org.apache.arrow.vector.holders.RepeatedVarCharHolder" [ 42eb1fa1-0742-4e4f-8723-609215c18900 on 10.250.0.86:31010 ]
     // appears to be resolving the data coming out of flatten as repeated, check fast schema stuff
 
     // FIXED BY RETURNING PROPER SCHEMA DURING FAST SCHEMA STEP

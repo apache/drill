@@ -21,14 +21,15 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.arrow.vector.NullableVarCharVector;
+import org.apache.arrow.vector.NullableVarCharVector.Accessor;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.NullableVarCharVector.Accessor;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.util.TransferPair;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Test;
 
 public class TestSplitAndTransfer {

@@ -18,7 +18,7 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.glassfish.hk2.api.Factory;
 
 public class DrillClientFactory implements Factory<DrillClient> {

@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import org.apache.arrow.vector.util.JsonStringArrayList;
+import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Test;
 
 /**

@@ -19,28 +19,27 @@ package org.apache.drill.exec.record.vector;
 
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.List;
 
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.NullableVarCharVector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -71,7 +70,7 @@ public class TestLoad extends ExecTest {
     for (int i = 0; i < byteBufs.length; i++) {
       bytes += byteBufs[i].writerIndex();
     }
-    final DrillBuf byteBuf = allocator.buffer(bytes);
+    final ArrowBuf byteBuf = allocator.buffer(bytes);
     int index = 0;
     for (int i = 0; i < byteBufs.length; i++) {
       byteBufs[i].readBytes(byteBuf, index, byteBufs[i].writerIndex());
@@ -105,7 +104,7 @@ public class TestLoad extends ExecTest {
           System.out.print("\t");
         }
         final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-        if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+        if (v.getField().getType().getMinorType() == MinorType.VARCHAR) {
           final Object obj = accessor.getObject(r);
           if (obj != null) {
             System.out.print(accessor.getObject(r));

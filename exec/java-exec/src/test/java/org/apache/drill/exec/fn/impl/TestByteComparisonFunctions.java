@@ -19,14 +19,14 @@ package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.arrow.vector.ValueHolderHelper;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.vector.ValueHolderHelper;
+import org.apache.arrow.vector.util.ByteFunctionHelpers;
+import org.apache.arrow.vector.holders.VarCharHolder;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

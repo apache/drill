@@ -21,7 +21,7 @@ import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFiel
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 import mockit.Injectable;
 
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.NullableBigIntVector;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -40,13 +42,13 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -55,11 +57,9 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.util.Text;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.util.CallBack;
+import org.apache.arrow.vector.util.Text;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -361,7 +361,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     }
 
     @Override
-    public DrillBuf getManagedBuffer() {
+    public ArrowBuf getManagedBuffer() {
       return allocator.buffer(255);
     }
 
@@ -432,8 +432,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
     HashMap<String, FieldInfo> fields2 = new HashMap<>();
     // pass strings instead of byte arrays
-    Object[] textVals = { new org.apache.drill.exec.util.Text("b"), new org.apache.drill.exec.util.Text("b2"),
-        new org.apache.drill.exec.util.Text("b3") };
+    Object[] textVals = { new org.apache.arrow.vector.util.Text("b"), new org.apache.arrow.vector.util.Text("b2"),
+        new org.apache.arrow.vector.util.Text("b3") };
     ParquetTestProperties props2 = new ParquetTestProperties(1, 30000, DEFAULT_BYTES_PER_PAGE, fields2);
     props2.fields.put("a", new FieldInfo("boolean", "a", 1, textVals, TypeProtos.MinorType.BIT, props2));
     testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",

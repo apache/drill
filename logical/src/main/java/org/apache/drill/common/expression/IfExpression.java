@@ -17,15 +17,16 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,17 +108,13 @@ public class IfExpression extends LogicalExpressionBase {
     MajorType majorType = elseExpression.getMajorType();
     if (majorType.getMinorType() == MinorType.UNION) {
       Set<MinorType> subtypes = Sets.newHashSet();
-      for (MinorType subtype : majorType.getSubTypeList()) {
+      for (MinorType subtype : majorType.getSubTypes()) {
         subtypes.add(subtype);
       }
-      for (MinorType subtype : ifCondition.expression.getMajorType().getSubTypeList()) {
+      for (MinorType subtype : ifCondition.expression.getMajorType().getSubTypes()) {
         subtypes.add(subtype);
       }
-      MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
-      for (MinorType subtype : subtypes) {
-        builder.addSubType(subtype);
-      }
-      return builder.build();
+      return new MajorType(MinorType.UNION, DataMode.OPTIONAL, 0, 0, 0, new ArrayList<>(subtypes));
     }
     if (majorType.getMode() == DataMode.OPTIONAL) {
       return majorType;

@@ -29,7 +29,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.util.Pointer;
+import org.apache.arrow.memory.util.Pointer;
 import org.junit.Test;
 
 public class TestCountDownLatchInjection extends BaseTestQuery {

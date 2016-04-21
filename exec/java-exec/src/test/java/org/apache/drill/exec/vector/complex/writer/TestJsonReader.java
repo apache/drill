@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Joiner;
-
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.RepeatedBigIntVector;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
@@ -43,8 +44,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.RepeatedBigIntVector;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;

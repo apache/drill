@@ -18,7 +18,7 @@
 package org.apache.drill.exec.testing;
 
 import static org.junit.Assert.fail;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,9 +37,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.arrow.vector.holders.Float8Holder;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.test.DrillTest;
@@ -128,7 +128,7 @@ public class TestResourceLeak extends DrillTest {
   public static class Leak implements DrillSimpleFunc {
 
     @Param Float8Holder in;
-    @Inject DrillBuf buf;
+    @Inject ArrowBuf buf;
     @Output Float8Holder out;
 
     @Override

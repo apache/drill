@@ -18,11 +18,11 @@
 package org.apache.drill.exec.store.avro;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -36,7 +36,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.util.Pointer;
+import org.apache.arrow.memory.util.Pointer;
 import org.junit.Test;
 import org.slf4j.Logger;
 

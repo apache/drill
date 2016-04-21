@@ -18,11 +18,14 @@
 package org.apache.drill;
 
 import com.google.common.collect.Lists;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
@@ -40,7 +43,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q1.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_regionkey")
         .build().run();
   }
@@ -56,7 +59,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q2.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_nationkey")
         .build().run();
   }
@@ -69,7 +72,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q3.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_nationkey")
         .build().run();
   }
@@ -82,7 +85,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q4.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_regionkey")
         .build().run();
   }
@@ -97,7 +100,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q5.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.VARCHAR, MinorType.VARCHAR, MinorType.INT)
         .baselineColumns("r_name", "r_comment", "r_regionkey")
         .build().run();
   }
@@ -110,7 +113,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q6.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT, MinorType.INT)
         .baselineColumns("n_nationkey", "n_regionkey")
         .build().run();
   }
@@ -123,7 +126,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q6_1.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT, MinorType.INT)
         .baselineColumns("n_nationkey", "n_nationkey0")
         .build().run();
   }
@@ -136,7 +139,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q7.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("EXPR$0")
         .build().run();
   }
@@ -149,7 +152,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q8.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.VARCHAR, MinorType.INT)
         .baselineColumns("n_name", "n_nationkey")
         .build().run();
   }
@@ -165,8 +168,8 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q9.tsv")
-        .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.VARCHAR,
-                       TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT,TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT)
+        .baselineTypes(MinorType.BIGINT, MinorType.VARCHAR, MinorType.FLOAT8, MinorType.VARCHAR,
+                       MinorType.VARCHAR, MinorType.VARCHAR, MinorType.BIGINT,MinorType.VARCHAR, MinorType.BIGINT)
         .baselineColumns("o_custkey", "o_orderstatus", "o_totalprice", "o_orderdate",
                          "o_orderpriority", "o_clerk", "o_shippriority", "o_comment", "o_orderkey")
         .build().run();
@@ -182,7 +185,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q10.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.VARCHAR, MinorType.VARCHAR, MinorType.INT, MinorType.INT)
         .baselineColumns("n_name", "LiteralConstant", "n_nationkey", "NumberConstant")
         .build().run();
   }
@@ -206,7 +209,7 @@ public class TestUnionAll extends BaseTestQuery{
           .sqlQuery(query1)
           .unOrdered()
           .csvBaselineFile("testframework/testUnionAllQueries/q11.tsv")
-          .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT)
+          .baselineTypes(MinorType.VARCHAR, MinorType.INT)
           .baselineColumns("n_name", "n_nationkey")
           .build().run();
 
@@ -214,7 +217,7 @@ public class TestUnionAll extends BaseTestQuery{
           .sqlQuery(query2)
           .unOrdered()
           .csvBaselineFile("testframework/testUnionAllQueries/q12.tsv")
-          .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT)
+          .baselineTypes(MinorType.VARCHAR, MinorType.INT)
           .baselineColumns("r_name", "r_regionkey")
           .build().run();
     } finally {
@@ -258,7 +261,7 @@ public class TestUnionAll extends BaseTestQuery{
           .sqlQuery(query1)
           .unOrdered()
           .csvBaselineFile("testframework/testUnionAllQueries/q13.tsv")
-          .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT)
+          .baselineTypes(MinorType.VARCHAR, MinorType.BIGINT)
           .baselineColumns("n_comment", "n_regionkey")
           .build().run();
     } finally {
@@ -279,7 +282,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q14.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("x1", "x2")
         .build().run();
   }
@@ -294,7 +297,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q15.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.INT, MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("n_nationkey", "n_regionkey", "n_name")
         .build().run();
   }
@@ -313,7 +316,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query1)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q16.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.INT, MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("n_nationkey", "n_regionkey", "n_name")
         .build().run();
 
@@ -322,7 +325,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query2)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q17.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.INT, MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("n_nationkey", "n_regionkey", "n_name")
         .build().run();
     }
@@ -348,7 +351,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query1)
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testAggregationOnUnionAllOperator/q1.tsv")
-        .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT)
+        .baselineTypes(MinorType.BIGINT, MinorType.BIGINT, MinorType.BIGINT, MinorType.BIGINT)
         .baselineColumns("calc1", "max", "min", "count")
         .build().run();
 
@@ -356,7 +359,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query2)
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testAggregationOnUnionAllOperator/q2.tsv")
-        .baselineTypes(TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.BIGINT)
+        .baselineTypes(MinorType.BIGINT, MinorType.BIGINT, MinorType.BIGINT, MinorType.BIGINT)
         .baselineColumns("calc1", "min", "max", "count")
         .build().run();
   }
@@ -398,7 +401,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query1)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q18_1.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("key")
         .build().run();
 
@@ -406,7 +409,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query2)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q18_2.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("key")
         .build().run();
 
@@ -414,7 +417,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query3)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/q18_3.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("key")
         .build().run();
   }
@@ -557,17 +560,14 @@ public class TestUnionAll extends BaseTestQuery{
   public void testUnionAllBothEmptyJson() throws Exception {
     final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
     final String query = String.format(
-        "select key from dfs_test.`%s` " +
-            "union all " +
-            "select key from dfs_test.`%s`",
-        rootEmpty,
-        rootEmpty);
+            "select key from dfs_test.`%s` " +
+                    "union all " +
+                    "select key from dfs_test.`%s`",
+            rootEmpty,
+            rootEmpty);
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.INT)
-        .setMode(TypeProtos.DataMode.OPTIONAL)
-        .build();
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList();
+    final MajorType majorType = Types.optional(MinorType.INT);
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
 
     testBuilder()
@@ -628,11 +628,8 @@ public class TestUnionAll extends BaseTestQuery{
         rootSimple,
         rootSimple);
 
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
-    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.INT)
-        .setMode(TypeProtos.DataMode.OPTIONAL)
-        .build();
+    final List<Pair<SchemaPath, MajorType>> expectedSchema = Lists.newArrayList();
+    final MajorType majorType = Types.optional(MinorType.INT);
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
 
     testBuilder()
@@ -759,7 +756,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectPushDownOverUnionAllWithProject.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("n_nationkey", "n_name")
         .build()
         .run();
@@ -786,7 +783,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectPushDownOverUnionAllWithoutProject.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_nationkey")
         .build()
         .run();
@@ -812,7 +809,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectWithExpressionPushDownOverUnionAll.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -840,7 +837,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectDownOverUnionAllImplicitCasting.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -866,7 +863,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectPushDownProjectColumnReorderingAndAlias.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR)
         .baselineColumns("col1", "col2", "col3")
         .build()
         .run();
@@ -894,7 +891,7 @@ public class TestUnionAll extends BaseTestQuery{
         .sqlQuery(query)
         .unOrdered()
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectFiltertPushDownOverUnionAll.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("n_nationkey")
         .build()
         .run();

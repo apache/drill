@@ -21,10 +21,10 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.Iterators;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
 
 public class TypedNullConstant extends LogicalExpressionBase {
 
@@ -32,7 +32,7 @@ public class TypedNullConstant extends LogicalExpressionBase {
 
     public TypedNullConstant(MajorType type) {
       super(null);
-      this.type = TypeProtos.MajorType.newBuilder().mergeFrom(type).setMode(DataMode.OPTIONAL).build();
+      this.type = new MajorType(type.getMinorType(), DataMode.OPTIONAL, type.getPrecision(), type.getScale(), type.getTimezone(), type.getSubTypes());
     }
 
     @Override

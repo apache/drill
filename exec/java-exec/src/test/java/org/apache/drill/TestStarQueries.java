@@ -21,6 +21,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,7 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q1.tsv")
-      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
       .build().run();
 
@@ -44,7 +45,7 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q2.tsv")
-      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
       .build().run();
 
@@ -52,8 +53,8 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q3.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR,
+            MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
             "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
       .build().run();
@@ -62,8 +63,8 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q4.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR,
+            MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
             "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
       .build().run();
@@ -75,8 +76,8 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q1.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR,
+              MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
       .build().run();
 
@@ -84,8 +85,8 @@ public class TestStarQueries extends BaseTestQuery{
       .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q2.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR,
+              MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
       .build().run();
   }
@@ -96,7 +97,7 @@ public class TestStarQueries extends BaseTestQuery{
     .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet`")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q1.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
 
@@ -104,7 +105,7 @@ public class TestStarQueries extends BaseTestQuery{
     .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet` limit 2")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q2.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
   }
@@ -115,7 +116,7 @@ public class TestStarQueries extends BaseTestQuery{
     .sqlQuery("select *, n_nationkey, *, n_name from cp.`tpch/nation.parquet` limit 2")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarWithAdditionalColumnLimit/q1.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.INT, MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_nationkey1", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
   }

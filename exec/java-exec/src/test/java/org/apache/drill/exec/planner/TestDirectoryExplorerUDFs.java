@@ -20,12 +20,12 @@ package org.apache.drill.exec.planner;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.arrow.vector.util.JsonStringArrayList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.drill.exec.util.Text;
+import org.apache.arrow.vector.util.Text;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;

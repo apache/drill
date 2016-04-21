@@ -19,9 +19,10 @@ package org.apache.drill.jdbc.impl;
 
 import static org.junit.Assert.*;
 
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor;
 import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
@@ -88,7 +89,7 @@ public class TypeConvertingSqlAccessorTest {
   // Byte?  TinyInt?  TINYINT?
   private static class TinyIntStubAccessor extends BaseStubAccessor {
     TinyIntStubAccessor( byte value ) {
-      super( Types.required( MinorType.TINYINT ), value );
+      super( new MajorType(MinorType.TINYINT, DataMode.REQUIRED), value );
     }
 
     public byte getByte( int rowOffset ) {
@@ -100,7 +101,7 @@ public class TypeConvertingSqlAccessorTest {
   // Short?  SmallInt?  SMALLINT?
   private static class SmallIntStubAccessor extends BaseStubAccessor {
     SmallIntStubAccessor( short value ) {
-      super( Types.required( MinorType.SMALLINT ), value );
+      super( new MajorType( MinorType.SMALLINT , DataMode.REQUIRED), value );
     }
 
     public short getShort( int rowOffset ) {
@@ -112,7 +113,7 @@ public class TypeConvertingSqlAccessorTest {
   // Int?  Int?  INT?
   private static class IntegerStubAccessor extends BaseStubAccessor {
     IntegerStubAccessor( int value ) {
-      super( Types.required( MinorType.INT ), value );
+      super( new MajorType( MinorType.INT, DataMode.REQUIRED ), value );
     }
 
     public int getInt( int rowOffset ) {
@@ -124,7 +125,7 @@ public class TypeConvertingSqlAccessorTest {
   // Long?  Bigint?  BIGINT?
   private static class BigIntStubAccessor extends BaseStubAccessor {
     BigIntStubAccessor( long value ) {
-      super( Types.required( MinorType.BIGINT ), value );
+      super( new MajorType( MinorType.BIGINT , DataMode.REQUIRED), value );
     }
 
     public long getLong( int rowOffset ) {
@@ -136,7 +137,7 @@ public class TypeConvertingSqlAccessorTest {
   // Float?  Float4?  FLOAT? (REAL?)
   private static class FloatStubAccessor extends BaseStubAccessor {
     FloatStubAccessor( float value ) {
-      super( Types.required( MinorType.FLOAT4 ), value );
+    super( new MajorType( MinorType.FLOAT4, DataMode.REQUIRED ), value );
     }
 
     public float getFloat( int rowOffset ) {
@@ -147,7 +148,7 @@ public class TypeConvertingSqlAccessorTest {
   // Double?  Float8?  DOUBLE?
   private static class DoubleStubAccessor extends BaseStubAccessor {
     DoubleStubAccessor( double value ) {
-      super( Types.required( MinorType.FLOAT8 ), value );
+      super( new MajorType( MinorType.FLOAT8, DataMode.REQUIRED ), value );
     }
 
     public double getDouble( int rowOffset ) {

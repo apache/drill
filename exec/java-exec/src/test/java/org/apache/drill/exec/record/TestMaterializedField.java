@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,10 +34,10 @@ public class TestMaterializedField {
   private static final String PARENT_SECOND_NAME = "parent2";
   private static final String CHILD_NAME = "child";
   private static final String CHILD_SECOND_NAME = "child2";
-  private static final TypeProtos.MajorType PARENT_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
-  private static final TypeProtos.MajorType PARENT_SECOND_TYPE = Types.repeated(TypeProtos.MinorType.LIST);
-  private static final TypeProtos.MajorType CHILD_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
-  private static final TypeProtos.MajorType CHILD_SECOND_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
+  private static final MajorType PARENT_TYPE = Types.repeated(MinorType.MAP);
+  private static final MajorType PARENT_SECOND_TYPE = Types.repeated(MinorType.LIST);
+  private static final MajorType CHILD_TYPE = Types.repeated(MinorType.MAP);
+  private static final MajorType CHILD_SECOND_TYPE = Types.repeated(MinorType.MAP);
 
   // set of (name, type) tuples representing a test case
   private static final Object[][] matrix = {
@@ -67,7 +70,7 @@ public class TestMaterializedField {
     for (final MaterializedField field:new MaterializedField[]{parent, child}) {
       for (Object[] args:matrix) {
         final String path = args[0].toString();
-        final TypeProtos.MajorType type = TypeProtos.MajorType.class.cast(args[1]);
+        final MajorType type = MajorType.class.cast(args[1]);
 
         final MaterializedField clone = field.withPathAndType(path, type);
 

@@ -24,11 +24,11 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
 
+import org.apache.arrow.vector.BigIntVector;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

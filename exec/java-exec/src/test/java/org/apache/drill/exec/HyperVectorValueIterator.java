@@ -20,8 +20,8 @@ package org.apache.drill.exec;
 import java.util.Iterator;
 
 import org.apache.drill.exec.record.HyperVectorWrapper;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.types.MaterializedField;
+import org.apache.arrow.vector.ValueVector;
 
 public class HyperVectorValueIterator implements Iterator<Object> {
   private MaterializedField mf;

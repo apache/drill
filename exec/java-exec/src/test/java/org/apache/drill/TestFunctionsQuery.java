@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.arrow.vector.util.DateUtility;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.joda.time.DateTime;
 import org.junit.AfterClass;
@@ -25,9 +26,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
-import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
 
 public class TestFunctionsQuery extends BaseTestQuery {
 
@@ -545,7 +543,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "timestamp '2008-2-23 12:23:23' as TS " +
         "FROM cp.`tpch/region.parquet` limit 1";
 
-    DateTime date = formatTimeStamp.parseDateTime("2008-02-23 12:23:23.0");
+    DateTime date = DateUtility.formatTimeStamp.parseDateTime("2008-02-23 12:23:23.0");
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -687,7 +685,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "To_DaTe('2003/07/09', 'yyyy/MM/dd') as col3 " +
         "from cp.`employee.json` LIMIT 1";
 
-    DateTime date = formatDate.parseDateTime("2003-07-09");
+    DateTime date = DateUtility.formatDate.parseDateTime("2003-07-09");
 
     testBuilder()
         .sqlQuery(query)

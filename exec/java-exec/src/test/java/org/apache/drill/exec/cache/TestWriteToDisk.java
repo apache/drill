@@ -21,16 +21,17 @@ import java.io.File;
 import java.util.List;
 
 import com.google.common.io.Files;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -38,10 +39,10 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.AllocationHelper;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -67,8 +68,8 @@ public class TestWriteToDisk extends ExecTest {
       bit.run();
       final DrillbitContext context = bit.getContext();
 
-      final MaterializedField intField = MaterializedField.create("int", Types.required(TypeProtos.MinorType.INT));
-      final MaterializedField binField = MaterializedField.create("binary", Types.required(TypeProtos.MinorType.VARBINARY));
+      final MaterializedField intField = MaterializedField.create("int", Types.required(MinorType.INT));
+      final MaterializedField binField = MaterializedField.create("binary", Types.required(MinorType.VARBINARY));
       try (final IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, context.getAllocator());
           final VarBinaryVector binVector =
               (VarBinaryVector) TypeHelper.getNewVector(binField, context.getAllocator())) {

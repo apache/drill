@@ -19,10 +19,10 @@ package org.apache.drill.common.expression;
 
 import java.io.IOException;
 
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.expression.FieldReference.De;
 import org.apache.drill.common.expression.FieldReference.Se;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;

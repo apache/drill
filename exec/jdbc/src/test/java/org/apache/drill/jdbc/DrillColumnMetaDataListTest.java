@@ -19,10 +19,13 @@ package org.apache.drill.jdbc;
 
 import net.hydromatic.avatica.ColumnMetaData;
 
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MajorType;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
 import org.junit.After;
 import org.junit.Before;
@@ -35,8 +38,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.apache.drill.common.types.TypeProtos.MajorType;
-import static org.apache.drill.common.types.TypeProtos.MinorType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -69,13 +70,13 @@ public class DrillColumnMetaDataListTest {
 
     // Create mock columns
     final MaterializedField exampleIntField = mock(MaterializedField.class);
-    MajorType exampleIntType = MajorType.newBuilder().setMinorType(MinorType.INT).build();
+    MajorType exampleIntType = new MajorType(MinorType.INT, Types.DataMode.OPTIONAL);
     when(exampleIntField.getPath()).thenReturn("/path/to/testInt");
     when(exampleIntField.getType()).thenReturn(exampleIntType);
-    when(exampleIntField.getDataMode()).thenReturn(DataMode.OPTIONAL);
+    when(exampleIntField.getDataMode()).thenReturn(DataMode.REQUIRED);
 
     final MaterializedField exampleStringField = mock(MaterializedField.class);
-    MajorType exampleStringType = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).build();
+    MajorType exampleStringType = new MajorType(MinorType.VARCHAR, DataMode.REQUIRED);
     when(exampleStringField.getPath()).thenReturn("/path/to/testString");
     when(exampleStringField.getType()).thenReturn(exampleStringType);
     when(exampleStringField.getDataMode()).thenReturn(DataMode.REQUIRED);

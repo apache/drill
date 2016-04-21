@@ -20,7 +20,7 @@ package org.apache.drill.exec.rpc.control;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.util.internal.ThreadLocalRandom;
 
@@ -100,7 +100,7 @@ public class TestCustomTunnel extends BaseTestQuery {
     }
 
     @Override
-    public CustomResponse<QueryId> onMessage(DrillbitEndpoint pBody, DrillBuf dBody) throws UserRpcException {
+    public CustomResponse<QueryId> onMessage(DrillbitEndpoint pBody, ArrowBuf dBody) throws UserRpcException {
 
       if (!expectedValue.equals(pBody)) {
         throw new UserRpcException(expectedValue, "Invalid expected downstream value.", new IllegalStateException());
@@ -270,7 +270,7 @@ public class TestCustomTunnel extends BaseTestQuery {
     }
 
     @Override
-    public CustomResponse<MesgB> onMessage(MesgA pBody, DrillBuf dBody) throws UserRpcException {
+    public CustomResponse<MesgB> onMessage(MesgA pBody, ArrowBuf dBody) throws UserRpcException {
 
       if (!expectedValue.equals(pBody)) {
         throw new UserRpcException(DrillbitEndpoint.getDefaultInstance(),

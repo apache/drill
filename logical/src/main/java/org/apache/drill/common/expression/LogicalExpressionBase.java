@@ -19,8 +19,8 @@ package org.apache.drill.common.expression;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.arrow.vector.types.Types.MajorType;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

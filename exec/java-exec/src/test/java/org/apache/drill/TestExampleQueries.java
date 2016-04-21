@@ -27,6 +27,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -93,7 +94,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery("select n_nationkey || '+' || n_name || '=' as CONCAT, n_nationkey, '+' as PLUS, n_name from cp.`tpch/nation.parquet`")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testConcatOperator.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR, MinorType.INT, MinorType.VARCHAR, MinorType.VARCHAR)
         .baselineColumns("CONCAT", "n_nationkey", "PLUS", "n_name")
         .build().run();
 
@@ -101,7 +102,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery("select (n_nationkey || n_name) as CONCAT from cp.`tpch/nation.parquet`")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("CONCAT")
         .build().run();
 
@@ -110,7 +111,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery("select (n_nationkey || cast(n_name as varchar(30))) as CONCAT from cp.`tpch/nation.parquet`")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("CONCAT")
         .build().run();
 
@@ -118,7 +119,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery("select (cast(n_nationkey as varchar(30)) || n_name) as CONCAT from cp.`tpch/nation.parquet`")
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testConcatOperatorInputTypeCombination.tsv")
-        .baselineTypes(TypeProtos.MinorType.VARCHAR)
+        .baselineTypes(MinorType.VARCHAR)
         .baselineColumns("CONCAT")
         .build().run();
   }
@@ -860,7 +861,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -932,7 +933,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query1)
         .unOrdered()
         .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q1.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -941,7 +942,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query2)
         .unOrdered()
         .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q2.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -950,7 +951,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query3)
         .unOrdered()
         .csvBaselineFile("testframework/testExampleQueries/testHavingAggFunction/q3.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("col")
         .build()
         .run();
@@ -979,7 +980,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("nation_key")
         .build()
         .run();
@@ -994,7 +995,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query2)
         .ordered()
         .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
-        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineTypes(MinorType.INT)
         .baselineColumns("nation_key")
         .build()
         .run();

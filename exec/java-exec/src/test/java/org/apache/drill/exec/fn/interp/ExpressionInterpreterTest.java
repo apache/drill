@@ -37,20 +37,20 @@ import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
-import org.apache.drill.exec.expr.holders.TimeStampHolder;
+import org.apache.arrow.vector.holders.TimeStampHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP;
 import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -129,7 +129,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
     final QueryContextInformation queryContextInfo = planFragment.getContext();
     final int                        timeZoneIndex = queryContextInfo.getTimeZone();
-    final org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    final org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.arrow.vector.util.DateUtility.getTimeZone(timeZoneIndex));
     final org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
     final long queryStartDate = now.getMillis();

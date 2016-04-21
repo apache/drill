@@ -17,16 +17,18 @@
  */
 package org.apache.drill.common.expression.fn;
 
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.DataMode;
+import org.apache.arrow.vector.types.Types.MinorType;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class CastFunctions {
 
-  private static Map<MinorType, String> TYPE2FUNC = new HashMap<>();
+  private static Map<Types.MinorType, String> TYPE2FUNC = new HashMap<>();
   /** The cast functions that need to be replaced (if
    * "drill.exec.functions.cast_empty_string_to_null" is set to true). */
   private static Set<String> CAST_FUNC_REPLACEMENT_NEEDED = new HashSet<>();
@@ -43,7 +45,7 @@ public class CastFunctions {
   /** Map from the replaced functions to the new ones (for nullable VARBINARY). */
   private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NULLABLE_VARBINARY = new HashMap<>();
   static {
-    TYPE2FUNC.put(MinorType.UNION, "castUNION");
+    TYPE2FUNC.put(Types.MinorType.UNION, "castUNION");
     TYPE2FUNC.put(MinorType.BIGINT, "castBIGINT");
     TYPE2FUNC.put(MinorType.INT, "castINT");
     TYPE2FUNC.put(MinorType.BIT, "castBIT");

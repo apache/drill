@@ -20,11 +20,13 @@ package org.apache.drill.exec.vector.complex;
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 
+import org.apache.arrow.vector.UInt4Vector;
+import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
+import org.apache.arrow.vector.complex.EmptyValuePopulator;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocatorFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

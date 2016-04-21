@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;
-import io.netty.buffer.DrillBuf;
+import io.netty.buffer.ArrowBuf;
 
 import java.util.Iterator;
 import java.util.List;
@@ -27,13 +27,13 @@ import java.util.Map;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.arrow.vector.types.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.arrow.vector.util.CallBack;
+import org.apache.arrow.vector.ValueVector;
 
 import com.google.common.collect.Maps;
 
@@ -105,7 +105,7 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   }
 
   @Override
-  public DrillBuf getManagedBuffer() {
+  public ArrowBuf getManagedBuffer() {
     return allocator.buffer(255);
   }
 

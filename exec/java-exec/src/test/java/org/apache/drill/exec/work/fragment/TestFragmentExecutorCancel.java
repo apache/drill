@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.junit.Test;
