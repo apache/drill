@@ -53,9 +53,9 @@ public class JSONRecordReader extends AbstractRecordReader {
   private VectorContainerWriter writer;
 
   // Data we're consuming
-  protected Path hadoopPath;
-  protected JsonNode embeddedContent;
-  protected InputStream stream;
+  private Path hadoopPath;
+  private JsonNode embeddedContent;
+  private InputStream stream;
   private final DrillFileSystem fileSystem;
   protected JsonProcessor jsonReader;
   private int recordCount;
@@ -91,7 +91,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this(fragmentContext, null, embeddedContent, fileSystem, columns);
   }
 
-  private JSONRecordReader(final FragmentContext fragmentContext, final String inputPath,
+  public JSONRecordReader(final FragmentContext fragmentContext, final String inputPath,
       final JsonNode embeddedContent, final DrillFileSystem fileSystem,
       final List<SchemaPath> columns) {
 
@@ -156,7 +156,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
   }
 
-  protected void handleAndRaise(String suffix, Exception e) throws UserException {
+  public void handleAndRaise(String suffix, Exception e) throws UserException {
 
     String message = e.getMessage();
     int columnNr = -1;
