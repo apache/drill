@@ -117,15 +117,15 @@ public class XMLSaxParser extends DefaultHandler {
         if (!stk.empty()) {
             // Get the parent from the stack
             JSONObject parent = (JSONObject) stk.pop();
-            if (parent.containsKey(cleanQName) || parent.containsKey(cleanQName.trim()+"_array")) {
+            if (parent.containsKey(cleanQName) || parent.containsKey(cleanQName.trim()+":drill_array")) {
                 int arrayExists = 0;
-                if(parent.containsKey(cleanQName.trim()+"_array")) {
+                if(parent.containsKey(cleanQName.trim()+":drill_array")) {
                     arrayExists = 1;
                 }
 
                 switch(arrayExists) {
                     case 1:
-                        JSONArray old_array = (JSONArray) parent.get(cleanQName.trim()+"_array");
+                        JSONArray old_array = (JSONArray) parent.get(cleanQName.trim()+":drill_array");
                         addNodeToArray(parent, cleanQName,old_array,newVal);
                         break;
 
@@ -174,7 +174,7 @@ public class XMLSaxParser extends DefaultHandler {
     }
 
     private int addNodeToArray(JSONObject parent,String cleanQName, Object old, Object new_val) {
-        String cleanQNameArray = cleanQName.trim()+"_array";
+        String cleanQNameArray = cleanQName.trim()+":drill_array";
         if(!key_stack.empty()) {
             String old_objkey = (String) key_stack.peek();
             if (cleanQName.equals(old_objkey)) {
@@ -236,5 +236,10 @@ public class XMLSaxParser extends DefaultHandler {
         super.startDocument();
         val = new JSONObject();
         stk.push(val);
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+        super.endDocument();
     }
 }
