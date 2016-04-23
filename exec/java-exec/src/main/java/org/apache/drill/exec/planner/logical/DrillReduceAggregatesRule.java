@@ -34,6 +34,7 @@ import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.fun.SqlAvgAggFunction.Subtype;
 import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -41,6 +42,7 @@ import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
+import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.RelNode;
@@ -116,6 +118,16 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     reduceAggs(ruleCall, oldAggRel);
   }
 
+  private boolean isStddev(AggregateCall call)  {
+    return call.getAggregation() instanceof DrillSqlAggOperator
+            && call.getAggregation().getName().equals("STDDEV");
+  }
+
+  private boolean isVariance(AggregateCall call) {
+    return call.getAggregation() instanceof DrillSqlAggOperator
+            && call.getAggregation().getName().equals("VARIANCE");
+  }
+
   /**
    * Returns whether any of the aggregates are calls to AVG, STDDEV_*, VAR_*.
    *
@@ -126,6 +138,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getAggregation());
       if (sqlAggFunction instanceof SqlAvgAggFunction
           || sqlAggFunction instanceof SqlSumAggFunction) {
+        return true;
+      }
+
+      if (isStddev(call) || isVariance(call)) {
         return true;
       }
     }
@@ -228,8 +244,18 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       // case COUNT(x) when 0 then null else SUM0(x) end
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
     }
-    if (sqlAggFunction instanceof SqlAvgAggFunction) {
-      final SqlAvgAggFunction.Subtype subtype = ((SqlAvgAggFunction) sqlAggFunction).getSubtype();
+
+    boolean isStddev = isStddev(oldCall);
+    boolean isVariance = isVariance(oldCall);
+    if (sqlAggFunction instanceof SqlAvgAggFunction || isStddev || isVariance) {
+      final SqlAvgAggFunction.Subtype subtype;
+      if (isStddev) {
+        subtype = Subtype.STDDEV_SAMP;
+      } else if (isVariance) {
+        subtype = Subtype.VAR_SAMP;
+      } else {
+        subtype = ((SqlAvgAggFunction) sqlAggFunction).getSubtype();
+      }
       switch (subtype) {
       case AVG:
         // replace original AVG(x) with SUM(x) / COUNT(x)

@@ -92,8 +92,13 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
       // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed
       // to convert them to use sum and count. Here, we make the cost of the original functions high
       // enough such that the planner does not choose them and instead chooses the rewritten functions.
-      if (name.equals("AVG") || name.equals("STDDEV_POP") || name.equals("STDDEV_SAMP")
-          || name.equals("VAR_POP") || name.equals("VAR_SAMP")) {
+      if (name.equals("AVG")
+              || name.equals("STDDEV_POP")
+              || name.equals("STDDEV_SAMP")
+              || name.equals("STDDEV")
+              || name.equals("VAR_POP")
+              || name.equals("VAR_SAMP")
+              || name.equals("VARIANCE")) {
         return ((DrillCostBase.DrillCostFactory)planner.getCostFactory()).makeHugeCost();
       }
     }
