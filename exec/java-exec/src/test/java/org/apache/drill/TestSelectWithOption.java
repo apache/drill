@@ -25,7 +25,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestSelectWithOption extends BaseTestQuery {
@@ -78,19 +77,72 @@ public class TestSelectWithOption extends BaseTestQuery {
       );
   }
 
-  @Test @Ignore // It does not look like lineDelimiter is working
-  public void testTextLineDelimiter() throws Exception {
-    String tableName = genCSVTable("testTextLineDelimiter",
-        "\"b\"|\"0\"",
-        "\"b\"|\"1\"",
-        "\"b\"|\"2\"");
+  @Test
+  public void testTabFieldDelimiter() throws Exception {
+    String tableName = genCSVTable("testTabFieldDelimiter",
+        "1\ta",
+        "2\tb");
+    String fieldDelimiter = new String(new char[]{92, 116}); // represents \t
+    testWithResult(format("select columns from table(%s(type=>'TeXT', fieldDelimiter => '%s'))", tableName, fieldDelimiter),
+        listOf("1", "a"),
+        listOf("2", "b"));
+  }
+
+  @Test
+  public void testSingleTextLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testSingleTextLineDelimiter",
+        "a|b|c");
 
     testWithResult(format("select columns from table(%s(type => 'TeXT', lineDelimiter => '|'))", tableName),
-        listOf("\"b\""),
-        listOf("\"0\"", "\"b\""),
-        listOf("\"1\"", "\"b\""),
-        listOf("\"2\"")
-      );
+        listOf("a"),
+        listOf("b"),
+        listOf("c"));
+  }
+
+  @Test
+  // '\n' is treated as standard delimiter
+  // if user has indicated custom line delimiter but input file contains '\n', split will occur on both
+  public void testCustomTextLineDelimiterAndNewLine() throws Exception {
+    String tableName = genCSVTable("testTextLineDelimiter",
+        "b|1",
+        "b|2");
+
+    testWithResult(format("select columns from table(%s(type => 'TeXT', lineDelimiter => '|'))", tableName),
+        listOf("b"),
+        listOf("1"),
+        listOf("b"),
+        listOf("2"));
+  }
+
+  @Test
+  public void testTextLineDelimiterWithCarriageReturn() throws Exception {
+    String tableName = genCSVTable("testTextLineDelimiterWithCarriageReturn",
+        "1, a\r",
+        "2, b\r");
+    String lineDelimiter = new String(new char[]{92, 114, 92, 110}); // represents \r\n
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => '%s'))", tableName, lineDelimiter),
+        listOf("1, a"),
+        listOf("2, b"));
+  }
+
+  @Test
+  public void testMultiByteLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testMultiByteLineDelimiter",
+        "1abc2abc3abc");
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => 'abc'))", tableName),
+        listOf("1"),
+        listOf("2"),
+        listOf("3"));
+  }
+
+  @Test
+  public void testDataWithPartOfMultiByteLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testDataWithPartOfMultiByteLineDelimiter",
+        "ab1abc2abc3abc");
+    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => 'abc'))", tableName),
+        listOf("ab1"),
+        listOf("2"),
+        listOf("3"));
   }
 
   @Test
