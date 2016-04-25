@@ -227,7 +227,7 @@ public class SqlConverter {
 
   public RelNode toRel(
       final SqlNode validatedNode) {
-    final RexBuilder rexBuilder = new DrillRexBuilder(typeFactory);
+    final RexBuilder rexBuilder = new RexBuilder(typeFactory);
     if (planner == null) {
       planner = new VolcanoPlanner(costFactory, settings);
       planner.setExecutor(new DrillConstExecutor(functions, util, settings));
@@ -370,24 +370,6 @@ public class SqlConverter {
         return schema;
       }
       schema = schema.getParentSchema();
-    }
-  }
-
-  private static class DrillRexBuilder extends RexBuilder {
-    private DrillRexBuilder(RelDataTypeFactory typeFactory) {
-      super(typeFactory);
-    }
-
-    /**
-     * Since Drill has different mechanism and rules for implicit casting,
-     * ensureType() is overridden to avoid conflicting cast functions being added to the expressions.
-     */
-    @Override
-    public RexNode ensureType(
-        RelDataType type,
-        RexNode node,
-        boolean matchNullability) {
-      return node;
     }
   }
 }
