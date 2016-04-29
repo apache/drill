@@ -1195,4 +1195,24 @@ public class TestExampleQueries extends BaseTestQuery {
         .run();
   }
 
+  @Test // DRILL-3823
+  public void testGroupingByCase() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    final String query = String.format(
+        "select case when columns[0] = 0 then cast(null as integer) else cast(columns[0] as integer) end as col \n" +
+        "from dfs_test.`%s` \n" +
+        "group by case when columns[0] = 0 then cast(null as integer) else cast(columns[0] as integer) end \n" +
+        "having (case when columns[0] = 0 then cast(null as integer) else cast(columns[0] as integer) end) is not null", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(1)
+        .baselineValues(2)
+        .baselineValues(3)
+        .baselineValues(4)
+        .build()
+        .run();
+  }
 }
