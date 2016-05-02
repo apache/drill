@@ -79,11 +79,13 @@ public class DrillSimpleFuncHolderError extends DrillSimpleFuncHolder {
     }
 
     assert indexInErrorCodeArray != null;
-
-    final JClass intArrayType = JPrimitiveType.parse(g.getModel(), "int").array();
-    final JVar intArray = catchBody.decl(intArrayType, "intArray");
-    catchBody.assign(intArray, JExpr.cast(intArrayType, point.invoke("get").arg(indexInErrorCodeArray)));
-    catchBody.assign(intArray.component(JExpr.lit(0)), JExpr.lit(1));
+    final JPrimitiveType intType = JPrimitiveType.parse(g.getModel(), "int");
+    final JVar origErrorCode = catchBody.decl(intType, "origErrorCode");
+    catchBody.assign(origErrorCode, JExpr.cast(intType.boxify(), point.invoke("get").arg(indexInErrorCodeArray)));
+    final JBlock ifBlock = catchBody
+        ._if(origErrorCode.eq(JExpr.lit(0)))
+        ._then();
+    ifBlock.add(point.invoke("set").arg(indexInErrorCodeArray).arg(JExpr.lit(1)));
   }
 
   public static LogicalExpression wrapError(LogicalExpression expr) {

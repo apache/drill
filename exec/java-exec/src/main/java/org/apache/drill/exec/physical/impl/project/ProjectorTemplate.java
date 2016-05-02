@@ -137,12 +137,12 @@ public abstract class ProjectorTemplate implements Projector {
   }
 
   private boolean doEvalSkip(int inputline, int inIndex, int outIndex, int svIndex) {
-    final List<int[]> errorCodeList = (List<int[]>) doEval(inIndex, outIndex);
+    final List<Integer> errorCodeList = (List<Integer>) doEval(inIndex, outIndex);
 
     boolean noError = true;
     for(int i = 0; i < errorCodeList.size(); ++i) {
-      int[] errorCode = errorCodeList.get(i);
-      if(errorCode[0] != 0) {
+      int errorCode = errorCodeList.get(i);
+      if(errorCode != 0) {
         skipRecordLogging.append("Error_Type", "Parsing Error");
         skipRecordLogging.append("Expression", skipRecordLogging.getExprList().get(i).getRight());
         skipRecordLogging.appendContext(inputline);
@@ -153,7 +153,7 @@ public abstract class ProjectorTemplate implements Projector {
         } catch (IOException ioe) {
           throw new RuntimeException();
         }
-        errorCode[0] = 0;
+        errorCodeList.set(i, 0);
         noError = false;
       }
     }

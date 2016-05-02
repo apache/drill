@@ -476,7 +476,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
         if(isSkipRecord()) {
           cg.getEvalBlock().assign(errorCodeJVar, JExpr.lit(errorCodeIndex++));
-          cg.getSetupBlock().add(errorCodeList.invoke("add").arg(JExpr.newArray(JPrimitiveType.parse(cg.getModel(), "int"), 1)));
+          cg.getSetupBlock().add(errorCodeList.invoke("add").arg(JExpr.lit(0)));
           skipRecordLogging.addExpr(org.apache.commons.lang3.tuple.Pair.of(i, namedExpression.getExpr().toString()));
         }
 
