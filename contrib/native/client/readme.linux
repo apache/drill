@@ -24,8 +24,8 @@ Install Prerequisites
 0) Install development tools
     $>yum groupinstall 'Development Tools'
 
-1) CMAKE 2.8
-    $> yum install cmake28
+1) CMAKE 3.0
+    $> yum install cmake3
 
 2.1) Download protobuf 2.5 from :
     http://rpm.pbone.net/index.php3/stat/4/idpl/23552166/dir/centos_6/com/protobuf-2.5.0-16.1.x86_64.rpm.html
@@ -73,13 +73,22 @@ Install Prerequisites
 OR 
     Download and build using boost build. 
     See this link for how to build: http://www.boost.org/doc/libs/1_53_0/more/getting_started/unix-variants.html#prepare-to-use-a-boost-library-binary 
-    
+    After building boost the hard way, you will need to do some symlinks for compatibility:
+    cd /usr/lib
+    ln -svf libboost_regex.so libboost_regex-mt.so
+    ln -svf libboost_system.so libboost_system-mt.so
+    ln -svf libboost_filesystem.so libboost_filesystem-mt.so
+    ln -svf libboost_date_time.so libboost_date_time-mt.so
+    ln -svf libboost_regex.a libboost_regex-mt.a
+    ln -svf libboost_system.a libboost_system-mt.a
+    ln -svf libboost_filesystem.a libboost_filesystem-mt.a
+    ln -svf libboost_date_time.a libboost_date_time-mt.a
 
 Build drill client
 -------------------
     $> cd DRILL_DIR/contrib/native/client
     $> mkdir build
-    $> cd build && cmake28 -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ..
+    $> cd build && cmake3 -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ..
     $> make
 
 Test
