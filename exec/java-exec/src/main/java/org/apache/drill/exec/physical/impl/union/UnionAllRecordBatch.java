@@ -162,25 +162,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     allocationVectors = Lists.newArrayList();
     transfers.clear();
 
-    // If both sides of Union-All are empty
-    if(unionAllInput.isBothSideEmpty()) {
-      for(int i = 0; i < outputFields.size(); ++i) {
-        final String colName = outputFields.get(i).getPath();
-        final MajorType majorType = MajorType.newBuilder()
-            .setMinorType(MinorType.INT)
-            .setMode(DataMode.OPTIONAL)
-            .build();
-
-        MaterializedField outputField = MaterializedField.create(colName, majorType);
-        ValueVector vv = container.addOrGet(outputField, callBack);
-        allocationVectors.add(vv);
-      }
-
-      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
-
-
     final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     int index = 0;
     for(VectorWrapper<?> vw : current) {
@@ -306,7 +287,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     // They are used to check if the schema is changed between recordbatches
     private BatchSchema leftSchema;
     private BatchSchema rightSchema;
-    private boolean bothEmpty = false;
 
     public UnionAllInput(UnionAllRecordBatch unionAllRecordBatch, RecordBatch left, RecordBatch right) {
       this.unionAllRecordBatch = unionAllRecordBatch;
@@ -314,52 +294,13 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       rightSide = new OneSideInput(right);
     }
 
-    private void setBothSideEmpty(boolean bothEmpty) {
-      this.bothEmpty = bothEmpty;
-    }
-
-    private boolean isBothSideEmpty() {
-      return bothEmpty;
-    }
-
     public IterOutcome nextBatch() throws SchemaChangeException {
       if(upstream == RecordBatch.IterOutcome.NOT_YET) {
         IterOutcome iterLeft = leftSide.nextBatch();
         switch(iterLeft) {
           case OK_NEW_SCHEMA:
-            /*
-             * If the first few record batches are all empty,
-             * there is no way to tell whether these empty batches are coming from empty files.
-             * It is incorrect to infer output types when either side could be coming from empty.
-             *
-             * Thus, while-loop is necessary to skip those empty batches.
-             */
-            whileLoop:
-            while(leftSide.getRecordBatch().getRecordCount() == 0) {
-              iterLeft = leftSide.nextBatch();
-
-              switch(iterLeft) {
-                case STOP:
-                case OUT_OF_MEMORY:
-                  return iterLeft;
-
-                case NONE:
-                  // Special Case: The left side was an empty input.
-                  leftIsFinish = true;
-                  break whileLoop;
-
-                case NOT_YET:
-                case OK_NEW_SCHEMA:
-                case OK:
-                  continue whileLoop;
-
-                default:
-                  throw new IllegalStateException(
-                      String.format("Unexpected state %s.", iterLeft));
-              }
-            }
-
             break;
+
           case STOP:
           case OUT_OF_MEMORY:
             return iterLeft;
@@ -374,52 +315,26 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
           case OK_NEW_SCHEMA:
             // Unless there is no record batch on the left side of the inputs,
             // always start processing from the left side.
-            if(leftIsFinish) {
-              unionAllRecordBatch.setCurrentRecordBatch(rightSide.getRecordBatch());
-            } else {
-              unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
-            }
+            unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
+
             // If the record count of the first batch from right input is zero,
             // there are two possibilities:
             // 1. The right side is an empty input (e.g., file).
             // 2. There will be more records carried by later batches.
-
-            /*
-             * If the first few record batches are all empty,
-             * there is no way to tell whether these empty batches are coming from empty files.
-             * It is incorrect to infer output types when either side could be coming from empty.
-             *
-             * Thus, while-loop is necessary to skip those empty batches.
-             */
-            whileLoop:
-            while(rightSide.getRecordBatch().getRecordCount() == 0) {
+            if (rightSide.getRecordBatch().getRecordCount() == 0) {
               iterRight = rightSide.nextBatch();
-              switch(iterRight) {
-                case STOP:
-                case OUT_OF_MEMORY:
-                  return iterRight;
 
-                case NONE:
-                  // Special Case: The right side was an empty input.
-                  rightIsFinish = true;
-                  break whileLoop;
-
-                case NOT_YET:
-                case OK_NEW_SCHEMA:
-                case OK:
-                  continue whileLoop;
-
-                default:
-                  throw new IllegalStateException(
-                      String.format("Unexpected state %s.", iterRight));
+              if (iterRight == IterOutcome.NONE) {
+                // Case 1: The right side was an empty input.
+                inferOutputFieldsFromLeftSide();
+                rightIsFinish = true;
+              } else {
+                // Case 2: There are more records carried by the latter batches.
+                inferOutputFields();
               }
+            } else {
+              inferOutputFields();
             }
-
-            if(leftIsFinish && rightIsFinish) {
-              setBothSideEmpty(true);
-            }
-
-            inferOutputFields();
             break;
 
           case STOP:
@@ -431,15 +346,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
                 String.format("Unexpected state %s.", iterRight));
         }
 
-
-
         upstream = IterOutcome.OK_NEW_SCHEMA;
         return upstream;
       } else {
-        if(isBothSideEmpty()) {
-          return IterOutcome.NONE;
-        }
-
         unionAllRecordBatch.clearCurrentRecordBatch();
 
         if(leftIsFinish && rightIsFinish) {
@@ -522,45 +431,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       }
     }
 
-    /**
-     *
-     * Summarize the inference in the four different situations:
-     * First of all, the field names are always determined by the left side
-     * (Even when the left side is from an empty file, we have the column names.)
-     *
-     * Cases:
-     * 1. Left: non-empty; Right: non-empty
-     *      types determined by both sides with implicit casting involved
-     * 2. Left: empty; Right: non-empty
-     *      type from the right
-     * 3. Left: non-empty; Right: empty
-     *      types from the left
-     * 4. Left: empty; Right: empty
-     *      types are nullable integer
-     */
-    private void inferOutputFields() {
-      if(!leftIsFinish && !rightIsFinish) {
-        // Both sides are non-empty
-        inferOutputFieldsBothSide();
-      } else if(!rightIsFinish) {
-        // Left side is non-empty
-        // While use left side's column names as output column names,
-        // use right side's column types as output column types.
-        inferOutputFieldsFromSingleSide(
-            leftSide.getRecordBatch().getSchema(),
-            rightSide.getRecordBatch().getSchema());
-      } else {
-        // Either right side is empty or both are empty
-        // Using left side's schema is sufficient
-        inferOutputFieldsFromSingleSide(
-            leftSide.getRecordBatch().getSchema(),
-            leftSide.getRecordBatch().getSchema());
-      }
-    }
-
     // The output table's column names always follow the left table,
     // where the output type is chosen based on DRILL's implicit casting rules
-    private void inferOutputFieldsBothSide() {
+    private void inferOutputFields() {
       outputFields = Lists.newArrayList();
       leftSchema = leftSide.getRecordBatch().getSchema();
       rightSchema = rightSide.getRecordBatch().getSchema();
@@ -609,19 +482,12 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       assert !leftIter.hasNext() && ! rightIter.hasNext() : "Mis-match of column count should have been detected when validating sqlNode at planning";
     }
 
-    private void inferOutputFieldsFromSingleSide(final BatchSchema schemaForNames, final BatchSchema schemaForTypes) {
+    private void inferOutputFieldsFromLeftSide() {
       outputFields = Lists.newArrayList();
-
-      final List<String> outputColumnNames = Lists.newArrayList();
-      final Iterator<MaterializedField> iterForNames = schemaForNames.iterator();
-      while(iterForNames.hasNext()) {
-        outputColumnNames.add(iterForNames.next().getPath());
-      }
-
-      final Iterator<MaterializedField> iterForTypes = schemaForTypes.iterator();
-      for(int i = 0; iterForTypes.hasNext(); ++i) {
-        MaterializedField field = iterForTypes.next();
-        outputFields.add(MaterializedField.create(outputColumnNames.get(i), field.getType()));
+      Iterator<MaterializedField> iter = leftSide.getRecordBatch().getSchema().iterator();
+      while(iter.hasNext()) {
+        MaterializedField field = iter.next();
+        outputFields.add(MaterializedField.create(field.getPath(), field.getType()));
       }
     }
 
