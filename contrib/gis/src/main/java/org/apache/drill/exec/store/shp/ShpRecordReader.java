@@ -165,7 +165,7 @@ public class ShpRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
 
     if (fileReaderShp == null) {
       throw new IllegalStateException("Shapefile reader is not open.");
