@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW"
-date:  
+date: 2016-05-05 21:44:33 UTC
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a
@@ -64,41 +64,6 @@ when you run the CREATE VIEW command, suffixed `by .view.drill`. For example,
 if you create a view named `myview`, Drill stores the view in the designated
 workspace as `myview.view.drill`.
 
-Data Sources
-
-Drill considers data sources to have either a strong schema or a weak schema.  
-
-##### Strong Schema
-
-With the exception of text file data sources, Drill verifies that data sources
-associated with a strong schema contain data types compatible with those used
-in the query. Drill also verifies that the columns referenced in the query
-exist in the underlying data sources. If the columns do not exist, CREATE VIEW
-fails.
-
-#### Weak Schema
-
-Drill does not verify that data sources associated with a weak schema contain
-data types compatible with those used in the query. Drill does not verify if
-columns referenced in a query on a Parquet data source exist, therefore CREATE
-VIEW always succeeds. In the case of JSON files, Drill does not verify if the
-files contain the maps specified in the view.
-
-The following table lists the current categories of schema and the data
-sources associated with each:
-
-<table>
-  <tr>
-    <th></th>
-    <th>Strong Schema</th>
-    <th>Weak Schema</th>
-  </tr>
-  <tr>
-    <td valign="top">Data Sources</td>
-    <td>views<br>hive tables<br>hbase column families<br>text</td>
-    <td>json<br>mongodb<br>hbase column qualifiers<br>parquet</td>
-  </tr>
-</table>
   
 ## Related Commands
 

@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Impersonation"
-date:  
+date: 2016-05-05 21:44:32 UTC
 parent: "Configure Drill"
 ---
 Impersonation allows a service to act on behalf of a client while performing the action requested by the client. By default, user impersonation is disabled in Drill. You can configure user impersonation in the <DRILLINSTALL_HOME>/conf/drill-override.conf file.
@@ -20,28 +20,11 @@ When impersonation is enabled and user Bob issues a query through the SQLLine cl
 ## Impersonation Support
 The following table lists the clients, storage plugins, and types of queries that you can use with impersonation in Drill:
 
-<table>
-  <tr>
-    <th>Type</th>
-    <th>Supported</th>
-    <th>Not Supported</th>
-  </tr>
-  <tr>
-    <td>Clients</td>
-    <td>SQLLine, ODBC, JDBC</td>
-    <td>Drill Web Console, REST API</td>
-  </tr>
-  <tr>
-    <td>Storage Plugins</td>
-    <td>File System</td>
-    <td>Hive HBase</td>
-  </tr>
-  <tr>
-    <td>Queries</td>
-    <td>When you enable impersonation, the setting applies to queries on data and metadata. For example, if you issue the SHOW SCHEMAS command, Drill impersonates the user logged into the client to access the requested metadata. If you issue a SELECT query on a workspace, Drill impersonates the user logged in to the client to access the requested data. Drill applies impersonation to queries issued using the following commands: <br>SHOW SCHEMAS <br>SHOW DATABASES<br> SHOW TABLES<br> CTAS<br> SELECT<br> CREATE VIEW<br> DROP VIEW<br> SHOW FILES<br> To successfully run the CTAS and CREATE VIEW commands, a user must have write permissions on the directory where the table or view will exist. Running these commands creates artifacts on the file system.</td>
-    <td></td>
-  </tr>
-</table>
+| Type            | Supported                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Not Supported               |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|
+| Clients         | SQLLine, ODBC, JDBC                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Drill Web Console, REST API |
+| Storage Plugins | File System, Hive, MapR-DB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | HBase                       |
+| Queries         | When you enable impersonation, the setting applies to queries on data and metadata. For example, if you issue the SHOW SCHEMAS command, Drill impersonates the user logged into the client to access the requested metadata. If you issue a SELECT query on a workspace, Drill impersonates the user logged in to the client to access the requested data. Drill applies impersonation to queries issued using the following commands: SHOW SCHEMAS, SHOW DATABASES, SHOW TABLES, CTAS, SELECT, CREATE VIEW, DROP VIEW, SHOW FILES. To successfully run the CTAS and CREATE VIEW commands, a user must have write permissions on the directory where the table or view will exist. Running these commands creates artifacts on the file system. |                             |
 
 ## Impersonation and Views
 You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view) Command.
@@ -60,7 +43,6 @@ The view owner or a superuser can modify permissions on the view file directly o
 Only a view owner or a super user can modify permissions on a view file to change them from owner to group or world readable. Before you grant permission to users to access a view, verify that they have access to the directory or workspace in which the view file is stored.
 
 Use the `chmod` and `chown` commands with the appropriate octal code to change permissions on a view file:
-
 
     hadoop fs –chmod <octal code> <file_name>
     hadoop fs –chown <user>:<group> <file_name>
