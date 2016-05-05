@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.ischema;
 
 import org.apache.calcite.schema.SchemaPlus;
 
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
@@ -51,8 +52,8 @@ public enum SelectedTable{
     this.tableDef = tableDef;
   }
 
-  public RecordReader getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter) {
-    RecordGenerator recordGenerator = tableDef.getRecordGenerator();
+  public RecordReader getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter, OptionManager optionManager) {
+    RecordGenerator recordGenerator = tableDef.getRecordGenerator(optionManager);
     recordGenerator.setInfoSchemaFilter(filter);
     recordGenerator.scanSchema(rootSchema);
     return recordGenerator.getRecordReader();

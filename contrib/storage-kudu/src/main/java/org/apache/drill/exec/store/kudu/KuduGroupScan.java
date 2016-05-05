@@ -190,7 +190,7 @@ public class KuduGroupScan extends AbstractGroupScan {
    */
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList, storagePlugin.getContext());
+    assignments = AssignmentCreator.getMappings(incomingEndpoints, kuduWorkList);
   }
 
 

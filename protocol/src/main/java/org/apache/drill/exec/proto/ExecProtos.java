@@ -61,6 +61,20 @@ public final class ExecProtos {
      * <code>optional int32 minor_fragment_id = 3;</code>
      */
     int getMinorFragmentId();
+
+    // optional .exec.shared.QueryId parent_query_id = 4;
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    boolean hasParentQueryId();
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId();
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getParentQueryIdOrBuilder();
   }
   /**
    * Protobuf type {@code exec.bit.FragmentHandle}
@@ -134,6 +148,19 @@ public final class ExecProtos {
             case 24: {
               bitField0_ |= 0x00000004;
               minorFragmentId_ = input.readInt32();
+              break;
+            }
+            case 34: {
+              org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                subBuilder = parentQueryId_.toBuilder();
+              }
+              parentQueryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(parentQueryId_);
+                parentQueryId_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
               break;
             }
           }
@@ -230,10 +257,33 @@ public final class ExecProtos {
       return minorFragmentId_;
     }
 
+    // optional .exec.shared.QueryId parent_query_id = 4;
+    public static final int PARENT_QUERY_ID_FIELD_NUMBER = 4;
+    private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_;
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    public boolean hasParentQueryId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
+      return parentQueryId_;
+    }
+    /**
+     * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getParentQueryIdOrBuilder() {
+      return parentQueryId_;
+    }
+
     private void initFields() {
       queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       majorFragmentId_ = 0;
       minorFragmentId_ = 0;
+      parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -256,6 +306,9 @@ public final class ExecProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt32(3, minorFragmentId_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, parentQueryId_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -276,6 +329,10 @@ public final class ExecProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, minorFragmentId_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, parentQueryId_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -386,6 +443,7 @@ public final class ExecProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getQueryIdFieldBuilder();
+          getParentQueryIdFieldBuilder();
         }
       }
       private static Builder create() {
@@ -404,6 +462,12 @@ public final class ExecProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         minorFragmentId_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
+        if (parentQueryIdBuilder_ == null) {
+          parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+        } else {
+          parentQueryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -448,6 +512,14 @@ public final class ExecProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.minorFragmentId_ = minorFragmentId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (parentQueryIdBuilder_ == null) {
+          result.parentQueryId_ = parentQueryId_;
+        } else {
+          result.parentQueryId_ = parentQueryIdBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -472,6 +544,9 @@ public final class ExecProtos {
         }
         if (other.hasMinorFragmentId()) {
           setMinorFragmentId(other.getMinorFragmentId());
+        }
+        if (other.hasParentQueryId()) {
+          mergeParentQueryId(other.getParentQueryId());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -683,6 +758,123 @@ public final class ExecProtos {
         return this;
       }
 
+      // optional .exec.shared.QueryId parent_query_id = 4;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> parentQueryIdBuilder_;
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public boolean hasParentQueryId() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
+        if (parentQueryIdBuilder_ == null) {
+          return parentQueryId_;
+        } else {
+          return parentQueryIdBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public Builder setParentQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (parentQueryIdBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          parentQueryId_ = value;
+          onChanged();
+        } else {
+          parentQueryIdBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public Builder setParentQueryId(
+          org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builderForValue) {
+        if (parentQueryIdBuilder_ == null) {
+          parentQueryId_ = builderForValue.build();
+          onChanged();
+        } else {
+          parentQueryIdBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public Builder mergeParentQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (parentQueryIdBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              parentQueryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
+            parentQueryId_ =
+              org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(parentQueryId_).mergeFrom(value).buildPartial();
+          } else {
+            parentQueryId_ = value;
+          }
+          onChanged();
+        } else {
+          parentQueryIdBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public Builder clearParentQueryId() {
+        if (parentQueryIdBuilder_ == null) {
+          parentQueryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+          onChanged();
+        } else {
+          parentQueryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId.Builder getParentQueryIdBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getParentQueryIdFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getParentQueryIdOrBuilder() {
+        if (parentQueryIdBuilder_ != null) {
+          return parentQueryIdBuilder_.getMessageOrBuilder();
+        } else {
+          return parentQueryId_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          getParentQueryIdFieldBuilder() {
+        if (parentQueryIdBuilder_ == null) {
+          parentQueryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
+                  parentQueryId_,
+                  getParentForChildren(),
+                  isClean());
+          parentQueryId_ = null;
+        }
+        return parentQueryIdBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.bit.FragmentHandle)
     }
 
@@ -709,11 +901,12 @@ public final class ExecProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\025ExecutionProtos.proto\022\010exec.bit\032\022Coord" +
-      "ination.proto\032\023UserBitShared.proto\"n\n\016Fr" +
-      "agmentHandle\022&\n\010query_id\030\001 \001(\0132\024.exec.sh" +
-      "ared.QueryId\022\031\n\021major_fragment_id\030\002 \001(\005\022" +
-      "\031\n\021minor_fragment_id\030\003 \001(\005B+\n\033org.apache" +
-      ".drill.exec.protoB\nExecProtosH\001"
+      "ination.proto\032\023UserBitShared.proto\"\235\001\n\016F" +
+      "ragmentHandle\022&\n\010query_id\030\001 \001(\0132\024.exec.s" +
+      "hared.QueryId\022\031\n\021major_fragment_id\030\002 \001(\005" +
+      "\022\031\n\021minor_fragment_id\030\003 \001(\005\022-\n\017parent_qu" +
+      "ery_id\030\004 \001(\0132\024.exec.shared.QueryIdB+\n\033or" +
+      "g.apache.drill.exec.protoB\nExecProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -725,7 +918,7 @@ public final class ExecProtos {
           internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_FragmentHandle_descriptor,
-              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", });
+              new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ParentQueryId", });
           return null;
         }
       };

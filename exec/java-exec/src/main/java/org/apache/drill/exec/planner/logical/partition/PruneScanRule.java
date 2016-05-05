@@ -205,10 +205,10 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     // set up the partitions
-    List<String> newFiles = Lists.newArrayList();
+    List<PartitionLocation> newPartitions = Lists.newArrayList();
     long numTotal = 0; // total number of partitions
     int batchIndex = 0;
-    String firstLocation = null;
+    PartitionLocation firstLocation = null;
     LogicalExpression materializedExpr = null;
 
     // Outer loop: iterate over a list of batches of PartitionLocations
@@ -216,7 +216,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       numTotal += partitions.size();
       logger.debug("Evaluating partition pruning for batch {}", batchIndex);
       if (batchIndex == 0) { // save the first location in case everything is pruned
-        firstLocation = partitions.get(0).getEntirePartitionLocation();
+        firstLocation = partitions.get(0);
       }
       final NullableBitVector output = new NullableBitVector(MaterializedField.create("", Types.optional(MinorType.BIT)), allocator);
       final VectorContainer container = new VectorContainer();
@@ -262,8 +262,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
         InterpreterEvaluator.evaluate(partitions.size(), optimizerContext, container, output, materializedExpr);
 
-        logger.info("Elapsed time in interpreter evaluation: {} ms within batchIndex: {}",
-            miscTimer.elapsed(TimeUnit.MILLISECONDS), batchIndex);
+        logger.info("Elapsed time in interpreter evaluation: {} ms within batchIndex: {} with # of partitions : {}",
+            miscTimer.elapsed(TimeUnit.MILLISECONDS), batchIndex, partitions.size());
         miscTimer.reset();
 
         int recordCount = 0;
@@ -272,7 +272,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         // Inner loop: within each batch iterate over the PartitionLocations
         for(PartitionLocation part: partitions){
           if(!output.getAccessor().isNull(recordCount) && output.getAccessor().get(recordCount) == 1){
-            newFiles.add(part.getEntirePartitionLocation());
+            newPartitions.add(part);
             qualifiedCount++;
           }
           recordCount++;
@@ -292,21 +292,23 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     try {
-
-      boolean canDropFilter = true;
-
-      if (newFiles.isEmpty()) {
-        assert firstLocation != null;
-        newFiles.add(firstLocation);
-        canDropFilter = false;
-      }
-
-      if (newFiles.size() == numTotal) {
+      if (newPartitions.size() == numTotal) {
         logger.info("No partitions were eligible for pruning");
         return;
       }
 
-      logger.info("Pruned {} partitions down to {}", numTotal, newFiles.size());
+      // handle the case all partitions are filtered out.
+      boolean canDropFilter = true;
+
+      if (newPartitions.isEmpty()) {
+        assert firstLocation != null;
+        // Add the first non-composite partition location, since execution requires schema.
+        // In such case, we should not drop filter.
+        newPartitions.add(firstLocation.getPartitionLocationRecursive().get(0));
+        canDropFilter = false;
+      }
+
+      logger.info("Pruned {} partitions down to {}", numTotal, newPartitions.size());
 
       List<RexNode> conjuncts = RelOptUtil.conjunctions(condition);
       List<RexNode> pruneConjuncts = RelOptUtil.conjunctions(pruneCondition);
@@ -318,7 +320,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       condition = condition.accept(reverseVisitor);
       pruneCondition = pruneCondition.accept(reverseVisitor);
 
-      RelNode inputRel = descriptor.createTableScan(newFiles);
+      RelNode inputRel = descriptor.createTableScan(newPartitions);
 
       if (projectRel != null) {
         inputRel = projectRel.copy(projectRel.getTraitSet(), Collections.singletonList(inputRel));

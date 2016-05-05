@@ -92,7 +92,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
             }
 
             pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler(connection));
+            pipe.addLast("exception-handler", new RpcExceptionHandler<C>(connection));
 
             connect = true;
 //            logger.debug("Server connection initialization completed.");
@@ -104,7 +104,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 //     }
   }
 
-  private class LogggingReadTimeoutHandler<C extends RemoteConnection> extends ReadTimeoutHandler {
+  private class LogggingReadTimeoutHandler extends ReadTimeoutHandler {
 
     private final C connection;
     private final int timeoutSeconds;
@@ -132,11 +132,6 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   }
 
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
-
-  @Override
-  public boolean isClient() {
-    return false;
-  }
 
   protected abstract ServerHandshakeHandler<?> getHandshakeHandler(C connection);
 

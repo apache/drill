@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.exec.physical.impl.common.HashTable;
+import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminOptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
@@ -148,7 +149,7 @@ public interface ExecConstants {
   OptionValidator FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR = new StringValidator(FILESYSTEM_PARTITION_COLUMN_LABEL, "dir");
 
   String JSON_READ_NUMBERS_AS_DOUBLE = "store.json.read_numbers_as_double";
-  OptionValidator JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(JSON_READ_NUMBERS_AS_DOUBLE, false);
+  BooleanValidator JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(JSON_READ_NUMBERS_AS_DOUBLE, false);
 
   String MONGO_ALL_TEXT_MODE = "store.mongo.all_text_mode";
   OptionValidator MONGO_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(MONGO_ALL_TEXT_MODE, false);
@@ -167,7 +168,8 @@ public interface ExecConstants {
 
   String SLICE_TARGET = "planner.slice_target";
   long SLICE_TARGET_DEFAULT = 100000l;
-  OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, SLICE_TARGET_DEFAULT);
+  PositiveLongValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE,
+      SLICE_TARGET_DEFAULT);
 
   String CAST_TO_NULLABLE_NUMERIC = "drill.exec.functions.cast_empty_string_to_null";
   OptionValidator CAST_TO_NULLABLE_NUMERIC_OPTION = new BooleanValidator(CAST_TO_NULLABLE_NUMERIC, false);
@@ -176,9 +178,9 @@ public interface ExecConstants {
    * HashTable runtime settings
    */
   String MIN_HASH_TABLE_SIZE_KEY = "exec.min_hash_table_size";
-  OptionValidator MIN_HASH_TABLE_SIZE = new PositiveLongValidator(MIN_HASH_TABLE_SIZE_KEY, HashTable.MAXIMUM_CAPACITY, HashTable.DEFAULT_INITIAL_CAPACITY);
+  PositiveLongValidator MIN_HASH_TABLE_SIZE = new PositiveLongValidator(MIN_HASH_TABLE_SIZE_KEY, HashTable.MAXIMUM_CAPACITY, HashTable.DEFAULT_INITIAL_CAPACITY);
   String MAX_HASH_TABLE_SIZE_KEY = "exec.max_hash_table_size";
-  OptionValidator MAX_HASH_TABLE_SIZE = new PositiveLongValidator(MAX_HASH_TABLE_SIZE_KEY, HashTable.MAXIMUM_CAPACITY, HashTable.MAXIMUM_CAPACITY);
+  PositiveLongValidator MAX_HASH_TABLE_SIZE = new PositiveLongValidator(MAX_HASH_TABLE_SIZE_KEY, HashTable.MAXIMUM_CAPACITY, HashTable.MAXIMUM_CAPACITY);
 
   /**
    * Limits the maximum level of parallelization to this factor time the number of Drillbits
@@ -199,6 +201,9 @@ public interface ExecConstants {
    */
   String AFFINITY_FACTOR_KEY = "planner.affinity_factor";
   OptionValidator AFFINITY_FACTOR = new DoubleValidator(AFFINITY_FACTOR_KEY, 1.2d);
+
+  String EARLY_LIMIT0_OPT_KEY = "planner.enable_limit0_optimization";
+  BooleanValidator EARLY_LIMIT0_OPT = new BooleanValidator(EARLY_LIMIT0_OPT_KEY, false);
 
   String ENABLE_MEMORY_ESTIMATION_KEY = "planner.memory.enable_memory_estimation";
   OptionValidator ENABLE_MEMORY_ESTIMATION = new BooleanValidator(ENABLE_MEMORY_ESTIMATION_KEY, false);
@@ -262,11 +267,11 @@ public interface ExecConstants {
   OptionValidator NEW_VIEW_DEFAULT_PERMS_VALIDATOR =
       new StringValidator(NEW_VIEW_DEFAULT_PERMS_KEY, "700");
 
-  String USE_OLD_ASSIGNMENT_CREATOR = "exec.schedule.assignment.old";
-  OptionValidator USE_OLD_ASSIGNMENT_CREATOR_VALIDATOR = new BooleanValidator(USE_OLD_ASSIGNMENT_CREATOR, false);
-
   String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE, false);
+
+  String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
+  BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY, false);
 
   /**
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
@@ -281,4 +286,26 @@ public interface ExecConstants {
    */
   String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
   StringValidator ADMIN_USER_GROUPS_VALIDATOR = new AdminOptionValidator(ADMIN_USER_GROUPS_KEY, "");
+
+  /**
+   * Option whose value is a string representing list of inbound impersonation policies.
+   *
+   * Impersonation policy format:
+   * [
+   *   {
+   *    proxy_principals : { users : [“...”], groups : [“...”] },
+   *    target_principals : { users : [“...”], groups : [“...”] }
+   *   },
+   *   ...
+   * ]
+   */
+  String IMPERSONATION_POLICIES_KEY = "exec.impersonation.inbound_policies";
+  StringValidator IMPERSONATION_POLICY_VALIDATOR =
+      new InboundImpersonationManager.InboundImpersonationPolicyValidator(IMPERSONATION_POLICIES_KEY, "[]");
+
+  /**
+   * Web settings
+   */
+  String WEB_LOGS_MAX_LINES = "web.logs.max_lines";
+  OptionValidator WEB_LOGS_MAX_LINES_VALIDATOR = new PositiveLongValidator(WEB_LOGS_MAX_LINES, Integer.MAX_VALUE, 10000);
 }

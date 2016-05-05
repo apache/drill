@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -54,7 +53,6 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -70,6 +68,7 @@ import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
@@ -133,11 +132,11 @@ public class EvaluationVisitor {
 
   Map<ExpressionHolder,HoldingContainer> previousExpressions = Maps.newHashMap();
 
-  Stack<Map<ExpressionHolder,HoldingContainer>> mapStack = new Stack();
+  Stack<Map<ExpressionHolder,HoldingContainer>> mapStack = new Stack<>();
 
   void newScope() {
     mapStack.push(previousExpressions);
-    previousExpressions = new HashMap(previousExpressions);
+    previousExpressions = new HashMap<>(previousExpressions);
   }
 
   void leaveScope() {

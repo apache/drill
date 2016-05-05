@@ -44,7 +44,7 @@ public class TestSqlBracketlessSyntax {
             .setParserFactory(DrillParserImpl.FACTORY)
             .build()) //
         .defaultSchema(SimpleCalciteSchema.createRootSchema(false)) //
-        .convertletTable(new DrillConvertletTable()) //
+        .convertletTable(DrillConvertletTable.INSTANCE) //
         .build();
     Planner planner = Frameworks.getPlanner(config);
 

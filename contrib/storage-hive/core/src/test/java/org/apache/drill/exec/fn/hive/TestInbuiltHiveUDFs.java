@@ -17,8 +17,16 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.TestBuilder;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.hive.HiveTestBase;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestInbuiltHiveUDFs extends HiveTestBase {
 
@@ -39,8 +47,41 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("SELECT encode(varchar_field, 'UTF-8') as rst from hive.readtest")
         .unOrdered()
         .baselineColumns("rst")
-        .baselineValues("varcharfield")
+        .baselineValues("varcharfield".getBytes())
         .baselineValues(new Object[] { null })
+        .go();
+  }
+
+  @Test
+  public void testXpath_Double() throws Exception {
+    final String query = "select xpath_double ('<a><b>20</b><c>40</c></a>', 'a/b * a/c') as col \n" +
+        "from hive.kv \n" +
+        "limit 0";
+
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-4459
+  public void testGetJsonObject() throws Exception {
+    testBuilder()
+        .sqlQuery("select convert_from(json, 'json') as json from hive.simple_json " +
+            "where GET_JSON_OBJECT(simple_json.json, '$.employee_id') like 'Emp2'")
+        .ordered()
+        .baselineColumns("json")
+        .baselineValues(TestBuilder.mapOf("employee_id","Emp2","full_name","Kamesh",
+            "first_name","Bh","last_name","Venkata","position","Store"))
         .go();
   }
 }

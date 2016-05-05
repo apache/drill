@@ -96,7 +96,7 @@ public class KuduSchemaFactory implements SchemaFactory {
         return Sets.newHashSet(tablesList.getTablesList());
       } catch (Exception e) {
         logger.warn("Failure reading kudu tables.", e);
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
       }
     }
 

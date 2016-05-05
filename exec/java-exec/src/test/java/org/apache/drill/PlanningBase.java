@@ -109,7 +109,7 @@ public class PlanningBase extends ExecTest{
     final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
-    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
+    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry, systemOptions);
     final SchemaPlus root = SimpleCalciteSchema.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(SchemaConfig.newBuilder("foo", context).build(), root);
 
@@ -150,8 +150,7 @@ public class PlanningBase extends ExecTest{
       if (sql.trim().isEmpty()) {
         continue;
       }
-      final DrillSqlWorker worker = new DrillSqlWorker(context);
-      final PhysicalPlan p = worker.getPlan(sql);
+      final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }
 

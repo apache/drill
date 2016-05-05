@@ -112,7 +112,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
       currentRow = processPartition(currentRow);
       if (isPartitionDone()) {
-        cleanPartition();
+        reset();
       }
     }
   }
@@ -126,7 +126,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     saveFirstValue(currentRow);
   }
 
-  private void cleanPartition() {
+  private void reset() {
     resetValues();
     for (VectorWrapper<?> vw : internal) {
       if ((vw.getValueVector() instanceof BaseDataValueVector)) {
@@ -177,7 +177,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
       if (remainingPeers == 0) {
         // because all peer rows share the same frame, we only need to compute and aggregate the frame once
         if (popConfig.getStart().isCurrent()) {
-          resetValues();
+          reset();
           saveFirstValue(row);
         }
 

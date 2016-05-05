@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -56,6 +57,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 public class StorageResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageResources.class);
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject StoragePluginRegistry storage;
   @Inject ObjectMapper mapper;
   @Inject SecurityContext sc;
@@ -88,7 +90,7 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStoragePlugins() {
     List<PluginConfigWrapper> list = getStoragePluginsJSON();
-    return ViewableWithPermissions.create("/rest/storage/list.ftl", sc, list);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, list);
   }
 
   @GET
@@ -111,7 +113,7 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStoragePlugin(@PathParam("name") String name) {
     PluginConfigWrapper plugin = getStoragePluginJSON(name);
-    return ViewableWithPermissions.create("/rest/storage/update.ftl", sc, plugin);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc, plugin);
   }
 
   @GET

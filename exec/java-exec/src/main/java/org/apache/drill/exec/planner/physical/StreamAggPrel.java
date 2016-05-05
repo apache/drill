@@ -87,8 +87,7 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
 
     Prel child = (Prel) this.getInput();
-    StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]),
-        aggExprs.toArray(new NamedExpression[aggExprs.size()]), 1.0f);
+    StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys, aggExprs, 1.0f);
 
     return creator.addMetadata(this, g);
 

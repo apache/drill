@@ -25,9 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.rest.auth.AnonymousAuthenticator;
-import org.apache.drill.exec.server.rest.auth.AnonymousLoginService;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -108,6 +105,9 @@ public class WebServer implements AutoCloseable {
     }
   }
 
+  private static final String BASE_STATIC_PATH = "/rest/static/";
+  private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
+
   /**
    * Start the web server including setup.
    * @throws Exception
@@ -144,13 +144,20 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
-    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
+    // Get resource URL for Drill static assets, based on where Drill icon is located
+    String drillIconResourcePath =
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+    staticHolder.setInitParameter(
+        "resourceBase",
+        drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    servletContextHandler.setSecurityHandler(createSecurityHandler());
-    servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    }
 
     embeddedJetty.start();
   }
@@ -190,25 +197,13 @@ public class WebServer implements AutoCloseable {
    * @return {@link SecurityHandler} with appropriate {@link LoginService}, {@link Authenticator} and constraints.
    */
   private ConstraintSecurityHandler createSecurityHandler() {
-    final LoginService loginService;
-    final Authenticator authenticator;
-
-    final DrillbitContext drillbitContext = workManager.getContext();
-    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
-      loginService = new DrillRestLoginService(drillbitContext);
-      authenticator = new FormAuthenticator("/login", "/login", true);
-    } else {
-      loginService = new AnonymousLoginService(drillbitContext);
-      authenticator = new AnonymousAuthenticator();
-    }
-
     ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 
     Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
     security.setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
 
-    security.setAuthenticator(authenticator);
-    security.setLoginService(loginService);
+    security.setAuthenticator(new FormAuthenticator("/login", "/login", true));
+    security.setLoginService(new DrillRestLoginService(workManager.getContext()));
 
     return security;
   }

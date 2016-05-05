@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -263,7 +263,13 @@
         <configuration>
           <shadedArtifactAttached>false</shadedArtifactAttached>
           <createDependencyReducedPom>true</createDependencyReducedPom>
-          <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+          <!-- TODO DRILL-4336: try to move the dependencyReducedPom out of the default location (the module root).
+               Putting it here caused the target directory to be run as a submodule (oddly
+               only when trying to run the maven release goal) -->
+          <!--dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
+          <!-- TODO DRILL-4336: an attempt to fix the issue by moving the file elsewhere, had issues executing
+               but may be able to be modified to to fix the issue-->
+          <!--dependencyReducedPomLocation>${project.build.directory}/generated/shade/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
           <minimizeJar>false</minimizeJar>
 
           <artifactSet>

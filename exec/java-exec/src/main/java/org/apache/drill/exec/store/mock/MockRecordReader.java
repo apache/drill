@@ -75,7 +75,7 @@ public class MockRecordReader extends AbstractRecordReader {
       for (int i = 0; i < config.getTypes().length; i++) {
         final MajorType type = config.getTypes()[i].getMajorType();
         final MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
-        final Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }
     } catch (SchemaChangeException e) {

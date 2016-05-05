@@ -29,20 +29,22 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared;
 
+import java.util.List;
+
 @JsonTypeName("window")
 public class WindowPOP extends AbstractSingle {
 
-  private final NamedExpression[] withins;
-  private final NamedExpression[] aggregations;
-  private final Order.Ordering[] orderings;
+  private final List<NamedExpression> withins;
+  private final List<NamedExpression> aggregations;
+  private final List<Order.Ordering> orderings;
   private final boolean frameUnitsRows;
   private final Bound start;
   private final Bound end;
 
   public WindowPOP(@JsonProperty("child") PhysicalOperator child,
-                   @JsonProperty("within") NamedExpression[] withins,
-                   @JsonProperty("aggregations") NamedExpression[] aggregations,
-                   @JsonProperty("orderings") Order.Ordering[] orderings,
+                   @JsonProperty("within") List<NamedExpression> withins,
+                   @JsonProperty("aggregations") List<NamedExpression> aggregations,
+                   @JsonProperty("orderings") List<Order.Ordering> orderings,
                    @JsonProperty("frameUnitsRows") boolean frameUnitsRows,
                    @JsonProperty("start") Bound start,
                    @JsonProperty("end") Bound end) {
@@ -78,15 +80,15 @@ public class WindowPOP extends AbstractSingle {
     return end;
   }
 
-  public NamedExpression[] getAggregations() {
+  public List<NamedExpression> getAggregations() {
     return aggregations;
   }
 
-  public NamedExpression[] getWithins() {
+  public List<NamedExpression> getWithins() {
     return withins;
   }
 
-  public Order.Ordering[] getOrderings() {
+  public List<Order.Ordering> getOrderings() {
     return orderings;
   }
 

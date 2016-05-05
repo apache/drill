@@ -48,6 +48,8 @@ import com.google.common.collect.ImmutableList;
 public class JSONRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
 
+  public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
+
   private VectorContainerWriter writer;
 
   // Data we're consuming
@@ -110,8 +112,8 @@ public class JSONRecordReader extends AbstractRecordReader {
 
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
-    this.readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val;
-    this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
+    this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     setColumns(columns);
   }
 
@@ -192,7 +194,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     ReadState write = null;
 //    Stopwatch p = new Stopwatch().start();
     try{
-      outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
+      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH) {
         writer.setPosition(recordCount);
         write = jsonReader.write(writer);
 

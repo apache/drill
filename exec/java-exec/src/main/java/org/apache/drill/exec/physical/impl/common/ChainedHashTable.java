@@ -143,17 +143,17 @@ public class ChainedHashTable {
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
-    LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().length];
+    LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
     LogicalExpression[] keyExprsProbe = null;
     boolean isProbe = (htConfig.getKeyExprsProbe() != null);
     if (isProbe) {
-      keyExprsProbe = new LogicalExpression[htConfig.getKeyExprsProbe().length];
+      keyExprsProbe = new LogicalExpression[htConfig.getKeyExprsProbe().size()];
     }
 
     ErrorCollector collector = new ErrorCollectorImpl();
     VectorContainer htContainerOrig = new VectorContainer(); // original ht container from which others may be cloned
-    LogicalExpression[] htKeyExprs = new LogicalExpression[htConfig.getKeyExprsBuild().length];
-    TypedFieldId[] htKeyFieldIds = new TypedFieldId[htConfig.getKeyExprsBuild().length];
+    LogicalExpression[] htKeyExprs = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
+    TypedFieldId[] htKeyFieldIds = new TypedFieldId[htConfig.getKeyExprsBuild().size()];
 
     int i = 0;
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
@@ -210,7 +210,7 @@ public class ChainedHashTable {
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
     if (outgoing != null) {
 
-      if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().length) {
+      if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().size()) {
         throw new IllegalArgumentException("Mismatched number of output key fields.");
       }
     }

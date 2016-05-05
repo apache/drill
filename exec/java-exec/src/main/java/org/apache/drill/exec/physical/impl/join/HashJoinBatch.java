@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -281,14 +282,14 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   public void setupHashTable() throws IOException, SchemaChangeException, ClassTransformationException {
     // Setup the hash table configuration object
     int conditionsSize = conditions.size();
-    final NamedExpression rightExpr[] = new NamedExpression[conditionsSize];
-    NamedExpression leftExpr[] = new NamedExpression[conditionsSize];
+    final List<NamedExpression> rightExpr = new ArrayList<>(conditionsSize);
+    List<NamedExpression> leftExpr = new ArrayList<>(conditionsSize);
 
     JoinComparator comparator = JoinComparator.NONE;
     // Create named expressions from the conditions
     for (int i = 0; i < conditionsSize; i++) {
-      rightExpr[i] = new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i));
-      leftExpr[i] = new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i));
+      rightExpr.add(new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i)));
+      leftExpr.add(new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i)));
 
       // Hash join only supports certain types of comparisons
       comparator = JoinUtils.checkAndSetComparison(conditions.get(i), comparator);
@@ -307,7 +308,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     final HashTableConfig htConfig =
-        new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
+        new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
             HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
 
     // Create the chained hash table

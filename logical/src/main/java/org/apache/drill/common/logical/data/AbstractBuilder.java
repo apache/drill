@@ -26,21 +26,4 @@ public abstract class AbstractBuilder<T extends LogicalOperator> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBuilder.class);
 
   public abstract T build();
-
-  protected LogicalExpression[] aL(List<LogicalExpression> exprs){
-    return exprs.toArray(new LogicalExpression[exprs.size()]);
-  }
-
-  protected FieldReference[] aF(List<FieldReference> exprs){
-    return exprs.toArray(new FieldReference[exprs.size()]);
-  }
-
-  protected NamedExpression[] aN(List<NamedExpression> exprs){
-    return exprs.toArray(new NamedExpression[exprs.size()]);
-  }
-
-  protected Order.Ordering[] aO(List<Order.Ordering> orderings) {
-    return orderings.toArray(new Order.Ordering[orderings.size()]);
-  }
-
 }

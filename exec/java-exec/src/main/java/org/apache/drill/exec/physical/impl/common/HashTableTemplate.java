@@ -447,7 +447,7 @@ public abstract class HashTableTemplate implements HashTable {
       throw new IllegalArgumentException("The initial capacity must be less than maximum capacity allowed");
     }
 
-    if (htConfig.getKeyExprsBuild() == null || htConfig.getKeyExprsBuild().length == 0) {
+    if (htConfig.getKeyExprsBuild() == null || htConfig.getKeyExprsBuild().size() == 0) {
       throw new IllegalArgumentException("Hash table must have at least 1 key expression");
     }
 

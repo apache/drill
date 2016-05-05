@@ -98,7 +98,7 @@ public enum SystemTable {
     return distributed;
   }
 
-  public Class getPojoClass() {
+  public Class<?> getPojoClass() {
     return pojoClass;
   }
 

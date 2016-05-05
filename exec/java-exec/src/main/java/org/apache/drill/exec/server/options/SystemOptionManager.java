@@ -83,6 +83,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       PlannerSettings.HEP_OPT,
       PlannerSettings.PLANNER_MEMORY_LIMIT,
       PlannerSettings.HEP_PARTITION_PRUNING,
+      PlannerSettings.TYPE_INFERENCE,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
@@ -115,6 +116,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.SMALL_QUEUE_SIZE,
       ExecConstants.MIN_HASH_TABLE_SIZE,
       ExecConstants.MAX_HASH_TABLE_SIZE,
+      ExecConstants.EARLY_LIMIT0_OPT,
       ExecConstants.ENABLE_MEMORY_ESTIMATION,
       ExecConstants.MAX_QUERY_MEMORY_PER_NODE,
       ExecConstants.NON_BLOCKING_OPERATORS_MEMORY,
@@ -122,17 +124,19 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.HASH_AGG_TABLE_FACTOR,
       ExecConstants.AVERAGE_FIELD_WIDTH,
       ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR,
-      ExecConstants.USE_OLD_ASSIGNMENT_CREATOR_VALIDATOR,
       ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR,
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
+      ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
-      ExecConstants.ENABLE_NEW_TEXT_READER
+      ExecConstants.ENABLE_NEW_TEXT_READER,
+      ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
+      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {

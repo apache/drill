@@ -30,6 +30,8 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.slf4j.Logger;
@@ -49,7 +51,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   private VectorContainer container = new VectorContainer();
   private int valueCount;
   private BatchSchema schema;
-
 
   /**
    * Constructs a loader using the given allocator for vector buffer allocation.
@@ -185,6 +186,16 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return this.container.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
   @Override

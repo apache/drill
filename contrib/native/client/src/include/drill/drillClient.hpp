@@ -53,6 +53,7 @@ namespace exec{
 namespace Drill{
 
 //struct UserServerEndPoint;
+class  DrillClientImplBase;
 class  DrillClientImpl;
 class  DrillClientQueryResult;
 class  FieldMetadata;
@@ -340,6 +341,10 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         std::string& getError();
 
         /*
+         * Returns the error message associated with the query handle
+         */
+        const std::string& getError(QueryHandle_t handle);
+        /*
          * Applications using the async query submit method can register a listener for schema changes
          *
          */
@@ -369,7 +374,7 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         static DrillClientInitializer s_init;
         static DrillClientConfig s_config;
 
-        DrillClientImpl * m_pImpl;
+        DrillClientImplBase * m_pImpl;
 };
 
 } // namespace Drill

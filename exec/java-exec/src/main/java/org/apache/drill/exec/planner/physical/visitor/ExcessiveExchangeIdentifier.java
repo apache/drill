@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -48,7 +49,10 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     MajorFragmentStat newFrag = new MajorFragmentStat();
     Prel newChild = ((Prel) prel.getInput()).accept(this, newFrag);
 
-    if (newFrag.isSingular() && parent.isSingular()) {
+    if (newFrag.isSingular() && parent.isSingular() &&
+        // if one of them has strict distribution or none, we can remove the exchange
+        (!newFrag.isDistributionStrict() || !parent.isDistributionStrict())
+        ) {
       return newChild;
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode) newChild));
@@ -57,7 +61,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   @Override
   public Prel visitScreen(ScreenPrel prel, MajorFragmentStat s) throws RuntimeException {
-    s.setSingular();
+    s.addScreen(prel);
     RelNode child = ((Prel)prel.getInput()).accept(this, s);
     return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(child));
   }
@@ -92,6 +96,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   }
 
   class MajorFragmentStat {
+    private DistributionAffinity distributionAffinity = DistributionAffinity.NONE;
     private double maxRows = 0d;
     private int maxWidth = Integer.MAX_VALUE;
     private boolean isMultiSubScan = false;
@@ -100,13 +105,15 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       maxRows = Math.max(prel.getRows(), maxRows);
     }
 
-    public void setSingular() {
+    public void addScreen(ScreenPrel screenPrel) {
       maxWidth = 1;
+      distributionAffinity = screenPrel.getDistributionAffinity();
     }
 
     public void addScan(ScanPrel prel) {
       maxWidth = Math.min(maxWidth, prel.getGroupScan().getMaxParallelizationWidth());
       isMultiSubScan = prel.getGroupScan().getMinParallelizationWidth() > 1;
+      distributionAffinity = prel.getDistributionAffinity();
       add(prel);
     }
 
@@ -123,6 +130,10 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
         w = 1;
       }
       return w == 1;
+    }
+
+    public boolean isDistributionStrict() {
+      return distributionAffinity == DistributionAffinity.HARD;
     }
   }
 

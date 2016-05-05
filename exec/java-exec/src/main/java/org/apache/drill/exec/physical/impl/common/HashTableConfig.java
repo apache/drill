@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("hashtable-config")
 public class HashTableConfig  {
 
@@ -30,13 +32,13 @@ public class HashTableConfig  {
 
   private final int initialCapacity;
   private final float loadFactor;
-  private final NamedExpression[] keyExprsBuild;
-  private final NamedExpression[] keyExprsProbe;
+  private final List<NamedExpression> keyExprsBuild;
+  private final List<NamedExpression> keyExprsProbe;
 
   @JsonCreator
   public HashTableConfig(@JsonProperty("initialCapacity") int initialCapacity, @JsonProperty("loadFactor") float loadFactor,
-                         @JsonProperty("keyExprsBuild") NamedExpression[] keyExprsBuild,
-                         @JsonProperty("keyExprsProbe") NamedExpression[] keyExprsProbe) {
+                         @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
+                         @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe) {
     this.initialCapacity = initialCapacity;
     this.loadFactor = loadFactor;
     this.keyExprsBuild = keyExprsBuild;
@@ -51,11 +53,11 @@ public class HashTableConfig  {
     return loadFactor;
   }
 
-  public NamedExpression[] getKeyExprsBuild() {
+  public List<NamedExpression> getKeyExprsBuild() {
     return keyExprsBuild;
   }
 
-  public NamedExpression[] getKeyExprsProbe() {
+  public List<NamedExpression> getKeyExprsProbe() {
     return keyExprsProbe;
   }
 

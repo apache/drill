@@ -25,7 +25,7 @@ import org.junit.Test;
 public class TestDrillSQLWorker {
 
   private void validateFormattedIs(String sql, SqlParserPos pos, String expected) {
-    String formatted = DrillSqlWorker.formatSQLParsingError(sql, pos);
+    String formatted = SqlConverter.formatSQLParsingError(sql, pos);
     assertEquals(expected, formatted);
   }
 

@@ -29,6 +29,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.server.options.OptionManager;
 
 /**
  * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and
@@ -85,7 +86,7 @@ public abstract class InfoSchemaTable {
     return typeFactory.createStructType(relTypes, fieldNames);
   }
 
-  public abstract RecordGenerator getRecordGenerator();
+  public abstract RecordGenerator getRecordGenerator(OptionManager optionManager);
 
   /** Layout for the CATALOGS table. */
   static public class Catalogs extends InfoSchemaTable {
@@ -101,8 +102,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator() {
-      return new RecordGenerator.Catalogs();
+    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new RecordGenerator.Catalogs(optionManager);
     }
   }
 
@@ -122,8 +123,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator() {
-      return new RecordGenerator.Schemata();
+    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new RecordGenerator.Schemata(optionManager);
     }
   }
 
@@ -142,8 +143,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator() {
-      return new RecordGenerator.Tables();
+    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new RecordGenerator.Tables(optionManager);
     }
   }
 
@@ -162,8 +163,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator() {
-      return new RecordGenerator.Views();
+    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new RecordGenerator.Views(optionManager);
     }
   }
 
@@ -214,8 +215,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator() {
-      return new RecordGenerator.Columns();
+    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new RecordGenerator.Columns(optionManager);
     }
   }
 }

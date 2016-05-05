@@ -17,15 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec;
 
+import java.util.Iterator;
+
 import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.util.Iterator;
-
 public class HyperVectorValueIterator implements Iterator<Object> {
   private MaterializedField mf;
-  private HyperVectorWrapper hyperVector;
+  private HyperVectorWrapper<?> hyperVector;
   private int indexInVectorList;
   private int indexInCurrentVector;
   private ValueVector currVec;
@@ -34,7 +34,7 @@ public class HyperVectorValueIterator implements Iterator<Object> {
   // limit how many values will be read out of this iterator
   private long recordLimit;
 
-  public HyperVectorValueIterator(MaterializedField mf, HyperVectorWrapper hyperVector) {
+  public HyperVectorValueIterator(MaterializedField mf, HyperVectorWrapper<?> hyperVector) {
     this.mf = mf;
     this.hyperVector = hyperVector;
     this.totalValues = 0;
@@ -47,7 +47,7 @@ public class HyperVectorValueIterator implements Iterator<Object> {
     this.recordLimit = limit;
   }
 
-  public HyperVectorWrapper getHyperVector() {
+  public HyperVectorWrapper<?> getHyperVector() {
     return hyperVector;
   }
 

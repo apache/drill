@@ -72,7 +72,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -89,7 +89,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -108,7 +108,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -125,7 +125,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -144,7 +144,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
       }
     }
   }
@@ -164,7 +164,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
       }
     }
   }
@@ -184,7 +184,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
       }
     }
   }
@@ -204,7 +204,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -223,7 +223,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -240,7 +240,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
     }
   }
 
@@ -256,7 +256,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
     }
   }
 
@@ -272,7 +272,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.end, in.buffer, 0);
     }
   }
 
@@ -288,7 +288,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -304,7 +304,7 @@ public class Hash64Functions {
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -319,7 +319,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -337,7 +337,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -353,7 +353,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -371,7 +371,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -387,7 +387,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -405,7 +405,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -421,7 +421,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -439,7 +439,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -455,7 +455,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 
@@ -473,7 +473,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -489,7 +489,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + Decimal28SparseHolder.WIDTH,
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.start + Decimal28SparseHolder.WIDTH,
           in.buffer, 0);
     }
   }
@@ -508,7 +508,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.start
             + NullableDecimal28SparseHolder.WIDTH, in.buffer, 0);
       }
     }
@@ -525,7 +525,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + Decimal38SparseHolder.WIDTH,
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.start + Decimal38SparseHolder.WIDTH,
           in.buffer, 0);
     }
   }
@@ -544,7 +544,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.start, in.start
             + NullableDecimal38SparseHolder.WIDTH, in.buffer, 0);
       }
     }
@@ -565,7 +565,7 @@ public class Hash64Functions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
       }
     }
   }
@@ -582,7 +582,7 @@ public class Hash64Functions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash64(in.value, 0);
     }
   }
 }

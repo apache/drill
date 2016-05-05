@@ -18,13 +18,12 @@
 package org.apache.drill.exec.store.json;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Test;
 import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestJsonRecordReader extends BaseTestQuery {

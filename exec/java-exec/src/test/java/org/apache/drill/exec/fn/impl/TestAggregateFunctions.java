@@ -17,12 +17,17 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestAggregateFunctions extends BaseTestQuery {
 
@@ -211,8 +216,9 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
-  @Test // test aggregates when input is empty and data type is optional
-  public void testAggregateWithEmptyInput() throws Exception {
+  @Test
+  // test aggregates when input is empty and data type is optional
+  public void countEmptyNullableInput() throws Exception {
     String query = "select " +
         "count(employee_id) col1, avg(employee_id) col2, sum(employee_id) col3 " +
         "from cp.`employee.json` where 1 = 0";
@@ -225,8 +231,59 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .go();
   }
 
-  @Test // test aggregates when input is empty and data type is required
-  public void testAggregateWithEmptyRequiredInput() throws Exception {
+  @Test
+  @Ignore("DRILL-4473")
+  public void sumEmptyNonexistentNullableInput() throws Exception {
+    final String query = "select "
+        +
+        "sum(int_col) col1, sum(bigint_col) col2, sum(float4_col) col3, sum(float8_col) col4, sum(interval_year_col) col5 "
+        +
+        "from cp.`employee.json` where 1 = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5")
+        .baselineValues(null, null, null, null, null)
+        .go();
+  }
+
+  @Test
+  @Ignore("DRILL-4473")
+  public void avgEmptyNonexistentNullableInput() throws Exception {
+    // test avg function
+    final String query = "select "
+        +
+        "avg(int_col) col1, avg(bigint_col) col2, avg(float4_col) col3, avg(float8_col) col4, avg(interval_year_col) col5 "
+        +
+        "from cp.`employee.json` where 1 = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5")
+        .baselineValues(null, null, null, null, null)
+        .go();
+  }
+
+  @Test
+  public void stddevEmptyNonexistentNullableInput() throws Exception {
+    // test stddev function
+    final String query = "select " +
+        "stddev_pop(int_col) col1, stddev_pop(bigint_col) col2, stddev_pop(float4_col) col3, " +
+        "stddev_pop(float8_col) col4, stddev_pop(interval_year_col) col5 " +
+        "from cp.`employee.json` where 1 = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5")
+        .baselineValues(null, null, null, null, null)
+        .go();
+
+  }
+  @Test
+  public void minEmptyNonnullableInput() throws Exception {
     // test min function on required type
     String query = "select " +
         "min(bool_col) col1, min(int_col) col2, min(bigint_col) col3, min(float4_col) col4, min(float8_col) col5, " +
@@ -240,9 +297,13 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9", "col10")
         .baselineValues(null, null, null, null, null, null, null, null, null, null)
         .go();
+  }
+
+  @Test
+  public void maxEmptyNonnullableInput() throws Exception {
 
     // test max function
-    query = "select " +
+    final String query = "select " +
         "max(int_col) col1, max(bigint_col) col2, max(float4_col) col3, max(float8_col) col4, " +
         "max(date_col) col5, max(time_col) col6, max(timestamp_col) col7, max(interval_year_col) col8, " +
         "max(varhcar_col) col9 " +
@@ -254,45 +315,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9")
         .baselineValues(null, null, null, null, null, null, null, null, null)
         .go();
-
-    // test sum function
-    query = "select " +
-        "sum(int_col) col1, sum(bigint_col) col2, sum(float4_col) col3, sum(float8_col) col4, sum(interval_year_col) col5 " +
-        "from cp.`employee.json` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5")
-        .baselineValues(null, null, null, null, null)
-        .go();
-
-    // test avg function
-    query = "select " +
-        "avg(int_col) col1, avg(bigint_col) col2, avg(float4_col) col3, avg(float8_col) col4, avg(interval_year_col) col5 " +
-        "from cp.`employee.json` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5")
-        .baselineValues(null, null, null, null, null)
-        .go();
-
-    // test stddev function
-    query = "select " +
-        "stddev_pop(int_col) col1, stddev_pop(bigint_col) col2, stddev_pop(float4_col) col3, " +
-        "stddev_pop(float8_col) col4, stddev_pop(interval_year_col) col5 " +
-        "from cp.`employee.json` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5")
-        .baselineValues(null, null, null, null, null)
-        .go();
-
   }
+
 
   /*
    * Streaming agg on top of a filter produces wrong results if the first two batches are filtered out.
@@ -436,6 +460,69 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineColumns("cnt")
         .baselineValues(1155l)
         .build().run();
+  }
+
+  @Test
+  public void test4443() throws Exception {
+    test("SELECT MIN(columns[1]) FROM dfs_test.`%s/agg/4443.csv` GROUP BY columns[0]", TEST_RES_PATH);
+  }
+
+  @Test
+  public void testCountStarRequired() throws Exception {
+    final String query = "select count(*) as col from cp.`tpch/region.parquet`";
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(5l)
+        .build()
+        .run();
+  }
+
+
+  @Test // DRILL-4531
+  public void testPushFilterDown() throws Exception {
+    final String sql =
+        "SELECT  cust.custAddress, \n"
+            + "       lineitem.provider \n"
+            + "FROM ( \n"
+            + "      SELECT cast(c_custkey AS bigint) AS custkey, \n"
+            + "             c_address                 AS custAddress \n"
+            + "      FROM   cp.`tpch/customer.parquet` ) cust \n"
+            + "LEFT JOIN \n"
+            + "  ( \n"
+            + "    SELECT DISTINCT l_linenumber, \n"
+            + "           CASE \n"
+            + "             WHEN l_partkey IN (1, 2) THEN 'Store1'\n"
+            + "             WHEN l_partkey IN (5, 6) THEN 'Store2'\n"
+            + "           END AS provider \n"
+            + "    FROM  cp.`tpch/lineitem.parquet` \n"
+            + "    WHERE ( l_orderkey >=20160101 AND l_partkey <=20160301) \n"
+            + "      AND   l_partkey IN (1,2, 5, 6) ) lineitem\n"
+            + "ON        cust.custkey = lineitem.l_linenumber \n"
+            + "WHERE     provider IS NOT NULL \n"
+            + "GROUP BY  cust.custAddress, \n"
+            + "          lineitem.provider \n"
+            + "ORDER BY  cust.custAddress, \n"
+            + "          lineitem.provider";
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)(Join).*inner"}; // With filter pushdown, left join will be converted into inner join
+    final String[] excludedPatterns = {"(?s)(Join).*(left)"};
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPatterns);
   }
 
 }

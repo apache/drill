@@ -247,7 +247,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     //      e.g SELECT COUNT(DISTINCT a1) FROM t1 ;
     // we need to build a hash table on the aggregation column a1.
     // TODO:  This functionality will be added later.
-    if (hashAggrConfig.getGroupByExprs().length == 0) {
+    if (hashAggrConfig.getGroupByExprs().size() == 0) {
       throw new IllegalArgumentException("Currently, hash aggregation is only applicable if there are group-by " +
           "expressions.");
     }
