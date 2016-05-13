@@ -26,7 +26,10 @@ import org.junit.Assert;
 public class TestDropTable extends PlanTestBase {
 
   private static final String CREATE_SIMPLE_TABLE = "create table %s as select 1 from cp.`employee.json`";
+  private static final String CREATE_SIMPLE_VIEW = "create view %s as select 1 from cp.`employee.json`";
   private static final String DROP_TABLE = "drop table %s";
+  private static final String DROP_TABLE_IF_EXISTS = "drop table if exists %s";
+  private static final String DROP_VIEW_IF_EXISTS = "drop view if exists %s";
   private static final String BACK_TICK = "`";
 
   @Test
@@ -170,5 +173,53 @@ public class TestDropTable extends PlanTestBase {
     }
 
     Assert.assertTrue("Dropping table on immutable schema failed", dropFailed);
+  }
+
+  @Test // DRILL-4673
+  public void testDropTableIfExistsWhileTableExists() throws Exception {
+    final String existentTableName = "test_table";
+    test("use dfs_test.tmp");
+
+    // successful dropping of existent table
+    test(String.format(CREATE_SIMPLE_TABLE, existentTableName));
+    testBuilder()
+        .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, existentTableName))
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Table [%s] dropped", existentTableName))
+        .go();
+  }
+
+  @Test // DRILL-4673
+  public void testDropTableIfExistsWhileTableDoesNotExist() throws Exception {
+    final String nonExistentTableName = "test_table";
+    test("use dfs_test.tmp");
+
+    // dropping of non existent table without error
+    testBuilder()
+        .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, nonExistentTableName))
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Table [%s] not found", nonExistentTableName))
+        .go();
+  }
+
+  @Test // DRILL-4673
+  public void testDropTableIfExistsWhileItIsAView() throws Exception {
+    final String viewName = "test_view";
+    try{
+      test("use dfs_test.tmp");
+
+      // dropping of non existent table without error if the view with such name is existed
+      test(String.format(CREATE_SIMPLE_VIEW, viewName));
+      testBuilder()
+          .sqlQuery(String.format(DROP_TABLE_IF_EXISTS, viewName))
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Table [%s] not found", viewName))
+          .go();
+    } finally {
+      test(String.format(DROP_VIEW_IF_EXISTS, viewName));
+    }
   }
 }
