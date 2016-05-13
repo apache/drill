@@ -37,7 +37,8 @@
     "FILES",
     "REFRESH",
     "METADATA",
-    "DATABASE"
+    "DATABASE",
+    "IF"
   ]
 
   # List of methods for parsing custom SQL statements.

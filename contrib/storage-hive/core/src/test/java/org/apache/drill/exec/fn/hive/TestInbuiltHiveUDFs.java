@@ -23,7 +23,6 @@ import org.apache.drill.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.hive.HiveTestBase;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 
 import java.util.List;
@@ -84,4 +83,15 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
             "first_name","Bh","last_name","Venkata","position","Store"))
         .go();
   }
+
+  @Test // DRILL-3272
+  public void testIf() throws Exception {
+    testBuilder()
+        .sqlQuery("select `if`(1999 > 2000, 'latest', 'old') Period from hive.kv limit 1")
+        .ordered()
+        .baselineColumns("Period")
+        .baselineValues("old")
+        .go();
+  }
+
 }

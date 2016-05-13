@@ -591,4 +591,35 @@ public class TestViewSupport extends TestBaseViewSupport {
       FileUtils.deleteQuietly(tblPath);
     }
   }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenViewExists() throws Exception {
+    final String existentViewName = generateViewName();
+
+    // successful dropping of existent view
+    createViewHelper(TEMP_SCHEMA, existentViewName, TEMP_SCHEMA, null,
+        "SELECT c_custkey, c_nationkey from cp.`tpch/customer.parquet`");
+    dropViewIfExistsHelper(TEMP_SCHEMA, existentViewName, TEMP_SCHEMA, true);
+  }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenViewDoesNotExist() throws Exception {
+    final String nonExistentViewName = generateViewName();
+
+    // dropping of non existent view without error
+    dropViewIfExistsHelper(TEMP_SCHEMA, nonExistentViewName, TEMP_SCHEMA, false);
+  }
+
+  @Test // DRILL-4673
+  public void dropViewIfExistsWhenItIsATable() throws Exception {
+    final String tableName = "table_name";
+    try{
+      // dropping of non existent view without error if the table with such name is existed
+      test(String.format("CREATE TABLE %s.%s as SELECT region_id, sales_city FROM cp.`region.json`",
+          TEMP_SCHEMA, tableName));
+      dropViewIfExistsHelper(TEMP_SCHEMA, tableName, TEMP_SCHEMA, false);
+    } finally {
+      test(String.format("DROP TABLE IF EXISTS %s.%s ", TEMP_SCHEMA, tableName));
+    }
+  }
 }
