@@ -240,14 +240,30 @@ public class StringFunctions{
     public void eval() {
       out.start = 0;
       charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
-      // Reusing same charSequenceWrapper, no need to pass it in.
-      // This saves one method call since reset(CharSequence) calls reset()
-      matcher.reset();
       final String r = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(replacement.start, replacement.end, replacement.buffer);
-      final byte [] bytea = matcher.replaceAll(r).getBytes(java.nio.charset.Charset.forName("UTF-8"));
-      out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
-      out.buffer.setBytes(out.start, bytea);
-      out.end = bytea.length;
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      matcher.reset();
+      // Implementation of Matcher.replaceAll() in-lined to avoid creating String object
+      // in cases where we don't actually replace anything.
+      boolean result = matcher.find();
+      if (result) {
+          StringBuffer sb = new StringBuffer();
+          do {
+              matcher.appendReplacement(sb, r);
+              result = matcher.find();
+          } while (result);
+          matcher.appendTail(sb);
+          final byte [] bytea = sb.toString().getBytes(java.nio.charset.Charset.forName("UTF-8"));
+          out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
+          out.buffer.setBytes(out.start, bytea);
+          out.end = bytea.length;
+      }
+      else {
+          // There is no matches, copy the input bytes into the output buffer
+          out.buffer = buffer = buffer.reallocIfNeeded(input.end - input.start);
+          out.buffer.setBytes(0, input.buffer, input.start, input.end - input.start);
+          out.end = input.end - input.start;
+      }
     }
   }
 
