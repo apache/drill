@@ -23,9 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 
+import com.codahale.metrics.Counter;
 import org.apache.drill.common.SelfCleaningRunnable;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -48,7 +50,6 @@ import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -105,19 +106,13 @@ public class WorkManager implements AutoCloseable {
     dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
     statusThread.start();
 
-    // TODO remove try block once metrics moved from singleton, For now catch to avoid unit test failures
-    try {
-      dContext.getMetrics().register(
-          MetricRegistry.name("drill.exec.work.running_fragments." + dContext.getEndpoint().getUserPort()),
-              new Gauge<Integer>() {
-                @Override
-                public Integer getValue() {
-                  return runningFragments.size();
-                }
-          });
-    } catch (final IllegalArgumentException e) {
-      logger.warn("Exception while registering metrics", e);
-    }
+    DrillMetrics.register("drill.fragments.running",
+        new Gauge<Integer>() {
+          @Override
+          public Integer getValue() {
+            return runningFragments.size();
+          }
+        });
   }
 
   public Executor getExecutor() {
@@ -144,8 +139,9 @@ public class WorkManager implements AutoCloseable {
   public void close() throws Exception {
     statusThread.interrupt();
 
-    if (!runningFragments.isEmpty()) {
-      logger.warn("Closing WorkManager but there are {} running fragments.", runningFragments.size());
+    final long numRunningFragments = runningFragments.size();
+    if (numRunningFragments != 0) {
+      logger.warn("Closing WorkManager but there are {} running fragments.", numRunningFragments);
       if (logger.isDebugEnabled()) {
         for (final FragmentHandle handle : runningFragments.keySet()) {
           logger.debug("Fragment still running: {} status: {}", QueryIdHelper.getQueryIdentifier(handle),
@@ -256,7 +252,7 @@ public class WorkManager implements AutoCloseable {
 
     /**
      * Currently used to start a root fragment that is blocked on data, and intermediate fragments. This method is
-     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataResponseHandlerImpl#handle}
+     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataServer#handle}
      * @param fragmentManager the manager for the fragment
      */
     public void startFragmentPendingRemote(final FragmentManager fragmentManager) {

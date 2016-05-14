@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
+import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
 
 import java.util.concurrent.ExecutorService;
@@ -34,8 +35,6 @@ import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
 
-import com.codahale.metrics.MetricRegistry;
-
 public class BootStrapContext implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
 
@@ -52,7 +51,8 @@ public class BootStrapContext implements AutoCloseable {
     this.classpathScan = classpathScan;
     this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
     this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
-    this.metrics = DrillMetrics.getInstance();
+    // Note that metrics are stored in a static instance
+    this.metrics = DrillMetrics.getRegistry();
     this.allocator = RootAllocatorFactory.newRoot(config);
     this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
         new SynchronousQueue<Runnable>(),

@@ -48,7 +48,7 @@ import com.google.common.collect.Range;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
-  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final MetricRegistry metrics = DrillMetrics.getRegistry();
   static final String BLOCK_MAP_BUILDER_TIMER = MetricRegistry.name(BlockMapBuilder.class, "blockMapBuilderTimer");
 
   private final Map<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = Maps.newConcurrentMap();
