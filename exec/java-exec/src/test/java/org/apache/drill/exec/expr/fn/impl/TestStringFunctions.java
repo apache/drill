@@ -117,6 +117,32 @@ public class TestStringFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testRegexpMatchesNonAscii() throws Exception {
+    testBuilder()
+        .sqlQuery("select regexp_matches(a, 'München') res1, regexp_matches(b, 'AMünchenA') res2 " +
+            "from (values('München', 'MünchenA'), ('MünchenA', 'AMünchenA')) as t(a,b)")
+        .unOrdered()
+        .baselineColumns("res1", "res2")
+        .baselineValues(true, false)
+        .baselineValues(false, true)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testRegexpReplace() throws Exception {
+    testBuilder()
+        .sqlQuery("select regexp_replace(a, 'a|c', 'x') res1, regexp_replace(b, 'd', 'zzz') res2 " +
+                  "from (values('abc', 'bcd'), ('bcd', 'abc')) as t(a,b)")
+        .unOrdered()
+        .baselineColumns("res1", "res2")
+        .baselineValues("xbx", "bczzz")
+        .baselineValues("bxd", "abc")
+        .build()
+        .run();
+  }
+
+  @Test
   public void testILike() throws Exception {
     testBuilder()
         .sqlQuery("select n_name from cp.`tpch/nation.parquet` where ilike(n_name, '%united%') = true")
