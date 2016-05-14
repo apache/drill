@@ -26,7 +26,7 @@ import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.internal.SystemPropertyUtil;
+import org.apache.drill.exec.util.SystemPropertyUtil;
 
 import java.util.Locale;
 

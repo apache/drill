@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.codahale.metrics.Counter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
@@ -44,6 +45,8 @@ import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -115,6 +118,10 @@ public class Foreman implements Runnable {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
 
+  private static final Counter enqueuedQueries = DrillMetrics.getRegistry().counter("drill.queries.enqueued");
+  private static final Counter runningQueries = DrillMetrics.getRegistry().counter("drill.queries.running");
+  private static final Counter completedQueries = DrillMetrics.getRegistry().counter("drill.queries.completed");
+
   private final QueryId queryId;
   private final String queryIdString;
   private final RunQuery queryRequest;
@@ -170,6 +177,7 @@ public class Foreman implements Runnable {
 
     final QueryState initialState = queuingEnabled ? QueryState.ENQUEUED : QueryState.STARTING;
     recordNewState(initialState);
+    enqueuedQueries.inc();
   }
 
   private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
@@ -233,6 +241,8 @@ public class Foreman implements Runnable {
 
     // track how long the query takes
     queryManager.markStartTime();
+    enqueuedQueries.dec();
+    runningQueries.inc();
 
     try {
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
@@ -809,6 +819,8 @@ public class Foreman implements Runnable {
         logger.warn("unable to close query manager", e);
       }
 
+      runningQueries.dec();
+      completedQueries.inc();
       try {
         releaseLease();
       } finally {
