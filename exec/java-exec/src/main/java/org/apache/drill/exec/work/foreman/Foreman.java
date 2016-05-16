@@ -128,7 +128,6 @@ public class Foreman implements Runnable {
 
   private volatile DistributedLease lease; // used to limit the number of concurrent queries
 
-  private final ExtendedLatch acceptExternalEvents = new ExtendedLatch(); // gates acceptance of external events
   private final StateListener stateListener = new StateListener(); // source of external events
   private final ResponseSendListener responseListener = new ResponseSendListener();
   private final StateSwitch stateSwitch = new StateSwitch();
@@ -296,7 +295,7 @@ public class Foreman implements Runnable {
        * would wait on the cancelling thread to signal a resume and the cancelling thread would wait on the Foreman
        * to accept events.
        */
-      acceptExternalEvents.countDown();
+      stateSwitch.start();
 
       // If we received the resume signal before fragments are setup, the first call does not actually resume the
       // fragments. Since setup is done, all fragments must have been delivered to remote nodes. Now we can resume.
@@ -1221,8 +1220,6 @@ public class Foreman implements Runnable {
      *   to the user
      */
     public void moveToState(final QueryState newState, final Exception ex) {
-      acceptExternalEvents.awaitUninterruptibly();
-
       Foreman.this.moveToState(newState, ex);
     }
   }

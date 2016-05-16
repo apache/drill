@@ -37,6 +37,7 @@ import java.util.LinkedList;
 public abstract class EventProcessor<T> {
   private final LinkedList<T> queuedEvents = new LinkedList<>();
   private volatile boolean isProcessing = false;
+  private volatile boolean started;
 
   /**
    * Constructor.
@@ -57,25 +58,35 @@ public abstract class EventProcessor<T> {
    */
   public void sendEvent(final T newEvent) {
     synchronized (queuedEvents) {
-      if (isProcessing) {
-        queuedEvents.addLast(newEvent);
+      queuedEvents.addLast(newEvent);
+      if (!started || isProcessing) {
         return;
       }
 
       isProcessing = true;
     }
 
+    processEvents();
+  }
+
+  public void start() {
+    if (started) {
+      return;
+    }
+
+    synchronized (queuedEvents) {
+      started = true;
+      isProcessing = true;
+    }
+
+    processEvents();
+  }
+
+  private void processEvents() {
     @SuppressWarnings("resource")
     final DeferredException deferredException = new DeferredException();
-    T event = newEvent;
+    T event;
     while (true) {
-      try {
-        processEvent(event);
-      } catch (Exception e) {
-        deferredException.addException(e);
-      } catch (AssertionError ae) {
-        deferredException.addException(new RuntimeException("Caught an assertion", ae));
-      }
 
       synchronized (queuedEvents) {
         if (queuedEvents.isEmpty()) {
@@ -84,6 +95,14 @@ public abstract class EventProcessor<T> {
         }
 
         event = queuedEvents.removeFirst();
+      }
+
+      try {
+        processEvent(event);
+      } catch (Exception e) {
+        deferredException.addException(e);
+      } catch (AssertionError ae) {
+        deferredException.addException(new RuntimeException("Caught an assertion", ae));
       }
     }
 
