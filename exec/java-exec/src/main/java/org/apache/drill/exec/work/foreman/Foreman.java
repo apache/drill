@@ -256,15 +256,15 @@ public class Foreman implements Runnable {
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
     } catch (final OutOfMemoryException e) {
-      moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
+      processStateChange(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
-      moveToState(QueryState.FAILED, e);
+      processStateChange(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
-      moveToState(QueryState.FAILED,
+      processStateChange(QueryState.FAILED,
           new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } catch (final OutOfMemoryError e) {
       if ("Direct buffer memory".equals(e.getMessage())) {
-        moveToState(QueryState.FAILED,
+        processStateChange(QueryState.FAILED,
             UserException.resourceError(e)
                 .message("One or more nodes ran out of memory while executing the query.")
                 .build(logger));
@@ -398,7 +398,7 @@ public class Foreman implements Runnable {
     MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
     if (queuingEnabled) {
       acquireQuerySemaphore(plan);
-      moveToState(QueryState.STARTING, null);
+      processStateChange(QueryState.STARTING, null);
     }
 
     final QueryWorkUnit work = getQueryWorkUnit(plan);
@@ -416,7 +416,7 @@ public class Foreman implements Runnable {
 
     setupNonRootFragments(planFragments);
 
-    moveToState(QueryState.RUNNING, null);
+    processStateChange(QueryState.RUNNING, null);
     logger.debug("Fragments running.");
   }
 
@@ -456,7 +456,7 @@ public class Foreman implements Runnable {
     }
     if (queuingEnabled) {
       acquireQuerySemaphore(rootOperator.getCost());
-      moveToState(QueryState.STARTING, null);
+      processStateChange(QueryState.STARTING, null);
     }
     drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
     drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
@@ -468,7 +468,7 @@ public class Foreman implements Runnable {
 
     setupNonRootFragments(planFragments);
 
-    moveToState(QueryState.RUNNING, null);
+    processStateChange(QueryState.RUNNING, null);
     logger.debug("Fragments running.");
   }
 
@@ -826,20 +826,10 @@ public class Foreman implements Runnable {
     }
   }
 
-  private class StateSwitch extends EventProcessor<StateEvent> {
-    public void moveToState(final QueryState newState, final Exception exception) {
-      sendEvent(new StateEvent(newState, exception));
-    }
-
-    @Override
-    protected void processEvent(final StateEvent event) {
-      final QueryState newState = event.newState;
-      final Exception exception = event.exception;
-
-      // TODO Auto-generated method stub
-      logger.debug(queryIdString + ": State change requested {} --> {}", state, newState,
-          exception);
-      switch (state) {
+  private void processStateChange(final QueryState newState, final Exception exception) {
+    logger.debug(queryIdString + ": State change requested {} --> {}", state, newState,
+      exception);
+    switch (state) {
       case ENQUEUED:
         switch (newState) {
           case FAILED:
@@ -868,35 +858,35 @@ public class Foreman implements Runnable {
          * cause this to be called recursively.
          */
         switch (newState) {
-        case CANCELLATION_REQUESTED: {
-          assert exception == null;
-          recordNewState(QueryState.CANCELLATION_REQUESTED);
-          queryManager.cancelExecutingFragments(drillbitContext);
-          foremanResult.setCompleted(QueryState.CANCELED);
+          case CANCELLATION_REQUESTED: {
+            assert exception == null;
+            recordNewState(QueryState.CANCELLATION_REQUESTED);
+            queryManager.cancelExecutingFragments(drillbitContext);
+            foremanResult.setCompleted(QueryState.CANCELED);
           /*
            * We don't close the foremanResult until we've gotten
            * acknowledgements, which happens below in the case for current state
            * == CANCELLATION_REQUESTED.
            */
-          return;
-        }
+            return;
+          }
 
-        case COMPLETED: {
-          assert exception == null;
-          recordNewState(QueryState.COMPLETED);
-          foremanResult.setCompleted(QueryState.COMPLETED);
-          foremanResult.close();
-          return;
-        }
+          case COMPLETED: {
+            assert exception == null;
+            recordNewState(QueryState.COMPLETED);
+            foremanResult.setCompleted(QueryState.COMPLETED);
+            foremanResult.close();
+            return;
+          }
 
-        case FAILED: {
-          assert exception != null;
-          recordNewState(QueryState.FAILED);
-          queryManager.cancelExecutingFragments(drillbitContext);
-          foremanResult.setFailed(exception);
-          foremanResult.close();
-          return;
-        }
+          case FAILED: {
+            assert exception != null;
+            recordNewState(QueryState.FAILED);
+            queryManager.cancelExecutingFragments(drillbitContext);
+            foremanResult.setFailed(exception);
+            foremanResult.close();
+            return;
+          }
 
         }
         break;
@@ -904,8 +894,8 @@ public class Foreman implements Runnable {
 
       case CANCELLATION_REQUESTED:
         if ((newState == QueryState.CANCELED)
-            || (newState == QueryState.COMPLETED)
-            || (newState == QueryState.FAILED)) {
+          || (newState == QueryState.COMPLETED)
+          || (newState == QueryState.FAILED)) {
 
           if (drillbitContext.getConfig().getBoolean(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS)) {
             if (newState == QueryState.FAILED) {
@@ -926,15 +916,25 @@ public class Foreman implements Runnable {
       case COMPLETED:
       case FAILED:
         logger
-            .warn(
-                "Dropping request to move to {} state as query is already at {} state (which is terminal).",
-                newState, state);
+          .warn(
+            "Dropping request to move to {} state as query is already at {} state (which is terminal).",
+            newState, state);
         return;
-      }
+    }
 
-      throw new IllegalStateException(String.format(
-          "Failure trying to change states: %s --> %s", state.name(),
-          newState.name()));
+    throw new IllegalStateException(String.format(
+      "Failure trying to change states: %s --> %s", state.name(),
+      newState.name()));
+  }
+
+  private class StateSwitch extends EventProcessor<StateEvent> {
+    public void addEvent(final QueryState newState, final Exception exception) {
+      sendEvent(new StateEvent(newState, exception));
+    }
+
+    @Override
+    protected void processEvent(final StateEvent event) {
+      processStateChange(event.newState, event.exception);
     }
   }
 
@@ -944,8 +944,8 @@ public class Foreman implements Runnable {
    * @param newState the state to move to
    * @param exception if not null, the exception that drove this state transition (usually a failure)
    */
-  private void moveToState(final QueryState newState, final Exception exception) {
-    stateSwitch.moveToState(newState, exception);
+  private void addToEventQueue(final QueryState newState, final Exception exception) {
+    stateSwitch.addEvent(newState, exception);
   }
 
   private void recordNewState(final QueryState newState) {
@@ -1220,7 +1220,7 @@ public class Foreman implements Runnable {
      *   to the user
      */
     public void moveToState(final QueryState newState, final Exception ex) {
-      Foreman.this.moveToState(newState, ex);
+      Foreman.this.addToEventQueue(newState, ex);
     }
   }
 
@@ -1232,13 +1232,11 @@ public class Foreman implements Runnable {
     public void failed(final RpcException ex) {
       logger.info("Failure while trying communicate query result to initiating client. " +
               "This would happen if a client is disconnected before response notice can be sent.", ex);
-      stateListener.moveToState(QueryState.FAILED, ex);
     }
 
     @Override
     public void interrupted(final InterruptedException e) {
       logger.warn("Interrupted while waiting for RPC outcome of sending final query result to initiating client.");
-      stateListener.moveToState(QueryState.FAILED, e);
     }
   }
 }
