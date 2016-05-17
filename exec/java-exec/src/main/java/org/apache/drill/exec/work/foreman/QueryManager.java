@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -53,7 +52,6 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
-import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.predicates.IntObjectPredicate;
@@ -79,7 +77,6 @@ public class QueryManager implements AutoCloseable {
       .build();
 
   private final Map<DrillbitEndpoint, NodeTracker> nodeMap = Maps.newHashMap();
-  private final StateListener stateListener;
   private final QueryId queryId;
   private final String stringQueryId;
   private final RunQuery runQuery;
@@ -108,10 +105,9 @@ public class QueryManager implements AutoCloseable {
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
 
   public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
-      final ClusterCoordinator coordinator, final StateListener stateListener, final Foreman foreman) {
+      final ClusterCoordinator coordinator, final Foreman foreman) {
     this.queryId =  queryId;
     this.runQuery = runQuery;
-    this.stateListener = stateListener;
     this.foreman = foreman;
 
     stringQueryId = QueryIdHelper.getQueryId(queryId);
@@ -471,7 +467,7 @@ public class QueryManager implements AutoCloseable {
     final int remaining = totalNodes - finishedNodes;
     if (remaining == 0) {
       // this target state may be adjusted in moveToState() based on current FAILURE/CANCELLATION_REQUESTED status
-      stateListener.moveToState(QueryState.COMPLETED, null);
+      foreman.addToEventQueue(QueryState.COMPLETED, null);
     } else {
       logger.debug("Foreman is still waiting for completion message from {} nodes containing {} fragments", remaining,
           this.fragmentDataSet.size() - finishedFragments.get());
@@ -494,7 +490,7 @@ public class QueryManager implements AutoCloseable {
         break;
 
       case FAILED:
-        stateListener.moveToState(QueryState.FAILED, new UserRemoteException(status.getProfile().getError()));
+        foreman.addToEventQueue(QueryState.FAILED, new UserRemoteException(status.getProfile().getError()));
         // fall-through.
       case FINISHED:
       case CANCELLED:
@@ -548,7 +544,7 @@ public class QueryManager implements AutoCloseable {
       if (atLeastOneFailure) {
         logger.warn("Drillbits [{}] no longer registered in cluster.  Canceling query {}",
             failedNodeList, QueryIdHelper.getQueryId(queryId));
-        stateListener.moveToState(QueryState.FAILED,
+        foreman.addToEventQueue(QueryState.FAILED,
             new ForemanException(String.format("One more more nodes lost connectivity during query.  Identified nodes were [%s].",
                 failedNodeList)));
       }
