@@ -63,6 +63,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntHashSet;
@@ -76,12 +77,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private Projector projector;
   private List<ValueVector> allocationVectors;
   private List<ComplexWriter> complexWriters;
+  private List<DrillComplexWriterFuncHolder> complexExprList;
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
 
   private static final String EMPTY_STRING = "";
   private boolean first = true;
+  private boolean wasNone = false; // whether a NONE iter outcome was already seen
 
   private class ClassifierResult {
     public boolean isStar = false;
@@ -121,6 +124,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   @Override
   public IterOutcome innerNext() {
+    if (wasNone) {
+      return IterOutcome.NONE;
+    }
     recordCount = 0;
     if (hasRemainder) {
       handleRemainder();
@@ -136,6 +142,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   @Override
   protected IterOutcome doWork() {
+    if (wasNone) {
+      return IterOutcome.NONE;
+    }
+
     int incomingRecordCount = incoming.getRecordCount();
 
     if (first && incomingRecordCount == 0) {
@@ -146,6 +156,23 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           if (next == IterOutcome.OUT_OF_MEMORY) {
             outOfMemory = true;
             return next;
+          } else if (next == IterOutcome.NONE) {
+            // since this is first batch and we already got a NONE, need to set up the schema
+            if (!doAlloc(0)) {
+              outOfMemory = true;
+              return IterOutcome.OUT_OF_MEMORY;
+            }
+            setValueCount(0);
+
+            // Only need to add the schema for the complex exprs because others should already have
+            // been setup during setupNewSchema
+            for (DrillComplexWriterFuncHolder f : complexExprList) {
+              container.addOrGet(f.getReference().getRootSegment().getPath(),
+                  Types.required(MinorType.MAP), MapVector.class);
+            }
+            container.buildSchema(SelectionVectorMode.NONE);
+            wasNone = true;
+            return IterOutcome.OK_NEW_SCHEMA;
           } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA) {
             return next;
           }
@@ -164,7 +191,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
     container.zeroVectors();
 
-    if (!doAlloc()) {
+    if (!doAlloc(incomingRecordCount)) {
       outOfMemory = true;
       return IterOutcome.OUT_OF_MEMORY;
     }
@@ -193,7 +220,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   private void handleRemainder() {
     final int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    if (!doAlloc()) {
+    if (!doAlloc(remainingRecordCount)) {
       outOfMemory = true;
       return;
     }
@@ -222,10 +249,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     complexWriters.add(writer);
   }
 
-  private boolean doAlloc() {
+  private boolean doAlloc(int recordCount) {
     //Allocate vv in the allocationVectors.
     for (final ValueVector v : this.allocationVectors) {
-      AllocationHelper.allocateNew(v, incoming.getRecordCount());
+      AllocationHelper.allocateNew(v, recordCount);
     }
 
     //Allocate vv for complexWriters.
@@ -417,6 +444,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
         cg.addExpr(expr, false);
+        if (complexExprList == null) {
+          complexExprList = Lists.newArrayList();
+        }
+        // save the expr for later for getting schema when input is empty
+        complexExprList.add((DrillComplexWriterFuncHolder)((DrillFuncHolderExpr)expr).getHolder());
       } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);
