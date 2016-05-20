@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.drill.common.Version;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -397,12 +398,11 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     return getServerMeta().getQuotedIdentifierCasing() == IdentifierCasing.IC_STORES_MIXED;
   }
 
-  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
   @Override
   public String getIdentifierQuoteString() throws SQLException {
     throwIfClosed();
     if (!getServerMetaSupported()) {
-      return "`";
+      return Quoting.BACK_TICK.string;
     }
     return getServerMeta().getIdentifierQuoteString();
   }

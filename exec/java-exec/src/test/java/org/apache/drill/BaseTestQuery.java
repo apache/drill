@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -51,7 +52,6 @@ import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -237,9 +237,9 @@ public class BaseTestQuery extends ExecTest {
    */
   public static void updateClient(final String user, final String password) throws Exception {
     final Properties props = new Properties();
-    props.setProperty(UserSession.USER, user);
+    props.setProperty(DrillProperties.USER, user);
     if (password != null) {
-      props.setProperty(UserSession.PASSWORD, password);
+      props.setProperty(DrillProperties.PASSWORD, password);
     }
     updateClient(props);
   }

@@ -200,6 +200,6 @@ public class OptionValue implements Comparable<OptionValue> {
 
   @Override
   public String toString() {
-    return "OptionValue [type=" + type + ", name=" + name + ", value=" + getValue() + "]";
+    return "OptionValue [ type=" + type + ", name=" + name + ", value=" + getValue() + " ]";
   }
 }

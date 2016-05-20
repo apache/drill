@@ -63,6 +63,8 @@ public final class DrillProperties extends Properties {
   // Subject's credentials set
   public static final String KERBEROS_FROM_SUBJECT = "from_subject";
 
+  public static final String QUOTING_IDENTIFIERS = "quoting_identifiers";
+
   // Although all properties from the application are sent to the server (from the client), the following
   // sets of properties are used by the client and server respectively. These are reserved words.
 
@@ -77,7 +79,8 @@ public final class DrillProperties extends Properties {
   public static final ImmutableSet<String> ACCEPTED_BY_SERVER = ImmutableSet.of(
       USER /** deprecated */, PASSWORD /** deprecated */,
       SCHEMA,
-      IMPERSONATION_TARGET
+      IMPERSONATION_TARGET,
+      QUOTING_IDENTIFIERS
   );
 
   private DrillProperties() {

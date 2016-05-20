@@ -27,9 +27,11 @@ import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdCo
 public class DrillParserConfig implements SqlParser.Config {
 
   private final long identifierMaxLength;
+  private final Quoting quotingIdentifiers;
 
   public DrillParserConfig(PlannerSettings settings) {
     identifierMaxLength = settings.getIdentifierMaxLength();
+    quotingIdentifiers = settings.getQuotingIdentifiers();
   }
 
   @Override
@@ -49,7 +51,7 @@ public class DrillParserConfig implements SqlParser.Config {
 
   @Override
   public Quoting quoting() {
-    return Quoting.BACK_TICK;
+    return quotingIdentifiers;
   }
 
   @Override

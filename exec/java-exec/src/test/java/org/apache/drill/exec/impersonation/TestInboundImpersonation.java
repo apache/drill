@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.test.UserExceptionMatcher;
@@ -128,9 +127,9 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
     // Connect as PROXY_NAME and query for IMPERSONATION_TARGET
     // data belongs to OWNER, however a view is shared with IMPERSONATION_TARGET
     final Properties connectionProps = new Properties();
-    connectionProps.setProperty(UserSession.USER, PROXY_NAME);
-    connectionProps.setProperty(UserSession.PASSWORD, PROXY_PASSWORD);
-    connectionProps.setProperty(UserSession.IMPERSONATION_TARGET, TARGET_NAME);
+    connectionProps.setProperty(DrillProperties.USER, PROXY_NAME);
+    connectionProps.setProperty(DrillProperties.PASSWORD, PROXY_PASSWORD);
+    connectionProps.setProperty(DrillProperties.IMPERSONATION_TARGET, TARGET_NAME);
     updateClient(connectionProps);
 
     testBuilder()
@@ -146,9 +145,9 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
   public void unauthorizedTarget() throws Exception {
     final String unauthorizedTarget = org2Users[0];
     final Properties connectionProps = new Properties();
-    connectionProps.setProperty(UserSession.USER, PROXY_NAME);
-    connectionProps.setProperty(UserSession.PASSWORD, PROXY_PASSWORD);
-    connectionProps.setProperty(UserSession.IMPERSONATION_TARGET, unauthorizedTarget);
+    connectionProps.setProperty(DrillProperties.USER, PROXY_NAME);
+    connectionProps.setProperty(DrillProperties.PASSWORD, PROXY_PASSWORD);
+    connectionProps.setProperty(DrillProperties.IMPERSONATION_TARGET, unauthorizedTarget);
     updateClient(connectionProps); // throws up
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,10 +19,13 @@ package org.apache.drill.exec.planner.sql;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Test;
 
-public class TestDrillSQLWorker {
+public class TestDrillSQLWorker extends BaseTestQuery {
 
   private void validateFormattedIs(String sql, SqlParserPos pos, String expected) {
     String formatted = SqlConverter.formatSQLParsingError(sql, pos);
@@ -47,5 +50,43 @@ public class TestDrillSQLWorker {
     validateFormattedIs(sql, new SqlParserPos(-11, -10), sql);
     validateFormattedIs(sql, new SqlParserPos(0, 10), sql);
     validateFormattedIs(sql, new SqlParserPos(100, 10), sql);
+  }
+
+  @Test
+  public void testDoubleQuotesForQuotingIdentifiers() throws Exception {
+    try {
+      test("ALTER SESSION SET `%s` = '%s'", PlannerSettings.QUOTING_IDENTIFIERS_KEY,
+          Quoting.DOUBLE_QUOTE.string);
+      testBuilder()
+          .sqlQuery("select \"employee_id\", \"full_name\" from cp.\"employee.json\" limit 1")
+          .ordered()
+          .baselineColumns("employee_id", "full_name")
+          .baselineValues(1L, "Sheri Nowmer")
+          .go();
+
+      // Other quoting characters are not acceptable while particular one is chosen,
+      // since calcite doesn't support parsing sql statements with several quoting identifiers characters
+      errorMsgTestHelper("select `employee_id`, `full_name` from cp.`employee.json` limit 1", "Encountered: \"`\"");
+      // Mix of different quotes in the one SQL statement is not acceptable
+      errorMsgTestHelper("select \"employee_id\", \"full_name\" from cp.`employee.json` limit 1", "Encountered: \"`\"");
+    } finally {
+      test("ALTER SESSION RESET %s", PlannerSettings.QUOTING_IDENTIFIERS_KEY);
+    }
+  }
+
+  @Test
+  public void testBracketsForQuotingIdentifiers() throws Exception {
+    try {
+      test("ALTER SESSION SET `%s` = '%s'", PlannerSettings.QUOTING_IDENTIFIERS_KEY,
+          Quoting.BRACKET.string);
+      testBuilder()
+          .sqlQuery("select [employee_id], [full_name] from cp.[employee.json] limit 1")
+          .ordered()
+          .baselineColumns("employee_id", "full_name")
+          .baselineValues(1L, "Sheri Nowmer")
+          .go();
+    } finally {
+      test("ALTER SESSION RESET %s", PlannerSettings.QUOTING_IDENTIFIERS_KEY);
+    }
   }
 }

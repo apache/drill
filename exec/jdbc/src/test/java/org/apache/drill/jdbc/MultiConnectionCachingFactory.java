@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,7 @@ public class MultiConnectionCachingFactory implements CachingConnectionFactory {
    * {@link java.sql.Connection#close()}. Consumer must call {#close} to close the cached connections.
    */
   @Override
-  public Connection getConnection(ConnectionInfo info) throws Exception {
+  public Connection getConnection(ConnectionInfo info) throws SQLException {
     Connection conn = cache.get(info);
     if (conn == null) {
       conn = delegate.getConnection(info);
