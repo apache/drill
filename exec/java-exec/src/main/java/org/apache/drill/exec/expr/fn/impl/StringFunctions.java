@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 
@@ -38,6 +39,8 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+
+import com.google.common.base.Charsets;
 
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
@@ -268,7 +271,11 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+        byte[] buf = new byte[pattern.end - pattern.start];
+        pattern.buffer.getBytes(pattern.start, buf, 0, pattern.end - pattern.start);
+        String s = new String(buf, StandardCharsets.ISO_8859_1);
+
+      matcher = java.util.regex.Pattern.compile(s).matcher("");
       charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
       matcher.reset(charSequenceWrapper);
     }
