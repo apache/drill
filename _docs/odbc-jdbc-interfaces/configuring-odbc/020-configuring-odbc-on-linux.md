@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date:  
+date: 2016-05-20 17:51:57 UTC
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
@@ -15,7 +15,7 @@ steps:
 ## Sample Configuration Files
 
 Before you connect to Drill through an ODBC client tool
-on Linux, copy the following configuration files in `/opt/mapr/drillobdc/Setup` to your home directory unless the files already exist in your home directory:
+on Linux, copy the following configuration files in `/opt/mapr/drillodbc/Setup` to your home directory unless the files already exist in your home directory:
 
 * `mapr.drillodbc.ini`
 * `odbc.ini`
