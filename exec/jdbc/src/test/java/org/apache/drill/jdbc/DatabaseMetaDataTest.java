@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.calcite.avatica.util.Quoting;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -103,10 +104,12 @@ public class DatabaseMetaDataTest {
   //  storesMixedCaseQuotedIdentifiers()
 
 
-  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  // TODO(DRILL-5402): Update when server meta information will be updated during one session.
   @Test
-  public void testGetIdentifierQuoteStringSaysBackquote() throws SQLException {
-    assertThat( dbmd.getIdentifierQuoteString(), equalTo( "`" ) );
+  public void testGetIdentifierQuoteString() throws SQLException {
+    // If connection string hasn't "quoting_identifiers" property, this method will return current system
+    // "planner.parser.quoting_identifiers" option (back tick by default)
+    assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.BACK_TICK.string));
   }
 
 

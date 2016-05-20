@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,10 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 /**
  * Validates the values provided to Drill options.
@@ -97,5 +98,12 @@ public abstract class OptionValidator {
    * @throws UserException message to describe error with value, including range or list of expected values
    */
   public abstract void validate(OptionValue value, OptionManager manager);
+
+  /**
+   * Gets the kind of this option value for this validator.
+   *
+   * @return kind of this option value
+   */
+  public abstract Kind getKind();
 
 }

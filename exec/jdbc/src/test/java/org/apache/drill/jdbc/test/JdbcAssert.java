@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -167,7 +167,7 @@ public class JdbcAssert {
       this.info = info;
       this.adapter = new ConnectionFactoryAdapter() {
         @Override
-        public Connection createConnection() throws Exception {
+        public Connection createConnection() throws SQLException {
           return factory.getConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
         }
       };

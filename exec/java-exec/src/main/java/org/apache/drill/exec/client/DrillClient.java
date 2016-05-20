@@ -527,7 +527,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   /**
    * Returns the list of methods supported by the server based on its advertised information.
    *
-   * @return a immutable set of capabilities
+   * @return an immutable set of capabilities
    */
   public Set<ServerMethod> getSupportedMethods() {
     return client != null ? ServerMethod.getSupportedMethods(client.getSupportedMethods(), client.getServerInfos()) : null;

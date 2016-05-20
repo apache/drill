@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
@@ -204,10 +204,11 @@ public class TypeValidators {
    * Validator that checks if the given value is included in a list of acceptable values. Case insensitive.
    */
   public static class EnumeratedStringValidator extends StringValidator {
-    private final Set<String> valuesSet = new HashSet<>();
+    private final Set<String> valuesSet = Sets.newLinkedHashSet();
 
     public EnumeratedStringValidator(String name, String def, String... values) {
       super(name, def);
+      valuesSet.add(def.toLowerCase());
       for (String value : values) {
         valuesSet.add(value.toLowerCase());
       }
@@ -257,6 +258,11 @@ public class TypeValidators {
             .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
             .build(logger);
       }
+    }
+
+    @Override
+    public Kind getKind() {
+      return kind;
     }
   }
 }

@@ -34,14 +34,17 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -51,11 +54,6 @@ import org.apache.hadoop.fs.Path;
 
 public class UserSession implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
-
-  public static final String SCHEMA = "schema";
-  public static final String USER = "user";
-  public static final String PASSWORD = "password";
-  public static final String IMPERSONATION_TARGET = "impersonation_target";
 
   private boolean supportComplexTypes = false;
   private UserCredentials credentials;
@@ -125,6 +123,15 @@ public class UserSession implements AutoCloseable {
     }
 
     public UserSession build() {
+      if (userSession.properties.containsKey(DrillProperties.QUOTING_IDENTIFIERS)) {
+        if (userSession.sessionOptions != null) {
+          userSession.setSessionOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY,
+              userSession.properties.getProperty(DrillProperties.QUOTING_IDENTIFIERS));
+        } else {
+          logger.warn("User property {} can't be installed as a server option without the session option manager",
+              DrillProperties.QUOTING_IDENTIFIERS);
+        }
+      }
       UserSession session = userSession;
       userSession = null;
       return session;
@@ -232,8 +239,17 @@ public class UserSession implements AutoCloseable {
     return SchemaUtilites.findSchema(rootSchema, defaultSchemaPath);
   }
 
-  public boolean setSessionOption(String name, String value) {
-    return true;
+  /**
+   * Set the option of a session level.
+   * Note: Option's kind is automatically detected if such option exists.
+   *
+   * @param name option name
+   * @param value option value
+   */
+  public void setSessionOption(String name, String value) {
+    OptionValue.Kind optionKind = SystemOptionManager.getValidator(name).getKind();
+    OptionValue optionValue = OptionValue.createOption(optionKind, OptionValue.OptionType.SESSION, name, value);
+    sessionOptions.setOption(optionValue);
   }
 
   /**
