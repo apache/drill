@@ -17,19 +17,18 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 
 public class CrossOriginFilter implements Filter {
-    // Response headers
-    public static final String ACCESS_CONTROL_ALLOW_ORIGIN_HEADER = "Access-Control-Allow-Origin";
-    // Implementation constants
-    public static final String ALLOWED_ORIGINS_PARAM = "allowedOrigins";
-    public static final String ALLOWED_METHODS_PARAM = "allowedMethods";
-    public static final String ALLOWED_HEADERS_PARAM = "allowedHeaders";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -42,10 +41,9 @@ public class CrossOriginFilter implements Filter {
     }
 
     private void handle(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain) {
-        servletResponse.setHeader(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-        servletResponse.setHeader(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
-        servletResponse.setHeader(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD,OPTIONS");
-        servletResponse.setHeader(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
+        servletResponse.setHeader("Access-Control-Allow-Origin", "*");
+        servletResponse.setHeader("Access-Control-Allow-Methods", "GET,POST,HEAD,OPTIONS");
+        servletResponse.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Origin");
     }
 
     @Override
