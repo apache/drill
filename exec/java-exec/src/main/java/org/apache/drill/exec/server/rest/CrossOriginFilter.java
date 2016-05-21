@@ -37,7 +37,10 @@ public class CrossOriginFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+
         handle((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
+
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 
     private void handle(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain) {
