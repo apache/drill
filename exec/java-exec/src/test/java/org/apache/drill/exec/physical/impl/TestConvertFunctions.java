@@ -217,6 +217,23 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   }
 
+  @Test // DRILL-4693
+  public void testConvertFromJson_drill4693() throws Exception {
+    Object mapVal1 = mapOf("x", "y");
+
+    String query = String.format("select 'abc' as col1, convert_from('{\"x\" : \"y\"}', 'json') as col2, 'xyz' as col3 "
+        + " from cp.`/store/json/input2.json` t"
+        + " where t.`integer` = 2001");
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("abc", mapVal1, "xyz")
+        .go();
+
+  }
+
   @Test
   public void testConvertToComplexJSON() throws Exception {
 
