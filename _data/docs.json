@@ -698,8 +698,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Drill Patch Review Tool", 
-            "next_url": "/docs/drill-patch-review-tool/", 
+            "next_title": "Contribute to Drill", 
+            "next_url": "/docs/contribute-to-drill/", 
             "parent": "Develop Drill", 
             "previous_title": "Develop Drill", 
             "previous_url": "/docs/develop-drill/", 
@@ -2026,8 +2026,8 @@
             "next_title": "Apache Drill Contribution Guidelines", 
             "next_url": "/docs/apache-drill-contribution-guidelines/", 
             "parent": "Developer Information", 
-            "previous_title": "Drill Patch Review Tool", 
-            "previous_url": "/docs/drill-patch-review-tool/", 
+            "previous_title": "Compiling Drill from Source", 
+            "previous_url": "/docs/compiling-drill-from-source/", 
             "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
             "title": "Contribute to Drill", 
             "url": "/docs/contribute-to-drill/"
@@ -2752,35 +2752,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Drill Patch Review Tool", 
-                    "next_url": "/docs/drill-patch-review-tool/", 
+                    "next_title": "Contribute to Drill", 
+                    "next_url": "/docs/contribute-to-drill/", 
                     "parent": "Develop Drill", 
                     "previous_title": "Develop Drill", 
                     "previous_url": "/docs/develop-drill/", 
                     "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                     "title": "Compiling Drill from Source", 
                     "url": "/docs/compiling-drill-from-source/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Develop Drill", 
-                            "url": "/docs/develop-drill/"
-                        }, 
-                        {
-                            "title": "Developer Information", 
-                            "url": "/docs/developer-information/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Contribute to Drill", 
-                    "next_url": "/docs/contribute-to-drill/", 
-                    "parent": "Develop Drill", 
-                    "previous_title": "Compiling Drill from Source", 
-                    "previous_url": "/docs/compiling-drill-from-source/", 
-                    "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
-                    "title": "Drill Patch Review Tool", 
-                    "url": "/docs/drill-patch-review-tool/"
                 }
             ], 
             "next_title": "Compiling Drill from Source", 
@@ -2832,35 +2811,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Drill Patch Review Tool", 
-                            "next_url": "/docs/drill-patch-review-tool/", 
+                            "next_title": "Contribute to Drill", 
+                            "next_url": "/docs/contribute-to-drill/", 
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
                             "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Develop Drill", 
-                                    "url": "/docs/develop-drill/"
-                                }, 
-                                {
-                                    "title": "Developer Information", 
-                                    "url": "/docs/developer-information/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Contribute to Drill", 
-                            "next_url": "/docs/contribute-to-drill/", 
-                            "parent": "Develop Drill", 
-                            "previous_title": "Compiling Drill from Source", 
-                            "previous_url": "/docs/compiling-drill-from-source/", 
-                            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
-                            "title": "Drill Patch Review Tool", 
-                            "url": "/docs/drill-patch-review-tool/"
                         }
                     ], 
                     "next_title": "Compiling Drill from Source", 
@@ -2926,8 +2884,8 @@
                     "next_title": "Apache Drill Contribution Guidelines", 
                     "next_url": "/docs/apache-drill-contribution-guidelines/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Drill Patch Review Tool", 
-                    "previous_url": "/docs/drill-patch-review-tool/", 
+                    "previous_title": "Compiling Drill from Source", 
+                    "previous_url": "/docs/compiling-drill-from-source/", 
                     "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
@@ -3178,27 +3136,6 @@
             "relative_path": "_docs/getting-started/010-drill-introduction.md", 
             "title": "Drill Introduction", 
             "url": "/docs/drill-introduction/"
-        }, 
-        "Drill Patch Review Tool": {
-            "breadcrumbs": [
-                {
-                    "title": "Develop Drill", 
-                    "url": "/docs/develop-drill/"
-                }, 
-                {
-                    "title": "Developer Information", 
-                    "url": "/docs/developer-information/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Contribute to Drill", 
-            "next_url": "/docs/contribute-to-drill/", 
-            "parent": "Develop Drill", 
-            "previous_title": "Compiling Drill from Source", 
-            "previous_url": "/docs/compiling-drill-from-source/", 
-            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
-            "title": "Drill Patch Review Tool", 
-            "url": "/docs/drill-patch-review-tool/"
         }, 
         "Drill Plan Syntax": {
             "breadcrumbs": [
@@ -16648,35 +16585,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Drill Patch Review Tool", 
-                            "next_url": "/docs/drill-patch-review-tool/", 
+                            "next_title": "Contribute to Drill", 
+                            "next_url": "/docs/contribute-to-drill/", 
                             "parent": "Develop Drill", 
                             "previous_title": "Develop Drill", 
                             "previous_url": "/docs/develop-drill/", 
                             "relative_path": "_docs/developer-information/develop-drill/010-compiling-drill-from-source.md", 
                             "title": "Compiling Drill from Source", 
                             "url": "/docs/compiling-drill-from-source/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Develop Drill", 
-                                    "url": "/docs/develop-drill/"
-                                }, 
-                                {
-                                    "title": "Developer Information", 
-                                    "url": "/docs/developer-information/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Contribute to Drill", 
-                            "next_url": "/docs/contribute-to-drill/", 
-                            "parent": "Develop Drill", 
-                            "previous_title": "Compiling Drill from Source", 
-                            "previous_url": "/docs/compiling-drill-from-source/", 
-                            "relative_path": "_docs/developer-information/develop-drill/020-drill-patch-review-tool.md", 
-                            "title": "Drill Patch Review Tool", 
-                            "url": "/docs/drill-patch-review-tool/"
                         }
                     ], 
                     "next_title": "Compiling Drill from Source", 
@@ -16742,8 +16658,8 @@
                     "next_title": "Apache Drill Contribution Guidelines", 
                     "next_url": "/docs/apache-drill-contribution-guidelines/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Drill Patch Review Tool", 
-                    "previous_url": "/docs/drill-patch-review-tool/", 
+                    "previous_title": "Compiling Drill from Source", 
+                    "previous_url": "/docs/compiling-drill-from-source/", 
                     "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
                     "title": "Contribute to Drill", 
                     "url": "/docs/contribute-to-drill/"
