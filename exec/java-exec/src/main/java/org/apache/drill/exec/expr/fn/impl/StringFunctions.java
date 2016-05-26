@@ -284,7 +284,13 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+      CharSequenceWrapper patternWrapper = new CharSequenceWrapper(pattern.start, pattern.end, pattern.buffer);
+      char[] chars = new char[patternWrapper.length()];
+      for(int i=0; i<patternWrapper.length(); i++){
+          chars[i] = patternWrapper.charAt(i);
+      }
+      String patternChars = new String(chars);
+      matcher = java.util.regex.Pattern.compile(patternChars).matcher("");
       charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
       matcher.reset(charSequenceWrapper);
     }

@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 import java.util.regex.Matcher;
 
 import io.netty.buffer.DrillBuf;
@@ -35,12 +41,28 @@ import io.netty.buffer.DrillBuf;
  */
 public class CharSequenceWrapper implements CharSequence {
 
-    // The adapted drill buffer
+    // The adapted drill buffer (in the case of US-ASCII)
     private DrillBuf buffer;
+    // The converted bytes in the case of non ASCII
+    private CharBuffer charBuffer;
+    // initial char buffer capacity
+    private static final int INITIAL_CHAR_BUF = 1024;
+    // The decoder to use in the case of non ASCII
+    private CharsetDecoder decoder;
+
     // The start offset into the drill buffer
     private int start;
     // The end offset into the drill buffer
     private int end;
+    // Indicates that the current byte buffer contains only ascii chars
+    private boolean usAscii;
+
+    public CharSequenceWrapper(){
+    }
+
+    public CharSequenceWrapper(int start, int end, DrillBuf buffer){
+        setBuffer(start, end, buffer);
+    }
 
     @Override
     public int length() {
@@ -49,13 +71,14 @@ public class CharSequenceWrapper implements CharSequence {
 
     @Override
     public char charAt(int index) {
-        int charPos = start + index;
-        if(charPos < start || charPos >= end)
-        {
-            throw new IndexOutOfBoundsException();
+        if(usAscii){
+            // Each byte is a char, the index is relative to the start of the original buffer
+            return (char) (buffer.getByte(start + index) & 0x00FF);
         }
-        // Get the char within the DrillBuf.
-        return (char) buffer.getByte(charPos);
+        else{
+            // The char buffer is a copy so the index directly corresponds
+            return charBuffer.charAt(index);
+        }
     }
 
     /**
@@ -69,7 +92,7 @@ public class CharSequenceWrapper implements CharSequence {
      */
     @Override
     public CharSequence subSequence(int start, int end) {
-        throw new UnsupportedOperationException("Not implemented.");
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -82,21 +105,117 @@ public class CharSequenceWrapper implements CharSequence {
      * @param buffer
      */
     public void setBuffer(int start, int end, DrillBuf buffer) {
-        this.start = start;
-        this.end = end;
-        this.buffer = buffer;
+        // Test if buffer is an ASCII string or not.
+        usAscii = isAscii(start, end, buffer);
+
+        if(usAscii){
+            // each byte equals one char
+            this.start = start;
+            this.end = end;
+            this.buffer = buffer;
+        }
+        else {
+            initCharBuffer();
+            // Wrap with java byte buffer
+            ByteBuffer byteBuf = buffer.nioBuffer(start, end-start);
+            while(charBuffer.capacity() < Integer.MAX_VALUE){
+                byteBuf.mark();
+                if(decodeUT8(byteBuf)){
+                    break;
+                }
+                // Failed to convert because the char buffer was not large enough
+                growCharBuffer();
+                // Make sure to reset the byte buffer we need to reprocess it
+                byteBuf.reset();
+            }
+            this.start = 0;
+            this.end = charBuffer.position();
+            // reset the char buffer so the index are relative to the start of the buffer
+            charBuffer.rewind();
+        }
     }
 
     /**
-     * In cases where a method like {@link Matcher#replaceAll(String)} is used this
-     * {@link CharSequence#toString()} method will be called, so we need to return a
-     * string representing the value of this CharSequence. Note however that the
-     * regexp_replace function is implemented in a way to avoid the call to toString()
+     * Test if the buffer contains only ASCII bytes.
+     * @param start
+     * @param end
+     * @param buffer
+     * @return
+     */
+    private boolean isAscii(int start, int end, DrillBuf buffer) {
+        for (int i = start; i <= end; i++) {
+            byte bb = buffer.getByte(i);
+            if (bb < 0) {
+                //System.out.printf("Not a ASCII byte 0x%02X\n", bb);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Initialize the charbuffer and decoder if they are not yet initialized.
+     */
+    private void initCharBuffer() {
+        if(charBuffer == null){
+            charBuffer = CharBuffer.allocate(INITIAL_CHAR_BUF);
+        }
+        if(decoder == null){
+            decoder = Charset.forName("UTF-8").newDecoder();
+        }
+    }
+
+    /**
+     * Decode the buffer using the CharsetDecoder.
+     * @param byteBuf
+     * @return false if failed because the charbuffer was not big enough
+     * @throws RuntimeExcepction if it fails for encoding errors
+     */
+    private boolean decodeUT8(ByteBuffer byteBuf) {
+        // We give it all of the input data in call.
+        boolean endOfInput = true;
+        decoder.reset();
+        charBuffer.rewind();
+        // Convert utf-8 bytes to sequence of chars
+        CoderResult result = decoder.decode(byteBuf, charBuffer, endOfInput);
+        if(result.isOverflow()){
+            // Not enough space in the charBuffer.
+            return false;
+        } else if(result.isError()) {
+            // Any other error
+            try {
+                result.throwException();
+            } catch (CharacterCodingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Grow the charbuffer making sure not to overflow size integer. Note
+     * this grows in the same manner as the ArrayList that is it adds 50%
+     * to the current size.
+     */
+    private void growCharBuffer() {
+        // overflow-conscious code
+        int oldCapacity = charBuffer.capacity();
+        //System.out.println("old capacity " + oldCapacity);
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        if (newCapacity < 0){
+            newCapacity = Integer.MAX_VALUE;
+        }
+        //System.out.println("new capacity " + newCapacity);
+        charBuffer = CharBuffer.allocate(newCapacity);
+    }
+
+    /**
+     * The regexp_replace function is implemented in a way to avoid the call to toString()
      * not to uselessly create a string object.
      */
     @Override
     public String toString() {
-        return StringFunctionHelpers.toStringFromUTF8(start, end, buffer);
+        throw new UnsupportedOperationException();
     }
 
 }
