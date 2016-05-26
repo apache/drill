@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2016-05-26 18:52:52 UTC
+date: 2016-05-26 19:04:18 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -140,7 +140,6 @@ this history of the discussion.
 
 ### See Also
 
-  * [Apache contributor documentation](http://www.apache.org/
-  * dev/contributors.html)
+  * [Apache contributor documentation](http://www.apache.org/dev/contributors.html)
   * [Apache voting documentation](http://www.apache.org/foundation/voting.html)
 
