@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2016-05-26 00:37:30 UTC
+date: 2016-05-26 18:52:52 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -14,9 +14,9 @@ Drill. For ideas about _what_ you might contribute, please see open tickets in
 
 The following steps outline the process for contributing code to the Apache Drill project:
 
-* Step 1: Get the source code.
-* Step 2: Get approval and modify the source code.
-* Step 3: Get your code reviewed and committed to the project.  
+* [Step 1: Get the source code.]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-1:-get-the-source-code.)
+* [Step 2: Get approval and modify the source code.]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-2:-get-approval-and-modify-the-source-code.)
+* [Step 3: Get your code reviewed and committed to the project. ]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-3:-get-your-code-reviewed-and-committed-to-the-project.) 
 
 You may also be interested in the [additional information]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#additional-information) at the end of this document. 
 
