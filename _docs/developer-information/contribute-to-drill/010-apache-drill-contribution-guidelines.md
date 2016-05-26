@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date:  
+date: 2016-05-26 00:37:30 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -10,195 +10,121 @@ This page describes the mechanics of _how_ to contribute software to Apache
 Drill. For ideas about _what_ you might contribute, please see open tickets in
 [Jira](https://issues.apache.org/jira/browse/DRILL).
 
-## How to Contribute to Drill
+## Code Contribution Steps
 
-These guidelines include the following topics:
+The following steps outline the process for contributing code to the Apache Drill project:
 
-* Getting the source code
-* Making Changes
-    * Coding Convention
-    * Formatter configuration
-    * Understanding Maven
-    * Creating a patch
-    * Applying a patch
-* Where is a good place to start contributing?
-* Contributing your work
-* JIRA Guidelines
-* See Also
+* Step 1: Get the source code.
+* Step 2: Get approval and modify the source code.
+* Step 3: Get your code reviewed and committed to the project.  
 
-## Getting the source code
+You may also be interested in the [additional information]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#additional-information) at the end of this document. 
 
-First, you need the Drill source code.
+## Step 1: Get the source code.
 
-Get the source code on your local drive using Git. Most development is done on
-"master":
+First, you need the Drill source code. You can use Git to put the source code on your local drive. Most development is done on "master."
 
     git clone https://git-wip-us.apache.org/repos/asf/drill.git
 
-## Making Changes
+## Step 2: Get approval and modify the source code.
 
-Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/), or file a bug
-report in [JIRA](https://issues.apache.org/jira/browse/DRILL). Describe your
-proposed changes and check that they fit in with what others are doing and
-have planned for the project. Be patient, it may take folks a while to
-understand your requirements.
+Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/) or file a bug report in [JIRA](https://issues.apache.org/jira/browse/DRILL) describing your proposed changes. Doing this helps to verify that your changes will work with what others are doing and have planned for the project. Be patient, it may take folks a while to understand your requirements.
 
-Modify the source code and add some features using your favorite IDE.
+Once your suggested changes are approved, you can modify the source code and add some features using your favorite IDE.
+
+The following sections provide tips for working on the project:
 
 ### Coding Convention
 
-Please take care about the following points
+Please adhere to the points outlined below:
 
-  * All public classes and methods should have informative [Javadoc comments](http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html).
-    * Do not use @author tags.
-  * Code should be formatted according to [Sun's conventions](http://www.oracle.com/technetwork/java/codeconvtoc-136057.html), with one exception:
+  * All public classes and methods should have informative [Javadoc comments](http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html). Do not use @author tags.
+  * Code should be formatted according to [Sun's conventions](http://www.oracle.com/technetwork/java/codeconvtoc-136057.html), with the following exceptions:
     * Indent two (2) spaces per level, not four (4).
     * Line length limit is 120 chars, instead of 80 chars.
   * Contributions should not introduce new Checkstyle violations.
   * Contributions should pass existing unit tests.
-  * New unit tests should be provided to demonstrate bugs and fixes. [JUnit](http://www.junit.org) 4.1 is our test framework:
-    * You must implement a class that contain test methods annotated with JUnit's 4.x @Test annotation and whose class name ends with `Test`.
+  * New unit tests should be provided to demonstrate bugs and fixes. [JUnit](http://www.junit.org) 4.1 is our test framework which has the following requirements:
+    * You must implement a class that contains test methods annotated with JUnit's 4.x @Test annotation and whose class name ends with `Test`.
     * Define methods within your class whose names begin with `test`, and call JUnit's many assert methods to verify conditions; these methods will be executed when you run `mvn clean test`.
 
-### Formatter configuration
+### Formatter Configuration
 
 Setting up IDE formatters is recommended and can be done by importing the
 following settings into your browser:
 
-IntelliJ IDEA formatter: [settings
-jar](https://cwiki.apache.org/confluence/download/attachments/29687985/intellij-idea-settings.jar?version=1&modificationDate=1381928827000&api=v2)
 
-Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
+* IntelliJ IDEA formatter: [settings
+jar](https://cwiki.apache.org/confluence/download/attachments/29687985/intellij-idea-settings.jar?version=1&modificationDate=1381928827000&api=v2)
+* Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
 
 ### Understanding Maven
 
-Drill is built by Maven, a Java build tool.
+You can use the Maven Java build tool to build Drill. To get started with Maven, see the [Maven tutorial](http://maven.apache.org/guides/getting-started/maven-in-five-minutes.html).
 
-  * Good Maven tutorial: <http://maven.apache.org/guides/getting-started/maven-in-five-minutes.html>
-
-To build Drill, run
+To build Drill with Maven, run the following command:
      
     mvn clean install 
     
 
-### Creating a patch
+## Step 3: Get your code reviewed and committed to the project.  
 
-Check to see what files you have modified:
+This section describes the GitHub pull request-based review process for Apache Drill.   
 
-    git status
+{% include startnote.html %}JIRA remains the primary site for discussions on issues. We are not using the GitHub issue tracker.{% include endnote.html %}
 
-Add any new files with:
+The following steps outline the code review and commit process required to contribute new code to the Apache Drill project:  
 
-    git add .../MyNewClass.java
-	git add .../TestMyNewClass.java
-	git add .../XXXXXX.q
-	git add .../XXXXXX.q.out
+1. The contributor writes the code that addresses a specific JIRA report as a contribution to the Apache Drill project.
+2.   	The contributor organizes (squashes) their code into commits that segregate out refactoring/reorg, as necessary, to enable efficient review. The following list identifies how to combine code into commits:  
+       * Combine WIP and other small commits together.
+       * Address multiple JIRAs, for smaller bug fixes or enhancements, with a single commit.
+       * Use separate commits to allow efficient review, separating out formatting changes or simple refactoring from core changes or additions.
+       * Rebase this chain of commits on top of the current master.  
+{% include startnote.html %}The discussion that is automatically copied over from GitHub adds the review process into the Apache infrastructure. The final commit ends up in the Apache Git repo, which is the critical part. As such, there is no requirement to have your intermediate work placed anywhere outside of the GitHub pull request.{% include endnote.html %}  
+3. The contributor opens a pull request against the GitHub mirror, based on the branch that contains their work, which has been squashed together as described in step 2.
+       * Open the pull request against this repo: https://github.com/apache/drill/
+       * Mention the JIRA number in the heading of the pull request, like “DRILL-3000” to automatically link to JIRA.
+       * For more information about pull requests, see [Using Pull Requests](https://help.github.com/articles/using-pull-requests/).
 
-In order to create a patch, type (from the base directory of drill):
+4. The contributor asks a committer who has experience with the affected component for review.
+This information can be found in the [component owners](https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira.jira-projects-plugin:components-panel) section of JIRA, or by running `git blame` on the primary files changed in the pull request. For pull requests that affect multiple areas, send a message to the dev list to find a reviewer.
+5. The contributor assigns the JIRA to the reviewer and marks the status as REVIEWABLE.
+6. The reviewer reviews the pull request in GitHub and adds comments or a +1 to the general discussion if the pull request is ready to commit.  
+       * If there are issues to address, the reviewer changes the JIRA status to "In Progress" and assigns the JIRA back to the contributing author.
+       * If the reviewer gives a +1, the contributor should continue to step 9 in this process.
+7. The contributor addresses review comments. This can be done with new commits on the branch or with work made on the branch locally, squashed into the commit(s) posted in the original pull request and force pushed to the branch the pull request is based on.
+8. Return to step 5.
+9. A Drill committer completes the following steps to commit the patch:
+       * If the master branch has moved forward since the review, rebase the branch from the pull request on the latest master and re-run tests. 
+       * If all tests pass, the committer amends the last commit message in the series to include "this closes #1234", where 1234 is the pull request number, not the JIRA number. This can be done with interactive rebase. When on the branch issue:  
+       
+              git rebase -i HEAD^  
+       * Change where it says “pick” on the line with the last commit, replacing it with “r” or “reword”. It replays the commit giving you the opportunity the change the commit message.  
+       * The committer pushes the commit(s) to the Apache repo (the GitHub repo is just a read-only mirror). 
+       * The committer resolves the JIRA with a message like `"Fixed in <Git commit SHA>"`.
 
-    git format-patch origin/master --stdout > DRILL-1234.1.patch.txt
 
-This will report all modifications done on Drill sources on your local disk
-and save them into the _DRILL-1234.1.patch.txt_ file. Read the patch file.
-Make sure it includes ONLY the modifications required to fix a single issue.
+## Additional Information
 
-Please do not:
-
-  * reformat code unrelated to the bug being fixed: formatting changes should be separate patches/commits.
-  * comment out code that is now obsolete: just remove it.
-  * insert comments around each change, marking the change: folks can use subversion to figure out what's changed and by whom.
-  * make things public which are not required by end users.
-
-Please do:
-
-  * try to adhere to the coding style of files you edit;
-  * comment code whose function or rationale is not obvious;
-  * update documentation (e.g., _package.html_ files, this wiki, etc.)
-
-### Updating a patch
-
-For patch updates, our convention is to number them like
-DRILL-1856.1.patch.txt, DRILL-1856.2.patch.txt, etc. And then click the
-"Submit Patch" button again when a new one is uploaded; this makes sure it
-gets back into the review queue. Appending '.txt' to the patch file name makes
-it easy to quickly view the contents of the patch in a web browser.
-
-### Applying a patch
-
-To apply a patch either you generated or found from JIRA, you can issue
-
-    git am < cool_patch.patch
-
-if you just want to check whether the patch applies you can run patch with
---dry-run option.
-
-  
-
-### Review Process
-
-  * Use Hadoop's [code review checklist](http://wiki.apache.org/hadoop/CodeReviewChecklist) as a rough guide when doing reviews.
-  * In JIRA, use attach file to notify that you've submitted a patch for that issue.
-  * Create a Review Request in [Review Board](https://reviews.apache.org/r/). The review request's name should start with the JIRA issue number (e.g. DRILL-XX) and should be assigned to the "drill-git" group.
-  * If a committer requests changes, set the issue status to 'Resume Progress', then once you're ready, submit an updated patch with necessary fixes and then request another round of review with 'Submit Patch' again.
-  * Once your patch is accepted, be sure to upload a final version which grants rights to the ASF.
-
-## Where is a good place to start contributing?
+### Where is a good place to start contributing?
 
 After getting the source code, building and running a few simple queries, one
-of the simplest places to start is to implement a DrillFunc.  
-DrillFuncs is way that Drill express all scalar functions (UDF or system).  
-First you can put together a JIRA for one of the DrillFunc's we don't yet have
-but should (referencing the capabilities of something like Postgres  
+of the simplest places to start is to implement a DrillFunc. DrillFuncs are the way that Drill expresses all scalar functions (UDF or system).  
+
+First you can put together a JIRA for one of the DrillFuncs that we don't yet have, but should (referencing the capabilities of something like Postgres  
 or SQL Server). Then try to implement one.
 
-One example DrillFunc:
+See this example DrillFunc:
 
 [ComparisonFunctions.java](https://github.com/apache/drill/blob/3f93454f014196a4da198ce012b605b70081fde0/exec/java-exec/src/main/codegen/templates/ComparisonFunctions.java)
 
-Also one can visit the JIRA issues and implement one of those too. 
+Also, you can visit the JIRA issues and implement one of those too. 
 
 More contribution ideas are located on the [Contribution Ideas]({{ site.baseurl }}/docs/apache-drill-contribution-ideas) page.
 
-### Contributing your work
 
-Finally, patches should be _attached_ to an issue report in
-[JIRA](http://issues.apache.org/jira/browse/DRILL) via the **Attach File**
-link on the issue's JIRA. Please add a comment that asks for a code review.
-Please note that the attachment should be granted license to ASF for inclusion
-in ASF works (as per the [Apache
-License](http://www.apache.org/licenses/LICENSE-2.0).
-
-Folks should run `mvn clean install` before submitting a patch. Tests should
-all pass. If your patch involves performance optimizations, they should be
-validated by benchmarks that demonstrate an improvement.
-
-If your patch creates an incompatibility with the latest major release, then
-you must set the **Incompatible change** flag on the issue's JIRA 'and' fill
-in the **Release Note** field with an explanation of the impact of the
-incompatibility and the necessary steps users must take.
-
-If your patch implements a major feature or improvement, then you must fill in
-the **Release Note** field on the issue's JIRA with an explanation of the
-feature that will be comprehensible by the end user.
-
-A committer should evaluate the patch within a few days and either: commit it;
-or reject it with an explanation.
-
-Please be patient. Committers are busy people too. If no one responds to your
-patch after a few days, please make friendly reminders. Please incorporate
-other's suggestions into your patch if you think they're reasonable. Finally,
-remember that even a patch that is not committed is useful to the community.
-
-Should your patch receive a "-1" select the **Resume Progress** on the issue's
-JIRA, upload a new patch with necessary fixes, and then select the **Submit
-Patch** link again.
-
-Committers: for non-trivial changes, it is best to get another committer to
-review your patches before commit. Use **Submit Patch** link like other
-contributors, and then wait for a "+1" from another committer before
-committing. Please also try to frequently review things in the patch queue.
-
-## JIRA Guidelines
+### What are the JIRA guidelines? 
 
 Please comment on issues in JIRA, making their concerns known. Please also
 vote for issues that are a high priority for you.
@@ -212,8 +138,9 @@ JIRA's automatically sent messages. If you change your mind, note this in a
 new comment, rather than editing an older comment. The issue should preserve
 this history of the discussion.
 
-## See Also
+### See Also
 
-  * [Apache contributor documentation](http://www.apache.org/dev/contributors.html)
+  * [Apache contributor documentation](http://www.apache.org/
+  * dev/contributors.html)
   * [Apache voting documentation](http://www.apache.org/foundation/voting.html)
 
