@@ -23,6 +23,7 @@ import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
@@ -163,12 +164,20 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
-    if (config.getBoolean(ExecConstants.HTTP_ENABLE_CORS)) {
-      FilterHolder cors = servletContextHandler.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-      cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-      cors.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
-      cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD");
-      cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
+    if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
+      FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
+              String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
+
+      for (String path: new String[] { "*.json", "/storage/*/enable/*", "/status*" }) {
+        servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
+      }
     }
 
     embeddedJetty.start();

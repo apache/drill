@@ -76,7 +76,11 @@ public interface ExecConstants {
   String HTTP_ENABLE = "drill.exec.http.enabled";
   String HTTP_PORT = "drill.exec.http.port";
   String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
-  String HTTP_ENABLE_CORS = "drill.exec.http.cors_enabled";
+  String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
+  String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";
+  String HTTP_CORS_ALLOWED_METHODS = "drill.exec.http.cors.allowedMethods";
+  String HTTP_CORS_ALLOWED_HEADERS = "drill.exec.http.cors.allowedHeaders";
+  String HTTP_CORS_CREDENTIALS = "drill.exec.http.cors.credentials";
   String HTTP_SESSION_MAX_IDLE_SECS = "drill.exec.http.session_max_idle_secs";
   String HTTP_KEYSTORE_PATH = "javax.net.ssl.keyStore";
   String HTTP_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
