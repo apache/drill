@@ -94,4 +94,14 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .go();
   }
 
+  @Test // DRILL-4618
+  public void testRand() throws Exception {
+    String query = "select 2*rand()=2*rand() col1 from (values (1))";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(false)
+            .go();
+  }
 }
