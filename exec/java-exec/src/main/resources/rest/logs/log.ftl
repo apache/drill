@@ -24,9 +24,9 @@
     <#if (model.getLines()?size > 0)>
     <pre>
         <#list model.getLines() as line>
-${line}
-            </#list>
-        </pre>
+${line?html}
+        </#list>
+     </pre>
     <#else>
     <div id="message" class="alert alert-info">
         <strong>Log is empty.</strong>
