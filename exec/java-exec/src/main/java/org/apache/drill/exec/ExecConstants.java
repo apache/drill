@@ -134,6 +134,7 @@ public interface ExecConstants {
   BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
   BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator("store.json.extended_types", false);
   BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator("store.json.writer.uglify", false);
+  BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator("store.json.writer.skip_null_fields", true);
 
   DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator(
       "store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE, 100.0);
