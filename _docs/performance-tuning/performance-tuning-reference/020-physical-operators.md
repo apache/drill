@@ -1,6 +1,6 @@
 ---
 title: "Physical Operators"
-date:  
+date: 2016-06-03 22:11:51 UTC
 parent: "Performance Tuning Reference"
 --- 
 
@@ -10,16 +10,18 @@ This document describes the physical operators that Drill uses in query plans.
 
 Drill uses the following operators to perform data distribution over the network:  
 
-* HashToRandomExchange
-* HashToMergeExchange
-* UnionExchange
-* SingleMergeExchange
-* BroadcastExchange
-* UnorderedMuxExchange
+| Operator             | Description                                                                                                                                                                                                                                                                                                                                               |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HashToRandomExchange | A HashToRandomExchange gets an   input row, computes a hash value on the distribution key, determines the   destination receiver based on the hash value, and sends the row in a batch   operation. The join key or aggregation group-by keys are examples of distribution   keys. The destination receiver is a minor fragment on a destination   node.  |
+| HashToMergeExchange  | A HashToMergeExchange is similar   to the HashToRandomExchange operator, except that each destination receiver   mergers incoming streams of sorted data received from a sender.                                                                                                                                                                          |
+| UnionExchange        | A UnionExchange is a   serialization operator in which each sender sends to a single (common)   destination. The receiver “unions” the input streams from various senders.                                                                                                                                                                                |
+| SingleMergeExchange  | A SingleMergeExchange is   distribution operator in which each sender sends a sorted stream of data to a   single receiver. The receiver performs a Merge operation to merge all of the   incoming streams. This operator is useful when performing an ORDER BY operation   that requires a final global ordering.                                        |
+| BroadcastExchange    | A BroadcastExchange is a   distrubtion operation in which each sender sends its input data to all N   receivers via a broadcast.                                                                                                                                                                                                                          |
+| UnorderedMuxExchange | An UnorderedMuxExchange is an   operation that multiplexes the data from all minor fragments on a node so the   data can be sent out on a single channel to a destination receiver. A sender   node only needs to maintain buffers for each receiving node instead of each   receiving minor fragment on every node.                                    |
 
 ## Join Operators  
 
-Drill uses the following operators:
+Drill uses the following join operators:
 
 | Operator         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 |------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
