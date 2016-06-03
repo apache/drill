@@ -172,7 +172,9 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer))).matcher("");
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers
+              .toStringFromUTF8(pattern.start, pattern.end, pattern.buffer))).matcher("");
       charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
       matcher.reset(charSequenceWrapper);
     }
@@ -231,7 +233,8 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start, pattern.end, pattern.buffer)).matcher("");
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(
+          pattern.start, pattern.end, pattern.buffer)).matcher("");
       charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
       matcher.reset(charSequenceWrapper);
     }
@@ -1345,7 +1348,7 @@ public class StringFunctions{
     public void setup() {
       int len = delimiter.end - delimiter.start;
       if (len != 1) {
-        throw new IllegalArgumentException("Only single character delimiters are supportted for split()");
+        throw new IllegalArgumentException("Only single character delimiters are supported for split()");
       }
       char splitChar = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
           toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer).charAt(0);
@@ -1354,12 +1357,13 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      Iterable<String> tokens = splitter.split(
-          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer));
+      // Convert the iterable to an array as Janino will not handle generics.
+      Object[] tokens = com.google.common.collect.Iterables.toArray(splitter.split(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer)), String.class);
       org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
       list.startList();
-      for (String token : tokens) {
-        final byte[] strBytes = token.getBytes(com.google.common.base.Charsets.UTF_8);
+      for(int i = 0; i < tokens.length; i++ ) {
+        final byte[] strBytes = ((String)tokens[i]).getBytes(com.google.common.base.Charsets.UTF_8);
         buffer = buffer.reallocIfNeeded(strBytes.length);
         buffer.setBytes(0, strBytes);
         list.varChar().writeVarChar(0, strBytes.length, buffer);
