@@ -34,23 +34,28 @@ public class TestCTASJson extends PlanTestBase {
   /**
    * Test a source json file that contains records that are maps with fields of all types.
    * Some records have missing fields. CTAS should skip the missing fields
-   */ public void testctas_alltypes_map() throws Exception {
+   */
+  public void testctas_alltypes_map() throws Exception {
     String testName = "ctas_alltypes_map";
     test("use dfs_test.tmp");
-    test("alter session set store.format = 'json' ");
-    test("alter session set store.json.writer.skip_null_fields = true"); // DEFAULT
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
 
-    testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .jsonBaselineFile("json/" + testName + ".json")
-        .build()
-        .run();
-
-    test("drop table " + testName + "_json" );
+    try {
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .jsonBaselineFile("json/" + testName + ".json")
+          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = true") // DEFAULT
+          .build()
+          .run();
+    } finally {
+      test("drop table " + testName + "_json");
+      test("alter session reset store.format ");
+      test("alter session reset store.json.writer.skip_null_fields ");
+    }
   }
 
   @Test
@@ -61,43 +66,54 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_map_noskip() throws Exception {
     String testName = "ctas_alltypes_map";
     test("use dfs_test.tmp");
-    test("alter session set store.format = 'json' ");
-    test("alter session set store.json.writer.skip_null_fields = false"); // CHANGE from default
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
 
-    testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .jsonBaselineFile("json/" + testName + "_out.json")
-        .build()
-        .run();
+    try {
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .jsonBaselineFile("json/" + testName + "_out.json")
+          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
+          .build()
+          .run();
+    } finally{
+      test("drop table " + testName + "_json" );
+      test("alter session reset store.format ");
+      test("alter session reset store.json.writer.skip_null_fields ");
+    }
 
-    test("drop table " + testName + "_json" );
   }
 
   @Test
   /**
    * Test a source json file that contains records that are maps with fields of all types.
    * Some records have missing fields. CTAS should skip the missing fields
-   */ public void testctas_alltypes_repeatedmap() throws Exception {
+   */
+  public void testctas_alltypes_repeatedmap() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
     test("use dfs_test.tmp");
-    test("alter session set store.format = 'json' ");
-    test("alter session set store.json.writer.skip_null_fields = true"); // DEFAULT
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
 
-    testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .jsonBaselineFile("json/" + testName + ".json")
-        .build()
-        .run();
-
-    test("drop table " + testName + "_json" );
+    try {
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .jsonBaselineFile("json/" + testName + ".json")
+          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery(
+              "alter session set store.json.writer.skip_null_fields = true") // DEFAULT
+          .build()
+          .run();
+    }finally{
+      test("drop table " + testName + "_json" );
+      test("alter session reset store.format ");
+      test("alter session reset store.json.writer.skip_null_fields ");
+    }
 
   }
 
@@ -109,20 +125,25 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_repeated_map_noskip() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
     test("use dfs_test.tmp");
-    test("alter session set store.format = 'json' ");
-    test("alter session set store.json.writer.skip_null_fields = false"); // CHANGE from default
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
 
-    testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .jsonBaselineFile("json/" + testName + "_out.json")
-        .build()
-        .run();
-
-    test("drop table " + testName + "_json" );
+    try {
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .jsonBaselineFile("json/" + testName + "_out.json")
+          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
+          .optionSettingQueriesForTestQuery(
+              "alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
+          .build()
+          .run();
+    } finally {
+      test("drop table " + testName + "_json" );
+      test("alter session reset store.format ");
+      test("alter session reset store.json.writer.skip_null_fields ");
+    }
 
   }
 

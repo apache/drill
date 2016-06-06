@@ -62,7 +62,7 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
 
     @Override
     public void startField() throws IOException {
-      <#if mode.prefix = "Nullable" >
+      <#if mode.prefix == "Nullable" >
       if (!skipNullFields || this.reader.isSet()) {
         gen.writeFieldName(fieldName);
       }
@@ -127,7 +127,7 @@ public abstract class JSONOutputRecordWriter extends AbstractRecordWriter implem
   <#elseif mode.prefix == "Repeated" >
     gen.write${typeName}(i, reader);
   <#else>
-    <#if mode.prefix = "Nullable" >
+    <#if mode.prefix == "Nullable" >
     if (!skipNullFields || this.reader.isSet()) {
       gen.write${typeName}(reader);
     }
