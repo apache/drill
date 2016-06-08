@@ -533,9 +533,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
     Map<String, String> objectsMap = Maps.newHashMap();
     objectsMap.put("COUNT_BIG_INT_REPEATED", "sia");
     objectsMap.put("COUNT_FLOAT_REPEATED", "sfa");
-    // TODO: can be uncommented after fixing DRILL-4664
-    // objectsMap.put("COUNT_MAP_REPEATED", "soa");
-    // objectsMap.put("COUNT_MAP_REQUIRED", "oooi");
+    objectsMap.put("COUNT_MAP_REPEATED", "soa");
+    objectsMap.put("COUNT_MAP_REQUIRED", "oooi");
     objectsMap.put("COUNT_LIST_REPEATED", "odd");
     objectsMap.put("COUNT_LIST_OPTIONAL", "sia");
 

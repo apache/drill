@@ -38,6 +38,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
@@ -161,7 +162,7 @@ public class MapVector extends AbstractMapVector {
     private final MapVector to;
 
     public MapTransferPair(MapVector from, String path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
+      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public MapTransferPair(MapVector from, MapVector to) {
