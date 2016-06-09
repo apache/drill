@@ -53,7 +53,16 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
+import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
+import org.apache.drill.exec.proto.UserProtos.LikeFilter;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -408,6 +417,98 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       logger.debug("Resuming query {}", QueryIdHelper.getQueryId(queryId));
     }
     return client.send(RpcType.RESUME_PAUSED_QUERY, queryId, Ack.class);
+  }
+
+  /**
+   * Get the list of catalogs in <code>INFORMATION_SCHEMA.CATALOGS</code> table satisfying the given filters.
+   *
+   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
+   * @return
+   */
+  public DrillRpcFuture<GetCatalogsResp> getCatalogs(LikeFilter catalogNameFilter) {
+    final GetCatalogsReq.Builder reqBuilder = GetCatalogsReq.newBuilder();
+    if (catalogNameFilter != null) {
+      reqBuilder.setCatalogNameFilter(catalogNameFilter);
+    }
+
+    return client.send(RpcType.GET_CATALOGS, reqBuilder.build(), GetCatalogsResp.class);
+  }
+
+  /**
+   * Get the list of schemas in <code>INFORMATION_SCHEMA.SCHEMATA</code> table satisfying the given filters.
+   *
+   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
+   * @return
+   */
+  public DrillRpcFuture<GetSchemasResp> getSchemas(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter) {
+    final GetSchemasReq.Builder reqBuilder = GetSchemasReq.newBuilder();
+    if (catalogNameFilter != null) {
+      reqBuilder.setCatalogNameFilter(catalogNameFilter);
+    }
+
+    if (schemaNameFilter != null) {
+      reqBuilder.setSchameNameFilter(schemaNameFilter);
+    }
+
+    return client.send(RpcType.GET_SCHEMAS, reqBuilder.build(), GetSchemasResp.class);
+  }
+
+  /**
+   * Get the list of tables in <code>INFORMATION_SCHEMA.TABLES</code> table satisfying the given filters.
+   *
+   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
+   * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
+   * @return
+   */
+  public DrillRpcFuture<GetTablesResp> getTables(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
+      LikeFilter tableNameFilter) {
+    final GetTablesReq.Builder reqBuilder = GetTablesReq.newBuilder();
+    if (catalogNameFilter != null) {
+      reqBuilder.setCatalogNameFilter(catalogNameFilter);
+    }
+
+    if (schemaNameFilter != null) {
+      reqBuilder.setSchameNameFilter(schemaNameFilter);
+    }
+
+    if (tableNameFilter != null) {
+      reqBuilder.setTableNameFilter(tableNameFilter);
+    }
+
+    return client.send(RpcType.GET_TABLES, reqBuilder.build(), GetTablesResp.class);
+  }
+
+  /**
+   * Get the list of columns in <code>INFORMATION_SCHEMA.COLUMNS</code> table satisfying the given filters.
+   *
+   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
+   * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
+   * @param columnNameFilter Filter in <code>column name</code>. Pass null to apply no filter.
+   * @return
+   */
+  public DrillRpcFuture<GetColumnsResp> getColumns(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
+      LikeFilter tableNameFilter, LikeFilter columnNameFilter) {
+    final GetColumnsReq.Builder reqBuilder = GetColumnsReq.newBuilder();
+    if (catalogNameFilter != null) {
+      reqBuilder.setCatalogNameFilter(catalogNameFilter);
+    }
+
+    if (schemaNameFilter != null) {
+      reqBuilder.setSchameNameFilter(schemaNameFilter);
+    }
+
+    if (tableNameFilter != null) {
+      reqBuilder.setTableNameFilter(tableNameFilter);
+    }
+
+    if (columnNameFilter != null) {
+      reqBuilder.setColumnNameFilter(columnNameFilter);
+    }
+
+    return client.send(RpcType.GET_COLUMNS, reqBuilder.build(), GetColumnsResp.class);
   }
 
   /**

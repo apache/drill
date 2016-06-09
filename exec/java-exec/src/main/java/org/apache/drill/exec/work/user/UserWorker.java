@@ -21,16 +21,22 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
+import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.drill.exec.work.metadata.MetadataProvider;
 
 public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
@@ -44,7 +50,6 @@ public class UserWorker{
   };
 
   public UserWorker(WorkerBee bee) {
-    super();
     this.bee = bee;
   }
 
@@ -52,7 +57,7 @@ public class UserWorker{
    * Helper method to generate QueryId
    * @return generated QueryId
    */
-  private QueryId queryIdGenerator() {
+  private static QueryId queryIdGenerator() {
     ThreadLocalRandom r = ThreadLocalRandom.current();
 
     // create a new queryid where the first four bytes are a growing time (each new value comes earlier in sequence).  Last 12 bytes are random.
@@ -96,5 +101,21 @@ public class UserWorker{
     final QueryId queryId = queryIdGenerator();
     final QueryPlanFragments qPlanFragments = new PlanSplitter().planFragments(bee.getContext(), queryId, req, connection);
     return qPlanFragments;
+  }
+
+  public void submitCatalogMetadataWork(UserSession session, GetCatalogsReq req, ResponseSender sender) {
+    bee.addNewWork(MetadataProvider.catalogs(session, bee.getContext(), req, sender));
+  }
+
+  public void submitSchemasMetadataWork(UserSession session, GetSchemasReq req, ResponseSender sender) {
+    bee.addNewWork(MetadataProvider.schemas(session, bee.getContext(), req, sender));
+  }
+
+  public void submitTablesMetadataWork(UserSession session, GetTablesReq req, ResponseSender sender) {
+    bee.addNewWork(MetadataProvider.tables(session, bee.getContext(), req, sender));
+  }
+
+  public void submitColumnsMetadataWork(UserSession session, GetColumnsReq req, ResponseSender sender) {
+    bee.addNewWork(MetadataProvider.columns(session, bee.getContext(), req, sender));
   }
 }

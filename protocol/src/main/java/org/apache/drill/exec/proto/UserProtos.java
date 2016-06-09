@@ -83,33 +83,97 @@ public final class UserProtos {
      */
     GET_QUERY_PLAN_FRAGMENTS(7, 12),
     /**
+     * <code>GET_CATALOGS = 14;</code>
+     *
+     * <pre>
+     * user is requesting metadata of catalog(s).
+     * </pre>
+     */
+    GET_CATALOGS(8, 14),
+    /**
+     * <code>GET_SCHEMAS = 15;</code>
+     *
+     * <pre>
+     * user is requesting metadata of schema(s)
+     * </pre>
+     */
+    GET_SCHEMAS(9, 15),
+    /**
+     * <code>GET_TABLES = 16;</code>
+     *
+     * <pre>
+     * user is requesting metadata of table(s)
+     * </pre>
+     */
+    GET_TABLES(10, 16),
+    /**
+     * <code>GET_COLUMNS = 17;</code>
+     *
+     * <pre>
+     * user is requesting metadata of column(s)
+     * </pre>
+     */
+    GET_COLUMNS(11, 17),
+    /**
      * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
      * bit to user
      * </pre>
      */
-    QUERY_DATA(8, 6),
+    QUERY_DATA(12, 6),
     /**
      * <code>QUERY_HANDLE = 7;</code>
      */
-    QUERY_HANDLE(9, 7),
+    QUERY_HANDLE(13, 7),
     /**
      * <code>QUERY_PLAN_FRAGMENTS = 13;</code>
      *
      * <pre>
-     * return plan fragments 
+     * return plan fragments
      * </pre>
      */
-    QUERY_PLAN_FRAGMENTS(10, 13),
+    QUERY_PLAN_FRAGMENTS(14, 13),
+    /**
+     * <code>CATALOGS = 18;</code>
+     *
+     * <pre>
+     * return catalogs metadata in response to GET_CATALOGS
+     * </pre>
+     */
+    CATALOGS(15, 18),
+    /**
+     * <code>SCHEMAS = 19;</code>
+     *
+     * <pre>
+     * return schema metadata in response to GET_SCHEMAS
+     * </pre>
+     */
+    SCHEMAS(16, 19),
+    /**
+     * <code>TABLES = 20;</code>
+     *
+     * <pre>
+     * return table metadata in response to GET_TABLES
+     * </pre>
+     */
+    TABLES(17, 20),
+    /**
+     * <code>COLUMNS = 21;</code>
+     *
+     * <pre>
+     * return column metadata in response to GET_COLUMNS
+     * </pre>
+     */
+    COLUMNS(18, 21),
     /**
      * <code>REQ_META_FUNCTIONS = 8;</code>
      */
-    REQ_META_FUNCTIONS(11, 8),
+    REQ_META_FUNCTIONS(19, 8),
     /**
      * <code>RESP_FUNCTION_LIST = 9;</code>
      */
-    RESP_FUNCTION_LIST(12, 9),
+    RESP_FUNCTION_LIST(20, 9),
     /**
      * <code>QUERY_RESULT = 10;</code>
      *
@@ -117,7 +181,7 @@ public final class UserProtos {
      * drillbit is reporting a query status change, most likely a terminal message, to the user
      * </pre>
      */
-    QUERY_RESULT(13, 10),
+    QUERY_RESULT(21, 10),
     ;
 
     /**
@@ -169,6 +233,38 @@ public final class UserProtos {
      */
     public static final int GET_QUERY_PLAN_FRAGMENTS_VALUE = 12;
     /**
+     * <code>GET_CATALOGS = 14;</code>
+     *
+     * <pre>
+     * user is requesting metadata of catalog(s).
+     * </pre>
+     */
+    public static final int GET_CATALOGS_VALUE = 14;
+    /**
+     * <code>GET_SCHEMAS = 15;</code>
+     *
+     * <pre>
+     * user is requesting metadata of schema(s)
+     * </pre>
+     */
+    public static final int GET_SCHEMAS_VALUE = 15;
+    /**
+     * <code>GET_TABLES = 16;</code>
+     *
+     * <pre>
+     * user is requesting metadata of table(s)
+     * </pre>
+     */
+    public static final int GET_TABLES_VALUE = 16;
+    /**
+     * <code>GET_COLUMNS = 17;</code>
+     *
+     * <pre>
+     * user is requesting metadata of column(s)
+     * </pre>
+     */
+    public static final int GET_COLUMNS_VALUE = 17;
+    /**
      * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
@@ -184,10 +280,42 @@ public final class UserProtos {
      * <code>QUERY_PLAN_FRAGMENTS = 13;</code>
      *
      * <pre>
-     * return plan fragments 
+     * return plan fragments
      * </pre>
      */
     public static final int QUERY_PLAN_FRAGMENTS_VALUE = 13;
+    /**
+     * <code>CATALOGS = 18;</code>
+     *
+     * <pre>
+     * return catalogs metadata in response to GET_CATALOGS
+     * </pre>
+     */
+    public static final int CATALOGS_VALUE = 18;
+    /**
+     * <code>SCHEMAS = 19;</code>
+     *
+     * <pre>
+     * return schema metadata in response to GET_SCHEMAS
+     * </pre>
+     */
+    public static final int SCHEMAS_VALUE = 19;
+    /**
+     * <code>TABLES = 20;</code>
+     *
+     * <pre>
+     * return table metadata in response to GET_TABLES
+     * </pre>
+     */
+    public static final int TABLES_VALUE = 20;
+    /**
+     * <code>COLUMNS = 21;</code>
+     *
+     * <pre>
+     * return column metadata in response to GET_COLUMNS
+     * </pre>
+     */
+    public static final int COLUMNS_VALUE = 21;
     /**
      * <code>REQ_META_FUNCTIONS = 8;</code>
      */
@@ -218,9 +346,17 @@ public final class UserProtos {
         case 5: return REQUEST_RESULTS;
         case 11: return RESUME_PAUSED_QUERY;
         case 12: return GET_QUERY_PLAN_FRAGMENTS;
+        case 14: return GET_CATALOGS;
+        case 15: return GET_SCHEMAS;
+        case 16: return GET_TABLES;
+        case 17: return GET_COLUMNS;
         case 6: return QUERY_DATA;
         case 7: return QUERY_HANDLE;
         case 13: return QUERY_PLAN_FRAGMENTS;
+        case 18: return CATALOGS;
+        case 19: return SCHEMAS;
+        case 20: return TABLES;
+        case 21: return COLUMNS;
         case 8: return REQ_META_FUNCTIONS;
         case 9: return RESP_FUNCTION_LIST;
         case 10: return QUERY_RESULT;
@@ -486,6 +622,102 @@ public final class UserProtos {
     }
 
     // @@protoc_insertion_point(enum_scope:exec.user.HandshakeStatus)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.RequestStatus}
+   *
+   * <pre>
+   *
+   * Enum indicating the request status.
+   * </pre>
+   */
+  public enum RequestStatus
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNKNOWN = 0;</code>
+     */
+    UNKNOWN(0, 0),
+    /**
+     * <code>OK = 1;</code>
+     */
+    OK(1, 1),
+    /**
+     * <code>FAILED = 2;</code>
+     */
+    FAILED(2, 2),
+    ;
+
+    /**
+     * <code>UNKNOWN = 0;</code>
+     */
+    public static final int UNKNOWN_VALUE = 0;
+    /**
+     * <code>OK = 1;</code>
+     */
+    public static final int OK_VALUE = 1;
+    /**
+     * <code>FAILED = 2;</code>
+     */
+    public static final int FAILED_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static RequestStatus valueOf(int value) {
+      switch (value) {
+        case 0: return UNKNOWN;
+        case 1: return OK;
+        case 2: return FAILED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<RequestStatus>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<RequestStatus>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<RequestStatus>() {
+            public RequestStatus findValueByNumber(int number) {
+              return RequestStatus.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(3);
+    }
+
+    private static final RequestStatus[] VALUES = values();
+
+    public static RequestStatus valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private RequestStatus(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.RequestStatus)
   }
 
   public interface PropertyOrBuilder
@@ -7150,6 +7382,12924 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
   }
 
+  public interface LikeFilterOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string regex = 1;
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    boolean hasRegex();
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    java.lang.String getRegex();
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getRegexBytes();
+
+    // optional string escape = 2;
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    boolean hasEscape();
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    java.lang.String getEscape();
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getEscapeBytes();
+  }
+  /**
+   * Protobuf type {@code exec.user.LikeFilter}
+   *
+   * <pre>
+   *
+   * Simple filter which encapsulates the SQL LIKE ... ESCAPE function
+   * </pre>
+   */
+  public static final class LikeFilter extends
+      com.google.protobuf.GeneratedMessage
+      implements LikeFilterOrBuilder {
+    // Use LikeFilter.newBuilder() to construct.
+    private LikeFilter(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private LikeFilter(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final LikeFilter defaultInstance;
+    public static LikeFilter getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public LikeFilter getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LikeFilter(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              regex_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              escape_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_LikeFilter_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_LikeFilter_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.class, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<LikeFilter> PARSER =
+        new com.google.protobuf.AbstractParser<LikeFilter>() {
+      public LikeFilter parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new LikeFilter(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<LikeFilter> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string regex = 1;
+    public static final int REGEX_FIELD_NUMBER = 1;
+    private java.lang.Object regex_;
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    public boolean hasRegex() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    public java.lang.String getRegex() {
+      java.lang.Object ref = regex_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          regex_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string regex = 1;</code>
+     *
+     * <pre>
+     * pattern to match
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getRegexBytes() {
+      java.lang.Object ref = regex_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        regex_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string escape = 2;
+    public static final int ESCAPE_FIELD_NUMBER = 2;
+    private java.lang.Object escape_;
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    public boolean hasEscape() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    public java.lang.String getEscape() {
+      java.lang.Object ref = escape_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          escape_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string escape = 2;</code>
+     *
+     * <pre>
+     * escape character (if any) present in the pattern
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getEscapeBytes() {
+      java.lang.Object ref = escape_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        escape_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      regex_ = "";
+      escape_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getRegexBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getEscapeBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getRegexBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getEscapeBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.LikeFilter parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.LikeFilter prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.LikeFilter}
+     *
+     * <pre>
+     *
+     * Simple filter which encapsulates the SQL LIKE ... ESCAPE function
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_LikeFilter_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_LikeFilter_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.LikeFilter.class, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        regex_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        escape_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_LikeFilter_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter build() {
+        org.apache.drill.exec.proto.UserProtos.LikeFilter result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.LikeFilter result = new org.apache.drill.exec.proto.UserProtos.LikeFilter(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.regex_ = regex_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.escape_ = escape_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.LikeFilter) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.LikeFilter)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.LikeFilter other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) return this;
+        if (other.hasRegex()) {
+          bitField0_ |= 0x00000001;
+          regex_ = other.regex_;
+          onChanged();
+        }
+        if (other.hasEscape()) {
+          bitField0_ |= 0x00000002;
+          escape_ = other.escape_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.LikeFilter parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.LikeFilter) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string regex = 1;
+      private java.lang.Object regex_ = "";
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public boolean hasRegex() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public java.lang.String getRegex() {
+        java.lang.Object ref = regex_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          regex_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getRegexBytes() {
+        java.lang.Object ref = regex_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          regex_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public Builder setRegex(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        regex_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public Builder clearRegex() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        regex_ = getDefaultInstance().getRegex();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string regex = 1;</code>
+       *
+       * <pre>
+       * pattern to match
+       * </pre>
+       */
+      public Builder setRegexBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        regex_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string escape = 2;
+      private java.lang.Object escape_ = "";
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public boolean hasEscape() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public java.lang.String getEscape() {
+        java.lang.Object ref = escape_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          escape_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getEscapeBytes() {
+        java.lang.Object ref = escape_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          escape_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public Builder setEscape(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        escape_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public Builder clearEscape() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        escape_ = getDefaultInstance().getEscape();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string escape = 2;</code>
+       *
+       * <pre>
+       * escape character (if any) present in the pattern
+       * </pre>
+       */
+      public Builder setEscapeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        escape_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.LikeFilter)
+    }
+
+    static {
+      defaultInstance = new LikeFilter(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.LikeFilter)
+  }
+
+  public interface GetCatalogsReqOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    boolean hasCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetCatalogsReq}
+   *
+   * <pre>
+   *
+   * Request message for getting the metadata for catalogs satisfying the given optional filter.
+   * </pre>
+   */
+  public static final class GetCatalogsReq extends
+      com.google.protobuf.GeneratedMessage
+      implements GetCatalogsReqOrBuilder {
+    // Use GetCatalogsReq.newBuilder() to construct.
+    private GetCatalogsReq(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetCatalogsReq(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetCatalogsReq defaultInstance;
+    public static GetCatalogsReq getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetCatalogsReq getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetCatalogsReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = catalogNameFilter_.toBuilder();
+              }
+              catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(catalogNameFilter_);
+                catalogNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetCatalogsReq> PARSER =
+        new com.google.protobuf.AbstractParser<GetCatalogsReq>() {
+      public GetCatalogsReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetCatalogsReq(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetCatalogsReq> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    public static final int CATALOG_NAME_FILTER_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public boolean hasCatalogNameFilter() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+      return catalogNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+      return catalogNameFilter_;
+    }
+
+    private void initFields() {
+      catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, catalogNameFilter_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, catalogNameFilter_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetCatalogsReq prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetCatalogsReq}
+     *
+     * <pre>
+     *
+     * Request message for getting the metadata for catalogs satisfying the given optional filter.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetCatalogsReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCatalogNameFilterFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsReq_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsReq getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsReq build() {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsReq buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsReq result = new org.apache.drill.exec.proto.UserProtos.GetCatalogsReq(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (catalogNameFilterBuilder_ == null) {
+          result.catalogNameFilter_ = catalogNameFilter_;
+        } else {
+          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetCatalogsReq) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetCatalogsReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetCatalogsReq other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.getDefaultInstance()) return this;
+        if (other.hasCatalogNameFilter()) {
+          mergeCatalogNameFilter(other.getCatalogNameFilter());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetCatalogsReq) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.LikeFilter catalog_name_filter = 1;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public boolean hasCatalogNameFilter() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          return catalogNameFilter_;
+        } else {
+          return catalogNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          catalogNameFilter_ = value;
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            catalogNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(catalogNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            catalogNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder clearCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getCatalogNameFilterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getCatalogNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+        if (catalogNameFilterBuilder_ != null) {
+          return catalogNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return catalogNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getCatalogNameFilterFieldBuilder() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  catalogNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          catalogNameFilter_ = null;
+        }
+        return catalogNameFilterBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetCatalogsReq)
+    }
+
+    static {
+      defaultInstance = new GetCatalogsReq(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetCatalogsReq)
+  }
+
+  public interface CatalogMetadataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string catalog_name = 1;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    boolean hasCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    java.lang.String getCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getCatalogNameBytes();
+
+    // optional string description = 2;
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    boolean hasDescription();
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    java.lang.String getDescription();
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getDescriptionBytes();
+
+    // optional string connect = 3;
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    boolean hasConnect();
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    java.lang.String getConnect();
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getConnectBytes();
+  }
+  /**
+   * Protobuf type {@code exec.user.CatalogMetadata}
+   *
+   * <pre>
+   *
+   * Message encapsulating metadata for a Catalog.
+   * </pre>
+   */
+  public static final class CatalogMetadata extends
+      com.google.protobuf.GeneratedMessage
+      implements CatalogMetadataOrBuilder {
+    // Use CatalogMetadata.newBuilder() to construct.
+    private CatalogMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private CatalogMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final CatalogMetadata defaultInstance;
+    public static CatalogMetadata getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public CatalogMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CatalogMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              catalogName_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              description_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              connect_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_CatalogMetadata_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_CatalogMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<CatalogMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<CatalogMetadata>() {
+      public CatalogMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CatalogMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CatalogMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string catalog_name = 1;
+    public static final int CATALOG_NAME_FIELD_NUMBER = 1;
+    private java.lang.Object catalogName_;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public boolean hasCatalogName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public java.lang.String getCatalogName() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogNameBytes() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string description = 2;
+    public static final int DESCRIPTION_FIELD_NUMBER = 2;
+    private java.lang.Object description_;
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    public boolean hasDescription() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    public java.lang.String getDescription() {
+      java.lang.Object ref = description_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          description_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string description = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDescriptionBytes() {
+      java.lang.Object ref = description_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        description_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string connect = 3;
+    public static final int CONNECT_FIELD_NUMBER = 3;
+    private java.lang.Object connect_;
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    public boolean hasConnect() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    public java.lang.String getConnect() {
+      java.lang.Object ref = connect_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          connect_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string connect = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getConnectBytes() {
+      java.lang.Object ref = connect_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        connect_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      catalogName_ = "";
+      description_ = "";
+      connect_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getDescriptionBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getConnectBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getDescriptionBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getConnectBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.CatalogMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.CatalogMetadata prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.CatalogMetadata}
+     *
+     * <pre>
+     *
+     * Message encapsulating metadata for a Catalog.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_CatalogMetadata_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_CatalogMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.CatalogMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        catalogName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        description_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        connect_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_CatalogMetadata_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata build() {
+        org.apache.drill.exec.proto.UserProtos.CatalogMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.CatalogMetadata result = new org.apache.drill.exec.proto.UserProtos.CatalogMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.catalogName_ = catalogName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.description_ = description_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.connect_ = connect_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.CatalogMetadata) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.CatalogMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.CatalogMetadata other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.CatalogMetadata.getDefaultInstance()) return this;
+        if (other.hasCatalogName()) {
+          bitField0_ |= 0x00000001;
+          catalogName_ = other.catalogName_;
+          onChanged();
+        }
+        if (other.hasDescription()) {
+          bitField0_ |= 0x00000002;
+          description_ = other.description_;
+          onChanged();
+        }
+        if (other.hasConnect()) {
+          bitField0_ |= 0x00000004;
+          connect_ = other.connect_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.CatalogMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.CatalogMetadata) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string catalog_name = 1;
+      private java.lang.Object catalogName_ = "";
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public boolean hasCatalogName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public java.lang.String getCatalogName() {
+        java.lang.Object ref = catalogName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogNameBytes() {
+        java.lang.Object ref = catalogName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder clearCatalogName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        catalogName_ = getDefaultInstance().getCatalogName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string description = 2;
+      private java.lang.Object description_ = "";
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public boolean hasDescription() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public java.lang.String getDescription() {
+        java.lang.Object ref = description_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          description_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDescriptionBytes() {
+        java.lang.Object ref = description_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          description_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public Builder setDescription(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        description_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public Builder clearDescription() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        description_ = getDefaultInstance().getDescription();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string description = 2;</code>
+       */
+      public Builder setDescriptionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        description_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string connect = 3;
+      private java.lang.Object connect_ = "";
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public boolean hasConnect() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public java.lang.String getConnect() {
+        java.lang.Object ref = connect_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          connect_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getConnectBytes() {
+        java.lang.Object ref = connect_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          connect_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public Builder setConnect(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        connect_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public Builder clearConnect() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        connect_ = getDefaultInstance().getConnect();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string connect = 3;</code>
+       */
+      public Builder setConnectBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        connect_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.CatalogMetadata)
+    }
+
+    static {
+      defaultInstance = new CatalogMetadata(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.CatalogMetadata)
+  }
+
+  public interface GetCatalogsRespOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.RequestStatus status = 1;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
+
+    // repeated .exec.user.CatalogMetadata catalogs = 2;
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> 
+        getCatalogsList();
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.CatalogMetadata getCatalogs(int index);
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    int getCatalogsCount();
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder> 
+        getCatalogsOrBuilderList();
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder getCatalogsOrBuilder(
+        int index);
+
+    // optional .exec.shared.DrillPBError error = 3;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetCatalogsResp}
+   *
+   * <pre>
+   *
+   * Response message for GetCatalogReq.
+   * </pre>
+   */
+  public static final class GetCatalogsResp extends
+      com.google.protobuf.GeneratedMessage
+      implements GetCatalogsRespOrBuilder {
+    // Use GetCatalogsResp.newBuilder() to construct.
+    private GetCatalogsResp(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetCatalogsResp(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetCatalogsResp defaultInstance;
+    public static GetCatalogsResp getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetCatalogsResp getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetCatalogsResp(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RequestStatus value = org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                status_ = value;
+              }
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                catalogs_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CatalogMetadata>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              catalogs_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.CatalogMetadata.PARSER, extensionRegistry));
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = error_.toBuilder();
+              }
+              error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(error_);
+                error_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          catalogs_ = java.util.Collections.unmodifiableList(catalogs_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsResp_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsResp_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetCatalogsResp> PARSER =
+        new com.google.protobuf.AbstractParser<GetCatalogsResp>() {
+      public GetCatalogsResp parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetCatalogsResp(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetCatalogsResp> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.RequestStatus status = 1;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.RequestStatus status_;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+      return status_;
+    }
+
+    // repeated .exec.user.CatalogMetadata catalogs = 2;
+    public static final int CATALOGS_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> catalogs_;
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> getCatalogsList() {
+      return catalogs_;
+    }
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder> 
+        getCatalogsOrBuilderList() {
+      return catalogs_;
+    }
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    public int getCatalogsCount() {
+      return catalogs_.size();
+    }
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.CatalogMetadata getCatalogs(int index) {
+      return catalogs_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder getCatalogsOrBuilder(
+        int index) {
+      return catalogs_.get(index);
+    }
+
+    // optional .exec.shared.DrillPBError error = 3;
+    public static final int ERROR_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+      return error_;
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      catalogs_ = java.util.Collections.emptyList();
+      error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, status_.getNumber());
+      }
+      for (int i = 0; i < catalogs_.size(); i++) {
+        output.writeMessage(2, catalogs_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(3, error_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, status_.getNumber());
+      }
+      for (int i = 0; i < catalogs_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, catalogs_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, error_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetCatalogsResp prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetCatalogsResp}
+     *
+     * <pre>
+     *
+     * Response message for GetCatalogReq.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetCatalogsRespOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsResp_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsResp_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCatalogsFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (catalogsBuilder_ == null) {
+          catalogs_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          catalogsBuilder_.clear();
+        }
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetCatalogsResp_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsResp getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsResp build() {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsResp result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetCatalogsResp buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsResp result = new org.apache.drill.exec.proto.UserProtos.GetCatalogsResp(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.status_ = status_;
+        if (catalogsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            catalogs_ = java.util.Collections.unmodifiableList(catalogs_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.catalogs_ = catalogs_;
+        } else {
+          result.catalogs_ = catalogsBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetCatalogsResp) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetCatalogsResp)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetCatalogsResp other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (catalogsBuilder_ == null) {
+          if (!other.catalogs_.isEmpty()) {
+            if (catalogs_.isEmpty()) {
+              catalogs_ = other.catalogs_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureCatalogsIsMutable();
+              catalogs_.addAll(other.catalogs_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.catalogs_.isEmpty()) {
+            if (catalogsBuilder_.isEmpty()) {
+              catalogsBuilder_.dispose();
+              catalogsBuilder_ = null;
+              catalogs_ = other.catalogs_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              catalogsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getCatalogsFieldBuilder() : null;
+            } else {
+              catalogsBuilder_.addAllMessages(other.catalogs_);
+            }
+          }
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetCatalogsResp parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetCatalogsResp) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.RequestStatus status = 1;
+      private org.apache.drill.exec.proto.UserProtos.RequestStatus status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.CatalogMetadata catalogs = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> catalogs_ =
+        java.util.Collections.emptyList();
+      private void ensureCatalogsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          catalogs_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CatalogMetadata>(catalogs_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.CatalogMetadata, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder, org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder> catalogsBuilder_;
+
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> getCatalogsList() {
+        if (catalogsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(catalogs_);
+        } else {
+          return catalogsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public int getCatalogsCount() {
+        if (catalogsBuilder_ == null) {
+          return catalogs_.size();
+        } else {
+          return catalogsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata getCatalogs(int index) {
+        if (catalogsBuilder_ == null) {
+          return catalogs_.get(index);
+        } else {
+          return catalogsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder setCatalogs(
+          int index, org.apache.drill.exec.proto.UserProtos.CatalogMetadata value) {
+        if (catalogsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCatalogsIsMutable();
+          catalogs_.set(index, value);
+          onChanged();
+        } else {
+          catalogsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder setCatalogs(
+          int index, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builderForValue) {
+        if (catalogsBuilder_ == null) {
+          ensureCatalogsIsMutable();
+          catalogs_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          catalogsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder addCatalogs(org.apache.drill.exec.proto.UserProtos.CatalogMetadata value) {
+        if (catalogsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCatalogsIsMutable();
+          catalogs_.add(value);
+          onChanged();
+        } else {
+          catalogsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder addCatalogs(
+          int index, org.apache.drill.exec.proto.UserProtos.CatalogMetadata value) {
+        if (catalogsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCatalogsIsMutable();
+          catalogs_.add(index, value);
+          onChanged();
+        } else {
+          catalogsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder addCatalogs(
+          org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builderForValue) {
+        if (catalogsBuilder_ == null) {
+          ensureCatalogsIsMutable();
+          catalogs_.add(builderForValue.build());
+          onChanged();
+        } else {
+          catalogsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder addCatalogs(
+          int index, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builderForValue) {
+        if (catalogsBuilder_ == null) {
+          ensureCatalogsIsMutable();
+          catalogs_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          catalogsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder addAllCatalogs(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.CatalogMetadata> values) {
+        if (catalogsBuilder_ == null) {
+          ensureCatalogsIsMutable();
+          super.addAll(values, catalogs_);
+          onChanged();
+        } else {
+          catalogsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder clearCatalogs() {
+        if (catalogsBuilder_ == null) {
+          catalogs_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          catalogsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public Builder removeCatalogs(int index) {
+        if (catalogsBuilder_ == null) {
+          ensureCatalogsIsMutable();
+          catalogs_.remove(index);
+          onChanged();
+        } else {
+          catalogsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder getCatalogsBuilder(
+          int index) {
+        return getCatalogsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder getCatalogsOrBuilder(
+          int index) {
+        if (catalogsBuilder_ == null) {
+          return catalogs_.get(index);  } else {
+          return catalogsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder> 
+           getCatalogsOrBuilderList() {
+        if (catalogsBuilder_ != null) {
+          return catalogsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(catalogs_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder addCatalogsBuilder() {
+        return getCatalogsFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.CatalogMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder addCatalogsBuilder(
+          int index) {
+        return getCatalogsFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.CatalogMetadata catalogs = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder> 
+           getCatalogsBuilderList() {
+        return getCatalogsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.CatalogMetadata, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder, org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder> 
+          getCatalogsFieldBuilder() {
+        if (catalogsBuilder_ == null) {
+          catalogsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.CatalogMetadata, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder, org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder>(
+                  catalogs_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          catalogs_ = null;
+        }
+        return catalogsBuilder_;
+      }
+
+      // optional .exec.shared.DrillPBError error = 3;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
+            error_ =
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
+                  error_,
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetCatalogsResp)
+    }
+
+    static {
+      defaultInstance = new GetCatalogsResp(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetCatalogsResp)
+  }
+
+  public interface GetSchemasReqOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    boolean hasCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    boolean hasSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetSchemasReq}
+   *
+   * <pre>
+   *
+   * Request message for getting the metadata for schemas satisfying the given optional filters.
+   * </pre>
+   */
+  public static final class GetSchemasReq extends
+      com.google.protobuf.GeneratedMessage
+      implements GetSchemasReqOrBuilder {
+    // Use GetSchemasReq.newBuilder() to construct.
+    private GetSchemasReq(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetSchemasReq(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetSchemasReq defaultInstance;
+    public static GetSchemasReq getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetSchemasReq getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSchemasReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = catalogNameFilter_.toBuilder();
+              }
+              catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(catalogNameFilter_);
+                catalogNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = schameNameFilter_.toBuilder();
+              }
+              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(schameNameFilter_);
+                schameNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class, org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetSchemasReq> PARSER =
+        new com.google.protobuf.AbstractParser<GetSchemasReq>() {
+      public GetSchemasReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetSchemasReq(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSchemasReq> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    public static final int CATALOG_NAME_FILTER_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public boolean hasCatalogNameFilter() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+      return catalogNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+      return catalogNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public boolean hasSchameNameFilter() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+      return schameNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+      return schameNameFilter_;
+    }
+
+    private void initFields() {
+      catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, schameNameFilter_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, schameNameFilter_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetSchemasReq prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetSchemasReq}
+     *
+     * <pre>
+     *
+     * Request message for getting the metadata for schemas satisfying the given optional filters.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetSchemasReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class, org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetSchemasReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCatalogNameFilterFieldBuilder();
+          getSchameNameFilterFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasReq_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasReq getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasReq build() {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasReq buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasReq result = new org.apache.drill.exec.proto.UserProtos.GetSchemasReq(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (catalogNameFilterBuilder_ == null) {
+          result.catalogNameFilter_ = catalogNameFilter_;
+        } else {
+          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (schameNameFilterBuilder_ == null) {
+          result.schameNameFilter_ = schameNameFilter_;
+        } else {
+          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetSchemasReq) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetSchemasReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetSchemasReq other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetSchemasReq.getDefaultInstance()) return this;
+        if (other.hasCatalogNameFilter()) {
+          mergeCatalogNameFilter(other.getCatalogNameFilter());
+        }
+        if (other.hasSchameNameFilter()) {
+          mergeSchameNameFilter(other.getSchameNameFilter());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetSchemasReq) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.LikeFilter catalog_name_filter = 1;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public boolean hasCatalogNameFilter() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          return catalogNameFilter_;
+        } else {
+          return catalogNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          catalogNameFilter_ = value;
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            catalogNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(catalogNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            catalogNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder clearCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getCatalogNameFilterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getCatalogNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+        if (catalogNameFilterBuilder_ != null) {
+          return catalogNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return catalogNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getCatalogNameFilterFieldBuilder() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  catalogNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          catalogNameFilter_ = null;
+        }
+        return catalogNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter schame_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public boolean hasSchameNameFilter() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          return schameNameFilter_;
+        } else {
+          return schameNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          schameNameFilter_ = value;
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schameNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            schameNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder clearSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getSchameNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+        if (schameNameFilterBuilder_ != null) {
+          return schameNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return schameNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getSchameNameFilterFieldBuilder() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  schameNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          schameNameFilter_ = null;
+        }
+        return schameNameFilterBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetSchemasReq)
+    }
+
+    static {
+      defaultInstance = new GetSchemasReq(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetSchemasReq)
+  }
+
+  public interface SchemaMetadataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string catalog_name = 1;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    boolean hasCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    java.lang.String getCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getCatalogNameBytes();
+
+    // optional string schema_name = 2;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    boolean hasSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    java.lang.String getSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getSchemaNameBytes();
+
+    // optional string owner = 3;
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    boolean hasOwner();
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    java.lang.String getOwner();
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getOwnerBytes();
+
+    // optional string type = 4;
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    boolean hasType();
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    java.lang.String getType();
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getTypeBytes();
+
+    // optional string mutable = 5;
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    boolean hasMutable();
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    java.lang.String getMutable();
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getMutableBytes();
+  }
+  /**
+   * Protobuf type {@code exec.user.SchemaMetadata}
+   *
+   * <pre>
+   *
+   * Message encapsulating metadata for a Schema.
+   * </pre>
+   */
+  public static final class SchemaMetadata extends
+      com.google.protobuf.GeneratedMessage
+      implements SchemaMetadataOrBuilder {
+    // Use SchemaMetadata.newBuilder() to construct.
+    private SchemaMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SchemaMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SchemaMetadata defaultInstance;
+    public static SchemaMetadata getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SchemaMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SchemaMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              catalogName_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              schemaName_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              owner_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              type_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              mutable_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_SchemaMetadata_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_SchemaMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SchemaMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<SchemaMetadata>() {
+      public SchemaMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SchemaMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SchemaMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string catalog_name = 1;
+    public static final int CATALOG_NAME_FIELD_NUMBER = 1;
+    private java.lang.Object catalogName_;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public boolean hasCatalogName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public java.lang.String getCatalogName() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogNameBytes() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string schema_name = 2;
+    public static final int SCHEMA_NAME_FIELD_NUMBER = 2;
+    private java.lang.Object schemaName_;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public boolean hasSchemaName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public java.lang.String getSchemaName() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          schemaName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSchemaNameBytes() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        schemaName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string owner = 3;
+    public static final int OWNER_FIELD_NUMBER = 3;
+    private java.lang.Object owner_;
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    public boolean hasOwner() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    public java.lang.String getOwner() {
+      java.lang.Object ref = owner_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          owner_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string owner = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOwnerBytes() {
+      java.lang.Object ref = owner_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        owner_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string type = 4;
+    public static final int TYPE_FIELD_NUMBER = 4;
+    private java.lang.Object type_;
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          type_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "file", "mongodb", "hive" etc.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string mutable = 5;
+    public static final int MUTABLE_FIELD_NUMBER = 5;
+    private java.lang.Object mutable_;
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    public boolean hasMutable() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    public java.lang.String getMutable() {
+      java.lang.Object ref = mutable_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          mutable_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string mutable = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMutableBytes() {
+      java.lang.Object ref = mutable_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        mutable_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      catalogName_ = "";
+      schemaName_ = "";
+      owner_ = "";
+      type_ = "";
+      mutable_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getOwnerBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getTypeBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getMutableBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getOwnerBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getTypeBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getMutableBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.SchemaMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.SchemaMetadata prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.SchemaMetadata}
+     *
+     * <pre>
+     *
+     * Message encapsulating metadata for a Schema.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_SchemaMetadata_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_SchemaMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.SchemaMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        catalogName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        schemaName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        owner_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        type_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        mutable_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_SchemaMetadata_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata build() {
+        org.apache.drill.exec.proto.UserProtos.SchemaMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.SchemaMetadata result = new org.apache.drill.exec.proto.UserProtos.SchemaMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.catalogName_ = catalogName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.schemaName_ = schemaName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.owner_ = owner_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.mutable_ = mutable_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.SchemaMetadata) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.SchemaMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.SchemaMetadata other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.SchemaMetadata.getDefaultInstance()) return this;
+        if (other.hasCatalogName()) {
+          bitField0_ |= 0x00000001;
+          catalogName_ = other.catalogName_;
+          onChanged();
+        }
+        if (other.hasSchemaName()) {
+          bitField0_ |= 0x00000002;
+          schemaName_ = other.schemaName_;
+          onChanged();
+        }
+        if (other.hasOwner()) {
+          bitField0_ |= 0x00000004;
+          owner_ = other.owner_;
+          onChanged();
+        }
+        if (other.hasType()) {
+          bitField0_ |= 0x00000008;
+          type_ = other.type_;
+          onChanged();
+        }
+        if (other.hasMutable()) {
+          bitField0_ |= 0x00000010;
+          mutable_ = other.mutable_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.SchemaMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.SchemaMetadata) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string catalog_name = 1;
+      private java.lang.Object catalogName_ = "";
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public boolean hasCatalogName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public java.lang.String getCatalogName() {
+        java.lang.Object ref = catalogName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogNameBytes() {
+        java.lang.Object ref = catalogName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder clearCatalogName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        catalogName_ = getDefaultInstance().getCatalogName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string schema_name = 2;
+      private java.lang.Object schemaName_ = "";
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public boolean hasSchemaName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public java.lang.String getSchemaName() {
+        java.lang.Object ref = schemaName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          schemaName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSchemaNameBytes() {
+        java.lang.Object ref = schemaName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          schemaName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder clearSchemaName() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        schemaName_ = getDefaultInstance().getSchemaName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string owner = 3;
+      private java.lang.Object owner_ = "";
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public boolean hasOwner() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public java.lang.String getOwner() {
+        java.lang.Object ref = owner_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          owner_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getOwnerBytes() {
+        java.lang.Object ref = owner_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          owner_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public Builder setOwner(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        owner_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public Builder clearOwner() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        owner_ = getDefaultInstance().getOwner();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string owner = 3;</code>
+       */
+      public Builder setOwnerBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        owner_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string type = 4;
+      private java.lang.Object type_ = "";
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          type_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        type_ = getDefaultInstance().getType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "file", "mongodb", "hive" etc.
+       * </pre>
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string mutable = 5;
+      private java.lang.Object mutable_ = "";
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public boolean hasMutable() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public java.lang.String getMutable() {
+        java.lang.Object ref = mutable_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          mutable_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMutableBytes() {
+        java.lang.Object ref = mutable_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          mutable_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public Builder setMutable(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        mutable_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public Builder clearMutable() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        mutable_ = getDefaultInstance().getMutable();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string mutable = 5;</code>
+       */
+      public Builder setMutableBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        mutable_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.SchemaMetadata)
+    }
+
+    static {
+      defaultInstance = new SchemaMetadata(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.SchemaMetadata)
+  }
+
+  public interface GetSchemasRespOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.RequestStatus status = 1;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
+
+    // repeated .exec.user.SchemaMetadata schemas = 2;
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> 
+        getSchemasList();
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.SchemaMetadata getSchemas(int index);
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    int getSchemasCount();
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder> 
+        getSchemasOrBuilderList();
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder getSchemasOrBuilder(
+        int index);
+
+    // optional .exec.shared.DrillPBError error = 3;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetSchemasResp}
+   *
+   * <pre>
+   *
+   * Response message for GetSchemasReq.
+   * </pre>
+   */
+  public static final class GetSchemasResp extends
+      com.google.protobuf.GeneratedMessage
+      implements GetSchemasRespOrBuilder {
+    // Use GetSchemasResp.newBuilder() to construct.
+    private GetSchemasResp(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetSchemasResp(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetSchemasResp defaultInstance;
+    public static GetSchemasResp getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetSchemasResp getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSchemasResp(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RequestStatus value = org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                status_ = value;
+              }
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                schemas_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SchemaMetadata>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              schemas_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.SchemaMetadata.PARSER, extensionRegistry));
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = error_.toBuilder();
+              }
+              error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(error_);
+                error_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          schemas_ = java.util.Collections.unmodifiableList(schemas_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasResp_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasResp_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class, org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetSchemasResp> PARSER =
+        new com.google.protobuf.AbstractParser<GetSchemasResp>() {
+      public GetSchemasResp parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetSchemasResp(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSchemasResp> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.RequestStatus status = 1;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.RequestStatus status_;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+      return status_;
+    }
+
+    // repeated .exec.user.SchemaMetadata schemas = 2;
+    public static final int SCHEMAS_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> schemas_;
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> getSchemasList() {
+      return schemas_;
+    }
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder> 
+        getSchemasOrBuilderList() {
+      return schemas_;
+    }
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    public int getSchemasCount() {
+      return schemas_.size();
+    }
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.SchemaMetadata getSchemas(int index) {
+      return schemas_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder getSchemasOrBuilder(
+        int index) {
+      return schemas_.get(index);
+    }
+
+    // optional .exec.shared.DrillPBError error = 3;
+    public static final int ERROR_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+      return error_;
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      schemas_ = java.util.Collections.emptyList();
+      error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, status_.getNumber());
+      }
+      for (int i = 0; i < schemas_.size(); i++) {
+        output.writeMessage(2, schemas_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(3, error_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, status_.getNumber());
+      }
+      for (int i = 0; i < schemas_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, schemas_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, error_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetSchemasResp parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetSchemasResp prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetSchemasResp}
+     *
+     * <pre>
+     *
+     * Response message for GetSchemasReq.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetSchemasRespOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasResp_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasResp_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class, org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetSchemasResp.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getSchemasFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (schemasBuilder_ == null) {
+          schemas_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          schemasBuilder_.clear();
+        }
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetSchemasResp_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasResp getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasResp build() {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasResp result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetSchemasResp buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasResp result = new org.apache.drill.exec.proto.UserProtos.GetSchemasResp(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.status_ = status_;
+        if (schemasBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            schemas_ = java.util.Collections.unmodifiableList(schemas_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.schemas_ = schemas_;
+        } else {
+          result.schemas_ = schemasBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetSchemasResp) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetSchemasResp)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetSchemasResp other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetSchemasResp.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (schemasBuilder_ == null) {
+          if (!other.schemas_.isEmpty()) {
+            if (schemas_.isEmpty()) {
+              schemas_ = other.schemas_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureSchemasIsMutable();
+              schemas_.addAll(other.schemas_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.schemas_.isEmpty()) {
+            if (schemasBuilder_.isEmpty()) {
+              schemasBuilder_.dispose();
+              schemasBuilder_ = null;
+              schemas_ = other.schemas_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              schemasBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getSchemasFieldBuilder() : null;
+            } else {
+              schemasBuilder_.addAllMessages(other.schemas_);
+            }
+          }
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetSchemasResp parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetSchemasResp) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.RequestStatus status = 1;
+      private org.apache.drill.exec.proto.UserProtos.RequestStatus status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.SchemaMetadata schemas = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> schemas_ =
+        java.util.Collections.emptyList();
+      private void ensureSchemasIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          schemas_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SchemaMetadata>(schemas_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.SchemaMetadata, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder, org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder> schemasBuilder_;
+
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> getSchemasList() {
+        if (schemasBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(schemas_);
+        } else {
+          return schemasBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public int getSchemasCount() {
+        if (schemasBuilder_ == null) {
+          return schemas_.size();
+        } else {
+          return schemasBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata getSchemas(int index) {
+        if (schemasBuilder_ == null) {
+          return schemas_.get(index);
+        } else {
+          return schemasBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder setSchemas(
+          int index, org.apache.drill.exec.proto.UserProtos.SchemaMetadata value) {
+        if (schemasBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSchemasIsMutable();
+          schemas_.set(index, value);
+          onChanged();
+        } else {
+          schemasBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder setSchemas(
+          int index, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builderForValue) {
+        if (schemasBuilder_ == null) {
+          ensureSchemasIsMutable();
+          schemas_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          schemasBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder addSchemas(org.apache.drill.exec.proto.UserProtos.SchemaMetadata value) {
+        if (schemasBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSchemasIsMutable();
+          schemas_.add(value);
+          onChanged();
+        } else {
+          schemasBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder addSchemas(
+          int index, org.apache.drill.exec.proto.UserProtos.SchemaMetadata value) {
+        if (schemasBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureSchemasIsMutable();
+          schemas_.add(index, value);
+          onChanged();
+        } else {
+          schemasBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder addSchemas(
+          org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builderForValue) {
+        if (schemasBuilder_ == null) {
+          ensureSchemasIsMutable();
+          schemas_.add(builderForValue.build());
+          onChanged();
+        } else {
+          schemasBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder addSchemas(
+          int index, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builderForValue) {
+        if (schemasBuilder_ == null) {
+          ensureSchemasIsMutable();
+          schemas_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          schemasBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder addAllSchemas(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.SchemaMetadata> values) {
+        if (schemasBuilder_ == null) {
+          ensureSchemasIsMutable();
+          super.addAll(values, schemas_);
+          onChanged();
+        } else {
+          schemasBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder clearSchemas() {
+        if (schemasBuilder_ == null) {
+          schemas_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          schemasBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public Builder removeSchemas(int index) {
+        if (schemasBuilder_ == null) {
+          ensureSchemasIsMutable();
+          schemas_.remove(index);
+          onChanged();
+        } else {
+          schemasBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder getSchemasBuilder(
+          int index) {
+        return getSchemasFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder getSchemasOrBuilder(
+          int index) {
+        if (schemasBuilder_ == null) {
+          return schemas_.get(index);  } else {
+          return schemasBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder> 
+           getSchemasOrBuilderList() {
+        if (schemasBuilder_ != null) {
+          return schemasBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(schemas_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder addSchemasBuilder() {
+        return getSchemasFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.SchemaMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder addSchemasBuilder(
+          int index) {
+        return getSchemasFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.SchemaMetadata schemas = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder> 
+           getSchemasBuilderList() {
+        return getSchemasFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.SchemaMetadata, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder, org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder> 
+          getSchemasFieldBuilder() {
+        if (schemasBuilder_ == null) {
+          schemasBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.SchemaMetadata, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder, org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder>(
+                  schemas_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          schemas_ = null;
+        }
+        return schemasBuilder_;
+      }
+
+      // optional .exec.shared.DrillPBError error = 3;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
+            error_ =
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
+                  error_,
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetSchemasResp)
+    }
+
+    static {
+      defaultInstance = new GetSchemasResp(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetSchemasResp)
+  }
+
+  public interface GetTablesReqOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    boolean hasCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    boolean hasSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter table_name_filter = 3;
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    boolean hasTableNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetTablesReq}
+   *
+   * <pre>
+   *
+   * Request message for getting the metadata for tables satisfying the given optional filters.
+   * </pre>
+   */
+  public static final class GetTablesReq extends
+      com.google.protobuf.GeneratedMessage
+      implements GetTablesReqOrBuilder {
+    // Use GetTablesReq.newBuilder() to construct.
+    private GetTablesReq(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetTablesReq(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetTablesReq defaultInstance;
+    public static GetTablesReq getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetTablesReq getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetTablesReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = catalogNameFilter_.toBuilder();
+              }
+              catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(catalogNameFilter_);
+                catalogNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = schameNameFilter_.toBuilder();
+              }
+              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(schameNameFilter_);
+                schameNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = tableNameFilter_.toBuilder();
+              }
+              tableNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(tableNameFilter_);
+                tableNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetTablesReq.class, org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetTablesReq> PARSER =
+        new com.google.protobuf.AbstractParser<GetTablesReq>() {
+      public GetTablesReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetTablesReq(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetTablesReq> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    public static final int CATALOG_NAME_FILTER_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public boolean hasCatalogNameFilter() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+      return catalogNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+      return catalogNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public boolean hasSchameNameFilter() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+      return schameNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+      return schameNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter table_name_filter = 3;
+    public static final int TABLE_NAME_FILTER_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public boolean hasTableNameFilter() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
+      return tableNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder() {
+      return tableNameFilter_;
+    }
+
+    private void initFields() {
+      catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, schameNameFilter_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, tableNameFilter_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, schameNameFilter_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, tableNameFilter_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetTablesReq prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetTablesReq}
+     *
+     * <pre>
+     *
+     * Request message for getting the metadata for tables satisfying the given optional filters.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetTablesReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetTablesReq.class, org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetTablesReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCatalogNameFilterFieldBuilder();
+          getSchameNameFilterFieldBuilder();
+          getTableNameFilterFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          tableNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesReq_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesReq getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetTablesReq.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesReq build() {
+        org.apache.drill.exec.proto.UserProtos.GetTablesReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesReq buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetTablesReq result = new org.apache.drill.exec.proto.UserProtos.GetTablesReq(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (catalogNameFilterBuilder_ == null) {
+          result.catalogNameFilter_ = catalogNameFilter_;
+        } else {
+          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (schameNameFilterBuilder_ == null) {
+          result.schameNameFilter_ = schameNameFilter_;
+        } else {
+          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (tableNameFilterBuilder_ == null) {
+          result.tableNameFilter_ = tableNameFilter_;
+        } else {
+          result.tableNameFilter_ = tableNameFilterBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetTablesReq) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetTablesReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetTablesReq other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetTablesReq.getDefaultInstance()) return this;
+        if (other.hasCatalogNameFilter()) {
+          mergeCatalogNameFilter(other.getCatalogNameFilter());
+        }
+        if (other.hasSchameNameFilter()) {
+          mergeSchameNameFilter(other.getSchameNameFilter());
+        }
+        if (other.hasTableNameFilter()) {
+          mergeTableNameFilter(other.getTableNameFilter());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetTablesReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetTablesReq) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.LikeFilter catalog_name_filter = 1;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public boolean hasCatalogNameFilter() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          return catalogNameFilter_;
+        } else {
+          return catalogNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          catalogNameFilter_ = value;
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            catalogNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(catalogNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            catalogNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder clearCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getCatalogNameFilterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getCatalogNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+        if (catalogNameFilterBuilder_ != null) {
+          return catalogNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return catalogNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getCatalogNameFilterFieldBuilder() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  catalogNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          catalogNameFilter_ = null;
+        }
+        return catalogNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter schame_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public boolean hasSchameNameFilter() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          return schameNameFilter_;
+        } else {
+          return schameNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          schameNameFilter_ = value;
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schameNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            schameNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder clearSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getSchameNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+        if (schameNameFilterBuilder_ != null) {
+          return schameNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return schameNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getSchameNameFilterFieldBuilder() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  schameNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          schameNameFilter_ = null;
+        }
+        return schameNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter table_name_filter = 3;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> tableNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public boolean hasTableNameFilter() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
+        if (tableNameFilterBuilder_ == null) {
+          return tableNameFilter_;
+        } else {
+          return tableNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder setTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (tableNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          tableNameFilter_ = value;
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder setTableNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder mergeTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (tableNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              tableNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            tableNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(tableNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            tableNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder clearTableNameFilter() {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getTableNameFilterBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getTableNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder() {
+        if (tableNameFilterBuilder_ != null) {
+          return tableNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return tableNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getTableNameFilterFieldBuilder() {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  tableNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          tableNameFilter_ = null;
+        }
+        return tableNameFilterBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetTablesReq)
+    }
+
+    static {
+      defaultInstance = new GetTablesReq(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetTablesReq)
+  }
+
+  public interface TableMetadataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string catalog_name = 1;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    boolean hasCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    java.lang.String getCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getCatalogNameBytes();
+
+    // optional string schema_name = 2;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    boolean hasSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    java.lang.String getSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getSchemaNameBytes();
+
+    // optional string table_name = 3;
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    boolean hasTableName();
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    java.lang.String getTableName();
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getTableNameBytes();
+
+    // optional string type = 4;
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    boolean hasType();
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    java.lang.String getType();
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getTypeBytes();
+  }
+  /**
+   * Protobuf type {@code exec.user.TableMetadata}
+   *
+   * <pre>
+   *
+   * Message encapsulating metadata for a Table.
+   * </pre>
+   */
+  public static final class TableMetadata extends
+      com.google.protobuf.GeneratedMessage
+      implements TableMetadataOrBuilder {
+    // Use TableMetadata.newBuilder() to construct.
+    private TableMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private TableMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final TableMetadata defaultInstance;
+    public static TableMetadata getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public TableMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private TableMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              catalogName_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              schemaName_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              tableName_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              type_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_TableMetadata_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_TableMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.TableMetadata.class, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<TableMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<TableMetadata>() {
+      public TableMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new TableMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TableMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string catalog_name = 1;
+    public static final int CATALOG_NAME_FIELD_NUMBER = 1;
+    private java.lang.Object catalogName_;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public boolean hasCatalogName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public java.lang.String getCatalogName() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogNameBytes() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string schema_name = 2;
+    public static final int SCHEMA_NAME_FIELD_NUMBER = 2;
+    private java.lang.Object schemaName_;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public boolean hasSchemaName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public java.lang.String getSchemaName() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          schemaName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSchemaNameBytes() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        schemaName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string table_name = 3;
+    public static final int TABLE_NAME_FIELD_NUMBER = 3;
+    private java.lang.Object tableName_;
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public boolean hasTableName() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public java.lang.String getTableName() {
+      java.lang.Object ref = tableName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          tableName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTableNameBytes() {
+      java.lang.Object ref = tableName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        tableName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string type = 4;
+    public static final int TYPE_FIELD_NUMBER = 4;
+    private java.lang.Object type_;
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          type_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string type = 4;</code>
+     *
+     * <pre>
+     * Type. Ex. "TABLE", "VIEW" etc.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      catalogName_ = "";
+      schemaName_ = "";
+      tableName_ = "";
+      type_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getTableNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getTypeBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getTableNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getTypeBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.TableMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.TableMetadata prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.TableMetadata}
+     *
+     * <pre>
+     *
+     * Message encapsulating metadata for a Table.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_TableMetadata_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_TableMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.TableMetadata.class, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.TableMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        catalogName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        schemaName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        tableName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        type_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_TableMetadata_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.TableMetadata.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata build() {
+        org.apache.drill.exec.proto.UserProtos.TableMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.TableMetadata result = new org.apache.drill.exec.proto.UserProtos.TableMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.catalogName_ = catalogName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.schemaName_ = schemaName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.tableName_ = tableName_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.type_ = type_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.TableMetadata) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.TableMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.TableMetadata other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.TableMetadata.getDefaultInstance()) return this;
+        if (other.hasCatalogName()) {
+          bitField0_ |= 0x00000001;
+          catalogName_ = other.catalogName_;
+          onChanged();
+        }
+        if (other.hasSchemaName()) {
+          bitField0_ |= 0x00000002;
+          schemaName_ = other.schemaName_;
+          onChanged();
+        }
+        if (other.hasTableName()) {
+          bitField0_ |= 0x00000004;
+          tableName_ = other.tableName_;
+          onChanged();
+        }
+        if (other.hasType()) {
+          bitField0_ |= 0x00000008;
+          type_ = other.type_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.TableMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.TableMetadata) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string catalog_name = 1;
+      private java.lang.Object catalogName_ = "";
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public boolean hasCatalogName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public java.lang.String getCatalogName() {
+        java.lang.Object ref = catalogName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogNameBytes() {
+        java.lang.Object ref = catalogName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder clearCatalogName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        catalogName_ = getDefaultInstance().getCatalogName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string schema_name = 2;
+      private java.lang.Object schemaName_ = "";
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public boolean hasSchemaName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public java.lang.String getSchemaName() {
+        java.lang.Object ref = schemaName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          schemaName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSchemaNameBytes() {
+        java.lang.Object ref = schemaName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          schemaName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder clearSchemaName() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        schemaName_ = getDefaultInstance().getSchemaName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string table_name = 3;
+      private java.lang.Object tableName_ = "";
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public boolean hasTableName() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public java.lang.String getTableName() {
+        java.lang.Object ref = tableName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          tableName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTableNameBytes() {
+        java.lang.Object ref = tableName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          tableName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder setTableName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        tableName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder clearTableName() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        tableName_ = getDefaultInstance().getTableName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder setTableNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        tableName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string type = 4;
+      private java.lang.Object type_ = "";
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          type_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        type_ = getDefaultInstance().getType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string type = 4;</code>
+       *
+       * <pre>
+       * Type. Ex. "TABLE", "VIEW" etc.
+       * </pre>
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.TableMetadata)
+    }
+
+    static {
+      defaultInstance = new TableMetadata(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.TableMetadata)
+  }
+
+  public interface GetTablesRespOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.RequestStatus status = 1;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
+
+    // repeated .exec.user.TableMetadata tables = 2;
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> 
+        getTablesList();
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.TableMetadata getTables(int index);
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    int getTablesCount();
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder> 
+        getTablesOrBuilderList();
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder getTablesOrBuilder(
+        int index);
+
+    // optional .exec.shared.DrillPBError error = 3;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetTablesResp}
+   *
+   * <pre>
+   *
+   * Response message for GetTablesReq.
+   * </pre>
+   */
+  public static final class GetTablesResp extends
+      com.google.protobuf.GeneratedMessage
+      implements GetTablesRespOrBuilder {
+    // Use GetTablesResp.newBuilder() to construct.
+    private GetTablesResp(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetTablesResp(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetTablesResp defaultInstance;
+    public static GetTablesResp getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetTablesResp getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetTablesResp(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RequestStatus value = org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                status_ = value;
+              }
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                tables_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.TableMetadata>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              tables_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.TableMetadata.PARSER, extensionRegistry));
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = error_.toBuilder();
+              }
+              error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(error_);
+                error_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          tables_ = java.util.Collections.unmodifiableList(tables_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesResp_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesResp_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetTablesResp.class, org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetTablesResp> PARSER =
+        new com.google.protobuf.AbstractParser<GetTablesResp>() {
+      public GetTablesResp parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetTablesResp(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetTablesResp> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.RequestStatus status = 1;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.RequestStatus status_;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+      return status_;
+    }
+
+    // repeated .exec.user.TableMetadata tables = 2;
+    public static final int TABLES_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> tables_;
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> getTablesList() {
+      return tables_;
+    }
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder> 
+        getTablesOrBuilderList() {
+      return tables_;
+    }
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    public int getTablesCount() {
+      return tables_.size();
+    }
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.TableMetadata getTables(int index) {
+      return tables_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder getTablesOrBuilder(
+        int index) {
+      return tables_.get(index);
+    }
+
+    // optional .exec.shared.DrillPBError error = 3;
+    public static final int ERROR_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+      return error_;
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      tables_ = java.util.Collections.emptyList();
+      error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, status_.getNumber());
+      }
+      for (int i = 0; i < tables_.size(); i++) {
+        output.writeMessage(2, tables_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(3, error_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, status_.getNumber());
+      }
+      for (int i = 0; i < tables_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, tables_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, error_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetTablesResp parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetTablesResp prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetTablesResp}
+     *
+     * <pre>
+     *
+     * Response message for GetTablesReq.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetTablesRespOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesResp_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesResp_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetTablesResp.class, org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetTablesResp.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getTablesFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (tablesBuilder_ == null) {
+          tables_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          tablesBuilder_.clear();
+        }
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetTablesResp_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesResp getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetTablesResp.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesResp build() {
+        org.apache.drill.exec.proto.UserProtos.GetTablesResp result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetTablesResp buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetTablesResp result = new org.apache.drill.exec.proto.UserProtos.GetTablesResp(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.status_ = status_;
+        if (tablesBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            tables_ = java.util.Collections.unmodifiableList(tables_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.tables_ = tables_;
+        } else {
+          result.tables_ = tablesBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetTablesResp) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetTablesResp)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetTablesResp other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetTablesResp.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (tablesBuilder_ == null) {
+          if (!other.tables_.isEmpty()) {
+            if (tables_.isEmpty()) {
+              tables_ = other.tables_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureTablesIsMutable();
+              tables_.addAll(other.tables_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.tables_.isEmpty()) {
+            if (tablesBuilder_.isEmpty()) {
+              tablesBuilder_.dispose();
+              tablesBuilder_ = null;
+              tables_ = other.tables_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              tablesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getTablesFieldBuilder() : null;
+            } else {
+              tablesBuilder_.addAllMessages(other.tables_);
+            }
+          }
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetTablesResp parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetTablesResp) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.RequestStatus status = 1;
+      private org.apache.drill.exec.proto.UserProtos.RequestStatus status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.TableMetadata tables = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> tables_ =
+        java.util.Collections.emptyList();
+      private void ensureTablesIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          tables_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.TableMetadata>(tables_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.TableMetadata, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder, org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder> tablesBuilder_;
+
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> getTablesList() {
+        if (tablesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(tables_);
+        } else {
+          return tablesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public int getTablesCount() {
+        if (tablesBuilder_ == null) {
+          return tables_.size();
+        } else {
+          return tablesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata getTables(int index) {
+        if (tablesBuilder_ == null) {
+          return tables_.get(index);
+        } else {
+          return tablesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder setTables(
+          int index, org.apache.drill.exec.proto.UserProtos.TableMetadata value) {
+        if (tablesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTablesIsMutable();
+          tables_.set(index, value);
+          onChanged();
+        } else {
+          tablesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder setTables(
+          int index, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builderForValue) {
+        if (tablesBuilder_ == null) {
+          ensureTablesIsMutable();
+          tables_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          tablesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder addTables(org.apache.drill.exec.proto.UserProtos.TableMetadata value) {
+        if (tablesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTablesIsMutable();
+          tables_.add(value);
+          onChanged();
+        } else {
+          tablesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder addTables(
+          int index, org.apache.drill.exec.proto.UserProtos.TableMetadata value) {
+        if (tablesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTablesIsMutable();
+          tables_.add(index, value);
+          onChanged();
+        } else {
+          tablesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder addTables(
+          org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builderForValue) {
+        if (tablesBuilder_ == null) {
+          ensureTablesIsMutable();
+          tables_.add(builderForValue.build());
+          onChanged();
+        } else {
+          tablesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder addTables(
+          int index, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builderForValue) {
+        if (tablesBuilder_ == null) {
+          ensureTablesIsMutable();
+          tables_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          tablesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder addAllTables(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.TableMetadata> values) {
+        if (tablesBuilder_ == null) {
+          ensureTablesIsMutable();
+          super.addAll(values, tables_);
+          onChanged();
+        } else {
+          tablesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder clearTables() {
+        if (tablesBuilder_ == null) {
+          tables_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          tablesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public Builder removeTables(int index) {
+        if (tablesBuilder_ == null) {
+          ensureTablesIsMutable();
+          tables_.remove(index);
+          onChanged();
+        } else {
+          tablesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder getTablesBuilder(
+          int index) {
+        return getTablesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder getTablesOrBuilder(
+          int index) {
+        if (tablesBuilder_ == null) {
+          return tables_.get(index);  } else {
+          return tablesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder> 
+           getTablesOrBuilderList() {
+        if (tablesBuilder_ != null) {
+          return tablesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(tables_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder addTablesBuilder() {
+        return getTablesFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.TableMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder addTablesBuilder(
+          int index) {
+        return getTablesFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.TableMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.TableMetadata tables = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder> 
+           getTablesBuilderList() {
+        return getTablesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.TableMetadata, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder, org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder> 
+          getTablesFieldBuilder() {
+        if (tablesBuilder_ == null) {
+          tablesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.TableMetadata, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder, org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder>(
+                  tables_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          tables_ = null;
+        }
+        return tablesBuilder_;
+      }
+
+      // optional .exec.shared.DrillPBError error = 3;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
+            error_ =
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
+                  error_,
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetTablesResp)
+    }
+
+    static {
+      defaultInstance = new GetTablesResp(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetTablesResp)
+  }
+
+  public interface GetColumnsReqOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    boolean hasCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    boolean hasSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter table_name_filter = 3;
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    boolean hasTableNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder();
+
+    // optional .exec.user.LikeFilter column_name_filter = 4;
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    boolean hasColumnNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter();
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getColumnNameFilterOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetColumnsReq}
+   *
+   * <pre>
+   *
+   * Request message for getting the metadata for columns satisfying the given optional filters.
+   * </pre>
+   */
+  public static final class GetColumnsReq extends
+      com.google.protobuf.GeneratedMessage
+      implements GetColumnsReqOrBuilder {
+    // Use GetColumnsReq.newBuilder() to construct.
+    private GetColumnsReq(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetColumnsReq(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetColumnsReq defaultInstance;
+    public static GetColumnsReq getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetColumnsReq getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetColumnsReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = catalogNameFilter_.toBuilder();
+              }
+              catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(catalogNameFilter_);
+                catalogNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = schameNameFilter_.toBuilder();
+              }
+              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(schameNameFilter_);
+                schameNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = tableNameFilter_.toBuilder();
+              }
+              tableNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(tableNameFilter_);
+                tableNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+            case 34: {
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                subBuilder = columnNameFilter_.toBuilder();
+              }
+              columnNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(columnNameFilter_);
+                columnNameFilter_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class, org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetColumnsReq> PARSER =
+        new com.google.protobuf.AbstractParser<GetColumnsReq>() {
+      public GetColumnsReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetColumnsReq(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetColumnsReq> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.LikeFilter catalog_name_filter = 1;
+    public static final int CATALOG_NAME_FILTER_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public boolean hasCatalogNameFilter() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+      return catalogNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+      return catalogNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public boolean hasSchameNameFilter() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+      return schameNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+      return schameNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter table_name_filter = 3;
+    public static final int TABLE_NAME_FILTER_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public boolean hasTableNameFilter() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
+      return tableNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder() {
+      return tableNameFilter_;
+    }
+
+    // optional .exec.user.LikeFilter column_name_filter = 4;
+    public static final int COLUMN_NAME_FILTER_FIELD_NUMBER = 4;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter columnNameFilter_;
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    public boolean hasColumnNameFilter() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter() {
+      return columnNameFilter_;
+    }
+    /**
+     * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getColumnNameFilterOrBuilder() {
+      return columnNameFilter_;
+    }
+
+    private void initFields() {
+      catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      columnNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, schameNameFilter_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, tableNameFilter_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, columnNameFilter_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, catalogNameFilter_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, schameNameFilter_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, tableNameFilter_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, columnNameFilter_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetColumnsReq prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetColumnsReq}
+     *
+     * <pre>
+     *
+     * Request message for getting the metadata for columns satisfying the given optional filters.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetColumnsReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class, org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetColumnsReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCatalogNameFilterFieldBuilder();
+          getSchameNameFilterFieldBuilder();
+          getTableNameFilterFieldBuilder();
+          getColumnNameFilterFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          tableNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (columnNameFilterBuilder_ == null) {
+          columnNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        } else {
+          columnNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsReq_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsReq getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsReq build() {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsReq buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsReq result = new org.apache.drill.exec.proto.UserProtos.GetColumnsReq(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (catalogNameFilterBuilder_ == null) {
+          result.catalogNameFilter_ = catalogNameFilter_;
+        } else {
+          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (schameNameFilterBuilder_ == null) {
+          result.schameNameFilter_ = schameNameFilter_;
+        } else {
+          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (tableNameFilterBuilder_ == null) {
+          result.tableNameFilter_ = tableNameFilter_;
+        } else {
+          result.tableNameFilter_ = tableNameFilterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (columnNameFilterBuilder_ == null) {
+          result.columnNameFilter_ = columnNameFilter_;
+        } else {
+          result.columnNameFilter_ = columnNameFilterBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetColumnsReq) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetColumnsReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetColumnsReq other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetColumnsReq.getDefaultInstance()) return this;
+        if (other.hasCatalogNameFilter()) {
+          mergeCatalogNameFilter(other.getCatalogNameFilter());
+        }
+        if (other.hasSchameNameFilter()) {
+          mergeSchameNameFilter(other.getSchameNameFilter());
+        }
+        if (other.hasTableNameFilter()) {
+          mergeTableNameFilter(other.getTableNameFilter());
+        }
+        if (other.hasColumnNameFilter()) {
+          mergeColumnNameFilter(other.getColumnNameFilter());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetColumnsReq) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.LikeFilter catalog_name_filter = 1;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public boolean hasCatalogNameFilter() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          return catalogNameFilter_;
+        } else {
+          return catalogNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          catalogNameFilter_ = value;
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder setCatalogNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (catalogNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            catalogNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(catalogNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            catalogNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public Builder clearCatalogNameFilter() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          catalogNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getCatalogNameFilterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getCatalogNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder() {
+        if (catalogNameFilterBuilder_ != null) {
+          return catalogNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return catalogNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getCatalogNameFilterFieldBuilder() {
+        if (catalogNameFilterBuilder_ == null) {
+          catalogNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  catalogNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          catalogNameFilter_ = null;
+        }
+        return catalogNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter schame_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public boolean hasSchameNameFilter() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          return schameNameFilter_;
+        } else {
+          return schameNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          schameNameFilter_ = value;
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder setSchameNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schameNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schameNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            schameNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public Builder clearSchameNameFilter() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          schameNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getSchameNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
+        if (schameNameFilterBuilder_ != null) {
+          return schameNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return schameNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getSchameNameFilterFieldBuilder() {
+        if (schameNameFilterBuilder_ == null) {
+          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  schameNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          schameNameFilter_ = null;
+        }
+        return schameNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter table_name_filter = 3;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> tableNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public boolean hasTableNameFilter() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
+        if (tableNameFilterBuilder_ == null) {
+          return tableNameFilter_;
+        } else {
+          return tableNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder setTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (tableNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          tableNameFilter_ = value;
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder setTableNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder mergeTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (tableNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              tableNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            tableNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(tableNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            tableNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public Builder clearTableNameFilter() {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          tableNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getTableNameFilterBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getTableNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder() {
+        if (tableNameFilterBuilder_ != null) {
+          return tableNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return tableNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getTableNameFilterFieldBuilder() {
+        if (tableNameFilterBuilder_ == null) {
+          tableNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  tableNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          tableNameFilter_ = null;
+        }
+        return tableNameFilterBuilder_;
+      }
+
+      // optional .exec.user.LikeFilter column_name_filter = 4;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter columnNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> columnNameFilterBuilder_;
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public boolean hasColumnNameFilter() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter() {
+        if (columnNameFilterBuilder_ == null) {
+          return columnNameFilter_;
+        } else {
+          return columnNameFilterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public Builder setColumnNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (columnNameFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          columnNameFilter_ = value;
+          onChanged();
+        } else {
+          columnNameFilterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public Builder setColumnNameFilter(
+          org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
+        if (columnNameFilterBuilder_ == null) {
+          columnNameFilter_ = builderForValue.build();
+          onChanged();
+        } else {
+          columnNameFilterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public Builder mergeColumnNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (columnNameFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              columnNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            columnNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(columnNameFilter_).mergeFrom(value).buildPartial();
+          } else {
+            columnNameFilter_ = value;
+          }
+          onChanged();
+        } else {
+          columnNameFilterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public Builder clearColumnNameFilter() {
+        if (columnNameFilterBuilder_ == null) {
+          columnNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+          onChanged();
+        } else {
+          columnNameFilterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getColumnNameFilterBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getColumnNameFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getColumnNameFilterOrBuilder() {
+        if (columnNameFilterBuilder_ != null) {
+          return columnNameFilterBuilder_.getMessageOrBuilder();
+        } else {
+          return columnNameFilter_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
+          getColumnNameFilterFieldBuilder() {
+        if (columnNameFilterBuilder_ == null) {
+          columnNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
+                  columnNameFilter_,
+                  getParentForChildren(),
+                  isClean());
+          columnNameFilter_ = null;
+        }
+        return columnNameFilterBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetColumnsReq)
+    }
+
+    static {
+      defaultInstance = new GetColumnsReq(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetColumnsReq)
+  }
+
+  public interface ColumnMetadataOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string catalog_name = 1;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    boolean hasCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    java.lang.String getCatalogName();
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getCatalogNameBytes();
+
+    // optional string schema_name = 2;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    boolean hasSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    java.lang.String getSchemaName();
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getSchemaNameBytes();
+
+    // optional string table_name = 3;
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    boolean hasTableName();
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    java.lang.String getTableName();
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getTableNameBytes();
+
+    // optional string column_name = 4;
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    boolean hasColumnName();
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    java.lang.String getColumnName();
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getColumnNameBytes();
+
+    // optional int32 ordinal_position = 5;
+    /**
+     * <code>optional int32 ordinal_position = 5;</code>
+     */
+    boolean hasOrdinalPosition();
+    /**
+     * <code>optional int32 ordinal_position = 5;</code>
+     */
+    int getOrdinalPosition();
+
+    // optional string default_value = 6;
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    boolean hasDefaultValue();
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    java.lang.String getDefaultValue();
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getDefaultValueBytes();
+
+    // optional bool is_nullable = 7;
+    /**
+     * <code>optional bool is_nullable = 7;</code>
+     */
+    boolean hasIsNullable();
+    /**
+     * <code>optional bool is_nullable = 7;</code>
+     */
+    boolean getIsNullable();
+
+    // optional string data_type = 8;
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    boolean hasDataType();
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    java.lang.String getDataType();
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    com.google.protobuf.ByteString
+        getDataTypeBytes();
+
+    // optional int32 char_max_length = 9;
+    /**
+     * <code>optional int32 char_max_length = 9;</code>
+     */
+    boolean hasCharMaxLength();
+    /**
+     * <code>optional int32 char_max_length = 9;</code>
+     */
+    int getCharMaxLength();
+
+    // optional int32 char_octet_length = 10;
+    /**
+     * <code>optional int32 char_octet_length = 10;</code>
+     */
+    boolean hasCharOctetLength();
+    /**
+     * <code>optional int32 char_octet_length = 10;</code>
+     */
+    int getCharOctetLength();
+
+    // optional int32 numeric_precision = 11;
+    /**
+     * <code>optional int32 numeric_precision = 11;</code>
+     */
+    boolean hasNumericPrecision();
+    /**
+     * <code>optional int32 numeric_precision = 11;</code>
+     */
+    int getNumericPrecision();
+
+    // optional int32 numeric_precision_radix = 12;
+    /**
+     * <code>optional int32 numeric_precision_radix = 12;</code>
+     */
+    boolean hasNumericPrecisionRadix();
+    /**
+     * <code>optional int32 numeric_precision_radix = 12;</code>
+     */
+    int getNumericPrecisionRadix();
+
+    // optional int32 numeric_scale = 13;
+    /**
+     * <code>optional int32 numeric_scale = 13;</code>
+     */
+    boolean hasNumericScale();
+    /**
+     * <code>optional int32 numeric_scale = 13;</code>
+     */
+    int getNumericScale();
+
+    // optional int32 date_time_precision = 14;
+    /**
+     * <code>optional int32 date_time_precision = 14;</code>
+     */
+    boolean hasDateTimePrecision();
+    /**
+     * <code>optional int32 date_time_precision = 14;</code>
+     */
+    int getDateTimePrecision();
+
+    // optional string interval_type = 15;
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    boolean hasIntervalType();
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    java.lang.String getIntervalType();
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    com.google.protobuf.ByteString
+        getIntervalTypeBytes();
+
+    // optional int32 interval_precision = 16;
+    /**
+     * <code>optional int32 interval_precision = 16;</code>
+     */
+    boolean hasIntervalPrecision();
+    /**
+     * <code>optional int32 interval_precision = 16;</code>
+     */
+    int getIntervalPrecision();
+  }
+  /**
+   * Protobuf type {@code exec.user.ColumnMetadata}
+   *
+   * <pre>
+   *
+   * Message encapsulating metadata for a Column.
+   * </pre>
+   */
+  public static final class ColumnMetadata extends
+      com.google.protobuf.GeneratedMessage
+      implements ColumnMetadataOrBuilder {
+    // Use ColumnMetadata.newBuilder() to construct.
+    private ColumnMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ColumnMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ColumnMetadata defaultInstance;
+    public static ColumnMetadata getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ColumnMetadata getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ColumnMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              catalogName_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              schemaName_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              tableName_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              columnName_ = input.readBytes();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              ordinalPosition_ = input.readInt32();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              defaultValue_ = input.readBytes();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              isNullable_ = input.readBool();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              dataType_ = input.readBytes();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000100;
+              charMaxLength_ = input.readInt32();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              charOctetLength_ = input.readInt32();
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000400;
+              numericPrecision_ = input.readInt32();
+              break;
+            }
+            case 96: {
+              bitField0_ |= 0x00000800;
+              numericPrecisionRadix_ = input.readInt32();
+              break;
+            }
+            case 104: {
+              bitField0_ |= 0x00001000;
+              numericScale_ = input.readInt32();
+              break;
+            }
+            case 112: {
+              bitField0_ |= 0x00002000;
+              dateTimePrecision_ = input.readInt32();
+              break;
+            }
+            case 122: {
+              bitField0_ |= 0x00004000;
+              intervalType_ = input.readBytes();
+              break;
+            }
+            case 128: {
+              bitField0_ |= 0x00008000;
+              intervalPrecision_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ColumnMetadata_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ColumnMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ColumnMetadata> PARSER =
+        new com.google.protobuf.AbstractParser<ColumnMetadata>() {
+      public ColumnMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ColumnMetadata(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ColumnMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string catalog_name = 1;
+    public static final int CATALOG_NAME_FIELD_NUMBER = 1;
+    private java.lang.Object catalogName_;
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public boolean hasCatalogName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public java.lang.String getCatalogName() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogNameBytes() {
+      java.lang.Object ref = catalogName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string schema_name = 2;
+    public static final int SCHEMA_NAME_FIELD_NUMBER = 2;
+    private java.lang.Object schemaName_;
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public boolean hasSchemaName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public java.lang.String getSchemaName() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          schemaName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string schema_name = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSchemaNameBytes() {
+      java.lang.Object ref = schemaName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        schemaName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string table_name = 3;
+    public static final int TABLE_NAME_FIELD_NUMBER = 3;
+    private java.lang.Object tableName_;
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public boolean hasTableName() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public java.lang.String getTableName() {
+      java.lang.Object ref = tableName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          tableName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string table_name = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTableNameBytes() {
+      java.lang.Object ref = tableName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        tableName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string column_name = 4;
+    public static final int COLUMN_NAME_FIELD_NUMBER = 4;
+    private java.lang.Object columnName_;
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    public boolean hasColumnName() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    public java.lang.String getColumnName() {
+      java.lang.Object ref = columnName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          columnName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string column_name = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getColumnNameBytes() {
+      java.lang.Object ref = columnName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        columnName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 ordinal_position = 5;
+    public static final int ORDINAL_POSITION_FIELD_NUMBER = 5;
+    private int ordinalPosition_;
+    /**
+     * <code>optional int32 ordinal_position = 5;</code>
+     */
+    public boolean hasOrdinalPosition() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional int32 ordinal_position = 5;</code>
+     */
+    public int getOrdinalPosition() {
+      return ordinalPosition_;
+    }
+
+    // optional string default_value = 6;
+    public static final int DEFAULT_VALUE_FIELD_NUMBER = 6;
+    private java.lang.Object defaultValue_;
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    public boolean hasDefaultValue() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    public java.lang.String getDefaultValue() {
+      java.lang.Object ref = defaultValue_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          defaultValue_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string default_value = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDefaultValueBytes() {
+      java.lang.Object ref = defaultValue_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        defaultValue_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bool is_nullable = 7;
+    public static final int IS_NULLABLE_FIELD_NUMBER = 7;
+    private boolean isNullable_;
+    /**
+     * <code>optional bool is_nullable = 7;</code>
+     */
+    public boolean hasIsNullable() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional bool is_nullable = 7;</code>
+     */
+    public boolean getIsNullable() {
+      return isNullable_;
+    }
+
+    // optional string data_type = 8;
+    public static final int DATA_TYPE_FIELD_NUMBER = 8;
+    private java.lang.Object dataType_;
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    public boolean hasDataType() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    public java.lang.String getDataType() {
+      java.lang.Object ref = dataType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          dataType_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string data_type = 8;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDataTypeBytes() {
+      java.lang.Object ref = dataType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        dataType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 char_max_length = 9;
+    public static final int CHAR_MAX_LENGTH_FIELD_NUMBER = 9;
+    private int charMaxLength_;
+    /**
+     * <code>optional int32 char_max_length = 9;</code>
+     */
+    public boolean hasCharMaxLength() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional int32 char_max_length = 9;</code>
+     */
+    public int getCharMaxLength() {
+      return charMaxLength_;
+    }
+
+    // optional int32 char_octet_length = 10;
+    public static final int CHAR_OCTET_LENGTH_FIELD_NUMBER = 10;
+    private int charOctetLength_;
+    /**
+     * <code>optional int32 char_octet_length = 10;</code>
+     */
+    public boolean hasCharOctetLength() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional int32 char_octet_length = 10;</code>
+     */
+    public int getCharOctetLength() {
+      return charOctetLength_;
+    }
+
+    // optional int32 numeric_precision = 11;
+    public static final int NUMERIC_PRECISION_FIELD_NUMBER = 11;
+    private int numericPrecision_;
+    /**
+     * <code>optional int32 numeric_precision = 11;</code>
+     */
+    public boolean hasNumericPrecision() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional int32 numeric_precision = 11;</code>
+     */
+    public int getNumericPrecision() {
+      return numericPrecision_;
+    }
+
+    // optional int32 numeric_precision_radix = 12;
+    public static final int NUMERIC_PRECISION_RADIX_FIELD_NUMBER = 12;
+    private int numericPrecisionRadix_;
+    /**
+     * <code>optional int32 numeric_precision_radix = 12;</code>
+     */
+    public boolean hasNumericPrecisionRadix() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional int32 numeric_precision_radix = 12;</code>
+     */
+    public int getNumericPrecisionRadix() {
+      return numericPrecisionRadix_;
+    }
+
+    // optional int32 numeric_scale = 13;
+    public static final int NUMERIC_SCALE_FIELD_NUMBER = 13;
+    private int numericScale_;
+    /**
+     * <code>optional int32 numeric_scale = 13;</code>
+     */
+    public boolean hasNumericScale() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional int32 numeric_scale = 13;</code>
+     */
+    public int getNumericScale() {
+      return numericScale_;
+    }
+
+    // optional int32 date_time_precision = 14;
+    public static final int DATE_TIME_PRECISION_FIELD_NUMBER = 14;
+    private int dateTimePrecision_;
+    /**
+     * <code>optional int32 date_time_precision = 14;</code>
+     */
+    public boolean hasDateTimePrecision() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional int32 date_time_precision = 14;</code>
+     */
+    public int getDateTimePrecision() {
+      return dateTimePrecision_;
+    }
+
+    // optional string interval_type = 15;
+    public static final int INTERVAL_TYPE_FIELD_NUMBER = 15;
+    private java.lang.Object intervalType_;
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    public boolean hasIntervalType() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    public java.lang.String getIntervalType() {
+      java.lang.Object ref = intervalType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          intervalType_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string interval_type = 15;</code>
+     */
+    public com.google.protobuf.ByteString
+        getIntervalTypeBytes() {
+      java.lang.Object ref = intervalType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        intervalType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 interval_precision = 16;
+    public static final int INTERVAL_PRECISION_FIELD_NUMBER = 16;
+    private int intervalPrecision_;
+    /**
+     * <code>optional int32 interval_precision = 16;</code>
+     */
+    public boolean hasIntervalPrecision() {
+      return ((bitField0_ & 0x00008000) == 0x00008000);
+    }
+    /**
+     * <code>optional int32 interval_precision = 16;</code>
+     */
+    public int getIntervalPrecision() {
+      return intervalPrecision_;
+    }
+
+    private void initFields() {
+      catalogName_ = "";
+      schemaName_ = "";
+      tableName_ = "";
+      columnName_ = "";
+      ordinalPosition_ = 0;
+      defaultValue_ = "";
+      isNullable_ = false;
+      dataType_ = "";
+      charMaxLength_ = 0;
+      charOctetLength_ = 0;
+      numericPrecision_ = 0;
+      numericPrecisionRadix_ = 0;
+      numericScale_ = 0;
+      dateTimePrecision_ = 0;
+      intervalType_ = "";
+      intervalPrecision_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getTableNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getColumnNameBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(5, ordinalPosition_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getDefaultValueBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBool(7, isNullable_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getDataTypeBytes());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeInt32(9, charMaxLength_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeInt32(10, charOctetLength_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeInt32(11, numericPrecision_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeInt32(12, numericPrecisionRadix_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeInt32(13, numericScale_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeInt32(14, dateTimePrecision_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeBytes(15, getIntervalTypeBytes());
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        output.writeInt32(16, intervalPrecision_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCatalogNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getTableNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getColumnNameBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, ordinalPosition_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getDefaultValueBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(7, isNullable_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getDataTypeBytes());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(9, charMaxLength_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(10, charOctetLength_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(11, numericPrecision_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(12, numericPrecisionRadix_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(13, numericScale_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(14, dateTimePrecision_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(15, getIntervalTypeBytes());
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(16, intervalPrecision_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ColumnMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.ColumnMetadata prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.ColumnMetadata}
+     *
+     * <pre>
+     *
+     * Message encapsulating metadata for a Column.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ColumnMetadata_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ColumnMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.ColumnMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        catalogName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        schemaName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        tableName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        columnName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        ordinalPosition_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        defaultValue_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        isNullable_ = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        dataType_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
+        charMaxLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        charOctetLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        numericPrecision_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        numericPrecisionRadix_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000800);
+        numericScale_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
+        dateTimePrecision_ = 0;
+        bitField0_ = (bitField0_ & ~0x00002000);
+        intervalType_ = "";
+        bitField0_ = (bitField0_ & ~0x00004000);
+        intervalPrecision_ = 0;
+        bitField0_ = (bitField0_ & ~0x00008000);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ColumnMetadata_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata build() {
+        org.apache.drill.exec.proto.UserProtos.ColumnMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.ColumnMetadata result = new org.apache.drill.exec.proto.UserProtos.ColumnMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.catalogName_ = catalogName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.schemaName_ = schemaName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.tableName_ = tableName_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.columnName_ = columnName_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.ordinalPosition_ = ordinalPosition_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.defaultValue_ = defaultValue_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.isNullable_ = isNullable_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.dataType_ = dataType_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.charMaxLength_ = charMaxLength_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.charOctetLength_ = charOctetLength_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.numericPrecision_ = numericPrecision_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.numericPrecisionRadix_ = numericPrecisionRadix_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.numericScale_ = numericScale_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.dateTimePrecision_ = dateTimePrecision_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.intervalType_ = intervalType_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00008000;
+        }
+        result.intervalPrecision_ = intervalPrecision_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.ColumnMetadata) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.ColumnMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.ColumnMetadata other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.ColumnMetadata.getDefaultInstance()) return this;
+        if (other.hasCatalogName()) {
+          bitField0_ |= 0x00000001;
+          catalogName_ = other.catalogName_;
+          onChanged();
+        }
+        if (other.hasSchemaName()) {
+          bitField0_ |= 0x00000002;
+          schemaName_ = other.schemaName_;
+          onChanged();
+        }
+        if (other.hasTableName()) {
+          bitField0_ |= 0x00000004;
+          tableName_ = other.tableName_;
+          onChanged();
+        }
+        if (other.hasColumnName()) {
+          bitField0_ |= 0x00000008;
+          columnName_ = other.columnName_;
+          onChanged();
+        }
+        if (other.hasOrdinalPosition()) {
+          setOrdinalPosition(other.getOrdinalPosition());
+        }
+        if (other.hasDefaultValue()) {
+          bitField0_ |= 0x00000020;
+          defaultValue_ = other.defaultValue_;
+          onChanged();
+        }
+        if (other.hasIsNullable()) {
+          setIsNullable(other.getIsNullable());
+        }
+        if (other.hasDataType()) {
+          bitField0_ |= 0x00000080;
+          dataType_ = other.dataType_;
+          onChanged();
+        }
+        if (other.hasCharMaxLength()) {
+          setCharMaxLength(other.getCharMaxLength());
+        }
+        if (other.hasCharOctetLength()) {
+          setCharOctetLength(other.getCharOctetLength());
+        }
+        if (other.hasNumericPrecision()) {
+          setNumericPrecision(other.getNumericPrecision());
+        }
+        if (other.hasNumericPrecisionRadix()) {
+          setNumericPrecisionRadix(other.getNumericPrecisionRadix());
+        }
+        if (other.hasNumericScale()) {
+          setNumericScale(other.getNumericScale());
+        }
+        if (other.hasDateTimePrecision()) {
+          setDateTimePrecision(other.getDateTimePrecision());
+        }
+        if (other.hasIntervalType()) {
+          bitField0_ |= 0x00004000;
+          intervalType_ = other.intervalType_;
+          onChanged();
+        }
+        if (other.hasIntervalPrecision()) {
+          setIntervalPrecision(other.getIntervalPrecision());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.ColumnMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.ColumnMetadata) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string catalog_name = 1;
+      private java.lang.Object catalogName_ = "";
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public boolean hasCatalogName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public java.lang.String getCatalogName() {
+        java.lang.Object ref = catalogName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogNameBytes() {
+        java.lang.Object ref = catalogName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder clearCatalogName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        catalogName_ = getDefaultInstance().getCatalogName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_name = 1;</code>
+       */
+      public Builder setCatalogNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        catalogName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string schema_name = 2;
+      private java.lang.Object schemaName_ = "";
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public boolean hasSchemaName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public java.lang.String getSchemaName() {
+        java.lang.Object ref = schemaName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          schemaName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSchemaNameBytes() {
+        java.lang.Object ref = schemaName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          schemaName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder clearSchemaName() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        schemaName_ = getDefaultInstance().getSchemaName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_name = 2;</code>
+       */
+      public Builder setSchemaNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        schemaName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string table_name = 3;
+      private java.lang.Object tableName_ = "";
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public boolean hasTableName() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public java.lang.String getTableName() {
+        java.lang.Object ref = tableName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          tableName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTableNameBytes() {
+        java.lang.Object ref = tableName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          tableName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder setTableName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        tableName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder clearTableName() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        tableName_ = getDefaultInstance().getTableName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_name = 3;</code>
+       */
+      public Builder setTableNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        tableName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string column_name = 4;
+      private java.lang.Object columnName_ = "";
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public boolean hasColumnName() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public java.lang.String getColumnName() {
+        java.lang.Object ref = columnName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          columnName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getColumnNameBytes() {
+        java.lang.Object ref = columnName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          columnName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public Builder setColumnName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        columnName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public Builder clearColumnName() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        columnName_ = getDefaultInstance().getColumnName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string column_name = 4;</code>
+       */
+      public Builder setColumnNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        columnName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 ordinal_position = 5;
+      private int ordinalPosition_ ;
+      /**
+       * <code>optional int32 ordinal_position = 5;</code>
+       */
+      public boolean hasOrdinalPosition() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 ordinal_position = 5;</code>
+       */
+      public int getOrdinalPosition() {
+        return ordinalPosition_;
+      }
+      /**
+       * <code>optional int32 ordinal_position = 5;</code>
+       */
+      public Builder setOrdinalPosition(int value) {
+        bitField0_ |= 0x00000010;
+        ordinalPosition_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 ordinal_position = 5;</code>
+       */
+      public Builder clearOrdinalPosition() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        ordinalPosition_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string default_value = 6;
+      private java.lang.Object defaultValue_ = "";
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public boolean hasDefaultValue() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public java.lang.String getDefaultValue() {
+        java.lang.Object ref = defaultValue_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          defaultValue_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDefaultValueBytes() {
+        java.lang.Object ref = defaultValue_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          defaultValue_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public Builder setDefaultValue(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        defaultValue_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public Builder clearDefaultValue() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        defaultValue_ = getDefaultInstance().getDefaultValue();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string default_value = 6;</code>
+       */
+      public Builder setDefaultValueBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        defaultValue_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bool is_nullable = 7;
+      private boolean isNullable_ ;
+      /**
+       * <code>optional bool is_nullable = 7;</code>
+       */
+      public boolean hasIsNullable() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bool is_nullable = 7;</code>
+       */
+      public boolean getIsNullable() {
+        return isNullable_;
+      }
+      /**
+       * <code>optional bool is_nullable = 7;</code>
+       */
+      public Builder setIsNullable(boolean value) {
+        bitField0_ |= 0x00000040;
+        isNullable_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool is_nullable = 7;</code>
+       */
+      public Builder clearIsNullable() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        isNullable_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional string data_type = 8;
+      private java.lang.Object dataType_ = "";
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public boolean hasDataType() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public java.lang.String getDataType() {
+        java.lang.Object ref = dataType_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          dataType_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDataTypeBytes() {
+        java.lang.Object ref = dataType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          dataType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public Builder setDataType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        dataType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public Builder clearDataType() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        dataType_ = getDefaultInstance().getDataType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string data_type = 8;</code>
+       */
+      public Builder setDataTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        dataType_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 char_max_length = 9;
+      private int charMaxLength_ ;
+      /**
+       * <code>optional int32 char_max_length = 9;</code>
+       */
+      public boolean hasCharMaxLength() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional int32 char_max_length = 9;</code>
+       */
+      public int getCharMaxLength() {
+        return charMaxLength_;
+      }
+      /**
+       * <code>optional int32 char_max_length = 9;</code>
+       */
+      public Builder setCharMaxLength(int value) {
+        bitField0_ |= 0x00000100;
+        charMaxLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 char_max_length = 9;</code>
+       */
+      public Builder clearCharMaxLength() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        charMaxLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 char_octet_length = 10;
+      private int charOctetLength_ ;
+      /**
+       * <code>optional int32 char_octet_length = 10;</code>
+       */
+      public boolean hasCharOctetLength() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional int32 char_octet_length = 10;</code>
+       */
+      public int getCharOctetLength() {
+        return charOctetLength_;
+      }
+      /**
+       * <code>optional int32 char_octet_length = 10;</code>
+       */
+      public Builder setCharOctetLength(int value) {
+        bitField0_ |= 0x00000200;
+        charOctetLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 char_octet_length = 10;</code>
+       */
+      public Builder clearCharOctetLength() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        charOctetLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 numeric_precision = 11;
+      private int numericPrecision_ ;
+      /**
+       * <code>optional int32 numeric_precision = 11;</code>
+       */
+      public boolean hasNumericPrecision() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int32 numeric_precision = 11;</code>
+       */
+      public int getNumericPrecision() {
+        return numericPrecision_;
+      }
+      /**
+       * <code>optional int32 numeric_precision = 11;</code>
+       */
+      public Builder setNumericPrecision(int value) {
+        bitField0_ |= 0x00000400;
+        numericPrecision_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 numeric_precision = 11;</code>
+       */
+      public Builder clearNumericPrecision() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        numericPrecision_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 numeric_precision_radix = 12;
+      private int numericPrecisionRadix_ ;
+      /**
+       * <code>optional int32 numeric_precision_radix = 12;</code>
+       */
+      public boolean hasNumericPrecisionRadix() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional int32 numeric_precision_radix = 12;</code>
+       */
+      public int getNumericPrecisionRadix() {
+        return numericPrecisionRadix_;
+      }
+      /**
+       * <code>optional int32 numeric_precision_radix = 12;</code>
+       */
+      public Builder setNumericPrecisionRadix(int value) {
+        bitField0_ |= 0x00000800;
+        numericPrecisionRadix_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 numeric_precision_radix = 12;</code>
+       */
+      public Builder clearNumericPrecisionRadix() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        numericPrecisionRadix_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 numeric_scale = 13;
+      private int numericScale_ ;
+      /**
+       * <code>optional int32 numeric_scale = 13;</code>
+       */
+      public boolean hasNumericScale() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional int32 numeric_scale = 13;</code>
+       */
+      public int getNumericScale() {
+        return numericScale_;
+      }
+      /**
+       * <code>optional int32 numeric_scale = 13;</code>
+       */
+      public Builder setNumericScale(int value) {
+        bitField0_ |= 0x00001000;
+        numericScale_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 numeric_scale = 13;</code>
+       */
+      public Builder clearNumericScale() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        numericScale_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 date_time_precision = 14;
+      private int dateTimePrecision_ ;
+      /**
+       * <code>optional int32 date_time_precision = 14;</code>
+       */
+      public boolean hasDateTimePrecision() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional int32 date_time_precision = 14;</code>
+       */
+      public int getDateTimePrecision() {
+        return dateTimePrecision_;
+      }
+      /**
+       * <code>optional int32 date_time_precision = 14;</code>
+       */
+      public Builder setDateTimePrecision(int value) {
+        bitField0_ |= 0x00002000;
+        dateTimePrecision_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 date_time_precision = 14;</code>
+       */
+      public Builder clearDateTimePrecision() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        dateTimePrecision_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string interval_type = 15;
+      private java.lang.Object intervalType_ = "";
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public boolean hasIntervalType() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public java.lang.String getIntervalType() {
+        java.lang.Object ref = intervalType_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          intervalType_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public com.google.protobuf.ByteString
+          getIntervalTypeBytes() {
+        java.lang.Object ref = intervalType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          intervalType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public Builder setIntervalType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        intervalType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public Builder clearIntervalType() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        intervalType_ = getDefaultInstance().getIntervalType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string interval_type = 15;</code>
+       */
+      public Builder setIntervalTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        intervalType_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 interval_precision = 16;
+      private int intervalPrecision_ ;
+      /**
+       * <code>optional int32 interval_precision = 16;</code>
+       */
+      public boolean hasIntervalPrecision() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional int32 interval_precision = 16;</code>
+       */
+      public int getIntervalPrecision() {
+        return intervalPrecision_;
+      }
+      /**
+       * <code>optional int32 interval_precision = 16;</code>
+       */
+      public Builder setIntervalPrecision(int value) {
+        bitField0_ |= 0x00008000;
+        intervalPrecision_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 interval_precision = 16;</code>
+       */
+      public Builder clearIntervalPrecision() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        intervalPrecision_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.ColumnMetadata)
+    }
+
+    static {
+      defaultInstance = new ColumnMetadata(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.ColumnMetadata)
+  }
+
+  public interface GetColumnsRespOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.RequestStatus status = 1;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
+
+    // repeated .exec.user.ColumnMetadata columns = 2;
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> 
+        getColumnsList();
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.ColumnMetadata getColumns(int index);
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    int getColumnsCount();
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder> 
+        getColumnsOrBuilderList();
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder getColumnsOrBuilder(
+        int index);
+
+    // optional .exec.shared.DrillPBError error = 3;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetColumnsResp}
+   *
+   * <pre>
+   *
+   * Response message for GetColumnsReq.
+   * </pre>
+   */
+  public static final class GetColumnsResp extends
+      com.google.protobuf.GeneratedMessage
+      implements GetColumnsRespOrBuilder {
+    // Use GetColumnsResp.newBuilder() to construct.
+    private GetColumnsResp(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetColumnsResp(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetColumnsResp defaultInstance;
+    public static GetColumnsResp getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetColumnsResp getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetColumnsResp(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RequestStatus value = org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                status_ = value;
+              }
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ColumnMetadata>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              columns_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.ColumnMetadata.PARSER, extensionRegistry));
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = error_.toBuilder();
+              }
+              error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(error_);
+                error_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          columns_ = java.util.Collections.unmodifiableList(columns_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsResp_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsResp_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class, org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetColumnsResp> PARSER =
+        new com.google.protobuf.AbstractParser<GetColumnsResp>() {
+      public GetColumnsResp parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetColumnsResp(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetColumnsResp> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.RequestStatus status = 1;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.RequestStatus status_;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+      return status_;
+    }
+
+    // repeated .exec.user.ColumnMetadata columns = 2;
+    public static final int COLUMNS_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> columns_;
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> getColumnsList() {
+      return columns_;
+    }
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder> 
+        getColumnsOrBuilderList() {
+      return columns_;
+    }
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    public int getColumnsCount() {
+      return columns_.size();
+    }
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ColumnMetadata getColumns(int index) {
+      return columns_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder getColumnsOrBuilder(
+        int index) {
+      return columns_.get(index);
+    }
+
+    // optional .exec.shared.DrillPBError error = 3;
+    public static final int ERROR_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+      return error_;
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      columns_ = java.util.Collections.emptyList();
+      error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, status_.getNumber());
+      }
+      for (int i = 0; i < columns_.size(); i++) {
+        output.writeMessage(2, columns_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(3, error_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, status_.getNumber());
+      }
+      for (int i = 0; i < columns_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, columns_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, error_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetColumnsResp parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetColumnsResp prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetColumnsResp}
+     *
+     * <pre>
+     *
+     * Response message for GetColumnsReq.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetColumnsRespOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsResp_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsResp_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class, org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetColumnsResp.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getColumnsFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (columnsBuilder_ == null) {
+          columns_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          columnsBuilder_.clear();
+        }
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetColumnsResp_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsResp getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsResp build() {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsResp result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetColumnsResp buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsResp result = new org.apache.drill.exec.proto.UserProtos.GetColumnsResp(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.status_ = status_;
+        if (columnsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            columns_ = java.util.Collections.unmodifiableList(columns_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.columns_ = columns_;
+        } else {
+          result.columns_ = columnsBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetColumnsResp) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetColumnsResp)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetColumnsResp other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetColumnsResp.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (columnsBuilder_ == null) {
+          if (!other.columns_.isEmpty()) {
+            if (columns_.isEmpty()) {
+              columns_ = other.columns_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureColumnsIsMutable();
+              columns_.addAll(other.columns_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.columns_.isEmpty()) {
+            if (columnsBuilder_.isEmpty()) {
+              columnsBuilder_.dispose();
+              columnsBuilder_ = null;
+              columns_ = other.columns_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              columnsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getColumnsFieldBuilder() : null;
+            } else {
+              columnsBuilder_.addAllMessages(other.columns_);
+            }
+          }
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetColumnsResp parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetColumnsResp) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.RequestStatus status = 1;
+      private org.apache.drill.exec.proto.UserProtos.RequestStatus status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.ColumnMetadata columns = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> columns_ =
+        java.util.Collections.emptyList();
+      private void ensureColumnsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ColumnMetadata>(columns_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ColumnMetadata, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder, org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder> columnsBuilder_;
+
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> getColumnsList() {
+        if (columnsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(columns_);
+        } else {
+          return columnsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public int getColumnsCount() {
+        if (columnsBuilder_ == null) {
+          return columns_.size();
+        } else {
+          return columnsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata getColumns(int index) {
+        if (columnsBuilder_ == null) {
+          return columns_.get(index);
+        } else {
+          return columnsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder setColumns(
+          int index, org.apache.drill.exec.proto.UserProtos.ColumnMetadata value) {
+        if (columnsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureColumnsIsMutable();
+          columns_.set(index, value);
+          onChanged();
+        } else {
+          columnsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder setColumns(
+          int index, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builderForValue) {
+        if (columnsBuilder_ == null) {
+          ensureColumnsIsMutable();
+          columns_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          columnsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder addColumns(org.apache.drill.exec.proto.UserProtos.ColumnMetadata value) {
+        if (columnsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureColumnsIsMutable();
+          columns_.add(value);
+          onChanged();
+        } else {
+          columnsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder addColumns(
+          int index, org.apache.drill.exec.proto.UserProtos.ColumnMetadata value) {
+        if (columnsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureColumnsIsMutable();
+          columns_.add(index, value);
+          onChanged();
+        } else {
+          columnsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder addColumns(
+          org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builderForValue) {
+        if (columnsBuilder_ == null) {
+          ensureColumnsIsMutable();
+          columns_.add(builderForValue.build());
+          onChanged();
+        } else {
+          columnsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder addColumns(
+          int index, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builderForValue) {
+        if (columnsBuilder_ == null) {
+          ensureColumnsIsMutable();
+          columns_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          columnsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder addAllColumns(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.ColumnMetadata> values) {
+        if (columnsBuilder_ == null) {
+          ensureColumnsIsMutable();
+          super.addAll(values, columns_);
+          onChanged();
+        } else {
+          columnsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder clearColumns() {
+        if (columnsBuilder_ == null) {
+          columns_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          columnsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public Builder removeColumns(int index) {
+        if (columnsBuilder_ == null) {
+          ensureColumnsIsMutable();
+          columns_.remove(index);
+          onChanged();
+        } else {
+          columnsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder getColumnsBuilder(
+          int index) {
+        return getColumnsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder getColumnsOrBuilder(
+          int index) {
+        if (columnsBuilder_ == null) {
+          return columns_.get(index);  } else {
+          return columnsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder> 
+           getColumnsOrBuilderList() {
+        if (columnsBuilder_ != null) {
+          return columnsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(columns_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder addColumnsBuilder() {
+        return getColumnsFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.ColumnMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder addColumnsBuilder(
+          int index) {
+        return getColumnsFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.ColumnMetadata columns = 2;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder> 
+           getColumnsBuilderList() {
+        return getColumnsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ColumnMetadata, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder, org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder> 
+          getColumnsFieldBuilder() {
+        if (columnsBuilder_ == null) {
+          columnsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.ColumnMetadata, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder, org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder>(
+                  columns_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          columns_ = null;
+        }
+        return columnsBuilder_;
+      }
+
+      // optional .exec.shared.DrillPBError error = 3;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
+            error_ =
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
+                  error_,
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetColumnsResp)
+    }
+
+    static {
+      defaultInstance = new GetColumnsResp(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetColumnsResp)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_Property_descriptor;
   private static
@@ -7190,6 +20340,71 @@ public final class UserProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_BitToUserHandshake_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_LikeFilter_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_LikeFilter_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetCatalogsReq_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetCatalogsReq_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_CatalogMetadata_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_CatalogMetadata_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetCatalogsResp_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetCatalogsResp_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetSchemasReq_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetSchemasReq_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_SchemaMetadata_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_SchemaMetadata_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetSchemasResp_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetSchemasResp_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetTablesReq_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetTablesReq_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_TableMetadata_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_TableMetadata_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetTablesResp_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetTablesResp_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetColumnsReq_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetColumnsReq_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_ColumnMetadata_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_ColumnMetadata_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetColumnsResp_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetColumnsResp_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -7228,19 +20443,71 @@ public final class UserProtos {
       "(\0132\031.exec.shared.DrillPBError\"|\n\022BitToUs" +
       "erHandshake\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006stat" +
       "us\030\003 \001(\0162\032.exec.user.HandshakeStatus\022\017\n\007" +
-      "errorId\030\004 \001(\t\022\024\n\014errorMessage\030\005 \001(\t*\231\002\n\007",
-      "RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODB" +
-      "YE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n" +
-      "\017REQUEST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUER" +
-      "Y\020\013\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\016\n\nQUE" +
-      "RY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLA" +
-      "N_FRAGMENTS\020\r\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n" +
-      "\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n*" +
-      "#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001*^\n\017" +
-      "HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERS" +
-      "ION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNO",
-      "WN_FAILURE\020\004B+\n\033org.apache.drill.exec.pr" +
-      "otoB\nUserProtosH\001"
+      "errorId\030\004 \001(\t\022\024\n\014errorMessage\030\005 \001(\t\"+\n\nL",
+      "ikeFilter\022\r\n\005regex\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t" +
+      "\"D\n\016GetCatalogsReq\0222\n\023catalog_name_filte" +
+      "r\030\001 \001(\0132\025.exec.user.LikeFilter\"M\n\017Catalo" +
+      "gMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013descr" +
+      "iption\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCat" +
+      "alogsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re" +
+      "questStatus\022,\n\010catalogs\030\002 \003(\0132\032.exec.use" +
+      "r.CatalogMetadata\022(\n\005error\030\003 \001(\0132\031.exec." +
+      "shared.DrillPBError\"v\n\rGetSchemasReq\0222\n\023" +
+      "catalog_name_filter\030\001 \001(\0132\025.exec.user.Li",
+      "keFilter\0221\n\022schame_name_filter\030\002 \001(\0132\025.e" +
+      "xec.user.LikeFilter\"i\n\016SchemaMetadata\022\024\n" +
+      "\014catalog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t" +
+      "\022\r\n\005owner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable" +
+      "\030\005 \001(\t\"\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(" +
+      "\0162\030.exec.user.RequestStatus\022*\n\007schemas\030\002" +
+      " \003(\0132\031.exec.user.SchemaMetadata\022(\n\005error" +
+      "\030\003 \001(\0132\031.exec.shared.DrillPBError\"\247\001\n\014Ge" +
+      "tTablesReq\0222\n\023catalog_name_filter\030\001 \001(\0132" +
+      "\025.exec.user.LikeFilter\0221\n\022schame_name_fi",
+      "lter\030\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021tab" +
+      "le_name_filter\030\003 \001(\0132\025.exec.user.LikeFil" +
+      "ter\"\\\n\rTableMetadata\022\024\n\014catalog_name\030\001 \001" +
+      "(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 " +
+      "\001(\t\022\014\n\004type\030\004 \001(\t\"\215\001\n\rGetTablesResp\022(\n\006s" +
+      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\022(\n" +
+      "\006tables\030\002 \003(\0132\030.exec.user.TableMetadata\022" +
+      "(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPBErro" +
+      "r\"\333\001\n\rGetColumnsReq\0222\n\023catalog_name_filt" +
+      "er\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022scham",
+      "e_name_filter\030\002 \001(\0132\025.exec.user.LikeFilt" +
+      "er\0220\n\021table_name_filter\030\003 \001(\0132\025.exec.use" +
+      "r.LikeFilter\0221\n\022column_name_filter\030\004 \001(\013" +
+      "2\025.exec.user.LikeFilter\"\224\003\n\016ColumnMetada" +
+      "ta\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_name\030" +
+      "\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_name" +
+      "\030\004 \001(\t\022\030\n\020ordinal_position\030\005 \001(\005\022\025\n\rdefa" +
+      "ult_value\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\t" +
+      "data_type\030\010 \001(\t\022\027\n\017char_max_length\030\t \001(\005" +
+      "\022\031\n\021char_octet_length\030\n \001(\005\022\031\n\021numeric_p",
+      "recision\030\013 \001(\005\022\037\n\027numeric_precision_radi" +
+      "x\030\014 \001(\005\022\025\n\rnumeric_scale\030\r \001(\005\022\033\n\023date_t" +
+      "ime_precision\030\016 \001(\005\022\025\n\rinterval_type\030\017 \001" +
+      "(\t\022\032\n\022interval_precision\030\020 \001(\005\"\220\001\n\016GetCo" +
+      "lumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re" +
+      "questStatus\022*\n\007columns\030\002 \003(\0132\031.exec.user" +
+      ".ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sh" +
+      "ared.DrillPBError*\221\003\n\007RpcType\022\r\n\tHANDSHA" +
+      "KE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020" +
+      "\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005",
+      "\022\027\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_P" +
+      "LAN_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET" +
+      "_SCHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMN" +
+      "S\020\021\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n" +
+      "\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n" +
+      "\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022R" +
+      "EQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIS" +
+      "T\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMod" +
+      "e\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus\022\013\n" +
+      "\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013",
+      "AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004*0\n\rRe" +
+      "questStatus\022\013\n\007UNKNOWN\020\000\022\006\n\002OK\020\001\022\n\n\006FAIL" +
+      "ED\020\002B+\n\033org.apache.drill.exec.protoB\nUse" +
+      "rProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7295,6 +20562,84 @@ public final class UserProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
               new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", });
+          internal_static_exec_user_LikeFilter_descriptor =
+            getDescriptor().getMessageTypes().get(8);
+          internal_static_exec_user_LikeFilter_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_LikeFilter_descriptor,
+              new java.lang.String[] { "Regex", "Escape", });
+          internal_static_exec_user_GetCatalogsReq_descriptor =
+            getDescriptor().getMessageTypes().get(9);
+          internal_static_exec_user_GetCatalogsReq_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetCatalogsReq_descriptor,
+              new java.lang.String[] { "CatalogNameFilter", });
+          internal_static_exec_user_CatalogMetadata_descriptor =
+            getDescriptor().getMessageTypes().get(10);
+          internal_static_exec_user_CatalogMetadata_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_CatalogMetadata_descriptor,
+              new java.lang.String[] { "CatalogName", "Description", "Connect", });
+          internal_static_exec_user_GetCatalogsResp_descriptor =
+            getDescriptor().getMessageTypes().get(11);
+          internal_static_exec_user_GetCatalogsResp_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetCatalogsResp_descriptor,
+              new java.lang.String[] { "Status", "Catalogs", "Error", });
+          internal_static_exec_user_GetSchemasReq_descriptor =
+            getDescriptor().getMessageTypes().get(12);
+          internal_static_exec_user_GetSchemasReq_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetSchemasReq_descriptor,
+              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", });
+          internal_static_exec_user_SchemaMetadata_descriptor =
+            getDescriptor().getMessageTypes().get(13);
+          internal_static_exec_user_SchemaMetadata_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_SchemaMetadata_descriptor,
+              new java.lang.String[] { "CatalogName", "SchemaName", "Owner", "Type", "Mutable", });
+          internal_static_exec_user_GetSchemasResp_descriptor =
+            getDescriptor().getMessageTypes().get(14);
+          internal_static_exec_user_GetSchemasResp_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetSchemasResp_descriptor,
+              new java.lang.String[] { "Status", "Schemas", "Error", });
+          internal_static_exec_user_GetTablesReq_descriptor =
+            getDescriptor().getMessageTypes().get(15);
+          internal_static_exec_user_GetTablesReq_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetTablesReq_descriptor,
+              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", "TableNameFilter", });
+          internal_static_exec_user_TableMetadata_descriptor =
+            getDescriptor().getMessageTypes().get(16);
+          internal_static_exec_user_TableMetadata_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_TableMetadata_descriptor,
+              new java.lang.String[] { "CatalogName", "SchemaName", "TableName", "Type", });
+          internal_static_exec_user_GetTablesResp_descriptor =
+            getDescriptor().getMessageTypes().get(17);
+          internal_static_exec_user_GetTablesResp_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetTablesResp_descriptor,
+              new java.lang.String[] { "Status", "Tables", "Error", });
+          internal_static_exec_user_GetColumnsReq_descriptor =
+            getDescriptor().getMessageTypes().get(18);
+          internal_static_exec_user_GetColumnsReq_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetColumnsReq_descriptor,
+              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", "TableNameFilter", "ColumnNameFilter", });
+          internal_static_exec_user_ColumnMetadata_descriptor =
+            getDescriptor().getMessageTypes().get(19);
+          internal_static_exec_user_ColumnMetadata_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_ColumnMetadata_descriptor,
+              new java.lang.String[] { "CatalogName", "SchemaName", "TableName", "ColumnName", "OrdinalPosition", "DefaultValue", "IsNullable", "DataType", "CharMaxLength", "CharOctetLength", "NumericPrecision", "NumericPrecisionRadix", "NumericScale", "DateTimePrecision", "IntervalType", "IntervalPrecision", });
+          internal_static_exec_user_GetColumnsResp_descriptor =
+            getDescriptor().getMessageTypes().get(20);
+          internal_static_exec_user_GetColumnsResp_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetColumnsResp_descriptor,
+              new java.lang.String[] { "Status", "Columns", "Error", });
           return null;
         }
       };
