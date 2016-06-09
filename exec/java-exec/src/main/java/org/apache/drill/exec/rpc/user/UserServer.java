@@ -38,7 +38,11 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
+import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -51,6 +55,7 @@ import org.apache.drill.exec.rpc.OutboundRpcMessage;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
@@ -101,8 +106,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   }
 
   @Override
-  protected Response handle(UserClientConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody)
-      throws RpcException {
+  protected void handle(UserClientConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
+      ResponseSender responseSender) throws RpcException {
     switch (rpcType) {
 
     case RpcType.RUN_QUERY_VALUE:
@@ -110,7 +115,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       try {
         final RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
         final QueryId queryId = worker.submitWork(connection, query);
-        return new Response(RpcType.QUERY_HANDLE, queryId);
+        responseSender.send(new Response(RpcType.QUERY_HANDLE, queryId));
+        break;
       } catch (InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding RunQuery body.", e);
       }
@@ -119,7 +125,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       try {
         final QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
         final Ack ack = worker.cancelQuery(queryId);
-        return new Response(RpcType.ACK, ack);
+        responseSender.send(new Response(RpcType.ACK, ack));
+        break;
       } catch (InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding QueryId body.", e);
       }
@@ -128,21 +135,54 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       try {
         final QueryId queryId = QueryId.PARSER.parseFrom(new ByteBufInputStream(pBody));
         final Ack ack = worker.resumeQuery(queryId);
-        return new Response(RpcType.ACK, ack);
+        responseSender.send(new Response(RpcType.ACK, ack));
+        break;
       } catch (final InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding QueryId body.", e);
       }
     case RpcType.GET_QUERY_PLAN_FRAGMENTS_VALUE:
       try {
         final GetQueryPlanFragments req = GetQueryPlanFragments.PARSER.parseFrom(new ByteBufInputStream(pBody));
-        return new Response(RpcType.QUERY_PLAN_FRAGMENTS, worker.getQueryPlan(connection, req));
+        responseSender.send(new Response(RpcType.QUERY_PLAN_FRAGMENTS, worker.getQueryPlan(connection, req)));
+        break;
       } catch(final InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding GetQueryPlanFragments body.", e);
+      }
+    case RpcType.GET_CATALOGS_VALUE:
+      try {
+        final GetCatalogsReq req = GetCatalogsReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        worker.submitCatalogMetadataWork(connection.getSession(), req, responseSender);
+        break;
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding GetCatalogsReq body.", e);
+      }
+    case RpcType.GET_SCHEMAS_VALUE:
+      try {
+        final GetSchemasReq req = GetSchemasReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        worker.submitSchemasMetadataWork(connection.getSession(), req, responseSender);
+        break;
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding GetSchemasReq body.", e);
+      }
+    case RpcType.GET_TABLES_VALUE:
+      try {
+        final GetTablesReq req = GetTablesReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        worker.submitTablesMetadataWork(connection.getSession(), req, responseSender);
+        break;
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding GetTablesReq body.", e);
+      }
+    case RpcType.GET_COLUMNS_VALUE:
+      try {
+        final GetColumnsReq req = GetColumnsReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        worker.submitColumnsMetadataWork(connection.getSession(), req, responseSender);
+        break;
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding GetColumnsReq body.", e);
       }
     default:
       throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
     }
-
   }
 
   public class UserClientConnection extends RemoteConnection {

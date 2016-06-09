@@ -31,7 +31,11 @@ import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -99,12 +103,20 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       return BitToUserHandshake.getDefaultInstance();
     case RpcType.QUERY_HANDLE_VALUE:
       return QueryId.getDefaultInstance();
-      case RpcType.QUERY_RESULT_VALUE:
-        return QueryResult.getDefaultInstance();
+    case RpcType.QUERY_RESULT_VALUE:
+      return QueryResult.getDefaultInstance();
     case RpcType.QUERY_DATA_VALUE:
       return QueryData.getDefaultInstance();
     case RpcType.QUERY_PLAN_FRAGMENTS_VALUE:
       return QueryPlanFragments.getDefaultInstance();
+    case RpcType.CATALOGS_VALUE:
+      return GetCatalogsResp.getDefaultInstance();
+    case RpcType.SCHEMAS_VALUE:
+      return GetSchemasResp.getDefaultInstance();
+    case RpcType.TABLES_VALUE:
+      return GetTablesResp.getDefaultInstance();
+    case RpcType.COLUMNS_VALUE:
+      return GetColumnsResp.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }

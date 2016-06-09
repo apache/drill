@@ -23,11 +23,19 @@ enum RpcType {
   REQUEST_RESULTS = 5;
   RESUME_PAUSED_QUERY = 11; // user is sending a query resume request to the drillbit
   GET_QUERY_PLAN_FRAGMENTS = 12; // to get plan fragments from query
+  GET_CATALOGS = 14; // user is requesting metadata of catalog(s).
+  GET_SCHEMAS = 15; // user is requesting metadata of schema(s)
+  GET_TABLES = 16; // user is requesting metadata of table(s)
+  GET_COLUMNS = 17; // user is requesting metadata of column(s)
 
   // bit to user
   QUERY_DATA = 6; // drillbit is sending a query result data batch to the user
   QUERY_HANDLE = 7;
-  QUERY_PLAN_FRAGMENTS = 13; // return plan fragments 
+  QUERY_PLAN_FRAGMENTS = 13; // return plan fragments
+  CATALOGS = 18; // return catalogs metadata in response to GET_CATALOGS
+  SCHEMAS = 19; // return schema metadata in response to GET_SCHEMAS
+  TABLES = 20; // return table metadata in response to GET_TABLES
+  COLUMNS = 21; // return column metadata in response to GET_COLUMNS
 
   REQ_META_FUNCTIONS = 8;
   RESP_FUNCTION_LIST = 9;
@@ -97,4 +105,143 @@ message BitToUserHandshake {
   optional HandshakeStatus status = 3;
   optional string errorId = 4;
   optional string errorMessage = 5;
+}
+
+/*
+ * Enum indicating the request status.
+ */
+enum RequestStatus {
+  UNKNOWN = 0;
+  OK = 1;
+  FAILED = 2;
+}
+
+/*
+ * Simple filter which encapsulates the SQL LIKE ... ESCAPE function
+ */
+message LikeFilter {
+  optional string regex = 1; // pattern to match
+  optional string escape = 2; // escape character (if any) present in the pattern
+}
+
+/*
+ * Request message for getting the metadata for catalogs satisfying the given optional filter.
+ */
+message GetCatalogsReq {
+  optional LikeFilter catalog_name_filter = 1;
+}
+
+/*
+ * Message encapsulating metadata for a Catalog.
+ */
+message CatalogMetadata {
+  optional string catalog_name = 1;
+  optional string description = 2;
+  optional string connect = 3;
+}
+
+/*
+ * Response message for GetCatalogReq.
+ */
+message GetCatalogsResp {
+  optional RequestStatus status = 1;
+  repeated CatalogMetadata catalogs = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for schemas satisfying the given optional filters.
+ */
+message GetSchemasReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+}
+
+/*
+ * Message encapsulating metadata for a Schema.
+ */
+message SchemaMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string owner = 3;
+  optional string type = 4; // Type. Ex. "file", "mongodb", "hive" etc.
+  optional string mutable = 5;
+}
+
+/*
+ * Response message for GetSchemasReq.
+ */
+message GetSchemasResp {
+  optional RequestStatus status = 1;
+  repeated SchemaMetadata schemas = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for tables satisfying the given optional filters.
+ */
+message GetTablesReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter table_name_filter = 3;
+}
+
+/*
+ * Message encapsulating metadata for a Table.
+ */
+message TableMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string table_name = 3;
+  optional string type = 4; // Type. Ex. "TABLE", "VIEW" etc.
+}
+
+/*
+ * Response message for GetTablesReq.
+ */
+message GetTablesResp {
+  optional RequestStatus status = 1;
+  repeated TableMetadata tables = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for columns satisfying the given optional filters.
+ */
+message GetColumnsReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter table_name_filter = 3;
+  optional LikeFilter column_name_filter = 4;
+}
+
+/*
+ * Message encapsulating metadata for a Column.
+ */
+message ColumnMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string table_name = 3;
+  optional string column_name = 4;
+  optional int32 ordinal_position = 5;
+  optional string default_value = 6;
+  optional bool is_nullable = 7;
+  optional string data_type = 8;
+  optional int32 char_max_length = 9;
+  optional int32 char_octet_length = 10;
+  optional int32 numeric_precision = 11;
+  optional int32 numeric_precision_radix = 12;
+  optional int32 numeric_scale = 13;
+  optional int32 date_time_precision = 14;
+  optional string interval_type = 15;
+  optional int32 interval_precision = 16;
+}
+
+/*
+ * Response message for GetColumnsReq.
+ */
+message GetColumnsResp {
+  optional RequestStatus status = 1;
+  repeated ColumnMetadata columns = 2;
+  optional exec.shared.DrillPBError error = 3;
 }
