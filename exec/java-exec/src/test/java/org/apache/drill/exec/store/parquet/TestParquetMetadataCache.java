@@ -177,6 +177,34 @@ public class TestParquetMetadataCache extends PlanTestBase {
       .go();
   }
 
+  @Test
+  public void testAbsentPluginOrWorkspaceError() throws Exception {
+    testBuilder()
+        .sqlQuery("refresh table metadata dfs_test.incorrect.table_name")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, "Storage plugin or workspace does not exist [dfs_test.incorrect]")
+        .go();
+
+    testBuilder()
+        .sqlQuery("refresh table metadata incorrect.table_name")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, "Storage plugin or workspace does not exist [incorrect]")
+        .go();
+  }
+
+  @Test
+  public void testNoSupportedError() throws Exception {
+    testBuilder()
+        .sqlQuery("refresh table metadata cp.`tpch/nation.parquet`")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, "Table tpch/nation.parquet does not support metadata refresh. " +
+            "Support is currently limited to directory-based Parquet tables.")
+        .go();
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);

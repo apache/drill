@@ -23,7 +23,11 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 public interface PluggableFunctionRegistry {
 
   /**
-   * Register functions in given operator table.
+   * Register functions in given operator table. There are two methods to add operators.
+   * One is addOperatorWithInference whose added operators will be used
+   * when planner.type_inference.enable is set to true;
+   * The other is addOperatorWithoutInference whose added operators will be used
+   * when planner.type_inference.enable is set to false;
    * @param operatorTable
    */
   public void register(DrillOperatorTable operatorTable);

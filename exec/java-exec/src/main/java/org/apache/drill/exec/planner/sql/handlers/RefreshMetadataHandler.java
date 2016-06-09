@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -52,7 +53,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
   }
 
   private PhysicalPlan notSupported(String tbl){
-    return direct(false, "Table %s does not support metadata refresh.  Support is currently limited to single-directory-based Parquet tables.", tbl);
+    return direct(false, "Table %s does not support metadata refresh. Support is currently limited to directory-based Parquet tables.", tbl);
   }
 
   @Override
@@ -63,6 +64,11 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
       final SchemaPlus schema = findSchema(config.getConverter().getDefaultSchema(),
           refreshTable.getSchemaPath());
+
+      if (schema == null) {
+        return direct(false, "Storage plugin or workspace does not exist [%s]",
+            SchemaUtilites.SCHEMA_PATH_JOINER.join(refreshTable.getSchemaPath()));
+      }
 
       final String tableName = refreshTable.getName();
 

@@ -206,6 +206,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @throws RelConversionException
    */
   protected DrillRel convertToDrel(final RelNode relNode) throws SqlUnsupportedException, RelConversionException {
+    if (context.getOptions().getOption(ExecConstants.EARLY_LIMIT0_OPT) &&
+        context.getPlannerSettings().isTypeInferenceEnabled() &&
+        FindLimit0Visitor.containsLimit0(relNode)) {
+      // disable distributed mode
+      context.getPlannerSettings().forceSingleMode();
+      // if the schema is known, return the schema directly
+      final DrillRel shorterPlan;
+      if ((shorterPlan = FindLimit0Visitor.getDirectScanRelIfFullySchemaed(relNode)) != null) {
+        return shorterPlan;
+      }
+    }
+
     try {
       final RelNode convertedRelNode;
 
@@ -234,14 +246,17 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.JOIN_PLANNING, intermediateNode2);
       }
 
-      final DrillRel drillRel = (DrillRel) convertedRelNode;
+      // Convert SUM to $SUM0
+      final RelNode convertedRelNodeWithSum0 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.SUM_CONVERSION, convertedRelNode);
+
+      final DrillRel drillRel = (DrillRel) convertedRelNodeWithSum0;
 
       if (drillRel instanceof DrillStoreRel) {
         throw new UnsupportedOperationException();
       } else {
 
         // If the query contains a limit 0 clause, disable distributed mode since it is overkill for determining schema.
-        if (FindLimit0Visitor.containsLimit0(convertedRelNode)) {
+        if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0)) {
           context.getPlannerSettings().forceSingleMode();
         }
 
@@ -613,7 +628,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
 
     PreProcessLogicalRel visitor = PreProcessLogicalRel.createVisitor(config.getConverter().getTypeFactory(),
-        context.getDrillOperatorTable());
+        context.getDrillOperatorTable(),
+        rel.getCluster().getRexBuilder());
     try {
       rel = rel.accept(visitor);
     } catch (UnsupportedOperationException ex) {

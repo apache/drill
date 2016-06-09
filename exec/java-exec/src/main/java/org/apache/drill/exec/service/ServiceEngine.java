@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -59,13 +60,14 @@ public class ServiceEngine implements AutoCloseable {
   private final DrillConfig config;
   boolean useIP = false;
   private final boolean allowPortHunting;
+  private final boolean isDistributedMode;
   private final BufferAllocator userAllocator;
   private final BufferAllocator controlAllocator;
   private final BufferAllocator dataAllocator;
 
 
   public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context,
-      WorkEventBus workBus, WorkerBee bee, boolean allowPortHunting) throws DrillbitStartupException {
+      WorkEventBus workBus, WorkerBee bee, boolean allowPortHunting, boolean isDistributedMode) throws DrillbitStartupException {
     userAllocator = newAllocator(context, "rpc:user", "drill.exec.rpc.user.server.memory.reservation",
         "drill.exec.rpc.user.server.memory.maximum");
     controlAllocator = newAllocator(context, "rpc:bit-control",
@@ -85,6 +87,7 @@ public class ServiceEngine implements AutoCloseable {
     this.dataPool = new DataConnectionCreator(context, dataAllocator, workBus, bee, allowPortHunting);
     this.config = context.getConfig();
     this.allowPortHunting = allowPortHunting;
+    this.isDistributedMode = isDistributedMode;
     registerMetrics(context.getMetrics());
 
   }
@@ -141,6 +144,8 @@ public class ServiceEngine implements AutoCloseable {
   public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException{
     int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
     String address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
+    checkLoopbackAddress(address);
+
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
         .setAddress(address)
         //.setAddress("localhost")
@@ -175,6 +180,12 @@ public class ServiceEngine implements AutoCloseable {
         }
       }
     });
+  }
+
+  private void checkLoopbackAddress(String address) throws DrillbitStartupException, UnknownHostException {
+    if (isDistributedMode && InetAddress.getByName(address).isLoopbackAddress()) {
+      throw new DrillbitStartupException("Drillbit is disallowed to bind to loopback address in distributed mode.");
+    }
   }
 
   @Override

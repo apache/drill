@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.store.direct;
 
-import java.util.Collections;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -32,14 +29,23 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.RecordReader;
 
-public class DirectGroupScan extends AbstractGroupScan{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectGroupScan.class);
+import java.util.List;
+
+@JsonTypeName("direct-scan")
+public class DirectGroupScan extends AbstractGroupScan {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectGroupScan.class);
 
   private final RecordReader reader;
+  private final ScanStats stats;
 
   public DirectGroupScan(RecordReader reader) {
-    super((String)null);
+    this(reader, ScanStats.TRIVIAL_TABLE);
+  }
+
+  public DirectGroupScan(RecordReader reader, ScanStats stats) {
+    super((String) null);
     this.reader = reader;
+    this.stats = stats;
   }
 
   @Override
@@ -58,14 +64,15 @@ public class DirectGroupScan extends AbstractGroupScan{
     return 1;
   }
 
-  public ScanStats getScanStats(){
-    return ScanStats.TRIVIAL_TABLE;
+  @Override
+  public ScanStats getScanStats() {
+    return stats;
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children == null || children.isEmpty();
-    return new DirectGroupScan(reader);
+    return new DirectGroupScan(reader, stats);
   }
 
   @Override

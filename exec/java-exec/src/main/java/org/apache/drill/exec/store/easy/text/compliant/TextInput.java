@@ -265,7 +265,7 @@ final class TextInput {
 
         if(lineSeparator2 == NULL_BYTE){
           // we found a line separator and don't need to consult the next byte.
-          length = (int)(m - bStart);
+          length = (int)(m - bStart) + 1; // make sure we include line separator otherwise query may fail (DRILL-4317)
           endFound = true;
           break;
         }else{

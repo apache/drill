@@ -29,16 +29,70 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 import org.apache.drill.exec.expr.holders.IntervalHolder;
 import org.apache.drill.exec.expr.holders.IntervalYearHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.ops.ContextInformation;
 
 public class DateTypeFunctions {
+
+    /**
+     * Function to check if a varchar value can be cast to a date.
+     *
+     * At the time of writing this function, several other databases were checked
+     * for behavior compatibility. There was not a consensus between oracle and
+     * Sql server about the expected behavior of this function, and Postgres
+     * lacks it completely.
+     *
+     * Sql Server appears to have both a DATEFORMAT and language locale setting
+     * that can change the values accepted by this function. Oracle appears to
+     * support several formats, some of which are not mentioned in the Sql
+     * Server docs. With the lack of standardization, we decided to implement
+     * this function so that it would only consider date strings that would be
+     * accepted by the cast function as valid.
+     */
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "isdate", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL,
+        costCategory = FunctionTemplate.FunctionCostCategory.COMPLEX)
+    public static class IsDate implements DrillSimpleFunc {
+
+      @Param NullableVarCharHolder in;
+      @Output BitHolder out;
+
+      public void setup() { }
+
+      public void eval() {
+        // for a null input return false
+        if (in.isSet == 0) {
+          out.value = 0;
+        } else {
+          out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.isReadableAsDate(in.buffer, in.start, in.end) ? 1 : 0;
+        }
+      }
+    }
+
+    // Same as above, just for required input
+    @SuppressWarnings("unused")
+    @FunctionTemplate(name = "isdate", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL,
+        costCategory = FunctionTemplate.FunctionCostCategory.COMPLEX)
+    public static class IsDateRequiredInput implements DrillSimpleFunc {
+
+      @Param VarCharHolder in;
+      @Output BitHolder out;
+
+      public void setup() { }
+
+      public void eval() {
+        // for a null input return false
+        out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.isReadableAsDate(in.buffer, in.start, in.end) ? 1 : 0;
+      }
+    }
 
     @FunctionTemplate(name = "intervaltype", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class IntervalType implements DrillSimpleFunc {

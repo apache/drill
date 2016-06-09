@@ -67,11 +67,11 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
-    send(queryResultHandler.getWrappedListener(connection, resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
+    send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
   public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint,
-      UserProperties props, UserBitShared.UserCredentials credentials) {
+                      UserProperties props, UserBitShared.UserCredentials credentials) {
     UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)
@@ -83,7 +83,8 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       hsBuilder.setProperties(props);
     }
 
-    this.connectAsClient(handler, hsBuilder.build(), endpoint.getAddress(), endpoint.getUserPort());
+    this.connectAsClient(queryResultHandler.getWrappedConnectionHandler(handler),
+        hsBuilder.build(), endpoint.getAddress(), endpoint.getUserPort());
   }
 
   @Override

@@ -31,8 +31,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.HyperVectorValueIterator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -294,9 +296,7 @@ public class DrillTestWrapper {
 
   protected void compareSchemaOnly() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    List<QueryDataBatch> actual = Collections.EMPTY_LIST;
-
-
+    List<QueryDataBatch> actual;
     QueryDataBatch batch = null;
     try {
       BaseTestQuery.test(testOptionSettingQueries);
@@ -305,21 +305,24 @@ public class DrillTestWrapper {
       loader.load(batch.getHeader().getDef(), batch.getData());
 
       final BatchSchema schema = loader.getSchema();
-      if(schema.getFieldCount() != testBuilder.getExpectedSchema().size()) {
-        throw new Exception("The column numbers for actual schema and expected schema do not match");
+      final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = testBuilder.getExpectedSchema();
+      if(schema.getFieldCount() != expectedSchema.size()) {
+        throw new Exception("Expected and actual numbers of columns do not match.");
       }
 
       for(int i = 0; i < schema.getFieldCount(); ++i) {
         final String actualSchemaPath = schema.getColumn(i).getPath();
         final TypeProtos.MajorType actualMajorType = schema.getColumn(i).getType();
 
-        final String expectedSchemaPath = schema.getColumn(i).getPath();
-        final TypeProtos.MajorType expectedlMajorType = schema.getColumn(i).getType();
+        final String expectedSchemaPath = expectedSchema.get(i).getLeft().getAsUnescapedPath();
+        final TypeProtos.MajorType expectedMajorType = expectedSchema.get(i).getValue();
 
-        if(!actualSchemaPath.equalsIgnoreCase(expectedSchemaPath)
-            || !actualMajorType.equals(expectedlMajorType)) {
-          throw new Exception("The type of the " + i + "-th column is '" + actualSchemaPath + "' mismatched, expected: '"
-              + expectedlMajorType + "'");
+        if(!actualSchemaPath.equals(expectedSchemaPath)
+            || !actualMajorType.equals(expectedMajorType)) {
+          throw new Exception(String.format("Schema path or type mismatch for column #%d:\n" +
+                  "Expected schema path: %s\nActual   schema path: %s\nExpected type: %s\nActual   type: %s",
+              i, expectedSchemaPath, actualSchemaPath, Types.toString(expectedMajorType),
+              Types.toString(actualMajorType)));
         }
       }
 

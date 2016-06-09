@@ -25,6 +25,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
 import org.apache.calcite.sql.SqlSelectKeyword;
@@ -351,7 +352,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    if(sqlCall.getOperator() instanceof SqlCountAggFunction) {
+    if(DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
       for(SqlNode sqlNode : sqlCall.getOperandList()) {
         if(containsFlatten(sqlNode)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
@@ -415,7 +416,7 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
         if (operator == SqlStdOperatorTable.ROLLUP
             || operator == SqlStdOperatorTable.CUBE
             || operator == SqlStdOperatorTable.GROUPING_SETS) {
@@ -433,10 +434,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     @Override
     public boolean test(SqlNode sqlNode) {
       if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
-        if (operator == SqlStdOperatorTable.GROUPING
-            || operator == SqlStdOperatorTable.GROUPING_ID
-            || operator == SqlStdOperatorTable.GROUP_ID) {
+        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
+          if (operator == SqlStdOperatorTable.GROUPING
+              || operator == SqlStdOperatorTable.GROUPING_ID
+              || operator == SqlStdOperatorTable.GROUP_ID) {
           return true;
         }
       }
