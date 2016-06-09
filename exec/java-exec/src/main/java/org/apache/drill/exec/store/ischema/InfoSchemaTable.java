@@ -86,7 +86,7 @@ public abstract class InfoSchemaTable {
     return typeFactory.createStructType(relTypes, fieldNames);
   }
 
-  public abstract RecordGenerator getRecordGenerator(OptionManager optionManager);
+  public abstract InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager);
 
   /** Layout for the CATALOGS table. */
   static public class Catalogs extends InfoSchemaTable {
@@ -102,8 +102,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
-      return new RecordGenerator.Catalogs(optionManager);
+    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Catalogs(optionManager);
     }
   }
 
@@ -123,8 +123,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
-      return new RecordGenerator.Schemata(optionManager);
+    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Schemata(optionManager);
     }
   }
 
@@ -143,8 +143,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
-      return new RecordGenerator.Tables(optionManager);
+    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Tables(optionManager);
     }
   }
 
@@ -163,8 +163,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
-      return new RecordGenerator.Views(optionManager);
+    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Views(optionManager);
     }
   }
 
@@ -215,8 +215,8 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public RecordGenerator getRecordGenerator(OptionManager optionManager) {
-      return new RecordGenerator.Columns(optionManager);
+    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+      return new InfoSchemaRecordGenerator.Columns(optionManager);
     }
   }
 }

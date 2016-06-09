@@ -62,7 +62,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   @Override
   public InfoSchemaGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
-    SelectedTable table = selection.getWith(context.getLpPersistence(),  SelectedTable.class);
+    InfoSchemaTableType table = selection.getWith(context.getLpPersistence(),  InfoSchemaTableType.class);
     return new InfoSchemaGroupScan(table);
   }
 
@@ -85,7 +85,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
       super(ImmutableList.<String>of(), IS_SCHEMA_NAME);
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
-      for(SelectedTable tbl : SelectedTable.values()){
+      for(InfoSchemaTableType tbl : InfoSchemaTableType.values()){
         tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, IS_SCHEMA_NAME, tbl, config));
       }
       this.tables = ImmutableMap.copyOf(tbls);

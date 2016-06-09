@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_CONNECT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCR;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
@@ -46,13 +50,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
- * Generates records for POJO RecordReader by scanning the given schema.
+ * Generates records for POJO RecordReader by scanning the given schema. At every level (catalog, schema, table, field),
+ * level specific object is visited and decision is taken to visit the contents of the object. Object here is catalog,
+ * schema, table or field.
  */
-public abstract class RecordGenerator {
+public abstract class InfoSchemaRecordGenerator {
   protected InfoSchemaFilter filter;
 
   protected OptionManager optionManager;
-  public RecordGenerator(OptionManager optionManager) {
+  public InfoSchemaRecordGenerator(OptionManager optionManager) {
     this.optionManager = optionManager;
   }
 
@@ -60,16 +66,58 @@ public abstract class RecordGenerator {
     this.filter = filter;
   }
 
+  /**
+   * Visit the catalog. Drill has only one catalog.
+   *
+   * @return Whether to continue exploring the contents of the catalog or not. Contents are schema/schema tree.
+   */
+  public boolean visitCatalog() {
+    return true;
+  }
+
+  /**
+   * Visit the given schema.
+   *
+   * @param schemaName Name of the schema
+   * @param schema Schema object
+   * @return Whether to continue exploring the contents of the schema or not. Contents are tables within the schema.
+   */
   public boolean visitSchema(String schemaName, SchemaPlus schema) {
     return true;
   }
 
+  /**
+   * Visit the given table.
+   *
+   * @param schemaName Name of the schema where the table is present
+   * @param tableName Name of the table
+   * @param table Table object
+   * @return Whether to continue exploring the contents of the table or not. Contents are fields within the table.
+   */
   public boolean visitTable(String schemaName, String tableName, Table table) {
     return true;
   }
 
-  public boolean visitField(String schemaName, String tableName, RelDataTypeField field) {
-    return true;
+  /**
+   * Visit the given field.
+   *
+   * @param schemaName Schema where the table of the field is present
+   * @param tableName Table name
+   * @param field Field object
+   */
+  public void visitField(String schemaName, String tableName, RelDataTypeField field) {
+  }
+
+  protected boolean shouldVisitCatalog() {
+    if (filter == null) {
+      return true;
+    }
+
+    final Map<String, String> recordValues = ImmutableMap.of(CATS_COL_CATALOG_NAME, IS_CATALOG_NAME);
+
+    // If the filter evaluates to false then we don't need to visit the catalog.
+    // For other two results (TRUE, INCONCLUSIVE) continue to visit the catalog.
+    return filter.evaluate(recordValues) != Result.FALSE;
   }
 
   protected boolean shouldVisitSchema(String schemaName, SchemaPlus schema) {
@@ -84,14 +132,19 @@ public abstract class RecordGenerator {
         return false;
       }
 
-      Map<String, String> recordValues =
-          ImmutableMap.of(SHRD_COL_TABLE_SCHEMA, schemaName,
-                          SCHS_COL_SCHEMA_NAME, schemaName);
-      if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
-        // If the filter evaluates to false then we don't need to visit the schema.
-        // For other two results (TRUE, INCONCLUSIVE) continue to visit the schema.
-        return false;
+      if (filter == null) {
+        return true;
       }
+
+      final Map<String, String> recordValues =
+          ImmutableMap.of(
+              CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
+              SHRD_COL_TABLE_SCHEMA, schemaName,
+              SCHS_COL_SCHEMA_NAME, schemaName);
+
+      // If the filter evaluates to false then we don't need to visit the schema.
+      // For other two results (TRUE, INCONCLUSIVE) continue to visit the schema.
+      return filter.evaluate(recordValues) != Result.FALSE;
     } catch(ClassCastException e) {
       // ignore and return true as this is not a Drill schema
     }
@@ -99,21 +152,46 @@ public abstract class RecordGenerator {
   }
 
   protected boolean shouldVisitTable(String schemaName, String tableName) {
-    Map<String, String> recordValues =
-        ImmutableMap.of( SHRD_COL_TABLE_SCHEMA, schemaName,
-                         SCHS_COL_SCHEMA_NAME, schemaName,
-                         SHRD_COL_TABLE_NAME, tableName);
-    if (filter != null && filter.evaluate(recordValues) == Result.FALSE) {
-      return false;
+    if (filter == null) {
+      return true;
     }
 
-    return true;
+    final Map<String, String> recordValues =
+        ImmutableMap.of(
+            CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
+            SHRD_COL_TABLE_SCHEMA, schemaName,
+            SCHS_COL_SCHEMA_NAME, schemaName,
+            SHRD_COL_TABLE_NAME, tableName);
+
+    // If the filter evaluates to false then we don't need to visit the table.
+    // For other two results (TRUE, INCONCLUSIVE) continue to visit the table.
+    return filter.evaluate(recordValues) != Result.FALSE;
   }
 
-  public abstract RecordReader getRecordReader();
+  protected boolean shouldVisitColumn(String schemaName, String tableName, String columnName) {
+    if (filter == null) {
+      return true;
+    }
+
+    final Map<String, String> recordValues =
+        ImmutableMap.of(
+            CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
+            SHRD_COL_TABLE_SCHEMA, schemaName,
+            SCHS_COL_SCHEMA_NAME, schemaName,
+            SHRD_COL_TABLE_NAME, tableName,
+            COLS_COL_COLUMN_NAME, columnName);
+
+    // If the filter evaluates to false then we don't need to visit the column.
+    // For other two results (TRUE, INCONCLUSIVE) continue to visit the column.
+    return filter.evaluate(recordValues) != Result.FALSE;
+  }
+
+  public abstract PojoRecordReader<?> getRecordReader();
 
   public void scanSchema(SchemaPlus root) {
-    scanSchema(root.getName(), root);
+    if (shouldVisitCatalog() && visitCatalog()) {
+      scanSchema(root.getName(), root);
+    }
   }
 
   /**
@@ -152,27 +230,34 @@ public abstract class RecordGenerator {
         // ... do for each of the table's fields.
         final RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
         for (RelDataTypeField field: tableRow.getFieldList()) {
-          visitField(schemaPath, tableName, field);
+          if (shouldVisitColumn(schemaPath, tableName, field.getName())) {
+            visitField(schemaPath, tableName, field);
+          }
         }
       }
     }
   }
 
-  public static class Catalogs extends RecordGenerator {
+  public static class Catalogs extends InfoSchemaRecordGenerator {
+    List<Records.Catalog> records = ImmutableList.of();
+
     public Catalogs(OptionManager optionManager) {
       super(optionManager);
     }
 
     @Override
-    public RecordReader getRecordReader() {
-      Records.Catalog catalogRecord =
-          new Records.Catalog(IS_CATALOG_NAME,
-                              "The internal metadata used by Drill", "");
-      return new PojoRecordReader<>(Records.Catalog.class, ImmutableList.of(catalogRecord).iterator());
+    public PojoRecordReader<Records.Catalog> getRecordReader() {
+      return new PojoRecordReader<>(Records.Catalog.class, records.iterator());
+    }
+
+    @Override
+    public boolean visitCatalog() {
+      records = ImmutableList.of(new Records.Catalog(IS_CATALOG_NAME, IS_CATALOG_DESCR, IS_CATALOG_CONNECT));
+      return false;
     }
   }
 
-  public static class Schemata extends RecordGenerator {
+  public static class Schemata extends InfoSchemaRecordGenerator {
     List<Records.Schema> records = Lists.newArrayList();
 
     public Schemata(OptionManager optionManager) {
@@ -180,7 +265,7 @@ public abstract class RecordGenerator {
     }
 
     @Override
-    public RecordReader getRecordReader() {
+    public PojoRecordReader<Records.Schema> getRecordReader() {
       return new PojoRecordReader<>(Records.Schema.class, records.iterator());
     }
 
@@ -193,7 +278,7 @@ public abstract class RecordGenerator {
     }
   }
 
-  public static class Tables extends RecordGenerator {
+  public static class Tables extends InfoSchemaRecordGenerator {
     List<Records.Table> records = Lists.newArrayList();
 
     public Tables(OptionManager optionManager) {
@@ -201,7 +286,7 @@ public abstract class RecordGenerator {
     }
 
     @Override
-    public RecordReader getRecordReader() {
+    public PojoRecordReader<Records.Table> getRecordReader() {
       return new PojoRecordReader<>(Records.Table.class, records.iterator());
     }
 
@@ -241,7 +326,7 @@ public abstract class RecordGenerator {
     }
   }
 
-  public static class Views extends RecordGenerator {
+  public static class Views extends InfoSchemaRecordGenerator {
     List<Records.View> records = Lists.newArrayList();
 
     public Views(OptionManager optionManager) {
@@ -249,7 +334,7 @@ public abstract class RecordGenerator {
     }
 
     @Override
-    public RecordReader getRecordReader() {
+    public PojoRecordReader<Records.View> getRecordReader() {
       return new PojoRecordReader<>(Records.View.class, records.iterator());
     }
 
@@ -263,21 +348,20 @@ public abstract class RecordGenerator {
     }
   }
 
-  public static class Columns extends RecordGenerator {
+  public static class Columns extends InfoSchemaRecordGenerator {
     List<Records.Column> records = Lists.newArrayList();
     public Columns(OptionManager optionManager) {
       super(optionManager);
     }
 
     @Override
-    public RecordReader getRecordReader() {
+    public PojoRecordReader<Records.Column> getRecordReader() {
       return new PojoRecordReader<>(Records.Column.class, records.iterator());
     }
 
     @Override
-    public boolean visitField(String schemaName, String tableName, RelDataTypeField field) {
+    public void visitField(String schemaName, String tableName, RelDataTypeField field) {
       records.add(new Records.Column(IS_CATALOG_NAME, schemaName, tableName, field));
-      return false;
     }
   }
 }

@@ -50,6 +50,14 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   }
 
   @Test
+  public void testFilterPushdown_LikeWithEscape() throws Exception {
+    final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA LIKE '%\\\\SCH%' ESCAPE '\\'";
+    final String scan = "Scan(groupscan=[TABLES, filter=like(Field=TABLE_SCHEMA,Literal=%\\\\SCH%,Literal=\\)])";
+
+    testHelper(query, scan, false);
+  }
+
+  @Test
   public void testFilterPushdown_And() throws Exception {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE " +
         "TABLE_SCHEMA = 'sys' AND " +
@@ -98,9 +106,11 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE " +
         "TABLE_SCHEMA = 'sys' AND " +
         "TABLE_NAME = 'version' AND " +
-        "COLUMN_NAME like 'commit%s'";
-    final String scan = "Scan(groupscan=[COLUMNS, filter=booleanand(equal(Field=TABLE_SCHEMA,Literal=sys)," +
-        "equal(Field=TABLE_NAME,Literal=version))])";
+        "COLUMN_NAME like 'commit%s' AND " +
+        "IS_NULLABLE = 'YES'"; // this is not expected to pushdown into scan
+    final String scan = "Scan(groupscan=[COLUMNS, " +
+        "filter=booleanand(equal(Field=TABLE_SCHEMA,Literal=sys),equal(Field=TABLE_NAME,Literal=version)," +
+        "like(Field=COLUMN_NAME,Literal=commit%s))]";
 
     testHelper(query, scan, true);
   }
