@@ -265,7 +265,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<Partitioner> cg ;
 
-    cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     ClassGenerator<Partitioner> cgInner = cg.getInnerGenerator("OutgoingRecordBatch");
 
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector, context.getFunctionRegistry());

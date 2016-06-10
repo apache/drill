@@ -181,7 +181,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     }
 
 
-    final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     int index = 0;
     for(VectorWrapper<?> vw : current) {
       ValueVector vvIn = vw.getValueVector();

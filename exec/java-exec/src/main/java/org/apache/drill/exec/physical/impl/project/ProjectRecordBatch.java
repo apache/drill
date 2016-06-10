@@ -321,7 +321,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
 
-    final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
 
     final IntHashSet transferFieldIds = new IntHashSet();
 
@@ -388,7 +388,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               allocationVectors.add(vv);
               final TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
               final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
-              final HoldingContainer hc = cg.addExpr(write, false);
+              final HoldingContainer hc = cg.addExpr(write, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
             }
           }
           continue;
@@ -452,7 +452,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
-        cg.addExpr(expr, false);
+        cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
         if (complexExprList == null) {
           complexExprList = Lists.newArrayList();
         }
@@ -465,7 +465,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
         final boolean useSetSafe = !(vector instanceof FixedWidthVector);
         final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
-        final HoldingContainer hc = cg.addExpr(write, false);
+        final HoldingContainer hc = cg.addExpr(write, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
 
         // We cannot do multiple transfers from the same vector. However we still need to instantiate the output vector.
         if (expr instanceof ValueVectorReadExpression) {

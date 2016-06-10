@@ -17,17 +17,53 @@
  */
 package org.apache.drill.exec;
 
+import com.codahale.metrics.MetricRegistry;
+import mockit.NonStrictExpectations;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.exec.compile.CodeCompilerTestFactory;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.metrics.DrillMetrics;
+import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.test.DrillTest;
 import org.junit.After;
+import org.junit.BeforeClass;
+
 
 public class ExecTest extends DrillTest {
+
+  protected static SystemOptionManager optionManager;
+  private static final DrillConfig c = DrillConfig.create();
 
   @After
   public void clear(){
     // TODO:  (Re DRILL-1735) Check whether still needed now that
     // BootstrapContext.close() resets the metrics.
     DrillMetrics.resetMetrics();
+  }
+
+
+  @BeforeClass
+  public static void setupOptionManager() throws Exception{
+    final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(c);
+    provider.start();
+    optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider);
+    optionManager.init();
+  }
+
+  protected void mockDrillbitContext(final DrillbitContext bitContext) throws Exception {
+    new NonStrictExpectations() {{
+      bitContext.getMetrics(); result = new MetricRegistry();
+      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
+      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
+      bitContext.getConfig(); result = c;
+      bitContext.getOptionManager(); result = optionManager;
+      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
+    }};
   }
 
 }

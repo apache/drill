@@ -321,4 +321,8 @@ public interface ExecConstants {
    */
   String WEB_LOGS_MAX_LINES = "web.logs.max_lines";
   OptionValidator WEB_LOGS_MAX_LINES_VALIDATOR = new PositiveLongValidator(WEB_LOGS_MAX_LINES, Integer.MAX_VALUE, 10000);
+
+  String CODE_GEN_EXP_IN_METHOD_SIZE = "exec.java.compiler.exp_in_method_size";
+  LongValidator CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR = new LongValidator(CODE_GEN_EXP_IN_METHOD_SIZE, 50);
+
 }

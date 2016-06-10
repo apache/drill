@@ -257,7 +257,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
-    ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION,
+        context.getFunctionRegistry(), context.getOptions());
     container.clear();
 
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
@@ -322,14 +323,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     for (final LogicalExpression expr : keyExprs) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       cg.setMappingSet(IS_SAME_I1);
-      final HoldingContainer first = cg.addExpr(expr, false);
+      final HoldingContainer first = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(IS_SAME_I2);
-      final HoldingContainer second = cg.addExpr(expr, false);
+      final HoldingContainer second = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       final LogicalExpression fh =
           FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
-      final HoldingContainer out = cg.addExpr(fh, false);
+      final HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
@@ -345,14 +346,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     for (final LogicalExpression expr : keyExprs) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       cg.setMappingSet(ISA_B1);
-      final HoldingContainer first = cg.addExpr(expr, false);
+      final HoldingContainer first = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(ISA_B2);
-      final HoldingContainer second = cg.addExpr(expr, false);
+      final HoldingContainer second = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       final LogicalExpression fh =
           FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
-      final HoldingContainer out = cg.addExpr(fh, false);
+      final HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
@@ -392,9 +393,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Writing out expr {}", keyExprs[i]);
       cg.rotateBlock();
       cg.setMappingSet(RECORD_KEYS_PREV);
-      final HoldingContainer innerExpression = cg.addExpr(keyExprs[i], false);
+      final HoldingContainer innerExpression = cg.addExpr(keyExprs[i], ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(RECORD_KEYS_PREV_OUT);
-      final HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
+      final HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), ClassGenerator.BlkCreateMode.FALSE);
     }
   }
 

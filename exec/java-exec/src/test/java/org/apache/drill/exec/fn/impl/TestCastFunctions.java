@@ -18,7 +18,6 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
 import org.junit.Test;

@@ -630,7 +630,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private MergingReceiverGeneratorBase createMerger() throws SchemaChangeException {
 
     try {
-      final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+      final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
       final ClassGenerator<MergingReceiverGeneratorBase> g = cg.getRoot();
 
       ExpandableHyperContainer batch = null;
@@ -675,16 +675,16 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
       g.setMappingSet(LEFT_MAPPING);
-      final HoldingContainer left = g.addExpr(expr, false);
+      final HoldingContainer left = g.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       g.setMappingSet(RIGHT_MAPPING);
-      final HoldingContainer right = g.addExpr(expr, false);
+      final HoldingContainer right = g.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       g.setMappingSet(MAIN_MAPPING);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
       final LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
                                                          context.getFunctionRegistry());
-      final HoldingContainer out = g.addExpr(fh, false);
+      final HoldingContainer out = g.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       final JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       if (od.getDirection() == Direction.ASCENDING) {
