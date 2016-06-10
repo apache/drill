@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.json;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -179,4 +180,43 @@ public class TestJsonRecordReader extends BaseTestQuery {
         .sqlBaselineQuery(baselineQuery)
         .go();
   }
+
+ @Test // See DRILL-4653
+public void testSkippingInvalidJSONRecords() throws Exception {
+    try
+    {
+      String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG+ "` = true";
+      String query = "select count(*) from cp.`jsoninput/DRILL-4653.json`";
+      testNoResult(set);
+      testBuilder()
+      .unOrdered()
+      .sqlQuery(query)
+      .sqlBaselineQuery(query)
+      .build().run();
+    }
+    finally
+    {
+      String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG+ "` = false";
+      testNoResult(set);
+    }
+  }
+
+  @Test // See DRILL-4653
+  public void testNotSkippingInvalidJSONRecords() throws Exception {
+      try
+      {
+        String query = "select count(*) from cp.`jsoninput/DRILL-4653.json`";
+        testBuilder()
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build().run();
+      }
+      catch(Exception ex)
+      {
+        // do nothing just return
+        return;
+      }
+      throw new Exception("testNotSkippingInvalidJSONRecords");
+      }
 }
