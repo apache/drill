@@ -23,6 +23,8 @@ import io.netty.buffer.DrillBuf;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -42,6 +44,8 @@ public abstract class OperatorContext {
   public abstract BufferAllocator getAllocator();
 
   public abstract OperatorStats getStats();
+
+  public abstract ExecutorService getExecutor();
 
   public abstract ExecutionControls getExecutionControls();
 

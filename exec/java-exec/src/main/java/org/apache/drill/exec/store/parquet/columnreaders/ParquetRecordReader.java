@@ -118,12 +118,12 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
 
   public ParquetRecordReader(FragmentContext fragmentContext,
-                             String path,
-                             int rowGroupIndex,
+      String path,
+      int rowGroupIndex,
                              long numRecordsToRead,
-                             FileSystem fs,
-                             CodecFactory codecFactory,
-                             ParquetMetadata footer,
+      FileSystem fs,
+      CodecFactory codecFactory,
+      ParquetMetadata footer,
                              List<SchemaPath> columns,
                              ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
                              throws ExecutionSetupException {
@@ -316,11 +316,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
       columnsToScan++;
       int dataTypeLength = getDataTypeLength(column, se);
       if (dataTypeLength == -1) {
-        allFieldsFixedLength = false;
-      } else {
+          allFieldsFixedLength = false;
+        } else {
         bitWidthAllFixedFields += dataTypeLength;
+        }
       }
-    }
 //    rowGroupOffset = footer.getBlocks().get(rowGroupIndex).getColumns().get(0).getFirstDataPageOffset();
 
     if (columnsToScan != 0  && allFieldsFixedLength) {
