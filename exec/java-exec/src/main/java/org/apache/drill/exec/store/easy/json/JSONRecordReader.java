@@ -64,6 +64,8 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
+  private int parseErrorCount;
+  private final boolean skipMalformedJSONRecords;
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -114,6 +116,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
     this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    this.skipMalformedJSONRecords = fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
     setColumns(columns);
   }
 
@@ -122,7 +125,8 @@ public class JSONRecordReader extends AbstractRecordReader {
     return super.toString()
         + "[hadoopPath = " + hadoopPath
         + ", recordCount = " + recordCount
-        + ", runningRecordCount = " + runningRecordCount + ", ...]";
+        + ", parseErrorCount = " + parseErrorCount
+         + ", runningRecordCount = " + runningRecordCount + ", ...]";
   }
 
   @Override
@@ -189,26 +193,33 @@ public class JSONRecordReader extends AbstractRecordReader {
   public int next() {
     writer.allocate();
     writer.reset();
-
     recordCount = 0;
     ReadState write = null;
 //    Stopwatch p = new Stopwatch().start();
-    try{
-      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH) {
-        writer.setPosition(recordCount);
-        write = jsonReader.write(writer);
-
-        if(write == ReadState.WRITE_SUCCEED) {
+   // try
+   // {
+      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH){
+      try{
+            writer.setPosition(recordCount);
+            write = jsonReader.write(writer);
+            if(write == ReadState.WRITE_SUCCEED) {
 //          logger.debug("Wrote record.");
-          recordCount++;
-        }else{
+              recordCount++;
+            }else{
 //          logger.debug("Exiting.");
-          break outside;
-        }
-
+              break outside;
+            }
       }
+      catch(Exception ex)
+      {
+           if(skipMalformedJSONRecords == false){
+              handleAndRaise("Error parsing JSON", ex);
+           }
+           ++parseErrorCount;
+      }
+     }
 
-      jsonReader.ensureAtLeastOneField(writer);
+     jsonReader.ensureAtLeastOneField(writer);
 
       writer.setValueCount(recordCount);
 //      p.stop();
@@ -217,11 +228,11 @@ public class JSONRecordReader extends AbstractRecordReader {
       updateRunningCount();
       return recordCount;
 
-    } catch (final Exception e) {
-      handleAndRaise("Error parsing JSON", e);
-    }
+   // } catch (final Exception e) {
+   //   handleAndRaise("Error parsing JSON", e);
+   // }
     // this is never reached
-    return 0;
+    //return 0;
   }
 
   private void updateRunningCount() {

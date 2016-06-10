@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.json;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -178,5 +179,28 @@ public class TestJsonRecordReader extends BaseTestQuery {
         .unOrdered()
         .sqlBaselineQuery(baselineQuery)
         .go();
+  }
+
+ @Test // See DRILL-4653
+  public void testSkippingInvalidJSONRecords() throws Exception {
+    String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_MALFORMED_RECORDS_FLAG+ "` = true";
+    testNoResult(set);
+    test("select count(*) from cp.`jsoninput/DRILL-4653.json`");
+    set = "alter session set `" + ExecConstants.JSON_READER_SKIP_MALFORMED_RECORDS_FLAG+ "` = false";
+    testNoResult(set);
+  }
+
+  @Test // See DRILL-4653
+  public void testNotSkippingInvalidJSONRecords() throws Exception {
+      try
+      {
+      test("select count(*) from cp.`jsoninput/DRILL-4653.json`");
+      }
+      catch(Exception ex)
+      {
+        // do nothing just return
+        return;
+      }
+      throw new Exception("testNotSkippingInvalidJSONRecords");
   }
 }

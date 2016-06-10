@@ -101,6 +101,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.JSON_WRITER_UGLIFY,
       ExecConstants.JSON_WRITER_SKIPNULLFIELDS,
       ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
+      ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR,
       ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR,
       ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
