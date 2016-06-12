@@ -1127,7 +1127,7 @@
           <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
-            <version>0.98.7-hadoop2</version>
+            <version>1.1.3</version>
             <exclusions>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
@@ -1239,9 +1239,13 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
             <classifier>tests</classifier>
-            <version>0.98.7-hadoop2</version>
+            <version>1.1.3</version>
             <scope>test</scope>
             <exclusions>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
@@ -1390,7 +1394,7 @@
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
         <hive.version>1.2.0-mapr-1601</hive.version>
-        <hbase.version>0.98.12-mapr-1602-m7-5.1.0</hbase.version>
+        <hbase.version>1.1.1-mapr-1602-m7-5.1.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1602</hadoop.version>
         <mapr.core.version>5.1.0-mapr</mapr.core.version>
       </properties>

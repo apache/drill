@@ -21,15 +21,13 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -79,11 +77,11 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
     @Override
     public Set<String> getTableNames() {
-      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
+      try(Admin admin = plugin.getConnection().getAdmin()) {
         HTableDescriptor[] tables = admin.listTables();
         Set<String> tableNames = Sets.newHashSet();
         for (HTableDescriptor table : tables) {
-          tableNames.add(new String(table.getName()));
+          tableNames.add(new String(table.getTableName().getNameAsString()));
         }
         return tableNames;
       } catch (Exception e) {

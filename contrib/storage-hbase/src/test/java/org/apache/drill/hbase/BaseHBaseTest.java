@@ -27,6 +27,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseStoragePlugin;
 import org.apache.drill.exec.store.hbase.HBaseStoragePluginConfig;
+import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.junit.AfterClass;
@@ -38,6 +39,10 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
+  static {
+    GuavaPatcher.patch();
+  }
+
   private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
@@ -46,16 +51,13 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected static HBaseStoragePluginConfig storagePluginConfig;
 
-
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
-    GuavaPatcher.patch();
-
     /*
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(true, true);
+    HBaseTestsSuite.configure(true /*manageHBaseCluster*/, true /*createTables*/);
     HBaseTestsSuite.initCluster();
 
     BaseTestQuery.setupDefaultTestCluster();
@@ -66,7 +68,6 @@ public class BaseHBaseTest extends BaseTestQuery {
     storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
     pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
-
   }
 
   @AfterClass
@@ -105,9 +106,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String canonizeHBaseSQL(String sql) {
-    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
+    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1.getNameAsString());
   }
-
-
 
 }

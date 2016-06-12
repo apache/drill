@@ -43,14 +43,13 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import com.google.common.base.Preconditions;
@@ -67,20 +66,22 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private Map<String, MapVector> familyVectorMap;
   private VarBinaryVector rowKeyVector;
 
-  private HTable hTable;
+  private Table hTable;
   private ResultScanner resultScanner;
 
-  private String hbaseTableName;
+  private TableName hbaseTableName;
   private Scan hbaseScan;
-  private Configuration hbaseConf;
   private OperatorContext operatorContext;
 
   private boolean rowKeyOnly;
 
-  public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
+  private final Connection connection;
+
+  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
-    hbaseConf = conf;
-    hbaseTableName = Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName();
+    this.connection = connection;
+    hbaseTableName = TableName.valueOf(
+        Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
     hbaseScan
         .setFilter(subScanSpec.getScanFilter())
@@ -136,10 +137,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     familyVectorMap = new HashMap<String, MapVector>();
 
     try {
-      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
-          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
-          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-      hTable = new HTable(hbaseConf, hbaseTableName);
+      hTable = connection.getTable(hbaseTableName);
 
       // Add top-level column-family map vectors to output in the order specified
       // when creating reader (order of first appearance in query).

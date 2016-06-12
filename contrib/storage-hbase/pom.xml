@@ -77,6 +77,14 @@
       <version>2.1.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <!-- Needed by HBase test cluster, set to provided
+           scope to avoid dependency propagation -->
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -126,6 +134,28 @@
                   <filtering>true</filtering>
                 </resource>
               </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>avoid_bad_dependencies</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration combine.self="override">
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <!-- Needed by HBase test cluster -->
+                    <include>commons-logging:commons-logging:*:jar:provided</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
             </configuration>
           </execution>
         </executions>

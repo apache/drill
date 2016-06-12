@@ -41,6 +41,7 @@ import org.apache.drill.exec.store.sys.store.provider.CachingPersistentStoreProv
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
+import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 
@@ -54,6 +55,12 @@ public class Drillbit implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
 
   static {
+    /*
+     * HBase client uses older version of Guava's Stopwatch API,
+     * while Drill ships with 18.x which has changes the scope of
+     * these API to 'package', this code make them accessible.
+     */
+    GuavaPatcher.patch();
     Environment.logEnv("Drillbit environment: ", logger);
   }
 
