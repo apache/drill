@@ -33,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
@@ -53,10 +55,17 @@ public class StatusResources {
   @Inject SecurityContext sc;
 
   @GET
+  @Path("/status.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Pair<String, String> getStatusJSON() {
+    return new ImmutablePair<>("status", "Running!");
+  }
+
+  @GET
   @Path("/status")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, "Running!");
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
   }
 
   @GET
