@@ -31,6 +31,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
@@ -117,6 +118,8 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       return GetTablesResp.getDefaultInstance();
     case RpcType.COLUMNS_VALUE:
       return GetColumnsResp.getDefaultInstance();
+    case RpcType.PREPARED_STATEMENT_VALUE:
+      return CreatePreparedStatementResp.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }

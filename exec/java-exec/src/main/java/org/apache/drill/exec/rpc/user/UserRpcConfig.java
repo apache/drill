@@ -26,6 +26,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
@@ -61,6 +63,8 @@ public class UserRpcConfig {
         .add(RpcType.GET_SCHEMAS, GetSchemasReq.class, RpcType.SCHEMAS, GetSchemasResp.class) // user to bit
         .add(RpcType.GET_TABLES, GetTablesReq.class, RpcType.TABLES, GetTablesResp.class) // user to bit
         .add(RpcType.GET_COLUMNS, GetColumnsReq.class, RpcType.COLUMNS, GetColumnsResp.class) // user to bit
+        .add(RpcType.CREATE_PREPARED_STATEMENT, CreatePreparedStatementReq.class,
+            RpcType.PREPARED_STATEMENT, CreatePreparedStatementResp.class) // user to bit
         .build();
   }
 

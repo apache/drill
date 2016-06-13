@@ -64,7 +64,7 @@ public final class GetSchemasResp implements Externalizable, Message<GetSchemasR
 
     public RequestStatus getStatus()
     {
-        return status == null ? RequestStatus.UNKNOWN : status;
+        return status == null ? RequestStatus.UNKNOWN_STATUS : status;
     }
 
     public GetSchemasResp setStatus(RequestStatus status)

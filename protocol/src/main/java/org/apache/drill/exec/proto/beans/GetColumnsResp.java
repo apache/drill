@@ -64,7 +64,7 @@ public final class GetColumnsResp implements Externalizable, Message<GetColumnsR
 
     public RequestStatus getStatus()
     {
-        return status == null ? RequestStatus.UNKNOWN : status;
+        return status == null ? RequestStatus.UNKNOWN_STATUS : status;
     }
 
     public GetColumnsResp setStatus(RequestStatus status)

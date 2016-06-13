@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.metadata.MetadataProvider;
+import org.apache.drill.exec.work.prepare.PreparedStatementProvider.PreparedStatementWorker;
 
 public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
@@ -117,5 +119,10 @@ public class UserWorker{
 
   public void submitColumnsMetadataWork(UserSession session, GetColumnsReq req, ResponseSender sender) {
     bee.addNewWork(MetadataProvider.columns(session, bee.getContext(), req, sender));
+  }
+
+  public void submitPreparedStatementWork(final UserClientConnection connection, final CreatePreparedStatementReq req,
+      final ResponseSender sender) {
+    bee.addNewWork(new PreparedStatementWorker(connection, this, sender, req));
   }
 }

@@ -36,6 +36,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
@@ -45,8 +47,10 @@ import com.google.common.base.Preconditions;
 
 public class TestBuilder {
 
-  // test query to run
-  private String query;
+  /**
+   * Test query to rung. Type of object depends on the {@link #queryType}
+   */
+  private Object query;
   // the type of query for the test
   private UserBitShared.QueryType queryType;
   // should the validation enforce ordering
@@ -85,7 +89,7 @@ public class TestBuilder {
     reset();
   }
 
-  public TestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
+  public TestBuilder(BufferAllocator allocator, Object query, UserBitShared.QueryType queryType, Boolean ordered,
                      boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
                      String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                      int expectedNumBatches) {
@@ -139,6 +143,12 @@ public class TestBuilder {
 
   public TestBuilder sqlQuery(String query, Object... replacements) {
     return sqlQuery(String.format(query, replacements));
+  }
+
+  public TestBuilder preparedStatement(PreparedStatementHandle preparedStatementHandle) {
+    queryType = QueryType.PREPARED_STATEMENT;
+    query = preparedStatementHandle;
+    return this;
   }
 
   public TestBuilder sqlQueryFromFile(String queryFile) throws IOException {
@@ -210,7 +220,7 @@ public class TestBuilder {
     }
   }
 
-  String getValidationQuery() throws Exception {
+  Object getValidationQuery() throws Exception {
     throw new RuntimeException("Must provide some kind of baseline, either a baseline file or another query");
   }
 
@@ -354,7 +364,7 @@ public class TestBuilder {
   }
 
   // provide a SQL query to validate against
-  public BaselineQueryTestBuilder sqlBaselineQuery(String baselineQuery) {
+  public BaselineQueryTestBuilder sqlBaselineQuery(Object baselineQuery) {
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.SQL, allocator, query, queryType, ordered, approximateEquality,
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
@@ -403,7 +413,7 @@ public class TestBuilder {
     // that come out of the test query drive interpretation of baseline
     private TypeProtos.MajorType[] baselineTypes;
 
-    CSVTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
+    CSVTestBuilder(String baselineFile, BufferAllocator allocator, Object query, UserBitShared.QueryType queryType, Boolean ordered,
                    boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
                    String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                    int expectedNumBatches) {
@@ -494,7 +504,7 @@ public class TestBuilder {
 
   public class SchemaTestBuilder extends TestBuilder {
     private List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema;
-    SchemaTestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType,
+    SchemaTestBuilder(BufferAllocator allocator, Object query, UserBitShared.QueryType queryType,
         String baselineOptionSettingQueries, String testOptionSettingQueries, List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
       super(allocator, query, queryType, false, false, null, baselineOptionSettingQueries, testOptionSettingQueries, false, -1);
       expectsEmptyResultSet();
@@ -535,7 +545,7 @@ public class TestBuilder {
     // path to the baseline file that will be inserted into the validation query
     private String baselineFilePath;
 
-    JSONTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
+    JSONTestBuilder(String baselineFile, BufferAllocator allocator, Object query, UserBitShared.QueryType queryType, Boolean ordered,
                     boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
                     String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                     int expectedNumBatches) {
@@ -559,11 +569,14 @@ public class TestBuilder {
 
   public class BaselineQueryTestBuilder extends TestBuilder {
 
-    private String baselineQuery;
+    /**
+     * Baseline query. Type of object depends on {@link #baselineQueryType}
+     */
+    private Object baselineQuery;
     private UserBitShared.QueryType baselineQueryType;
 
-    BaselineQueryTestBuilder(String baselineQuery, UserBitShared.QueryType baselineQueryType, BufferAllocator allocator,
-                             String query, UserBitShared.QueryType queryType, Boolean ordered,
+    BaselineQueryTestBuilder(Object baselineQuery, UserBitShared.QueryType baselineQueryType, BufferAllocator allocator,
+                             Object query, UserBitShared.QueryType queryType, Boolean ordered,
                              boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
                              String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
                              int expectedNumBatches) {
@@ -574,7 +587,7 @@ public class TestBuilder {
     }
 
     @Override
-    String getValidationQuery() {
+    Object getValidationQuery() {
       return baselineQuery;
     }
 
