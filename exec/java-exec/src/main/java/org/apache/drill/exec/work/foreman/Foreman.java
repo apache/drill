@@ -61,10 +61,12 @@ import org.apache.drill.exec.proto.BitControl.InitializeFragments;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
@@ -92,6 +94,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Foreman manages all the fragments (local and remote) for a single query where this
@@ -162,7 +165,7 @@ public class Foreman implements Runnable {
     this.drillbitContext = drillbitContext;
 
     initiatingClient = connection;
-    this.closeFuture = initiatingClient.getChannel().closeFuture();
+    closeFuture = initiatingClient.getChannelClosureFuture();
     closeFuture.addListener(closeListener);
 
     queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
@@ -254,10 +257,17 @@ public class Foreman implements Runnable {
         parseAndRunPhysicalPlan(queryRequest.getPlan());
         break;
       case SQL:
-        runSQL(queryRequest.getPlan());
+        final String sql = queryRequest.getPlan();
+        // log query id and query text before starting any real work. Also, put
+        // them together such that it is easy to search based on query id
+        logger.info("Query text for query id {}: {}", this.queryIdString, sql);
+        runSQL(sql);
         break;
       case EXECUTION:
         runFragment(queryRequest.getFragmentsList());
+        break;
+      case PREPARED_STATEMENT:
+        runPreparedStatement(queryRequest.getPreparedStatementHandle());
         break;
       default:
         throw new IllegalStateException();
@@ -484,7 +494,31 @@ public class Foreman implements Runnable {
     logger.debug("Fragments running.");
   }
 
+  /**
+   * Helper method to execute the query in prepared statement. Current implementation takes the query from opaque
+   * object of the <code>preparedStatement</code> and submits as a new query.
+   *
+   * @param preparedStatementHandle
+   * @throws ExecutionSetupException
+   */
+  private void runPreparedStatement(final PreparedStatementHandle preparedStatementHandle)
+      throws ExecutionSetupException {
+    final ServerPreparedStatementState serverState;
 
+    try {
+      serverState =
+          ServerPreparedStatementState.PARSER.parseFrom(preparedStatementHandle.getServerInfo());
+    } catch (final InvalidProtocolBufferException ex) {
+      throw UserException.parseError(ex)
+          .message("Failed to parse the prepared statement handle. " +
+              "Make sure the handle is same as one returned from create prepared statement call.")
+          .build(logger);
+    }
+
+    final String sql = serverState.getSqlQuery();
+    logger.info("Prepared statement query for QueryId {} : {}", queryId, sql);
+    runSQL(sql);
+  }
 
   private static void validatePlan(final PhysicalPlan plan) throws ForemanSetupException {
     if (plan.getProperties().resultMode != ResultMode.EXEC) {
@@ -734,7 +768,7 @@ public class Foreman implements Runnable {
             new Date(System.currentTimeMillis()),
             state,
             queryContext.getSession().getCredentials().getUserName(),
-            initiatingClient.getChannel().remoteAddress());
+            initiatingClient.getRemoteAddress());
         queryLogger.info(MAPPER.writeValueAsString(q));
       } catch (Exception e) {
         logger.error("Failure while recording query information to query log.", e);
@@ -805,7 +839,7 @@ public class Foreman implements Runnable {
        */
       try {
         // send whatever result we ended up with
-        initiatingClient.sendResult(responseListener, resultBuilder.build(), true);
+        initiatingClient.sendResult(responseListener, resultBuilder.build());
       } catch(final Exception e) {
         addException(e);
         logger.warn("Exception sending result to client", resultException);
@@ -970,10 +1004,6 @@ public class Foreman implements Runnable {
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {
-    // log query id and query text before starting any real work. Also, put
-    // them together such that it is easy to search based on query id
-    logger.info("Query text for query id {}: {}", this.queryIdString, sql);
-
     final Pointer<String> textPlan = new Pointer<>();
     final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
     queryManager.setPlanText(textPlan.value);

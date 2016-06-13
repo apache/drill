@@ -64,7 +64,7 @@ public final class GetCatalogsResp implements Externalizable, Message<GetCatalog
 
     public RequestStatus getStatus()
     {
-        return status == null ? RequestStatus.UNKNOWN : status;
+        return status == null ? RequestStatus.UNKNOWN_STATUS : status;
     }
 
     public GetCatalogsResp setStatus(RequestStatus status)

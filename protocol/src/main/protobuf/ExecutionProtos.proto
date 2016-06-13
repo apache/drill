@@ -14,3 +14,12 @@ message FragmentHandle {
 	optional exec.shared.QueryId parent_query_id = 4;
 }
 
+/*
+ * Prepared statement state on server side. Clients do not
+ * need to know the contents. They just need to submit it back to
+ * server when executing the prepared statement.
+ */
+message ServerPreparedStatementState {
+  optional string sql_query = 1;
+}
+

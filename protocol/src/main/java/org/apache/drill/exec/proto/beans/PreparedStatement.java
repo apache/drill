@@ -33,69 +33,55 @@ import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
 
-public final class GetTablesResp implements Externalizable, Message<GetTablesResp>, Schema<GetTablesResp>
+public final class PreparedStatement implements Externalizable, Message<PreparedStatement>, Schema<PreparedStatement>
 {
 
-    public static Schema<GetTablesResp> getSchema()
+    public static Schema<PreparedStatement> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static GetTablesResp getDefaultInstance()
+    public static PreparedStatement getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final GetTablesResp DEFAULT_INSTANCE = new GetTablesResp();
+    static final PreparedStatement DEFAULT_INSTANCE = new PreparedStatement();
 
     
-    private RequestStatus status;
-    private List<TableMetadata> tables;
-    private DrillPBError error;
+    private List<ResultColumnMetadata> columns;
+    private PreparedStatementHandle serverHandle;
 
-    public GetTablesResp()
+    public PreparedStatement()
     {
         
     }
 
     // getters and setters
 
-    // status
+    // columns
 
-    public RequestStatus getStatus()
+    public List<ResultColumnMetadata> getColumnsList()
     {
-        return status == null ? RequestStatus.UNKNOWN_STATUS : status;
+        return columns;
     }
 
-    public GetTablesResp setStatus(RequestStatus status)
+    public PreparedStatement setColumnsList(List<ResultColumnMetadata> columns)
     {
-        this.status = status;
+        this.columns = columns;
         return this;
     }
 
-    // tables
+    // serverHandle
 
-    public List<TableMetadata> getTablesList()
+    public PreparedStatementHandle getServerHandle()
     {
-        return tables;
+        return serverHandle;
     }
 
-    public GetTablesResp setTablesList(List<TableMetadata> tables)
+    public PreparedStatement setServerHandle(PreparedStatementHandle serverHandle)
     {
-        this.tables = tables;
-        return this;
-    }
-
-    // error
-
-    public DrillPBError getError()
-    {
-        return error;
-    }
-
-    public GetTablesResp setError(DrillPBError error)
-    {
-        this.error = error;
+        this.serverHandle = serverHandle;
         return this;
     }
 
@@ -113,39 +99,39 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
 
     // message method
 
-    public Schema<GetTablesResp> cachedSchema()
+    public Schema<PreparedStatement> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public GetTablesResp newMessage()
+    public PreparedStatement newMessage()
     {
-        return new GetTablesResp();
+        return new PreparedStatement();
     }
 
-    public Class<GetTablesResp> typeClass()
+    public Class<PreparedStatement> typeClass()
     {
-        return GetTablesResp.class;
+        return PreparedStatement.class;
     }
 
     public String messageName()
     {
-        return GetTablesResp.class.getSimpleName();
+        return PreparedStatement.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return GetTablesResp.class.getName();
+        return PreparedStatement.class.getName();
     }
 
-    public boolean isInitialized(GetTablesResp message)
+    public boolean isInitialized(PreparedStatement message)
     {
         return true;
     }
 
-    public void mergeFrom(Input input, GetTablesResp message) throws IOException
+    public void mergeFrom(Input input, PreparedStatement message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -154,16 +140,13 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
                 case 0:
                     return;
                 case 1:
-                    message.status = RequestStatus.valueOf(input.readEnum());
-                    break;
-                case 2:
-                    if(message.tables == null)
-                        message.tables = new ArrayList<TableMetadata>();
-                    message.tables.add(input.mergeObject(null, TableMetadata.getSchema()));
+                    if(message.columns == null)
+                        message.columns = new ArrayList<ResultColumnMetadata>();
+                    message.columns.add(input.mergeObject(null, ResultColumnMetadata.getSchema()));
                     break;
 
-                case 3:
-                    message.error = input.mergeObject(message.error, DrillPBError.getSchema());
+                case 2:
+                    message.serverHandle = input.mergeObject(message.serverHandle, PreparedStatementHandle.getSchema());
                     break;
 
                 default:
@@ -173,23 +156,20 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
     }
 
 
-    public void writeTo(Output output, GetTablesResp message) throws IOException
+    public void writeTo(Output output, PreparedStatement message) throws IOException
     {
-        if(message.status != null)
-             output.writeEnum(1, message.status.number, false);
-
-        if(message.tables != null)
+        if(message.columns != null)
         {
-            for(TableMetadata tables : message.tables)
+            for(ResultColumnMetadata columns : message.columns)
             {
-                if(tables != null)
-                    output.writeObject(2, tables, TableMetadata.getSchema(), true);
+                if(columns != null)
+                    output.writeObject(1, columns, ResultColumnMetadata.getSchema(), true);
             }
         }
 
 
-        if(message.error != null)
-             output.writeObject(3, message.error, DrillPBError.getSchema(), false);
+        if(message.serverHandle != null)
+             output.writeObject(2, message.serverHandle, PreparedStatementHandle.getSchema(), false);
 
     }
 
@@ -197,9 +177,8 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
     {
         switch(number)
         {
-            case 1: return "status";
-            case 2: return "tables";
-            case 3: return "error";
+            case 1: return "columns";
+            case 2: return "serverHandle";
             default: return null;
         }
     }
@@ -213,9 +192,8 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("status", 1);
-        __fieldMap.put("tables", 2);
-        __fieldMap.put("error", 3);
+        __fieldMap.put("columns", 1);
+        __fieldMap.put("serverHandle", 2);
     }
     
 }

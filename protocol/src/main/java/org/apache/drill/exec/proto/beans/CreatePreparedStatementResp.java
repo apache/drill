@@ -24,8 +24,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -33,27 +31,27 @@ import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
 
-public final class GetTablesResp implements Externalizable, Message<GetTablesResp>, Schema<GetTablesResp>
+public final class CreatePreparedStatementResp implements Externalizable, Message<CreatePreparedStatementResp>, Schema<CreatePreparedStatementResp>
 {
 
-    public static Schema<GetTablesResp> getSchema()
+    public static Schema<CreatePreparedStatementResp> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static GetTablesResp getDefaultInstance()
+    public static CreatePreparedStatementResp getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final GetTablesResp DEFAULT_INSTANCE = new GetTablesResp();
+    static final CreatePreparedStatementResp DEFAULT_INSTANCE = new CreatePreparedStatementResp();
 
     
     private RequestStatus status;
-    private List<TableMetadata> tables;
+    private PreparedStatement preparedStatement;
     private DrillPBError error;
 
-    public GetTablesResp()
+    public CreatePreparedStatementResp()
     {
         
     }
@@ -67,22 +65,22 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
         return status == null ? RequestStatus.UNKNOWN_STATUS : status;
     }
 
-    public GetTablesResp setStatus(RequestStatus status)
+    public CreatePreparedStatementResp setStatus(RequestStatus status)
     {
         this.status = status;
         return this;
     }
 
-    // tables
+    // preparedStatement
 
-    public List<TableMetadata> getTablesList()
+    public PreparedStatement getPreparedStatement()
     {
-        return tables;
+        return preparedStatement;
     }
 
-    public GetTablesResp setTablesList(List<TableMetadata> tables)
+    public CreatePreparedStatementResp setPreparedStatement(PreparedStatement preparedStatement)
     {
-        this.tables = tables;
+        this.preparedStatement = preparedStatement;
         return this;
     }
 
@@ -93,7 +91,7 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
         return error;
     }
 
-    public GetTablesResp setError(DrillPBError error)
+    public CreatePreparedStatementResp setError(DrillPBError error)
     {
         this.error = error;
         return this;
@@ -113,39 +111,39 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
 
     // message method
 
-    public Schema<GetTablesResp> cachedSchema()
+    public Schema<CreatePreparedStatementResp> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public GetTablesResp newMessage()
+    public CreatePreparedStatementResp newMessage()
     {
-        return new GetTablesResp();
+        return new CreatePreparedStatementResp();
     }
 
-    public Class<GetTablesResp> typeClass()
+    public Class<CreatePreparedStatementResp> typeClass()
     {
-        return GetTablesResp.class;
+        return CreatePreparedStatementResp.class;
     }
 
     public String messageName()
     {
-        return GetTablesResp.class.getSimpleName();
+        return CreatePreparedStatementResp.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return GetTablesResp.class.getName();
+        return CreatePreparedStatementResp.class.getName();
     }
 
-    public boolean isInitialized(GetTablesResp message)
+    public boolean isInitialized(CreatePreparedStatementResp message)
     {
         return true;
     }
 
-    public void mergeFrom(Input input, GetTablesResp message) throws IOException
+    public void mergeFrom(Input input, CreatePreparedStatementResp message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -157,9 +155,7 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
                     message.status = RequestStatus.valueOf(input.readEnum());
                     break;
                 case 2:
-                    if(message.tables == null)
-                        message.tables = new ArrayList<TableMetadata>();
-                    message.tables.add(input.mergeObject(null, TableMetadata.getSchema()));
+                    message.preparedStatement = input.mergeObject(message.preparedStatement, PreparedStatement.getSchema());
                     break;
 
                 case 3:
@@ -173,19 +169,13 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
     }
 
 
-    public void writeTo(Output output, GetTablesResp message) throws IOException
+    public void writeTo(Output output, CreatePreparedStatementResp message) throws IOException
     {
         if(message.status != null)
              output.writeEnum(1, message.status.number, false);
 
-        if(message.tables != null)
-        {
-            for(TableMetadata tables : message.tables)
-            {
-                if(tables != null)
-                    output.writeObject(2, tables, TableMetadata.getSchema(), true);
-            }
-        }
+        if(message.preparedStatement != null)
+             output.writeObject(2, message.preparedStatement, PreparedStatement.getSchema(), false);
 
 
         if(message.error != null)
@@ -198,7 +188,7 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
         switch(number)
         {
             case 1: return "status";
-            case 2: return "tables";
+            case 2: return "preparedStatement";
             case 3: return "error";
             default: return null;
         }
@@ -214,7 +204,7 @@ public final class GetTablesResp implements Externalizable, Message<GetTablesRes
     static
     {
         __fieldMap.put("status", 1);
-        __fieldMap.put("tables", 2);
+        __fieldMap.put("preparedStatement", 2);
         __fieldMap.put("error", 3);
     }
     

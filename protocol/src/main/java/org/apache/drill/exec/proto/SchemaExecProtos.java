@@ -160,4 +160,115 @@ public final class SchemaExecProtos
         }
     }
 
+    public static final class ServerPreparedStatementState
+    {
+        public static final org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException
+            {
+                if(message.hasSqlQuery())
+                    output.writeString(1, message.getSqlQuery(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState> typeClass()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setSqlQuery(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "sqlQuery";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("sqlQuery", 1);
+        }
+    }
+
 }

@@ -20,16 +20,15 @@
 
 package org.apache.drill.exec.proto.beans;
 
-public enum RequestStatus implements com.dyuproject.protostuff.EnumLite<RequestStatus>
+public enum ColumnUpdatability implements com.dyuproject.protostuff.EnumLite<ColumnUpdatability>
 {
-    UNKNOWN_STATUS(0),
-    OK(1),
-    FAILED(2),
-    TIMEOUT(3);
+    UNKNOWN_UPDATABILITY(0),
+    READ_ONLY(1),
+    WRITABLE(2);
     
     public final int number;
     
-    private RequestStatus (int number)
+    private ColumnUpdatability (int number)
     {
         this.number = number;
     }
@@ -39,14 +38,13 @@ public enum RequestStatus implements com.dyuproject.protostuff.EnumLite<RequestS
         return number;
     }
     
-    public static RequestStatus valueOf(int number)
+    public static ColumnUpdatability valueOf(int number)
     {
         switch(number) 
         {
-            case 0: return UNKNOWN_STATUS;
-            case 1: return OK;
-            case 2: return FAILED;
-            case 3: return TIMEOUT;
+            case 0: return UNKNOWN_UPDATABILITY;
+            case 1: return READ_ONLY;
+            case 2: return WRITABLE;
             default: return null;
         }
     }

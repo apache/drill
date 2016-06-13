@@ -591,4 +591,45 @@ public class Types {
     return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
   }
 
+  /**
+   * Get the <code>precision</code> of given type.
+   * @param majorType
+   * @return
+   */
+  public static int getPrecision(MajorType majorType) {
+    MinorType type = majorType.getMinorType();
+
+    if (type == MinorType.VARBINARY || type == MinorType.VARCHAR) {
+      return 65536;
+    }
+
+    if (majorType.hasPrecision()) {
+      return majorType.getPrecision();
+    }
+
+    return 0;
+  }
+
+  /**
+   * Get the <code>scale</code> of given type.
+   * @param majorType
+   * @return
+   */
+  public static int getScale(MajorType majorType) {
+    if (majorType.hasScale()) {
+      return majorType.getScale();
+    }
+
+    return 0;
+  }
+
+  /**
+   * Is the given type column be used in ORDER BY clause?
+   * @param type
+   * @return
+   */
+  public static boolean isSortable(MinorType type) {
+    // Currently only map and list columns are not sortable.
+    return type != MinorType.MAP && type != MinorType.LIST;
+  }
 }
