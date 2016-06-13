@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -69,15 +70,15 @@ public class DrillCompoundIdentifier extends SqlIdentifier{
     }
   }
 
-  public SqlNode getAsSqlNode(){
-    if(ids.size() == 1){
+  public SqlNode getAsSqlNode(Set<DrillCompoundIdentifier> fullSchemasSet) {
+    if (ids.size() == 1) {
       return new SqlIdentifier(Collections.singletonList(ids.get(0).value), ids.get(0).parserPos);
     }
 
     int startIndex;
     SqlNode node;
 
-    if(ids.get(1).isArray()){
+    if (ids.get(1).isArray()) {
       // handle everything post zero index as item operator.
       startIndex = 1;
       node = new SqlIdentifier( //
@@ -85,15 +86,22 @@ public class DrillCompoundIdentifier extends SqlIdentifier{
           null, //
           ids.get(0).parserPos, //
           ImmutableList.of(ids.get(0).parserPos));
-    }else{
-      // handle everything post two index as item operator.
-      startIndex = 2;
-      node = new SqlIdentifier( //
-          ImmutableList.of(ids.get(0).value, ids.get(1).value), //
-          null, //
-          ids.get(0).parserPos, //
-          ImmutableList.of(ids.get(0).parserPos, ids.get(1).parserPos));
-
+    } else {
+      int fullSchemaNamesCount = getFullSchemaIdentifiersCountInColumnName(fullSchemasSet);
+      if (fullSchemaNamesCount != 0) {
+        // the case when full schema identifier is used in select clause
+        // handle everything post two index (except schema identifier) as item operator.
+        startIndex = fullSchemaNamesCount + 1;
+        node = getAsCompoundIdentifier(startIndex);
+      } else {
+        // handle everything post two index as item operator.
+        startIndex = 2;
+        node = new SqlIdentifier( //
+            ImmutableList.of(ids.get(0).value, ids.get(1).value), //
+            null, //
+            ids.get(0).parserPos, //
+            ImmutableList.of(ids.get(0).parserPos, ids.get(1).parserPos));
+      }
     }
     for(int i = startIndex ; i < ids.size(); i++){
       node = ids.get(i).getNode(node);
@@ -112,6 +120,34 @@ public class DrillCompoundIdentifier extends SqlIdentifier{
       pos.add(holder.parserPos);
     }
     return new SqlIdentifier(names, null, pos.get(0), pos);
+  }
+
+  private SqlNode getAsCompoundIdentifier(int numberOfIdentifiers) {
+    List<String> names = Lists.newArrayListWithCapacity(ids.size());
+    List<SqlParserPos> pos = Lists.newArrayListWithCapacity(ids.size());
+    for(int i =0; i < numberOfIdentifiers; i++){
+      IdentifierHolder holder = ids.get(i);
+      names.add(holder.value);
+      pos.add(holder.parserPos);
+    }
+    return new SqlIdentifier(
+        ImmutableList.copyOf(names),
+        null,
+        ids.get(0).parserPos,
+        ImmutableList.copyOf(pos));
+  }
+
+  private int getFullSchemaIdentifiersCountInColumnName(Set<DrillCompoundIdentifier> fullSchemasSet) {
+    for (DrillCompoundIdentifier fullSchema : fullSchemasSet) {
+      if (fullSchema != null && ids.size() > fullSchema.ids.size()) {
+        List<String> possibleFullSchemaNames = getNames(ids.subList(0, fullSchema.ids.size()));
+        List<String> fullSchemaNames = getNames(fullSchema.ids);
+        if (possibleFullSchemaNames.equals(fullSchemaNames)) {
+          return  fullSchema.ids.size();
+        }
+      }
+    }
+    return 0;
   }
 
   private static class IdentifierHolder{

@@ -19,10 +19,13 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
@@ -43,13 +46,14 @@ import com.google.common.collect.Maps;
 public class CompoundIdentifierConverter extends SqlShuttle {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompoundIdentifierConverter.class);
 
+  private Set<DrillCompoundIdentifier> fullSchemasSet = Sets.newHashSet();
   private boolean enableComplex = true;
 
   @Override
   public SqlNode visit(SqlIdentifier id) {
     if(id instanceof DrillCompoundIdentifier){
       if(enableComplex){
-        return ((DrillCompoundIdentifier) id).getAsSqlNode();
+        return ((DrillCompoundIdentifier) id).getAsSqlNode(fullSchemasSet);
       }else{
         return ((DrillCompoundIdentifier) id).getAsCompoundIdentifier();
       }
@@ -113,6 +117,18 @@ public class CompoundIdentifierConverter extends SqlShuttle {
           break;
         case ENABLE:
           enableComplex = true;
+        }
+      }
+      if (expr.getKind() == SqlKind.SELECT) {
+        if (((SqlSelect) expr).getFrom() instanceof DrillCompoundIdentifier) {
+          fullSchemasSet.add((DrillCompoundIdentifier) ((SqlSelect) expr).getFrom());
+        } else if (((SqlSelect) expr).getFrom() instanceof SqlJoin) {
+          if (((SqlJoin) ((SqlSelect) expr).getFrom()).getLeft() instanceof DrillCompoundIdentifier){
+            fullSchemasSet.add((DrillCompoundIdentifier) ((SqlJoin) ((SqlSelect) expr).getFrom()).getLeft());
+          }
+          if (((SqlJoin) ((SqlSelect) expr).getFrom()).getRight() instanceof DrillCompoundIdentifier){
+            fullSchemasSet.add((DrillCompoundIdentifier) ((SqlJoin) ((SqlSelect) expr).getFrom()).getRight());
+          }
         }
       }
       SqlNode newOperand = operand.accept(CompoundIdentifierConverter.this);

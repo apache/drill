@@ -1195,4 +1195,25 @@ public class TestExampleQueries extends BaseTestQuery {
         .run();
   }
 
+  @Test // DRILL-4682
+  public void testColumnNamesWithSchemaName() throws Exception {
+    test("SELECT cp.`employee.json`.department_id FROM cp.`employee.json` ORDER BY cp.`employee.json`.department_id");
+    test("SELECT COUNT(cp.`employee.json`.department_id) FROM cp.`employee.json`");
+    test("SELECT cp.`employee.json`.employee_id, cp.`employee.json`.full_name, cp.`department.json`.department_id " +
+        "FROM cp.`employee.json` LEFT JOIN cp.`department.json` " +
+        "ON cp.`employee.json`.department_id = cp.`department.json`.department_id " +
+        "WHERE cp.`department.json`.department_description = 'HQ Marketing'");
+    test("SELECT cp.`employee.json`.employee_id, t.department_id " +
+        "FROM cp.`employee.json` LEFT JOIN (select * from cp.`department.json`) t " +
+        "ON cp.`employee.json`.department_id = t.department_id " +
+        "WHERE t.department_description = 'HQ Marketing'");
+
+    // TODO: Can be uncommented after resolving "DRILL-3993: Rebase Drill on Calcite master branch"
+    // Fixed in "CALCITE-881: Allow schema.table.column references in GROUP BY".
+    // test("SELECT cp.`employee.json`.employee_id FROM cp.`employee.json` GROUP BY cp.`employee.json`.employee_id");
+
+    // TODO: Can be uncommented after resolving "CALCITE-1323: Wrong prefix number in DelegatingScope.fullyQualify()"
+    // test("SELECT cp.`employee.json`.* FROM cp.`employee.json`");
+  }
+
 }
