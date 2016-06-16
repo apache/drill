@@ -18,6 +18,7 @@
 package org.apache.drill.exec.fn.impl;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
@@ -28,6 +29,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
 public class TestAggregateFunctions extends BaseTestQuery {
 
@@ -523,6 +525,38 @@ public class TestAggregateFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"(?s)(Join).*inner"}; // With filter pushdown, left join will be converted into inner join
     final String[] excludedPatterns = {"(?s)(Join).*(left)"};
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPatterns);
+  }
+
+  @Test // DRILL-2385: count on complex objects failed with missing function implementation
+  public void testCountComplexObjects() throws Exception {
+    final String query = "select count(t.%s) %s from cp.`complex/json/complex.json` t";
+    Map<String, String> objectsMap = Maps.newHashMap();
+    objectsMap.put("COUNT_BIG_INT_REPEATED", "sia");
+    objectsMap.put("COUNT_FLOAT_REPEATED", "sfa");
+    // TODO: can be uncommented after fixing DRILL-4664
+    // objectsMap.put("COUNT_MAP_REPEATED", "soa");
+    // objectsMap.put("COUNT_MAP_REQUIRED", "oooi");
+    objectsMap.put("COUNT_LIST_REPEATED", "odd");
+    objectsMap.put("COUNT_LIST_OPTIONAL", "sia");
+
+    for (String object: objectsMap.keySet()) {
+      String optionSetting = "";
+      if (object.equals("COUNT_LIST_OPTIONAL")) {
+        // if `exec.enable_union_type` parameter is true then BIGINT<REPEATED> object is converted to LIST<OPTIONAL> one
+        optionSetting = "alter session set `exec.enable_union_type`=true";
+      }
+      try {
+        testBuilder()
+            .sqlQuery(query, objectsMap.get(object), object)
+            .optionSettingQueriesForTestQuery(optionSetting)
+            .unOrdered()
+            .baselineColumns(object)
+            .baselineValues(3L)
+            .go();
+      } finally {
+        test("ALTER SESSION RESET `exec.enable_union_type`");
+      }
+    }
   }
 
 }
