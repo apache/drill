@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.easy.json;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-
 import com.google.common.collect.Lists;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -30,7 +29,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -40,7 +38,6 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.Log;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -196,35 +193,31 @@ public class JSONRecordReader extends AbstractRecordReader {
     writer.reset();
     recordCount = 0;
     ReadState write = null;
-//    Stopwatch p = new Stopwatch().start();
-   // try
-   // {
-      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH){
-      try{
+    outside: while(recordCount < DEFAULT_ROWS_PER_BATCH){
+    try
+      {
             writer.setPosition(recordCount);
             write = jsonReader.write(writer);
-            if(write == ReadState.WRITE_SUCCEED) {
-//          logger.debug("Wrote record.");
+            if(write == ReadState.WRITE_SUCCEED)
+            {
               recordCount++;
-            }else{
-//          logger.debug("Exiting.");
+            }else
+            {
               break outside;
             }
       }
-      catch(Exception ex)
+    catch(Exception ex)
       {
            ++parseErrorCount;
            logger.error("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount+parseErrorCount));
            if(skipMalformedJSONRecords == false){
              handleAndRaise("Error parsing JSON", ex);}
       }
-     }
-     jsonReader.ensureAtLeastOneField(writer);
-      writer.setValueCount(recordCount);
-//      p.stop();
-//      System.out.println(String.format("Wrote %d records in %dms.", recordCount, p.elapsed(TimeUnit.MILLISECONDS)));
-      updateRunningCount();
-      return recordCount;
+    }
+    jsonReader.ensureAtLeastOneField(writer);
+    writer.setValueCount(recordCount);
+    updateRunningCount();
+    return recordCount;
   }
 
   private void updateRunningCount() {
