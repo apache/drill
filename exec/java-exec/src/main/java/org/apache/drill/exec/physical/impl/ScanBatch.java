@@ -29,7 +29,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -46,7 +45,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -56,7 +54,6 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -80,20 +77,16 @@ public class ScanBatch implements CloseableRecordBatch {
   private RecordReader currentReader;
   private BatchSchema schema;
   private final Mutator mutator = new Mutator();
-  private Iterator<String[]> partitionColumns;
-  private String[] partitionValues;
-  private List<ValueVector> partitionVectors;
-  private List<Integer> selectedPartitionColumns;
-  private String partitionColumnDesignator;
   private boolean done = false;
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private boolean hasReadNonEmptyFile = false;
-
+  private Map<String, ValueVector> implicitVectors;
+  private Iterator<Map<String, String>> implicitColumns;
+  private Map<String, String> implicitValues;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    OperatorContext oContext, Iterator<RecordReader> readers,
-                   List<String[]> partitionColumns,
-                   List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
+                   List<Map<String, String>> implicitColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
@@ -118,16 +111,10 @@ public class ScanBatch implements CloseableRecordBatch {
       }
       oContext.getStats().stopProcessing();
     }
-    this.partitionColumns = partitionColumns.iterator();
-    partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
-    this.selectedPartitionColumns = selectedPartitionColumns;
+    this.implicitColumns = implicitColumns.iterator();
+    this.implicitValues = this.implicitColumns.hasNext() ? this.implicitColumns.next() : null;
 
-    // TODO Remove null check after DRILL-2097 is resolved. That JIRA refers to test cases that do not initialize
-    // options; so labelValue = null.
-    final OptionValue labelValue = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    partitionColumnDesignator = labelValue == null ? "dir" : labelValue.string_val;
-
-    addPartitionVectors();
+    addImplicitVectors();
   }
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
@@ -135,7 +122,7 @@ public class ScanBatch implements CloseableRecordBatch {
       throws ExecutionSetupException {
     this(subScanConfig, context,
         context.newOperatorContext(subScanConfig),
-        readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
+        readers, Collections.<Map<String, String>> emptyList());
   }
 
   @Override
@@ -221,7 +208,7 @@ public class ScanBatch implements CloseableRecordBatch {
 
           currentReader.close();
           currentReader = readers.next();
-          partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
+          implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
           currentReader.setup(oContext, mutator);
           try {
             currentReader.allocate(fieldVectorMap);
@@ -230,8 +217,7 @@ public class ScanBatch implements CloseableRecordBatch {
             clearFieldVectorMap();
             return IterOutcome.OUT_OF_MEMORY;
           }
-          addPartitionVectors();
-
+          addImplicitVectors();
         } catch (ExecutionSetupException e) {
           this.context.fail(e);
           releaseAssets();
@@ -241,7 +227,7 @@ public class ScanBatch implements CloseableRecordBatch {
       // At this point, the current reader has read 1 or more rows.
 
       hasReadNonEmptyFile = true;
-      populatePartitionVectors();
+      populateImplicitVectors();
 
       for (VectorWrapper w : container) {
         w.getValueVector().getMutator().setValueCount(recordCount);
@@ -271,41 +257,43 @@ public class ScanBatch implements CloseableRecordBatch {
     }
   }
 
-  private void addPartitionVectors() throws ExecutionSetupException {
+  private void addImplicitVectors() throws ExecutionSetupException {
     try {
-      if (partitionVectors != null) {
-        for (ValueVector v : partitionVectors) {
+      if (implicitVectors != null) {
+        for (ValueVector v : implicitVectors.values()) {
           v.clear();
         }
       }
-      partitionVectors = Lists.newArrayList();
-      for (int i : selectedPartitionColumns) {
-        final MaterializedField field =
-            MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i).getAsUnescapedPath(),
-                                     Types.optional(MinorType.VARCHAR));
-        final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
-        partitionVectors.add(v);
+      implicitVectors = Maps.newHashMap();
+
+      if (implicitValues != null) {
+        for (String column : implicitValues.keySet()) {
+          final MaterializedField field = MaterializedField.create(column, Types.optional(MinorType.VARCHAR));
+          final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
+          implicitVectors.put(column, v);
+        }
       }
     } catch(SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }
   }
 
-  private void populatePartitionVectors() {
-    for (int index = 0; index < selectedPartitionColumns.size(); index++) {
-      final int i = selectedPartitionColumns.get(index);
-      final NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(index);
-      if (partitionValues.length > i) {
-        final String val = partitionValues[i];
-        AllocationHelper.allocate(v, recordCount, val.length());
-        final byte[] bytes = val.getBytes();
-        for (int j = 0; j < recordCount; j++) {
-          v.getMutator().setSafe(j, bytes, 0, bytes.length);
+  private void populateImplicitVectors() {
+    if (implicitValues != null) {
+      for (Map.Entry<String, String> entry : implicitValues.entrySet()) {
+        final NullableVarCharVector v = (NullableVarCharVector) implicitVectors.get(entry.getKey());
+        String val;
+        if ((val = entry.getValue()) != null) {
+          AllocationHelper.allocate(v, recordCount, val.length());
+          final byte[] bytes = val.getBytes();
+          for (int j = 0; j < recordCount; j++) {
+            v.getMutator().setSafe(j, bytes, 0, bytes.length);
+          }
+          v.getMutator().setValueCount(recordCount);
+        } else {
+          AllocationHelper.allocate(v, recordCount, 0);
+          v.getMutator().setValueCount(recordCount);
         }
-        v.getMutator().setValueCount(recordCount);
-      } else {
-        AllocationHelper.allocate(v, recordCount, 0);
-        v.getMutator().setValueCount(recordCount);
       }
     }
   }
@@ -418,7 +406,7 @@ public class ScanBatch implements CloseableRecordBatch {
   @Override
   public void close() throws Exception {
     container.clear();
-    for (final ValueVector v : partitionVectors) {
+    for (final ValueVector v : implicitVectors.values()) {
       v.clear();
     }
     fieldVectorMap.clear();
