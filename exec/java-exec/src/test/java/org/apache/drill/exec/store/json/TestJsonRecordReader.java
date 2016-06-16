@@ -185,14 +185,14 @@ public class TestJsonRecordReader extends BaseTestQuery {
 public void testSkippingInvalidJSONRecords() throws Exception {
     try
     {
-    String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG+ "` = true";
-    String query = "select count(*) from cp.`jsoninput/DRILL-4653.json`";
-    testNoResult(set);
-    testBuilder()
-    .unOrdered()
-    .sqlQuery(query)
-    .sqlBaselineQuery(query)
-    .build().run();
+      String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG+ "` = true";
+      String query = "select count(*) from cp.`jsoninput/DRILL-4653.json`";
+      testNoResult(set);
+      testBuilder()
+      .unOrdered()
+      .sqlQuery(query)
+      .sqlBaselineQuery(query)
+      .build().run();
     }
     finally
     {

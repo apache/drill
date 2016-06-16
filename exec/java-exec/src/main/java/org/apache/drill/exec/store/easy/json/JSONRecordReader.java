@@ -196,22 +196,22 @@ public class JSONRecordReader extends AbstractRecordReader {
     outside: while(recordCount < DEFAULT_ROWS_PER_BATCH){
     try
       {
-            writer.setPosition(recordCount);
-            write = jsonReader.write(writer);
-            if(write == ReadState.WRITE_SUCCEED)
-            {
-              recordCount++;
-            }else
-            {
-              break outside;
-            }
+        writer.setPosition(recordCount);
+        write = jsonReader.write(writer);
+        if(write == ReadState.WRITE_SUCCEED)
+        {
+          recordCount++;
+        }else
+        {
+          break outside;
+        }
       }
     catch(Exception ex)
       {
-           ++parseErrorCount;
-           logger.error("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount+parseErrorCount));
-           if(skipMalformedJSONRecords == false){
-             handleAndRaise("Error parsing JSON", ex);}
+        ++parseErrorCount;
+        logger.error("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount+parseErrorCount));
+        if(skipMalformedJSONRecords == false){
+          handleAndRaise("Error parsing JSON", ex);}
       }
     }
     jsonReader.ensureAtLeastOneField(writer);
