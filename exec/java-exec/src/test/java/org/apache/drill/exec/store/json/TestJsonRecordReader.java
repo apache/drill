@@ -117,6 +117,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
           .jsonBaselineFile("jsoninput/mixed_number_types.json")
           .build().run();
     } catch (Exception ex) {
+      ex.printStackTrace();
       assertTrue(ex.getMessage().contains("DATA_READ ERROR: Error parsing JSON - You tried to write a BigInt type when you are using a ValueWriter of type NullableFloat8WriterImpl."));
       // this indicates successful completion of the test
       return;
@@ -181,6 +182,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
         .go();
   }
 
+
  @Test // See DRILL-4653
   public void testSkippingInvalidJSONRecords() throws Exception {
     String set = "alter session set `" + ExecConstants.JSON_READER_SKIP_MALFORMED_RECORDS_FLAG+ "` = true";
@@ -202,5 +204,5 @@ public class TestJsonRecordReader extends BaseTestQuery {
         return;
       }
       throw new Exception("testNotSkippingInvalidJSONRecords");
-  }
+      }
 }

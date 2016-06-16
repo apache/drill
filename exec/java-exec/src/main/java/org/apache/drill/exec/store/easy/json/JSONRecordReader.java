@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,6 +40,7 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.Log;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -64,7 +66,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
-  private int parseErrorCount;
+  private long parseErrorCount;
   private final boolean skipMalformedJSONRecords;
 
   /**
@@ -111,7 +113,6 @@ public class JSONRecordReader extends AbstractRecordReader {
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
     this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
@@ -212,27 +213,18 @@ public class JSONRecordReader extends AbstractRecordReader {
       }
       catch(Exception ex)
       {
-           if(skipMalformedJSONRecords == false){
-              handleAndRaise("Error parsing JSON", ex);
-           }
            ++parseErrorCount;
+           logger.error("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount+parseErrorCount));
+           if(skipMalformedJSONRecords == false){
+             handleAndRaise("Error parsing JSON", ex);}
       }
      }
-
      jsonReader.ensureAtLeastOneField(writer);
-
       writer.setValueCount(recordCount);
 //      p.stop();
 //      System.out.println(String.format("Wrote %d records in %dms.", recordCount, p.elapsed(TimeUnit.MILLISECONDS)));
-
       updateRunningCount();
       return recordCount;
-
-   // } catch (final Exception e) {
-   //   handleAndRaise("Error parsing JSON", e);
-   // }
-    // this is never reached
-    //return 0;
   }
 
   private void updateRunningCount() {
