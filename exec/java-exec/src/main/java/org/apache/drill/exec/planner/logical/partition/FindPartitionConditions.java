@@ -299,11 +299,11 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
 
     if (callPushDirFilter == PushDirFilter.NO_PUSH) {
-      if (call.getKind() != SqlKind.AND) {
+      OpState currentOp = opStack.peek();
+      if (currentOp.sqlOperator.getKind() != SqlKind.AND) {
         clearChildren();
       } else {
         // AND op, check if we pushed some children
-        OpState currentOp = opStack.peek();
         if (currentOp.children.size() > 0) {
           callPushDirFilter = PushDirFilter.PARTIAL_PUSH;
         }

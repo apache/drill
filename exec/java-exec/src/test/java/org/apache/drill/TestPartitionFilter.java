@@ -362,4 +362,18 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 10);
   }
 
+  @Test  //DRILL-4665: Partition pruning should occur when LIKE predicate on non-partitioning column
+  public void testPartitionFilterWithLike() throws Exception {
+    // Also should be insensitive to the order of the predicates
+    String query1 = "select yr, qrtr from dfs_test.tmp.parquet where yr=1994 and o_custkey LIKE '%5%'";
+    String query2 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%5%' and yr=1994";
+    testIncludeFilter(query1, 4, "Filter", 9);
+    testIncludeFilter(query2, 4, "Filter", 9);
+    // Test when LIKE predicate on partitioning column
+    String query3 = "select yr, qrtr from dfs_test.tmp.parquet where yr LIKE '%1995%' and o_custkey LIKE '%3%'";
+    String query4 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%3%' and yr LIKE '%1995%'";
+    testIncludeFilter(query3, 4, "Filter", 16);
+    testIncludeFilter(query4, 4, "Filter", 16);
+  }
+
 }
