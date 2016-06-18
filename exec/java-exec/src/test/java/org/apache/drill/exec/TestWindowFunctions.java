@@ -844,4 +844,34 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-2330
+  public void testNestedAggregates() throws Exception {
+
+    final String query = "select sum(min(l_extendedprice))" +
+            " over (partition by l_suppkey order by l_suppkey) as totprice" +
+            " from cp.`tpch/lineitem.parquet` where l_suppkey <= 10 group by l_suppkey order by 1 desc";
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$1\\).*",
+            "HashAgg\\(group=\\[\\{0\\}\\].*\\[MIN\\(\\$1\\)\\]\\)"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    // Validate the results
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("totprice")
+            .baselineValues(1107.2)
+            .baselineValues(998.09)
+            .baselineValues(957.05)
+            .baselineValues(953.05)
+            .baselineValues(931.03)
+            .baselineValues(926.02)
+            .baselineValues(909.0)
+            .baselineValues(906.0)
+            .baselineValues(904.0)
+            .baselineValues(904.0)
+            .go();
+  }
 }
