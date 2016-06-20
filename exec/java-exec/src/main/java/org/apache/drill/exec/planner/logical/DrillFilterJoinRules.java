@@ -7,10 +7,7 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlKind;
 
 import java.util.List;
 
@@ -34,13 +31,13 @@ import java.util.List;
 
 public class DrillFilterJoinRules {
   /** Predicate that always returns true for any filter in OUTER join, and only true
-   * for EQUAL or IS_DISTINCT_FROM over RexInputRef in INNER join. With this predicate,
+   * for EQUAL or IS_NOT_DISTINCT_FROM over RexInputRef in INNER join. With this predicate,
    * the filter expression that return true will be kept in the JOIN OP.
    * Example:  INNER JOIN,   L.C1 = R.C2 and L.C3 + 100 = R.C4 + 100 will be kepted in JOIN.
    *                         L.C5 < R.C6 will be pulled up into Filter above JOIN.
    *           OUTER JOIN,   Keep any filter in JOIN.
   */
-  public static final FilterJoinRule.Predicate EQUAL_IS_DISTINCT_FROM =
+  public static final FilterJoinRule.Predicate EQUAL_IS_NOT_DISTINCT_FROM =
       new FilterJoinRule.Predicate() {
         public boolean apply(Join join, JoinRelType joinType, RexNode exp) {
           if (joinType != JoinRelType.INNER) {
@@ -53,8 +50,10 @@ public class DrillFilterJoinRules {
           List<RexNode> tmpLeftKeys = Lists.newArrayList();
           List<RexNode> tmpRightKeys = Lists.newArrayList();
           List<RelDataTypeField> sysFields = Lists.newArrayList();
+          List<Integer> filterNulls = Lists.newArrayList();
 
-          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(), exp, tmpLeftKeys, tmpRightKeys, null, null);
+          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(),
+              exp, tmpLeftKeys, tmpRightKeys, filterNulls, null);
 
           if (remaining.isAlwaysTrue()) {
             return true;
@@ -68,12 +67,12 @@ public class DrillFilterJoinRules {
   /** Rule that pushes predicates from a Filter into the Join below them. */
   public static final FilterJoinRule DRILL_FILTER_ON_JOIN =
       new FilterJoinRule.FilterIntoJoinRule(true, RelFactories.DEFAULT_FILTER_FACTORY,
-          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_DISTINCT_FROM);
+          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_NOT_DISTINCT_FROM);
 
 
   /** Rule that pushes predicates in a Join into the inputs to the join. */
   public static final FilterJoinRule DRILL_JOIN =
       new FilterJoinRule.JoinConditionPushRule(RelFactories.DEFAULT_FILTER_FACTORY,
-          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_DISTINCT_FROM);
+          RelFactories.DEFAULT_PROJECT_FACTORY, EQUAL_IS_NOT_DISTINCT_FROM);
 
 }

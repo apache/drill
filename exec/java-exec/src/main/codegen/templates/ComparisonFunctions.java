@@ -29,29 +29,7 @@
 
 <@pp.dropOutputFile />
 
-<#macro intervalCompareBlock leftType rightType leftMonths leftDays leftMillis rightMonths rightDays rightMillis output>
-
-        org.joda.time.MutableDateTime leftDate  =
-            new org.joda.time.MutableDateTime(1970, 1, 1, 0, 0, 0, 0, org.joda.time.DateTimeZone.UTC);
-        org.joda.time.MutableDateTime rightDate =
-            new org.joda.time.MutableDateTime(1970, 1, 1, 0, 0, 0, 0, org.joda.time.DateTimeZone.UTC);
-
-        // Left and right date have the same starting point (epoch), add the interval period and compare the two
-        leftDate.addMonths(${leftMonths});
-        leftDate.addDays(${leftDays});
-        leftDate.add(${leftMillis});
-
-        rightDate.addMonths(${rightMonths});
-        rightDate.addDays(${rightDays});
-        rightDate.add(${rightMillis});
-
-        long leftMS  = leftDate.getMillis();
-        long rightMS = rightDate.getMillis();
-
-        ${output} = leftMS < rightMS ? -1 : (leftMS > rightMS ? 1 : 0);
-
-</#macro>
-
+<#include "/@includes/isDistinctFrom.ftl" />
 
 <#macro compareNullsSubblock leftType rightType output breakTarget nullCompare nullComparesHigh>
   <#if nullCompare>
@@ -142,7 +120,6 @@
       } // outside
 </#macro>
 
-
 <#-- 1.  For each group of cross-comparable types: -->
 <#list comparisonTypesMain.typeGroups as typeGroup>
 
@@ -212,6 +189,36 @@ public class GCompare${leftTypeBase}Vs${rightTypeBase} {
     public void eval() {
       <@compareBlock mode=typeGroup.mode leftType=leftType rightType=rightType
                      output="out.value" nullCompare=true nullComparesHigh=false />
+    }
+  }
+
+  <#-- IS_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_distinct_from", "is distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode=typeGroup.mode isNotDistinct=false/>
+    }
+  }
+
+  <#-- IS_NOT_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_not_distinct_from", "is not distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsNotDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode=typeGroup.mode isNotDistinct=true/>
     }
   }
 

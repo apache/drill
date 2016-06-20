@@ -57,6 +57,8 @@ public class FunctionCallFactory {
     opToFuncTable.put("is false", "isfalse");
     opToFuncTable.put("is not false", "isnotfalse");
     opToFuncTable.put("similar to", "similar_to");
+    opToFuncTable.put("is distinct from", "is_distinct_from");
+    opToFuncTable.put("is not distinct from", "is_not_distinct_from");
 
     opToFuncTable.put("!", "not");
     opToFuncTable.put("u-", "negative");

@@ -30,6 +30,8 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.TypeValidators;
 
 import java.util.List;
 
@@ -45,13 +47,15 @@ public class DrillCalciteSqlFunctionWrapper extends SqlFunction implements Drill
 
   public DrillCalciteSqlFunctionWrapper(
       final SqlFunction wrappedFunction,
-    final List<DrillFuncHolder> functions) {
+      final List<DrillFuncHolder> functions,
+      OptionManager optionManager) {
     super(wrappedFunction.getName(),
         wrappedFunction.getSqlIdentifier(),
         wrappedFunction.getKind(),
         TypeInferenceUtils.getDrillSqlReturnTypeInference(
             wrappedFunction.getName(),
-            functions),
+            functions,
+            optionManager),
         wrappedFunction.getOperandTypeInference(),
         Checker.ANY_CHECKER,
         wrappedFunction.getParamTypes(),

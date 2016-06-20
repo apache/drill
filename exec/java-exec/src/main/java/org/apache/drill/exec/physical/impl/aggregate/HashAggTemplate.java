@@ -268,8 +268,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     ChainedHashTable ht =
-        new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing,
-            true /* nulls are equal */);
+        new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing);
     this.htable = ht.createAndSetupHashTable(groupByOutFieldIds);
 
     numGroupByOutFields = groupByOutFieldIds.length;

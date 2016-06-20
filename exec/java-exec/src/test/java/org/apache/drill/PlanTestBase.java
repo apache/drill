@@ -125,14 +125,14 @@ public class PlanTestBase extends BaseTestQuery {
     // Check and make sure all expected patterns are in the plan
     if (expectedPatterns != null) {
       for (final String s : expectedPatterns) {
-        assertTrue(EXPECTED_NOT_FOUND + s, plan.contains(s));
+        assertTrue(EXPECTED_NOT_FOUND + s + ", Output plan: " + plan, plan.contains(s));
       }
     }
 
     // Check and make sure all excluded patterns are not in the plan
     if (excludedPatterns != null) {
       for (final String s : excludedPatterns) {
-        assertFalse(UNEXPECTED_FOUND + s, plan.contains(s));
+        assertFalse(UNEXPECTED_FOUND + s + ", Output plan: " + plan, plan.contains(s));
       }
     }
   }

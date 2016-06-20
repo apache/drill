@@ -24,6 +24,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
      eliminate duplicate template code and so that ComparisonFunctions actually
      as all comparison functions. -->
 
+<#include "/@includes/isDistinctFrom.ftl" />
+
 <#macro compareNullsSubblock leftType rightType output breakTarget nullCompare nullComparesHigh>
   <#if nullCompare>
     <#if nullComparesHigh>
@@ -866,6 +868,36 @@ public class ${type.name}Functions {
     }
   }
 
+  <#-- IS_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_distinct_from", "is distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode="decimal" isNotDistinct=false/>
+    }
+  }
+
+  <#-- IS_NOT_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_not_distinct_from", "is not distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsNotDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode="decimal" isNotDistinct=true/>
+    }
+  }
+
  </#list>
  </#list>
 
@@ -1066,6 +1098,36 @@ public class ${type.name}Functions {
 
         out.value = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(left.start, left.buffer), right.buffer, right.start, right.getSign(right.start, right.buffer), left.WIDTH);
       } // outside
+    }
+  }
+
+  <#-- IS_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_distinct_from", "is distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode="decimal" isNotDistinct=false/>
+    }
+  }
+
+  <#-- IS_NOT_DISTINCT_FROM function -->
+  @FunctionTemplate(names = {"is_not_distinct_from", "is not distinct from" },
+                    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class GIsNotDistinctFrom${leftType}Vs${rightType} implements DrillSimpleFunc {
+    @Param ${leftType}Holder left;
+    @Param ${rightType}Holder right;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      <@isDistinctFromMacro leftType=leftType rightType=rightType mode="decimal" isNotDistinct=true/>
     }
   }
 

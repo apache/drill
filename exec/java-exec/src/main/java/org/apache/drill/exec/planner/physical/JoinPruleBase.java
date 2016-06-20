@@ -52,9 +52,8 @@ public abstract class JoinPruleBase extends Prule {
 
   protected boolean checkPreconditions(DrillJoinRel join, RelNode left, RelNode right,
       PlannerSettings settings) {
-    List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList() ;
-    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys);
+    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(),
+        Lists.<Integer>newArrayList(), Lists.<Integer>newArrayList(), Lists.<Boolean>newArrayList());
     if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
       return false;
     }

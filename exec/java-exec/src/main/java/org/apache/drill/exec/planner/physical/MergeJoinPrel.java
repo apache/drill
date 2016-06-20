@@ -36,7 +36,6 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
 
@@ -48,7 +47,7 @@ public class MergeJoinPrel  extends JoinPrel {
   public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
 

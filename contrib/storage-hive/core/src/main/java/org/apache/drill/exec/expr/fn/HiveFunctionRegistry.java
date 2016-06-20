@@ -34,10 +34,12 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
 import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
@@ -79,7 +81,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   public void register(DrillOperatorTable operatorTable) {
     for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
       operatorTable.addOperatorWithoutInference(name, new HiveUDFOperatorWithoutInference(name.toUpperCase()));
-      operatorTable.addOperatorWithInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
+      operatorTable.addOperatorWithInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference(operatorTable.getOptionManager())));
     }
   }
 
@@ -212,12 +214,19 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   }
 
   public class HiveSqlReturnTypeInference implements SqlReturnTypeInference {
-    private HiveSqlReturnTypeInference() {
-
+    private final OptionManager optionManager;
+    private HiveSqlReturnTypeInference(OptionManager optionManager) {
+      this.optionManager = optionManager;
     }
 
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      // Only the operand types are useful in the type inference.
+      // Also, since Decimal literals are treated as DOUBLE in Drill's exection,
+      // inference algorithm treats them as DOUBLE also
+      opBinding = TypeInferenceUtils.convertDecimalLiteralToDouble(opBinding,
+          optionManager.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val);
+
       for (RelDataType type : opBinding.collectOperandTypes()) {
         final TypeProtos.MinorType minorType = TypeInferenceUtils.getDrillTypeFromCalciteType(type);
         if(minorType == TypeProtos.MinorType.LATE) {
