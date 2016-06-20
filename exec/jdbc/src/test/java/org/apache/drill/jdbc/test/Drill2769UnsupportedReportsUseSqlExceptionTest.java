@@ -398,7 +398,7 @@ public class Drill2769UnsupportedReportsUseSqlExceptionTest extends JdbcTestBase
     }
 
     protected PreparedStatement getJdbcObject() throws SQLException {
-      return factoryConnection.prepareStatement(null);
+      return factoryConnection.prepareStatement("VALUES 1");
     }
 
   } // class PlainStatementChecker

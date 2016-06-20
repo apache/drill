@@ -28,11 +28,15 @@ import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.ColumnMetaData.AvaticaType;
 import net.hydromatic.avatica.ColumnMetaData.Rep;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.proto.UserProtos.ColumnSearchability;
+import org.apache.drill.exec.proto.UserProtos.ColumnUpdatability;
+import org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+
+import com.google.common.collect.ImmutableList;
 
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
@@ -51,13 +55,61 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
   /**
    * Gets AvaticaType carrying both JDBC {@code java.sql.Type.*} type code
+   * and SQL type name for given SQL type name.
+   */
+  private static AvaticaType getAvaticaType(String sqlTypeName) {
+    final int jdbcTypeId = Types.getJdbcTypeCode(sqlTypeName);
+    return ColumnMetaData.scalar( jdbcTypeId, sqlTypeName,
+        Rep.BOOLEAN /* dummy value, unused */ );
+  }
+
+  /**
+   * Update the metadata with given metadata received from server.
+   * @param metadata
+   */
+  public void updateColumnMetaData(List<ResultColumnMetadata> metadata) {
+    final List<ColumnMetaData> newColumns = new ArrayList<>(metadata.size());
+    int offset = 0;
+    for(ResultColumnMetadata m : metadata) {
+
+      final AvaticaType bundledSqlDataType = getAvaticaType(m.getDataType());
+
+      newColumns.add(new ColumnMetaData(
+          offset,
+          m.getAutoIncrement(),
+          m.getCaseSensitivity(),
+          m.getSearchability() != ColumnSearchability.NONE,
+          m.getIsCurrency(),
+          m.getIsNullable() ? ResultSetMetaData.columnNullable : ResultSetMetaData.columnNoNulls,
+          m.getSigned(),
+          m.getDisplaySize(),
+          m.getLabel(),
+          m.getColumnName(),
+          m.getSchemaName(),
+          m.getPrecision(),
+          m.getScale(),
+          m.getTableName(),
+          m.getCatalogName(),
+          bundledSqlDataType,
+          m.getUpdatability() == ColumnUpdatability.READ_ONLY,
+          m.getUpdatability() == ColumnUpdatability.WRITABLE,
+          m.getUpdatability() == ColumnUpdatability.WRITABLE,
+          m.getClassName()
+      ));
+      offset++;
+    }
+    columns = ImmutableList.copyOf(newColumns);
+  }
+
+  /**
+   * Gets AvaticaType carrying both JDBC {@code java.sql.Type.*} type code
    * and SQL type name for given RPC-level type (from batch schema).
    */
   private static AvaticaType getAvaticaType( MajorType rpcDateType ) {
     final String sqlTypeName = Types.getSqlTypeName( rpcDateType );
-    final int jdbcTypeId = Types.getJdbcTypeCode( rpcDateType );
+    final int jdbcTypeId = Types.getJdbcTypeCode( sqlTypeName );
     return ColumnMetaData.scalar( jdbcTypeId, sqlTypeName,
-                                  Rep.BOOLEAN /* dummy value, unused */ );
+        Rep.BOOLEAN /* dummy value, unused */ );
   }
 
   public void updateColumnMetaData(String catalogName, String schemaName,
