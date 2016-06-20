@@ -17,7 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.io.IOException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -30,6 +29,7 @@ import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -54,6 +54,9 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
+import org.apache.drill.exec.proto.UserProtos.RequestStatus;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -362,12 +365,47 @@ class DrillConnectionImpl extends AvaticaConnection
                                             int resultSetHoldability) throws SQLException {
     throwIfClosed();
     try {
-      DrillPrepareResult prepareResult = new DrillPrepareResult(sql);
+      DrillRpcFuture<CreatePreparedStatementResp> respFuture = client.createPreparedStatement(sql);
+
+      CreatePreparedStatementResp resp;
+      try {
+        resp = respFuture.get();
+      } catch (InterruptedException e) {
+        // Preserve evidence that the interruption occurred so that code higher up
+        // on the call stack can learn of the interruption and respond to it if it
+        // wants to.
+        Thread.currentThread().interrupt();
+
+        throw new SQLException( "Interrupted", e );
+      }
+
+      final RequestStatus status = resp.getStatus();
+      if (status != RequestStatus.OK) {
+        final String errMsgFromServer = resp.getError() != null ? resp.getError().getMessage() : "";
+
+        if (status == RequestStatus.TIMEOUT) {
+          logger.error("Request timed out to create prepare statement: {}", errMsgFromServer);
+          throw new SQLTimeoutException("Failed to create prepared statement: " + errMsgFromServer);
+        }
+
+        if (status == RequestStatus.FAILED) {
+          logger.error("Failed to create prepared statement: {}", errMsgFromServer);
+          throw new SQLException("Failed to create prepared statement: " + errMsgFromServer);
+        }
+
+        logger.error("Failed to create prepared statement. Unknown status: {}, Error: {}", status, errMsgFromServer);
+        throw new SQLException(String.format(
+            "Failed to create prepared statement. Unknown status: %s, Error: %s", status, errMsgFromServer));
+      }
+
+      DrillPrepareResult prepareResult = new DrillPrepareResult(sql, resp.getPreparedStatement());
       DrillPreparedStatementImpl statement =
           (DrillPreparedStatementImpl) factory.newPreparedStatement(
               this, prepareResult, resultSetType, resultSetConcurrency,
               resultSetHoldability);
       return statement;
+    } catch (SQLException e) {
+      throw e;
     } catch (RuntimeException e) {
       throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
     } catch (Exception e) {
