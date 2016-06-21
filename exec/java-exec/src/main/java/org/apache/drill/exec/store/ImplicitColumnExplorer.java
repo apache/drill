@@ -135,12 +135,6 @@ public class ImplicitColumnExplorer {
           tableColumns.add(column);
         }
       }
-
-      // We must make sure to pass a table column(not to be confused with partition column) to the underlying record
-      // reader.
-      if (tableColumns.size() == 0) {
-        tableColumns.add(AbstractRecordReader.STAR_COLUMN);
-      }
     }
   }
 
