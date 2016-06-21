@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.ImplicitColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -126,8 +127,12 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(context, scan.getColumns());
 
     if (!columnExplorer.isSelectAllColumns()) {
+      // We must make sure to pass a table column (not to be confused with implicit column) to the underlying record reader.
+      List<SchemaPath> tableColumns =
+          columnExplorer.getTableColumns().size() == 0 ?
+              Lists.<SchemaPath>newArrayList(AbstractRecordReader.STAR_COLUMN) : columnExplorer.getTableColumns();
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-          columnExplorer.getTableColumns(), scan.getSelectionRoot());
+          tableColumns, scan.getSelectionRoot());
       scan.setOperatorId(scan.getOperatorId());
     }
 
