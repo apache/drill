@@ -20,6 +20,7 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.Text;
 import org.apache.hadoop.fs.Path;
@@ -108,6 +109,22 @@ public class TestImplicitFileColumns extends BaseTestQuery {
         .baselineColumns("filename", "suffix")
         .baselineValues("region.parquet", "parquet")
         .go();
+  }
+
+  @Test // DRILL-4733
+  public void testMultilevelParquetWithSchemaChange() throws Exception {
+    try {
+      test("alter session set `planner.enable_decimal_data_type` = true");
+      testBuilder()
+          .sqlQuery(String.format("select max(dir0) as max_dir from dfs_test.`%s/src/test/resources/multilevel/parquetWithSchemaChange`",
+              TestTools.getWorkingPath()))
+          .unOrdered()
+          .baselineColumns("max_dir")
+          .baselineValues("voter50")
+          .go();
+    } finally {
+      test("alter session set `planner.enable_decimal_data_type` = false");
+    }
   }
 
 }
