@@ -110,7 +110,7 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
   public void setOption(OptionValue value) {
     final OptionValidator validator = SystemOptionManager.getValidator(value.name);
 
-    validator.validate(value); // validate the option
+    validator.validate(value, this); // validate the option
 
     // fallback if unable to set locally
     if (!setLocalOption(value)) {

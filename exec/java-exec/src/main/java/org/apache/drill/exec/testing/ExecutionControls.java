@@ -96,7 +96,7 @@ public final class ExecutionControls {
     }
 
     @Override
-    public void validate(final OptionValue v) {
+    public void validate(final OptionValue v, final OptionManager manager) {
       if (v.type != OptionType.SESSION) {
         throw UserException.validationError()
             .message("Controls can be set only at SESSION level.")

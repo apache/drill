@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
@@ -38,5 +39,10 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     } else {
       return super.getRowCount(rel);
     }
+  }
+
+  @Override
+  public Double getRowCount(Filter rel) {
+    return rel.getRows();
   }
 }
