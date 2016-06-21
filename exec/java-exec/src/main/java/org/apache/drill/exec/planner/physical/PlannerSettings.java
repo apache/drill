@@ -81,6 +81,9 @@ public class PlannerSettings implements Context{
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
                               Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
 
+  public static final OptionValidator FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.filter.min_selectivity_estimate_factor",
+          0.0, 1.0, 0.15d);
+
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, true);
 
@@ -210,6 +213,10 @@ public class PlannerSettings implements Context{
 
   public static long getInitialPlanningMemorySize() {
     return INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES;
+  }
+
+  public double getFilterMinSelectivityEstimateFactor(){
+    return options.getOption(FILTER_MIN_SELECTIVITY_ESTIMATE_FACTOR.getOptionName()).float_val;
   }
 
   public boolean isTypeInferenceEnabled() {

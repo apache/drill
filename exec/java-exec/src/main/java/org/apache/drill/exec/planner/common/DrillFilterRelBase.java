@@ -44,6 +44,7 @@ import java.util.List;
 public abstract class DrillFilterRelBase extends Filter implements DrillRelNode {
   private final int numConjuncts;
   private final List<RexNode> conjunctions;
+  private final double filterMinSelectivityEstimateFactor;
 
   protected DrillFilterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, traits, child, condition);
@@ -55,6 +56,8 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
     numConjuncts = conjunctions.size();
     // assert numConjuncts >= 1;
 
+    filterMinSelectivityEstimateFactor = PrelUtil.
+            getPlannerSettings(cluster.getPlanner()).getFilterMinSelectivityEstimateFactor();
   }
 
   @Override
@@ -90,4 +93,15 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
     return compNum * DrillCostBase.COMPARE_CPU_COST;
   }
 
+  public double getRows() {
+    // override Calcite's default selectivity estimate - cap lower bound on the selectivity estimate in order to
+    // get sufficient parallelism
+    double selectivity = RelMetadataQuery.getSelectivity(getInput(), condition);
+
+    // Cap selectivity at filterMinSelectivityEstimateFactor
+    if (selectivity < filterMinSelectivityEstimateFactor) {
+      selectivity = filterMinSelectivityEstimateFactor;
+    }
+    return selectivity*RelMetadataQuery.getRowCount(getInput());
+  }
 }
