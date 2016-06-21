@@ -75,7 +75,7 @@ public class ControlsInjectionUtil {
 
     final OptionManager options = session.getOptions();
     try {
-      DRILLBIT_CONTROLS_VALIDATOR.validate(opValue);
+      DRILLBIT_CONTROLS_VALIDATOR.validate(opValue, null);
       options.setOption(opValue);
     } catch (final Exception e) {
       fail("Could not set controls options: " + e.getMessage());

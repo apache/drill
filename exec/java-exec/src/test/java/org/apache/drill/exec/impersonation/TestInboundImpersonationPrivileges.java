@@ -49,7 +49,7 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
     ExecConstants.IMPERSONATION_POLICY_VALIDATOR.validate(
         OptionValue.createString(OptionValue.OptionType.SYSTEM,
             ExecConstants.IMPERSONATION_POLICIES_KEY,
-            IMPERSONATION_POLICIES));
+            IMPERSONATION_POLICIES), null);
     try {
       return InboundImpersonationManager.hasImpersonationPrivileges(proxyName, targetName, IMPERSONATION_POLICIES);
     } catch (final Exception e) {
