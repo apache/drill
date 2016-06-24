@@ -1,0 +1,3 @@
+{"balance": 1000.2, "num2":100, "is_vip":false,"name":"foo2"}
+{"balance": 1000.3,  "num":100, "is_vip":true, "name":"foo3"}
+{"balance": 1000.5, "num":100, "is_vip":true, "name":"foo5"}
