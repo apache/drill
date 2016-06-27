@@ -302,6 +302,12 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
                 String[] parts = p.getLeft();
                 int tmpIndex = p.getRight();
                 if (spInfo == null) {
+                  for (int j = 0; j <= tmpIndex; j++) {
+                    if (parts[j] == null) { // prefixes should be non-null
+                      isSinglePartition = false;
+                      break;
+                    }
+                  }
                   spInfo = parts;
                   maxIndex = tmpIndex;
                 } else if (maxIndex != tmpIndex) {
@@ -310,8 +316,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
                 } else {
                   // we only want to compare until the maxIndex inclusive since subsequent values would be null
                   for (int j = 0; j <= maxIndex; j++) {
-                    if (spInfo[j] == null // prefixes should be non-null
-                        || !spInfo[j].equals(parts[j])) {
+                    if (!spInfo[j].equals(parts[j])) {
                       isSinglePartition = false;
                       break;
                     }
