@@ -46,40 +46,83 @@ public class PlannerSettings implements Context{
   // max off heap memory for planning (16G)
   private static final long MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16l * 1024 * 1024 * 1024;
 
-  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding", true);
+  public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding", true,
+      "If one side of a filter condition is a constant expression, constant folding evaluates the expression in the" +
+          " planning phase and replaces the expression with the constant value. For example, Drill can rewrite" +
+          " this clause ' WHERE age + 5 < 42 as WHERE age < 37'.");
+
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
+
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
+
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
-  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
-  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
+
+  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true,
+      "Enable the memory hungry hash join. Drill assumes that a query with have adequate memory to complete and" +
+          " tries to use the fastest operations possible to complete the planned inner, left, right, or full outer" +
+          " joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily" +
+          " large data in a small memory footprint.");
+
+  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true,
+      "Sort-based operation. A merge join is used for inner join, left and right outer joins. Inputs to the merge" +
+          " join must be sorted. It reads the sorted input streams from both sides and finds matching rows." +
+          " Writes to disk.");
+
   public static final OptionValidator NESTEDLOOPJOIN = new BooleanValidator("planner.enable_nestedloopjoin", true);
+
   public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
-  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
-  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 10000000);
-  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0, Double.MAX_VALUE, 1.0d);
-  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor", 0, Double.MAX_VALUE, 100.0d);
-  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only", true);
-  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE, 1.0d);
+
+  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true,
+      "The broadcast join can be used for hash join, merge join and nested loop join. Use to join a large (fact)" +
+          " table to relatively smaller (dimension) tables. This should be enabled.");
+  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold",
+      MAX_BROADCAST_THRESHOLD, 10000000, "The maximum number of records allowed to be broadcast as part of a query." +
+      " If the threshold is exceeded, Drill reshuffles data rather than doing a broadcast to one side of the" +
+      " join. Range: 0 - " + MAX_BROADCAST_THRESHOLD + ".");
+  public static final OptionValidator BROADCAST_FACTOR = new RangeDoubleValidator("planner.broadcast_factor", 0,
+      Double.MAX_VALUE, 1.0d, "A heuristic parameter for influencing the broadcast of records as part of a query.");
+
+  public static final OptionValidator NESTEDLOOPJOIN_FACTOR = new RangeDoubleValidator("planner.nestedloopjoin_factor",
+      0, Double.MAX_VALUE, 100.0d);
+
+  public static final OptionValidator NLJOIN_FOR_SCALAR = new BooleanValidator("planner.enable_nljoin_for_scalar_only",
+      true);
+
+  public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator(
+      "planner.join.row_count_estimate_factor", 0, Double.MAX_VALUE, 1.0d,
+      "The factor for adjusting the estimated row count when considering multiple join order sequences during the" +
+          " planning phase.");
+
   public static final OptionValidator MUX_EXCHANGE = new BooleanValidator("planner.enable_mux_exchange", true);
   public static final OptionValidator DEMUX_EXCHANGE = new BooleanValidator("planner.enable_demux_exchange", false);
-  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator("planner.partitioner_sender_threads_factor", 2);
-  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator("planner.partitioner_sender_max_threads", 8);
-  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator("planner.partitioner_sender_set_threads", -1);
+  public static final OptionValidator PARTITION_SENDER_THREADS_FACTOR = new LongValidator(
+      "planner.partitioner_sender_threads_factor", 2);
+  public static final OptionValidator PARTITION_SENDER_MAX_THREADS = new LongValidator(
+      "planner.partitioner_sender_max_threads", 8);
+  public static final OptionValidator PARTITION_SENDER_SET_THREADS = new LongValidator(
+      "planner.partitioner_sender_set_threads", -1);
   public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", false);
-  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
+  public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator(
+      "planner.producer_consumer_queue_size", 10);
   public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
   public static final OptionValidator HASH_JOIN_SWAP = new BooleanValidator("planner.enable_hashjoin_swap", true);
-  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100, 10d);
+  public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator(
+      "planner.join.hash_join_swap_margin_factor", 0, 100, 10d);
   public static final String ENABLE_DECIMAL_DATA_TYPE_KEY = "planner.enable_decimal_data_type";
-  public static final OptionValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY, false);
+  public static final OptionValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY,
+      false);
   public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt", true);
-  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", true);
+  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator(
+      "planner.enable_hep_partition_pruning", true);
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
-      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES, DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
+      INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES, DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES,
+      "Defines the maximum amount of direct memory allocated to a query for planning. When multiple queries run" +
+          " concurrently, each query is allocated the amount of memory set by this parameter. Increase the value" +
+          " of this parameter and rerun the query if partition pruning failed due to insufficient memory.");
 
-  public static final OptionValidator IDENTIFIER_MAX_LENGTH =
-      new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
-                              Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
+  public static final OptionValidator IDENTIFIER_MAX_LENGTH = new RangeLongValidator("planner.identifier_max_length",
+      128 /* A minimum length is needed because option names are identifiers themselves */,
+      Integer.MAX_VALUE, DEFAULT_IDENTIFIER_MAX_LENGTH);
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, true);

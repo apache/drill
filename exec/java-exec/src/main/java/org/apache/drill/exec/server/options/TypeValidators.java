@@ -32,8 +32,13 @@ public class TypeValidators {
   public static class PositiveLongValidator extends LongValidator {
     private final long max;
 
+    @Deprecated
     public PositiveLongValidator(String name, long max, long def) {
-      super(name, def);
+      this(name, max, def, null);
+    }
+
+    public PositiveLongValidator(String name, long max, long def, String description) {
+      super(name, def, description);
       this.max = max;
     }
 
@@ -50,8 +55,13 @@ public class TypeValidators {
 
   public static class PowerOfTwoLongValidator extends PositiveLongValidator {
 
+    @Deprecated
     public PowerOfTwoLongValidator(String name, long max, long def) {
-      super(name, max, def);
+      this(name, max, def, null);
+    }
+
+    public PowerOfTwoLongValidator(String name, long max, long def, String description) {
+      super(name, max, def, description);
     }
 
     @Override
@@ -73,8 +83,13 @@ public class TypeValidators {
     private final double min;
     private final double max;
 
+    @Deprecated
     public RangeDoubleValidator(String name, double min, double max, double def) {
-      super(name, def);
+      this(name, min, max, def, null);
+    }
+
+    public RangeDoubleValidator(String name, double min, double max, double def, String description) {
+      super(name, def, description);
       this.min = min;
       this.max = max;
     }
@@ -91,26 +106,50 @@ public class TypeValidators {
   }
 
   public static class BooleanValidator extends TypeValidator {
+
+    @Deprecated
     public BooleanValidator(String name, boolean def) {
-      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def));
+      this(name, def, null);
+    }
+
+    public BooleanValidator(String name, boolean def, String description) {
+      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def), description);
     }
   }
 
   public static class StringValidator extends TypeValidator {
+
+    @Deprecated
     public StringValidator(String name, String def) {
-      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
+      this(name, def, null);
+    }
+
+    public StringValidator(String name, String def, String description) {
+      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def), description);
     }
   }
 
   public static class LongValidator extends TypeValidator {
+
+    @Deprecated
     public LongValidator(String name, long def) {
-      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def));
+      this(name, def, null);
+    }
+
+    public LongValidator(String name, long def, String description) {
+      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def), description);
     }
   }
 
   public static class DoubleValidator extends TypeValidator {
+
+    @Deprecated
     public DoubleValidator(String name, double def) {
-      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def));
+      this(name, def, null);
+    }
+
+    public DoubleValidator(String name, double def, String description) {
+      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def), description);
     }
   }
 
@@ -118,8 +157,13 @@ public class TypeValidators {
     private final long min;
     private final long max;
 
+    @Deprecated
     public RangeLongValidator(String name, long min, long max, long def) {
-      super(name, def);
+      this(name, min, max, def, null);
+    }
+
+    public RangeLongValidator(String name, long min, long max, long def, String description) {
+      super(name, def, description);
       this.min = min;
       this.max = max;
     }
@@ -136,8 +180,14 @@ public class TypeValidators {
   }
 
   public static class AdminOptionValidator extends StringValidator {
+
+    @Deprecated
     public AdminOptionValidator(String name, String def) {
-      super(name, def);
+      this(name, def, null);
+    }
+
+    public AdminOptionValidator(String name, String def, String description) {
+      super(name, def, description);
     }
 
     @Override
@@ -157,8 +207,8 @@ public class TypeValidators {
   public static class EnumeratedStringValidator extends StringValidator {
     private final Set<String> valuesSet = new HashSet<>();
 
-    public EnumeratedStringValidator(String name, String def, String... values) {
-      super(name, def);
+    public EnumeratedStringValidator(String name, String def, String description, String... values) {
+      super(name, def, description);
       for (String value : values) {
         valuesSet.add(value.toLowerCase());
       }
@@ -178,12 +228,20 @@ public class TypeValidators {
   public static abstract class TypeValidator extends OptionValidator {
     private final Kind kind;
     private final OptionValue defaultValue;
+    private final String description;
 
-    public TypeValidator(final String name, final Kind kind, final OptionValue defValue) {
+    public TypeValidator(final String name, final Kind kind, final OptionValue defValue, String description) {
       super(name);
       checkArgument(defValue.type == OptionType.SYSTEM, "Default value must be SYSTEM type.");
       this.kind = kind;
       this.defaultValue = defValue;
+      this.description = description;
+    }
+
+    @Override
+    public String getOptionDescription() {
+      return description != null ? description :
+          "A description of this option is unavailable.";
     }
 
     @Override

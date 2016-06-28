@@ -41,6 +41,13 @@ public abstract class OptionValidator {
   }
 
   /**
+   * Returns the description of this option.
+   *
+   * @return option description
+   */
+  public abstract String getOptionDescription();
+
+  /**
    * This function returns true if and only if this validator is meant for a short-lived option.
    *
    * NOTE: By default, options are not short-lived. So, if a derived class is meant for a short-lived option,
