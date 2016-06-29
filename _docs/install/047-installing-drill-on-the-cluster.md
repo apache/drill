@@ -1,13 +1,13 @@
 ---
 title: "Installing Drill on the Cluster"
-date: 2016-03-16 19:17:03 UTC
+date: 2016-06-29 02:15:53 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 You install Drill on nodes in the cluster, configure a cluster ID, and add Zookeeper information, as described in the following steps:
 
-  1. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.6.0/apache-drill-1.6.0.tar.gz&action=download) or from the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.6.0/apache-drill-1.6.0.tar.gz) with the command appropriate for your system:  
-       * `wget http://apache.mesi.com.ar/drill/drill-1.6.0/apache-drill-1.6.0.tar.gz`  
-       * `curl -o apache-drill-1.6.0.tar.gz http://apache.mesi.com.ar/drill/drill-1.6.0/apache-drill-1.6.0.tar.gz`  
+  1. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.7.0/apache-drill-1.7.0.tar.gz&action=download) or from the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.7.0/apache-drill-1.7.0.tar.gz) with the command appropriate for your system:  
+       * `wget http://apache.mesi.com.ar/drill/drill-1.7.0/apache-drill-1.7.0.tar.gz`  
+       * `curl -o apache-drill-1.7.0.tar.gz http://apache.mesi.com.ar/drill/drill-1.7.0/apache-drill-1.7.0.tar.gz`  
   2. Extract the tarball to the directory of your choice, such as `/opt`:  
   `tar -xzvf apache-drill-<version>.tar.gz`
   3. In `drill-override.conf,` use the Drill `cluster ID`, and provide ZooKeeper host names and port numbers to configure a connection to your ZooKeeper quorum.  
