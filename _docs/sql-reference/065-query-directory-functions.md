@@ -1,6 +1,6 @@
 ---
 title: "Query Directory Functions"
-date:  
+date: 2016-06-29 01:29:06 UTC
 parent: "SQL Reference"
 ---
 You can use the following query directory functions when [querying multiple files or directories]({{site.baseurl}}/docs/querying-directories):
@@ -20,11 +20,10 @@ The query directory functions are recommended instead of the MAX or MIN aggregat
 
 The following syntax shows how to construct a SELECT statement that using the MAXDIR function:
 
-    SELECT * FROM <plugin>.<workspace>.`<filename>` 
-    WHERE dir<n> = MAXDIR('<plugin>.<workspace>', '<filename>');
+       SELECT * FROM <plugin>.<workspace>.`<filename>`
+       WHERE dir<n> = MAXDIR('<plugin>.<workspace>'[, '<filename>']);
 
-Enclose both arguments to the query directory function in single-quotation marks, not back ticks. The first argument to the function is the plugin and workspace names in dot notation, and the second argument is the directory name. The dir<n> variable, `dir0`, `dir1`, and so on, refers to
-subdirectories in your workspace path, as explained in section, ["Querying Directories"]({{site.baseurl}}/docs/querying-directories). 
+Enclose query directory function arguments in single-quotation marks, not back ticks. The first argument to the function is the plugin and workspace names in dot notation. The second argument is the directory name. The directory name is an optional argument. The dir variable, dir0, dir1, and so on, refers to subdirectories in your workspace path, as explained in ["Querying Directories"]({{site.baseurl}}/docs/querying-directories). 
 
 ## Query Directory Function Example 
 
