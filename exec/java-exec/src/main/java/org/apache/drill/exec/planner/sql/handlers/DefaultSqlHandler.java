@@ -651,7 +651,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       projections.add(b.makeInputRef(rel, i));
     }
 
-    final List<String> fieldNames2 = SqlValidatorUtil.uniquify(validatedRowType.getFieldNames(), SqlValidatorUtil.F_SUGGESTER2);
+    final List<String> fieldNames2 = SqlValidatorUtil.uniquify(
+        validatedRowType.getFieldNames(),
+        SqlValidatorUtil.F_SUGGESTER2,
+        rel.getCluster().getTypeFactory().getTypeSystem().isSchemaCaseSensitive());
 
     RelDataType newRowType = RexUtil.createStructType(rel.getCluster().getTypeFactory(), projections, fieldNames2);
 

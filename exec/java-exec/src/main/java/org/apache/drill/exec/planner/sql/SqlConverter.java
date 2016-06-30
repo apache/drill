@@ -223,6 +223,11 @@ public class SqlConverter {
       return 38;
     }
 
+    @Override
+    public boolean isSchemaCaseSensitive() {
+      // Drill uses case-insensitive and case-preserve policy
+      return false;
+    }
   }
 
   public RelNode toRel(
