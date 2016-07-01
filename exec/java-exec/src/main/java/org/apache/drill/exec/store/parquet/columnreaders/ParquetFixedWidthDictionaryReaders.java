@@ -148,26 +148,31 @@ public class ParquetFixedWidthDictionaryReaders {
                                    SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
+
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
-          - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
-      readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      readLength = (int) Math.ceil(readLengthInBits / 8.0);
+
       if (usingDictionary) {
         BigIntVector.Mutator mutator =  valueVec.getMutator();
+        recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+            - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
         for (int i = 0; i < recordsReadInThisIteration; i++){
           mutator.setSafe(valuesReadInCurrentPass + i,  pageReader.dictionaryValueReader.readLong());
         }
         // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
         // and we will go into the else condition below. The readField method of the parent class requires the
         // writer index to be set correctly.
+        readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
         super.readField(recordsToReadInThisPass);
       }
+
     }
   }
 
