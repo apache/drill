@@ -169,7 +169,6 @@ public class ParquetFixedWidthDictionaryReaders {
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
       }
-
     }
   }
 
