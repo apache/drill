@@ -153,11 +153,11 @@ public class ParquetFixedWidthDictionaryReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
 
+      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+          - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
       if (usingDictionary) {
         BigIntVector.Mutator mutator =  valueVec.getMutator();
-        recordsReadInThisIteration = Math.min(pageReader.currentPageCount
-            - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
-
         for (int i = 0; i < recordsReadInThisIteration; i++){
           mutator.setSafe(valuesReadInCurrentPass + i,  pageReader.dictionaryValueReader.readLong());
         }
@@ -166,7 +166,6 @@ public class ParquetFixedWidthDictionaryReaders {
         // writer index to be set correctly.
         readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
         readLength = (int) Math.ceil(readLengthInBits / 8.0);
-
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
