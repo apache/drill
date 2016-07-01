@@ -156,12 +156,18 @@ public class ParquetFixedWidthDictionaryReaders {
       recordsReadInThisIteration = Math.min(pageReader.currentPageCount
           - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
-      for (int i = 0; i < recordsReadInThisIteration; i++){
-        try {
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        } catch ( Exception ex) {
-          throw ex;
+      if (usingDictionary) {
+        BigIntVector.Mutator mutator =  valueVec.getMutator();
+        for (int i = 0; i < recordsReadInThisIteration; i++){
+          mutator.setSafe(valuesReadInCurrentPass + i,  pageReader.dictionaryValueReader.readLong());
         }
+        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
+        readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        int writerIndex = valueVec.getBuffer().writerIndex();
+        valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
       }
     }
   }
