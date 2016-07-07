@@ -77,7 +77,16 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   /**
    * Methods create a new TableScan rel node, given the lists of new partitions or new files to SCAN.
    * @param newPartitions
-   * @param cacheFileRoot - optional (can be null)
+   * @return
+   * @throws Exception
+   */
+  public TableScan createTableScan(List<PartitionLocation> newPartitions) throws Exception;
+
+  /**
+   * Create a new TableScan rel node, given the lists of new partitions or new files to scan and a path
+   * to a metadata cache file
+   * @param newPartitions
+   * @param cacheFileRoot
    * @return
    * @throws Exception
    */

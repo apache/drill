@@ -152,7 +152,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitions) throws Exception {
     GroupScan newGroupScan = createNewGroupScan(newPartitions);
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),

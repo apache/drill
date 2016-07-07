@@ -392,7 +392,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         cacheFileRoot = descriptor.getBaseTableLocation() + path;
       }
 
-      RelNode inputRel = descriptor.createTableScan(newPartitions, cacheFileRoot);
+      RelNode inputRel = descriptor.supportsSinglePartOptimization() ?
+          descriptor.createTableScan(newPartitions, cacheFileRoot) : descriptor.createTableScan(newPartitions);
 
       if (projectRel != null) {
         inputRel = projectRel.copy(projectRel.getTraitSet(), Collections.singletonList(inputRel));

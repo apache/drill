@@ -147,4 +147,10 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
         scanRel.getColumns(),
         true /*filter pushdown*/);
   }
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
+    return createTableScan(newPartitionLocation, null);
+  }
+
 }

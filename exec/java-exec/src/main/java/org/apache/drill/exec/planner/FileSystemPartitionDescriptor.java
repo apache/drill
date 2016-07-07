@@ -259,6 +259,11 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
+    return createTableScan(newPartitionLocation, null);
+  }
+
+  @Override
   public boolean supportsSinglePartOptimization() {
     return true;
   }
