@@ -29,9 +29,12 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.shims.Utils;
@@ -127,9 +130,9 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @return
    * @throws MetaException
    */
-  public static DrillHiveMetaStoreClient createNonCloseableClientWithCaching(final HiveConf hiveConf)
+  public static DrillHiveMetaStoreClient createCloseableClientWithCaching(final HiveConf hiveConf)
       throws MetaException {
-    return new NonCloseableHiveClientWithCaching(hiveConf);
+    return new HiveClientWithCaching(hiveConf);
   }
 
   private DrillHiveMetaStoreClient(final HiveConf hiveConf) throws MetaException {
@@ -197,8 +200,15 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   protected static List<String> getDatabasesHelper(final IMetaStoreClient mClient) throws TException {
     try {
       return mClient.getAllDatabases();
+    } catch (MetaException e) {
+      throw e;
     } catch (TException e) {
-      logger.warn("Failure while attempting to get hive databases", e);
+      logger.warn("Failure while attempting to get hive databases. Retries once.", e);
+      try {
+        mClient.close();
+      } catch (Exception ex) {
+        logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
+      }
       mClient.reconnect();
       return mClient.getAllDatabases();
     }
@@ -209,8 +219,15 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       throws TException {
     try {
       return mClient.getAllTables(dbName);
+    } catch (MetaException | UnknownDBException e) {
+      throw e;
     } catch (TException e) {
-      logger.warn("Failure while attempting to get hive tables", e);
+      logger.warn("Failure while attempting to get hive tables. Retries once.", e);
+      try {
+        mClient.close();
+      } catch (Exception ex) {
+        logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
+      }
       mClient.reconnect();
       return mClient.getAllTables(dbName);
     }
@@ -222,7 +239,15 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     Table t = null;
     try {
       t = mClient.getTable(dbName, tableName);
+    } catch (MetaException | NoSuchObjectException e) {
+      throw e;
     } catch (TException e) {
+      logger.warn("Failure while attempting to get hive table. Retries once. ", e);
+      try {
+        mClient.close();
+      } catch (Exception ex) {
+        logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
+      }
       mClient.reconnect();
       t = mClient.getTable(dbName, tableName);
     }
@@ -234,7 +259,15 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     List<Partition> partitions;
     try {
       partitions = mClient.listPartitions(dbName, tableName, (short) -1);
+    } catch (NoSuchObjectException | MetaException e) {
+      throw e;
     } catch (TException e) {
+      logger.warn("Failure while attempting to get hive partitions. Retries once. ", e);
+      try {
+        mClient.close();
+      } catch (Exception ex) {
+        logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
+      }
       mClient.reconnect();
       partitions = mClient.listPartitions(dbName, tableName, (short) -1);
     }
@@ -249,6 +282,32 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     }
 
     return new HiveReadEntry(new HiveTable(t), hivePartitions);
+  }
+
+  /**
+   * Help method which gets hive tables for a given schema|DB name and a list of table names.
+   * Retries once if the first call fails with TExcption other than connection-lost problems.
+   * @param mClient
+   * @param schemaName
+   * @param tableNames
+   * @return  list of hive table instances.
+   **/
+  public static List<Table> getTableObjectsByNameHelper(final HiveMetaStoreClient mClient, final String schemaName,
+      final List<String> tableNames) throws TException {
+    try {
+      return mClient.getTableObjectsByName(schemaName, tableNames);
+    } catch (MetaException | InvalidOperationException | UnknownDBException e) {
+      throw e;
+    } catch (TException e) {
+      logger.warn("Failure while attempting to get tables by names. Retries once. ", e);
+      try {
+        mClient.close();
+      } catch (Exception ex) {
+        logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
+      }
+      mClient.reconnect();
+      return mClient.getTableObjectsByName(schemaName, tableNames);
+    }
   }
 
   /**
@@ -345,8 +404,8 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   /**
    * HiveMetaStoreClient that provides a shared MetaStoreClient implementation with caching.
    */
-  private static class NonCloseableHiveClientWithCaching extends DrillHiveMetaStoreClient {
-    private NonCloseableHiveClientWithCaching(final HiveConf hiveConf) throws MetaException {
+  private static class HiveClientWithCaching extends DrillHiveMetaStoreClient {
+    private HiveClientWithCaching(final HiveConf hiveConf) throws MetaException {
       super(hiveConf);
     }
 
@@ -382,11 +441,6 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       synchronized (this) {
         return super.getDelegationToken(owner, renewerKerberosPrincipalName);
       }
-    }
-
-    @Override
-    public void close() {
-      // No-op.
     }
 
   }
