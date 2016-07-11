@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -15,9 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
+# Set up the environment for the Drill-on-YARN client. Run only on the
+# client machine; this is NOT used for launching the Drill Application Master
+# or drillbit under YARN.
 
-# Start a sqlline session with an embedded Drillbit
-export DRILL_EMBEDDED=1
-exec ${bin}/sqlline -u "jdbc:drill:zk=local" "$@"
+# Set the path to your Hadoop (and thus YARN) installation. This must include
+# your valid Hadoop and YARN configuration files.
+# This is equivalent to the --hadoop option of drill-on-yarn.sh; if you've set
+# HADOOP_HOME you can omit the --hadoop option. You can also set
+# HADOOP_HOME in the environment.
+
+# export HADOOP_HOME=/path/to/hadoop
