@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.sql;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_CONNECT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_DESCRIPTION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
@@ -39,6 +43,16 @@ public class TestInfoSchema extends BaseTestQuery {
     test("select * from INFORMATION_SCHEMA.VIEWS");
     test("select * from INFORMATION_SCHEMA.`TABLES`");
     test("select * from INFORMATION_SCHEMA.COLUMNS");
+  }
+
+  @Test
+  public void catalogs() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.CATALOGS")
+        .unOrdered()
+        .baselineColumns(CATS_COL_CATALOG_NAME, CATS_COL_CATALOG_DESCRIPTION, CATS_COL_CATALOG_CONNECT)
+        .baselineValues("DRILL", "The internal metadata used by Drill", "")
+        .go();
   }
 
   @Test

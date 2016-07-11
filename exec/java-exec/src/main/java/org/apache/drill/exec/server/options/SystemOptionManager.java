@@ -99,6 +99,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.TEXT_ESTIMATED_ROW_SIZE,
       ExecConstants.JSON_EXTENDED_TYPES,
       ExecConstants.JSON_WRITER_UGLIFY,
+      ExecConstants.JSON_WRITER_SKIPNULLFIELDS,
       ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
       ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR,
       ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
@@ -134,7 +135,14 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
-      ExecConstants.ENABLE_NEW_TEXT_READER
+      ExecConstants.ENABLE_NEW_TEXT_READER,
+      ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
+      ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR,
+      ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR,
+      ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {

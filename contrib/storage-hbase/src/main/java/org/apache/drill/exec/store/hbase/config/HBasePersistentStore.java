@@ -25,36 +25,40 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
-import com.google.common.collect.Iterators;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import com.google.common.collect.Iterators;
 
 public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStore.class);
 
   private final PersistentStoreConfig<V> config;
-  private final HTableInterface table;
+  private final Table hbaseTable;
+  private final String hbaseTableName;
+
   private final String tableName;
   private final byte[] tableNameStartKey;
   private final byte[] tableNameStopKey;
 
-  public HBasePersistentStore(PersistentStoreConfig<V> config, HTableInterface table) {
+  public HBasePersistentStore(PersistentStoreConfig<V> config, Table table) {
     this.tableName = config.getName() + '\0';
     this.tableNameStartKey = Bytes.toBytes(tableName); // "tableName\x00"
     this.tableNameStopKey = this.tableNameStartKey.clone();
     this.tableNameStopKey[tableNameStartKey.length-1] = 1;
     this.config = config;
-    this.table = table;
+    this.hbaseTable = table;
+    this.hbaseTableName = table.getName().getNameAsString();
   }
 
   @Override
@@ -71,13 +75,15 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     try {
       Get get = new Get(row(key));
       get.addColumn(family, QUALIFIER);
-      Result r = table.get(get);
+      Result r = hbaseTable.get(get);
       if(r.isEmpty()){
         return null;
       }
       return value(r);
     } catch (IOException e) {
-      throw new DrillRuntimeException("Caught error while getting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
+      throw UserException.dataReadError(e)
+          .message("Caught error while getting row '%s' from for table '%s'", key, hbaseTableName)
+          .build(logger);
     }
   }
 
@@ -89,10 +95,12 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   protected synchronized void put(String key, byte[] family, V value) {
     try {
       Put put = new Put(row(key));
-      put.add(family, QUALIFIER, bytes(value));
-      table.put(put);
+      put.addColumn(family, QUALIFIER, bytes(value));
+      hbaseTable.put(put);
     } catch (IOException e) {
-      throw new DrillRuntimeException("Caught error while putting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
+      throw UserException.dataReadError(e)
+          .message("Caught error while putting row '%s' into table '%s'", key, hbaseTableName)
+          .build(logger);
     }
   }
 
@@ -100,10 +108,12 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   public synchronized boolean putIfAbsent(String key, V value) {
     try {
       Put put = new Put(row(key));
-      put.add(FAMILY, QUALIFIER, bytes(value));
-      return table.checkAndPut(put.getRow(), FAMILY, QUALIFIER, null /*absent*/, put);
+      put.addColumn(FAMILY, QUALIFIER, bytes(value));
+      return hbaseTable.checkAndPut(put.getRow(), FAMILY, QUALIFIER, null /*absent*/, put);
     } catch (IOException e) {
-      throw new DrillRuntimeException("Caught error while putting row '" + key + "' from for table:" + Bytes.toString(table.getTableName()), e);
+      throw UserException.dataReadError(e)
+          .message("Caught error while putting row '%s' into table '%s'", key, hbaseTableName)
+          .build(logger);
     }
   }
 
@@ -127,7 +137,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     try {
       return config.getSerializer().serialize(value);
     } catch (IOException e) {
-      throw new DrillRuntimeException(e);
+      throw UserException.dataReadError(e).build(logger);
     }
   }
 
@@ -135,17 +145,18 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     try {
       return config.getSerializer().deserialize(result.value());
     } catch (IOException e) {
-      throw new DrillRuntimeException(e);
+      throw UserException.dataReadError(e).build(logger);
     }
   }
 
   private void delete(byte[] row) {
     try {
       Delete del = new Delete(row);
-      table.delete(del);
+      hbaseTable.delete(del);
     } catch (IOException e) {
-      throw new DrillRuntimeException("Caught error while deleting row '" + Bytes.toStringBinary(row)
-          + "' from for table:" + Bytes.toString(table.getTableName()), e);
+      throw UserException.dataReadError(e)
+          .message("Caught error while deleting row '%s' from for table '%s'", Bytes.toStringBinary(row), hbaseTableName)
+          .build(logger);
     }
   }
 
@@ -161,9 +172,11 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
         scan.addColumn(FAMILY, QUALIFIER);
         scan.setCaching(Math.min(take, 100));
         scan.setBatch(take);  // set batch size
-        scanner = table.getScanner(scan);
+        scanner = hbaseTable.getScanner(scan);
       } catch (IOException e) {
-        throw new DrillRuntimeException("Caught error while creating HBase scanner for table:" + Bytes.toString(table.getTableName()), e);
+        throw UserException.dataReadError(e)
+            .message("Caught error while creating HBase scanner for table '%s'" + hbaseTableName)
+            .build(logger);
       }
     }
 
@@ -175,7 +188,9 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
             done = true;
           }
         } catch (IOException e) {
-          throw new DrillRuntimeException("Caught error while fetching rows from for table:" + Bytes.toString(table.getTableName()), e);
+          throw UserException.dataReadError(e)
+              .message("Caught error while fetching rows from for table '%s'", hbaseTableName)
+              .build(logger);
         }
       }
 

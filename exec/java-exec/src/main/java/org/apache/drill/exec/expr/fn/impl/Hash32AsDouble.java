@@ -45,6 +45,7 @@ import org.apache.drill.exec.expr.holders.NullableIntHolder;
  */
 public class Hash32AsDouble {
   @FunctionTemplate(name = "hash32AsDouble", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+
   public static class NullableFloatHash implements DrillSimpleFunc {
 
     @Param
@@ -59,7 +60,7 @@ public class Hash32AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
       }
     }
   }
@@ -76,7 +77,7 @@ public class Hash32AsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
     }
   }
 
@@ -95,7 +96,7 @@ public class Hash32AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
       }
     }
   }
@@ -112,7 +113,7 @@ public class Hash32AsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
     }
   }
 
@@ -131,7 +132,7 @@ public class Hash32AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((long) in.value, 0);
       }
     }
   }
@@ -150,7 +151,7 @@ public class Hash32AsDouble {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
       }
     }
   }
@@ -167,7 +168,7 @@ public class Hash32AsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32((long)in.value, 0);
     }
   }
 
@@ -182,7 +183,7 @@ public class Hash32AsDouble {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
     }
   }
 
@@ -198,7 +199,7 @@ public class Hash32AsDouble {
 
     public void eval() {
       java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
     }
   }
 
@@ -217,7 +218,7 @@ public class Hash32AsDouble {
         out.value = 0;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
       }
     }
   }
@@ -234,7 +235,7 @@ public class Hash32AsDouble {
 
     public void eval() {
       java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
     }
   }
 
@@ -253,7 +254,7 @@ public class Hash32AsDouble {
         out.value = 0;
       } else {
         java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
       }
     }
   }
@@ -271,7 +272,7 @@ public class Hash32AsDouble {
     public void eval() {
       java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
     }
   }
 
@@ -291,7 +292,7 @@ public class Hash32AsDouble {
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
       }
     }
   }
@@ -309,7 +310,7 @@ public class Hash32AsDouble {
     public void eval() {
       java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
           in.start, in.nDecimalDigits, in.scale);
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
     }
   }
 
@@ -329,7 +330,7 @@ public class Hash32AsDouble {
       } else {
         java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
             in.start, in.nDecimalDigits, in.scale);
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(input.doubleValue(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(input.doubleValue(), 0);
       }
     }
   }

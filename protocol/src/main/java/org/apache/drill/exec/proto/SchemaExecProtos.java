@@ -42,6 +42,9 @@ public final class SchemaExecProtos
                     output.writeInt32(2, message.getMajorFragmentId(), false);
                 if(message.hasMinorFragmentId())
                     output.writeInt32(3, message.getMinorFragmentId(), false);
+                if(message.hasParentQueryId())
+                    output.writeObject(4, message.getParentQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.ExecProtos.FragmentHandle message)
             {
@@ -91,6 +94,10 @@ public final class SchemaExecProtos
                         case 3:
                             builder.setMinorFragmentId(input.readInt32());
                             break;
+                        case 4:
+                            builder.setParentQueryId(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -134,6 +141,7 @@ public final class SchemaExecProtos
                 case 1: return "queryId";
                 case 2: return "majorFragmentId";
                 case 3: return "minorFragmentId";
+                case 4: return "parentQueryId";
                 default: return null;
             }
         }
@@ -148,6 +156,7 @@ public final class SchemaExecProtos
             fieldMap.put("queryId", 1);
             fieldMap.put("majorFragmentId", 2);
             fieldMap.put("minorFragmentId", 3);
+            fieldMap.put("parentQueryId", 4);
         }
     }
 

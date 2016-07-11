@@ -580,7 +580,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "window w as(partition by position_id order by employee_id)";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), SUM\\(\\$2\\), SUM\\(\\$1\\), SUM\\(\\$3\\)",
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
@@ -705,10 +705,10 @@ public class TestWindowFunctions extends BaseTestQuery {
         "order by 1, 2, 3, 4", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*SUM\\(\\$3\\).*\n" +
+    final String[] expectedPlan = {"Window.*\\$SUM0\\(\\$3\\).*\n" +
         ".*SelectionVectorRemover.*\n" +
         ".*Sort.*\n" +
-        ".*Window.*SUM\\(\\$2\\).*"
+        ".*Window.*\\$SUM0\\(\\$2\\).*"
     };
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
 

@@ -40,30 +40,40 @@ import java.lang.UnsupportedOperationException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.ArrayListMultimap;
 
 public class ObjectInspectorHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ObjectInspectorHelper.class);
 
-  private static Map<MinorType, Class> OIMAP_REQUIRED = new HashMap<>();
-  private static Map<MinorType, Class> OIMAP_OPTIONAL = new HashMap<>();
+  private static Multimap<MinorType, Class> OIMAP_REQUIRED = ArrayListMultimap.create();
+  private static Multimap<MinorType, Class> OIMAP_OPTIONAL = ArrayListMultimap.create();
   static {
 <#list drillOI.map as entry>
     <#if entry.needOIForDrillType == true>
-    OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Required.class);
-    OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Optional.class);
+    OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Required.class);
+    OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Optional.class);
     </#if>
 </#list>
   }
 
-  public static ObjectInspector getDrillObjectInspector(DataMode mode, MinorType minorType) {
+  public static ObjectInspector getDrillObjectInspector(DataMode mode, MinorType minorType, boolean varCharToStringReplacement) {
     try {
       if (mode == DataMode.REQUIRED) {
         if (OIMAP_REQUIRED.containsKey(minorType)) {
-          return (ObjectInspector) OIMAP_REQUIRED.get(minorType).newInstance();
+          if (varCharToStringReplacement && minorType == MinorType.VARCHAR) {
+            return (ObjectInspector) ((Class) OIMAP_REQUIRED.get(minorType).toArray()[1]).newInstance();
+          } else {
+            return (ObjectInspector) ((Class) OIMAP_REQUIRED.get(minorType).toArray()[0]).newInstance();
+          }
         }
       } else if (mode == DataMode.OPTIONAL) {
         if (OIMAP_OPTIONAL.containsKey(minorType)) {
-          return (ObjectInspector) OIMAP_OPTIONAL.get(minorType).newInstance();
+          if (varCharToStringReplacement && minorType == MinorType.VARCHAR) {
+            return (ObjectInspector) ((Class) OIMAP_OPTIONAL.get(minorType).toArray()[1]).newInstance();
+          } else {
+            return (ObjectInspector) ((Class) OIMAP_OPTIONAL.get(minorType).toArray()[0]).newInstance();
+          }
         }
       } else {
         throw new UnsupportedOperationException("Repeated types are not supported as arguement to Hive UDFs");
@@ -191,7 +201,7 @@ public class ObjectInspectorHelper {
           <#elseif entry.hiveType == "STRING">
             JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
-                      .invoke("getBytes").arg(DirectExpression.direct("com.google.common.base.Charsets.UTF_16")));
+                      .invoke("getBytes"));
             jc._else().add(returnValueHolder.ref("buffer")
               .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
             jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));

@@ -27,29 +27,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.List;
+
 @JsonTypeName("hash-aggregate")
 public class HashAggregate extends AbstractSingle {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregate.class);
 
-  private final NamedExpression[] groupByExprs;
-  private final NamedExpression[] aggrExprs;
+  private final List<NamedExpression> groupByExprs;
+  private final List<NamedExpression> aggrExprs;
 
   private final float cardinality;
 
   @JsonCreator
-  public HashAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] groupByExprs, @JsonProperty("exprs") NamedExpression[] aggrExprs, @JsonProperty("cardinality") float cardinality) {
+  public HashAggregate(@JsonProperty("child") PhysicalOperator child,
+                       @JsonProperty("keys") List<NamedExpression> groupByExprs,
+                       @JsonProperty("exprs") List<NamedExpression> aggrExprs,
+                       @JsonProperty("cardinality") float cardinality) {
     super(child);
     this.groupByExprs = groupByExprs;
     this.aggrExprs = aggrExprs;
     this.cardinality = cardinality;
   }
 
-  public NamedExpression[] getGroupByExprs() {
+  public List<NamedExpression> getGroupByExprs() {
     return groupByExprs;
   }
 
-  public NamedExpression[] getAggrExprs() {
+  public List<NamedExpression> getAggrExprs() {
     return aggrExprs;
   }
 

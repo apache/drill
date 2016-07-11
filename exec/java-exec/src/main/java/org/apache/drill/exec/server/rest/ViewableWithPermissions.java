@@ -78,6 +78,7 @@ public class ViewableWithPermissions extends Viewable {
         .put("showStorage", isAdmin)
         .put("showOptions", isAdmin)
         .put("showThreads", isAdmin)
+        .put("showLogs", isAdmin)
         .put("showLogin", authEnabled && showControls && !isUserLoggedIn)
         .put("showLogout", authEnabled && showControls && isUserLoggedIn)
         .put("loggedInUserName", authEnabled && showControls &&

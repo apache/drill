@@ -24,6 +24,7 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 public class Utilities {
+
   public static String getFileNameForQueryFragment(FragmentContext context, String location, String tag) {
      /*
      * From the context, get the query id, major fragment id, minor fragment id. This will be used as the file name to
@@ -66,5 +67,4 @@ public class Utilities {
       String v = Utilities.class.getPackage().getImplementationVersion();
       return v;
   }
-
 }

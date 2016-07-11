@@ -72,6 +72,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
     this.useExtendedOutput = Boolean.parseBoolean(writerOptions.get("extended"));
+    this.skipNullFields = Boolean.parseBoolean(writerOptions.get("skipnulls"));
     final boolean uglify = Boolean.parseBoolean(writerOptions.get("uglify"));
 
     Configuration conf = new Configuration();

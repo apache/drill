@@ -25,9 +25,9 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 public class InfoSchemaDrillTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaDrillTable.class);
 
-  private final SelectedTable table;
+  private final InfoSchemaTableType table;
 
-  public InfoSchemaDrillTable(InfoSchemaStoragePlugin plugin, String storageEngineName, SelectedTable selection, StoragePluginConfig storageEngineConfig) {
+  public InfoSchemaDrillTable(InfoSchemaStoragePlugin plugin, String storageEngineName, InfoSchemaTableType selection, StoragePluginConfig storageEngineConfig) {
     super(storageEngineName, plugin, selection);
     this.table = selection;
   }

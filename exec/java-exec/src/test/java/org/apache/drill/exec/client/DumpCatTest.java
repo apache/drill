@@ -23,18 +23,14 @@ import static org.junit.Assert.assertTrue;
 import java.io.FileInputStream;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -47,12 +43,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
 /**
  * The unit test case will read a physical plan in json format. The physical plan contains a "trace" operator,
@@ -67,13 +61,7 @@ public class DumpCatTest  extends ExecTest {
   public void testDumpCat(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
   {
 
-      new NonStrictExpectations(){{
-          bitContext.getMetrics(); result = new MetricRegistry();
-          bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-          bitContext.getConfig(); result = c;  minTimes = 1;
-          bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-          bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      }};
+      mockDrillbitContext(bitContext);
 
       final PhysicalPlanReader reader = defaultPhysicalPlanReader(c);
       final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));

@@ -52,9 +52,17 @@
   </logger>
 
   <logger name="org.apache.hadoop" additivity="false">
-    <level value="info" />
+    <level value="warn" />
     <appender-ref ref="STDOUT" />
     <appender-ref ref="SOCKET" />
+    <appender-ref ref="FILE" />
+  </logger>
+
+  <logger name="org.apache.hadoop.hbase.client.ConnectionManager" additivity="false">
+    <level value="error" />
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="FILE" />
   </logger>
 
   <root>

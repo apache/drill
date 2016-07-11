@@ -105,6 +105,9 @@ public class WebServer implements AutoCloseable {
     }
   }
 
+  private static final String BASE_STATIC_PATH = "/rest/static/";
+  private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
+
   /**
    * Start the web server including setup.
    * @throws Exception
@@ -141,7 +144,12 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
-    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
+    // Get resource URL for Drill static assets, based on where Drill icon is located
+    String drillIconResourcePath =
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+    staticHolder.setInitParameter(
+        "resourceBase",
+        drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");

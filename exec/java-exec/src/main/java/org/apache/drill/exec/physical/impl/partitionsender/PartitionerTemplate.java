@@ -399,6 +399,16 @@ public abstract class PartitionerTemplate implements Partitioner {
       return vectorContainer.iterator();
     }
 
+    @Override
+    public SelectionVector2 getSelectionVector2() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SelectionVector4 getSelectionVector4() {
+      throw new UnsupportedOperationException();
+    }
+
     public WritableBatch getWritableBatch() {
       return WritableBatch.getBatchNoHVWrap(recordCount, this, false);
     }

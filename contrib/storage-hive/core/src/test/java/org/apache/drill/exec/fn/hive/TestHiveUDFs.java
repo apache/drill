@@ -25,11 +25,12 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float4Vector;
+import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableVar16CharVector;
-import org.apache.drill.exec.vector.Var16CharVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -53,42 +54,42 @@ public class TestHiveUDFs extends BaseTestQuery {
         continue;
       }
       // Output columns and types
-      //  1. str1 : Var16Char
-      //  2. upperStr1 : NullableVar16Char
+      //  1. str1 : VarChar
+      //  2. upperStr1 : NullableVarChar
       //  3. concat : NullableVarChar
       //  4. flt1 : Float4
       //  5. format_number : NullableFloat8
-      //  6. nullableStr1 : NullableVar16Char
-      //  7. upperNullableStr1 : NullableVar16Char
-      Var16CharVector str1V = (Var16CharVector) batchLoader.getValueAccessorById(Var16CharVector.class, 0).getValueVector();
-      NullableVar16CharVector upperStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 1).getValueVector();
-      NullableVar16CharVector concatV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 2).getValueVector();
+      //  6. nullableStr1 : NullableVarChar
+      //  7. upperNullableStr1 : NullableVarChar
+      VarCharVector str1V = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
+      NullableVarCharVector upperStr1V = (NullableVarCharVector) batchLoader.getValueAccessorById(NullableVarCharVector.class, 1).getValueVector();
+      NullableVarCharVector concatV = (NullableVarCharVector) batchLoader.getValueAccessorById(NullableVarCharVector.class, 2).getValueVector();
       Float4Vector flt1V = (Float4Vector) batchLoader.getValueAccessorById(Float4Vector.class, 3).getValueVector();
-      NullableVar16CharVector format_numberV = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 4).getValueVector();
-      NullableVar16CharVector nullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 5).getValueVector();
-      NullableVar16CharVector upperNullableStr1V = (NullableVar16CharVector) batchLoader.getValueAccessorById(NullableVar16CharVector.class, 6).getValueVector();
+      NullableVarCharVector format_numberV = (NullableVarCharVector) batchLoader.getValueAccessorById(NullableVarCharVector.class, 4).getValueVector();
+      NullableVarCharVector nullableStr1V = (NullableVarCharVector) batchLoader.getValueAccessorById(NullableVarCharVector.class, 5).getValueVector();
+      NullableVarCharVector upperNullableStr1V = (NullableVarCharVector) batchLoader.getValueAccessorById(NullableVarCharVector.class, 6).getValueVector();
 
       for (int i=0; i<batchLoader.getRecordCount(); i++) {
-        String in = new String(str1V.getAccessor().get(i), Charsets.UTF_16);
-        String upper = new String(upperStr1V.getAccessor().get(i), Charsets.UTF_16);
+        String in = new String(str1V.getAccessor().get(i), Charsets.UTF_8);
+        String upper = new String(upperStr1V.getAccessor().get(i), Charsets.UTF_8);
         assertTrue(in.toUpperCase().equals(upper));
 
 
-        String concat = new String(concatV.getAccessor().get(i), Charsets.UTF_16);
+        String concat = new String(concatV.getAccessor().get(i), Charsets.UTF_8);
         assertTrue(concat.equals(in+"-"+in));
 
         float flt1 = flt1V.getAccessor().get(i);
-        String format_number = new String(format_numberV.getAccessor().get(i), Charsets.UTF_16);
+        String format_number = new String(format_numberV.getAccessor().get(i), Charsets.UTF_8);
 
 
         String nullableStr1 = null;
         if (!nullableStr1V.getAccessor().isNull(i)) {
-          nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_16);
+          nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_8);
         }
 
         String upperNullableStr1 = null;
         if (!upperNullableStr1V.getAccessor().isNull(i)) {
-          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i), Charsets.UTF_16);
+          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i), Charsets.UTF_8);
         }
 
         assertEquals(nullableStr1 != null, upperNullableStr1 != null);
@@ -125,20 +126,20 @@ public class TestHiveUDFs extends BaseTestQuery {
       }
 
       // Output columns and types
-      // 1. str1 : Var16Char
+      // 1. str1 : VarChar
       // 2. str1Length : Int
       // 3. str1Ascii : Int
       // 4. flt1 : Float4
       // 5. pow : Float8
-      Var16CharVector str1V = (Var16CharVector) batchLoader.getValueAccessorById(Var16CharVector.class, 0).getValueVector();
-      NullableIntVector str1LengthV = (NullableIntVector) batchLoader.getValueAccessorById(NullableIntVector.class, 1).getValueVector();
-      NullableIntVector str1AsciiV = (NullableIntVector) batchLoader.getValueAccessorById(NullableIntVector.class, 2).getValueVector();
+      VarCharVector str1V = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
+      BigIntVector str1LengthV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
+      IntVector str1AsciiV = (IntVector) batchLoader.getValueAccessorById(IntVector.class, 2).getValueVector();
       Float4Vector flt1V = (Float4Vector) batchLoader.getValueAccessorById(Float4Vector.class, 3).getValueVector();
       NullableFloat8Vector powV = (NullableFloat8Vector) batchLoader.getValueAccessorById(NullableFloat8Vector.class, 4).getValueVector();
 
       for (int i=0; i<batchLoader.getRecordCount(); i++) {
-        String str1 = new String(str1V.getAccessor().get(i), Charsets.UTF_16);
-        int str1Length = str1LengthV.getAccessor().get(i);
+        String str1 = new String(str1V.getAccessor().get(i), Charsets.UTF_8);
+        long str1Length = str1LengthV.getAccessor().get(i);
         assertTrue(str1.length() == str1Length);
 
         int str1Ascii = str1AsciiV.getAccessor().get(i);

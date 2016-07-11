@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -120,7 +121,8 @@ public class ImplCreator {
 
 
   /** Create a RecordBatch and its children for given PhysicalOperator */
-  private RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
+  @VisibleForTesting
+  public RecordBatch getRecordBatch(final PhysicalOperator op, final FragmentContext context) throws ExecutionSetupException {
     Preconditions.checkNotNull(op);
 
     final List<RecordBatch> childRecordBatches = getChildren(op, context);

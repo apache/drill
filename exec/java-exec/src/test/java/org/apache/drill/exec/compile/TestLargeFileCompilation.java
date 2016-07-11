@@ -38,6 +38,8 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final String LARGE_QUERY_WRITER;
 
+  private static final String LARGE_QUERY_SELECT_LIST;
+
   private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestLargeFileCompilation.iteration", "1"));
 
   private static final int NUM_PROJECT_COULMNS = 2000;
@@ -62,6 +64,15 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       sb.append("c").append(i).append(", ");
     }
     LARGE_QUERY_GROUP_BY = sb.append("full_name").toString();
+  }
+
+  static {
+    StringBuilder sb = new StringBuilder("select\n\t");
+    for (int i = 0; i < NUM_PROJECT_COULMNS; i++) {
+      sb.append("employee_id+").append(i).append(" as col").append(i).append(", ");
+    }
+    sb.append("full_name\nfrom cp.`employee.json`\n\n\t");
+    LARGE_QUERY_SELECT_LIST = sb.append("full_name").toString();
   }
 
   static {
@@ -135,6 +146,12 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   public void testFILTER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_FILTER);
+  }
+
+  @Test
+  public void testProject() throws Exception {
+    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult(ITERATION_COUNT, LARGE_QUERY_SELECT_LIST);
   }
 
 }

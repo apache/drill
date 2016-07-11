@@ -42,6 +42,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.default", "kv_parquet")
         .baselineValues("hive.default", "kv_sh")
         .baselineValues("hive.default", "countstar_parquet")
+        .baselineValues("hive.default", "simple_json")
         .go();
 
     testBuilder()

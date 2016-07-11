@@ -137,7 +137,8 @@ public class ExpressionTest extends ExecTest {
       assertEquals(0, error.getErrorCount());
     }
 
-    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create())).getRoot();
+    FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(DrillConfig.create());
+    final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, funcReg, null).getRoot();
     cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.getCodeGenerator().generateAndGet();
   }

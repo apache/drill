@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.hbase;
+package org.apache.drill.exec.util;
 
 import java.lang.reflect.Modifier;
 
@@ -25,9 +25,8 @@ import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 
-import org.apache.drill.common.CatastrophicFailure;
-
 public class GuavaPatcher {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GuavaPatcher.class);
 
   private static boolean patched;
 
@@ -37,8 +36,8 @@ public class GuavaPatcher {
         patchStopwatch();
         patchCloseables();
         patched = true;
-      } catch (Exception e) {
-        CatastrophicFailure.exit(e, "Unable to patch Guava classes.", -100);
+      } catch (Throwable e) {
+        logger.warn("Unable to patch Guava classes.", e);
       }
     }
   }
@@ -66,7 +65,7 @@ public class GuavaPatcher {
     // Load the modified class instead of the original.
     cc.toClass();
 
-    System.out.println("Google's Stopwatch patched for old HBase Guava version.");
+    logger.info("Google's Stopwatch patched for old HBase Guava version.");
   }
 
   private static void patchCloseables() throws Exception {
@@ -84,7 +83,7 @@ public class GuavaPatcher {
     // Load the modified class instead of the original.
     cc.toClass();
 
-    System.out.println("Google's Closeables patched for old HBase Guava version.");
+    logger.info("Google's Closeables patched for old HBase Guava version.");
   }
 
 }

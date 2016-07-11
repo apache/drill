@@ -19,36 +19,39 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.calcite.schema.SchemaPlus;
-
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.Connection;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 
 public class HBaseStoragePlugin extends AbstractStoragePlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePlugin.class);
+  private static final HBaseConnectionManager hbaseConnectionManager = HBaseConnectionManager.INSTANCE;
 
   private final DrillbitContext context;
-  private final HBaseStoragePluginConfig engineConfig;
+  private final HBaseStoragePluginConfig storeConfig;
   private final HBaseSchemaFactory schemaFactory;
+  private final HBaseConnectionKey connectionKey;
 
-  @SuppressWarnings("unused")
   private final String name;
 
-  public HBaseStoragePlugin(HBaseStoragePluginConfig configuration, DrillbitContext context, String name)
+  public HBaseStoragePlugin(HBaseStoragePluginConfig storeConfig, DrillbitContext context, String name)
       throws IOException {
     this.context = context;
     this.schemaFactory = new HBaseSchemaFactory(this, name);
-    this.engineConfig = configuration;
+    this.storeConfig = storeConfig;
     this.name = name;
+    this.connectionKey = new HBaseConnectionKey();
   }
 
   public DrillbitContext getContext() {
@@ -73,11 +76,85 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public HBaseStoragePluginConfig getConfig() {
-    return engineConfig;
+    return storeConfig;
   }
 
   @Override
   public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of(HBasePushFilterIntoScan.FILTER_ON_SCAN, HBasePushFilterIntoScan.FILTER_ON_PROJECT);
   }
+
+  @Override
+  public void close() throws Exception {
+    hbaseConnectionManager.closeConnection(connectionKey);
+  }
+
+  public Connection getConnection() {
+    return hbaseConnectionManager.getConnection(connectionKey);
+  }
+
+  /**
+   * An internal class which serves the key in a map of {@link HBaseStoragePlugin} => {@link Connection}.
+   */
+  class HBaseConnectionKey {
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private HBaseConnectionKey() {}
+
+    public void lock() {
+      lock.lock();
+    }
+
+    public void unlock() {
+      lock.unlock();
+    }
+
+    public Configuration getHBaseConf() {
+      return storeConfig.getHBaseConf();
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + ((storeConfig == null) ? 0 : storeConfig.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      } else if (obj == null) {
+        return false;
+      } else if (getClass() != obj.getClass()) {
+        return false;
+      }
+
+      HBaseStoragePlugin other = ((HBaseConnectionKey) obj).getHBaseStoragePlugin();
+      if (name == null) {
+        if (other.name != null) {
+          return false;
+        }
+      } else if (!name.equals(other.name)) {
+        return false;
+      }
+      if (storeConfig == null) {
+        if (other.storeConfig != null) {
+          return false;
+        }
+      } else if (!storeConfig.equals(other.storeConfig)) {
+        return false;
+      }
+      return true;
+    }
+
+    private HBaseStoragePlugin getHBaseStoragePlugin() {
+      return HBaseStoragePlugin.this;
+    }
+
+  }
+
 }

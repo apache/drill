@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -440,6 +441,45 @@ public class AvroTestUtil {
           array.add(nestedRecord);
           record.put("c_array", array);
         }
+        record.endRecord();
+      }
+    } finally {
+      record.close();
+    }
+
+    return record;
+  }
+
+  public static AvroTestRecordWriter generateNestedArraySchema() throws IOException {
+    return generateNestedArraySchema(RECORD_COUNT, ARRAY_SIZE);
+  }
+
+  public static AvroTestRecordWriter generateNestedArraySchema(int numRecords, int numArrayItems) throws IOException {
+
+    final File file = File.createTempFile("avro-nested-test", ".avro");
+    file.deleteOnExit();
+
+    final Schema schema = SchemaBuilder.record("AvroRecordReaderTest").namespace("org.apache.drill.exec.store.avro")
+        .fields().name("a_int").type().intType().noDefault().name("b_array").type().array().items()
+        .record("my_record_1").namespace("foo.blah.org").fields().name("nested_1_int").type().optional().intType()
+        .endRecord().arrayDefault(Collections.emptyList()).endRecord();
+
+    final Schema arraySchema = schema.getField("b_array").schema();
+    final Schema itemSchema = arraySchema.getElementType();
+
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
+    try {
+      for (int i = 0; i < numRecords; i++) {
+        record.startRecord();
+        record.put("a_int", i);
+        GenericArray<GenericRecord> array = new GenericData.Array<>(ARRAY_SIZE, arraySchema);
+
+        for (int j = 0; j < numArrayItems; j++) {
+          final GenericRecord nestedRecord = new GenericData.Record(itemSchema);
+          nestedRecord.put("nested_1_int", j);
+          array.add(nestedRecord);
+        }
+        record.put("b_array", array);
         record.endRecord();
       }
     } finally {

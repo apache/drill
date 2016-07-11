@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
@@ -40,7 +41,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.RelNode;
@@ -81,6 +81,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       new DrillReduceAggregatesRule(operand(LogicalAggregate.class, any()));
   public static final DrillConvertSumToSumZero INSTANCE_SUM =
       new DrillConvertSumToSumZero(operand(DrillAggregateRel.class, any()));
+
+  public static final DrillConvertWindowSumToSumZero INSTANCE_WINDOW_SUM =
+          new DrillConvertWindowSumToSumZero(operand(DrillWindowRel.class, any()));
 
   private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false,
       new SqlReturnTypeInference() {
@@ -695,12 +698,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     public boolean matches(RelOptRuleCall call) {
       DrillAggregateRel oldAggRel = (DrillAggregateRel) call.rels[0];
       for (AggregateCall aggregateCall : oldAggRel.getAggCallList()) {
-        final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(aggregateCall.getAggregation());
-        if(sqlAggFunction instanceof SqlSumAggFunction
-            && !aggregateCall.getType().isNullable()) {
-          // If SUM(x) is not nullable, the validator must have determined that
-          // nulls are impossible (because the group is never empty and x is never
-          // null). Therefore we translate to SUM0(x).
+        if(isConversionToSumZeroNeeded(aggregateCall.getAggregation(), aggregateCall.getType())) {
           return true;
         }
       }
@@ -714,10 +712,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       final Map<AggregateCall, RexNode> aggCallMapping = Maps.newHashMap();
       final List<AggregateCall> newAggregateCalls = Lists.newArrayList();
       for (AggregateCall oldAggregateCall : oldAggRel.getAggCallList()) {
-        final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(
-            oldAggregateCall.getAggregation());
-        if(sqlAggFunction instanceof SqlSumAggFunction
-            && !oldAggregateCall.getType().isNullable()) {
+        if(isConversionToSumZeroNeeded(oldAggregateCall.getAggregation(), oldAggregateCall.getType())) {
           final RelDataType argType = oldAggregateCall.getType();
           final RelDataType sumType = oldAggRel.getCluster().getTypeFactory()
               .createTypeWithNullability(argType, argType.isNullable());
@@ -755,6 +750,82 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         tracer.warning(e.toString());
       }
     }
+  }
+
+  private static class DrillConvertWindowSumToSumZero extends RelOptRule {
+    public DrillConvertWindowSumToSumZero(RelOptRuleOperand operand) {
+      super(operand);
+    }
+
+    @Override
+    public boolean matches(RelOptRuleCall call) {
+      final DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
+      for(Window.Group group : oldWinRel.groups) {
+        for(Window.RexWinAggCall rexWinAggCall : group.aggCalls) {
+          if(isConversionToSumZeroNeeded(rexWinAggCall.getOperator(), rexWinAggCall.getType())) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public void onMatch(RelOptRuleCall call) {
+      final DrillWindowRel oldWinRel = (DrillWindowRel) call.rels[0];
+      final ImmutableList.Builder<Window.Group> builder = ImmutableList.builder();
+
+      for(Window.Group group : oldWinRel.groups) {
+        final List<Window.RexWinAggCall> aggCalls = Lists.newArrayList();
+        for(Window.RexWinAggCall rexWinAggCall : group.aggCalls) {
+          if(isConversionToSumZeroNeeded(rexWinAggCall.getOperator(), rexWinAggCall.getType())) {
+            final RelDataType argType = rexWinAggCall.getType();
+            final RelDataType sumType = oldWinRel.getCluster().getTypeFactory()
+                .createTypeWithNullability(argType, argType.isNullable());
+            final SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+                new SqlSumEmptyIsZeroAggFunction(), sumType);
+            final Window.RexWinAggCall sumZeroCall =
+                new Window.RexWinAggCall(
+                    sumZeroAgg,
+                    sumType,
+                    rexWinAggCall.operands,
+                    rexWinAggCall.ordinal);
+            aggCalls.add(sumZeroCall);
+          } else {
+            aggCalls.add(rexWinAggCall);
+          }
+        }
+
+        final Window.Group newGroup = new Window.Group(
+            group.keys,
+            group.isRows,
+            group.lowerBound,
+            group.upperBound,
+            group.orderKeys,
+            aggCalls);
+        builder.add(newGroup);
+      }
+
+      call.transformTo(new DrillWindowRel(
+          oldWinRel.getCluster(),
+          oldWinRel.getTraitSet(),
+          oldWinRel.getInput(),
+          oldWinRel.constants,
+          oldWinRel.getRowType(),
+          builder.build()));
+    }
+  }
+
+  private static boolean isConversionToSumZeroNeeded(SqlOperator sqlOperator, RelDataType type) {
+    sqlOperator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlOperator);
+    if(sqlOperator instanceof SqlSumAggFunction
+        && !type.isNullable()) {
+      // If SUM(x) is not nullable, the validator must have determined that
+      // nulls are impossible (because the group is never empty and x is never
+      // null). Therefore we translate to SUM0(x).
+      return true;
+    }
+    return false;
   }
 }
 

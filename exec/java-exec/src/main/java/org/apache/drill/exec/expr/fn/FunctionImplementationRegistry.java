@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr.fn;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -186,4 +185,5 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
     }
     return false;
   }
+
 }
