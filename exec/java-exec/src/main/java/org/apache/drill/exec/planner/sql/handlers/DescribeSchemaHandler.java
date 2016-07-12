@@ -25,14 +25,15 @@ import com.google.common.base.Joiner;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeSchema;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FileSystemSchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
@@ -76,17 +77,17 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
       try {
         storagePlugin = context.getStorage().getPlugin(schema.names.get(0));
       } catch (ExecutionSetupException e) {
-        throw UserException.validationError()
-            .message("Failure while retrieving storage plugin", e)
-            .build(logger);
+        throw new DrillRuntimeException("Failure while retrieving storage plugin", e);
       }
       String properties;
       try {
-        properties = getPropertiesAsJsonString(schema.names, storagePlugin.getConfig());
+        final Map configMap = mapper.convertValue(storagePlugin.getConfig(), Map.class);
+        if (storagePlugin instanceof FileSystemPlugin) {
+          transformWorkspaces(schema.names, configMap);
+        }
+        properties = mapper.writeValueAsString(configMap);
       } catch (JsonProcessingException e) {
-        throw UserException.parseError()
-            .message("Error while trying to convert storage config to json string")
-            .build(logger);
+        throw new DrillRuntimeException("Error while trying to convert storage config to json string", e);
       }
       return DirectPlan.createDirectPlan(context, new DescribeSchemaResult(Joiner.on(".").join(schema.names), properties));
     }
@@ -97,10 +98,9 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
   }
 
   /**
-   * Converts schema config properties to json string. If storage plugin has several workspaces, picks appropriate one.
+   * If storage plugin has several workspaces, picks appropriate one and removes the others.
    */
-  private String getPropertiesAsJsonString(List<String> names, StoragePluginConfig config) throws JsonProcessingException {
-    final Map configMap = mapper.convertValue(config, Map.class);
+  private void transformWorkspaces(List<String> names, Map configMap) {
     Object workspaces = configMap.remove("workspaces");
     if (workspaces != null) {
       Map map = (Map) workspaces;
@@ -113,7 +113,6 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
         configMap.putAll(mapper.convertValue(WorkspaceConfig.DEFAULT, Map.class));
       }
     }
-    return mapper.writeValueAsString(configMap);
   }
 
   public static class DescribeSchemaResult {

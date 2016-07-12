@@ -21,17 +21,24 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_CONNECT;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_DESCRIPTION;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contains tests for
@@ -368,37 +375,42 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
-  public void describeSchemaOutputForDefaultWorkspace() throws Exception {
-    String properties = Resources.toString(Resources.getResource("describe_schema_output.json"), Charsets.UTF_8).replace("\r", "");
-    testBuilder()
-        .sqlQuery("describe schema dfs_test")
-        .unOrdered()
-        .baselineColumns("schema", "properties")
-        .baselineValues("dfs_test", properties)
-        .go();
+  public void describeSchemaOutput() throws Exception {
+    final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs_test.tmp");
+    assertTrue(result.size() == 1);
+    final QueryDataBatch batch = result.get(0);
+    final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
+    loader.load(batch.getHeader().getDef(), batch.getData());
 
-    testBuilder()
-        .sqlQuery("describe schema dfs_test.`default`")
-        .unOrdered()
-        .baselineColumns("schema", "properties")
-        .baselineValues("dfs_test.default", properties)
-        .go();
-  }
+    // check schema column value
+    final VectorWrapper schemaValueVector = loader.getValueAccessorById(
+        NullableVarCharVector.class,
+        loader.getValueVectorId(SchemaPath.getCompoundPath("schema")).getFieldIds());
+    String schema = schemaValueVector.getValueVector().getAccessor().getObject(0).toString();
+    assertEquals("dfs_test.tmp", schema);
 
-  @Test
-  public void describeSchemaOutputForTmpWorkspace() throws Exception {
-    String properties = Resources.toString(Resources.getResource("describe_schema_output.json"), Charsets.UTF_8).replace("\r", "");
+    // check properties column value
+    final VectorWrapper propertiesValueVector = loader.getValueAccessorById(
+        NullableVarCharVector.class,
+        loader.getValueVectorId(SchemaPath.getCompoundPath("properties")).getFieldIds());
+    String properties = propertiesValueVector.getValueVector().getAccessor().getObject(0).toString();
+    final Map configMap = mapper.readValue(properties, Map.class);
+
+    // check some stable properties existence
+    assertTrue(configMap.containsKey("connection"));
+    assertTrue(configMap.containsKey("config"));
+    assertTrue(configMap.containsKey("formats"));
+    assertFalse(configMap.containsKey("workspaces"));
+
+    // check some stable properties values
+    assertEquals("file", configMap.get("type"));
+
     final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs_test").getConfig();
     final String tmpSchemaLocation = testConfig.workspaces.get("tmp").getLocation();
-    properties = properties.replace("\"writable\" : false", String.format("\"writable\" : %s", true));
-    properties = properties.replace("\"location\" : \"/\"", String.format("\"location\" : \"%s\"", tmpSchemaLocation));
+    assertEquals(tmpSchemaLocation, configMap.get("location"));
 
-    testBuilder()
-        .sqlQuery("describe schema dfs_test.tmp")
-        .unOrdered()
-        .baselineColumns("schema", "properties")
-        .baselineValues("dfs_test.tmp", properties)
-        .go();
+    batch.release();
+    loader.clear();
   }
 
   @Test
