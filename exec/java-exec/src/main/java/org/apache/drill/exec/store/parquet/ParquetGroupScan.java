@@ -607,7 +607,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       fileSet = Sets.newHashSet(fileNames);
     }
 
-    if (fileNames.isEmpty()) {
+    List<String> finalFileNames;
+    if (fileSet != null) {
+      finalFileNames = Lists.newArrayList(fileSet);
+    } else {
+      finalFileNames = fileNames;
+    }
+
+    if (finalFileNames.isEmpty()) {
       // no files were found, most likely we tried to query some empty sub folders
       throw UserException.validationError().message("The table you tried to query is empty").build(logger);
     }
@@ -623,7 +630,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // because create() changes the root to include the scheme and authority; In future, if create()
     // is the preferred way to instantiate a file selection, we may need to do something different...
     // WARNING: file statuses and file names are inconsistent
-    FileSelection newSelection = new FileSelection(selection.getStatuses(fs), fileNames, metaRootPath.toString(), cacheFileRoot);
+    FileSelection newSelection = new FileSelection(selection.getStatuses(fs), finalFileNames, metaRootPath.toString(), cacheFileRoot);
 
     newSelection.setExpandedFully();
     return newSelection;
