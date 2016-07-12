@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -15,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
-
-# Start a sqlline session with an embedded Drillbit
-export DRILL_EMBEDDED=1
-exec ${bin}/sqlline -u "jdbc:drill:zk=local" "$@"
+# This file is empty by default. Default Drill environment settings appear
+# in drill-config.sh. Distributions can replace this file with a
+# distribution-specific version that sets environment variables and options
+# specific to that distribution. Users should not put anything in this file;
+# put user options in drill-env.sh instead.
