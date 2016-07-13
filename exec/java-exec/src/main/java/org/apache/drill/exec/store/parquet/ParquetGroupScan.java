@@ -571,22 +571,24 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     // get (and set internal field) the metadata for the directory by reading the metadata file
     this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString());
-    List<String> fileNames = Lists.newArrayList();
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
+
+    if (fileSet == null) {
+      fileSet = Sets.newHashSet();
+    }
 
     final Path first = fileStatuses.get(0).getPath();
     if (fileStatuses.size() == 1 && selection.getSelectionRoot().equals(first.toString())) {
       // we are selecting all files from selection root. Expand the file list from the cache
       for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
-        fileNames.add(file.getPath());
+        fileSet.add(file.getPath());
       }
-      // we don't need to populate fileSet as all files are selected
+
     } else if (selection.isExpandedPartial() && cacheFileRoot != null) {
       this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString());
       for (Metadata.ParquetFileMetadata file : this.parquetTableMetadata.getFiles()) {
-        fileNames.add(file.getPath());
+        fileSet.add(file.getPath());
       }
-      fileSet = Sets.newHashSet(fileNames);
     } else {
       // we need to expand the files from fileStatuses
       for (FileStatus status : fileStatuses) {
@@ -595,29 +597,22 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           final Path metaPath = new Path(status.getPath(), Metadata.METADATA_FILENAME);
           final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString());
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
-            fileNames.add(file.getPath());
+            // fileNames.add(file.getPath());
+            fileSet.add(file.getPath());
           }
         } else {
           final Path path = Path.getPathWithoutSchemeAndAuthority(status.getPath());
-          fileNames.add(path.toString());
+          fileSet.add(path.toString());
         }
       }
-
-      // populate fileSet so we only keep the selected row groups
-      fileSet = Sets.newHashSet(fileNames);
     }
 
-    List<String> finalFileNames;
-    if (fileSet != null) {
-      finalFileNames = Lists.newArrayList(fileSet);
-    } else {
-      finalFileNames = fileNames;
-    }
-
-    if (finalFileNames.isEmpty()) {
+    if (fileSet.isEmpty()) {
       // no files were found, most likely we tried to query some empty sub folders
       throw UserException.validationError().message("The table you tried to query is empty").build(logger);
     }
+
+    List<String> fileNames = Lists.newArrayList(fileSet);
 
     // when creating the file selection, set the selection root in the form /a/b instead of
     // file:/a/b.  The reason is that the file names above have been created in the form
@@ -630,7 +625,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // because create() changes the root to include the scheme and authority; In future, if create()
     // is the preferred way to instantiate a file selection, we may need to do something different...
     // WARNING: file statuses and file names are inconsistent
-    FileSelection newSelection = new FileSelection(selection.getStatuses(fs), finalFileNames, metaRootPath.toString(), cacheFileRoot);
+    FileSelection newSelection = new FileSelection(selection.getStatuses(fs), fileNames, metaRootPath.toString(), cacheFileRoot);
 
     newSelection.setExpandedFully();
     return newSelection;
