@@ -17,22 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-/*******************************************************************************
- * Copyright 2014 uniVocity Software Pty Ltd
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
@@ -188,7 +172,7 @@ final class TextInput {
    * read some more bytes from the stream.  Uses the zero copy interface if available.  Otherwise, does byte copy.
    * @throws IOException
    */
-  private final void read() throws IOException {
+  private void read() throws IOException {
     if(bufferReadable){
 
       if(remByte != -1){
@@ -219,7 +203,7 @@ final class TextInput {
    * Read more data into the buffer.  Will also manage split end conditions.
    * @throws IOException
    */
-  private final void updateBuffer() throws IOException {
+  private void updateBuffer() throws IOException {
     streamPos = seekable.getPos();
     underlyingBuffer.clear();
 
@@ -249,30 +233,24 @@ final class TextInput {
    * the split boundary.
    */
   private void updateLengthBasedOnConstraint() {
-    // find the next line separator:
     final long max = bStart + length;
-
-    for (long m = this.bStart + (endPos - streamPos); m < max; m++) {
-      long mTemp = m - 1;
+    for(long m = bStart + (endPos - streamPos); m < max; m++) {
       for (int i = 0; i < lineSeparator.length; i++) {
-        mTemp++;
-        if (PlatformDependent.getByte(mTemp) == lineSeparator[i]) {
-          if (mTemp < max) {
-            continue;
-          } else {
-            // remnant bytes
-            // the last N characters of the read were a remnant bytes. We'll hold off on dealing with these bytes until the next read.
-            remByte = i;
-            length -= (i + 1);
+        long mPlus = m + i;
+        if (mPlus < max) {
+          // we found a line separator and don't need to consult the next byte.
+          if (lineSeparator[i] == PlatformDependent.getByte(mPlus) && i == lineSeparator.length - 1) {
+            length = (int) (mPlus - bStart) + 1;
+            endFound = true;
             return;
           }
+        } else {
+          // the last N characters of the read were remnant bytes. We'll hold off on dealing with these bytes until the next read.
+          remByte = i;
+          length = length - i;
+          return;
         }
-        break;
       }
-      // we found line delimiter
-      length = (int) (mTemp - bStart);
-      endFound = true;
-      break;
     }
   }
 
