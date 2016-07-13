@@ -81,8 +81,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot) throws IOException {
-    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection, cacheFileRoot);
+    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(), cacheFileRoot);
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
 

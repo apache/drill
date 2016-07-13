@@ -223,12 +223,11 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
     }
 
     if (scanRel instanceof DrillScanRel) {
-//      final FormatSelection formatSelection = (FormatSelection)((DynamicDrillTable)scanRel.getTable()).getSelection();
       final FormatSelection formatSelection = (FormatSelection)table.getSelection();
       final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
           cacheFileRoot, formatSelection.getSelection().getDirStatus());
       final FileGroupScan newGroupScan =
-          ((FileGroupScan)((DrillScanRel)scanRel).getGroupScan()).clone(newFileSelection, cacheFileRoot);
+          ((FileGroupScan)((DrillScanRel)scanRel).getGroupScan()).clone(newFileSelection);
       return new DrillScanRel(scanRel.getCluster(),
                       scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
                       scanRel.getTable(),

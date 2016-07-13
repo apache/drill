@@ -871,10 +871,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
-  public FileGroupScan clone(FileSelection selection, String cacheFileRoot) throws IOException {
+  public FileGroupScan clone(FileSelection selection) throws IOException {
     ParquetGroupScan newScan = new ParquetGroupScan(this);
     newScan.modifyFileSelection(selection);
-    newScan.cacheFileRoot = cacheFileRoot;
+    newScan.cacheFileRoot = selection.cacheFileRoot;
     newScan.init();
     return newScan;
   }
@@ -913,9 +913,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
 
     try {
-      FileSelection newSelection = new FileSelection(null, Lists.newArrayList(fileNames), getSelectionRoot());
+      FileSelection newSelection = new FileSelection(null, Lists.newArrayList(fileNames), getSelectionRoot(), cacheFileRoot);
       logger.debug("applyLimit() reduce parquet file # from {} to {}", fileSet.size(), fileNames.size());
-      return this.clone(newSelection, this.cacheFileRoot);
+      return this.clone(newSelection);
     } catch (IOException e) {
       logger.warn("Could not apply rowcount based prune due to Exception : {}", e);
       return null;

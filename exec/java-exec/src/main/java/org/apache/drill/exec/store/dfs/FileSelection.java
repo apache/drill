@@ -281,13 +281,14 @@ public class FileSelection {
    * @param statuses  list of file statuses
    * @param files  list of files
    * @param root  root path for selections
-   *
+   * @param cacheFileRoot root path for metadata cache (null for no metadata cache)
    * @return  null if creation of {@link FileSelection} fails with an {@link IllegalArgumentException}
    *          otherwise a new selection.
    *
    * @see FileSelection#FileSelection(List, List, String)
    */
-  public static FileSelection create(final List<FileStatus> statuses, final List<String> files, final String root) {
+  public static FileSelection create(final List<FileStatus> statuses, final List<String> files, final String root,
+      final String cacheFileRoot) {
     final boolean bothNonEmptySelection = (statuses != null && statuses.size() > 0) && (files != null && files.size() > 0);
     final boolean bothEmptySelection = (statuses == null || statuses.size() == 0) && (files == null || files.size() == 0);
 
@@ -307,7 +308,11 @@ public class FileSelection {
       final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
       selectionRoot = path.toString();
     }
-    return new FileSelection(statuses, files, selectionRoot);
+    return new FileSelection(statuses, files, selectionRoot, cacheFileRoot);
+  }
+
+  public static FileSelection create(final List<FileStatus> statuses, final List<String> files, final String root) {
+    return FileSelection.create(statuses, files, root, null);
   }
 
   public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection) {
