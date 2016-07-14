@@ -23,7 +23,7 @@ When communicating through project channels, please follow these general guideli
 * Be concise in asking your question. Before doing so, try to read available documentation, FAQs, and mailing list history.
 * Provide enough technical background to explain the issue.
 
-For additional guidelines, see [How To Ask Questions The Smart Way](http://www.catb.org/esr/faqs/smart-questions.html), and note the disclaimer:  
-*We are not a help desk for your project!*
+For additional guidelines, see [How To Ask Questions The Smart Way](http://www.catb.org/esr/faqs/smart-questions.html), and note the disclaimer which requests that you refrain from asking project (Drill) questions on catb.org.  
+
 
 
