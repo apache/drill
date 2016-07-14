@@ -1,6 +1,6 @@
 ---
 title: "Monitoring Metrics"
-date:
+date: 2016-07-14 18:41:09 UTC
 parent: "Performance Tuning"
 --- 
 
@@ -24,9 +24,9 @@ The following table lists the predefined Drill system-level metrics that you can
 
 |    Metric                 | Description                                                                                                                                                         |
 |---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| drill.queries.running     | The   number of queries running for which the Drillbit is the Foreman.                                                                                              |
-| drill.queries.completed   | The   number of queries completed, canceled, or failed for which the Drillbit was   the Foreman.                                                                    |
-| drill.fragments.running   | The   number of query fragments currently running in the Drillbit.                                                                                                  |
+| drill.queries.running     | The   number of queries running for which this drillbit is the Foreman.                                                                                              |
+| drill.queries.completed   | The   number of queries completed, canceled, or failed for which this drillbit was   the Foreman.                                                                    |
+| drill.fragments.running   | The   number of query fragments currently running in the drillbit.                                                                                                  |
 | drill.allocator.root.used | The   amount of memory (in bytes) used by the internal memory allocator.                                                                                            |
 | drill.allocator.root.peak | The   peak amount of memory (in bytes) used by the internal memory allocator.                                                                                       |
 | heap.used                 | The   amount of heap memory (in bytes) used by the JVM.                                                                                                             |
