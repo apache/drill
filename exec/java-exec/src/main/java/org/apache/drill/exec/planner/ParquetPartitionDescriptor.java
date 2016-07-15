@@ -80,8 +80,10 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return partitionColumns.size();
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot) throws IOException {
-    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(), cacheFileRoot);
+  private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot,
+      boolean wasAllPartitionsPruned) throws IOException {
+    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(),
+        cacheFileRoot, wasAllPartitionsPruned);
     final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
@@ -131,13 +133,14 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
+      boolean wasAllPartitionsPruned) throws Exception {
     List<String> newFiles = Lists.newArrayList();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
 
-    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot);
+    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot, wasAllPartitionsPruned);
 
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -149,8 +152,9 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
-    return createTableScan(newPartitionLocation, null);
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
+      boolean wasAllPartitionsPruned) throws Exception {
+    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned);
   }
 
 }

@@ -55,4 +55,9 @@ public interface PartitionLocation {
    */
   public boolean isCompositePartition();
 
+  /**
+   * Returns the path string of directory names only for composite partition
+   */
+  public String getCompositePartitionPath();
+
 }

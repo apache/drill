@@ -209,7 +209,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
+      boolean wasAllPartitionsPruned) throws Exception {
     List<String> newFiles = Lists.newArrayList();
     for (final PartitionLocation location : newPartitionLocation) {
       if (!location.isCompositePartition()) {
@@ -225,7 +226,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
     if (scanRel instanceof DrillScanRel) {
       final FormatSelection formatSelection = (FormatSelection)table.getSelection();
       final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
-          cacheFileRoot, formatSelection.getSelection().getDirStatus());
+          cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
       final FileGroupScan newGroupScan =
           ((FileGroupScan)((DrillScanRel)scanRel).getGroupScan()).clone(newFileSelection);
       return new DrillScanRel(scanRel.getCluster(),
@@ -236,17 +237,19 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
                       ((DrillScanRel) scanRel).getColumns(),
                       true /*filter pushdown*/);
     } else if (scanRel instanceof EnumerableTableScan) {
-      return createNewTableScanFromSelection((EnumerableTableScan)scanRel, newFiles, cacheFileRoot);
+      return createNewTableScanFromSelection((EnumerableTableScan)scanRel, newFiles, cacheFileRoot,
+          wasAllPartitionsPruned);
     } else {
       throw new UnsupportedOperationException("Only DrillScanRel and EnumerableTableScan is allowed!");
     }
   }
 
-  private TableScan createNewTableScanFromSelection(EnumerableTableScan oldScan, List<String> newFiles, String cacheFileRoot) {
+  private TableScan createNewTableScanFromSelection(EnumerableTableScan oldScan, List<String> newFiles, String cacheFileRoot,
+      boolean wasAllPartitionsPruned) {
     final RelOptTableImpl t = (RelOptTableImpl) oldScan.getTable();
     final FormatSelection formatSelection = (FormatSelection) table.getSelection();
     final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
-            cacheFileRoot, formatSelection.getSelection().getDirStatus());
+            cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
     final FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
     final DrillTranslatableTable newTable = new DrillTranslatableTable(
             new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
@@ -258,8 +261,9 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
-    return createTableScan(newPartitionLocation, null);
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
+      boolean wasAllPartitionsPruned) throws Exception {
+    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned);
   }
 
   @Override

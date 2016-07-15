@@ -65,7 +65,10 @@ public class FileSelection {
   }
 
   private StatusType dirStatus;
-  private boolean hadWildcard = false;   // whether this selection previously had a wildcard
+  // whether this selection previously had a wildcard
+  private boolean hadWildcard = false;
+  // whether all partitions were previously pruned for this selection
+  private boolean wasAllPartitionsPruned = false;
 
   /**
    * Creates a {@link FileSelection selection} out of given file statuses/files and selection root.
@@ -75,20 +78,22 @@ public class FileSelection {
    * @param selectionRoot  root path for selections
    */
   public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot) {
-    this(statuses, files, selectionRoot, null, StatusType.NOT_CHECKED);
-  }
-
-  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot, final String cacheFileRoot) {
-    this(statuses, files, selectionRoot, cacheFileRoot, StatusType.NOT_CHECKED);
+    this(statuses, files, selectionRoot, null, false, StatusType.NOT_CHECKED);
   }
 
   public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot,
-      final String cacheFileRoot, final StatusType dirStatus) {
+      final String cacheFileRoot, final boolean wasAllPartitionsPruned) {
+    this(statuses, files, selectionRoot, cacheFileRoot, wasAllPartitionsPruned, StatusType.NOT_CHECKED);
+  }
+
+  public FileSelection(final List<FileStatus> statuses, final List<String> files, final String selectionRoot,
+      final String cacheFileRoot, final boolean wasAllPartitionsPruned, final StatusType dirStatus) {
     this.statuses = statuses;
     this.files = files;
     this.selectionRoot = Preconditions.checkNotNull(selectionRoot);
     this.dirStatus = dirStatus;
     this.cacheFileRoot = cacheFileRoot;
+    this.wasAllPartitionsPruned = wasAllPartitionsPruned;
   }
 
   /**
@@ -101,6 +106,8 @@ public class FileSelection {
     this.selectionRoot = selection.selectionRoot;
     this.dirStatus = selection.dirStatus;
     this.cacheFileRoot = selection.cacheFileRoot;
+    this.hadWildcard = selection.hadWildcard;
+    this.wasAllPartitionsPruned = selection.wasAllPartitionsPruned;
   }
 
   public String getSelectionRoot() {
@@ -202,6 +209,10 @@ public class FileSelection {
     return dirStatus;
   }
 
+  public boolean wasAllPartitionsPruned() {
+    return this.wasAllPartitionsPruned;
+  }
+
   private static String commonPath(final List<FileStatus> statuses) {
     if (statuses == null || statuses.isEmpty()) {
       return "";
@@ -288,7 +299,7 @@ public class FileSelection {
    * @see FileSelection#FileSelection(List, List, String)
    */
   public static FileSelection create(final List<FileStatus> statuses, final List<String> files, final String root,
-      final String cacheFileRoot) {
+      final String cacheFileRoot, final boolean wasAllPartitionsPruned) {
     final boolean bothNonEmptySelection = (statuses != null && statuses.size() > 0) && (files != null && files.size() > 0);
     final boolean bothEmptySelection = (statuses == null || statuses.size() == 0) && (files == null || files.size() == 0);
 
@@ -308,11 +319,11 @@ public class FileSelection {
       final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
       selectionRoot = path.toString();
     }
-    return new FileSelection(statuses, files, selectionRoot, cacheFileRoot);
+    return new FileSelection(statuses, files, selectionRoot, cacheFileRoot, wasAllPartitionsPruned);
   }
 
   public static FileSelection create(final List<FileStatus> statuses, final List<String> files, final String root) {
-    return FileSelection.create(statuses, files, root, null);
+    return FileSelection.create(statuses, files, root, null, false);
   }
 
   public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection) {
@@ -368,7 +379,12 @@ public class FileSelection {
   }
 
   public boolean supportDirPrunig() {
-    return isExpandedFully() || isExpandedPartial();
+    if (isExpandedFully() || isExpandedPartial()) {
+      if (!wasAllPartitionsPruned) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public void setHadWildcard(boolean wc) {

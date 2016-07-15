@@ -64,7 +64,8 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
 
 
   @Override
-  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
+      boolean isAllPruned) throws Exception {
     throw new UnsupportedOperationException();
   }
 

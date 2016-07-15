@@ -48,6 +48,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.FileSystemPartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionLocation;
+import org.apache.drill.exec.planner.SimplePartitionLocation;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
@@ -79,7 +80,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
 
   final OptimizerRulesContext optimizerContext;
-  boolean wasAllPartitionsPruned = false; // whether all partitions were previously eliminated
 
   public PruneScanRule(RelOptRuleOperand operand, String id, OptimizerRulesContext optimizerContext) {
     super(operand, id);
@@ -144,10 +144,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   }
 
   protected void doOnMatch(RelOptRuleCall call, Filter filterRel, Project projectRel, TableScan scanRel) {
-    if (wasAllPartitionsPruned) {
-      // if previously we had already pruned out all the partitions, we should exit early
-      return;
-    }
 
     final String pruningClassName = getClass().getName();
     logger.info("Beginning partition pruning, pruning class: {}", pruningClassName);
@@ -359,6 +355,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
       // handle the case all partitions are filtered out.
       boolean canDropFilter = true;
+      boolean wasAllPartitionsPruned = false;
+      String cacheFileRoot = null;
 
       if (newPartitions.isEmpty()) {
         assert firstLocation != null;
@@ -366,8 +364,16 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         // In such case, we should not drop filter.
         newPartitions.add(firstLocation.getPartitionLocationRecursive().get(0));
         canDropFilter = false;
+        // NOTE: with DRILL-4530, the PruneScanRule may be called with only a list of
+        // directories first and the non-composite partition location will still return
+        // directories, not files.  So, additional processing is done depending on this flag
         wasAllPartitionsPruned = true;
         logger.info("All {} partitions were pruned; added back a single partition to allow creating a schema", numTotal);
+
+        // set the cacheFileRoot appropriately
+        if (firstLocation.isCompositePartition()) {
+          cacheFileRoot = descriptor.getBaseTableLocation() + firstLocation.getCompositePartitionPath();
+        }
       }
 
       logger.info("Pruned {} partitions down to {}", numTotal, newPartitions.size());
@@ -382,8 +388,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       condition = condition.accept(reverseVisitor);
       pruneCondition = pruneCondition.accept(reverseVisitor);
 
-      String cacheFileRoot = null;
-      if (checkForSingle && isSinglePartition) {
+      if (checkForSingle && isSinglePartition && !wasAllPartitionsPruned) {
         // if metadata cache file could potentially be used, then assign a proper cacheFileRoot
         String path = "";
         for (int j = 0; j <= maxIndex; j++) {
@@ -393,7 +398,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       }
 
       RelNode inputRel = descriptor.supportsSinglePartOptimization() ?
-          descriptor.createTableScan(newPartitions, cacheFileRoot) : descriptor.createTableScan(newPartitions);
+          descriptor.createTableScan(newPartitions, cacheFileRoot, wasAllPartitionsPruned) :
+            descriptor.createTableScan(newPartitions, wasAllPartitionsPruned);
 
       if (projectRel != null) {
         inputRel = projectRel.copy(projectRel.getTraitSet(), Collections.singletonList(inputRel));
