@@ -112,7 +112,7 @@ if [ -n "$DRILL_CONF_DIR" ]; then
 else
 
   # Allow alternate drill conf dir location.
-  DRILL_CONF_DIR=${DRILL_CONF_DIR:-/etc/drill/conf}
+  DRILL_CONF_DIR="/etc/drill/conf"
 
   # Otherwise, use the default
   if [[ ! -d "$DRILL_CONF_DIR" ]]; then
@@ -280,27 +280,39 @@ if [ -n "$HADOOP_CLASSPATH" ]; then
   CP="$CP:$HADOOP_CLASSPATH"
 fi
 
-# Followed by HBase' jar
+# Followed by HBase's jar
 if [ -n "$HBASE_CLASSPATH" ]; then
   CP="$CP:$HBASE_CLASSPATH"
 fi
 
 # Generalized extension path (use this for new deployments instead
 # of the specialized HADOOP_ and HBASE_CLASSPATH variables.)
+# Drill-on-YARN uses this variable to avoid the need to add more
+# XYX_CLASSPATH variables as we integrate with other external
+# systems.
+
 if [ -n "$EXTN_CLASSPATH" ]; then
   CP="$CP:$EXTN_CLASSPATH"
 fi
 
 # Followed by Drill's other dependency jars
+
 CP="$CP:$DRILL_HOME/jars/3rdparty/*"
 CP="$CP:$DRILL_HOME/jars/classb/*"
 
 # Finally any user specified
 # Allow user jars to appear in $DRILL_CONF_DIR/jars to avoid mixing
 # user and Drill distribution jars.
+
 if [ -d "$DRILL_CONF_DIR/jars" ]; then
   CP="$CP:$DRILL_CONF_DIR/jars/*"
 fi
+
+# The Drill classpath is a catch-all for any other jars that
+# a specific run might need. The use of this variable is for jars that
+# are not in a Drill directory; that means the jars must exist on every
+# node in the cluster.
+
 if [ -n "$DRILL_CLASSPATH" ]; then
   CP="$CP:$DRILL_CLASSPATH"
 fi
