@@ -126,15 +126,23 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   }
 
   private void setFlattenVector() {
-    try {
-      final TypedFieldId typedFieldId = incoming.getValueVectorId(popConfig.getColumn());
-      final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
-      final RepeatedValueVector vector = RepeatedValueVector.class.cast(incoming.getValueAccessorById(
-          field.getValueClass(), typedFieldId.getFieldIds()).getValueVector());
-      flattener.setFlattenField(vector);
-    } catch (Exception ex) {
-      throw UserException.unsupportedError(ex).message("Trying to flatten a non-repeated field.").build(logger);
+    final TypedFieldId typedFieldId = incoming.getValueVectorId(popConfig.getColumn());
+    final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
+    final RepeatedValueVector vector;
+    final ValueVector inVV = incoming.getValueAccessorById(
+        field.getValueClass(), typedFieldId.getFieldIds()).getValueVector();
+
+    if (! (inVV instanceof RepeatedValueVector)) {
+      if (incoming.getRecordCount() != 0) {
+        throw UserException.unsupportedError().message("Flatten does not support inputs of non-list values.").build(logger);
+      }
+      //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
+      logger.error("setFlattenVector cast failed and recordcount is 0, create empty vector anyway.");
+      vector = new RepeatedMapVector(field, oContext.getAllocator(), null);
+    } else {
+      vector = RepeatedValueVector.class.cast(inVV);
     }
+    flattener.setFlattenField(vector);
   }
 
   @Override
@@ -151,7 +159,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     setFlattenVector();
 
     int childCount = incomingRecordCount == 0 ? 0 : flattener.getFlattenField().getAccessor().getInnerValueCount();
-    int outputRecords = flattener.flattenRecords(incomingRecordCount, 0, monitor);
+    int outputRecords = childCount == 0 ? 0: flattener.flattenRecords(incomingRecordCount, 0, monitor);
     // TODO - change this to be based on the repeated vector length
     if (outputRecords < childCount) {
       setValueCount(outputRecords);
@@ -266,6 +274,14 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     TransferPair tp = null;
     if (flattenField instanceof RepeatedMapVector) {
       tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
+    } else if ( !(flattenField instanceof RepeatedValueVector) ) {
+      if(incoming.getRecordCount() != 0) {
+        throw UserException.unsupportedError().message("Flatten does not support inputs of non-list values.").build(logger);
+      }
+      logger.error("Cannot cast {} to RepeatedValueVector", flattenField);
+      //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
+      final ValueVector vv = new RepeatedMapVector(flattenField.getField(), oContext.getAllocator(), null);
+      tp = RepeatedValueVector.class.cast(vv).getTransferPair(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else {
       final ValueVector vvIn = RepeatedValueVector.class.cast(flattenField).getDataVector();
       // vvIn may be null because of fast schema return for repeated list vectors
