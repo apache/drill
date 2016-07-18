@@ -50,6 +50,7 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
+import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadataDirs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -164,7 +165,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   @Override
   public ParquetGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
       throws IOException {
-    return new ParquetGroupScan(userName, selection, this, selection.selectionRoot, columns);
+    return new ParquetGroupScan(userName, selection, this, selection.selectionRoot, selection.cacheFileRoot, columns);
   }
 
   @Override
@@ -208,8 +209,18 @@ public class ParquetFormatPlugin implements FormatPlugin{
         FileSystemPlugin fsPlugin, String storageEngineName, String userName)
         throws IOException {
       // TODO: we only check the first file for directory reading.
-      if(selection.containsDirectories(fs)){
-        if(isDirReadable(fs, selection.getFirstPath(fs))){
+      if(selection.containsDirectories(fs)) {
+        Path dirMetaPath = new Path(selection.getSelectionRoot(), Metadata.METADATA_DIRECTORIES_FILENAME);
+        if (fs.exists(dirMetaPath)) {
+          ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString());
+          if (mDirs.getDirectories().size() > 0) {
+            FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection);
+            dirSelection.setExpandedPartial();
+            return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+                new FormatSelection(plugin.getConfig(), dirSelection));
+          }
+        }
+        if(isDirReadable(fs, selection.getFirstPath(fs))) {
           return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
               new FormatSelection(plugin.getConfig(), selection));
         }

@@ -760,7 +760,6 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
     }
   }
 
-
   private void addRecursiveStatus(FileStatus parent, List<FileStatus> listToFill) throws IOException {
     if (parent.isDir()) {
       Path pattern = new Path(parent.getPath(), "*");

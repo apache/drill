@@ -34,6 +34,11 @@ public abstract  class SimplePartitionLocation implements PartitionLocation{
   }
 
   @Override
+  public String getCompositePartitionPath() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public List<SimplePartitionLocation> getPartitionLocationRecursive() {
     return ImmutableList.of(this);
   }
