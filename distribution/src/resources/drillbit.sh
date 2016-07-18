@@ -55,7 +55,7 @@
 # Where config-var is a fully expanded form of a configuration variable.
 # The value overrides any value in the user or Drill configuration files.
 
-usage="Usage: drillbit.sh [--config <conf-dir>]\
+usage="Usage: drillbit.sh [--config|--site <site-dir>]\
  (start|stop|status|restart|run) [args]"
 
 bin=`dirname "${BASH_SOURCE-$0}"`
