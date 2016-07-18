@@ -209,12 +209,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     if (context.getOptions().getOption(ExecConstants.EARLY_LIMIT0_OPT) &&
         context.getPlannerSettings().isTypeInferenceEnabled() &&
         FindLimit0Visitor.containsLimit0(relNode)) {
-      // disable distributed mode
-      context.getPlannerSettings().forceSingleMode();
       // if the schema is known, return the schema directly
       final DrillRel shorterPlan;
       if ((shorterPlan = FindLimit0Visitor.getDirectScanRelIfFullySchemaed(relNode)) != null) {
         return shorterPlan;
+      }
+
+      if (FindHardDistributionScans.canForceSingleMode(relNode)) {
+        // disable distributed mode
+        context.getPlannerSettings().forceSingleMode();
       }
     }
 
@@ -256,7 +259,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       } else {
 
         // If the query contains a limit 0 clause, disable distributed mode since it is overkill for determining schema.
-        if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0)) {
+        if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0) &&
+            FindHardDistributionScans.canForceSingleMode(convertedRelNodeWithSum0)) {
           context.getPlannerSettings().forceSingleMode();
         }
 

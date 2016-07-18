@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalIntersect;
 import org.apache.calcite.rel.logical.LogicalJoin;
@@ -35,7 +34,6 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -43,18 +41,14 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.logical.DrillDirectScanRel;
 import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -117,18 +111,11 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    * @param rel rel node tree
    * @return true if the root portion of the tree contains LIMIT(0)
    */
-  public static boolean containsLimit0(RelNode rel) {
+  public static boolean containsLimit0(final RelNode rel) {
     FindLimit0Visitor visitor = new FindLimit0Visitor();
     rel.accept(visitor);
 
-    if (!visitor.isContains()) {
-      return false;
-    }
-
-    final FindHardDistributionScans hdVisitor = new FindHardDistributionScans();
-    rel.accept(hdVisitor);
-    // Can't optimize limit 0 if the query contains a table which has hard distribution requirement.
-    return !hdVisitor.contains();
+    return visitor.isContains();
   }
 
   private boolean contains = false;
@@ -246,34 +233,6 @@ public class FindLimit0Visitor extends RelShuttleImpl {
 
     @Override
     public void close() throws Exception {
-    }
-  }
-  /**
-   * Visitor to scan the RelNode tree and find if it contains any Scans that require hard distribution requirements.
-   */
-  private static class FindHardDistributionScans extends RelShuttleImpl {
-    private boolean contains;
-
-    @Override
-    public RelNode visit(TableScan scan) {
-      DrillTable unwrap;
-      unwrap = scan.getTable().unwrap(DrillTable.class);
-      if (unwrap == null) {
-        unwrap = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
-      }
-
-      try {
-        if (unwrap.getGroupScan().getDistributionAffinity() == DistributionAffinity.HARD) {
-          contains = true;
-        }
-      } catch (final IOException e) {
-        throw new DrillRuntimeException("Failed to get GroupScan from table.");
-      }
-      return scan;
-    }
-
-    public boolean contains() {
-      return contains;
     }
   }
 }
