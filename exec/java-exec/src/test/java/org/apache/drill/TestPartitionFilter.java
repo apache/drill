@@ -376,4 +376,14 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query4, 4, "Filter", 16);
   }
 
+  @Test //DRILL-3710 Partition pruning should occur with varying IN-LIST size
+  public void testPartitionFilterWithInSubquery() throws Exception {
+    String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)", TEST_RES_PATH);
+    /* In list size exceeds threshold - no partition pruning since predicate converted to join */
+    test("alter session set `planner.in_subquery_threshold` = 2");
+    testExcludeFilter(query, 12, "Filter", 40);
+    /* In list size does not exceed threshold - partition pruning */
+    test("alter session set `planner.in_subquery_threshold` = 10");
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
 }
