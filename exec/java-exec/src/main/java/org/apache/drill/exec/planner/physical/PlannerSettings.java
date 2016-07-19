@@ -94,6 +94,8 @@ public class PlannerSettings implements Context{
 
   public static final String TYPE_INFERENCE_KEY = "planner.enable_type_inference";
   public static final BooleanValidator TYPE_INFERENCE = new BooleanValidator(TYPE_INFERENCE_KEY, true);
+  public static final LongValidator IN_SUBQUERY_THRESHOLD =
+      new PositiveLongValidator("planner.in_subquery_threshold", Integer.MAX_VALUE, 20); /* Same as Calcite's default IN List subquery size */
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -233,6 +235,10 @@ public class PlannerSettings implements Context{
 
   public boolean isTypeInferenceEnabled() {
     return options.getOption(TYPE_INFERENCE);
+  }
+
+  public long getInSubqueryThreshold() {
+    return options.getOption(IN_SUBQUERY_THRESHOLD);
   }
 
   @Override
