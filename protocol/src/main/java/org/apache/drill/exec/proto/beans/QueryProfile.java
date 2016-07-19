@@ -67,6 +67,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private String verboseError;
     private String errorId;
     private String errorNode;
+    private String optionsJson;
 
     public QueryProfile()
     {
@@ -283,6 +284,19 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // optionsJson
+
+    public String getOptionsJson()
+    {
+        return optionsJson;
+    }
+
+    public QueryProfile setOptionsJson(String optionsJson)
+    {
+        this.optionsJson = optionsJson;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -390,6 +404,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                 case 16:
                     message.errorNode = input.readString();
                     break;
+                case 17:
+                    message.optionsJson = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -455,6 +472,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
         if(message.errorNode != null)
             output.writeString(16, message.errorNode, false);
+
+        if(message.optionsJson != null)
+            output.writeString(17, message.optionsJson, false);
     }
 
     public String getFieldName(int number)
@@ -477,6 +497,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 14: return "verboseError";
             case 15: return "errorId";
             case 16: return "errorNode";
+            case 17: return "optionsJson";
             default: return null;
         }
     }
@@ -506,6 +527,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("verboseError", 14);
         __fieldMap.put("errorId", 15);
         __fieldMap.put("errorNode", 16);
+        __fieldMap.put("optionsJson", 17);
     }
     
 }

@@ -185,6 +185,7 @@ message QueryInfo {
   optional QueryResult.QueryState state = 3;
   optional string user = 4 [default = "-"];
   optional DrillbitEndpoint foreman = 5;
+  optional string options_json = 6;
 }
 
 
@@ -205,6 +206,7 @@ message QueryProfile {
   optional string verboseError = 14;
   optional string error_id = 15;
   optional string error_node = 16;
+  optional string options_json = 17;
 }
 
 message MajorFragmentProfile {

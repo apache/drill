@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 
 import java.util.List;
@@ -48,6 +50,7 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
@@ -320,6 +323,7 @@ public class QueryManager implements AutoCloseable {
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
+        .setOptionsJson(getQueryOptionsAsJson())
         .build();
   }
 
@@ -338,7 +342,8 @@ public class QueryManager implements AutoCloseable {
         .setStart(startTime)
         .setEnd(endTime)
         .setTotalFragments(fragmentDataSet.size())
-        .setFinishedFragments(finishedFragments.get());
+        .setFinishedFragments(finishedFragments.get())
+        .setOptionsJson(getQueryOptionsAsJson());
 
     if (ex != null) {
       profileBuilder.setError(ex.getMessage(false));
@@ -356,6 +361,15 @@ public class QueryManager implements AutoCloseable {
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
     return profileBuilder.build();
+  }
+
+  private String getQueryOptionsAsJson() {
+    try {
+      OptionList optionList = foreman.getQueryContext().getOptions().getOptionList();
+      return foreman.getQueryContext().getLpPersistence().getMapper().writeValueAsString(optionList);
+    } catch (JsonProcessingException e) {
+      throw new DrillRuntimeException("Error while trying to convert option list to json string", e);
+    }
   }
 
   private class OuterIter implements IntObjectPredicate<IntObjectHashMap<FragmentData>> {

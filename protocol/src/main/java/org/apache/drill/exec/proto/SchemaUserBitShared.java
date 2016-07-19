@@ -1616,6 +1616,8 @@ public final class SchemaUserBitShared
                 if(message.hasForeman())
                     output.writeObject(5, message.getForeman(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.WRITE, false);
 
+                if(message.hasOptionsJson())
+                    output.writeString(6, message.getOptionsJson(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryInfo message)
             {
@@ -1671,6 +1673,9 @@ public final class SchemaUserBitShared
                             builder.setForeman(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.MERGE));
 
                             break;
+                        case 6:
+                            builder.setOptionsJson(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1716,6 +1721,7 @@ public final class SchemaUserBitShared
                 case 3: return "state";
                 case 4: return "user";
                 case 5: return "foreman";
+                case 6: return "optionsJson";
                 default: return null;
             }
         }
@@ -1732,6 +1738,7 @@ public final class SchemaUserBitShared
             fieldMap.put("state", 3);
             fieldMap.put("user", 4);
             fieldMap.put("foreman", 5);
+            fieldMap.put("optionsJson", 6);
         }
     }
 
@@ -1781,6 +1788,8 @@ public final class SchemaUserBitShared
                     output.writeString(15, message.getErrorId(), false);
                 if(message.hasErrorNode())
                     output.writeString(16, message.getErrorNode(), false);
+                if(message.hasOptionsJson())
+                    output.writeString(17, message.getOptionsJson(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1871,6 +1880,9 @@ public final class SchemaUserBitShared
                         case 16:
                             builder.setErrorNode(input.readString());
                             break;
+                        case 17:
+                            builder.setOptionsJson(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1927,6 +1939,7 @@ public final class SchemaUserBitShared
                 case 14: return "verboseError";
                 case 15: return "errorId";
                 case 16: return "errorNode";
+                case 17: return "optionsJson";
                 default: return null;
             }
         }
@@ -1954,6 +1967,7 @@ public final class SchemaUserBitShared
             fieldMap.put("verboseError", 14);
             fieldMap.put("errorId", 15);
             fieldMap.put("errorNode", 16);
+            fieldMap.put("optionsJson", 17);
         }
     }
 
