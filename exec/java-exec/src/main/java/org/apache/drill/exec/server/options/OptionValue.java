@@ -99,6 +99,10 @@ public class OptionValue implements Comparable<OptionValue> {
     this.bool_val = bool_val;
   }
 
+  public String getName() {
+    return name;
+  }
+
   @JsonIgnore
   public Object getValue() {
     switch (kind) {

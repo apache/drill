@@ -107,6 +107,42 @@
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
 
+  <#if (model.getOptionList()?size > 0)>
+    <div class="page-header"></div>
+    <h3>Session Options</h3>
+    <div class="panel-group" id="session-options-accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#session-options-overview">
+              Overview
+            </a>
+          </h4>
+        </div>
+        <div id="session-options-overview" class="panel-collapse collapse in">
+          <div class="panel-body">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <#list model.getOptionList() as option>
+                  <tr>
+                    <td>${option.getName()}</td>
+                    <td>${option.getValue()?c}</td>
+                  </tr>
+                </#list>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </#if>
+
   <div class="page-header"></div>
   <h3>Fragment Profiles</h3>
 
