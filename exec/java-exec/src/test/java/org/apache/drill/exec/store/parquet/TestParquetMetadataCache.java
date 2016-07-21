@@ -305,6 +305,26 @@ public class TestParquetMetadataCache extends PlanTestBase {
         new String[] {});
   }
 
+  @Test // DRILL-4794
+  public void testDrill4794() throws Exception {
+    test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName1));
+    checkForMetadataFile(tableName1);
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/%s` " +
+            " where dir0=1994 or dir1='Q3'",
+        getDfsTestTmpSchemaLocation(), tableName1);
+
+    int expectedRowCount = 60;
+    int expectedNumFiles = 6;
+
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+    String numFilesPattern = "numFiles=" + expectedNumFiles;
+    String usedMetaPattern = "usedMetadataFile=true";
+    String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), tableName1);
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
+        new String[] {});
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
