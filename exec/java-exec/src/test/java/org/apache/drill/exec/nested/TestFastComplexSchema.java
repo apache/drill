@@ -80,4 +80,33 @@ public class TestFastComplexSchema extends BaseTestQuery {
             "                       AND r.r_regionkey = 4)) t \n" +
             "ORDER  BY t.f.name");
   }
+
+  @Test //DRILL-4783 when resultset is empty, don't throw exception.
+  public void test5() throws Exception {
+
+    //when there is no incoming record, flatten won't throw exception
+    testBuilder().sqlQuery("select flatten(j) from \n" +
+           " (select convert_from(names, 'json') j \n" +
+           " from (select concat('[\"', first_name, '\", ', '\"', last_name, '\"]') names \n" +
+           " from cp.`employee.json` where store_id=9999))")
+        .expectsEmptyResultSet()
+        .build().run();
+
+    //result is not empty and is list type,
+    testBuilder().sqlQuery("select flatten(j) n from \n" +
+        " (select convert_from(names, 'json') j \n" +
+        " from (select concat('[\"', first_name, '\", ', '\"', last_name, '\"]') names \n" +
+        " from cp.`employee.json` where first_name='Sheri'))")
+        .unOrdered()
+        .baselineColumns("n")
+        .baselineValues("Sheri")
+        .baselineValues("Nowmer")
+        .build().run();
+
+    //result is not empty, and flatten got incompatible (non-list) incoming records. got exception thrown
+    errorMsgTestHelper("select flatten(first_name) from \n" +
+        "(select first_name from cp.`employee.json` where first_name='Sheri')",
+        "Flatten does not support inputs of non-list values");
+  }
+
 }
