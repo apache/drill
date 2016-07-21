@@ -86,7 +86,7 @@ public class InboundImpersonationManager {
   public static class InboundImpersonationPolicyValidator extends TypeValidators.AdminOptionValidator {
 
     public InboundImpersonationPolicyValidator(String name, String def) {
-      super(name, def);
+      super(name, def, "Defines inbound impersonation policies. See configuration documentation for more details.");
     }
 
     @Override

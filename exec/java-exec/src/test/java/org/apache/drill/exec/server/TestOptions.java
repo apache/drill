@@ -46,6 +46,18 @@ public class TestOptions extends BaseTestQuery{
   }
 
   @Test
+  public void checkDescriptionColumn() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM sys.options WHERE name = '%s'", SLICE_TARGET)
+        .unOrdered()
+        .baselineColumns("name", "kind", "type", "status", "num_val", "string_val", "bool_val", "float_val",
+            "description")
+        .baselineValues(SLICE_TARGET, "LONG", "SYSTEM", "DEFAULT", ExecConstants.SLICE_TARGET_DEFAULT, null, null,
+            null, ExecConstants.SLICE_TARGET_DESCRIPTION)
+        .go();
+  }
+
+  @Test
   public void checkValidationException() throws Exception {
     thrownException.expect(new UserExceptionMatcher(VALIDATION));
     test("ALTER session SET %s = '%s';", SLICE_TARGET, "fail");

@@ -42,7 +42,17 @@ public class QueryClassLoader extends URLClassLoader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
 
   public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
-  public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION, CompilerPolicy.DEFAULT.toString()) {
+  public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
+
+  public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE =
+      new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION, 256 * 1024,
+          "See the " + JAVA_COMPILER_OPTION + ". Accepts inputs of type LONG.");
+
+  public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION,
+      CompilerPolicy.DEFAULT.toString(),
+      "Switches between DEFAULT, JDK, and JANINO mode for the current session. Uses Janino by default for generated" +
+          " source code of less than " + JAVA_COMPILER_JANINO_MAXSIZE_OPTION + "; otherwise, switches" +
+          " to the JDK compiler.") {
     @Override
     public void validate(OptionValue v) {
       super.validate(v);
@@ -58,10 +68,8 @@ public class QueryClassLoader extends URLClassLoader {
   };
 
   public static final String JAVA_COMPILER_DEBUG_OPTION = "exec.java_compiler_debug";
-  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION, true);
-
-  public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
-  public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION, 256*1024);
+  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION, true,
+      "Toggles the output of debug-level compiler error messages in runtime generated code.");
 
   public static final String JAVA_COMPILER_CONFIG = "drill.exec.compile.compiler";
   public static final String JAVA_COMPILER_DEBUG_CONFIG = "drill.exec.compile.debug";

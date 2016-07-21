@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
@@ -38,12 +39,11 @@ public class OptionIterator implements Iterator<Object> {
     BOOT, SYS_SESS, BOTH
   };
 
-  private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
 
   public OptionIterator(FragmentContext context, Mode mode){
     final DrillConfigIterator configOptions = new DrillConfigIterator(context.getConfig());
-    fragmentOptions = context.getOptions();
+    final OptionManager fragmentOptions = context.getOptions();
     final Iterator<OptionValue> optionList;
     switch(mode){
     case BOOT:
@@ -71,10 +71,11 @@ public class OptionIterator implements Iterator<Object> {
   public OptionValueWrapper next() {
     final OptionValue value = mergedOptions.next();
     final Status status;
+    final OptionValidator validator = SystemOptionManager.getValidator(value.name);
     if (value.type == OptionType.BOOT) {
       status = Status.BOOT;
     } else {
-      final OptionValue def = SystemOptionManager.getValidator(value.name).getDefault();
+      final OptionValue def = validator.getDefault();
       if (value.equalsIgnoreType(def)) {
         status = Status.DEFAULT;
         } else {
@@ -82,10 +83,10 @@ public class OptionIterator implements Iterator<Object> {
         }
       }
     return new OptionValueWrapper(value.name, value.kind, value.type, value.num_val, value.string_val,
-        value.bool_val, value.float_val, status);
+        value.bool_val, value.float_val, status, validator.getOptionDescription());
   }
 
-  public static enum Status {
+  public enum Status {
     BOOT, DEFAULT, CHANGED
   }
 
@@ -102,10 +103,11 @@ public class OptionIterator implements Iterator<Object> {
     public final String string_val;
     public final Boolean bool_val;
     public final Double float_val;
+    public final String description;
 
     public OptionValueWrapper(final String name, final Kind kind, final OptionType type, final Long num_val,
         final String string_val, final Boolean bool_val, final Double float_val,
-        final Status status) {
+        final Status status, final String description) {
       this.name = name;
       this.kind = kind;
       this.type = type;
@@ -114,6 +116,7 @@ public class OptionIterator implements Iterator<Object> {
       this.bool_val = bool_val;
       this.float_val = float_val;
       this.status = status;
+      this.description = description;
     }
   }
 
