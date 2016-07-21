@@ -308,7 +308,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
                   maxIndex = tmpIndex;
                 } else if (maxIndex != tmpIndex) {
                   isSinglePartition = false;
-                  break;
                 } else {
                   // we only want to compare until the maxIndex inclusive since subsequent values would be null
                   for (int j = 0; j <= maxIndex; j++) {
