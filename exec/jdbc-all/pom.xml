@@ -312,6 +312,7 @@
               <exclude>org.hamcrest:hamcrest-core</exclude>
               <exclude>org.mockito:mockito-core</exclude>
               <exclude>org.objenesis:objenesis</exclude>
+              <exclude>org.eclipse.jetty:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
