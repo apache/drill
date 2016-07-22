@@ -58,7 +58,7 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
   }
 
   @Override
-  public boolean supportsSinglePartOptimization() {
+  public boolean supportsMetadataCachePruning() {
     return false;
   }
 

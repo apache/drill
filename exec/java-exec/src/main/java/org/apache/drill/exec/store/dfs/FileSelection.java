@@ -326,7 +326,8 @@ public class FileSelection {
     return FileSelection.create(statuses, files, root, null, false);
   }
 
-  public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection) {
+  public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection,
+      final String cacheFileRoot) {
     final String root = selection.getSelectionRoot();
     if (Strings.isNullOrEmpty(root)) {
       throw new DrillRuntimeException("Selection root is null or empty" + root);
@@ -351,7 +352,9 @@ public class FileSelection {
     // final URI uri = dirPaths.get(0).toUri();
     final URI uri = selection.getFileStatuses().get(0).getPath().toUri();
     final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
-    return new FileSelection(null, dirs, path.toString());
+    FileSelection fileSel = new FileSelection(null, dirs, path.toString(), cacheFileRoot, false);
+    fileSel.setHadWildcard(selection.hadWildcard());
+    return fileSel;
   }
 
   private static Path handleWildCard(final String root) {
@@ -393,6 +396,10 @@ public class FileSelection {
 
   public boolean hadWildcard() {
     return this.hadWildcard;
+  }
+
+  public String getCacheFileRoot() {
+    return cacheFileRoot;
   }
 
 }

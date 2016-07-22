@@ -584,7 +584,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         fileSet.add(file.getPath());
       }
 
-    } else if (selection.isExpandedPartial() && cacheFileRoot != null) {
+    } else if (selection.isExpandedPartial() && !selection.hadWildcard() &&
+        cacheFileRoot != null) {
       this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString());
       if (selection.wasAllPartitionsPruned()) {
         // if all partitions were previously pruned, we only need to read 1 file (for the schema)
