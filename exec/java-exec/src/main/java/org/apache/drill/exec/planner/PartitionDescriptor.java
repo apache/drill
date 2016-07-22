@@ -96,7 +96,7 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
       boolean wasAllPartitionsPruned) throws Exception;
 
-  public boolean supportsSinglePartOptimization();
+  public boolean supportsMetadataCachePruning();
 
   public String getBaseTableLocation();
 

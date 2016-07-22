@@ -584,12 +584,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         fileSet.add(file.getPath());
       }
 
-    } else if (selection.isExpandedPartial() && cacheFileRoot != null) {
+    } else if (selection.isExpandedPartial() && !selection.hadWildcard() &&
+        cacheFileRoot != null) {
       this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString());
       if (selection.wasAllPartitionsPruned()) {
         // if all partitions were previously pruned, we only need to read 1 file (for the schema)
         fileSet.add(this.parquetTableMetadata.getFiles().get(0).getPath());
       } else {
+        // we are here if the selection is in the expanded_partial state (i.e it has directories).  We get the
+        // list of files from the metadata cache file that is present in the cacheFileRoot directory and populate
+        // the fileSet. However, this is *not* the final list of files that will be scanned in execution since the
+        // second phase of partition pruning will apply on the files and modify the file selection appropriately.
         for (Metadata.ParquetFileMetadata file : this.parquetTableMetadata.getFiles()) {
           fileSet.add(file.getPath());
         }

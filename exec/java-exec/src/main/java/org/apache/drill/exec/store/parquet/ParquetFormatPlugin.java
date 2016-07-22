@@ -216,7 +216,8 @@ public class ParquetFormatPlugin implements FormatPlugin{
         if (fs.exists(dirMetaPath)) {
           ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString());
           if (mDirs.getDirectories().size() > 0) {
-            FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection);
+            FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
+                selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);
             dirSelection.setExpandedPartial();
             return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
                 new FormatSelection(plugin.getConfig(), dirSelection));
