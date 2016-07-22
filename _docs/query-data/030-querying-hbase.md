@@ -1,6 +1,6 @@
 ---
 title: "Querying HBase"
-date:  
+date: 2016-07-22 00:36:27 UTC
 parent: "Query Data"
 ---
 
@@ -140,7 +140,7 @@ steps:
                 CONVERT_FROM(students.account.name, 'UTF8') AS name, 
                 CONVERT_FROM(students.address.state, 'UTF8') AS state, 
                 CONVERT_FROM(students.address.street, 'UTF8') AS street, 
-                CONVERT_FROM(t.students.address.zipcode, 'UTF8') AS zipcode 
+                CONVERT_FROM(students.address.zipcode, 'UTF8') AS zipcode 
          FROM students;
 
     {% include startnote.html %}Use dot notation to drill down to a column in an HBase table: tablename.columnfamilyname.columnnname{% include endnote.html %}
