@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2016-01-20 21:22:49 UTC
+date: 2016-07-22 00:44:51 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -27,7 +27,7 @@ Verify that your system meets the system requirements before you start.
   * An installed ODBC driver manager:
     * iODBC 3.52.7 or above  
       OR 
-    * unixODBC 2.2.12 or above  
+    * unixODBC 2.2.14 or above  
     On Linux, 3.52.7 is available as a tarball. After unpacking the tarball, see the README for instructions about building the driver manager.
   * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes.   
 If not, create an entry in `/etc/hosts` for each node in the following format:  
