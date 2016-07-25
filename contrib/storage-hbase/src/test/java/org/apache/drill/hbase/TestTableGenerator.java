@@ -24,9 +24,15 @@ import java.util.Random;
 
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.BufferedMutator;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.util.Order;
+import org.apache.hadoop.hbase.util.OrderedBytes;
+import org.apache.hadoop.hbase.util.PositionedByteRange;
+import org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange;
 
 public class TestTableGenerator {
 
@@ -39,7 +45,7 @@ public class TestTableGenerator {
   static final byte[] FAMILY_F = {'f'};
   static final byte[] COLUMN_C = {'c'};
 
-  public static void generateHBaseDataset1(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDataset1(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -54,81 +60,80 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     Put p = new Put("a1".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "3".getBytes());
-    p.add("f".getBytes(), "c4".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
-    p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.addColumn("f".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.addColumn("f".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("a2".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "3".getBytes());
-    p.add("f".getBytes(), "c4".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
-    p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.addColumn("f".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.addColumn("f".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("a3".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "3".getBytes());
-    p.add("f".getBytes(), "c7".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c8".getBytes(), "5".getBytes());
-    p.add("f".getBytes(), "c9".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "3".getBytes());
+    p.addColumn("f".getBytes(), "c7".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c8".getBytes(), "5".getBytes());
+    p.addColumn("f".getBytes(), "c9".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put(new byte[]{'b', '4', 0});
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f2".getBytes(), "c2".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "3".getBytes());
-    p.add("f2".getBytes(), "c4".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
-    p.add("f2".getBytes(), "c6".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f2".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.addColumn("f2".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.addColumn("f2".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("b4".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f2".getBytes(), "c2".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "3".getBytes());
-    p.add("f2".getBytes(), "c4".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
-    p.add("f2".getBytes(), "c6".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f2".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.addColumn("f2".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.addColumn("f2".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("b5".getBytes());
-    p.add("f2".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
-    p.add("f2".getBytes(), "c3".getBytes(), "3".getBytes());
-    p.add("f".getBytes(), "c4".getBytes(), "4".getBytes());
-    p.add("f2".getBytes(), "c5".getBytes(), "5".getBytes());
-    p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f2".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.addColumn("f2".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.addColumn("f".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.addColumn("f2".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.addColumn("f".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("b6".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f2".getBytes(), "c3".getBytes(), "2".getBytes());
-    p.add("f".getBytes(), "c5".getBytes(), "3".getBytes());
-    p.add("f2".getBytes(), "c7".getBytes(), "4".getBytes());
-    p.add("f".getBytes(), "c8".getBytes(), "5".getBytes());
-    p.add("f2".getBytes(), "c9".getBytes(), "6".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f2".getBytes(), "c3".getBytes(), "2".getBytes());
+    p.addColumn("f".getBytes(), "c5".getBytes(), "3".getBytes());
+    p.addColumn("f2".getBytes(), "c7".getBytes(), "4".getBytes());
+    p.addColumn("f".getBytes(), "c8".getBytes(), "5".getBytes());
+    p.addColumn("f2".getBytes(), "c9".getBytes(), "6".getBytes());
+    table.mutate(p);
 
     p = new Put("b7".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
-    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    table.mutate(p);
 
-    table.flushCommits();
     table.close();
   }
 
-  public static void generateHBaseDataset2(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDataset2(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -143,7 +148,7 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     int rowCount = 0;
     byte[] bytes = null;
@@ -156,9 +161,9 @@ public class TestTableGenerator {
         Put p = new Put((""+rowKeyChar+iteration).getBytes());
         for (int j = 1; j <= numColumns; j++) {
           bytes = new byte[5000]; random.nextBytes(bytes);
-          p.add("f".getBytes(), ("c"+j).getBytes(), bytes);
+          p.addColumn("f".getBytes(), ("c"+j).getBytes(), bytes);
         }
-        table.put(p);
+        table.mutate(p);
 
         ++rowKeyChar;
         ++rowCount;
@@ -166,13 +171,12 @@ public class TestTableGenerator {
       ++iteration;
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDataset3(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDataset3(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -187,34 +191,33 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (int i = 0; i <= 100; ++i) {
       Put p = new Put((String.format("%03d", i)).getBytes());
-      p.add(FAMILY_F, COLUMN_C, String.format("value %03d", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %03d", i).getBytes());
+      table.mutate(p);
     }
     for (int i = 0; i <= 1000; ++i) {
       Put p = new Put((String.format("%04d", i)).getBytes());
-      p.add(FAMILY_F, COLUMN_C, String.format("value %04d", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %04d", i).getBytes());
+      table.mutate(p);
     }
 
     Put p = new Put("%_AS_PREFIX_ROW1".getBytes());
-    p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
-    table.put(p);
+    p.addColumn(FAMILY_F, COLUMN_C, "dummy".getBytes());
+    table.mutate(p);
 
     p = new Put("%_AS_PREFIX_ROW2".getBytes());
-    p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
-    table.put(p);
+    p.addColumn(FAMILY_F, COLUMN_C, "dummy".getBytes());
+    table.mutate(p);
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetCompositeKeyDate(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetCompositeKeyDate(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -229,7 +232,7 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     Date startDate = new Date(1408924800000L);
     long startTime  = startDate.getTime();
@@ -246,15 +249,14 @@ public class TestTableGenerator {
       }
 
       Put p = new Put(rowKey);
-      p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, "dummy".getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
   }
 
-  public static void generateHBaseDatasetCompositeKeyTime(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetCompositeKeyTime(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -269,7 +271,7 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     long startTime  = 0;
     long MILLISECONDS_IN_A_SEC  = (long)1000;
@@ -287,8 +289,8 @@ public class TestTableGenerator {
       }
 
       Put p = new Put(rowKey);
-      p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, "dummy".getBytes());
+      table.mutate(p);
 
       if (interval == smallInterval) {
         interval = largeInterval;
@@ -297,11 +299,10 @@ public class TestTableGenerator {
       }
     }
 
-    table.flushCommits();
     table.close();
   }
 
-  public static void generateHBaseDatasetCompositeKeyInt(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetCompositeKeyInt(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -316,7 +317,7 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     int startVal = 0;
     int stopVal = 1000;
@@ -330,15 +331,14 @@ public class TestTableGenerator {
       }
 
       Put p = new Put(rowKey);
-      p.add(FAMILY_F, COLUMN_C, "dummy".getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, "dummy".getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
   }
 
-  public static void generateHBaseDatasetDoubleOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetDoubleOB(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -353,26 +353,23 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (double i = 0.5; i <= 100.00; i += 0.75) {
-        byte[] bytes = new byte[9];
-        org.apache.hadoop.hbase.util.PositionedByteRange br =
-                new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
-        org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br, i,
-                org.apache.hadoop.hbase.util.Order.ASCENDING);
+      byte[] bytes = new byte[9];
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
+      OrderedBytes.encodeFloat64(br, i, Order.ASCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetFloatOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetFloatOB(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -387,60 +384,23 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (float i = (float)0.5; i <= 100.00; i += 0.75) {
       byte[] bytes = new byte[5];
-      org.apache.hadoop.hbase.util.PositionedByteRange br =
-              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
-      org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br, i,
-              org.apache.hadoop.hbase.util.Order.ASCENDING);
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
+      OrderedBytes.encodeFloat32(br, i,Order.ASCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetBigIntOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
-    if (admin.tableExists(tableName)) {
-      admin.disableTable(tableName);
-      admin.deleteTable(tableName);
-    }
-
-   HTableDescriptor desc = new HTableDescriptor(tableName);
-  desc.addFamily(new HColumnDescriptor(FAMILY_F));
-
-  if (numberRegions > 1) {
-    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
-  } else {
-    admin.createTable(desc);
-  }
-
-  HTable table = new HTable(admin.getConfiguration(), tableName);
-  long startTime = (long)1438034423 * 1000;
-  for (long i = startTime; i <= startTime + 100; i ++) {
-    byte[] bytes = new byte[9];
-    org.apache.hadoop.hbase.util.PositionedByteRange br =
-            new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
-    org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br, i,
-            org.apache.hadoop.hbase.util.Order.ASCENDING);
-    Put p = new Put(bytes);
-    p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
-    table.put(p);
-  }
-
-  table.flushCommits();
-  table.close();
-
-  admin.flush(tableName);
-  }
-
-  public static void generateHBaseDatasetIntOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetBigIntOB(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -455,26 +415,54 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
+    long startTime = (long)1438034423 * 1000;
+    for (long i = startTime; i <= startTime + 100; i ++) {
+      byte[] bytes = new byte[9];
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
+      OrderedBytes.encodeInt64(br, i, Order.ASCENDING);
+      Put p = new Put(bytes);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.mutate(p);
+    }
+
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetIntOB(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (int i = -49; i <= 100; i ++) {
       byte[] bytes = new byte[5];
-      org.apache.hadoop.hbase.util.PositionedByteRange br =
-              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
-      org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br, i,
-              org.apache.hadoop.hbase.util.Order.ASCENDING);
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
+      OrderedBytes.encodeInt32(br, i, Order.ASCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetDoubleOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetDoubleOBDesc(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -489,26 +477,23 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (double i = 0.5; i <= 100.00; i += 0.75) {
-        byte[] bytes = new byte[9];
-        org.apache.hadoop.hbase.util.PositionedByteRange br =
-                new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
-        org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br, i,
-                org.apache.hadoop.hbase.util.Order.DESCENDING);
+      byte[] bytes = new byte[9];
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
+      OrderedBytes.encodeFloat64(br, i, Order.DESCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetFloatOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetFloatOBDesc(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -523,61 +508,23 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     for (float i = (float)0.5; i <= 100.00; i += 0.75) {
       byte[] bytes = new byte[5];
-      org.apache.hadoop.hbase.util.PositionedByteRange br =
-              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
-      org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br, i,
-              org.apache.hadoop.hbase.util.Order.DESCENDING);
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
+      OrderedBytes.encodeFloat32(br, i, Order.DESCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetBigIntOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
-    if (admin.tableExists(tableName)) {
-      admin.disableTable(tableName);
-      admin.deleteTable(tableName);
-    }
-
-   HTableDescriptor desc = new HTableDescriptor(tableName);
-  desc.addFamily(new HColumnDescriptor(FAMILY_F));
-
-  if (numberRegions > 1) {
-    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
-  } else {
-    admin.createTable(desc);
-  }
-
-  HTable table = new HTable(admin.getConfiguration(), tableName);
-  long startTime = (long)1438034423 * 1000;
-  for (long i = startTime; i <= startTime + 100; i ++) {
-    byte[] bytes = new byte[9];
-    org.apache.hadoop.hbase.util.PositionedByteRange br =
-            new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
-    org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br, i,
-            org.apache.hadoop.hbase.util.Order.DESCENDING);
-    Put p = new Put(bytes);
-    p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
-    table.put(p);
-  }
-
-  table.flushCommits();
-  table.close();
-
-  admin.flush(tableName);
-  }
-
-
-  public static void generateHBaseDatasetIntOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+  public static void generateHBaseDatasetBigIntOBDesc(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -592,26 +539,55 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
-
-    for (int i = -49; i <= 100; i ++) {
-      byte[] bytes = new byte[5];
-      org.apache.hadoop.hbase.util.PositionedByteRange br =
-              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
-      org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br, i,
-              org.apache.hadoop.hbase.util.Order.DESCENDING);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
+    long startTime = (long)1438034423 * 1000;
+    for (long i = startTime; i <= startTime + 100; i ++) {
+      byte[] bytes = new byte[9];
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 9);
+      OrderedBytes.encodeInt64(br, i, Order.DESCENDING);
       Put p = new Put(bytes);
-      p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
-      table.put(p);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.mutate(p);
     }
 
-    table.flushCommits();
     table.close();
 
     admin.flush(tableName);
   }
 
-  public static void generateHBaseDatasetNullStr(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+
+  public static void generateHBaseDatasetIntOBDesc(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    BufferedMutator table = conn.getBufferedMutator(tableName);
+
+    for (int i = -49; i <= 100; i ++) {
+      byte[] bytes = new byte[5];
+      PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
+      OrderedBytes.encodeInt32(br, i, Order.DESCENDING);
+      Put p = new Put(bytes);
+      p.addColumn(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.mutate(p);
+    }
+
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetNullStr(Connection conn, Admin admin, TableName tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
@@ -625,16 +601,16 @@ public class TestTableGenerator {
       admin.createTable(desc);
     }
 
-    HTable table = new HTable(admin.getConfiguration(), tableName);
+    BufferedMutator table = conn.getBufferedMutator(tableName);
 
     Put p = new Put("a1".getBytes());
-    p.add("f".getBytes(), "c1".getBytes(), "".getBytes());
-    p.add("f".getBytes(), "c2".getBytes(), "".getBytes());
-    p.add("f".getBytes(), "c3".getBytes(), "5".getBytes());
-    p.add("f".getBytes(), "c4".getBytes(), "".getBytes());
-    table.put(p);
+    p.addColumn("f".getBytes(), "c1".getBytes(), "".getBytes());
+    p.addColumn("f".getBytes(), "c2".getBytes(), "".getBytes());
+    p.addColumn("f".getBytes(), "c3".getBytes(), "5".getBytes());
+    p.addColumn("f".getBytes(), "c4".getBytes(), "".getBytes());
+    table.mutate(p);
 
-    table.flushCommits();
     table.close();
   }
+
 }

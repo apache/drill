@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +40,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 
 // Class containing information for reading a single HBase region
 @JsonTypeName("hbase-region-scan")
@@ -111,7 +111,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   public static class HBaseSubScanSpec {

@@ -36,6 +36,7 @@ import java.util.Map;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
@@ -358,6 +359,29 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
         containsString("SYSTEM ERROR: RemoteException: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/drillTestGrp0_755/"));
+  }
+
+  @Test
+  public void testRefreshMetadata() throws Exception {
+    final String tableName = "nation1";
+    final String tableWS = "drillTestGrp1_700";
+
+    updateClient(user1);
+    test("USE " + Joiner.on(".").join(MINIDFS_STORAGE_PLUGIN_NAME, tableWS));
+
+    test("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
+              "FROM cp.`tpch/nation.parquet`;");
+
+    test( "refresh table metadata " + tableName + ";");
+
+    test("SELECT * FROM " + tableName + ";");
+
+    final Path tablePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName);
+    assertTrue ( fs.exists(tablePath) && fs.isDirectory(tablePath));
+    fs.mkdirs(new Path(tablePath, "tmp5"));
+
+    test("SELECT * from " + tableName + ";");
+
   }
 
   @AfterClass

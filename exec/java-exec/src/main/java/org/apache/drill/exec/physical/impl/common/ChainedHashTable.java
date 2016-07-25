@@ -19,15 +19,11 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -45,13 +41,11 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.physical.HashPrelUtil;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JConditional;
@@ -139,7 +133,7 @@ public class ChainedHashTable {
 
   public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
       IOException, SchemaChangeException {
-    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
@@ -239,11 +233,11 @@ public class ChainedHashTable {
     int i = 0;
     for (LogicalExpression expr : keyExprs) {
       cg.setMappingSet(incomingMapping);
-      HoldingContainer left = cg.addExpr(expr, false);
+      HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       cg.setMappingSet(htableMapping);
       ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i++]);
-      HoldingContainer right = cg.addExpr(vvrExpr, false);
+      HoldingContainer right = cg.addExpr(vvrExpr, ClassGenerator.BlkCreateMode.FALSE);
 
       JConditional jc;
 
@@ -258,7 +252,7 @@ public class ChainedHashTable {
           FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
 
-      HoldingContainer out = cg.addExpr(f, false);
+      HoldingContainer out = cg.addExpr(f, ClassGenerator.BlkCreateMode.FALSE);
 
       // check if two values are not equal (comparator result != 0)
       jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
@@ -280,7 +274,7 @@ public class ChainedHashTable {
       boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
       ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
 
-      cg.addExpr(vvwExpr, false); // this will write to the htContainer at htRowIdx
+      cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.FALSE); // this will write to the htContainer at htRowIdx
     }
   }
 
@@ -293,7 +287,7 @@ public class ChainedHashTable {
         ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
         boolean useSetSafe = !Types.isFixedWidthType(vvrExpr.getMajorType()) || Types.isRepeated(vvrExpr.getMajorType());
         ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, useSetSafe);
-        cg.addExpr(vvwExpr, true);
+        cg.addExpr(vvwExpr, ClassGenerator.BlkCreateMode.TRUE);
       }
 
     }

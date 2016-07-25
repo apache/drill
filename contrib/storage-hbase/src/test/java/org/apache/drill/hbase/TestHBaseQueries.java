@@ -23,39 +23,36 @@ import java.util.List;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Table;
 import org.junit.Test;
 
 public class TestHBaseQueries extends BaseHBaseTest {
 
   @Test
   public void testWithEmptyFirstAndLastRegion() throws Exception {
-    HBaseAdmin admin = HBaseTestsSuite.getAdmin();
-    String tableName = "drill_ut_empty_regions";
-    HTable table = null;
+    HBaseAdmin admin = (HBaseAdmin) HBaseTestsSuite.getAdmin();
+    TableName tableName = TableName.valueOf("drill_ut_empty_regions");
 
-    try {
-    HTableDescriptor desc = new HTableDescriptor(tableName);
-    desc.addFamily(new HColumnDescriptor("f"));
-    admin.createTable(desc, Arrays.copyOfRange(TestTableGenerator.SPLIT_KEYS, 0, 2));
+    try (Table table = HBaseTestsSuite.getConnection().getTable(tableName);) {
+      HTableDescriptor desc = new HTableDescriptor(tableName);
+      desc.addFamily(new HColumnDescriptor("f"));
+      admin.createTable(desc, Arrays.copyOfRange(TestTableGenerator.SPLIT_KEYS, 0, 2));
 
-    table = new HTable(admin.getConfiguration(), tableName);
-    Put p = new Put("b".getBytes());
-    p.add("f".getBytes(), "c".getBytes(), "1".getBytes());
-    table.put(p);
+      Put p = new Put("b".getBytes());
+      p.addColumn("f".getBytes(), "c".getBytes(), "1".getBytes());
+      table.put(p);
 
-    setColumnWidths(new int[] {8, 15});
-    runHBaseSQLVerifyCount("SELECT *\n"
-        + "FROM\n"
-        + "  hbase.`" + tableName + "` tableName\n"
-        , 1);
+      setColumnWidths(new int[] {8, 15});
+      runHBaseSQLVerifyCount("SELECT *\n"
+          + "FROM\n"
+          + "  hbase.`" + tableName + "` tableName\n"
+          , 1);
     } finally {
       try {
-        if (table != null) {
-          table.close();
-        }
         admin.disableTable(tableName);
         admin.deleteTable(tableName);
       } catch (Exception e) { } // ignore
@@ -63,19 +60,15 @@ public class TestHBaseQueries extends BaseHBaseTest {
 
   }
 
-
   @Test
   public void testWithEmptyTable() throws Exception {
-    HBaseAdmin admin = HBaseTestsSuite.getAdmin();
-    String tableName = "drill_ut_empty_table";
-    HTable table = null;
+    Admin admin = HBaseTestsSuite.getAdmin();
+    TableName tableName = TableName.valueOf("drill_ut_empty_table");
 
-    try {
+    try (Table table = HBaseTestsSuite.getConnection().getTable(tableName);) {
       HTableDescriptor desc = new HTableDescriptor(tableName);
       desc.addFamily(new HColumnDescriptor("f"));
       admin.createTable(desc, Arrays.copyOfRange(TestTableGenerator.SPLIT_KEYS, 0, 2));
-
-      table = new HTable(admin.getConfiguration(), tableName);
 
       setColumnWidths(new int[] {8, 15});
       runHBaseSQLVerifyCount("SELECT row_key, count(*)\n"
@@ -84,14 +77,12 @@ public class TestHBaseQueries extends BaseHBaseTest {
           , 0);
     } finally {
       try {
-        if (table != null) {
-          table.close();
-        }
         admin.disableTable(tableName);
         admin.deleteTable(tableName);
       } catch (Exception e) { } // ignore
     }
   }
+
   @Test
   public void testCastEmptyStrings() throws Exception {
     try {
@@ -106,4 +97,5 @@ public class TestHBaseQueries extends BaseHBaseTest {
         test("alter system reset `drill.exec.functions.cast_empty_string_to_null`;");
     }
   }
+
 }

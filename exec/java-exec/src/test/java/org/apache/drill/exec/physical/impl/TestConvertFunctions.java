@@ -148,6 +148,92 @@ public class TestConvertFunctions extends BaseTestQuery {
         .go();
   }
 
+  @Test // DRILL-4679
+  public void testConvertFromJson_drill4679() throws Exception {
+    Object mapVal1 = mapOf("y", "kevin", "z", "paul");
+    Object mapVal2 = mapOf("y", "bill", "z", "peter");
+
+    // right side of union-all produces 0 rows due to FALSE filter, column t.x is a map
+    String query1 = String.format("select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " where t.`integer` = 2010 "
+        + " union all "
+        + " select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t"
+        + " where 1 = 0");
+
+    testBuilder()
+        .sqlQuery(query1)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("abc", mapVal1, "xyz")
+        .go();
+
+    // left side of union-all produces 0 rows due to FALSE filter, column t.x is a map
+    String query2 = String.format("select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " where 1 = 0 "
+        + " union all "
+        + " select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " where t.`integer` = 2010");
+
+    testBuilder()
+        .sqlQuery(query2)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("abc", mapVal1, "xyz")
+        .go();
+
+    // sanity test where neither side produces 0 rows
+    String query3 = String.format("select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " where t.`integer` = 2010 "
+        + " union all "
+        + " select 'abc' as col1, convert_from(convert_to(t.x, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " where t.`integer` = 2001");
+
+    testBuilder()
+        .sqlQuery(query3)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("abc", mapVal1, "xyz")
+        .baselineValues("abc", mapVal2, "xyz")
+        .go();
+
+    // convert_from() on a list, column t.rl is a repeated list
+    Object listVal1 = listOf(listOf(2l, 1l), listOf(4l, 6l));
+    Object listVal2 = listOf(); // empty
+
+    String query4 = String.format("select 'abc' as col1, convert_from(convert_to(t.rl, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t "
+        + " union all "
+        + " select 'abc' as col1, convert_from(convert_to(t.rl, 'JSON'), 'JSON') as col2, 'xyz' as col3 from cp.`/store/json/input2.json` t"
+        + " where 1 = 0");
+
+    testBuilder()
+       .sqlQuery(query4)
+       .unOrdered()
+       .baselineColumns("col1", "col2", "col3")
+       .baselineValues("abc", listVal1, "xyz")
+       .baselineValues("abc", listVal2, "xyz")
+       .baselineValues("abc", listVal1, "xyz")
+       .baselineValues("abc", listVal1, "xyz")
+       .go();
+
+  }
+
+  @Test // DRILL-4693
+  public void testConvertFromJson_drill4693() throws Exception {
+    Object mapVal1 = mapOf("x", "y");
+
+    String query = String.format("select 'abc' as col1, convert_from('{\"x\" : \"y\"}', 'json') as col2, 'xyz' as col3 "
+        + " from cp.`/store/json/input2.json` t"
+        + " where t.`integer` = 2001");
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("abc", mapVal1, "xyz")
+        .go();
+
+  }
+
   @Test
   public void testConvertToComplexJSON() throws Exception {
 

@@ -79,7 +79,9 @@ public abstract class OptionValidator {
    * Validates the option value.
    *
    * @param value the value to validate
+   * @param manager the manager for accessing validation dependencies (options)
    * @throws UserException message to describe error with value, including range or list of expected values
    */
-  public abstract void validate(OptionValue value);
+  public abstract void validate(OptionValue value, OptionManager manager);
+
 }

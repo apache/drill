@@ -195,6 +195,7 @@ public class AvroRecordReader extends AbstractRecordReader {
           }
 
           process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer, fieldSelection.getChild(field.name()));
+
         }
         break;
       case ARRAY:
@@ -207,11 +208,11 @@ public class AvroRecordReader extends AbstractRecordReader {
         } else {
           writer = (MapOrListWriterImpl) writer.list(fieldName);
         }
-        writer.start();
         for (final Object o : array) {
+          writer.start();
           process(o, elementSchema, fieldName, writer, fieldSelection.getChild(fieldName));
+          writer.end();
         }
-        writer.end();
         break;
       case UNION:
         // currently supporting only nullable union (optional fields) like ["null", "some-type"].

@@ -18,21 +18,20 @@
 
 package org.apache.drill.exec.store.hbase;
 
+import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
-import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.ImmutableList;
 
@@ -95,7 +94,7 @@ public abstract class HBasePushFilterIntoScan extends StoragePluginOptimizerRule
       }
 
       // convert the filter to one that references the child of the project
-      final RexNode condition =  RelOptUtil.pushFilterPastProject(filter.getCondition(), project);
+      final RexNode condition =  RelOptUtil.pushPastProject(filter.getCondition(), project);
 
       doPushFilterToScan(call, filter, project, scan, groupScan, condition);
     }

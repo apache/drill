@@ -31,7 +31,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 
 public class ProjectPrel extends DrillProjectRelBase implements Prel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectPrel.class);
@@ -79,8 +81,23 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     return SelectionVectorMode.NONE;
   }
 
+  /**
+   * Whether this Project requires a final column re-ordering. Returns False for all cases except when
+   * convert_fromjson function is present.  For convert_fromjson function, the Project operator at
+   * run-time produces an output schema with convert_fromjson expr appended to the end of the schema.
+   * We need a final column re-ordering to ensure the correct column order.
+  */
   @Override
   public boolean needsFinalColumnReordering() {
+    for (RexNode expr : this.exps) {
+      // TODO: a convert_fromjson nested within other convert functions currently does not work.
+      // When it is supported, we should enhance this check by using a visitor to find the nested function.
+      if (expr.getKind() == SqlKind.OTHER_FUNCTION &&
+          expr instanceof RexCall &&
+          ((RexCall) expr).getOperator().getName().equalsIgnoreCase("CONVERT_FROMJSON")) {
+        return true;
+      }
+    }
     return false;
   }
 

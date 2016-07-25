@@ -286,11 +286,6 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/dumpcat</source>
-      <fileMode>0755</fileMode>
-      <outputDirectory>bin</outputDirectory>
-    </file>
-    <file>
       <source>src/resources/drill-override.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
@@ -304,11 +299,16 @@
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
+      <source>src/resources/distrib-env.sh</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/core-site.xml</source>
+      <source>src/resources/core-site-example.xml</source>
       <outputDirectory>conf</outputDirectory>
     </file>
   </files>

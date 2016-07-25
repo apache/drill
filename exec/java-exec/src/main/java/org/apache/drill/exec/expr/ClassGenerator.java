@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.CodeGeneratorArgument;
 import org.apache.drill.exec.compile.sig.CodeGeneratorMethod;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -54,6 +55,7 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import org.apache.drill.exec.server.options.OptionManager;
 
 public class ClassGenerator<T>{
 
@@ -62,8 +64,6 @@ public class ClassGenerator<T>{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
   public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
-
-  private static final int MAX_BLOCKS_IN_FUNCTION = 50;
 
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
@@ -74,8 +74,9 @@ public class ClassGenerator<T>{
   private final CodeGenerator<T> codeGenerator;
 
   public final JDefinedClass clazz;
-  private final LinkedList<JBlock>[] blocks;
+  private final LinkedList<SizedJBlock>[] blocks;
   private final JCodeModel model;
+  private final OptionManager optionManager;
 
   private int index = 0;
   private int labelIndex = 0;
@@ -86,14 +87,16 @@ public class ClassGenerator<T>{
   }
 
   @SuppressWarnings("unchecked")
-  ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model) throws JClassAlreadyExistsException {
+  ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model, OptionManager optionManager) throws JClassAlreadyExistsException {
     this.codeGenerator = codeGenerator;
     this.clazz = clazz;
     this.mappings = mappingSet;
     this.sig = signature;
     this.evaluationVisitor = eval;
     this.model = model;
-    blocks = (LinkedList<JBlock>[]) new LinkedList[sig.size()];
+    this.optionManager = optionManager;
+
+    blocks = (LinkedList<SizedJBlock>[]) new LinkedList[sig.size()];
     for (int i =0; i < sig.size(); i++) {
       blocks[i] = Lists.newLinkedList();
     }
@@ -102,7 +105,7 @@ public class ClassGenerator<T>{
     for (SignatureHolder child : signature.getChildHolders()) {
       String innerClassName = child.getSignatureClass().getSimpleName();
       JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
-      innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model));
+      innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model, optionManager));
     }
   }
 
@@ -129,7 +132,7 @@ public class ClassGenerator<T>{
   }
 
   public JBlock getBlock(String methodName) {
-    JBlock blk = this.blocks[sig.get(methodName)].getLast();
+    JBlock blk = this.blocks[sig.get(methodName)].getLast().getBlock();
     Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
     return blk;
   }
@@ -154,7 +157,7 @@ public class ClassGenerator<T>{
   public void nestEvalBlock(JBlock block) {
     String methodName = getCurrentMapping().getMethodName(BlockType.EVAL);
     evaluationVisitor.newScope();
-    this.blocks[sig.get(methodName)].addLast(block);
+    this.blocks[sig.get(methodName)].addLast(new SizedJBlock(block));
   }
 
   public void unNestEvalBlock() {
@@ -215,22 +218,47 @@ public class ClassGenerator<T>{
     return vv;
   }
 
-  public HoldingContainer addExpr(LogicalExpression ex) {
-    return addExpr(ex, true);
+  public enum BlkCreateMode {
+    TRUE,  // Create new block
+    FALSE, // Do not create block; put into existing block.
+    TRUE_IF_BOUND // Create new block only if # of expressions added hit upper-bound (ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE)
   }
 
-  public HoldingContainer addExpr(LogicalExpression ex, boolean rotate) {
-//    logger.debug("Adding next write {}", ex);
-    if (rotate) {
-      rotateBlock();
+  public HoldingContainer addExpr(LogicalExpression ex) {
+    // default behavior is always to put expression into new block.
+    return addExpr(ex, BlkCreateMode.TRUE);
+  }
+
+  public HoldingContainer addExpr(LogicalExpression ex, BlkCreateMode mode) {
+    if (mode == BlkCreateMode.TRUE || mode == BlkCreateMode.TRUE_IF_BOUND) {
+      rotateBlock(mode);
     }
+
+    for (LinkedList<SizedJBlock> b : blocks) {
+      b.getLast().incCounter();
+    }
+
     return evaluationVisitor.addExpr(ex, this);
   }
 
   public void rotateBlock() {
-    evaluationVisitor.previousExpressions.clear();
-    for (LinkedList<JBlock> b : blocks) {
-      b.add(new JBlock(true, true));
+    // default behavior is always to create new block.
+    rotateBlock(BlkCreateMode.TRUE);
+  }
+
+  private void rotateBlock(BlkCreateMode mode) {
+    boolean blockRotated = false;
+    for (LinkedList<SizedJBlock> b : blocks) {
+      if (mode == BlkCreateMode.TRUE ||
+          (mode == BlkCreateMode.TRUE_IF_BOUND &&
+            optionManager != null &&
+            b.getLast().getCount() > optionManager.getOption(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR))) {
+        b.add(new SizedJBlock(new JBlock(true, true)));
+        blockRotated = true;
+      }
+    }
+    if (blockRotated) {
+      evaluationVisitor.previousExpressions.clear();
     }
   }
 
@@ -247,11 +275,13 @@ public class ClassGenerator<T>{
       outer._throws(SchemaChangeException.class);
 
       int methodIndex = 0;
-      int blocksInMethod = 0;
+      int exprsInMethod = 0;
       boolean isVoidMethod = method.getReturnType() == void.class;
-      for(JBlock b : blocks[i++]) {
+      for(SizedJBlock sb : blocks[i++]) {
+        JBlock b = sb.getBlock();
         if(!b.isEmpty()) {
-          if (blocksInMethod > MAX_BLOCKS_IN_FUNCTION) {
+          if (optionManager != null &&
+              exprsInMethod > optionManager.getOption(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR)) {
             JMethod inner = clazz.method(JMod.PRIVATE, model._ref(method.getReturnType()), method.getMethodName() + methodIndex);
             JInvocation methodCall = JExpr.invoke(inner);
             for (CodeGeneratorArgument arg : method) {
@@ -269,11 +299,11 @@ public class ClassGenerator<T>{
               outer.body()._return(methodCall);
             }
             outer = inner;
-            blocksInMethod = 0;
+            exprsInMethod = 0;
             ++methodIndex;
           }
           outer.body().add(b);
-          ++blocksInMethod;
+          exprsInMethod += sb.getCount();
         }
       }
     }

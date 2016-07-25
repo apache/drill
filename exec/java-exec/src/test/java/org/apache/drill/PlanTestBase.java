@@ -101,6 +101,45 @@ public class PlanTestBase extends BaseTestQuery {
   }
 
   /**
+   * Runs an explain plan including attributes query and check for expected regex patterns
+   * (in optiq text format), also ensure excluded patterns are not found. Either list can
+   * be empty or null to skip that part of the check.
+   *
+   * See the convenience methods for passing a single string in either the
+   * excluded list, included list or both.
+   *
+   * @param query - an explain query, this method does not add it for you
+   * @param expectedPatterns - list of patterns that should appear in the plan
+   * @param excludedPatterns - list of patterns that should not appear in the plan
+   * @throws Exception - if an inclusion or exclusion check fails, or the
+   *                     planning process throws an exception
+   */
+  public static void testPlanWithAttributesMatchingPatterns(String query, String[] expectedPatterns,
+                                                            String[] excludedPatterns)
+          throws Exception {
+    final String plan = getPlanInString("EXPLAIN PLAN INCLUDING ALL ATTRIBUTES for " +
+            QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
+
+    // Check and make sure all expected patterns are in the plan
+    if (expectedPatterns != null) {
+      for (final String s : expectedPatterns) {
+        final Pattern p = Pattern.compile(s);
+        final Matcher m = p.matcher(plan);
+        assertTrue(EXPECTED_NOT_FOUND + s, m.find());
+      }
+    }
+
+    // Check and make sure all excluded patterns are not in the plan
+    if (excludedPatterns != null) {
+      for (final String s : excludedPatterns) {
+        final Pattern p = Pattern.compile(s);
+        final Matcher m = p.matcher(plan);
+        assertFalse(UNEXPECTED_FOUND + s, m.find());
+      }
+    }
+  }
+
+  /**
    * Runs an explain plan query and check for expected substring patterns (in optiq
    * text format), also ensure excluded patterns are not found. Either list can
    * be empty or null to skip that part of the check.

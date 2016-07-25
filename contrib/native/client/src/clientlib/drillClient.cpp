@@ -369,6 +369,10 @@ status_t DrillClient::submitQuery(Drill::QueryType t, const std::string& plan, p
 
     ::exec::shared::QueryType castedType = static_cast< ::exec::shared::QueryType> (t);
     DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(castedType, plan, listener, listenerCtx);
+    if(pResult==NULL){
+        *qHandle=NULL;
+        return (status_t)this->m_pImpl->getError()->status;
+    }
     *qHandle=(QueryHandle_t)pResult;
     return QRY_SUCCESS;
 }

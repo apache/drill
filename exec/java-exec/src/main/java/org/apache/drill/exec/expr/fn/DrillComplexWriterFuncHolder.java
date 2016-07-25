@@ -44,6 +44,10 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
     this.ref = ref;
   }
 
+  public FieldReference getReference() {
+    return ref;
+  }
+
   @Override
   protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
 

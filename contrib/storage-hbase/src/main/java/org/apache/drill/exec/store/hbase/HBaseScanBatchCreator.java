@@ -45,7 +45,7 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
         if ((columns = subScan.getColumns())==null) {
           columns = GroupScan.ALL_COLUMNS;
         }
-        readers.add(new HBaseRecordReader(subScan.getStorageConfig().getHBaseConf(), scanSpec, columns, context));
+        readers.add(new HBaseRecordReader(subScan.getStorageEngine().getConnection(), scanSpec, columns, context));
       } catch (Exception e1) {
         throw new ExecutionSetupException(e1);
       }

@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.memory;
 
+import com.codahale.metrics.Gauge;
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.exec.metrics.DrillMetrics;
 
 /**
  * The root allocator for using direct memory inside a Drillbit. Supports creating a
@@ -27,6 +29,18 @@ public class RootAllocator extends BaseAllocator {
 
   public RootAllocator(final long limit) {
     super(null, "ROOT", 0, limit);
+    DrillMetrics.register("drill.allocator.root.used", new Gauge<Long>() {
+      @Override
+      public Long getValue() {
+        return getAllocatedMemory();
+      }
+    });
+    DrillMetrics.register("drill.allocator.root.peak", new Gauge<Long>() {
+      @Override
+      public Long getValue() {
+        return getPeakMemoryAllocation();
+      }
+    });
   }
 
   /**

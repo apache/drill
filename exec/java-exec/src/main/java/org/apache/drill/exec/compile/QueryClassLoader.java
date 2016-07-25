@@ -44,8 +44,8 @@ public class QueryClassLoader extends URLClassLoader {
   public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
   public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION, CompilerPolicy.DEFAULT.toString()) {
     @Override
-    public void validate(OptionValue v) {
-      super.validate(v);
+    public void validate(final OptionValue v, final OptionManager manager) {
+      super.validate(v, manager);
       try {
         CompilerPolicy.valueOf(v.string_val.toUpperCase());
       } catch (IllegalArgumentException e) {

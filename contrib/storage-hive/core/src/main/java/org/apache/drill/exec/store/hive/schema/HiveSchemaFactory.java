@@ -73,7 +73,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     try {
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf);
+          DrillHiveMetaStoreClient.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }

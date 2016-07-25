@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -92,9 +91,9 @@ public class ServiceEngine implements AutoCloseable {
 
   }
 
-  private final void registerMetrics(final MetricRegistry registry) {
+  private void registerMetrics(final MetricRegistry registry) {
     final String prefix = PooledByteBufAllocatorL.METRIC_PREFIX + "rpc.";
-    DrillMetrics.register(prefix + "user.current", new Gauge<Long>() {
+    DrillMetrics.register(prefix + "user.used", new Gauge<Long>() {
       @Override
       public Long getValue() {
         return userAllocator.getAllocatedMemory();
@@ -106,7 +105,7 @@ public class ServiceEngine implements AutoCloseable {
         return userAllocator.getPeakMemoryAllocation();
       }
     });
-    DrillMetrics.register(prefix + "bit.control.current", new Gauge<Long>() {
+    DrillMetrics.register(prefix + "bit.control.used", new Gauge<Long>() {
       @Override
       public Long getValue() {
         return controlAllocator.getAllocatedMemory();
@@ -119,7 +118,7 @@ public class ServiceEngine implements AutoCloseable {
       }
     });
 
-    DrillMetrics.register(prefix + "bit.data.current", new Gauge<Long>() {
+    DrillMetrics.register(prefix + "bit.data.used", new Gauge<Long>() {
       @Override
       public Long getValue() {
         return dataAllocator.getAllocatedMemory();
