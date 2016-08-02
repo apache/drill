@@ -166,10 +166,17 @@ fi
 # Source distrib-env.sh for any distribution-specific settings.
 # distrib-env.sh is optional; it is created by some distribution installers
 # that need distribution-specific settings.
+# Because installers write site-specific values into the file, the file
+# should be moved into the site directory, if the user employs one.
 
-distribEnv="$DRILL_HOME/conf/distrib-env.sh"
+distribEnv="$DRILL_CONF_DIR/distrib-env.sh"
 if [ -r "$distribEnv" ]; then
   . "$distribEnv"
+else
+  distribEnv="$DRILL_HOME/conf/distrib-env.sh"
+  if [ -r "$distribEnv" ]; then
+    . "$distribEnv"
+  fi
 fi
 
 # Default memory settings if none provided by the environment or
