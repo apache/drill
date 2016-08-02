@@ -40,10 +40,10 @@ SLARGS=()
 for (( i=0; i < ${#args[@]}; i++ )); do
   case "${args[i]}" in
   -q|-e)
-      QUERY=$args[i+1]
+      QUERY=${args[i+1]}
       let i=$i+1
       ;;
-  -f) FILE=$args[i+1]
+  -f) FILE=${args[i+1]}
       let i=$i+1
       ;;
    *) SLARGS+=("${args[i]}");;
