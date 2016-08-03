@@ -328,6 +328,7 @@ public class FileSelection {
 
   public static FileSelection createFromDirectories(final List<String> dirPaths, final FileSelection selection,
       final String cacheFileRoot) {
+    Stopwatch timer = Stopwatch.createStarted();
     final String root = selection.getSelectionRoot();
     if (Strings.isNullOrEmpty(root)) {
       throw new DrillRuntimeException("Selection root is null or empty" + root);
@@ -354,6 +355,7 @@ public class FileSelection {
     final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
     FileSelection fileSel = new FileSelection(null, dirs, path.toString(), cacheFileRoot, false);
     fileSel.setHadWildcard(selection.hadWildcard());
+    logger.info("FileSelection.createFromDirectories() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
     return fileSel;
   }
 

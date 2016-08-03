@@ -151,6 +151,7 @@ public class Metadata {
    */
   private Pair<ParquetTableMetadata_v2, ParquetTableMetadataDirs>
   createMetaFilesRecursively(final String path) throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     List<ParquetFileMetadata_v2> metaDataList = Lists.newArrayList();
     List<String> directoryList = Lists.newArrayList();
     ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfoSet =
@@ -199,9 +200,13 @@ public class Metadata {
     if (directoryList.size() > 0 && childFiles.size() == 0) {
       ParquetTableMetadataDirs parquetTableMetadataDirs = new ParquetTableMetadataDirs(directoryList);
       writeFile(parquetTableMetadataDirs, new Path(p, METADATA_DIRECTORIES_FILENAME));
+      logger.info("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
       return Pair.of(parquetTableMetadata, parquetTableMetadataDirs);
     }
     List<String> emptyDirList = Lists.newArrayList();
+    logger.info("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+    timer.stop();
     return Pair.of(parquetTableMetadata, new ParquetTableMetadataDirs(emptyDirList));
   }
 
@@ -518,33 +523,47 @@ public class Metadata {
    */
   private boolean tableModified(ParquetTableMetadataBase tableMetadata, Path metaFilePath)
       throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
     FileStatus directoryStatus = fs.getFileStatus(metaFilePath.getParent());
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+      logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
       return true;
     }
     for (String directory : tableMetadata.getDirectories()) {
       directoryStatus = fs.getFileStatus(new Path(directory));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+        logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+        timer.stop();
         return true;
       }
     }
+    logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+    timer.stop();
     return false;
   }
 
   private boolean tableModified(ParquetTableMetadataDirs tableMetadataDirs, Path metaFilePath)
       throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
     FileStatus directoryStatus = fs.getFileStatus(metaFilePath.getParent());
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+      logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
       return true;
     }
     for (String directory : tableMetadataDirs.getDirectories()) {
       directoryStatus = fs.getFileStatus(new Path(directory));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+        logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+        timer.stop();
         return true;
       }
     }
+    logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+    timer.stop();
     return false;
   }
 
