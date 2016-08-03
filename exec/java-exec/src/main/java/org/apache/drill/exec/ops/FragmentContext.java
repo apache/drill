@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
+import com.google.common.base.Function;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -103,6 +105,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
   private final AccountingUserConnection accountingUserConnection;
+  private final Map<String, ValueHolder> constantValueHolderCache;
 
   /**
    * Create a FragmentContext instance for non-root fragment.
@@ -173,6 +176,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
     stats = new FragmentStats(allocator, fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
+    constantValueHolderCache = Maps.newHashMap();
   }
 
   /**
@@ -438,6 +442,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     throw new UnsupportedOperationException(String.format("The partition explorer interface can only be used " +
         "in functions that can be evaluated at planning time. Make sure that the %s configuration " +
         "option is set to true.", PlannerSettings.CONSTANT_FOLDING.getOptionName()));
+  }
+
+  @Override
+  public ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer) {
+    ValueHolder valueHolder = constantValueHolderCache.get(value);
+    if (valueHolder == null) {
+      valueHolder = holderInitializer.apply(getManagedBuffer());
+      constantValueHolderCache.put(value, valueHolder);
+    }
+    return valueHolder;
   }
 
   public Executor getExecutor(){

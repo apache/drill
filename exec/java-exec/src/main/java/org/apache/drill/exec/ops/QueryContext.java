@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.ops;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
@@ -29,6 +32,7 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -70,6 +74,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
+  private final Map<String, ValueHolder> constantValueHolderCache;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -96,6 +101,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
+    constantValueHolderCache = Maps.newHashMap();
   }
 
   @Override
@@ -240,6 +246,16 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   @Override
   public PartitionExplorer getPartitionExplorer() {
     return new PartitionExplorerImpl(getRootSchema());
+  }
+
+  @Override
+  public ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer) {
+    ValueHolder valueHolder = constantValueHolderCache.get(value);
+    if (valueHolder == null) {
+      valueHolder = holderInitializer.apply(getManagedBuffer());
+      constantValueHolderCache.put(value, valueHolder);
+    }
+    return valueHolder;
   }
 
   @Override
