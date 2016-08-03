@@ -17,18 +17,23 @@
  */
 package org.apache.drill.exec.ops;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -70,6 +75,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
+  /** Stores constants and their holders by type */
+  private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -96,6 +103,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
+    constantValueHolderCache = Maps.newHashMap();
   }
 
   @Override
@@ -240,6 +248,21 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   @Override
   public PartitionExplorer getPartitionExplorer() {
     return new PartitionExplorerImpl(getRootSchema());
+  }
+
+  @Override
+  public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+    if (!constantValueHolderCache.containsKey(value)) {
+      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+    }
+
+    Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);
+    ValueHolder valueHolder = holdersByType.get(type);
+    if (valueHolder == null) {
+      valueHolder = holderInitializer.apply(getManagedBuffer());
+      holdersByType.put(type, valueHolder);
+    }
+    return valueHolder;
   }
 
   @Override
