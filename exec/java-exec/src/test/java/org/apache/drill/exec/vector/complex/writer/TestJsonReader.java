@@ -91,9 +91,7 @@ public class TestJsonReader extends BaseTestQuery {
           .baselineColumns("col_1", "col_2")
           .baselineValues(
               mapOf(),
-              mapOf(
-                  "inner_1", listOf(),
-                  "inner_3", mapOf()))
+              mapOf())
           .baselineValues(
               mapOf("inner_object_field_1", "2"),
               mapOf(
@@ -104,8 +102,7 @@ public class TestJsonReader extends BaseTestQuery {
               mapOf(),
               mapOf(
                   "inner_1", listOf("4", "5", "6"),
-                  "inner_2", "3",
-                  "inner_3", mapOf()))
+                  "inner_2", "3"))
           .go();
     } finally {
       test("alter session set `store.json.all_text_mode` = false");
@@ -128,7 +125,7 @@ public class TestJsonReader extends BaseTestQuery {
         .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`")
         .ordered()
         .baselineColumns("flat")
-        .baselineValues(mapOf("repeated_varchar", listOf()))
+        .baselineValues(mapOf())
         .baselineValues(mapOf("repeated_varchar", listOf(testVal)))
         .go();
 
