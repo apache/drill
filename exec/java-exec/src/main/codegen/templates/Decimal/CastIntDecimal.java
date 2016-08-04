@@ -65,8 +65,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
         out.scale = (int) scale.value;
 
-        if (precision.value == 0) {
-            // since input precision is zero, calculate precision for this integer value
+        if (precision.value <= 0) {
+            // since input precision is nonpositive, calculate precision for this integer value
             long precisionTmp = in.value == 0 ? 1 : in.value;  // precision for value 0 will be 1
             int precisionCounter = 0;
             while (precisionTmp != 0) {
@@ -76,7 +76,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             out.precision = precisionCounter;
         }
         else {
-            // since input precision is not zero, assume it is correct, and use it
+            // since input precision is positive, assume it is correct, and use it
             out.precision = (int) precision.value;
         }
 
