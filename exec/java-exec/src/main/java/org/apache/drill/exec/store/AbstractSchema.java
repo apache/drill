@@ -208,7 +208,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * @param  tableNames the requested tables, specified by the table names
    * @return the collection of requested tables
    */
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames) {
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, int bulkSize) {
     return getTablesByNames(tableNames);
   }
 
@@ -231,4 +231,21 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     }
     return tables;
   }
+
+  public List<Pair<String, Schema.TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
+    final List<String> tableNames = Lists.newArrayList(getTableNames());
+    final List<Pair<String, Schema.TableType>> tableNamesAndTypes = Lists.newArrayList();
+    final List<Pair<String, ? extends Table>> tables;
+    if (bulkLoad) {
+      tables = getTablesByNamesByBulkLoad(tableNames, bulkSize);
+    } else {
+      tables = getTablesByNames(tableNames);
+    }
+    for (Pair<String, ? extends Table> table : tables) {
+      tableNamesAndTypes.add(Pair.of(table.getKey(), table.getValue().getJdbcTableType()));
+    }
+
+    return tableNamesAndTypes;
+  }
+
 }

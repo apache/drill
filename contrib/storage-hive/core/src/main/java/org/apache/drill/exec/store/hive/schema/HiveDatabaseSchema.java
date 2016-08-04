@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.calcite.rel.type.RelDataType;
@@ -78,32 +79,26 @@ public class HiveDatabaseSchema extends AbstractSchema{
   }
 
   @Override
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames) {
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames,
+      final int bulkSize) {
     final String schemaName = getName();
-    final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
-    List<org.apache.hadoop.hive.metastore.api.Table> tables;
-    try {
-      tables = DrillHiveMetaStoreClient.getTableObjectsByNameHelper(mClient, schemaName, tableNames);
-    } catch (TException e) {
-      logger.warn("Exception occurred while trying to list tables by names from {}: {}", schemaName, e.getCause());
-      return tableNameToTable;
-    }
+    final List<org.apache.hadoop.hive.metastore.api.Table> tables = DrillHiveMetaStoreClient
+        .getTablesByNamesByBulkLoadHelper(mClient, tableNames, schemaName, bulkSize);
 
-    for(final org.apache.hadoop.hive.metastore.api.Table table : tables) {
-      if(table == null) {
+    final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
+    for (final org.apache.hadoop.hive.metastore.api.Table table : tables) {
+      if (table == null) {
         continue;
       }
 
       final String tableName = table.getTableName();
       final TableType tableType;
-      if(table.getTableType().equals(org.apache.hadoop.hive.metastore.TableType.VIRTUAL_VIEW.toString())) {
+      if (table.getTableType().equals(org.apache.hadoop.hive.metastore.TableType.VIRTUAL_VIEW.toString())) {
         tableType = TableType.VIEW;
       } else {
         tableType = TableType.TABLE;
       }
-      tableNameToTable.add(Pair.of(
-          tableName,
-          new HiveTableWithoutStatisticAndRowType(tableType)));
+      tableNameToTable.add(Pair.of(tableName, new HiveTableWithoutStatisticAndRowType(tableType)));
     }
     return tableNameToTable;
   }
@@ -117,12 +112,14 @@ public class HiveDatabaseSchema extends AbstractSchema{
 
     @Override
     public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-      throw new UnsupportedOperationException("RowType was not retrieved when this table had been being requested");
+      throw new UnsupportedOperationException(
+          "RowType was not retrieved when this table had been being requested");
     }
 
     @Override
     public Statistic getStatistic() {
-      throw new UnsupportedOperationException("Statistic was not retrieved when this table had been being requested");
+      throw new UnsupportedOperationException(
+          "Statistic was not retrieved when this table had been being requested");
     }
 
     @Override
@@ -130,4 +127,5 @@ public class HiveDatabaseSchema extends AbstractSchema{
       return tableType;
     }
   }
+
 }
