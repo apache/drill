@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date:  
+date: 2016-08-04 16:47:22 UTC
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin configurations on one Drill node in a 
@@ -103,9 +103,9 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats" . . . "delimiter"</td>
-    <td>"\t"<br>","</td>
+    <td>"\n"<br>"\r"<br>"\t"<br>"\r\n"<br>","</td>
     <td>format-dependent</td>
-    <td>Sequence of one or more characters that serve as a record separator in a delimited text file, such as CSV. Use a 4-digit hex code syntax \uXXXX for a non-printable delimiter. </td>
+    <td>Sequence of one or more characters that signifies the end of a line of text and the start of a new line in a delimited text file, such as CSV. Drill treats \n as the standard line delimiter. As of Drill 1.8, Drill supports multi-byte delimiters, such as \r\n. Use a 4-digit hex code syntax \uXXXX for a non-printable delimiter. </td>
   </tr>
   <tr>
     <td>"formats" . . . "quote"</td>
