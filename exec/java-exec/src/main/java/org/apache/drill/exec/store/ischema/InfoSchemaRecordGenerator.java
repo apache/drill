@@ -40,7 +40,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
@@ -55,6 +54,7 @@ import com.google.common.collect.Lists;
  * schema, table or field.
  */
 public abstract class InfoSchemaRecordGenerator {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaRecordGenerator.class);
   protected InfoSchemaFilter filter;
 
   protected OptionManager optionManager;
@@ -290,26 +290,28 @@ public abstract class InfoSchemaRecordGenerator {
       return new PojoRecordReader<>(Records.Table.class, records.iterator());
     }
 
-    @Override
-    public void visitTables(String schemaPath, SchemaPlus schema) {
+    @Override public void visitTables(String schemaPath, SchemaPlus schema) {
       final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+      final List<Pair<String, TableType>> tableNamesAndTypes = drillSchema
+          .getTableNamesAndTypes(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST),
+              (int)optionManager.getOption(ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE));
 
-      final List<String> tableNames = Lists.newArrayList(schema.getTableNames());
-      final List<Pair<String, ? extends Table>> tableNameToTables;
-      if(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST)) {
-        tableNameToTables = drillSchema.getTablesByNamesByBulkLoad(tableNames);
-      } else {
-        tableNameToTables = drillSchema.getTablesByNames(tableNames);
-      }
-
-      for(Pair<String, ? extends Table> tableNameToTable : tableNameToTables) {
-        final String tableName = tableNameToTable.getKey();
-        final Table table = tableNameToTable.getValue();
+      for (Pair<String, TableType> tableNameAndType : tableNamesAndTypes) {
+        final String tableName = tableNameAndType.getKey();
+        final TableType tableType = tableNameAndType.getValue();
         // Visit the table, and if requested ...
-        if(shouldVisitTable(schemaPath, tableName)) {
-          visitTable(schemaPath, tableName, table);
+        if (shouldVisitTable(schemaPath, tableName)) {
+          visitTableWithType(schemaPath, tableName, tableType);
         }
       }
+    }
+
+    public boolean visitTableWithType(String schemaName, String tableName, TableType type) {
+      Preconditions
+          .checkNotNull(type, "Error. Type information for table %s.%s provided is null.", schemaName,
+              tableName);
+      records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName, type.toString()));
+      return false;
     }
 
     @Override

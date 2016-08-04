@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.calcite.rel.type.RelDataType;
@@ -78,17 +79,34 @@ public class HiveDatabaseSchema extends AbstractSchema{
   }
 
   @Override
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames) {
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, final int bulkSize) {
+    final int totalTables = tableNames.size();
     final String schemaName = getName();
-    final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
-    List<org.apache.hadoop.hive.metastore.api.Table> tables;
-    try {
-      tables = DrillHiveMetaStoreClient.getTableObjectsByNameHelper(mClient, schemaName, tableNames);
-    } catch (TException e) {
-      logger.warn("Exception occurred while trying to list tables by names from {}: {}", schemaName, e.getCause());
-      return tableNameToTable;
+    final List<org.apache.hadoop.hive.metastore.api.Table> tables = Lists.newArrayList();
+
+    // In each round, Drill asks for a sub-list of all the requested tables
+    for(int fromIndex = 0; fromIndex < totalTables; fromIndex += bulkSize) {
+      final int toIndex = Math.min(fromIndex + bulkSize, totalTables);
+      final List<String> eachBulkofTableNames = tableNames.subList(fromIndex, toIndex);
+      List<org.apache.hadoop.hive.metastore.api.Table> eachBulkofTables;
+      // Retries once if the first call to fetch the metadata fails
+      synchronized(mClient) {
+        try {
+          eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
+        } catch (TException tException) {
+          try {
+            mClient.reconnect();
+            eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
+          } catch (Exception e) {
+            logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName, e.getCause());
+            return ImmutableList.of();
+          }
+        }
+        tables.addAll(eachBulkofTables);
+      }
     }
 
+    final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
     for(final org.apache.hadoop.hive.metastore.api.Table table : tables) {
       if(table == null) {
         continue;
@@ -108,7 +126,7 @@ public class HiveDatabaseSchema extends AbstractSchema{
     return tableNameToTable;
   }
 
-  private static class HiveTableWithoutStatisticAndRowType implements Table {
+   private static class HiveTableWithoutStatisticAndRowType implements Table {
     private final TableType tableType;
 
     public HiveTableWithoutStatisticAndRowType(final TableType tableType) {
@@ -130,4 +148,5 @@ public class HiveDatabaseSchema extends AbstractSchema{
       return tableType;
     }
   }
+
 }
