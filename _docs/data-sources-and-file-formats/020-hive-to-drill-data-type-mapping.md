@@ -1,6 +1,6 @@
 ---
 title: "Hive-to-Drill Data Type Mapping"
-date: 2016-06-29 01:29:05 UTC
+date: 2016-08-04 00:23:08 UTC
 parent: "Data Sources and File Formats"
 ---
 Using Drill you can read tables created in Hive that use data types compatible with Drill. Drill currently does not support writing Hive tables. The map of SQL types and Hive types shows that several Hive types need to be cast to the supported SQL type in a Drill query:
@@ -86,7 +86,9 @@ You check that Hive mapped the data from the CSV to the typed values as as expec
     8223372036854775807	true	3.5	-1231.4	3.14	42	"SomeText"	2015-03-25   2015-03-25 01:23:15
     Time taken: 0.524 seconds, Fetched: 1 row(s)
 
-### Connect Drill to Hive and Query the Data
+### Connect Drill to Hive and Query the Data  
+
+{% include startnote.html %}Drill 1.8 implements the IF EXISTS parameter for the DROP TABLE and DROP VIEW commands, making IF a reserved word in Drill. As a result, you must include backticks around the Hive \``IF`` conditional function when you use it in a query on Hive tables. Alternatively, you can use the CASE statement instead of the IF function.{% include endnote.html %}
 
 In Drill, you use the [Hive storage plugin]({{site.baseurl}}/docs/hive-storage-plugin). Using the Hive storage plugin connects Drill to the Hive metastore containing the data.
 	

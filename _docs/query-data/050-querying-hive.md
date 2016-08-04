@@ -1,11 +1,13 @@
 ---
 title: "Querying Hive"
-date:  
+date: 2016-08-04 00:23:09 UTC
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and
 inserting data that you can query using Drill. Before you perform the steps,
-download the [customers.csv](http://doc.mapr.com/download/attachments/28868943/customers.csv?version=1&modificationDate=1426874930765&api=v2) file.
+download the [customers.csv](http://doc.mapr.com/download/attachments/28868943/customers.csv?version=1&modificationDate=1426874930765&api=v2) file.  
+
+{% include startnote.html %}Drill 1.8 implements the IF EXISTS parameter for the DROP TABLE and DROP VIEW commands, making IF a reserved word in Drill. As a result, you must include backticks around the Hive \``IF`` conditional function when you use it in a query on Hive tables. Alternatively, you can use the CASE statement instead of the IF function.{% include endnote.html %}
 
 To create a Hive table and query it with Drill, complete the following steps:
 

@@ -1,30 +1,51 @@
 ---
 title: "DESCRIBE"
-date:  
+date: 2016-08-04 00:23:09 UTC
 parent: "SQL Commands"
 ---
-The DESCRIBE command returns information about columns in a table or view.
+The DESCRIBE command returns information about columns in a table, view, or schema.
 
 ## Syntax
 
 The DESCRIBE command supports the following syntax:
 
     DESCRIBE [workspace.]table_name|view_name
+    DESCRIBE SCHEMA|DATABASE <name>[.workspace]
+
+
+##Parameters  
+*workspace*  
+The location, within a schema, where a table or view exists.  
+ 
+*view_name*  
+The unique name of a view.  
+
+*table_name*  
+The unique name of a table.  
+
+*schema/database*  
+A configured storage plugin instance with or without a configured workspace. 
+
 
 ## Usage Notes
 
-You can issue the DESCRIBE command against views created in a workspace and
-tables created in Hive and HBase. You can issue the DESCRIBE command
-on a table or view from any schema. For example, if you are working in the
-`dfs.myworkspace` schema, you can issue the DESCRIBE command on a view or
-table in another schema. Currently, DESCRIBE does not support tables created
-in a file system.
+Drill only supports SQL data types. Verify that all data types in an external data source, such as Hive or HBase, map to supported data types in Drill. See [Data Types]({{site.baseurl}}/docs/data-types/) for more information.  
 
-Drill only supports SQL data types. Verify that all data types in an external
-data source, such as Hive or HBase, map to supported data types in Drill. See
-Drill Data Type Mapping for more information.
+###DESCRIBE
+- You can issue the DESCRIBE command against views created in a workspace, tables created in Hive and HBase, or schemas.  
+- You can issue the DESCRIBE command on a table or view from any schema. For example, if you are working in the dfs.myworkspace schema, you can issue the DESCRIBE command on a view or table in another schema, such hive or dfs.devworkspace.  
+- Currently, DESCRIBE does not support tables created in a file system.
 
-## Example
+###DESCRIBE SCHEMA  
+- You can issue the DESCRIBE SCHEMA command on any schema. However, you can only include workspaces for file schemas, such as `dfs.myworkspace`.  
+- When you issue the DESCRIBE SCHEMA command on a particular schema, Drill returns all of the schema properties. The schema properties correlate with the configuration information in the Storage tab of the Drill Web Console for that schema.  
+- When you issue DESCRIBE SCHEMA against a schema and workspace, such as `dfs.myworkspace`, Drill returns the workspace properties in addition to all of the schema properties.  
+- When you issue DESCRIBE SCHEMA against the `dfs` schema, Drill also returns the properties of the “default” workspace. Issuing DESCRIBE SCHEMA against `dfs` or `` dfs.`default` `` returns the same results. 
+
+
+## Examples
+
+###DESCRIBE  
 
 The following example demonstrates the steps that you can follow when you want
 to use the DESCRIBE command to see column information for a view and for Hive
@@ -96,5 +117,37 @@ Complete the following steps to use the DESCRIBE command:
         | agg_rev   | VARCHAR   | NO        |
         | membership  | VARCHAR | NO        |
         +-------------+------------+-------------+
-        7 rows selected (0.403 seconds)
+        7 rows selected (0.403 seconds)  
+ 
+6. Issue the DESCRIBE SCHEMA command on `dfs.tmp` (the `dfs` schema and `tmp` workspace configured within the `dfs` schema) from the current schema.  
+  
+        0: jdbc:drill:zk=drilldemo:5181> describe schema dfs.tmp;  
+       
+              {
+                "type" : "file",
+                "enabled" : true,
+                "connection" : "file:///",
+                "config" : null,
+                "formats" : {
+                  "psv" : {
+                    "type" : "text",
+                    "extensions" : [ "tbl" ],
+                    "delimiter" : "|"
+                  },
+                  "csv" : {
+                    "type" : "text",
+                    "extensions" : [ "csv", "bcp" ],
+                    "delimiter" : ","
+                  },
+                 ... 
+                },
+                "location" : "/tmp",
+                "writable" : true,
+                "defaultInputFormat" : null
+              }  
 
+
+
+       
+              
+       

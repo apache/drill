@@ -1,17 +1,26 @@
 ---
 title: "DROP TABLE"
-date:  
+date: 2016-08-04 00:23:10 UTC
 parent: "SQL Commands"
 ---
 
-As of Drill 1.2, you can use the DROP TABLE command to remove tables (files or directories) from a file system when the file system is configured as a DFS storage plugin. See [Storage Plugin Registration]({{ site.baseurl }}/docs/storage-plugin-registration/). Currently, you can only issue the DROP TABLE command against file system data sources.
+As of Drill 1.2, you can use the DROP TABLE command to remove tables (files or directories) from a file system when the file system is configured as a DFS storage plugin. See [Storage Plugin Registration]({{ site.baseurl }}/docs/storage-plugin-registration/). As of Drill 1.8, you can include the IF EXISTS parameter with the DROP TABLE command. Currently, you can only issue the DROP TABLE command against file system data sources.
 
 ## Syntax
 The DROP TABLE command supports the following syntax: 
 
-       DROP TABLE [workspace.]name;
+    DROP TABLE [IF EXISTS] [workspace.]name;  
 
-*name* is a unique directory or file name, optionally prefaced by a storage plugin name, such as dfs, and a workspace, such as tmp using dot notation.
+## Parameters  
+
+IF EXISTS  
+Drill does not throw an error if the table does not exist. Instead, Drill returns "`Table [name] not found.`"  
+
+*workspace*  
+The location of the table in subdirectories of a local or distributed file system.
+
+*name*  
+A unique directory or file name, optionally prefaced by a storage plugin name, such as `dfs`, and a workspace, such as `tmp` using dot notation.  
 
 
 ## Usage Notes
@@ -200,7 +209,7 @@ Issuing the DROP TABLE command against the directory removes the directory and d
 ###Example 4: Dropping a table that does not exist
 The following example shows the result of dropping a table that does not exist because it was either already dropped or never existed. 
 
-       0: jdbc:drill:zk=local> use use dfs.tmp;
+       0: jdbc:drill:zk=local> use dfs.tmp;
        +-------+--------------------------------------+
        |  ok   |               summary                |
        +-------+--------------------------------------+
@@ -211,9 +220,47 @@ The following example shows the result of dropping a table that does not exist b
        0: jdbc:drill:zk=local> drop table name_key;
 
        Error: VALIDATION ERROR: Table [name_key] not found
-       [Error Id: fc6bfe17-d009-421c-8063-d759d7ea2f4e on 10.250.56.218:31010] (state=,code=0)
+       [Error Id: fc6bfe17-d009-421c-8063-d759d7ea2f4e on 10.250.56.218:31010] (state=,code=0)  
 
-###Example 5: Dropping a table without permissions 
+### Example 5: Dropping a table that does not exist using the IF EXISTS parameter  
+The following example shows the result of dropping a table that does not exist (because it was already dropped or never existed) using the IF EXISTS parameter with the DROP TABLE command:  
+
+       0: jdbc:drill:zk=local> use dfs.tmp;
+       +-------+--------------------------------------+
+       |  ok   |               summary                |
+       +-------+--------------------------------------+
+       | true  | Default schema changed to 'dfs.tmp'  |
+       +-------+--------------------------------------+
+       1 row selected (0.289 seconds)  
+
+       0: jdbc:drill:zk=local> drop table if exists name_key;
+       +-------+-----------------------------+
+       |  ok   |         summary             |
+       +-------+-----------------------------+
+       | true  | Table 'name_key' not found  |
+       +-------+-----------------------------+
+       1 row selected (0.083 seconds)  
+
+### Example 6: Dropping a table that exists using the IF EXISTS parameter  
+
+The following example shows the result of dropping a table that exists using the IF EXISTS parameter with the DROP TABLE command.  
+
+       0: jdbc:drill:zk=local> use dfs.tmp;
+       +-------+--------------------------------------+
+       |  ok   |               summary                |
+       +-------+--------------------------------------+
+       | true  | Default schema changed to 'dfs.tmp'  |
+       +-------+--------------------------------------+
+       1 row selected (0.289 seconds)
+       
+       0: jdbc:drill:zk=local> drop table if exists name_key;
+       +-------+---------------------------+
+       |  ok   |        summary            |
+       +-------+---------------------------+
+       | true  | Table 'name_key' dropped  |
+       +-------+---------------------------+  
+       
+###Example 7: Dropping a table without permissions 
 The following example shows the result of dropping a table without the appropriate permissions in the file system.
 
        0: jdbc:drill:zk=local> drop table name_key;
@@ -221,7 +268,7 @@ The following example shows the result of dropping a table without the appropria
        Error: PERMISSION ERROR: Unauthorized to drop table
        [Error Id: 36f6b51a-786d-4950-a4a7-44250f153c55 on 10.10.30.167:31010] (state=,code=0)  
 
-###Example 6: Dropping and querying a table concurrently  
+###Example 8: Dropping and querying a table concurrently  
 
 The result of this scenario depends on the delta in time between one user dropping a table and another user issuing a query against the table. Results can also vary. In some instances the drop may succeed and the query fails completely or the query completes partially and then the table is dropped returning an exception in the middle of the query results.
 
@@ -245,7 +292,7 @@ The following example shows the result of dropping a table and issuing a query a
        Fragment 1:0
        [Error Id: 6e3c6a8d-8cfd-4033-90c4-61230af80573 on 10.10.30.167:31010] (state=,code=0)
 
-###Example 7: Dropping a table with different file formats
+###Example 9: Dropping a table with different file formats
 The following example shows the result of dropping a table when multiple file formats exists in the directory. In this scenario, the `sales_dir` table resides in the `dfs.sales` workspace and contains Parquet, CSV, and JSON files.
 
 Running `ls` on `sales_dir` shows the different file types that exist in the directory.
