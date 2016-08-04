@@ -1,6 +1,6 @@
 ---
 title: "DROP TABLE"
-date: 2016-08-04 16:47:22 UTC
+date: 2016-08-04 22:01:44 UTC
 parent: "SQL Commands"
 ---
 
@@ -42,7 +42,7 @@ A unique directory or file name, optionally prefaced by a storage plugin name, s
 * When user impersonation is not enabled in Drill, Drill accesses the file system as the user running the Drillbit. This user is typically a super user who has permission to delete most files. In this scenario, use the DROP TABLE command with caution to avoid deleting critical files and directories.  
 
 ###Views
-* Views are independent of tables. If you drop a base table on which views were defined, the views become invalid, but users can still access them. You must explicitly drop any view that references a dropped table using the [DROP VIEW command]({{ site.baseurl }}/docs/drop-view/).  
+* Views are independent of tables. Views that reference dropped tables become invalid. You must explicitly drop any view that references a dropped table using the [DROP VIEW command]({{ site.baseurl }}/docs/drop-view/).  
 
 ###Concurrency 
 * Concurrency occurs when two processes try to access and/or change data at the same time. Currently, Drill does not have a mechanism in place, such as read locks on files, to address concurrency issues. For example, if one user runs a query that references a table that another user simultaneously issues the DROP TABLE command against, there is no mechanism in place to prevent a collision of the two processes. In such a scenario, Drill may return partial query results or a system error to the user running the query when the table is dropped. 
