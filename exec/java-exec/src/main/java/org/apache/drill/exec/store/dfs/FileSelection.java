@@ -402,4 +402,25 @@ public class FileSelection {
     return cacheFileRoot;
   }
 
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("root=" + this.selectionRoot);
+
+    sb.append("files=[");
+    boolean isFirst = true;
+    for (final String file : this.files) {
+      if (isFirst) {
+        isFirst = false;
+        sb.append(file);
+      } else {
+        sb.append(",");
+        sb.append(file);
+      }
+    }
+    sb.append("]");
+
+    return sb.toString();
+  }
+
 }

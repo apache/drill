@@ -40,6 +40,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.base.FileGroupScan;
+import org.apache.drill.exec.planner.logical.DirPrunedEnumerableTableScan;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -257,7 +258,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
             newFormatSelection));
     final RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable);
 
-    return EnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl);
+    // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
+    return DirPrunedEnumerableTableScan.create(oldScan.getCluster(), newOptTableImpl, newFileSelection.toString());
   }
 
   @Override
