@@ -848,9 +848,9 @@ public class TestWindowFunctions extends BaseTestQuery {
   @Test // DRILL-2330
   public void testNestedAggregates() throws Exception {
 
-    final String query = "select sum(min(l_extendedprice))" +
-            " over (partition by l_suppkey order by l_suppkey) as totprice" +
-            " from cp.`tpch/lineitem.parquet` where l_suppkey <= 10 group by l_suppkey order by 1 desc";
+    final String query = "select sum(min(l_extendedprice))"
+        + " over (partition by l_suppkey order by l_suppkey) as totprice"
+        + " from cp.`tpch/lineitem.parquet` where l_suppkey <= 10 group by l_suppkey order by 1 desc";
 
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$1\\).*",
@@ -873,5 +873,58 @@ public class TestWindowFunctions extends BaseTestQuery {
             .baselineValues(904.0)
             .baselineValues(904.0)
             .go();
+  }
+
+  @Test // DRILL-4795, DRILL-4796
+  public void testNestedAggregates1() throws Exception {
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey)\n"
+              + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey) as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over w1 as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10\n"
+          + " window w1 as (partition by l_suppkey)";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'tpch/nation.parquet.l_suppkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey)\n"
+              + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey) as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+    }
+
+    try {
+      String query = "select sum(min(l_extendedprice)) over w2 as totprice\n"
+          + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey\n"
+          + " window w2 as (partition by n_nationkey)";
+      test(query);
+    } catch(UserException ex) {
+      assert(ex.getMessage().contains("Expression 'tpch/nation.parquet.n_nationkey' is not being grouped"));
+    }
   }
 }
