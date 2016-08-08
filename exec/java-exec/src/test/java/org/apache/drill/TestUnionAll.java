@@ -1111,4 +1111,69 @@ public class TestUnionAll extends BaseTestQuery{
     }
   }
 
+  @Test // DRILL-4833  // limit 1 is on RHS of union-all
+  public void testDrill4833_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
+        " Union All (SELECT o_custkey FROM dfs_test.`%s` limit 1))", l, r, l);
+
+    test(sliceTargetSmall);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4833  // limit 1 is on LHS of union-all
+  public void testDrill4833_2() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((SELECT o_custkey FROM dfs_test.`%s` limit 1) \n" +
+        " union all \n" +
+        " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey))", l, r, l);
+
+    test(sliceTargetSmall);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
 }

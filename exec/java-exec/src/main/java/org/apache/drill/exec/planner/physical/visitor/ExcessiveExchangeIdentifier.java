@@ -25,6 +25,7 @@ import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.UnionAllPrel;
 import org.apache.calcite.rel.RelNode;
 
 import com.google.common.collect.Lists;
@@ -72,6 +73,47 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     return prel;
   }
 
+  /**
+   * A union-all should be treated differently compared to a join operator because joins impose
+   * a co-location requirement and therefore insert an exchange on both sides of the
+   * join (e.g HashToRandomExchange or BroadcastExchange), thus the major fragment of the join itself
+   * is different from the major fragment of its children.  Union-All does not impose the co-location
+   * requirement on its children, hence the major fragment of the union-all may be the same as that of
+   * its children. Thus, we should take an 'aggregate' view of all its children to decide the parallelism.
+   */
+  @Override
+  public Prel visitUnionAll(UnionAllPrel prel, MajorFragmentStat s) throws RuntimeException {
+    List<RelNode> children = Lists.newArrayList();
+    s.add(prel);
+
+    List<MajorFragmentStat> statList = Lists.newArrayList();
+    for (Prel p : prel) {
+      // for each input of union-all, create a temporary MajorFragmentStat instance
+      MajorFragmentStat childStat = new MajorFragmentStat(s /* use existing stat to initialize */);
+      statList.add(childStat);
+      childStat.add(p);
+    }
+
+    int i = 0;
+    for(Prel p : prel) {
+      children.add(p.accept(this, statList.get(i++)));
+    }
+
+    MajorFragmentStat maxStat = statList.get(0);
+    // get the max width of all child stats
+    for (int j=1; j < statList.size(); j++) {
+      if (statList.get(j).getMaxWidth() > maxStat.getMaxWidth()) {
+        maxStat = statList.get(j);
+      }
+    }
+
+    // width of the major fragment that contains union-all should be the maximum
+    // width of all its inputs
+    s.setMaxWidth(maxStat.getMaxWidth());
+
+    return (Prel) prel.copy(prel.getTraitSet(), children);
+  }
+
   @Override
   public Prel visitPrel(Prel prel, MajorFragmentStat s) throws RuntimeException {
     List<RelNode> children = Lists.newArrayList();
@@ -101,6 +143,16 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     private int maxWidth = Integer.MAX_VALUE;
     private boolean isMultiSubScan = false;
 
+    public MajorFragmentStat() {
+    }
+
+    public MajorFragmentStat(MajorFragmentStat that) {
+      this.distributionAffinity = that.distributionAffinity;
+      this.maxRows = that.maxRows;
+      this.maxWidth = that.maxWidth;
+      this.isMultiSubScan = that.isMultiSubScan;
+    }
+
     public void add(Prel prel) {
       maxRows = Math.max(prel.getRows(), maxRows);
     }
@@ -115,6 +167,14 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       isMultiSubScan = prel.getGroupScan().getMinParallelizationWidth() > 1;
       distributionAffinity = prel.getDistributionAffinity();
       add(prel);
+    }
+
+    public int getMaxWidth() {
+      return maxWidth;
+    }
+
+    public void setMaxWidth(int w) {
+      maxWidth = w;
     }
 
     public boolean isSingular() {
