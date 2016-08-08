@@ -267,6 +267,17 @@ public class ExpressionTreeMaterializer {
       return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
+    static public int computePrecision(LogicalExpression currentArg) {
+        int precision = currentArg.getMajorType().getPrecision();
+        if (currentArg.getMajorType().getMinorType() == MinorType.INT) {
+            precision = 10;
+        }
+        else if (currentArg.getMajorType().getMinorType() == MinorType.BIGINT) {
+            precision = 19;
+        }
+        return precision;
+    }
+
     @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionLookupContext functionLookupContext) {
       List<LogicalExpression> args = Lists.newArrayList();
@@ -313,7 +324,7 @@ public class ExpressionTreeMaterializer {
             if (CoreDecimalUtility.isDecimalType(parmType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
               parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
             }
             argsWithCast.add(addCastExpression(currentArg, parmType, functionLookupContext, errorCollector));
           }
@@ -339,7 +350,7 @@ public class ExpressionTreeMaterializer {
             if (CoreDecimalUtility.isDecimalType(parmType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
               parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
             }
             extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, functionLookupContext, errorCollector));
           }
