@@ -32,6 +32,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException.NodeExistsException;
 
 /**
  * A namespace aware Zookeeper client.
@@ -185,13 +186,22 @@ public class ZookeeperClient implements AutoCloseable {
     try {
       // we make a consistent read to ensure this call won't fail upon consecutive calls on the same path
       // before cache is updated
-      if (hasPath(path, true)) {
+      boolean hasNode = hasPath(path, true);
+      if (!hasNode) {
+        try {
+          curator.create().withMode(mode).forPath(target, data);
+        } catch (NodeExistsException e) {
+          // Handle race conditions since Drill is distributed and other
+          // drillbits may have just created the node. This assumes that we do want to
+          // override the new node. Makes sense here, because if the node had existed,
+          // we'd have updated it.
+          hasNode = true;
+        }
+      }
+      if (hasNode) {
         curator.setData().forPath(target, data);
-      } else {
-        curator.create().withMode(mode).forPath(target, data);
       }
       getCache().rebuildNode(target);
-
     } catch (final Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }
