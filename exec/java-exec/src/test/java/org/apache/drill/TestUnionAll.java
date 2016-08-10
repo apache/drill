@@ -35,6 +35,8 @@ public class TestUnionAll extends BaseTestQuery{
 
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
+  private static final String enableDistribute = "alter session set `planner.enable_unionall_distribute` = true";
+  private static final String defaultDistribute = "alter session reset `planner.enable_unionall_distribute`";
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -1108,6 +1110,73 @@ public class TestUnionAll extends BaseTestQuery{
         .run();
     } finally {
       test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4833  // limit 1 is on RHS of union-all
+  public void testDrill4833_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
+        " Union All (SELECT o_custkey FROM dfs_test.`%s` limit 1))", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      test(enableDistribute);
+
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+      test(defaultDistribute);
+    }
+  }
+
+  @Test // DRILL-4833  // limit 1 is on LHS of union-all
+  public void testDrill4833_2() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " ((SELECT o_custkey FROM dfs_test.`%s` limit 1) \n" +
+        " union all \n" +
+        " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey))", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      test(enableDistribute);
+
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+      test(defaultDistribute);
     }
   }
 

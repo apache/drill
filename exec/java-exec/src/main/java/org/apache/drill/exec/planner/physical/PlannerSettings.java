@@ -80,6 +80,8 @@ public class PlannerSettings implements Context{
   public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", true);
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
       INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES, DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
+  public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
+  public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, false);
 
   public static final OptionValidator IDENTIFIER_MAX_LENGTH =
       new RangeLongValidator("planner.identifier_max_length", 128 /* A minimum length is needed because option names are identifiers themselves */,
@@ -239,6 +241,10 @@ public class PlannerSettings implements Context{
 
   public long getInSubqueryThreshold() {
     return options.getOption(IN_SUBQUERY_THRESHOLD);
+  }
+
+  public boolean isUnionAllDistributeEnabled() {
+    return options.getOption(UNIONALL_DISTRIBUTE);
   }
 
   @Override
