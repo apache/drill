@@ -352,6 +352,32 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
+   * Creates a new user exception builder.
+   *
+   * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#CLIENT
+   * @return user exception builder
+   */
+  public static Builder clientError() {
+    return clientError(null);
+  }
+
+  /**
+   * Wraps the passed exception inside a client error.
+   * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
+   *
+   * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#CLIENT
+   *
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+  public static Builder clientError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.CLIENT, cause);
+  }
+
+  /**
    * Builder class for DrillUserException. You can wrap an existing exception, in this case it will first check if
    * this exception is, or wraps, a DrillUserException. If it does then the builder will use the user exception as it is
    * (it will ignore the message passed to the constructor) and will add any additional context information to the
