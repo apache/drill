@@ -28,6 +28,7 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -81,9 +82,10 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   private GroupScan createNewGroupScan(List<String> newFiles, String cacheFileRoot,
-      boolean wasAllPartitionsPruned) throws IOException {
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws IOException {
     final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation(),
         cacheFileRoot, wasAllPartitionsPruned);
+    newSelection.setMetaContext(metaContext);
     final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
@@ -134,13 +136,13 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
-      boolean wasAllPartitionsPruned) throws Exception {
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
     List<String> newFiles = Lists.newArrayList();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
 
-    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot, wasAllPartitionsPruned);
+    final GroupScan newGroupScan = createNewGroupScan(newFiles, cacheFileRoot, wasAllPartitionsPruned, metaContext);
 
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -154,7 +156,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
       boolean wasAllPartitionsPruned) throws Exception {
-    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned);
+    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned, null);
   }
 
 }

@@ -22,6 +22,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.util.BitSet;
@@ -90,11 +91,12 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
    * @param newPartitions
    * @param cacheFileRoot
    * @param wasAllPartitionsPruned
+   * @param metaContext
    * @return
    * @throws Exception
    */
   public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
-      boolean wasAllPartitionsPruned) throws Exception;
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception;
 
   public boolean supportsMetadataCachePruning();
 

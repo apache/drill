@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.TimedRunnable;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -81,6 +81,9 @@ public class Metadata {
 
   private final FileSystem fs;
 
+  private ParquetTableMetadataBase parquetTableMetadata;
+  private ParquetTableMetadataDirs parquetTableMetadataDirs;
+
   /**
    * Create the parquet metadata file for the directory at the given path, and for any subdirectories
    *
@@ -129,14 +132,16 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path) throws IOException {
+  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
     Metadata metadata = new Metadata(fs);
-    return metadata.readBlockMeta(path);
+    metadata.readBlockMeta(path, false, metaContext);
+    return metadata.parquetTableMetadata;
   }
 
-  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path) throws IOException {
+  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
     Metadata metadata = new Metadata(fs);
-    return metadata.readMetadataDirs(path);
+    metadata.readBlockMeta(path, true, metaContext);
+    return metadata.parquetTableMetadataDirs;
   }
 
   private Metadata(FileSystem fs) {
@@ -458,9 +463,12 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private ParquetTableMetadataBase readBlockMeta(String path) throws IOException {
+  private void readBlockMeta(String path,
+      boolean dirsOnly,
+      MetadataContext metaContext) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     Path p = new Path(path);
+    Path parentDir = p.getParent(); // parent directory of the metadata file
     ObjectMapper mapper = new ObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
@@ -475,41 +483,38 @@ public class Metadata {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     FSDataInputStream is = fs.open(p);
 
-    ParquetTableMetadataBase parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
-    logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
-    timer.stop();
-    if (tableModified(parquetTableMetadata, p)) {
-      parquetTableMetadata =
-          (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
+    boolean alreadyCheckedModification = false;
+    boolean newMetadata = false;
+
+    if (metaContext != null) {
+      alreadyCheckedModification = metaContext.getStatus(parentDir.toString());
     }
-    return parquetTableMetadata;
-  }
 
-  private ParquetTableMetadataDirs readMetadataDirs(String path) throws IOException {
-    Stopwatch timer = Stopwatch.createStarted();
-    Path p = new Path(path);
-    ObjectMapper mapper = new ObjectMapper();
-
-    final SimpleModule serialModule = new SimpleModule();
-    serialModule.addDeserializer(SchemaPath.class, new SchemaPath.De());
-
-    AfterburnerModule module = new AfterburnerModule();
-    module.setUseOptimizedBeanDeserializer(true);
-
-    mapper.registerModule(serialModule);
-    mapper.registerModule(module);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    FSDataInputStream is = fs.open(p);
-
-    ParquetTableMetadataDirs parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
-    logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
-    timer.stop();
-
-    if (tableModified(parquetTableMetadataDirs, p)) {
-      parquetTableMetadataDirs =
-          (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getRight();
+    if (dirsOnly) {
+      parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
+      logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), p, parentDir, metaContext)) {
+        parquetTableMetadataDirs =
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getRight();
+        newMetadata = true;
+      }
+    } else {
+      parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
+      logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), p, parentDir, metaContext)) {
+        parquetTableMetadata =
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
+        newMetadata = true;
+      }
     }
-    return parquetTableMetadataDirs;
+
+    if (newMetadata && metaContext != null) {
+      // if new metadata files were created, invalidate the existing metadata context
+      metaContext.clear();
+    }
+
   }
 
   /**
@@ -521,48 +526,41 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private boolean tableModified(ParquetTableMetadataBase tableMetadata, Path metaFilePath)
+  private boolean tableModified(List<String> directories, Path metaFilePath,
+      Path parentDir,
+      MetadataContext metaContext)
       throws IOException {
-    Stopwatch timer = Stopwatch.createStarted();
-    long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
-    FileStatus directoryStatus = fs.getFileStatus(metaFilePath.getParent());
-    if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-      logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
-      timer.stop();
-      return true;
-    }
-    for (String directory : tableMetadata.getDirectories()) {
-      directoryStatus = fs.getFileStatus(new Path(directory));
-      if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-        logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
-        timer.stop();
-        return true;
-      }
-    }
-    logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
-    timer.stop();
-    return false;
-  }
 
-  private boolean tableModified(ParquetTableMetadataDirs tableMetadataDirs, Path metaFilePath)
-      throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
+
+    if (metaContext != null) {
+      metaContext.setStatus(parentDir.toString());
+    }
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
-    FileStatus directoryStatus = fs.getFileStatus(metaFilePath.getParent());
+    FileStatus directoryStatus = fs.getFileStatus(parentDir);
+    int numDirs = 1;
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-      logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+      logger.info("Directory {} was modified. Took {} ms to check modification time of {} directories", directoryStatus.getPath().toString(),
+          timer.elapsed(TimeUnit.MILLISECONDS),
+          numDirs);
       timer.stop();
       return true;
     }
-    for (String directory : tableMetadataDirs.getDirectories()) {
+    for (String directory : directories) {
+      numDirs++;
+      if (metaContext != null) {
+        metaContext.setStatus(directory);
+      }
       directoryStatus = fs.getFileStatus(new Path(directory));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
-        logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+        logger.info("Directory {} was modified. Took {} ms to check modification time of {} directories", directoryStatus.getPath().toString(),
+            timer.elapsed(TimeUnit.MILLISECONDS),
+            numDirs);
         timer.stop();
         return true;
       }
     }
-    logger.info("Took {} ms to check modification time of directories", timer.elapsed(TimeUnit.MILLISECONDS));
+    logger.info("No directories were modified. Took {} ms to check modification time of {} directories", timer.elapsed(TimeUnit.MILLISECONDS), numDirs);
     timer.stop();
     return false;
   }
