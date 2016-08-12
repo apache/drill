@@ -1,14 +1,12 @@
 ---
 title: "Configuration Options Introduction"
-date: 2016-08-05 18:24:50 UTC
+date: 2016-08-12 01:11:42 UTC
 parent: "Configuration Options"
 ---
-Drill provides many configuration options that you can enable, disable, or
-modify. Modifying certain configuration options can impact Drill
-performance. Many of configuration options reside in the `drill-
-env.sh` and `drill-override.conf` files in the
-`/conf` directory. Drill sources` /etc/drill/conf` if it exists. Otherwise,
-Drill sources the local `<drill_installation_directory>/conf` directory.
+
+Drill provides many configuration options that you can enable, disable, or modify. Modifying certain configuration options can impact Drill performance. Many of the configuration options reside in the `drill-env.sh` script and the `drill-override.conf` configuration file located in the `$DRILL_HOME/conf` directory. Drill loads these files from `/etc/drill/conf`, if it exists. Otherwise, Drill loads the files from the `$DRILL_HOME/conf` directory.  
+
+{% include startnote.html %}As of Drill 1.8, default Drill settings reside in `$DRILL_HOME/bin/drill-config.sh`. You can override many settings by creating an entry in `$DRILL_HOME/conf/drill-env.sh`. The file includes descriptions of the options that you can set.{% include endnote.html %}
 
 The sys.options table contains information about system and session options. The sys.boot table contains information about Drill start-up options. The section, ["Start-up Options"]({{site.baseurl}}/docs/start-up-options), covers how to configure and view key boot options. The following table lists the system options in alphabetical order and provides a brief description of supported options.
 
