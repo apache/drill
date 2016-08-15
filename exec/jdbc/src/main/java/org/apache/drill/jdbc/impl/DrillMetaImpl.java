@@ -18,22 +18,20 @@
 package org.apache.drill.jdbc.impl;
 
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Cursor;
-import net.hydromatic.avatica.Meta;
-
+import org.apache.calcite.avatica.AvaticaParameter;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.MetaImpl;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.DrillStringUtils;
 
 
-class MetaImpl implements Meta {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetaImpl.class);
+class DrillMetaImpl extends MetaImpl {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetaImpl.class);
 
   // TODO:  Use more central version of these constants if available.
 
@@ -52,58 +50,38 @@ class MetaImpl implements Meta {
 
   final DrillConnectionImpl connection;
 
-  MetaImpl(DrillConnectionImpl connection) {
+  DrillMetaImpl(DrillConnectionImpl connection) {
+    super(connection);
     this.connection = connection;
   }
 
-  @Override
-  public String getSqlKeywords() {
-    return "";
+  private static Signature newSignature(String sql) {
+    return new Signature(
+        new DrillColumnMetaDataList(),
+        sql,
+        Collections.<AvaticaParameter> emptyList(),
+        Collections.<String, Object>emptyMap(),
+        CursorFactory.OBJECT);
   }
 
-  @Override
-  public String getNumericFunctions() {
-    return "";
-  }
-
-  @Override
-  public String getStringFunctions() {
-    return "";
-  }
-
-  @Override
-  public String getSystemFunctions() {
-    return "";
-  }
-
-  @Override
-  public String getTimeDateFunctions() {
-    return "";
-  }
-
-  private ResultSet s(String s) {
+  private MetaResultSet s(String s) {
     try {
       logger.debug("Running {}", s);
-      AvaticaStatement statement = connection.createStatement();
-      statement.execute(s);
-      return statement.getResultSet();
 
+      AvaticaStatement statement = connection.createStatement();
+      return MetaResultSet.create(connection.id, statement.getId(), true,
+          newSignature(s), null);
     } catch (Exception e) {
       // Wrap in RuntimeException because Avatica's abstract method declarations
       // didn't allow for SQLException!
       throw new DrillRuntimeException("Failure while attempting to get DatabaseMetadata.", e);
     }
-
   }
 
-  /**
-   * Returns interim generic empty result set.
-   * <p>
-   *   (Does not return specific columns expected (and visible in metadata) for
-   *   specific get methods.)
-   * </p>
-   */
-  private ResultSet getEmptyResultSet() {
+
+
+  @Override
+  protected <E> MetaResultSet createEmptyResultSet(Class<E> clazz) {
     return s(
         "SELECT '' AS `Interim zero-row result set` "  // dummy row type
         + "FROM INFORMATION_SCHEMA.CATALOGS "          // any table
@@ -112,7 +90,7 @@ class MetaImpl implements Meta {
   }
 
   @Override
-  public ResultSet getTables(String catalog, final Pat schemaPattern, final Pat tableNamePattern,
+  public MetaResultSet getTables(String catalog, final Pat schemaPattern, final Pat tableNamePattern,
       final List<String> typeList) {
     StringBuilder sb = new StringBuilder();
     sb.append("select "
@@ -160,7 +138,7 @@ class MetaImpl implements Meta {
    * Implements {@link DatabaseMetaData#getColumns}.
    */
   @Override
-  public ResultSet getColumns(String catalog, Pat schemaPattern,
+  public MetaResultSet getColumns(String catalog, Pat schemaPattern,
                               Pat tableNamePattern, Pat columnNamePattern) {
     StringBuilder sb = new StringBuilder();
     // TODO:  Resolve the various questions noted below.
@@ -433,7 +411,7 @@ class MetaImpl implements Meta {
   }
 
   @Override
-  public ResultSet getSchemas(String catalog, Pat schemaPattern) {
+  public MetaResultSet getSchemas(String catalog, Pat schemaPattern) {
     StringBuilder sb = new StringBuilder();
     sb.append("select "
         + "SCHEMA_NAME as TABLE_SCHEM, "
@@ -452,7 +430,7 @@ class MetaImpl implements Meta {
   }
 
   @Override
-  public ResultSet getCatalogs() {
+  public MetaResultSet getCatalogs() {
     StringBuilder sb = new StringBuilder();
     sb.append("select "
         + "CATALOG_NAME as TABLE_CAT "
@@ -463,126 +441,37 @@ class MetaImpl implements Meta {
     return s(sb.toString());
   }
 
-  @Override
-  public ResultSet getTableTypes() {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getProcedures(String catalog, Pat schemaPattern, Pat procedureNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getProcedureColumns(String catalog, Pat schemaPattern, Pat procedureNamePattern,
-      Pat columnNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getColumnPrivileges(String catalog, String schema, String table, Pat columnNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getTablePrivileges(String catalog, Pat schemaPattern, Pat tableNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getVersionColumns(String catalog, String schema, String table) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getPrimaryKeys(String catalog, String schema, String table) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getImportedKeys(String catalog, String schema, String table) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getExportedKeys(String catalog, String schema, String table) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
-      String foreignCatalog, String foreignSchema, String foreignTable) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getTypeInfo() {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getUDTs(String catalog, Pat schemaPattern, Pat typeNamePattern, int[] types) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getSuperTypes(String catalog, Pat schemaPattern, Pat typeNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getSuperTables(String catalog, Pat schemaPattern, Pat tableNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getAttributes(String catalog, Pat schemaPattern, Pat typeNamePattern, Pat attributeNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getClientInfoProperties() {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getFunctions(String catalog, Pat schemaPattern, Pat functionNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getFunctionColumns(String catalog, Pat schemaPattern, Pat functionNamePattern, Pat columnNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public ResultSet getPseudoColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
-    return getEmptyResultSet();
-  }
-
-  @Override
-  public Cursor createCursor(AvaticaResultSet resultSet_) {
-    return ((DrillResultSetImpl) resultSet_).cursor;
-  }
-
-  @Override
-  public AvaticaPrepareResult prepare(AvaticaStatement statement_, String sql) {
-    //DrillStatement statement = (DrillStatement) statement_;
-    return new DrillPrepareResult(sql);
-  }
 
   interface Named {
     String getName();
   }
 
+  @Override
+  public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
+    StatementHandle result = super.createStatement(ch);
+    result.signature = newSignature(sql);
+
+    return result;
+  }
+
+  @Override
+  public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, PrepareCallback callback) {
+    final Signature signature = newSignature(sql);
+    try {
+      synchronized (callback.getMonitor()) {
+        callback.clear();
+        callback.assign(signature, null, -1);
+      }
+      callback.execute();
+      final MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, signature, null);
+      return new ExecuteResult(Collections.singletonList(metaResultSet));
+    } catch(SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void closeStatement(StatementHandle h) {
+    // Nothing
+  }
 }

@@ -36,6 +36,7 @@ import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.TimeZone;
@@ -44,10 +45,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
-
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaSite;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
@@ -87,9 +90,10 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   boolean hasPendingCancelationNotification;
 
 
-  DrillResultSetImpl(AvaticaStatement statement, AvaticaPrepareResult prepareResult,
-                     ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
-    super(statement, prepareResult, resultSetMetaData, timeZone);
+  DrillResultSetImpl(AvaticaStatement statement, Meta.Signature signature,
+                     ResultSetMetaData resultSetMetaData, TimeZone timeZone,
+                     Meta.Frame firstFrame) {
+    super(statement, signature, resultSetMetaData, timeZone, firstFrame);
     connection = (DrillConnectionImpl) statement.getConnection();
     client = connection.getClient();
     final int batchQueueThrottlingThreshold =
@@ -417,7 +421,17 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public Object getObject( int columnIndex ) throws SQLException {
     throwIfClosed();
-    return super.getObject( columnIndex );
+
+    final Cursor.Accessor accessor;
+    try {
+      accessor = accessorList.get(columnIndex - 1);
+    } catch (IndexOutOfBoundsException e) {
+      throw new SQLException("invalid column ordinal: " + columnIndex);
+    }
+    final ColumnMetaData metaData = columnMetaDataList.get(columnIndex - 1);
+    // Drill returns a float (4bytes) for a SQL Float whereas Calcite would return a double (8bytes)
+    int typeId = (metaData.type.id != Types.FLOAT) ? metaData.type.id : Types.REAL;
+    return AvaticaSite.get(accessor, typeId, localCalendar);
   }
 
   @Override
@@ -1883,6 +1897,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   ////////////////////////////////////////
   // DrillResultSet methods:
 
+  @Override
   public String getQueryId() throws SQLException {
     throwIfClosed();
     if (resultsListener.getQueryId() != null) {
@@ -1897,20 +1912,15 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   protected DrillResultSetImpl execute() throws SQLException{
-    final DrillPrepareResult drillPrepareResult = ((DrillPrepareResult)prepareResult);
-    /**
-     * {@link DrillPrepareResult} is created both for normal queries and prepared queries.
-     * If the prepared statement exists submit the query as prepared statement, otherwise
-     * regular submission.
-     */
-    if (drillPrepareResult.getPreparedStatement() != null) {
-      client.executePreparedStatement(drillPrepareResult.getPreparedStatement().getServerHandle(), resultsListener);
+    if (statement instanceof DrillPreparedStatementImpl) {
+      DrillPreparedStatementImpl drillPreparedStatement = (DrillPreparedStatementImpl) statement;
+      client.executePreparedStatement(drillPreparedStatement.getPreparedStatementHandle().getServerHandle(), resultsListener);
     } else {
-      client.runQuery(QueryType.SQL, this.prepareResult.getSql(), resultsListener);
+      client.runQuery(QueryType.SQL, this.signature.sql, resultsListener);
     }
     connection.getDriver().handler.onStatementExecute(statement, null);
 
-    super.execute();
+    super.execute2(cursor, this.signature.columns);
 
     // don't return with metadata until we've achieved at least one return message.
     try {

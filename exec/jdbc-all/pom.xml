@@ -279,7 +279,8 @@
             <excludes>
               <exclude>org.slf4j:jcl-over-slf4j</exclude>
               <exclude>com.dyuproject.protostuff:*</exclude>
-              <exclude>org.apache.calcite:*</exclude>
+              <exclude>org.apache.calcite:calcite-core</exclude>
+              <exclude>org.apache.calcite:calcite-linq4j</exclude>
               <exclude>org.pentaho:*</exclude>
               <exclude>org.msgpack:*</exclude>
               <exclude>xerces:*</exclude>
