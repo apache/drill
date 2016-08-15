@@ -1,6 +1,6 @@
 ---
 title: "Partition Pruning Introduction"
-date: 2016-08-08 18:42:19 UTC
+date: 2016-08-15 18:40:27 UTC
 parent: "Partition Pruning"
 --- 
 
