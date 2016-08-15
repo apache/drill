@@ -316,8 +316,8 @@ int main(int argc, char* argv[]) {
         std::vector<Drill::RecordIterator*> recordIterators;
         std::vector<Drill::RecordIterator*>::iterator recordIterIter;
 
-        std::vector<Drill::QueryHandle_t*> queryHandles;
-        std::vector<Drill::QueryHandle_t*>::iterator queryHandleIter;
+        std::vector<Drill::QueryHandle_t> queryHandles;
+        std::vector<Drill::QueryHandle_t>::iterator queryHandleIter;
 
         Drill::DrillClient client;
 #if defined _WIN32 || defined _WIN64
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
 		strcpy(logpathPrefix,tempPath);
 		strcat(logpathPrefix, "\\drillclient");
 #else
-		char* logpathPrefix = "/var/log/drill/drillclient";
+		const char* logpathPrefix = "/var/log/drill/drillclient";
 #endif
 		// To log to file
         Drill::DrillClient::initLogging(logpathPrefix, l);
@@ -411,27 +411,25 @@ int main(int argc, char* argv[]) {
         }else{
             if(bSyncSend){
                 for(queryInpIter = queryInputs.begin(); queryInpIter != queryInputs.end(); queryInpIter++) {
-                    Drill::QueryHandle_t* qryHandle = new Drill::QueryHandle_t;
-                    client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, qryHandle);
-                    client.registerSchemaChangeListener(qryHandle, SchemaListener);
+                    Drill::QueryHandle_t qryHandle;
+                    client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, &qryHandle);
+                    client.registerSchemaChangeListener(&qryHandle, SchemaListener);
                     
                     client.waitForResults();
 
-                    client.freeQueryResources(qryHandle);
-                    delete qryHandle;
+                    client.freeQueryResources(&qryHandle);
                 }
 
             }else{
                 for(queryInpIter = queryInputs.begin(); queryInpIter != queryInputs.end(); queryInpIter++) {
-                    Drill::QueryHandle_t* qryHandle = new Drill::QueryHandle_t;
-                    client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, qryHandle);
-                    client.registerSchemaChangeListener(qryHandle, SchemaListener);
+                    Drill::QueryHandle_t qryHandle;
+                    client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, &qryHandle);
+                    client.registerSchemaChangeListener(&qryHandle, SchemaListener);
                     queryHandles.push_back(qryHandle);
                 }
                 client.waitForResults();
                 for(queryHandleIter = queryHandles.begin(); queryHandleIter != queryHandles.end(); queryHandleIter++) {
-                    client.freeQueryResources(*queryHandleIter);
-                    delete *queryHandleIter;
+                    client.freeQueryResources(&*queryHandleIter);
                 }
             }
         }

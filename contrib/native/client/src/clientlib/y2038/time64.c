@@ -110,15 +110,15 @@ static const int safe_years_low[SOLAR_CYCLE_LENGTH] = {
 };
 
 /* This isn't used, but it's handy to look at */
-static const char dow_year_start[SOLAR_CYCLE_LENGTH] = {
-    5, 0, 1, 2,     /* 0       2016 - 2019 */
-    3, 5, 6, 0,     /* 4  */
-    1, 3, 4, 5,     /* 8       1996 - 1998, 1971*/
-    6, 1, 2, 3,     /* 12      1972 - 1975 */
-    4, 6, 0, 1,     /* 16 */
-    2, 4, 5, 6,     /* 20      2036, 2037, 2010, 2011 */
-    0, 2, 3, 4      /* 24      2012, 2013, 2014, 2015 */
-};
+//static const char dow_year_start[SOLAR_CYCLE_LENGTH] = {
+//    5, 0, 1, 2,     /* 0       2016 - 2019 */
+//    3, 5, 6, 0,     /* 4  */
+//    1, 3, 4, 5,     /* 8       1996 - 1998, 1971*/
+//    6, 1, 2, 3,     /* 12      1972 - 1975 */
+//    4, 6, 0, 1,     /* 16 */
+//    2, 4, 5, 6,     /* 20      2036, 2037, 2010, 2011 */
+//    0, 2, 3, 4      /* 24      2012, 2013, 2014, 2015 */
+//};
 
 /* Let's assume people are going to be looking for dates in the future.
    Let's provide some cheats so you can skip ahead.

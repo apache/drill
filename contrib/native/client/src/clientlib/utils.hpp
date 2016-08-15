@@ -31,7 +31,6 @@
     #undef random
   #endif
 #endif
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/random/mersenne_twister.hpp> // for mt19937
 #include <boost/random/random_device.hpp>
 #include <boost/random/uniform_int.hpp>

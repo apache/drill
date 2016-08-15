@@ -22,6 +22,13 @@
 #include "logger.hpp"
 #include "drill/common.hpp"
 
+#if defined _WIN32  || defined _WIN64
+//Windows header files redefine 'max'
+#ifdef max
+#undef max
+#endif
+#endif
+
 namespace Drill{
 
 
