@@ -24,10 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.ColumnMetaData.AvaticaType;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ColumnMetaData.AvaticaType;
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.proto.UserProtos.ColumnSearchability;
@@ -41,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
 
-  private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
+  private List<ColumnMetaData> columns = new ArrayList<>();
 
   @Override
   public int size() {
@@ -116,7 +115,7 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
                                    String tableName, BatchSchema schema,
                                    List<Class<?>> getObjectClasses ) {
     final List<ColumnMetaData> newColumns =
-        new ArrayList<ColumnMetaData>(schema.getFieldCount());
+        new ArrayList<>(schema.getFieldCount());
     for (int colOffset = 0; colOffset < schema.getFieldCount(); colOffset++) {
       final MaterializedField field = schema.getColumn(colOffset);
       Class<?> objectClass = getObjectClasses.get( colOffset );

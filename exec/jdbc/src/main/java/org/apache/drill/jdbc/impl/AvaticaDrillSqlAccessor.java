@@ -35,8 +35,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-import net.hydromatic.avatica.Cursor.Accessor;
-
+import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.InvalidCursorStateSqlException;
 
