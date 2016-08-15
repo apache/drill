@@ -18,6 +18,7 @@
 
 # Drill Client unit tests
 set (TESTS_SRC_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/CollectionsTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/UtilsTest.cpp
     )
 

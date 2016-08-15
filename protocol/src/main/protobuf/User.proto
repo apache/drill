@@ -361,7 +361,7 @@ message ResultColumnMetadata {
   optional ColumnSearchability searchability = 13;
 
   /*
-   * Defaults to READ_ONLU
+   * Defaults to READ_ONLY
    */
   optional ColumnUpdatability updatability = 14;
 

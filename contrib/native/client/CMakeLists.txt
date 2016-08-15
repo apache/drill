@@ -57,10 +57,9 @@ project(drillclient
         )
 
 message("Project Dir = ${PROJECT_SOURCE_DIR}")
-message("Project version = ${PROJECT_VERSION} ")
+message("Project Version = ${PROJECT_VERSION} ")
 message("Source Dir = ${CMAKE_SOURCE_DIR} ")
 
-cmake_policy(SET CMP0043 NEW)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmakeModules/")
 
@@ -69,6 +68,12 @@ execute_process(
     COMMAND git log -1 --format="\\nCommit: %H \\nDescription: %s \\nAuthor: %aN Date: %ai"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_COMMIT_PROP
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+execute_process(
+    COMMAND git log -1 --format="%H"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_SHA_PROP
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 STRING(REPLACE . " " GIT_COMMIT_PROP "${GIT_COMMIT_PROP}")

@@ -21,6 +21,8 @@
 
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
+#include "drill/fieldmeta.hpp"
+#include "drill/preparedStatement.hpp"
 #include "drill/recordBatch.hpp"
 #include "drill/protobuf/Types.pb.h"
 

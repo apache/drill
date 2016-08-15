@@ -74,7 +74,7 @@ static Drill::ErrorMessages errorMessages[]={
 std::string getMessage(uint32_t msgId, ...){
     char str[10240];
     std::string s;
-    assert(msgId <= ERR_QRY_MAX);
+    assert((ERR_NONE <= msgId) && (msgId < ERR_QRY_MAX));
     va_list args;
     va_start (args, msgId);
     vsprintf (str, errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);

@@ -22,12 +22,14 @@ set (CLIENTLIB_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/decimalUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drillClient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drillClientImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/fieldmeta.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/metadata.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/recordBatch.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rpcEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rpcDecoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rpcMessage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/errmsgs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/zookeeperClient.cpp
     )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include )
@@ -43,7 +45,7 @@ set_property(
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "/EHsc")
-    add_definitions(-DDRILL_CLIENT_EXPORTS)
+    add_definitions(-DDRILL_CLIENT_EXPORTS -D_SCL_SECURE_NO_WARNINGS)
 endif()
 
 add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} )
