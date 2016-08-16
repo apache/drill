@@ -60,6 +60,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -406,8 +407,13 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
       }
 
+      final Object selection = getDrillTable(scanRel).getSelection();
+      MetadataContext metaContext = null;
+      if (selection instanceof FormatSelection) {
+           metaContext = ((FormatSelection)selection).getSelection().getMetaContext();
+      }
       RelNode inputRel = descriptor.supportsMetadataCachePruning() ?
-          descriptor.createTableScan(newPartitions, cacheFileRoot, wasAllPartitionsPruned) :
+          descriptor.createTableScan(newPartitions, cacheFileRoot, wasAllPartitionsPruned, metaContext) :
             descriptor.createTableScan(newPartitions, wasAllPartitionsPruned);
 
       if (projectRel != null) {
@@ -488,14 +494,18 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
   public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel);
 
+  private static DrillTable getDrillTable(final TableScan scan) {
+    DrillTable drillTable;
+    drillTable = scan.getTable().unwrap(DrillTable.class);
+    if (drillTable == null) {
+      drillTable = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
+    return drillTable;
+  }
+
   private static boolean isQualifiedDirPruning(final TableScan scan) {
     if (scan instanceof EnumerableTableScan) {
-      DrillTable drillTable;
-      drillTable = scan.getTable().unwrap(DrillTable.class);
-      if (drillTable == null) {
-        drillTable = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
-      }
-      final Object selection = drillTable.getSelection();
+      final Object selection = getDrillTable(scan).getSelection();
       if (selection instanceof FormatSelection
           && ((FormatSelection)selection).supportDirPruning()) {
         return true;  // Do directory-based pruning in Calcite logical
