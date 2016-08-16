@@ -588,6 +588,7 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
       case DECIMAL18:
       case DECIMAL28SPARSE:
       case DECIMAL38SPARSE:
+      case VARDECIMAL:
         result = innerAccessor.getBigDecimal( rowOffset );
         break;
 

@@ -35,14 +35,14 @@ package org.apache.drill.exec.vector.complex.impl;
 @SuppressWarnings("unused")
 public class UnionReader extends AbstractFieldReader {
 
-  private BaseReader[] readers = new BaseReader[43];
+  private BaseReader[] readers = new BaseReader[44];
   public UnionVector data;
   
   public UnionReader(UnionVector data) {
     this.data = data;
   }
 
-  private static MajorType[] TYPES = new MajorType[43];
+  private static MajorType[] TYPES = new MajorType[44];
 
   static {
     for (MinorType minorType : MinorType.values()) {
