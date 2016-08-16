@@ -25,6 +25,12 @@ public final class InfoSchemaConstants {
   /** Name of catalog containing information schema. */
   public static final String IS_CATALOG_NAME = "DRILL";
 
+  /** Catalog description */
+  public static final String IS_CATALOG_DESCR = "The internal metadata used by Drill";
+
+  /** Catalog connect string. Currently empty */
+  public static final String IS_CATALOG_CONNECT = "";
+
   /** Name of information schema. */
   public static final String IS_SCHEMA_NAME = "INFORMATION_SCHEMA";
 

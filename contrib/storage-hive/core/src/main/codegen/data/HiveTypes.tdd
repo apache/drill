@@ -80,10 +80,10 @@
       needOIForDrillType: false
     },
     {
-      hiveType: "STRING",l
+      hiveType: "STRING",
       hiveOI: "StringObjectInspector",
       javaType: "",
-      drillType: "Var16Char",
+      drillType: "VarChar",
       needOIForDrillType: true
     },
     {

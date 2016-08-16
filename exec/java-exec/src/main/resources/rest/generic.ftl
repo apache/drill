@@ -64,6 +64,9 @@
               <#if showThreads == true>
               <li><a href="/threads">Threads</a></li>
               </#if>
+              <#if showLogs == true>
+                  <li><a href="/logs">Logs</a></li>
+              </#if>
             </ul>
             </#if>
             <ul class="nav navbar-nav navbar-right">

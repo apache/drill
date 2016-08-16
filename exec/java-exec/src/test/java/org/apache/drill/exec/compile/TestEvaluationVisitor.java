@@ -46,7 +46,7 @@ public class TestEvaluationVisitor {
 
     FunctionImplementationRegistry reg = new FunctionImplementationRegistry(c);
     EvaluationVisitor v = new EvaluationVisitor(reg);
-    CodeGenerator<?> g = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, reg);
+    CodeGenerator<?> g = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, reg, null);
     SchemaPath path = (SchemaPath) getExpr("a.b[4][2].c[6]");
 
     TypedFieldId id = TypedFieldId.newBuilder() //

@@ -33,10 +33,10 @@ import com.google.common.collect.Lists;
 public class GroupingAggregate extends SingleInputOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GroupingAggregate.class);
 
-  private final NamedExpression[] keys;
-  private final NamedExpression[] exprs;
+  private final List<NamedExpression> keys;
+  private final List<NamedExpression> exprs;
 
-  public GroupingAggregate(@JsonProperty("keys") NamedExpression[] keys, @JsonProperty("exprs") NamedExpression[] exprs) {
+  public GroupingAggregate(@JsonProperty("keys") List<NamedExpression> keys, @JsonProperty("exprs") List<NamedExpression> exprs) {
     super();
     this.keys = keys;
     this.exprs = exprs;
@@ -56,11 +56,11 @@ public class GroupingAggregate extends SingleInputOperator{
     return new Builder();
   }
 
-  public NamedExpression[] getKeys(){
+  public List<NamedExpression> getKeys(){
     return keys;
   }
 
-  public NamedExpression[] getExprs(){
+  public List<NamedExpression> getExprs(){
     return exprs;
   }
 
@@ -90,7 +90,7 @@ public class GroupingAggregate extends SingleInputOperator{
 
     @Override
     public GroupingAggregate internalBuild(){
-      GroupingAggregate ga =  new GroupingAggregate(aN(keys), aN(exprs));
+      GroupingAggregate ga =  new GroupingAggregate(keys, exprs);
       return ga;
     }
 

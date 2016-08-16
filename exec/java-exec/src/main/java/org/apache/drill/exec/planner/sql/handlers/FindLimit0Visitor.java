@@ -111,9 +111,10 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    * @param rel rel node tree
    * @return true if the root portion of the tree contains LIMIT(0)
    */
-  public static boolean containsLimit0(RelNode rel) {
+  public static boolean containsLimit0(final RelNode rel) {
     FindLimit0Visitor visitor = new FindLimit0Visitor();
     rel.accept(visitor);
+
     return visitor.isContains();
   }
 
@@ -200,7 +201,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     public final List<TypeProtos.DataMode> dataModes;
 
     public RelDataTypeReader(List<String> columnNames, List<SqlTypeName> columnTypes,
-                             List<TypeProtos.DataMode> dataModes) {
+        List<TypeProtos.DataMode> dataModes) {
       Preconditions.checkArgument(columnNames.size() == columnTypes.size() &&
           columnTypes.size() == dataModes.size());
       this.columnNames = columnNames;

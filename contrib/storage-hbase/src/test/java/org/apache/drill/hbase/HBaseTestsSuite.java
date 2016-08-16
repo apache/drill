@@ -21,11 +21,16 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.util.GuavaPatcher;
+import org.apache.drill.hbase.test.Drill2130StorageHBaseHamcrestConfigurationTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -34,38 +39,46 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  TestHBaseQueries.class,
-  TestHBaseRegexParser.class,
+  Drill2130StorageHBaseHamcrestConfigurationTest.class,
   HBaseRecordReaderTest.class,
+  TestHBaseCFAsJSONString.class,
+  TestHBaseConnectionManager.class,
   TestHBaseFilterPushDown.class,
   TestHBaseProjectPushDown.class,
+  TestHBaseQueries.class,
+  TestHBaseRegexParser.class,
   TestHBaseRegionScanAssignments.class,
   TestHBaseTableProvider.class,
-  TestHBaseCFAsJSONString.class
+  TestOrderedBytesConvertFunctions.class
 })
 public class HBaseTestsSuite {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseTestsSuite.class);
 
+  static {
+    GuavaPatcher.patch();
+  }
+
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
-  protected static final String TEST_TABLE_1 = "TestTable1";
-  protected static final String TEST_TABLE_3 = "TestTable3";
-  protected static final String TEST_TABLE_COMPOSITE_DATE = "TestTableCompositeDate";
-  protected static final String TEST_TABLE_COMPOSITE_TIME = "TestTableCompositeTime";
-  protected static final String TEST_TABLE_COMPOSITE_INT = "TestTableCompositeInt";
-  protected static final String TEST_TABLE_DOUBLE_OB = "TestTableDoubleOB";
-  protected static final String TEST_TABLE_FLOAT_OB = "TestTableFloatOB";
-  protected static final String TEST_TABLE_BIGINT_OB = "TestTableBigIntOB";
-  protected static final String TEST_TABLE_INT_OB = "TestTableIntOB";
-  protected static final String TEST_TABLE_DOUBLE_OB_DESC = "TestTableDoubleOBDesc";
-  protected static final String TEST_TABLE_FLOAT_OB_DESC = "TestTableFloatOBDesc";
-  protected static final String TEST_TABLE_BIGINT_OB_DESC = "TestTableBigIntOBDesc";
-  protected static final String TEST_TABLE_INT_OB_DESC = "TestTableIntOBDesc";
-  protected static final String TEST_TABLE_NULL_STR = "TestTableNullStr";
+  protected static final TableName TEST_TABLE_1 = TableName.valueOf("TestTable1");
+  protected static final TableName TEST_TABLE_3 = TableName.valueOf("TestTable3");
+  protected static final TableName TEST_TABLE_COMPOSITE_DATE = TableName.valueOf("TestTableCompositeDate");
+  protected static final TableName TEST_TABLE_COMPOSITE_TIME = TableName.valueOf("TestTableCompositeTime");
+  protected static final TableName TEST_TABLE_COMPOSITE_INT = TableName.valueOf("TestTableCompositeInt");
+  protected static final TableName TEST_TABLE_DOUBLE_OB = TableName.valueOf("TestTableDoubleOB");
+  protected static final TableName TEST_TABLE_FLOAT_OB = TableName.valueOf("TestTableFloatOB");
+  protected static final TableName TEST_TABLE_BIGINT_OB = TableName.valueOf("TestTableBigIntOB");
+  protected static final TableName TEST_TABLE_INT_OB = TableName.valueOf("TestTableIntOB");
+  protected static final TableName TEST_TABLE_DOUBLE_OB_DESC = TableName.valueOf("TestTableDoubleOBDesc");
+  protected static final TableName TEST_TABLE_FLOAT_OB_DESC = TableName.valueOf("TestTableFloatOBDesc");
+  protected static final TableName TEST_TABLE_BIGINT_OB_DESC = TableName.valueOf("TestTableBigIntOBDesc");
+  protected static final TableName TEST_TABLE_INT_OB_DESC = TableName.valueOf("TestTableIntOBDesc");
+  protected static final TableName TEST_TABLE_NULL_STR = TableName.valueOf("TestTableNullStr");
 
   private static Configuration conf;
 
-  private static HBaseAdmin admin;
+  private static Connection conn;
+  private static Admin admin;
 
   private static HBaseTestingUtility UTIL;
 
@@ -82,15 +95,13 @@ public class HBaseTestsSuite {
 
   @BeforeClass
   public static void initCluster() throws Exception {
-    GuavaPatcher.patch();
-
     if (initCount.get() == 0) {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {
           conf = HBaseConfiguration.create();
           conf.set(HConstants.HBASE_CLIENT_INSTANCE_ID, "drill-hbase-unit-tests-client");
           if (IS_DEBUG) {
-            conf.set("hbase.regionserver.lease.period","10000000");
+            conf.set("hbase.client.scanner.timeout.period","10000000");
           }
 
           if (manageHBaseCluster) {
@@ -105,7 +116,8 @@ public class HBaseTestsSuite {
             logger.info("HBase mini cluster started. Zookeeper port: '{}'", getZookeeperPort());
           }
 
-          admin = new HBaseAdmin(conf);
+          conn = ConnectionFactory.createConnection(conf);
+          admin = conn.getAdmin();
 
           if (createTables || !tablesExist()) {
             createTestTables();
@@ -172,20 +184,20 @@ public class HBaseTestsSuite {
      * multiple fragments. Hence the number of regions in the HBase table is set to 1.
      * Will revert to multiple region once the issue is resolved.
      */
-    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 2);
-    TestTableGenerator.generateHBaseDataset3(admin, TEST_TABLE_3, 1);
-    TestTableGenerator.generateHBaseDatasetCompositeKeyDate(admin, TEST_TABLE_COMPOSITE_DATE, 1);
-    TestTableGenerator.generateHBaseDatasetCompositeKeyTime(admin, TEST_TABLE_COMPOSITE_TIME, 1);
-    TestTableGenerator.generateHBaseDatasetCompositeKeyInt(admin, TEST_TABLE_COMPOSITE_INT, 1);
-    TestTableGenerator.generateHBaseDatasetDoubleOB(admin, TEST_TABLE_DOUBLE_OB, 1);
-    TestTableGenerator.generateHBaseDatasetFloatOB(admin, TEST_TABLE_FLOAT_OB, 1);
-    TestTableGenerator.generateHBaseDatasetBigIntOB(admin, TEST_TABLE_BIGINT_OB, 1);
-    TestTableGenerator.generateHBaseDatasetIntOB(admin, TEST_TABLE_INT_OB, 1);
-    TestTableGenerator.generateHBaseDatasetDoubleOBDesc(admin, TEST_TABLE_DOUBLE_OB_DESC, 1);
-    TestTableGenerator.generateHBaseDatasetFloatOBDesc(admin, TEST_TABLE_FLOAT_OB_DESC, 1);
-    TestTableGenerator.generateHBaseDatasetBigIntOBDesc(admin, TEST_TABLE_BIGINT_OB_DESC, 1);
-    TestTableGenerator.generateHBaseDatasetIntOBDesc(admin, TEST_TABLE_INT_OB_DESC, 1);
-    TestTableGenerator.generateHBaseDatasetNullStr(admin, TEST_TABLE_NULL_STR, 1);
+    TestTableGenerator.generateHBaseDataset1(conn, admin, TEST_TABLE_1, 2);
+    TestTableGenerator.generateHBaseDataset3(conn, admin, TEST_TABLE_3, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyDate(conn, admin, TEST_TABLE_COMPOSITE_DATE, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyTime(conn, admin, TEST_TABLE_COMPOSITE_TIME, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyInt(conn, admin, TEST_TABLE_COMPOSITE_INT, 1);
+    TestTableGenerator.generateHBaseDatasetDoubleOB(conn, admin, TEST_TABLE_DOUBLE_OB, 1);
+    TestTableGenerator.generateHBaseDatasetFloatOB(conn, admin, TEST_TABLE_FLOAT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetBigIntOB(conn, admin, TEST_TABLE_BIGINT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetIntOB(conn, admin, TEST_TABLE_INT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetDoubleOBDesc(conn, admin, TEST_TABLE_DOUBLE_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetFloatOBDesc(conn, admin, TEST_TABLE_FLOAT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetBigIntOBDesc(conn, admin, TEST_TABLE_BIGINT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetIntOBDesc(conn, admin, TEST_TABLE_INT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetNullStr(conn, admin, TEST_TABLE_NULL_STR, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
@@ -228,8 +240,12 @@ public class HBaseTestsSuite {
     HBaseTestsSuite.createTables = createTables;
   }
 
-  public static HBaseAdmin getAdmin() {
+  public static Admin getAdmin() {
     return admin;
+  }
+
+  public static Connection getConnection() {
+    return conn;
   }
 
 }

@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.exec.physical.EndpointAffinity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 
 /**
  * Describes a physical operator that has affinity to particular nodes. Used for assignment decisions.
@@ -33,5 +34,11 @@ public interface HasAffinity extends PhysicalOperator {
    * @return List of EndpointAffinity objects.
    */
   @JsonIgnore
-  public List<EndpointAffinity> getOperatorAffinity();
+  List<EndpointAffinity> getOperatorAffinity();
+
+  /**
+   * Get distribution affinity which describes the parallelization strategy of the operator.
+   */
+  @JsonIgnore
+  DistributionAffinity getDistributionAffinity();
 }

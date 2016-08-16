@@ -171,7 +171,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
       throw new ExecutionSetupException("Failure while getting memory allocator for fragment.", e);
     }
 
-    stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
+    stats = new FragmentStats(allocator, fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
   }
 

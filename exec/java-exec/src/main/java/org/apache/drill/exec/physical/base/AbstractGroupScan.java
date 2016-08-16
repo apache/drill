@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -162,4 +163,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
     return null;
   }
 
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return DistributionAffinity.SOFT;
+  }
 }

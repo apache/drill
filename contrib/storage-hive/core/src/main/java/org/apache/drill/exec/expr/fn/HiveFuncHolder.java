@@ -45,6 +45,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JVar;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 
 public class HiveFuncHolder extends AbstractFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
@@ -188,7 +189,9 @@ public class HiveFuncHolder extends AbstractFuncHolder {
         oiArray.component(JExpr.lit(i)),
         oih.staticInvoke("getDrillObjectInspector")
           .arg(mode.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMode().getNumber())))
-          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().getNumber()))));
+          .arg(mt.staticInvoke("valueOf").arg(JExpr.lit(argTypes[i].getMinorType().getNumber())))
+          .arg((((PrimitiveObjectInspector) returnOI).getPrimitiveCategory() ==
+              PrimitiveObjectInspector.PrimitiveCategory.STRING) ? JExpr.lit(true) : JExpr.lit(false)));
     }
 
     // declare and instantiate DeferredObject array

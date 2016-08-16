@@ -25,10 +25,12 @@ import java.util.Set;
 
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -193,5 +195,40 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     throw UserException.unsupportedError()
         .message("Dropping tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
+  }
+
+  /**
+   * Get the collection of {@link Table} tables specified in the tableNames with bulk-load (if the underlying storage
+   * plugin supports).
+   * It is not guaranteed that the retrieved tables would have RowType and Statistic being fully populated.
+   *
+   * Specifically, calling {@link Table#getRowType(RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
+   * {@link UnsupportedOperationException} being thrown.
+   *
+   * @param  tableNames the requested tables, specified by the table names
+   * @return the collection of requested tables
+   */
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames) {
+    return getTablesByNames(tableNames);
+  }
+
+  /**
+   * Get the collection of {@link Table} tables specified in the tableNames.
+   *
+   * @param  tableNames the requested tables, specified by the table names
+   * @return the collection of requested tables
+   */
+  public List<Pair<String, ? extends Table>> getTablesByNames(final List<String> tableNames) {
+    final List<Pair<String, ? extends Table>> tables = Lists.newArrayList();
+    for (String tableName : tableNames) {
+      final Table table = getTable(tableName);
+      if (table == null) {
+        // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
+        // tables as INFO SCHEMA is about showing tables which the use has access to query.
+        continue;
+      }
+      tables.add(Pair.of(tableName, table));
+    }
+    return tables;
   }
 }

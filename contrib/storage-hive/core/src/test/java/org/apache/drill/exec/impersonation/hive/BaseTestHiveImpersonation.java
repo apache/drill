@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
+import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -118,6 +119,26 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     } else {
       for (String tbl : expectedTables) {
         testBuilder.baselineValues(dbQualified, tbl);
+      }
+    }
+
+    testBuilder.go();
+  }
+
+  protected void fromInfoSchemaHelper(final String pluginName, final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
+    final String dbQualified = pluginName + "." + db;
+    final TestBuilder testBuilder = testBuilder()
+        .sqlQuery("SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
+            "FROM INFORMATION_SCHEMA.`TABLES` \n" +
+            "WHERE TABLE_SCHEMA = '" + dbQualified + "'")
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE");
+
+    if (expectedTables.size() == 0) {
+      testBuilder.expectsEmptyResultSet();
+    } else {
+      for (int i = 0; i < expectedTables.size(); ++i) {
+        testBuilder.baselineValues(dbQualified, expectedTables.get(i), expectedTableTypes.get(i).toString());
       }
     }
 

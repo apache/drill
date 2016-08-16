@@ -439,4 +439,16 @@ public class TestWindowFrame extends BaseTestQuery {
       .baselineValues("EMPTY")
       .go();
   }
+
+  @Test
+  public void test4657() throws Exception {
+    testBuilder()
+      .sqlQuery("select row_number() over(order by position_id) rn, rank() over(order by position_id) rnk from dfs_test.`%s/window/b3.p2`", TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/4657.tsv")
+      .baselineColumns("rn", "rnk")
+      .expectsNumBatches(4) // we expect 3 data batches and the fast schema
+      .go();
+  }
+
 }

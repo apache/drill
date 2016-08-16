@@ -45,7 +45,7 @@ public class OrderedBytesFloatDescConvertTo implements DrillSimpleFunc {
   public void setup() {
     buffer = buffer.reallocIfNeeded(5);
     bytes = new byte[5];
-    br = new org.apache.hadoop.hbase.util.SimplePositionedByteRange();
+    br = new org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange();
   }
 
   @Override

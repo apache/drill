@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rel.core.TableScan;
+
 /**
  * Abstract base class for file system based partition descriptors and Hive partition descriptors.
  *
@@ -53,6 +55,18 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
       createPartitionSublists();
     }
     return locationSuperList.iterator();
+  }
+
+  @Override
+  public boolean supportsMetadataCachePruning() {
+    return false;
+  }
+
+
+  @Override
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, String cacheFileRoot,
+      boolean isAllPruned) throws Exception {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -15,24 +15,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARGS=();
-while [ $# -gt 0 ] ; do
-  case "$1" in
-  -q) shift;
-      QUERY=$1;;
-  -e) shift;
-      QUERY=$1;;
-  -f) shift;
-      FILE=$1;;
-   *) ARGS+=($1);;
-  esac
-  shift
+# resolve links - "${BASH_SOURCE-$0}" may be a softlink
+this="${BASH_SOURCE-$0}"
+while [ -h "$this" ]; do
+  ls=`ls -ld "$this"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '.*/.*' > /dev/null; then
+    this="$link"
+  else
+    this=`dirname "$this"`/"$link"
+  fi
 done
 
-bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
+# convert relative path to absolute path
+bin=`dirname "$this"`
 
-. "$bin"/drill-config.sh
+# Do setup, including finding the site directory, removing the
+# --config argument, and copying remaining argument into the
+# args array.
+
+. "$bin/drill-config.sh"
+
+SLARGS=()
+for (( i=0; i < ${#args[@]}; i++ )); do
+  case "${args[i]}" in
+  -q|-e)
+      QUERY=${args[i+1]}
+      let i=$i+1
+      ;;
+  -f) FILE=${args[i+1]}
+      let i=$i+1
+      ;;
+   *) SLARGS+=("${args[i]}");;
+  esac
+done
 
 # Override SQLLine's default initial transaction isolation level.  (SQLLine
 # sets an initial level instead of leaving it at whatever the Driver's default
@@ -43,16 +59,32 @@ bin=`cd "$bin">/dev/null; pwd`
 # This is not currently needed as the new SQLLine we are using doesn't isolate.
 # DRILL_SHELL_JAVA_OPTS="-Dsqlline.isolation=TRANSACTION_NONE $DRILL_SHELL_JAVA_OPTS"
 
-DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json"
+DRILL_SHELL_LOG_OPTS="-Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json"
+
+# Use either the SQLline options (for remote Drill) or full Drill options
+# (embedded Drill)
+
+if [ "$DRILL_EMBEDDED" = "1" ]; then
+  SQLLINE_JAVA_OPTS="$DRILL_JAVA_OPTS $DRILLBIT_OPTS"
+fi 
 
 if ! $is_cygwin; then
   DRILL_SHELL_OPTS="$DRILL_SHELL_OPTS --color=true"
 fi
 
+SHELL_OPTS="$DRILL_SHELL_JAVA_OPTS $SQLLINE_JAVA_OPTS $DRILL_SHELL_LOG_OPTS $CLIENT_GC_OPTS"
+CMD="$JAVA $SHELL_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver --maxWidth=10000"
+
+# The wrapper is purely for unit testing.
+
+if [ -n "$_DRILL_WRAPPER_" ]; then
+  CMD="$_DRILL_WRAPPER_ $CMD"
+fi
+
 if [ -n "$QUERY" ] ; then
-  echo $QUERY | exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}"
+  echo $QUERY | exec $CMD "${SLARGS[@]}"
 elif [ -n "$FILE" ] ; then
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}" --run=$FILE
+  exec $CMD "${SLARGS[@]}" --run=$FILE
 else
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver --maxWidth=10000 $DRILL_SHELL_OPTS "${ARGS[@]}"
+  exec $CMD $DRILL_SHELL_OPTS "${SLARGS[@]}"
 fi

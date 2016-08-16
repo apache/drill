@@ -24,6 +24,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
 
+import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.BaseTestQuery;
@@ -504,6 +505,11 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_sequencefile_large", "sequencefile", "1", "1"));
     executeQuery(hiveDriver, "insert into table skipper.kv_sequencefile_large select * from skipper.kv_text_large");
 
+      // Create a table based on json file
+      executeQuery(hiveDriver, "create table default.simple_json(json string)");
+      final String loadData = String.format("load data local inpath '" +
+          Resources.getResource("simple.json") + "' into table default.simple_json");
+      executeQuery(hiveDriver, loadData);
     ss.close();
   }
 

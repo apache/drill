@@ -157,7 +157,7 @@ public abstract class WindowFunction {
 
     @Override
     public boolean requiresFullPartition(final WindowPOP pop) {
-      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
+      return pop.getOrderings().isEmpty() || pop.getEnd().isUnbounded();
     }
 
     @Override
@@ -221,10 +221,18 @@ public abstract class WindowFunction {
     @Override
     public boolean canDoWork(int numBatchesAvailable, final WindowPOP pop, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      if (type == Type.ROW_NUMBER) {
+        // row_number doesn't need to wait for anything
+        return true;
+      }
+      if (type == Type.RANK) {
+        // rank only works if we know how many rows we have in the current frame
+        // we could avoid this, but it requires more refactoring
+        return frameEndReached;
+      }
 
       // for CUME_DIST, PERCENT_RANK and NTILE we need the full partition
-      // otherwise we can process the first batch immediately
-      return partitionEndReached || ! requiresFullPartition(pop);
+      return partitionEndReached;
     }
 
     @Override
@@ -451,7 +459,7 @@ public abstract class WindowFunction {
 
     @Override
     public boolean requiresFullPartition(final WindowPOP pop) {
-      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
+      return pop.getOrderings().isEmpty() || pop.getEnd().isUnbounded();
     }
 
     @Override

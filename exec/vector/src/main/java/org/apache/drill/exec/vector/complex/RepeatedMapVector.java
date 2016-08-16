@@ -43,6 +43,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -238,7 +239,7 @@ public class RepeatedMapVector extends AbstractMapVector
     private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
 
     public SingleMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, from.callBack), false);
+      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public SingleMapTransferPair(RepeatedMapVector from, MapVector to) {
@@ -303,7 +304,7 @@ public class RepeatedMapVector extends AbstractMapVector
     private final RepeatedMapVector from;
 
     public RepeatedMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
-      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
+      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
     public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to) {

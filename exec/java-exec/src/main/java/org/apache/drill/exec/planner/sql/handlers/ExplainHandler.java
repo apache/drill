@@ -39,6 +39,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 public class ExplainHandler extends DefaultSqlHandler {
@@ -46,8 +47,8 @@ public class ExplainHandler extends DefaultSqlHandler {
 
   private ResultMode mode;
   private SqlExplainLevel level = SqlExplainLevel.ALL_ATTRIBUTES;
-  public ExplainHandler(SqlHandlerConfig config) {
-    super(config);
+  public ExplainHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
+    super(config, textPlan);
   }
 
   @Override

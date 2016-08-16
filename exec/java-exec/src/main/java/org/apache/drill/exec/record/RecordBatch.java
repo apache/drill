@@ -234,11 +234,6 @@ public interface RecordBatch extends VectorAccessible {
    */
   public void kill(boolean sendUpstream);
 
-  public abstract SelectionVector2 getSelectionVector2();
-
-  public abstract SelectionVector4 getSelectionVector4();
-
-
   public VectorContainer getOutgoingContainer();
 
   /**

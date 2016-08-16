@@ -22,7 +22,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -708,5 +707,16 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
+  }
+
+  @Test // DRILL-4529
+  public void testWindowSumConstant() throws Exception {
+    final String query = "select sum(1) over w as col \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "window w as (partition by r_regionkey)";
+
+    final String[] expectedPlan = {"\\$SUM0"};
+    final String[] excludedPlan = {};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
   }
 }

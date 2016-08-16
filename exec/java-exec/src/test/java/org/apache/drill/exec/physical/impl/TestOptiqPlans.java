@@ -304,16 +304,7 @@ public class TestOptiqPlans extends ExecTest {
 
   private SimpleRootExec doPhysicalTest(final DrillbitContext bitContext, UserClientConnection connection, String file)
       throws Exception {
-    new NonStrictExpectations() {
-      {
-        bitContext.getMetrics();
-        result = new MetricRegistry();
-        bitContext.getAllocator();
-        result = RootAllocatorFactory.newRoot(config);
-        bitContext.getConfig();
-        result = config;
-      }
-    };
+    mockDrillbitContext(bitContext);
 
     final StoragePluginRegistry reg = new StoragePluginRegistryImpl(bitContext);
 

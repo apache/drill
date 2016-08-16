@@ -23,6 +23,7 @@ import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
@@ -53,13 +54,16 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.joda.time.DateTime;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
@@ -71,6 +75,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Set;
 
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
@@ -104,6 +109,9 @@ public class WebServer implements AutoCloseable {
       embeddedJetty = null;
     }
   }
+
+  private static final String BASE_STATIC_PATH = "/rest/static/";
+  private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   /**
    * Start the web server including setup.
@@ -141,7 +149,12 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
-    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
+    // Get resource URL for Drill static assets, based on where Drill icon is located
+    String drillIconResourcePath =
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+    staticHolder.setInitParameter(
+        "resourceBase",
+        drillIconResourcePath.substring(0,  drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
@@ -149,6 +162,22 @@ public class WebServer implements AutoCloseable {
     if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
       servletContextHandler.setSecurityHandler(createSecurityHandler());
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    }
+
+    if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
+      FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_ORIGINS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_METHODS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
+              StringUtils.join(config.getStringList(ExecConstants.HTTP_CORS_ALLOWED_HEADERS), ","));
+      holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
+              String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
+
+      for (String path: new String[] { "*.json", "/storage/*/enable/*", "/status*" }) {
+        servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
+      }
     }
 
     embeddedJetty.start();

@@ -31,7 +31,14 @@ import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
+import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
+import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
+import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -39,6 +46,7 @@ import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicClientWithConnection;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
@@ -96,10 +104,22 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       return BitToUserHandshake.getDefaultInstance();
     case RpcType.QUERY_HANDLE_VALUE:
       return QueryId.getDefaultInstance();
-      case RpcType.QUERY_RESULT_VALUE:
-        return QueryResult.getDefaultInstance();
+    case RpcType.QUERY_RESULT_VALUE:
+      return QueryResult.getDefaultInstance();
     case RpcType.QUERY_DATA_VALUE:
       return QueryData.getDefaultInstance();
+    case RpcType.QUERY_PLAN_FRAGMENTS_VALUE:
+      return QueryPlanFragments.getDefaultInstance();
+    case RpcType.CATALOGS_VALUE:
+      return GetCatalogsResp.getDefaultInstance();
+    case RpcType.SCHEMAS_VALUE:
+      return GetSchemasResp.getDefaultInstance();
+    case RpcType.TABLES_VALUE:
+      return GetTablesResp.getDefaultInstance();
+    case RpcType.COLUMNS_VALUE:
+      return GetColumnsResp.getDefaultInstance();
+    case RpcType.PREPARED_STATEMENT_VALUE:
+      return CreatePreparedStatementResp.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
@@ -136,5 +156,15 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
     return new UserProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
+  }
+
+  /**
+   * planQuery is an API to plan a query without query execution
+   * @param req - data necessary to plan query
+   * @return list of PlanFragments that can later on be submitted for execution
+   */
+  public DrillRpcFuture<QueryPlanFragments> planQuery(
+      GetQueryPlanFragments req) {
+    return send(RpcType.GET_QUERY_PLAN_FRAGMENTS, req, QueryPlanFragments.class);
   }
 }

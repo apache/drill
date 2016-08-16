@@ -56,15 +56,12 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.work.foreman.ForemanException;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 public class BasicOptimizer extends Optimizer {
@@ -139,7 +136,7 @@ public class BasicOptimizer extends Optimizer {
       final List<Ordering> orderDefs = Lists.newArrayList();
       PhysicalOperator input = groupBy.getInput().accept(this, value);
 
-      if (groupBy.getKeys().length > 0) {
+      if (groupBy.getKeys().size() > 0) {
         for(NamedExpression e : groupBy.getKeys()) {
           orderDefs.add(new Ordering(Direction.ASCENDING, e.getExpr(), NullDirection.FIRST));
         }
@@ -197,8 +194,7 @@ public class BasicOptimizer extends Optimizer {
       rightOp = new Sort(rightOp, rightOrderDefs, false);
       rightOp = new SelectionVectorRemover(rightOp);
 
-      final MergeJoinPOP mjp = new MergeJoinPOP(leftOp, rightOp, Arrays.asList(join.getConditions()),
-          join.getJoinType());
+      final MergeJoinPOP mjp = new MergeJoinPOP(leftOp, rightOp, join.getConditions(), join.getJoinType());
       return new SelectionVectorRemover(mjp);
     }
 
@@ -221,17 +217,17 @@ public class BasicOptimizer extends Optimizer {
 
     @Override
     public PhysicalOperator visitStore(final Store store, final Object obj) throws OptimizerException {
-      final Iterator<LogicalOperator> iterator = store.iterator();
-      if (!iterator.hasNext()) {
+      LogicalOperator input = store.getInput();
+      if (input == null) {
         throw new OptimizerException("Store node in logical plan does not have a child.");
       }
-      return new Screen(iterator.next().accept(this, obj), queryContext.getCurrentEndpoint());
+      return new Screen(store.getInput().accept(this, obj), queryContext.getCurrentEndpoint());
     }
 
     @Override
     public PhysicalOperator visitProject(final Project project, final Object obj) throws OptimizerException {
       return new org.apache.drill.exec.physical.config.Project(
-          Arrays.asList(project.getSelections()), project.iterator().next().accept(this, obj));
+          project.getSelections(), project.getInput().accept(this, obj));
     }
 
     @Override
@@ -239,7 +235,7 @@ public class BasicOptimizer extends Optimizer {
       final TypeProtos.MajorType.Builder b = TypeProtos.MajorType.getDefaultInstance().newBuilderForType();
       b.setMode(DataMode.REQUIRED);
       b.setMinorType(MinorType.BIGINT);
-      final PhysicalOperator child = filter.iterator().next().accept(this, obj);
+      final PhysicalOperator child = filter.getInput().accept(this, obj);
       return new SelectionVectorRemover(new org.apache.drill.exec.physical.config.Filter(child, filter.getExpr(), 1.0f));
     }
   }

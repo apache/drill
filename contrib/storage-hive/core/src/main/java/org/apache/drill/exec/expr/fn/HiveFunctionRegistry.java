@@ -126,23 +126,21 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
 
   /**
    * Helper method which resolves the given function call to a Hive UDF. It takes an argument
-   * <i>convertVarCharToVar16Char</i> which tells to implicitly cast input arguments of type VARCHAR to VAR16CHAR
-   * and search Hive UDF registry using implicitly casted argument types.
+   * <i>varCharToStringReplacement</i> which tells to use hive STRING(true) or VARCHAR(false) type for drill VARCHAR type
+   * and search Hive UDF registry using this replacement.
    *
    * TODO: This is a rudimentary function resolver. Need to include more implicit casting such as DECIMAL28 to
    * DECIMAL38 as Hive UDFs can accept only DECIMAL38 type.
    */
-  private HiveFuncHolder resolveFunction(FunctionCall call, boolean convertVarCharToVar16Char) {
+  private HiveFuncHolder resolveFunction(FunctionCall call, boolean varCharToStringReplacement) {
     HiveFuncHolder holder;
     MajorType[] argTypes = new MajorType[call.args.size()];
     ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
     for (int i=0; i<call.args.size(); i++) {
       try {
         argTypes[i] = call.args.get(i).getMajorType();
-        if (convertVarCharToVar16Char && argTypes[i].getMinorType() == MinorType.VARCHAR) {
-          argTypes[i] = Types.withMode(MinorType.VAR16CHAR, argTypes[i].getMode());
-        }
-        argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType());
+        argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType(),
+            varCharToStringReplacement);
       } catch(Exception e) {
         // Hive throws errors if there are unsupported types. Consider there is no hive UDF supporting the
         // given argument types

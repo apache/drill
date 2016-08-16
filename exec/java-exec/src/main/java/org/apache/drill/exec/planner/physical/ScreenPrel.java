@@ -24,13 +24,14 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.planner.common.DrillScreenRelBase;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 
-public class ScreenPrel extends DrillScreenRelBase implements Prel {
+public class ScreenPrel extends DrillScreenRelBase implements Prel, HasDistributionAffinity {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenPrel.class);
 
@@ -79,4 +80,8 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
     return false;
   }
 
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return DistributionAffinity.HARD;
+  }
 }

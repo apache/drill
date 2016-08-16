@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +32,9 @@ import java.util.List;
 
 public class TestUnionAll extends BaseTestQuery{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+
+  private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
+  private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
 
   @Test  // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
@@ -724,6 +728,7 @@ public class TestUnionAll extends BaseTestQuery{
                     ".*Scan.*columns=\\[`columns`\\[0\\]\\].*\n" +
             ".*Project.*\n" +
                 ".*Scan.*columns=\\[`columns`\\[0\\]\\].*"};
+
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -1013,4 +1018,97 @@ public class TestUnionAll extends BaseTestQuery{
         .build()
         .run();
   }
+
+  @Test // DRILL-4147 // base case
+  public void testDrill4147_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union All SELECT o_custkey FROM dfs_test.`%s`", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"UnionExchange.*\n",
+        ".*Project.*\n" +
+        ".*UnionAll"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4147  // group-by on top of union-all
+  public void testDrill4147_2() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("Select o_custkey, count(*) as cnt from \n" +
+        " (SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union All SELECT o_custkey FROM dfs_test.`%s`) \n" +
+        "group by o_custkey", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
+  @Test // DRILL-4147 // union-all above a hash join
+  public void testDrill4147_3() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM \n" +
+        " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
+        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey < 10", l, r, l);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
 }

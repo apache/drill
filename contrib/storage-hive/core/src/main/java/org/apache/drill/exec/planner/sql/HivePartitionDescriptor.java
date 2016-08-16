@@ -86,6 +86,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     return numPartitionLevels;
   }
 
+  @Override
   public String getBaseTableLocation() {
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
     return origEntry.table.getTable().getSd().getLocation();
@@ -151,7 +152,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<String> newPartitions) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitions, boolean wasAllPartitionsPruned /* ignored */) throws Exception {
     GroupScan newGroupScan = createNewGroupScan(newPartitions);
     return new DrillScanRel(scanRel.getCluster(),
         scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -162,7 +163,7 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
         true /*filter pushdown*/);
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles) throws ExecutionSetupException {
+  private GroupScan createNewGroupScan(List<PartitionLocation> newPartitionLocations) throws ExecutionSetupException {
     HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
     List<HiveTable.HivePartition> oldPartitions = origReadEntry.partitions;
@@ -170,8 +171,8 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
 
     for (HiveTable.HivePartition part: oldPartitions) {
       String partitionLocation = part.getPartition().getSd().getLocation();
-      for (String newPartitionLocation: newFiles) {
-        if (partitionLocation.equals(newPartitionLocation)) {
+      for (PartitionLocation newPartitionLocation: newPartitionLocations) {
+        if (partitionLocation.equals(newPartitionLocation.getEntirePartitionLocation())) {
           newPartitions.add(part);
         }
       }

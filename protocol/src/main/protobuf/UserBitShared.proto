@@ -18,6 +18,10 @@ enum QueryType {
   SQL = 1;
   LOGICAL = 2;
   PHYSICAL = 3;
+  EXECUTION = 4;
+
+  /* Input is a prepared statement */
+  PREPARED_STATEMENT = 5;
 }
 
 message UserCredentials {

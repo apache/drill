@@ -6,6 +6,10 @@ option optimize_for = SPEED;
 
 import "SchemaDef.proto";
 import "UserBitShared.proto";
+import "BitData.proto";
+import "BitControl.proto";
+import "ExecutionProtos.proto";
+
 
 ////// UserToBit RPC ///////
 enum RpcType {
@@ -18,10 +22,22 @@ enum RpcType {
   CANCEL_QUERY = 4; // user is sending a query cancellation request to the drillbit
   REQUEST_RESULTS = 5;
   RESUME_PAUSED_QUERY = 11; // user is sending a query resume request to the drillbit
+  GET_QUERY_PLAN_FRAGMENTS = 12; // to get plan fragments from query
+  GET_CATALOGS = 14; // user is requesting metadata of catalog(s).
+  GET_SCHEMAS = 15; // user is requesting metadata of schema(s)
+  GET_TABLES = 16; // user is requesting metadata of table(s)
+  GET_COLUMNS = 17; // user is requesting metadata of column(s)
+  CREATE_PREPARED_STATEMENT = 22; // user is sending a request to create prepared statement
 
   // bit to user
   QUERY_DATA = 6; // drillbit is sending a query result data batch to the user
   QUERY_HANDLE = 7;
+  QUERY_PLAN_FRAGMENTS = 13; // return plan fragments
+  CATALOGS = 18; // return catalogs metadata in response to GET_CATALOGS
+  SCHEMAS = 19; // return schema metadata in response to GET_SCHEMAS
+  TABLES = 20; // return table metadata in response to GET_TABLES
+  COLUMNS = 21; // return column metadata in response to GET_COLUMNS
+  PREPARED_STATEMENT = 23; // return preparated statement in response to CREATE_PREPARED_STATEMENT
 
   REQ_META_FUNCTIONS = 8;
   RESP_FUNCTION_LIST = 9;
@@ -53,10 +69,17 @@ message RequestResults {
   optional int32 maximum_responses = 2;
 }
 
-message RunQuery {
-  optional QueryResultsMode results_mode = 1;
+message GetQueryPlanFragments {
+  required string query = 1;
   optional exec.shared.QueryType type = 2;
-  optional string plan = 3;
+  optional bool split_plan = 3 [default = false];
+}
+
+message QueryPlanFragments {
+  required exec.shared.QueryResult.QueryState status = 1;
+  optional exec.shared.QueryId query_id = 2;
+  repeated exec.bit.control.PlanFragment fragments = 3;
+  optional exec.shared.DrillPBError error = 4;
 }
 
 enum QueryResultsMode {
@@ -77,4 +100,338 @@ message BitToUserHandshake {
   optional HandshakeStatus status = 3;
   optional string errorId = 4;
   optional string errorMessage = 5;
+}
+
+/*
+ * Enum indicating the request status.
+ */
+enum RequestStatus {
+  UNKNOWN_STATUS = 0;
+  OK = 1;
+  FAILED = 2;
+
+  /**
+   * Request timed out. Futher attempts can change any API specific parameters and retry or just retry the request.
+   */
+  TIMEOUT = 3;
+}
+
+/*
+ * Simple filter which encapsulates the SQL LIKE ... ESCAPE function
+ */
+message LikeFilter {
+  optional string regex = 1; // pattern to match
+  optional string escape = 2; // escape character (if any) present in the pattern
+}
+
+/*
+ * Request message for getting the metadata for catalogs satisfying the given optional filter.
+ */
+message GetCatalogsReq {
+  optional LikeFilter catalog_name_filter = 1;
+}
+
+/*
+ * Message encapsulating metadata for a Catalog.
+ */
+message CatalogMetadata {
+  optional string catalog_name = 1;
+  optional string description = 2;
+  optional string connect = 3;
+}
+
+/*
+ * Response message for GetCatalogReq.
+ */
+message GetCatalogsResp {
+  optional RequestStatus status = 1;
+  repeated CatalogMetadata catalogs = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for schemas satisfying the given optional filters.
+ */
+message GetSchemasReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+}
+
+/*
+ * Message encapsulating metadata for a Schema.
+ */
+message SchemaMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string owner = 3;
+  optional string type = 4; // Type. Ex. "file", "mongodb", "hive" etc.
+  optional string mutable = 5;
+}
+
+/*
+ * Response message for GetSchemasReq.
+ */
+message GetSchemasResp {
+  optional RequestStatus status = 1;
+  repeated SchemaMetadata schemas = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for tables satisfying the given optional filters.
+ */
+message GetTablesReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter table_name_filter = 3;
+}
+
+/*
+ * Message encapsulating metadata for a Table.
+ */
+message TableMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string table_name = 3;
+  optional string type = 4; // Type. Ex. "TABLE", "VIEW" etc.
+}
+
+/*
+ * Response message for GetTablesReq.
+ */
+message GetTablesResp {
+  optional RequestStatus status = 1;
+  repeated TableMetadata tables = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for getting the metadata for columns satisfying the given optional filters.
+ */
+message GetColumnsReq {
+  optional LikeFilter catalog_name_filter = 1;
+  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter table_name_filter = 3;
+  optional LikeFilter column_name_filter = 4;
+}
+
+/*
+ * Message encapsulating metadata for a Column.
+ */
+message ColumnMetadata {
+  optional string catalog_name = 1;
+  optional string schema_name = 2;
+  optional string table_name = 3;
+  optional string column_name = 4;
+  optional int32 ordinal_position = 5;
+  optional string default_value = 6;
+  optional bool is_nullable = 7;
+  optional string data_type = 8;
+  optional int32 char_max_length = 9;
+  optional int32 char_octet_length = 10;
+  optional int32 numeric_precision = 11;
+  optional int32 numeric_precision_radix = 12;
+  optional int32 numeric_scale = 13;
+  optional int32 date_time_precision = 14;
+  optional string interval_type = 15;
+  optional int32 interval_precision = 16;
+}
+
+/*
+ * Response message for GetColumnsReq.
+ */
+message GetColumnsResp {
+  optional RequestStatus status = 1;
+  repeated ColumnMetadata columns = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message to create a prepared statement. Currently prepared
+ * statement only accepts a SQL query. Query parameter support is not
+ * included in current implementation.
+ */
+message CreatePreparedStatementReq {
+  optional string sql_query = 1;
+}
+
+/*
+ * How a column can be used in WHERE clause
+ */
+enum ColumnSearchability {
+  UNKNOWN_SEARCHABILITY = 0;
+  NONE = 1; // can't be used in WHERE clause
+  CHAR = 2; // can be used in WHERE clause but only with LIKE predicate
+  NUMBER = 3; // can be used in a WHERE clause with all the comparison operators except LIKE
+  ALL = 4; // can be used in a WHERE clause with all the comparison operators
+}
+
+/*
+ * Whether a column can be updatable.
+ */
+enum ColumnUpdatability {
+  UNKNOWN_UPDATABILITY = 0;
+  READ_ONLY = 1;
+  WRITABLE = 2;
+}
+
+/*
+ * Metadata of a column in query result set
+ */
+message ResultColumnMetadata {
+  /*
+   * Designated column's catalog name. Empty string if not applicable.
+   * Defaults to "DRILL" as drill has only one catalog.
+   */
+  optional string catalog_name = 1;
+
+  /*
+   * Designated column's schema name. Not set if not applicable. Initial implementation
+   * defaults to no value as we use LIMIT 0 queries to get the schema and schema info
+   * is lost. If we derive the schema from plan, we may get the right value.
+   */
+  optional string schema_name = 2;
+
+  /*
+   * Designated column's table name. Not set if not applicable. Initial implementation
+   * defaults to no value as we use LIMIT 0 queries to get the schema and table info
+   * is lost. If we derive the schema from query plan, we may get the right value.
+   */
+  optional string table_name = 3;
+  optional string column_name = 4; // column name
+
+  /*
+   * Column label name for display or print purposes.
+   * Ex. a column named "empName" might be labeled as "Employee Name".
+   */
+  optional string label = 5;
+
+  /*
+   * Data type in string format. Value is SQL standard type.
+   */
+  optional string data_type = 6;
+
+  optional bool is_nullable = 7;
+
+  /*
+   * For numeric data, this is the maximum precision.
+   * For character data, this is the length in characters.
+   * For datetime datatypes, this is the length in characters of the String representation
+   *    (assuming the maximum allowed precision of the fractional seconds component).
+   * For binary data, this is the length in bytes.
+   * For all other types 0 is returned where the column size is not applicable.
+   */
+  optional int32 precision = 8;
+
+  /*
+   * Column's number of digits to right of the decimal point.
+   * 0 is returned for types where the scale is not applicable
+   */
+  optional int32 scale = 9;
+
+  /*
+   * Indicates whether values in the designated column are signed numbers.
+   */
+  optional bool signed = 10;
+
+  /*
+   * Maximum number of characters required to display data from the column.
+   */
+  optional int32 display_size = 11;
+
+  /*
+   * Is the column an aliased column. Initial implementation defaults to
+   * true as we derive schema from LIMIT 0 query and not the query plan.
+   */
+  optional bool is_aliased = 12;
+
+  optional ColumnSearchability searchability = 13;
+
+  /*
+   * Defaults to READ_ONLU
+   */
+  optional ColumnUpdatability updatability = 14;
+
+  /*
+   * whether the designated column is automatically incremented.
+   */
+  optional bool auto_increment = 15;
+
+  /*
+   * Whether column's case matters for collations and comparisons. Defaults to true.
+   */
+  optional bool case_sensitivity = 16;
+
+  /*
+   * whether the column can be used in ORDER BY clause
+   */
+  optional bool sortable = 17;
+
+  /*
+   * A fully-qualified name of the Java class whose instances are created
+   * if the method ResultSet.getObject is called to retrieve
+   * a value from the column. Applicable only to JDBC clients.
+   */
+  optional string class_name = 18;
+
+  /*
+   * Is the data type a currency type? For JDBC only.
+   */
+  optional bool is_currency = 20;
+}
+
+/*
+ * Server state of prepared statement. Contents are opaque to
+ * client. Client just need to submit this object in RunQuery to
+ * the prepared statement.
+ */
+message PreparedStatementHandle {
+  optional bytes server_info = 1;
+}
+
+/*
+ * Prepared statement. It contains the query metadata and handle to prepared
+ * statement state on server.
+ */
+message PreparedStatement {
+  repeated ResultColumnMetadata columns = 1;
+
+  /*
+   * In order to execute the prepared statement,
+   * clients need to submit this object in RunQuery message.
+   */
+  optional PreparedStatementHandle server_handle = 2;
+}
+
+/*
+ * Response message for CreatePreparedStatementReq.
+ */
+message CreatePreparedStatementResp {
+  optional RequestStatus status = 1;
+  optional PreparedStatement prepared_statement = 2;
+  optional exec.shared.DrillPBError error = 3;
+}
+
+/*
+ * Request message for running a query.
+ */
+message RunQuery {
+  optional QueryResultsMode results_mode = 1;
+  optional exec.shared.QueryType type = 2;
+
+  /*
+   * Input for query type LOGICAL, PHYSICAL or SQL.
+   */
+  optional string plan = 3;
+
+  /*
+   * Input for query type EXECUTION. Input is a set of executable fragments.
+   */
+  repeated exec.bit.control.PlanFragment fragments = 4;
+
+  /*
+   * Input for query type PREPARED_STATEMENT. Input is a prepared statement handle
+   * to state on server side which is returned in response to CreatePreparedStatementReq.
+   */
+  optional PreparedStatementHandle prepared_statement_handle = 5;
 }

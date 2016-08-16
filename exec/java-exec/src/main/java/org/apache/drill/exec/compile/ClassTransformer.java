@@ -216,9 +216,7 @@ public class ClassTransformer {
       final String entireClass,
       final String materializedClassName) throws ClassTransformationException {
     // unfortunately, this hasn't been set up at construction time, so we have to do it here
-    final OptionValue optionValue = optionManager.getOption(SCALAR_REPLACEMENT_OPTION);
-    final ScalarReplacementOption scalarReplacementOption =
-        ScalarReplacementOption.fromString((String) optionValue.getValue()); // TODO(DRILL-2474)
+    final ScalarReplacementOption scalarReplacementOption = ScalarReplacementOption.fromString(optionManager.getOption(SCALAR_REPLACEMENT_VALIDATOR));
 
     try {
       final long t1 = System.nanoTime();
