@@ -153,6 +153,7 @@ public class DecimalUtility extends CoreDecimalUtility{
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 =======
     public static BigDecimal getBigDecimalFromSparse(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
@@ -161,6 +162,8 @@ public class DecimalUtility extends CoreDecimalUtility{
         return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
     }
 
+=======
+>>>>>>> reverse earlier DRILL-4184 experimental changes
     public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 >>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
 
@@ -168,6 +171,7 @@ public class DecimalUtility extends CoreDecimalUtility{
     return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
   }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
@@ -183,6 +187,8 @@ public class DecimalUtility extends CoreDecimalUtility{
       return new BigDecimal(unscaledValue, scale);
     }
 
+=======
+>>>>>>> reverse earlier DRILL-4184 experimental changes
     public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
       byte[] value = new byte[length];
       bytebuf.getBytes(start, value, 0, length);
@@ -191,19 +197,9 @@ public class DecimalUtility extends CoreDecimalUtility{
     }
 >>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
 
-  public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int scale) {
-    byte[] value;
-    if (bytebuf.hasArray()) {
-      value = bytebuf.array();
-    }
-    else {
-      // rewinding bytebuf gives extra bytes here, and an incorrect decimal.
-      // instead, we save position, get bytes through the end, and restore the position.
-      int savePosition = bytebuf.position();
-      value = new byte[bytebuf.remaining()];
-      bytebuf.get(value);
-      bytebuf.position(savePosition);  // restore bytebuf position, which may not be necessary
-    }
+  public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
+    byte[] value = new byte[length];
+    bytebuf.get(value);
     BigInteger unscaledValue = new BigInteger(value);
     return new BigDecimal(unscaledValue, scale);
   }
@@ -324,7 +320,7 @@ public class DecimalUtility extends CoreDecimalUtility{
       intermediate.release();
     }
 
-  }
+    }
 
   /**
    * Function converts the BigDecimal and stores it in out internal sparse representation

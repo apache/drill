@@ -20,15 +20,8 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.ValueVector.Mutator;
-import org.apache.drill.exec.vector.Decimal28SparseVector;
-import org.apache.drill.exec.vector.Decimal28SparseVector.Accessor;
-import org.apache.drill.exec.vector.Decimal38SparseVector;
-import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -43,27 +36,12 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
   Binary currLengthDeterminingDictVal;
   Binary currDictValToWrite;
   VariableWidthVector variableWidthVector;
-  FixedWidthVector fixedWidthVector;
-
-  // decimalLengths list is part of a near-term fix for DRILL-4184.
-  // Decimal[23]8SparseVector classes are fixed width vectors, without ability to "remember" offsets of
-  // (variable width) field sizes.  so, we "remember" the array sizes in decimalLengths (also used to
-  // "remember" whether a value was null, for nullable decimal columns).
-  // TODO: storage of decimal values should support variable length values in a much cleaner way than this,
-  // perhaps with a new variable width Decimal vector class.
-  protected ArrayList<Integer> decimalLengths = new ArrayList();
 
   VarLengthValuesColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                         ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
                         SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    if (valueVec instanceof VariableWidthVector) {
-      variableWidthVector = (VariableWidthVector) valueVec;
-    }
-    else {
-      fixedWidthVector = (FixedWidthVector) valueVec;
-      dataTypeLengthInBits = this.schemaElement.getPrecision() * 8;
-    }
+    variableWidthVector = (VariableWidthVector) valueVec;
     if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
       usingDictionary = true;
     }
@@ -72,51 +50,11 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     }
   }
 
-  @Override
-  public void reset() {
-    super.reset();
-    decimalLengths.clear();
-  }
-
-  /**
-   * Use this method to add a length (may be null) to the list of decimal lengths.
-   * @param val decimal length, or null if the value is NULL
-   */
-  protected void addDecimalLength(Integer val) {
-    decimalLengths.add(val);
-  }
-
-  /**
-   * Use this method to obtain the decimal length from the list of stored lengths.
-   * @param subscript subscript to obtain
-   * @return Integer object indicating length, or null if the value is NULL
-   */
-  protected Integer getDecimalLength(int subscript) {
-    /* Including this code (now commented out) throws an exception, demonstrating
-     * that the list is definitely not always accessed at the end.
-    if (subscript != decimalLengths.size() - 1) {
-      throw new UnsupportedOperationException("Accessing decimalLengths subscript " + subscript + " with size " + decimalLengths.size());
-    }
-    */
-    return decimalLengths.get(subscript);
-  }
-
   public abstract boolean setSafe(int index, DrillBuf bytes, int start, int length);
-
-  public abstract boolean setSafe(int index, BigDecimal intermediate);
-
-  protected void setDataTypeLength() {
-    if (variableWidthVector == null) {
-      dataTypeLengthInBits = getDecimalLength(valuesReadInCurrentPass);
-    } else {
-      dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
-    }
-  }
 
   @Override
   protected void readField(long recordToRead) {
-    setDataTypeLength();
-
+    dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     boolean success = setSafe((int) valuesReadInCurrentPass, pageReader.pageData,
         (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
@@ -157,14 +95,10 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = pageReader.pageData.getInt((int) pageReader.readyToReadPosInBytes);
     }
-    if (variableWidthVector == null) {
-      addDecimalLength(dataTypeLengthInBits);  // store length in BYTES for variable length decimal field
-    }
-    else {
-      // this should not fail
-      variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead,
+
+    // this should not fail
+    variableWidthVector.getMutator().setValueLengthSafe((int) valuesReadInCurrentPass + pageReader.valuesReadyToRead,
         dataTypeLengthInBits);
-    }
     return false;
   }
 
