@@ -49,6 +49,7 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -211,7 +212,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation, String cacheFileRoot,
-      boolean wasAllPartitionsPruned) throws Exception {
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) throws Exception {
     List<String> newFiles = Lists.newArrayList();
     for (final PartitionLocation location : newPartitionLocation) {
       if (!location.isCompositePartition()) {
@@ -228,6 +229,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
       final FormatSelection formatSelection = (FormatSelection)table.getSelection();
       final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
           cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
+      newFileSelection.setMetaContext(metaContext);
       final FileGroupScan newGroupScan =
           ((FileGroupScan)((DrillScanRel)scanRel).getGroupScan()).clone(newFileSelection);
       return new DrillScanRel(scanRel.getCluster(),
@@ -239,18 +241,19 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
                       true /*filter pushdown*/);
     } else if (scanRel instanceof EnumerableTableScan) {
       return createNewTableScanFromSelection((EnumerableTableScan)scanRel, newFiles, cacheFileRoot,
-          wasAllPartitionsPruned);
+          wasAllPartitionsPruned, metaContext);
     } else {
       throw new UnsupportedOperationException("Only DrillScanRel and EnumerableTableScan is allowed!");
     }
   }
 
   private TableScan createNewTableScanFromSelection(EnumerableTableScan oldScan, List<String> newFiles, String cacheFileRoot,
-      boolean wasAllPartitionsPruned) {
+      boolean wasAllPartitionsPruned, MetadataContext metaContext) {
     final RelOptTableImpl t = (RelOptTableImpl) oldScan.getTable();
     final FormatSelection formatSelection = (FormatSelection) table.getSelection();
     final FileSelection newFileSelection = new FileSelection(null, newFiles, getBaseTableLocation(),
             cacheFileRoot, wasAllPartitionsPruned, formatSelection.getSelection().getDirStatus());
+    newFileSelection.setMetaContext(metaContext);
     final FormatSelection newFormatSelection = new FormatSelection(formatSelection.getFormat(), newFileSelection);
     final DrillTranslatableTable newTable = new DrillTranslatableTable(
             new DynamicDrillTable(table.getPlugin(), table.getStorageEngineName(),
@@ -265,7 +268,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
       boolean wasAllPartitionsPruned) throws Exception {
-    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned);
+    return createTableScan(newPartitionLocation, null, wasAllPartitionsPruned, null);
   }
 
   @Override

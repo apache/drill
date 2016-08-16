@@ -49,6 +49,7 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadataDirs;
 import org.apache.hadoop.conf.Configuration;
@@ -214,11 +215,16 @@ public class ParquetFormatPlugin implements FormatPlugin{
         // the directory is readable since the metadata 'directories' file cannot be created otherwise.  Note
         // that isDirReadable() does a similar check with the metadata 'cache' file.
         if (fs.exists(dirMetaPath)) {
-          ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString());
+          // create a metadata context that will be used for the duration of the query
+          MetadataContext metaContext = new MetadataContext();
+
+          ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString(), metaContext);
           if (mDirs.getDirectories().size() > 0) {
             FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
                 selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);
             dirSelection.setExpandedPartial();
+            dirSelection.setMetaContext(metaContext);
+
             return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
                 new FormatSelection(plugin.getConfig(), dirSelection));
           }
