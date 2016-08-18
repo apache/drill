@@ -57,6 +57,8 @@ class MinorFragmentProfile;
 class OperatorProfile;
 class StreamProfile;
 class MetricValue;
+class Registry;
+class Jar;
 
 enum DrillPBError_ErrorType {
   DrillPBError_ErrorType_CONNECTION = 0,
@@ -152,11 +154,13 @@ inline bool RpcChannel_Parse(
 enum QueryType {
   SQL = 1,
   LOGICAL = 2,
-  PHYSICAL = 3
+  PHYSICAL = 3,
+  EXECUTION = 4,
+  PREPARED_STATEMENT = 5
 };
 bool QueryType_IsValid(int value);
 const QueryType QueryType_MIN = SQL;
-const QueryType QueryType_MAX = PHYSICAL;
+const QueryType QueryType_MAX = PREPARED_STATEMENT;
 const int QueryType_ARRAYSIZE = QueryType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* QueryType_descriptor();
@@ -2750,6 +2754,195 @@ class MetricValue : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static MetricValue* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Registry : public ::google::protobuf::Message {
+ public:
+  Registry();
+  virtual ~Registry();
+
+  Registry(const Registry& from);
+
+  inline Registry& operator=(const Registry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Registry& default_instance();
+
+  void Swap(Registry* other);
+
+  // implements Message ----------------------------------------------
+
+  Registry* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Registry& from);
+  void MergeFrom(const Registry& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .exec.shared.Jar jar = 1;
+  inline int jar_size() const;
+  inline void clear_jar();
+  static const int kJarFieldNumber = 1;
+  inline const ::exec::shared::Jar& jar(int index) const;
+  inline ::exec::shared::Jar* mutable_jar(int index);
+  inline ::exec::shared::Jar* add_jar();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >&
+      jar() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >*
+      mutable_jar();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.Registry)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar > jar_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static Registry* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Jar : public ::google::protobuf::Message {
+ public:
+  Jar();
+  virtual ~Jar();
+
+  Jar(const Jar& from);
+
+  inline Jar& operator=(const Jar& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Jar& default_instance();
+
+  void Swap(Jar* other);
+
+  // implements Message ----------------------------------------------
+
+  Jar* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Jar& from);
+  void MergeFrom(const Jar& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string name = 1;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 1;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const char* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // repeated string function_signature = 2;
+  inline int function_signature_size() const;
+  inline void clear_function_signature();
+  static const int kFunctionSignatureFieldNumber = 2;
+  inline const ::std::string& function_signature(int index) const;
+  inline ::std::string* mutable_function_signature(int index);
+  inline void set_function_signature(int index, const ::std::string& value);
+  inline void set_function_signature(int index, const char* value);
+  inline void set_function_signature(int index, const char* value, size_t size);
+  inline ::std::string* add_function_signature();
+  inline void add_function_signature(const ::std::string& value);
+  inline void add_function_signature(const char* value);
+  inline void add_function_signature(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& function_signature() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_function_signature();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.Jar)
+ private:
+  inline void set_has_name();
+  inline void clear_has_name();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* name_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> function_signature_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static Jar* default_instance_;
 };
 // ===================================================================
 
@@ -5933,6 +6126,153 @@ inline double MetricValue::double_value() const {
 inline void MetricValue::set_double_value(double value) {
   set_has_double_value();
   double_value_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// Registry
+
+// repeated .exec.shared.Jar jar = 1;
+inline int Registry::jar_size() const {
+  return jar_.size();
+}
+inline void Registry::clear_jar() {
+  jar_.Clear();
+}
+inline const ::exec::shared::Jar& Registry::jar(int index) const {
+  return jar_.Get(index);
+}
+inline ::exec::shared::Jar* Registry::mutable_jar(int index) {
+  return jar_.Mutable(index);
+}
+inline ::exec::shared::Jar* Registry::add_jar() {
+  return jar_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >&
+Registry::jar() const {
+  return jar_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >*
+Registry::mutable_jar() {
+  return &jar_;
+}
+
+// -------------------------------------------------------------------
+
+// Jar
+
+// optional string name = 1;
+inline bool Jar::has_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Jar::set_has_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Jar::clear_has_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Jar::clear_name() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& Jar::name() const {
+  return *name_;
+}
+inline void Jar::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Jar::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Jar::set_name(const char* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Jar::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  return name_;
+}
+inline ::std::string* Jar::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Jar::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated string function_signature = 2;
+inline int Jar::function_signature_size() const {
+  return function_signature_.size();
+}
+inline void Jar::clear_function_signature() {
+  function_signature_.Clear();
+}
+inline const ::std::string& Jar::function_signature(int index) const {
+  return function_signature_.Get(index);
+}
+inline ::std::string* Jar::mutable_function_signature(int index) {
+  return function_signature_.Mutable(index);
+}
+inline void Jar::set_function_signature(int index, const ::std::string& value) {
+  function_signature_.Mutable(index)->assign(value);
+}
+inline void Jar::set_function_signature(int index, const char* value) {
+  function_signature_.Mutable(index)->assign(value);
+}
+inline void Jar::set_function_signature(int index, const char* value, size_t size) {
+  function_signature_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Jar::add_function_signature() {
+  return function_signature_.Add();
+}
+inline void Jar::add_function_signature(const ::std::string& value) {
+  function_signature_.Add()->assign(value);
+}
+inline void Jar::add_function_signature(const char* value) {
+  function_signature_.Add()->assign(value);
+}
+inline void Jar::add_function_signature(const char* value, size_t size) {
+  function_signature_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Jar::function_signature() const {
+  return function_signature_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Jar::mutable_function_signature() {
+  return &function_signature_;
 }
 
 

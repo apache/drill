@@ -81,6 +81,12 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* MetricValue_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   MetricValue_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Registry_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Registry_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Jar_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Jar_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* RpcChannel_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* QueryType_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* FragmentState_descriptor_ = NULL;
@@ -454,6 +460,37 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(MetricValue));
+  Registry_descriptor_ = file->message_type(19);
+  static const int Registry_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Registry, jar_),
+  };
+  Registry_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Registry_descriptor_,
+      Registry::default_instance_,
+      Registry_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Registry, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Registry, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Registry));
+  Jar_descriptor_ = file->message_type(20);
+  static const int Jar_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Jar, name_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Jar, function_signature_),
+  };
+  Jar_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Jar_descriptor_,
+      Jar::default_instance_,
+      Jar_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Jar, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Jar, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Jar));
   RpcChannel_descriptor_ = file->enum_type(0);
   QueryType_descriptor_ = file->enum_type(1);
   FragmentState_descriptor_ = file->enum_type(2);
@@ -508,6 +545,10 @@ void protobuf_RegisterTypes(const ::std::string&) {
     StreamProfile_descriptor_, &StreamProfile::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     MetricValue_descriptor_, &MetricValue::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Registry_descriptor_, &Registry::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Jar_descriptor_, &Jar::default_instance());
 }
 
 }  // namespace
@@ -553,6 +594,10 @@ void protobuf_ShutdownFile_UserBitShared_2eproto() {
   delete StreamProfile_reflection_;
   delete MetricValue::default_instance_;
   delete MetricValue_reflection_;
+  delete Registry::default_instance_;
+  delete Registry_reflection_;
+  delete Jar::default_instance_;
+  delete Jar_reflection_;
 }
 
 void protobuf_AddDesc_UserBitShared_2eproto() {
@@ -650,32 +695,36 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sch"
     "emas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001"
     " \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value"
-    "\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n"
-    "\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQ"
-    "L\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragm"
-    "entState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCA"
-    "TION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCAN"
-    "CELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQ"
-    "UESTED\020\006*\335\005\n\020CoreOperatorType\022\021\n\rSINGLE_"
-    "SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER"
-    "\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n"
-    "\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006"
-    "\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORD"
-    "ERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022"
-    "UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n"
-    "\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMOVER\020\016"
-    "\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020"
-    "\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION"
-    "\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SC"
-    "AN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_"
-    "SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRI"
-    "TER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITE"
-    "R\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020"
-    "\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_T"
-    "O_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE"
-    "_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_J"
-    "OIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033org.apache.d"
-    "rill.exec.protoB\rUserBitSharedH\001", 4432);
+    "\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.s"
+    "hared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022functi"
+    "on_signature\030\002 \003(\t*5\n\nRpcChannel\022\017\n\013BIT_"
+    "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue"
+    "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL"
+    "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020"
+    "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI"
+    "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH"
+    "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE"
+    "LLATION_REQUESTED\020\006*\335\005\n\020CoreOperatorType"
+    "\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020"
+    "\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHAS"
+    "H_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITI"
+    "ON_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIV"
+    "ER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PR"
+    "OJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE"
+    "_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTO"
+    "R_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\n"
+    "TOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE"
+    "\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_R"
+    "OW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SY"
+    "STEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016"
+    "PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n"
+    "\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSO"
+    "N_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023"
+    "\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER"
+    "\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NE"
+    "STED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033o"
+    "rg.apache.drill.exec.protoB\rUserBitShare"
+    "dH\001", 4563);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -701,6 +750,8 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
   OperatorProfile::default_instance_ = new OperatorProfile();
   StreamProfile::default_instance_ = new StreamProfile();
   MetricValue::default_instance_ = new MetricValue();
+  Registry::default_instance_ = new Registry();
+  Jar::default_instance_ = new Jar();
   UserCredentials::default_instance_->InitAsDefaultInstance();
   QueryId::default_instance_->InitAsDefaultInstance();
   DrillPBError::default_instance_->InitAsDefaultInstance();
@@ -720,6 +771,8 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
   OperatorProfile::default_instance_->InitAsDefaultInstance();
   StreamProfile::default_instance_->InitAsDefaultInstance();
   MetricValue::default_instance_->InitAsDefaultInstance();
+  Registry::default_instance_->InitAsDefaultInstance();
+  Jar::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_UserBitShared_2eproto);
 }
 
@@ -753,6 +806,8 @@ bool QueryType_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+    case 4:
+    case 5:
       return true;
     default:
       return false;
@@ -8130,6 +8185,482 @@ void MetricValue::Swap(MetricValue* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = MetricValue_descriptor_;
   metadata.reflection = MetricValue_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Registry::kJarFieldNumber;
+#endif  // !_MSC_VER
+
+Registry::Registry()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Registry::InitAsDefaultInstance() {
+}
+
+Registry::Registry(const Registry& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Registry::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Registry::~Registry() {
+  SharedDtor();
+}
+
+void Registry::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void Registry::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Registry::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Registry_descriptor_;
+}
+
+const Registry& Registry::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_UserBitShared_2eproto();
+  return *default_instance_;
+}
+
+Registry* Registry::default_instance_ = NULL;
+
+Registry* Registry::New() const {
+  return new Registry;
+}
+
+void Registry::Clear() {
+  jar_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Registry::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated .exec.shared.Jar jar = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_jar:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_jar()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(10)) goto parse_jar;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Registry::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // repeated .exec.shared.Jar jar = 1;
+  for (int i = 0; i < this->jar_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->jar(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Registry::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // repeated .exec.shared.Jar jar = 1;
+  for (int i = 0; i < this->jar_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->jar(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Registry::ByteSize() const {
+  int total_size = 0;
+
+  // repeated .exec.shared.Jar jar = 1;
+  total_size += 1 * this->jar_size();
+  for (int i = 0; i < this->jar_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->jar(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Registry::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Registry* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Registry*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Registry::MergeFrom(const Registry& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  jar_.MergeFrom(from.jar_);
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Registry::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Registry::CopyFrom(const Registry& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Registry::IsInitialized() const {
+
+  return true;
+}
+
+void Registry::Swap(Registry* other) {
+  if (other != this) {
+    jar_.Swap(&other->jar_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Registry::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Registry_descriptor_;
+  metadata.reflection = Registry_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Jar::kNameFieldNumber;
+const int Jar::kFunctionSignatureFieldNumber;
+#endif  // !_MSC_VER
+
+Jar::Jar()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Jar::InitAsDefaultInstance() {
+}
+
+Jar::Jar(const Jar& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Jar::SharedCtor() {
+  _cached_size_ = 0;
+  name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Jar::~Jar() {
+  SharedDtor();
+}
+
+void Jar::SharedDtor() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void Jar::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Jar::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Jar_descriptor_;
+}
+
+const Jar& Jar::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_UserBitShared_2eproto();
+  return *default_instance_;
+}
+
+Jar* Jar::default_instance_ = NULL;
+
+Jar* Jar::New() const {
+  return new Jar;
+}
+
+void Jar::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_name()) {
+      if (name_ != &::google::protobuf::internal::kEmptyString) {
+        name_->clear();
+      }
+    }
+  }
+  function_signature_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Jar::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string name = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_name()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->name().data(), this->name().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_function_signature;
+        break;
+      }
+
+      // repeated string function_signature = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_function_signature:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_function_signature()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->function_signature(this->function_signature_size() - 1).data(),
+            this->function_signature(this->function_signature_size() - 1).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_function_signature;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Jar::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional string name = 1;
+  if (has_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->name().data(), this->name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      1, this->name(), output);
+  }
+
+  // repeated string function_signature = 2;
+  for (int i = 0; i < this->function_signature_size(); i++) {
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->function_signature(i).data(), this->function_signature(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      2, this->function_signature(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Jar::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional string name = 1;
+  if (has_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->name().data(), this->name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->name(), target);
+  }
+
+  // repeated string function_signature = 2;
+  for (int i = 0; i < this->function_signature_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->function_signature(i).data(), this->function_signature(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(2, this->function_signature(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Jar::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional string name = 1;
+    if (has_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->name());
+    }
+
+  }
+  // repeated string function_signature = 2;
+  total_size += 1 * this->function_signature_size();
+  for (int i = 0; i < this->function_signature_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->function_signature(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Jar::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Jar* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Jar*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Jar::MergeFrom(const Jar& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  function_signature_.MergeFrom(from.function_signature_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_name()) {
+      set_name(from.name());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Jar::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Jar::CopyFrom(const Jar& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Jar::IsInitialized() const {
+
+  return true;
+}
+
+void Jar::Swap(Jar* other) {
+  if (other != this) {
+    std::swap(name_, other->name_);
+    function_signature_.Swap(&other->function_signature_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Jar::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Jar_descriptor_;
+  metadata.reflection = Jar_reflection_;
   return metadata;
 }
 

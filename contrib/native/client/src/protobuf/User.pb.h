@@ -27,6 +27,9 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "SchemaDef.pb.h"
 #include "UserBitShared.pb.h"
+#include "BitData.pb.h"
+#include "BitControl.pb.h"
+#include "ExecutionProtos.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace exec {
@@ -39,10 +42,31 @@ void protobuf_ShutdownFile_User_2eproto();
 
 class Property;
 class UserProperties;
+class RpcEndpointInfos;
 class UserToBitHandshake;
 class RequestResults;
-class RunQuery;
+class GetQueryPlanFragments;
+class QueryPlanFragments;
 class BitToUserHandshake;
+class LikeFilter;
+class GetCatalogsReq;
+class CatalogMetadata;
+class GetCatalogsResp;
+class GetSchemasReq;
+class SchemaMetadata;
+class GetSchemasResp;
+class GetTablesReq;
+class TableMetadata;
+class GetTablesResp;
+class GetColumnsReq;
+class ColumnMetadata;
+class GetColumnsResp;
+class CreatePreparedStatementReq;
+class ResultColumnMetadata;
+class PreparedStatementHandle;
+class PreparedStatement;
+class CreatePreparedStatementResp;
+class RunQuery;
 
 enum RpcType {
   HANDSHAKE = 0,
@@ -52,15 +76,27 @@ enum RpcType {
   CANCEL_QUERY = 4,
   REQUEST_RESULTS = 5,
   RESUME_PAUSED_QUERY = 11,
+  GET_QUERY_PLAN_FRAGMENTS = 12,
+  GET_CATALOGS = 14,
+  GET_SCHEMAS = 15,
+  GET_TABLES = 16,
+  GET_COLUMNS = 17,
+  CREATE_PREPARED_STATEMENT = 22,
   QUERY_DATA = 6,
   QUERY_HANDLE = 7,
+  QUERY_PLAN_FRAGMENTS = 13,
+  CATALOGS = 18,
+  SCHEMAS = 19,
+  TABLES = 20,
+  COLUMNS = 21,
+  PREPARED_STATEMENT = 23,
   REQ_META_FUNCTIONS = 8,
   RESP_FUNCTION_LIST = 9,
   QUERY_RESULT = 10
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = RESUME_PAUSED_QUERY;
+const RpcType RpcType_MAX = PREPARED_STATEMENT;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -111,6 +147,69 @@ inline bool HandshakeStatus_Parse(
     const ::std::string& name, HandshakeStatus* value) {
   return ::google::protobuf::internal::ParseNamedEnum<HandshakeStatus>(
     HandshakeStatus_descriptor(), name, value);
+}
+enum RequestStatus {
+  UNKNOWN_STATUS = 0,
+  OK = 1,
+  FAILED = 2,
+  TIMEOUT = 3
+};
+bool RequestStatus_IsValid(int value);
+const RequestStatus RequestStatus_MIN = UNKNOWN_STATUS;
+const RequestStatus RequestStatus_MAX = TIMEOUT;
+const int RequestStatus_ARRAYSIZE = RequestStatus_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* RequestStatus_descriptor();
+inline const ::std::string& RequestStatus_Name(RequestStatus value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    RequestStatus_descriptor(), value);
+}
+inline bool RequestStatus_Parse(
+    const ::std::string& name, RequestStatus* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<RequestStatus>(
+    RequestStatus_descriptor(), name, value);
+}
+enum ColumnSearchability {
+  UNKNOWN_SEARCHABILITY = 0,
+  NONE = 1,
+  CHAR = 2,
+  NUMBER = 3,
+  ALL = 4
+};
+bool ColumnSearchability_IsValid(int value);
+const ColumnSearchability ColumnSearchability_MIN = UNKNOWN_SEARCHABILITY;
+const ColumnSearchability ColumnSearchability_MAX = ALL;
+const int ColumnSearchability_ARRAYSIZE = ColumnSearchability_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* ColumnSearchability_descriptor();
+inline const ::std::string& ColumnSearchability_Name(ColumnSearchability value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    ColumnSearchability_descriptor(), value);
+}
+inline bool ColumnSearchability_Parse(
+    const ::std::string& name, ColumnSearchability* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<ColumnSearchability>(
+    ColumnSearchability_descriptor(), name, value);
+}
+enum ColumnUpdatability {
+  UNKNOWN_UPDATABILITY = 0,
+  READ_ONLY = 1,
+  WRITABLE = 2
+};
+bool ColumnUpdatability_IsValid(int value);
+const ColumnUpdatability ColumnUpdatability_MIN = UNKNOWN_UPDATABILITY;
+const ColumnUpdatability ColumnUpdatability_MAX = WRITABLE;
+const int ColumnUpdatability_ARRAYSIZE = ColumnUpdatability_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* ColumnUpdatability_descriptor();
+inline const ::std::string& ColumnUpdatability_Name(ColumnUpdatability value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    ColumnUpdatability_descriptor(), value);
+}
+inline bool ColumnUpdatability_Parse(
+    const ::std::string& name, ColumnUpdatability* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<ColumnUpdatability>(
+    ColumnUpdatability_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -301,6 +400,153 @@ class UserProperties : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class RpcEndpointInfos : public ::google::protobuf::Message {
+ public:
+  RpcEndpointInfos();
+  virtual ~RpcEndpointInfos();
+
+  RpcEndpointInfos(const RpcEndpointInfos& from);
+
+  inline RpcEndpointInfos& operator=(const RpcEndpointInfos& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const RpcEndpointInfos& default_instance();
+
+  void Swap(RpcEndpointInfos* other);
+
+  // implements Message ----------------------------------------------
+
+  RpcEndpointInfos* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const RpcEndpointInfos& from);
+  void MergeFrom(const RpcEndpointInfos& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string name = 1;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 1;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const char* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // optional string version = 2;
+  inline bool has_version() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 2;
+  inline const ::std::string& version() const;
+  inline void set_version(const ::std::string& value);
+  inline void set_version(const char* value);
+  inline void set_version(const char* value, size_t size);
+  inline ::std::string* mutable_version();
+  inline ::std::string* release_version();
+  inline void set_allocated_version(::std::string* version);
+
+  // optional uint32 majorVersion = 3;
+  inline bool has_majorversion() const;
+  inline void clear_majorversion();
+  static const int kMajorVersionFieldNumber = 3;
+  inline ::google::protobuf::uint32 majorversion() const;
+  inline void set_majorversion(::google::protobuf::uint32 value);
+
+  // optional uint32 minorVersion = 4;
+  inline bool has_minorversion() const;
+  inline void clear_minorversion();
+  static const int kMinorVersionFieldNumber = 4;
+  inline ::google::protobuf::uint32 minorversion() const;
+  inline void set_minorversion(::google::protobuf::uint32 value);
+
+  // optional uint32 patchVersion = 5;
+  inline bool has_patchversion() const;
+  inline void clear_patchversion();
+  static const int kPatchVersionFieldNumber = 5;
+  inline ::google::protobuf::uint32 patchversion() const;
+  inline void set_patchversion(::google::protobuf::uint32 value);
+
+  // optional string application = 6;
+  inline bool has_application() const;
+  inline void clear_application();
+  static const int kApplicationFieldNumber = 6;
+  inline const ::std::string& application() const;
+  inline void set_application(const ::std::string& value);
+  inline void set_application(const char* value);
+  inline void set_application(const char* value, size_t size);
+  inline ::std::string* mutable_application();
+  inline ::std::string* release_application();
+  inline void set_allocated_application(::std::string* application);
+
+  // @@protoc_insertion_point(class_scope:exec.user.RpcEndpointInfos)
+ private:
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_version();
+  inline void clear_has_version();
+  inline void set_has_majorversion();
+  inline void clear_has_majorversion();
+  inline void set_has_minorversion();
+  inline void clear_has_minorversion();
+  inline void set_has_patchversion();
+  inline void clear_has_patchversion();
+  inline void set_has_application();
+  inline void clear_has_application();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* name_;
+  ::std::string* version_;
+  ::google::protobuf::uint32 majorversion_;
+  ::google::protobuf::uint32 minorversion_;
+  ::std::string* application_;
+  ::google::protobuf::uint32 patchversion_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static RpcEndpointInfos* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class UserToBitHandshake : public ::google::protobuf::Message {
  public:
   UserToBitHandshake();
@@ -408,6 +654,15 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline bool support_timeout() const;
   inline void set_support_timeout(bool value);
 
+  // optional .exec.user.RpcEndpointInfos client_infos = 8;
+  inline bool has_client_infos() const;
+  inline void clear_client_infos();
+  static const int kClientInfosFieldNumber = 8;
+  inline const ::exec::user::RpcEndpointInfos& client_infos() const;
+  inline ::exec::user::RpcEndpointInfos* mutable_client_infos();
+  inline ::exec::user::RpcEndpointInfos* release_client_infos();
+  inline void set_allocated_client_infos(::exec::user::RpcEndpointInfos* client_infos);
+
   // @@protoc_insertion_point(class_scope:exec.user.UserToBitHandshake)
  private:
   inline void set_has_channel();
@@ -424,6 +679,8 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline void clear_has_support_complex_types();
   inline void set_has_support_timeout();
   inline void clear_has_support_timeout();
+  inline void set_has_client_infos();
+  inline void clear_has_client_infos();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -431,12 +688,13 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   ::google::protobuf::int32 rpc_version_;
   ::exec::shared::UserCredentials* credentials_;
   ::exec::user::UserProperties* properties_;
+  ::exec::user::RpcEndpointInfos* client_infos_;
   bool support_listening_;
   bool support_complex_types_;
   bool support_timeout_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -541,14 +799,14 @@ class RequestResults : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class RunQuery : public ::google::protobuf::Message {
+class GetQueryPlanFragments : public ::google::protobuf::Message {
  public:
-  RunQuery();
-  virtual ~RunQuery();
+  GetQueryPlanFragments();
+  virtual ~GetQueryPlanFragments();
 
-  RunQuery(const RunQuery& from);
+  GetQueryPlanFragments(const GetQueryPlanFragments& from);
 
-  inline RunQuery& operator=(const RunQuery& from) {
+  inline GetQueryPlanFragments& operator=(const GetQueryPlanFragments& from) {
     CopyFrom(from);
     return *this;
   }
@@ -562,17 +820,17 @@ class RunQuery : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const RunQuery& default_instance();
+  static const GetQueryPlanFragments& default_instance();
 
-  void Swap(RunQuery* other);
+  void Swap(GetQueryPlanFragments* other);
 
   // implements Message ----------------------------------------------
 
-  RunQuery* New() const;
+  GetQueryPlanFragments* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const RunQuery& from);
-  void MergeFrom(const RunQuery& from);
+  void CopyFrom(const GetQueryPlanFragments& from);
+  void MergeFrom(const GetQueryPlanFragments& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -595,12 +853,17 @@ class RunQuery : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional .exec.user.QueryResultsMode results_mode = 1;
-  inline bool has_results_mode() const;
-  inline void clear_results_mode();
-  static const int kResultsModeFieldNumber = 1;
-  inline ::exec::user::QueryResultsMode results_mode() const;
-  inline void set_results_mode(::exec::user::QueryResultsMode value);
+  // required string query = 1;
+  inline bool has_query() const;
+  inline void clear_query();
+  static const int kQueryFieldNumber = 1;
+  inline const ::std::string& query() const;
+  inline void set_query(const ::std::string& value);
+  inline void set_query(const char* value);
+  inline void set_query(const char* value, size_t size);
+  inline ::std::string* mutable_query();
+  inline ::std::string* release_query();
+  inline void set_allocated_query(::std::string* query);
 
   // optional .exec.shared.QueryType type = 2;
   inline bool has_type() const;
@@ -609,32 +872,27 @@ class RunQuery : public ::google::protobuf::Message {
   inline ::exec::shared::QueryType type() const;
   inline void set_type(::exec::shared::QueryType value);
 
-  // optional string plan = 3;
-  inline bool has_plan() const;
-  inline void clear_plan();
-  static const int kPlanFieldNumber = 3;
-  inline const ::std::string& plan() const;
-  inline void set_plan(const ::std::string& value);
-  inline void set_plan(const char* value);
-  inline void set_plan(const char* value, size_t size);
-  inline ::std::string* mutable_plan();
-  inline ::std::string* release_plan();
-  inline void set_allocated_plan(::std::string* plan);
+  // optional bool split_plan = 3 [default = false];
+  inline bool has_split_plan() const;
+  inline void clear_split_plan();
+  static const int kSplitPlanFieldNumber = 3;
+  inline bool split_plan() const;
+  inline void set_split_plan(bool value);
 
-  // @@protoc_insertion_point(class_scope:exec.user.RunQuery)
+  // @@protoc_insertion_point(class_scope:exec.user.GetQueryPlanFragments)
  private:
-  inline void set_has_results_mode();
-  inline void clear_has_results_mode();
+  inline void set_has_query();
+  inline void clear_has_query();
   inline void set_has_type();
   inline void clear_has_type();
-  inline void set_has_plan();
-  inline void clear_has_plan();
+  inline void set_has_split_plan();
+  inline void clear_has_split_plan();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  int results_mode_;
+  ::std::string* query_;
   int type_;
-  ::std::string* plan_;
+  bool split_plan_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
@@ -644,7 +902,126 @@ class RunQuery : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_User_2eproto();
 
   void InitAsDefaultInstance();
-  static RunQuery* default_instance_;
+  static GetQueryPlanFragments* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class QueryPlanFragments : public ::google::protobuf::Message {
+ public:
+  QueryPlanFragments();
+  virtual ~QueryPlanFragments();
+
+  QueryPlanFragments(const QueryPlanFragments& from);
+
+  inline QueryPlanFragments& operator=(const QueryPlanFragments& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const QueryPlanFragments& default_instance();
+
+  void Swap(QueryPlanFragments* other);
+
+  // implements Message ----------------------------------------------
+
+  QueryPlanFragments* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const QueryPlanFragments& from);
+  void MergeFrom(const QueryPlanFragments& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required .exec.shared.QueryResult.QueryState status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::shared::QueryResult_QueryState status() const;
+  inline void set_status(::exec::shared::QueryResult_QueryState value);
+
+  // optional .exec.shared.QueryId query_id = 2;
+  inline bool has_query_id() const;
+  inline void clear_query_id();
+  static const int kQueryIdFieldNumber = 2;
+  inline const ::exec::shared::QueryId& query_id() const;
+  inline ::exec::shared::QueryId* mutable_query_id();
+  inline ::exec::shared::QueryId* release_query_id();
+  inline void set_allocated_query_id(::exec::shared::QueryId* query_id);
+
+  // repeated .exec.bit.control.PlanFragment fragments = 3;
+  inline int fragments_size() const;
+  inline void clear_fragments();
+  static const int kFragmentsFieldNumber = 3;
+  inline const ::exec::bit::control::PlanFragment& fragments(int index) const;
+  inline ::exec::bit::control::PlanFragment* mutable_fragments(int index);
+  inline ::exec::bit::control::PlanFragment* add_fragments();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+      fragments() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+      mutable_fragments();
+
+  // optional .exec.shared.DrillPBError error = 4;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 4;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.QueryPlanFragments)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_query_id();
+  inline void clear_has_query_id();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::shared::QueryId* query_id_;
+  ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment > fragments_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static QueryPlanFragments* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -740,6 +1117,15 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline ::std::string* release_errormessage();
   inline void set_allocated_errormessage(::std::string* errormessage);
 
+  // optional .exec.user.RpcEndpointInfos server_infos = 6;
+  inline bool has_server_infos() const;
+  inline void clear_server_infos();
+  static const int kServerInfosFieldNumber = 6;
+  inline const ::exec::user::RpcEndpointInfos& server_infos() const;
+  inline ::exec::user::RpcEndpointInfos* mutable_server_infos();
+  inline ::exec::user::RpcEndpointInfos* release_server_infos();
+  inline void set_allocated_server_infos(::exec::user::RpcEndpointInfos* server_infos);
+
   // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
  private:
   inline void set_has_rpc_version();
@@ -750,6 +1136,8 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline void clear_has_errorid();
   inline void set_has_errormessage();
   inline void clear_has_errormessage();
+  inline void set_has_server_infos();
+  inline void clear_has_server_infos();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -757,6 +1145,892 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   int status_;
   ::std::string* errorid_;
   ::std::string* errormessage_;
+  ::exec::user::RpcEndpointInfos* server_infos_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static BitToUserHandshake* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LikeFilter : public ::google::protobuf::Message {
+ public:
+  LikeFilter();
+  virtual ~LikeFilter();
+
+  LikeFilter(const LikeFilter& from);
+
+  inline LikeFilter& operator=(const LikeFilter& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const LikeFilter& default_instance();
+
+  void Swap(LikeFilter* other);
+
+  // implements Message ----------------------------------------------
+
+  LikeFilter* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const LikeFilter& from);
+  void MergeFrom(const LikeFilter& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string pattern = 1;
+  inline bool has_pattern() const;
+  inline void clear_pattern();
+  static const int kPatternFieldNumber = 1;
+  inline const ::std::string& pattern() const;
+  inline void set_pattern(const ::std::string& value);
+  inline void set_pattern(const char* value);
+  inline void set_pattern(const char* value, size_t size);
+  inline ::std::string* mutable_pattern();
+  inline ::std::string* release_pattern();
+  inline void set_allocated_pattern(::std::string* pattern);
+
+  // optional string escape = 2;
+  inline bool has_escape() const;
+  inline void clear_escape();
+  static const int kEscapeFieldNumber = 2;
+  inline const ::std::string& escape() const;
+  inline void set_escape(const ::std::string& value);
+  inline void set_escape(const char* value);
+  inline void set_escape(const char* value, size_t size);
+  inline ::std::string* mutable_escape();
+  inline ::std::string* release_escape();
+  inline void set_allocated_escape(::std::string* escape);
+
+  // @@protoc_insertion_point(class_scope:exec.user.LikeFilter)
+ private:
+  inline void set_has_pattern();
+  inline void clear_has_pattern();
+  inline void set_has_escape();
+  inline void clear_has_escape();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* pattern_;
+  ::std::string* escape_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static LikeFilter* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetCatalogsReq : public ::google::protobuf::Message {
+ public:
+  GetCatalogsReq();
+  virtual ~GetCatalogsReq();
+
+  GetCatalogsReq(const GetCatalogsReq& from);
+
+  inline GetCatalogsReq& operator=(const GetCatalogsReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetCatalogsReq& default_instance();
+
+  void Swap(GetCatalogsReq* other);
+
+  // implements Message ----------------------------------------------
+
+  GetCatalogsReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetCatalogsReq& from);
+  void MergeFrom(const GetCatalogsReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.LikeFilter catalog_name_filter = 1;
+  inline bool has_catalog_name_filter() const;
+  inline void clear_catalog_name_filter();
+  static const int kCatalogNameFilterFieldNumber = 1;
+  inline const ::exec::user::LikeFilter& catalog_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_catalog_name_filter();
+  inline ::exec::user::LikeFilter* release_catalog_name_filter();
+  inline void set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetCatalogsReq)
+ private:
+  inline void set_has_catalog_name_filter();
+  inline void clear_has_catalog_name_filter();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::LikeFilter* catalog_name_filter_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetCatalogsReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CatalogMetadata : public ::google::protobuf::Message {
+ public:
+  CatalogMetadata();
+  virtual ~CatalogMetadata();
+
+  CatalogMetadata(const CatalogMetadata& from);
+
+  inline CatalogMetadata& operator=(const CatalogMetadata& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CatalogMetadata& default_instance();
+
+  void Swap(CatalogMetadata* other);
+
+  // implements Message ----------------------------------------------
+
+  CatalogMetadata* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CatalogMetadata& from);
+  void MergeFrom(const CatalogMetadata& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string catalog_name = 1;
+  inline bool has_catalog_name() const;
+  inline void clear_catalog_name();
+  static const int kCatalogNameFieldNumber = 1;
+  inline const ::std::string& catalog_name() const;
+  inline void set_catalog_name(const ::std::string& value);
+  inline void set_catalog_name(const char* value);
+  inline void set_catalog_name(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_name();
+  inline ::std::string* release_catalog_name();
+  inline void set_allocated_catalog_name(::std::string* catalog_name);
+
+  // optional string description = 2;
+  inline bool has_description() const;
+  inline void clear_description();
+  static const int kDescriptionFieldNumber = 2;
+  inline const ::std::string& description() const;
+  inline void set_description(const ::std::string& value);
+  inline void set_description(const char* value);
+  inline void set_description(const char* value, size_t size);
+  inline ::std::string* mutable_description();
+  inline ::std::string* release_description();
+  inline void set_allocated_description(::std::string* description);
+
+  // optional string connect = 3;
+  inline bool has_connect() const;
+  inline void clear_connect();
+  static const int kConnectFieldNumber = 3;
+  inline const ::std::string& connect() const;
+  inline void set_connect(const ::std::string& value);
+  inline void set_connect(const char* value);
+  inline void set_connect(const char* value, size_t size);
+  inline ::std::string* mutable_connect();
+  inline ::std::string* release_connect();
+  inline void set_allocated_connect(::std::string* connect);
+
+  // @@protoc_insertion_point(class_scope:exec.user.CatalogMetadata)
+ private:
+  inline void set_has_catalog_name();
+  inline void clear_has_catalog_name();
+  inline void set_has_description();
+  inline void clear_has_description();
+  inline void set_has_connect();
+  inline void clear_has_connect();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_name_;
+  ::std::string* description_;
+  ::std::string* connect_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static CatalogMetadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetCatalogsResp : public ::google::protobuf::Message {
+ public:
+  GetCatalogsResp();
+  virtual ~GetCatalogsResp();
+
+  GetCatalogsResp(const GetCatalogsResp& from);
+
+  inline GetCatalogsResp& operator=(const GetCatalogsResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetCatalogsResp& default_instance();
+
+  void Swap(GetCatalogsResp* other);
+
+  // implements Message ----------------------------------------------
+
+  GetCatalogsResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetCatalogsResp& from);
+  void MergeFrom(const GetCatalogsResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // repeated .exec.user.CatalogMetadata catalogs = 2;
+  inline int catalogs_size() const;
+  inline void clear_catalogs();
+  static const int kCatalogsFieldNumber = 2;
+  inline const ::exec::user::CatalogMetadata& catalogs(int index) const;
+  inline ::exec::user::CatalogMetadata* mutable_catalogs(int index);
+  inline ::exec::user::CatalogMetadata* add_catalogs();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata >&
+      catalogs() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata >*
+      mutable_catalogs();
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetCatalogsResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata > catalogs_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetCatalogsResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetSchemasReq : public ::google::protobuf::Message {
+ public:
+  GetSchemasReq();
+  virtual ~GetSchemasReq();
+
+  GetSchemasReq(const GetSchemasReq& from);
+
+  inline GetSchemasReq& operator=(const GetSchemasReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetSchemasReq& default_instance();
+
+  void Swap(GetSchemasReq* other);
+
+  // implements Message ----------------------------------------------
+
+  GetSchemasReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetSchemasReq& from);
+  void MergeFrom(const GetSchemasReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.LikeFilter catalog_name_filter = 1;
+  inline bool has_catalog_name_filter() const;
+  inline void clear_catalog_name_filter();
+  static const int kCatalogNameFilterFieldNumber = 1;
+  inline const ::exec::user::LikeFilter& catalog_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_catalog_name_filter();
+  inline ::exec::user::LikeFilter* release_catalog_name_filter();
+  inline void set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter);
+
+  // optional .exec.user.LikeFilter schema_name_filter = 2;
+  inline bool has_schema_name_filter() const;
+  inline void clear_schema_name_filter();
+  static const int kSchemaNameFilterFieldNumber = 2;
+  inline const ::exec::user::LikeFilter& schema_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_schema_name_filter();
+  inline ::exec::user::LikeFilter* release_schema_name_filter();
+  inline void set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetSchemasReq)
+ private:
+  inline void set_has_catalog_name_filter();
+  inline void clear_has_catalog_name_filter();
+  inline void set_has_schema_name_filter();
+  inline void clear_has_schema_name_filter();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::LikeFilter* catalog_name_filter_;
+  ::exec::user::LikeFilter* schema_name_filter_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetSchemasReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SchemaMetadata : public ::google::protobuf::Message {
+ public:
+  SchemaMetadata();
+  virtual ~SchemaMetadata();
+
+  SchemaMetadata(const SchemaMetadata& from);
+
+  inline SchemaMetadata& operator=(const SchemaMetadata& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SchemaMetadata& default_instance();
+
+  void Swap(SchemaMetadata* other);
+
+  // implements Message ----------------------------------------------
+
+  SchemaMetadata* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SchemaMetadata& from);
+  void MergeFrom(const SchemaMetadata& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string catalog_name = 1;
+  inline bool has_catalog_name() const;
+  inline void clear_catalog_name();
+  static const int kCatalogNameFieldNumber = 1;
+  inline const ::std::string& catalog_name() const;
+  inline void set_catalog_name(const ::std::string& value);
+  inline void set_catalog_name(const char* value);
+  inline void set_catalog_name(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_name();
+  inline ::std::string* release_catalog_name();
+  inline void set_allocated_catalog_name(::std::string* catalog_name);
+
+  // optional string schema_name = 2;
+  inline bool has_schema_name() const;
+  inline void clear_schema_name();
+  static const int kSchemaNameFieldNumber = 2;
+  inline const ::std::string& schema_name() const;
+  inline void set_schema_name(const ::std::string& value);
+  inline void set_schema_name(const char* value);
+  inline void set_schema_name(const char* value, size_t size);
+  inline ::std::string* mutable_schema_name();
+  inline ::std::string* release_schema_name();
+  inline void set_allocated_schema_name(::std::string* schema_name);
+
+  // optional string owner = 3;
+  inline bool has_owner() const;
+  inline void clear_owner();
+  static const int kOwnerFieldNumber = 3;
+  inline const ::std::string& owner() const;
+  inline void set_owner(const ::std::string& value);
+  inline void set_owner(const char* value);
+  inline void set_owner(const char* value, size_t size);
+  inline ::std::string* mutable_owner();
+  inline ::std::string* release_owner();
+  inline void set_allocated_owner(::std::string* owner);
+
+  // optional string type = 4;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 4;
+  inline const ::std::string& type() const;
+  inline void set_type(const ::std::string& value);
+  inline void set_type(const char* value);
+  inline void set_type(const char* value, size_t size);
+  inline ::std::string* mutable_type();
+  inline ::std::string* release_type();
+  inline void set_allocated_type(::std::string* type);
+
+  // optional string mutable = 5;
+  inline bool has_mutable_() const;
+  inline void clear_mutable_();
+  static const int kMutableFieldNumber = 5;
+  inline const ::std::string& mutable_() const;
+  inline void set_mutable_(const ::std::string& value);
+  inline void set_mutable_(const char* value);
+  inline void set_mutable_(const char* value, size_t size);
+  inline ::std::string* mutable_mutable_();
+  inline ::std::string* release_mutable_();
+  inline void set_allocated_mutable_(::std::string* mutable_);
+
+  // @@protoc_insertion_point(class_scope:exec.user.SchemaMetadata)
+ private:
+  inline void set_has_catalog_name();
+  inline void clear_has_catalog_name();
+  inline void set_has_schema_name();
+  inline void clear_has_schema_name();
+  inline void set_has_owner();
+  inline void clear_has_owner();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_mutable_();
+  inline void clear_has_mutable_();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_name_;
+  ::std::string* schema_name_;
+  ::std::string* owner_;
+  ::std::string* type_;
+  ::std::string* mutable__;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static SchemaMetadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetSchemasResp : public ::google::protobuf::Message {
+ public:
+  GetSchemasResp();
+  virtual ~GetSchemasResp();
+
+  GetSchemasResp(const GetSchemasResp& from);
+
+  inline GetSchemasResp& operator=(const GetSchemasResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetSchemasResp& default_instance();
+
+  void Swap(GetSchemasResp* other);
+
+  // implements Message ----------------------------------------------
+
+  GetSchemasResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetSchemasResp& from);
+  void MergeFrom(const GetSchemasResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // repeated .exec.user.SchemaMetadata schemas = 2;
+  inline int schemas_size() const;
+  inline void clear_schemas();
+  static const int kSchemasFieldNumber = 2;
+  inline const ::exec::user::SchemaMetadata& schemas(int index) const;
+  inline ::exec::user::SchemaMetadata* mutable_schemas(int index);
+  inline ::exec::user::SchemaMetadata* add_schemas();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata >&
+      schemas() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata >*
+      mutable_schemas();
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetSchemasResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata > schemas_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetSchemasResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetTablesReq : public ::google::protobuf::Message {
+ public:
+  GetTablesReq();
+  virtual ~GetTablesReq();
+
+  GetTablesReq(const GetTablesReq& from);
+
+  inline GetTablesReq& operator=(const GetTablesReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetTablesReq& default_instance();
+
+  void Swap(GetTablesReq* other);
+
+  // implements Message ----------------------------------------------
+
+  GetTablesReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetTablesReq& from);
+  void MergeFrom(const GetTablesReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.LikeFilter catalog_name_filter = 1;
+  inline bool has_catalog_name_filter() const;
+  inline void clear_catalog_name_filter();
+  static const int kCatalogNameFilterFieldNumber = 1;
+  inline const ::exec::user::LikeFilter& catalog_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_catalog_name_filter();
+  inline ::exec::user::LikeFilter* release_catalog_name_filter();
+  inline void set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter);
+
+  // optional .exec.user.LikeFilter schema_name_filter = 2;
+  inline bool has_schema_name_filter() const;
+  inline void clear_schema_name_filter();
+  static const int kSchemaNameFilterFieldNumber = 2;
+  inline const ::exec::user::LikeFilter& schema_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_schema_name_filter();
+  inline ::exec::user::LikeFilter* release_schema_name_filter();
+  inline void set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter);
+
+  // optional .exec.user.LikeFilter table_name_filter = 3;
+  inline bool has_table_name_filter() const;
+  inline void clear_table_name_filter();
+  static const int kTableNameFilterFieldNumber = 3;
+  inline const ::exec::user::LikeFilter& table_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_table_name_filter();
+  inline ::exec::user::LikeFilter* release_table_name_filter();
+  inline void set_allocated_table_name_filter(::exec::user::LikeFilter* table_name_filter);
+
+  // repeated string table_type_filter = 4;
+  inline int table_type_filter_size() const;
+  inline void clear_table_type_filter();
+  static const int kTableTypeFilterFieldNumber = 4;
+  inline const ::std::string& table_type_filter(int index) const;
+  inline ::std::string* mutable_table_type_filter(int index);
+  inline void set_table_type_filter(int index, const ::std::string& value);
+  inline void set_table_type_filter(int index, const char* value);
+  inline void set_table_type_filter(int index, const char* value, size_t size);
+  inline ::std::string* add_table_type_filter();
+  inline void add_table_type_filter(const ::std::string& value);
+  inline void add_table_type_filter(const char* value);
+  inline void add_table_type_filter(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& table_type_filter() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_table_type_filter();
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetTablesReq)
+ private:
+  inline void set_has_catalog_name_filter();
+  inline void clear_has_catalog_name_filter();
+  inline void set_has_schema_name_filter();
+  inline void clear_has_schema_name_filter();
+  inline void set_has_table_name_filter();
+  inline void clear_has_table_name_filter();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::LikeFilter* catalog_name_filter_;
+  ::exec::user::LikeFilter* schema_name_filter_;
+  ::exec::user::LikeFilter* table_name_filter_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> table_type_filter_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
@@ -766,7 +2040,1556 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_User_2eproto();
 
   void InitAsDefaultInstance();
-  static BitToUserHandshake* default_instance_;
+  static GetTablesReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class TableMetadata : public ::google::protobuf::Message {
+ public:
+  TableMetadata();
+  virtual ~TableMetadata();
+
+  TableMetadata(const TableMetadata& from);
+
+  inline TableMetadata& operator=(const TableMetadata& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const TableMetadata& default_instance();
+
+  void Swap(TableMetadata* other);
+
+  // implements Message ----------------------------------------------
+
+  TableMetadata* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const TableMetadata& from);
+  void MergeFrom(const TableMetadata& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string catalog_name = 1;
+  inline bool has_catalog_name() const;
+  inline void clear_catalog_name();
+  static const int kCatalogNameFieldNumber = 1;
+  inline const ::std::string& catalog_name() const;
+  inline void set_catalog_name(const ::std::string& value);
+  inline void set_catalog_name(const char* value);
+  inline void set_catalog_name(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_name();
+  inline ::std::string* release_catalog_name();
+  inline void set_allocated_catalog_name(::std::string* catalog_name);
+
+  // optional string schema_name = 2;
+  inline bool has_schema_name() const;
+  inline void clear_schema_name();
+  static const int kSchemaNameFieldNumber = 2;
+  inline const ::std::string& schema_name() const;
+  inline void set_schema_name(const ::std::string& value);
+  inline void set_schema_name(const char* value);
+  inline void set_schema_name(const char* value, size_t size);
+  inline ::std::string* mutable_schema_name();
+  inline ::std::string* release_schema_name();
+  inline void set_allocated_schema_name(::std::string* schema_name);
+
+  // optional string table_name = 3;
+  inline bool has_table_name() const;
+  inline void clear_table_name();
+  static const int kTableNameFieldNumber = 3;
+  inline const ::std::string& table_name() const;
+  inline void set_table_name(const ::std::string& value);
+  inline void set_table_name(const char* value);
+  inline void set_table_name(const char* value, size_t size);
+  inline ::std::string* mutable_table_name();
+  inline ::std::string* release_table_name();
+  inline void set_allocated_table_name(::std::string* table_name);
+
+  // optional string type = 4;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 4;
+  inline const ::std::string& type() const;
+  inline void set_type(const ::std::string& value);
+  inline void set_type(const char* value);
+  inline void set_type(const char* value, size_t size);
+  inline ::std::string* mutable_type();
+  inline ::std::string* release_type();
+  inline void set_allocated_type(::std::string* type);
+
+  // @@protoc_insertion_point(class_scope:exec.user.TableMetadata)
+ private:
+  inline void set_has_catalog_name();
+  inline void clear_has_catalog_name();
+  inline void set_has_schema_name();
+  inline void clear_has_schema_name();
+  inline void set_has_table_name();
+  inline void clear_has_table_name();
+  inline void set_has_type();
+  inline void clear_has_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_name_;
+  ::std::string* schema_name_;
+  ::std::string* table_name_;
+  ::std::string* type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static TableMetadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetTablesResp : public ::google::protobuf::Message {
+ public:
+  GetTablesResp();
+  virtual ~GetTablesResp();
+
+  GetTablesResp(const GetTablesResp& from);
+
+  inline GetTablesResp& operator=(const GetTablesResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetTablesResp& default_instance();
+
+  void Swap(GetTablesResp* other);
+
+  // implements Message ----------------------------------------------
+
+  GetTablesResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetTablesResp& from);
+  void MergeFrom(const GetTablesResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // repeated .exec.user.TableMetadata tables = 2;
+  inline int tables_size() const;
+  inline void clear_tables();
+  static const int kTablesFieldNumber = 2;
+  inline const ::exec::user::TableMetadata& tables(int index) const;
+  inline ::exec::user::TableMetadata* mutable_tables(int index);
+  inline ::exec::user::TableMetadata* add_tables();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata >&
+      tables() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata >*
+      mutable_tables();
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetTablesResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata > tables_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetTablesResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetColumnsReq : public ::google::protobuf::Message {
+ public:
+  GetColumnsReq();
+  virtual ~GetColumnsReq();
+
+  GetColumnsReq(const GetColumnsReq& from);
+
+  inline GetColumnsReq& operator=(const GetColumnsReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetColumnsReq& default_instance();
+
+  void Swap(GetColumnsReq* other);
+
+  // implements Message ----------------------------------------------
+
+  GetColumnsReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetColumnsReq& from);
+  void MergeFrom(const GetColumnsReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.LikeFilter catalog_name_filter = 1;
+  inline bool has_catalog_name_filter() const;
+  inline void clear_catalog_name_filter();
+  static const int kCatalogNameFilterFieldNumber = 1;
+  inline const ::exec::user::LikeFilter& catalog_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_catalog_name_filter();
+  inline ::exec::user::LikeFilter* release_catalog_name_filter();
+  inline void set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter);
+
+  // optional .exec.user.LikeFilter schema_name_filter = 2;
+  inline bool has_schema_name_filter() const;
+  inline void clear_schema_name_filter();
+  static const int kSchemaNameFilterFieldNumber = 2;
+  inline const ::exec::user::LikeFilter& schema_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_schema_name_filter();
+  inline ::exec::user::LikeFilter* release_schema_name_filter();
+  inline void set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter);
+
+  // optional .exec.user.LikeFilter table_name_filter = 3;
+  inline bool has_table_name_filter() const;
+  inline void clear_table_name_filter();
+  static const int kTableNameFilterFieldNumber = 3;
+  inline const ::exec::user::LikeFilter& table_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_table_name_filter();
+  inline ::exec::user::LikeFilter* release_table_name_filter();
+  inline void set_allocated_table_name_filter(::exec::user::LikeFilter* table_name_filter);
+
+  // optional .exec.user.LikeFilter column_name_filter = 4;
+  inline bool has_column_name_filter() const;
+  inline void clear_column_name_filter();
+  static const int kColumnNameFilterFieldNumber = 4;
+  inline const ::exec::user::LikeFilter& column_name_filter() const;
+  inline ::exec::user::LikeFilter* mutable_column_name_filter();
+  inline ::exec::user::LikeFilter* release_column_name_filter();
+  inline void set_allocated_column_name_filter(::exec::user::LikeFilter* column_name_filter);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetColumnsReq)
+ private:
+  inline void set_has_catalog_name_filter();
+  inline void clear_has_catalog_name_filter();
+  inline void set_has_schema_name_filter();
+  inline void clear_has_schema_name_filter();
+  inline void set_has_table_name_filter();
+  inline void clear_has_table_name_filter();
+  inline void set_has_column_name_filter();
+  inline void clear_has_column_name_filter();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::LikeFilter* catalog_name_filter_;
+  ::exec::user::LikeFilter* schema_name_filter_;
+  ::exec::user::LikeFilter* table_name_filter_;
+  ::exec::user::LikeFilter* column_name_filter_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetColumnsReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ColumnMetadata : public ::google::protobuf::Message {
+ public:
+  ColumnMetadata();
+  virtual ~ColumnMetadata();
+
+  ColumnMetadata(const ColumnMetadata& from);
+
+  inline ColumnMetadata& operator=(const ColumnMetadata& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ColumnMetadata& default_instance();
+
+  void Swap(ColumnMetadata* other);
+
+  // implements Message ----------------------------------------------
+
+  ColumnMetadata* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ColumnMetadata& from);
+  void MergeFrom(const ColumnMetadata& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string catalog_name = 1;
+  inline bool has_catalog_name() const;
+  inline void clear_catalog_name();
+  static const int kCatalogNameFieldNumber = 1;
+  inline const ::std::string& catalog_name() const;
+  inline void set_catalog_name(const ::std::string& value);
+  inline void set_catalog_name(const char* value);
+  inline void set_catalog_name(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_name();
+  inline ::std::string* release_catalog_name();
+  inline void set_allocated_catalog_name(::std::string* catalog_name);
+
+  // optional string schema_name = 2;
+  inline bool has_schema_name() const;
+  inline void clear_schema_name();
+  static const int kSchemaNameFieldNumber = 2;
+  inline const ::std::string& schema_name() const;
+  inline void set_schema_name(const ::std::string& value);
+  inline void set_schema_name(const char* value);
+  inline void set_schema_name(const char* value, size_t size);
+  inline ::std::string* mutable_schema_name();
+  inline ::std::string* release_schema_name();
+  inline void set_allocated_schema_name(::std::string* schema_name);
+
+  // optional string table_name = 3;
+  inline bool has_table_name() const;
+  inline void clear_table_name();
+  static const int kTableNameFieldNumber = 3;
+  inline const ::std::string& table_name() const;
+  inline void set_table_name(const ::std::string& value);
+  inline void set_table_name(const char* value);
+  inline void set_table_name(const char* value, size_t size);
+  inline ::std::string* mutable_table_name();
+  inline ::std::string* release_table_name();
+  inline void set_allocated_table_name(::std::string* table_name);
+
+  // optional string column_name = 4;
+  inline bool has_column_name() const;
+  inline void clear_column_name();
+  static const int kColumnNameFieldNumber = 4;
+  inline const ::std::string& column_name() const;
+  inline void set_column_name(const ::std::string& value);
+  inline void set_column_name(const char* value);
+  inline void set_column_name(const char* value, size_t size);
+  inline ::std::string* mutable_column_name();
+  inline ::std::string* release_column_name();
+  inline void set_allocated_column_name(::std::string* column_name);
+
+  // optional int32 ordinal_position = 5;
+  inline bool has_ordinal_position() const;
+  inline void clear_ordinal_position();
+  static const int kOrdinalPositionFieldNumber = 5;
+  inline ::google::protobuf::int32 ordinal_position() const;
+  inline void set_ordinal_position(::google::protobuf::int32 value);
+
+  // optional string default_value = 6;
+  inline bool has_default_value() const;
+  inline void clear_default_value();
+  static const int kDefaultValueFieldNumber = 6;
+  inline const ::std::string& default_value() const;
+  inline void set_default_value(const ::std::string& value);
+  inline void set_default_value(const char* value);
+  inline void set_default_value(const char* value, size_t size);
+  inline ::std::string* mutable_default_value();
+  inline ::std::string* release_default_value();
+  inline void set_allocated_default_value(::std::string* default_value);
+
+  // optional bool is_nullable = 7;
+  inline bool has_is_nullable() const;
+  inline void clear_is_nullable();
+  static const int kIsNullableFieldNumber = 7;
+  inline bool is_nullable() const;
+  inline void set_is_nullable(bool value);
+
+  // optional string data_type = 8;
+  inline bool has_data_type() const;
+  inline void clear_data_type();
+  static const int kDataTypeFieldNumber = 8;
+  inline const ::std::string& data_type() const;
+  inline void set_data_type(const ::std::string& value);
+  inline void set_data_type(const char* value);
+  inline void set_data_type(const char* value, size_t size);
+  inline ::std::string* mutable_data_type();
+  inline ::std::string* release_data_type();
+  inline void set_allocated_data_type(::std::string* data_type);
+
+  // optional int32 char_max_length = 9;
+  inline bool has_char_max_length() const;
+  inline void clear_char_max_length();
+  static const int kCharMaxLengthFieldNumber = 9;
+  inline ::google::protobuf::int32 char_max_length() const;
+  inline void set_char_max_length(::google::protobuf::int32 value);
+
+  // optional int32 char_octet_length = 10;
+  inline bool has_char_octet_length() const;
+  inline void clear_char_octet_length();
+  static const int kCharOctetLengthFieldNumber = 10;
+  inline ::google::protobuf::int32 char_octet_length() const;
+  inline void set_char_octet_length(::google::protobuf::int32 value);
+
+  // optional int32 numeric_precision = 11;
+  inline bool has_numeric_precision() const;
+  inline void clear_numeric_precision();
+  static const int kNumericPrecisionFieldNumber = 11;
+  inline ::google::protobuf::int32 numeric_precision() const;
+  inline void set_numeric_precision(::google::protobuf::int32 value);
+
+  // optional int32 numeric_precision_radix = 12;
+  inline bool has_numeric_precision_radix() const;
+  inline void clear_numeric_precision_radix();
+  static const int kNumericPrecisionRadixFieldNumber = 12;
+  inline ::google::protobuf::int32 numeric_precision_radix() const;
+  inline void set_numeric_precision_radix(::google::protobuf::int32 value);
+
+  // optional int32 numeric_scale = 13;
+  inline bool has_numeric_scale() const;
+  inline void clear_numeric_scale();
+  static const int kNumericScaleFieldNumber = 13;
+  inline ::google::protobuf::int32 numeric_scale() const;
+  inline void set_numeric_scale(::google::protobuf::int32 value);
+
+  // optional int32 date_time_precision = 14;
+  inline bool has_date_time_precision() const;
+  inline void clear_date_time_precision();
+  static const int kDateTimePrecisionFieldNumber = 14;
+  inline ::google::protobuf::int32 date_time_precision() const;
+  inline void set_date_time_precision(::google::protobuf::int32 value);
+
+  // optional string interval_type = 15;
+  inline bool has_interval_type() const;
+  inline void clear_interval_type();
+  static const int kIntervalTypeFieldNumber = 15;
+  inline const ::std::string& interval_type() const;
+  inline void set_interval_type(const ::std::string& value);
+  inline void set_interval_type(const char* value);
+  inline void set_interval_type(const char* value, size_t size);
+  inline ::std::string* mutable_interval_type();
+  inline ::std::string* release_interval_type();
+  inline void set_allocated_interval_type(::std::string* interval_type);
+
+  // optional int32 interval_precision = 16;
+  inline bool has_interval_precision() const;
+  inline void clear_interval_precision();
+  static const int kIntervalPrecisionFieldNumber = 16;
+  inline ::google::protobuf::int32 interval_precision() const;
+  inline void set_interval_precision(::google::protobuf::int32 value);
+
+  // optional int32 column_size = 17;
+  inline bool has_column_size() const;
+  inline void clear_column_size();
+  static const int kColumnSizeFieldNumber = 17;
+  inline ::google::protobuf::int32 column_size() const;
+  inline void set_column_size(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:exec.user.ColumnMetadata)
+ private:
+  inline void set_has_catalog_name();
+  inline void clear_has_catalog_name();
+  inline void set_has_schema_name();
+  inline void clear_has_schema_name();
+  inline void set_has_table_name();
+  inline void clear_has_table_name();
+  inline void set_has_column_name();
+  inline void clear_has_column_name();
+  inline void set_has_ordinal_position();
+  inline void clear_has_ordinal_position();
+  inline void set_has_default_value();
+  inline void clear_has_default_value();
+  inline void set_has_is_nullable();
+  inline void clear_has_is_nullable();
+  inline void set_has_data_type();
+  inline void clear_has_data_type();
+  inline void set_has_char_max_length();
+  inline void clear_has_char_max_length();
+  inline void set_has_char_octet_length();
+  inline void clear_has_char_octet_length();
+  inline void set_has_numeric_precision();
+  inline void clear_has_numeric_precision();
+  inline void set_has_numeric_precision_radix();
+  inline void clear_has_numeric_precision_radix();
+  inline void set_has_numeric_scale();
+  inline void clear_has_numeric_scale();
+  inline void set_has_date_time_precision();
+  inline void clear_has_date_time_precision();
+  inline void set_has_interval_type();
+  inline void clear_has_interval_type();
+  inline void set_has_interval_precision();
+  inline void clear_has_interval_precision();
+  inline void set_has_column_size();
+  inline void clear_has_column_size();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_name_;
+  ::std::string* schema_name_;
+  ::std::string* table_name_;
+  ::std::string* column_name_;
+  ::std::string* default_value_;
+  ::google::protobuf::int32 ordinal_position_;
+  bool is_nullable_;
+  ::std::string* data_type_;
+  ::google::protobuf::int32 char_max_length_;
+  ::google::protobuf::int32 char_octet_length_;
+  ::google::protobuf::int32 numeric_precision_;
+  ::google::protobuf::int32 numeric_precision_radix_;
+  ::google::protobuf::int32 numeric_scale_;
+  ::google::protobuf::int32 date_time_precision_;
+  ::std::string* interval_type_;
+  ::google::protobuf::int32 interval_precision_;
+  ::google::protobuf::int32 column_size_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static ColumnMetadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetColumnsResp : public ::google::protobuf::Message {
+ public:
+  GetColumnsResp();
+  virtual ~GetColumnsResp();
+
+  GetColumnsResp(const GetColumnsResp& from);
+
+  inline GetColumnsResp& operator=(const GetColumnsResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetColumnsResp& default_instance();
+
+  void Swap(GetColumnsResp* other);
+
+  // implements Message ----------------------------------------------
+
+  GetColumnsResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetColumnsResp& from);
+  void MergeFrom(const GetColumnsResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // repeated .exec.user.ColumnMetadata columns = 2;
+  inline int columns_size() const;
+  inline void clear_columns();
+  static const int kColumnsFieldNumber = 2;
+  inline const ::exec::user::ColumnMetadata& columns(int index) const;
+  inline ::exec::user::ColumnMetadata* mutable_columns(int index);
+  inline ::exec::user::ColumnMetadata* add_columns();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata >&
+      columns() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata >*
+      mutable_columns();
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetColumnsResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata > columns_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetColumnsResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CreatePreparedStatementReq : public ::google::protobuf::Message {
+ public:
+  CreatePreparedStatementReq();
+  virtual ~CreatePreparedStatementReq();
+
+  CreatePreparedStatementReq(const CreatePreparedStatementReq& from);
+
+  inline CreatePreparedStatementReq& operator=(const CreatePreparedStatementReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CreatePreparedStatementReq& default_instance();
+
+  void Swap(CreatePreparedStatementReq* other);
+
+  // implements Message ----------------------------------------------
+
+  CreatePreparedStatementReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CreatePreparedStatementReq& from);
+  void MergeFrom(const CreatePreparedStatementReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string sql_query = 1;
+  inline bool has_sql_query() const;
+  inline void clear_sql_query();
+  static const int kSqlQueryFieldNumber = 1;
+  inline const ::std::string& sql_query() const;
+  inline void set_sql_query(const ::std::string& value);
+  inline void set_sql_query(const char* value);
+  inline void set_sql_query(const char* value, size_t size);
+  inline ::std::string* mutable_sql_query();
+  inline ::std::string* release_sql_query();
+  inline void set_allocated_sql_query(::std::string* sql_query);
+
+  // @@protoc_insertion_point(class_scope:exec.user.CreatePreparedStatementReq)
+ private:
+  inline void set_has_sql_query();
+  inline void clear_has_sql_query();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* sql_query_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static CreatePreparedStatementReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ResultColumnMetadata : public ::google::protobuf::Message {
+ public:
+  ResultColumnMetadata();
+  virtual ~ResultColumnMetadata();
+
+  ResultColumnMetadata(const ResultColumnMetadata& from);
+
+  inline ResultColumnMetadata& operator=(const ResultColumnMetadata& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ResultColumnMetadata& default_instance();
+
+  void Swap(ResultColumnMetadata* other);
+
+  // implements Message ----------------------------------------------
+
+  ResultColumnMetadata* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ResultColumnMetadata& from);
+  void MergeFrom(const ResultColumnMetadata& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string catalog_name = 1;
+  inline bool has_catalog_name() const;
+  inline void clear_catalog_name();
+  static const int kCatalogNameFieldNumber = 1;
+  inline const ::std::string& catalog_name() const;
+  inline void set_catalog_name(const ::std::string& value);
+  inline void set_catalog_name(const char* value);
+  inline void set_catalog_name(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_name();
+  inline ::std::string* release_catalog_name();
+  inline void set_allocated_catalog_name(::std::string* catalog_name);
+
+  // optional string schema_name = 2;
+  inline bool has_schema_name() const;
+  inline void clear_schema_name();
+  static const int kSchemaNameFieldNumber = 2;
+  inline const ::std::string& schema_name() const;
+  inline void set_schema_name(const ::std::string& value);
+  inline void set_schema_name(const char* value);
+  inline void set_schema_name(const char* value, size_t size);
+  inline ::std::string* mutable_schema_name();
+  inline ::std::string* release_schema_name();
+  inline void set_allocated_schema_name(::std::string* schema_name);
+
+  // optional string table_name = 3;
+  inline bool has_table_name() const;
+  inline void clear_table_name();
+  static const int kTableNameFieldNumber = 3;
+  inline const ::std::string& table_name() const;
+  inline void set_table_name(const ::std::string& value);
+  inline void set_table_name(const char* value);
+  inline void set_table_name(const char* value, size_t size);
+  inline ::std::string* mutable_table_name();
+  inline ::std::string* release_table_name();
+  inline void set_allocated_table_name(::std::string* table_name);
+
+  // optional string column_name = 4;
+  inline bool has_column_name() const;
+  inline void clear_column_name();
+  static const int kColumnNameFieldNumber = 4;
+  inline const ::std::string& column_name() const;
+  inline void set_column_name(const ::std::string& value);
+  inline void set_column_name(const char* value);
+  inline void set_column_name(const char* value, size_t size);
+  inline ::std::string* mutable_column_name();
+  inline ::std::string* release_column_name();
+  inline void set_allocated_column_name(::std::string* column_name);
+
+  // optional string label = 5;
+  inline bool has_label() const;
+  inline void clear_label();
+  static const int kLabelFieldNumber = 5;
+  inline const ::std::string& label() const;
+  inline void set_label(const ::std::string& value);
+  inline void set_label(const char* value);
+  inline void set_label(const char* value, size_t size);
+  inline ::std::string* mutable_label();
+  inline ::std::string* release_label();
+  inline void set_allocated_label(::std::string* label);
+
+  // optional string data_type = 6;
+  inline bool has_data_type() const;
+  inline void clear_data_type();
+  static const int kDataTypeFieldNumber = 6;
+  inline const ::std::string& data_type() const;
+  inline void set_data_type(const ::std::string& value);
+  inline void set_data_type(const char* value);
+  inline void set_data_type(const char* value, size_t size);
+  inline ::std::string* mutable_data_type();
+  inline ::std::string* release_data_type();
+  inline void set_allocated_data_type(::std::string* data_type);
+
+  // optional bool is_nullable = 7;
+  inline bool has_is_nullable() const;
+  inline void clear_is_nullable();
+  static const int kIsNullableFieldNumber = 7;
+  inline bool is_nullable() const;
+  inline void set_is_nullable(bool value);
+
+  // optional int32 precision = 8;
+  inline bool has_precision() const;
+  inline void clear_precision();
+  static const int kPrecisionFieldNumber = 8;
+  inline ::google::protobuf::int32 precision() const;
+  inline void set_precision(::google::protobuf::int32 value);
+
+  // optional int32 scale = 9;
+  inline bool has_scale() const;
+  inline void clear_scale();
+  static const int kScaleFieldNumber = 9;
+  inline ::google::protobuf::int32 scale() const;
+  inline void set_scale(::google::protobuf::int32 value);
+
+  // optional bool signed = 10;
+  inline bool has_signed_() const;
+  inline void clear_signed_();
+  static const int kSignedFieldNumber = 10;
+  inline bool signed_() const;
+  inline void set_signed_(bool value);
+
+  // optional int32 display_size = 11;
+  inline bool has_display_size() const;
+  inline void clear_display_size();
+  static const int kDisplaySizeFieldNumber = 11;
+  inline ::google::protobuf::int32 display_size() const;
+  inline void set_display_size(::google::protobuf::int32 value);
+
+  // optional bool is_aliased = 12;
+  inline bool has_is_aliased() const;
+  inline void clear_is_aliased();
+  static const int kIsAliasedFieldNumber = 12;
+  inline bool is_aliased() const;
+  inline void set_is_aliased(bool value);
+
+  // optional .exec.user.ColumnSearchability searchability = 13;
+  inline bool has_searchability() const;
+  inline void clear_searchability();
+  static const int kSearchabilityFieldNumber = 13;
+  inline ::exec::user::ColumnSearchability searchability() const;
+  inline void set_searchability(::exec::user::ColumnSearchability value);
+
+  // optional .exec.user.ColumnUpdatability updatability = 14;
+  inline bool has_updatability() const;
+  inline void clear_updatability();
+  static const int kUpdatabilityFieldNumber = 14;
+  inline ::exec::user::ColumnUpdatability updatability() const;
+  inline void set_updatability(::exec::user::ColumnUpdatability value);
+
+  // optional bool auto_increment = 15;
+  inline bool has_auto_increment() const;
+  inline void clear_auto_increment();
+  static const int kAutoIncrementFieldNumber = 15;
+  inline bool auto_increment() const;
+  inline void set_auto_increment(bool value);
+
+  // optional bool case_sensitivity = 16;
+  inline bool has_case_sensitivity() const;
+  inline void clear_case_sensitivity();
+  static const int kCaseSensitivityFieldNumber = 16;
+  inline bool case_sensitivity() const;
+  inline void set_case_sensitivity(bool value);
+
+  // optional bool sortable = 17;
+  inline bool has_sortable() const;
+  inline void clear_sortable();
+  static const int kSortableFieldNumber = 17;
+  inline bool sortable() const;
+  inline void set_sortable(bool value);
+
+  // optional string class_name = 18;
+  inline bool has_class_name() const;
+  inline void clear_class_name();
+  static const int kClassNameFieldNumber = 18;
+  inline const ::std::string& class_name() const;
+  inline void set_class_name(const ::std::string& value);
+  inline void set_class_name(const char* value);
+  inline void set_class_name(const char* value, size_t size);
+  inline ::std::string* mutable_class_name();
+  inline ::std::string* release_class_name();
+  inline void set_allocated_class_name(::std::string* class_name);
+
+  // optional bool is_currency = 20;
+  inline bool has_is_currency() const;
+  inline void clear_is_currency();
+  static const int kIsCurrencyFieldNumber = 20;
+  inline bool is_currency() const;
+  inline void set_is_currency(bool value);
+
+  // @@protoc_insertion_point(class_scope:exec.user.ResultColumnMetadata)
+ private:
+  inline void set_has_catalog_name();
+  inline void clear_has_catalog_name();
+  inline void set_has_schema_name();
+  inline void clear_has_schema_name();
+  inline void set_has_table_name();
+  inline void clear_has_table_name();
+  inline void set_has_column_name();
+  inline void clear_has_column_name();
+  inline void set_has_label();
+  inline void clear_has_label();
+  inline void set_has_data_type();
+  inline void clear_has_data_type();
+  inline void set_has_is_nullable();
+  inline void clear_has_is_nullable();
+  inline void set_has_precision();
+  inline void clear_has_precision();
+  inline void set_has_scale();
+  inline void clear_has_scale();
+  inline void set_has_signed_();
+  inline void clear_has_signed_();
+  inline void set_has_display_size();
+  inline void clear_has_display_size();
+  inline void set_has_is_aliased();
+  inline void clear_has_is_aliased();
+  inline void set_has_searchability();
+  inline void clear_has_searchability();
+  inline void set_has_updatability();
+  inline void clear_has_updatability();
+  inline void set_has_auto_increment();
+  inline void clear_has_auto_increment();
+  inline void set_has_case_sensitivity();
+  inline void clear_has_case_sensitivity();
+  inline void set_has_sortable();
+  inline void clear_has_sortable();
+  inline void set_has_class_name();
+  inline void clear_has_class_name();
+  inline void set_has_is_currency();
+  inline void clear_has_is_currency();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_name_;
+  ::std::string* schema_name_;
+  ::std::string* table_name_;
+  ::std::string* column_name_;
+  ::std::string* label_;
+  ::std::string* data_type_;
+  ::google::protobuf::int32 precision_;
+  ::google::protobuf::int32 scale_;
+  ::google::protobuf::int32 display_size_;
+  bool is_nullable_;
+  bool signed__;
+  bool is_aliased_;
+  bool auto_increment_;
+  int searchability_;
+  int updatability_;
+  ::std::string* class_name_;
+  bool case_sensitivity_;
+  bool sortable_;
+  bool is_currency_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(19 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static ResultColumnMetadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class PreparedStatementHandle : public ::google::protobuf::Message {
+ public:
+  PreparedStatementHandle();
+  virtual ~PreparedStatementHandle();
+
+  PreparedStatementHandle(const PreparedStatementHandle& from);
+
+  inline PreparedStatementHandle& operator=(const PreparedStatementHandle& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const PreparedStatementHandle& default_instance();
+
+  void Swap(PreparedStatementHandle* other);
+
+  // implements Message ----------------------------------------------
+
+  PreparedStatementHandle* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const PreparedStatementHandle& from);
+  void MergeFrom(const PreparedStatementHandle& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bytes server_info = 1;
+  inline bool has_server_info() const;
+  inline void clear_server_info();
+  static const int kServerInfoFieldNumber = 1;
+  inline const ::std::string& server_info() const;
+  inline void set_server_info(const ::std::string& value);
+  inline void set_server_info(const char* value);
+  inline void set_server_info(const void* value, size_t size);
+  inline ::std::string* mutable_server_info();
+  inline ::std::string* release_server_info();
+  inline void set_allocated_server_info(::std::string* server_info);
+
+  // @@protoc_insertion_point(class_scope:exec.user.PreparedStatementHandle)
+ private:
+  inline void set_has_server_info();
+  inline void clear_has_server_info();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* server_info_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static PreparedStatementHandle* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class PreparedStatement : public ::google::protobuf::Message {
+ public:
+  PreparedStatement();
+  virtual ~PreparedStatement();
+
+  PreparedStatement(const PreparedStatement& from);
+
+  inline PreparedStatement& operator=(const PreparedStatement& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const PreparedStatement& default_instance();
+
+  void Swap(PreparedStatement* other);
+
+  // implements Message ----------------------------------------------
+
+  PreparedStatement* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const PreparedStatement& from);
+  void MergeFrom(const PreparedStatement& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .exec.user.ResultColumnMetadata columns = 1;
+  inline int columns_size() const;
+  inline void clear_columns();
+  static const int kColumnsFieldNumber = 1;
+  inline const ::exec::user::ResultColumnMetadata& columns(int index) const;
+  inline ::exec::user::ResultColumnMetadata* mutable_columns(int index);
+  inline ::exec::user::ResultColumnMetadata* add_columns();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata >&
+      columns() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata >*
+      mutable_columns();
+
+  // optional .exec.user.PreparedStatementHandle server_handle = 2;
+  inline bool has_server_handle() const;
+  inline void clear_server_handle();
+  static const int kServerHandleFieldNumber = 2;
+  inline const ::exec::user::PreparedStatementHandle& server_handle() const;
+  inline ::exec::user::PreparedStatementHandle* mutable_server_handle();
+  inline ::exec::user::PreparedStatementHandle* release_server_handle();
+  inline void set_allocated_server_handle(::exec::user::PreparedStatementHandle* server_handle);
+
+  // @@protoc_insertion_point(class_scope:exec.user.PreparedStatement)
+ private:
+  inline void set_has_server_handle();
+  inline void clear_has_server_handle();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata > columns_;
+  ::exec::user::PreparedStatementHandle* server_handle_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static PreparedStatement* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CreatePreparedStatementResp : public ::google::protobuf::Message {
+ public:
+  CreatePreparedStatementResp();
+  virtual ~CreatePreparedStatementResp();
+
+  CreatePreparedStatementResp(const CreatePreparedStatementResp& from);
+
+  inline CreatePreparedStatementResp& operator=(const CreatePreparedStatementResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CreatePreparedStatementResp& default_instance();
+
+  void Swap(CreatePreparedStatementResp* other);
+
+  // implements Message ----------------------------------------------
+
+  CreatePreparedStatementResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CreatePreparedStatementResp& from);
+  void MergeFrom(const CreatePreparedStatementResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // optional .exec.user.PreparedStatement prepared_statement = 2;
+  inline bool has_prepared_statement() const;
+  inline void clear_prepared_statement();
+  static const int kPreparedStatementFieldNumber = 2;
+  inline const ::exec::user::PreparedStatement& prepared_statement() const;
+  inline ::exec::user::PreparedStatement* mutable_prepared_statement();
+  inline ::exec::user::PreparedStatement* release_prepared_statement();
+  inline void set_allocated_prepared_statement(::exec::user::PreparedStatement* prepared_statement);
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.CreatePreparedStatementResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_prepared_statement();
+  inline void clear_has_prepared_statement();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::PreparedStatement* prepared_statement_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static CreatePreparedStatementResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class RunQuery : public ::google::protobuf::Message {
+ public:
+  RunQuery();
+  virtual ~RunQuery();
+
+  RunQuery(const RunQuery& from);
+
+  inline RunQuery& operator=(const RunQuery& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const RunQuery& default_instance();
+
+  void Swap(RunQuery* other);
+
+  // implements Message ----------------------------------------------
+
+  RunQuery* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const RunQuery& from);
+  void MergeFrom(const RunQuery& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.QueryResultsMode results_mode = 1;
+  inline bool has_results_mode() const;
+  inline void clear_results_mode();
+  static const int kResultsModeFieldNumber = 1;
+  inline ::exec::user::QueryResultsMode results_mode() const;
+  inline void set_results_mode(::exec::user::QueryResultsMode value);
+
+  // optional .exec.shared.QueryType type = 2;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 2;
+  inline ::exec::shared::QueryType type() const;
+  inline void set_type(::exec::shared::QueryType value);
+
+  // optional string plan = 3;
+  inline bool has_plan() const;
+  inline void clear_plan();
+  static const int kPlanFieldNumber = 3;
+  inline const ::std::string& plan() const;
+  inline void set_plan(const ::std::string& value);
+  inline void set_plan(const char* value);
+  inline void set_plan(const char* value, size_t size);
+  inline ::std::string* mutable_plan();
+  inline ::std::string* release_plan();
+  inline void set_allocated_plan(::std::string* plan);
+
+  // repeated .exec.bit.control.PlanFragment fragments = 4;
+  inline int fragments_size() const;
+  inline void clear_fragments();
+  static const int kFragmentsFieldNumber = 4;
+  inline const ::exec::bit::control::PlanFragment& fragments(int index) const;
+  inline ::exec::bit::control::PlanFragment* mutable_fragments(int index);
+  inline ::exec::bit::control::PlanFragment* add_fragments();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+      fragments() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+      mutable_fragments();
+
+  // optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;
+  inline bool has_prepared_statement_handle() const;
+  inline void clear_prepared_statement_handle();
+  static const int kPreparedStatementHandleFieldNumber = 5;
+  inline const ::exec::user::PreparedStatementHandle& prepared_statement_handle() const;
+  inline ::exec::user::PreparedStatementHandle* mutable_prepared_statement_handle();
+  inline ::exec::user::PreparedStatementHandle* release_prepared_statement_handle();
+  inline void set_allocated_prepared_statement_handle(::exec::user::PreparedStatementHandle* prepared_statement_handle);
+
+  // @@protoc_insertion_point(class_scope:exec.user.RunQuery)
+ private:
+  inline void set_has_results_mode();
+  inline void clear_has_results_mode();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_plan();
+  inline void clear_has_plan();
+  inline void set_has_prepared_statement_handle();
+  inline void clear_has_prepared_statement_handle();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int results_mode_;
+  int type_;
+  ::std::string* plan_;
+  ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment > fragments_;
+  ::exec::user::PreparedStatementHandle* prepared_statement_handle_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static RunQuery* default_instance_;
 };
 // ===================================================================
 
@@ -942,6 +3765,286 @@ UserProperties::properties() const {
 inline ::google::protobuf::RepeatedPtrField< ::exec::user::Property >*
 UserProperties::mutable_properties() {
   return &properties_;
+}
+
+// -------------------------------------------------------------------
+
+// RpcEndpointInfos
+
+// optional string name = 1;
+inline bool RpcEndpointInfos::has_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void RpcEndpointInfos::set_has_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void RpcEndpointInfos::clear_has_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void RpcEndpointInfos::clear_name() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& RpcEndpointInfos::name() const {
+  return *name_;
+}
+inline void RpcEndpointInfos::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void RpcEndpointInfos::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void RpcEndpointInfos::set_name(const char* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RpcEndpointInfos::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  return name_;
+}
+inline ::std::string* RpcEndpointInfos::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RpcEndpointInfos::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string version = 2;
+inline bool RpcEndpointInfos::has_version() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void RpcEndpointInfos::set_has_version() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void RpcEndpointInfos::clear_has_version() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void RpcEndpointInfos::clear_version() {
+  if (version_ != &::google::protobuf::internal::kEmptyString) {
+    version_->clear();
+  }
+  clear_has_version();
+}
+inline const ::std::string& RpcEndpointInfos::version() const {
+  return *version_;
+}
+inline void RpcEndpointInfos::set_version(const ::std::string& value) {
+  set_has_version();
+  if (version_ == &::google::protobuf::internal::kEmptyString) {
+    version_ = new ::std::string;
+  }
+  version_->assign(value);
+}
+inline void RpcEndpointInfos::set_version(const char* value) {
+  set_has_version();
+  if (version_ == &::google::protobuf::internal::kEmptyString) {
+    version_ = new ::std::string;
+  }
+  version_->assign(value);
+}
+inline void RpcEndpointInfos::set_version(const char* value, size_t size) {
+  set_has_version();
+  if (version_ == &::google::protobuf::internal::kEmptyString) {
+    version_ = new ::std::string;
+  }
+  version_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RpcEndpointInfos::mutable_version() {
+  set_has_version();
+  if (version_ == &::google::protobuf::internal::kEmptyString) {
+    version_ = new ::std::string;
+  }
+  return version_;
+}
+inline ::std::string* RpcEndpointInfos::release_version() {
+  clear_has_version();
+  if (version_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = version_;
+    version_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RpcEndpointInfos::set_allocated_version(::std::string* version) {
+  if (version_ != &::google::protobuf::internal::kEmptyString) {
+    delete version_;
+  }
+  if (version) {
+    set_has_version();
+    version_ = version;
+  } else {
+    clear_has_version();
+    version_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional uint32 majorVersion = 3;
+inline bool RpcEndpointInfos::has_majorversion() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void RpcEndpointInfos::set_has_majorversion() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void RpcEndpointInfos::clear_has_majorversion() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void RpcEndpointInfos::clear_majorversion() {
+  majorversion_ = 0u;
+  clear_has_majorversion();
+}
+inline ::google::protobuf::uint32 RpcEndpointInfos::majorversion() const {
+  return majorversion_;
+}
+inline void RpcEndpointInfos::set_majorversion(::google::protobuf::uint32 value) {
+  set_has_majorversion();
+  majorversion_ = value;
+}
+
+// optional uint32 minorVersion = 4;
+inline bool RpcEndpointInfos::has_minorversion() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void RpcEndpointInfos::set_has_minorversion() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void RpcEndpointInfos::clear_has_minorversion() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void RpcEndpointInfos::clear_minorversion() {
+  minorversion_ = 0u;
+  clear_has_minorversion();
+}
+inline ::google::protobuf::uint32 RpcEndpointInfos::minorversion() const {
+  return minorversion_;
+}
+inline void RpcEndpointInfos::set_minorversion(::google::protobuf::uint32 value) {
+  set_has_minorversion();
+  minorversion_ = value;
+}
+
+// optional uint32 patchVersion = 5;
+inline bool RpcEndpointInfos::has_patchversion() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void RpcEndpointInfos::set_has_patchversion() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void RpcEndpointInfos::clear_has_patchversion() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void RpcEndpointInfos::clear_patchversion() {
+  patchversion_ = 0u;
+  clear_has_patchversion();
+}
+inline ::google::protobuf::uint32 RpcEndpointInfos::patchversion() const {
+  return patchversion_;
+}
+inline void RpcEndpointInfos::set_patchversion(::google::protobuf::uint32 value) {
+  set_has_patchversion();
+  patchversion_ = value;
+}
+
+// optional string application = 6;
+inline bool RpcEndpointInfos::has_application() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void RpcEndpointInfos::set_has_application() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void RpcEndpointInfos::clear_has_application() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void RpcEndpointInfos::clear_application() {
+  if (application_ != &::google::protobuf::internal::kEmptyString) {
+    application_->clear();
+  }
+  clear_has_application();
+}
+inline const ::std::string& RpcEndpointInfos::application() const {
+  return *application_;
+}
+inline void RpcEndpointInfos::set_application(const ::std::string& value) {
+  set_has_application();
+  if (application_ == &::google::protobuf::internal::kEmptyString) {
+    application_ = new ::std::string;
+  }
+  application_->assign(value);
+}
+inline void RpcEndpointInfos::set_application(const char* value) {
+  set_has_application();
+  if (application_ == &::google::protobuf::internal::kEmptyString) {
+    application_ = new ::std::string;
+  }
+  application_->assign(value);
+}
+inline void RpcEndpointInfos::set_application(const char* value, size_t size) {
+  set_has_application();
+  if (application_ == &::google::protobuf::internal::kEmptyString) {
+    application_ = new ::std::string;
+  }
+  application_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RpcEndpointInfos::mutable_application() {
+  set_has_application();
+  if (application_ == &::google::protobuf::internal::kEmptyString) {
+    application_ = new ::std::string;
+  }
+  return application_;
+}
+inline ::std::string* RpcEndpointInfos::release_application() {
+  clear_has_application();
+  if (application_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = application_;
+    application_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RpcEndpointInfos::set_allocated_application(::std::string* application) {
+  if (application_ != &::google::protobuf::internal::kEmptyString) {
+    delete application_;
+  }
+  if (application) {
+    set_has_application();
+    application_ = application;
+  } else {
+    clear_has_application();
+    application_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------
@@ -1135,6 +4238,44 @@ inline void UserToBitHandshake::set_support_timeout(bool value) {
   support_timeout_ = value;
 }
 
+// optional .exec.user.RpcEndpointInfos client_infos = 8;
+inline bool UserToBitHandshake::has_client_infos() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void UserToBitHandshake::set_has_client_infos() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void UserToBitHandshake::clear_has_client_infos() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void UserToBitHandshake::clear_client_infos() {
+  if (client_infos_ != NULL) client_infos_->::exec::user::RpcEndpointInfos::Clear();
+  clear_has_client_infos();
+}
+inline const ::exec::user::RpcEndpointInfos& UserToBitHandshake::client_infos() const {
+  return client_infos_ != NULL ? *client_infos_ : *default_instance_->client_infos_;
+}
+inline ::exec::user::RpcEndpointInfos* UserToBitHandshake::mutable_client_infos() {
+  set_has_client_infos();
+  if (client_infos_ == NULL) client_infos_ = new ::exec::user::RpcEndpointInfos;
+  return client_infos_;
+}
+inline ::exec::user::RpcEndpointInfos* UserToBitHandshake::release_client_infos() {
+  clear_has_client_infos();
+  ::exec::user::RpcEndpointInfos* temp = client_infos_;
+  client_infos_ = NULL;
+  return temp;
+}
+inline void UserToBitHandshake::set_allocated_client_infos(::exec::user::RpcEndpointInfos* client_infos) {
+  delete client_infos_;
+  client_infos_ = client_infos;
+  if (client_infos) {
+    set_has_client_infos();
+  } else {
+    clear_has_client_infos();
+  }
+}
+
 // -------------------------------------------------------------------
 
 // RequestResults
@@ -1201,121 +4342,248 @@ inline void RequestResults::set_maximum_responses(::google::protobuf::int32 valu
 
 // -------------------------------------------------------------------
 
-// RunQuery
+// GetQueryPlanFragments
 
-// optional .exec.user.QueryResultsMode results_mode = 1;
-inline bool RunQuery::has_results_mode() const {
+// required string query = 1;
+inline bool GetQueryPlanFragments::has_query() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void RunQuery::set_has_results_mode() {
+inline void GetQueryPlanFragments::set_has_query() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void RunQuery::clear_has_results_mode() {
+inline void GetQueryPlanFragments::clear_has_query() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void RunQuery::clear_results_mode() {
-  results_mode_ = 1;
-  clear_has_results_mode();
+inline void GetQueryPlanFragments::clear_query() {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    query_->clear();
+  }
+  clear_has_query();
 }
-inline ::exec::user::QueryResultsMode RunQuery::results_mode() const {
-  return static_cast< ::exec::user::QueryResultsMode >(results_mode_);
+inline const ::std::string& GetQueryPlanFragments::query() const {
+  return *query_;
 }
-inline void RunQuery::set_results_mode(::exec::user::QueryResultsMode value) {
-  assert(::exec::user::QueryResultsMode_IsValid(value));
-  set_has_results_mode();
-  results_mode_ = value;
+inline void GetQueryPlanFragments::set_query(const ::std::string& value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void GetQueryPlanFragments::set_query(const char* value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void GetQueryPlanFragments::set_query(const char* value, size_t size) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* GetQueryPlanFragments::mutable_query() {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  return query_;
+}
+inline ::std::string* GetQueryPlanFragments::release_query() {
+  clear_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = query_;
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void GetQueryPlanFragments::set_allocated_query(::std::string* query) {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    delete query_;
+  }
+  if (query) {
+    set_has_query();
+    query_ = query;
+  } else {
+    clear_has_query();
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // optional .exec.shared.QueryType type = 2;
-inline bool RunQuery::has_type() const {
+inline bool GetQueryPlanFragments::has_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void RunQuery::set_has_type() {
+inline void GetQueryPlanFragments::set_has_type() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void RunQuery::clear_has_type() {
+inline void GetQueryPlanFragments::clear_has_type() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void RunQuery::clear_type() {
+inline void GetQueryPlanFragments::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::exec::shared::QueryType RunQuery::type() const {
+inline ::exec::shared::QueryType GetQueryPlanFragments::type() const {
   return static_cast< ::exec::shared::QueryType >(type_);
 }
-inline void RunQuery::set_type(::exec::shared::QueryType value) {
+inline void GetQueryPlanFragments::set_type(::exec::shared::QueryType value) {
   assert(::exec::shared::QueryType_IsValid(value));
   set_has_type();
   type_ = value;
 }
 
-// optional string plan = 3;
-inline bool RunQuery::has_plan() const {
+// optional bool split_plan = 3 [default = false];
+inline bool GetQueryPlanFragments::has_split_plan() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void RunQuery::set_has_plan() {
+inline void GetQueryPlanFragments::set_has_split_plan() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void RunQuery::clear_has_plan() {
+inline void GetQueryPlanFragments::clear_has_split_plan() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void RunQuery::clear_plan() {
-  if (plan_ != &::google::protobuf::internal::kEmptyString) {
-    plan_->clear();
-  }
-  clear_has_plan();
+inline void GetQueryPlanFragments::clear_split_plan() {
+  split_plan_ = false;
+  clear_has_split_plan();
 }
-inline const ::std::string& RunQuery::plan() const {
-  return *plan_;
+inline bool GetQueryPlanFragments::split_plan() const {
+  return split_plan_;
 }
-inline void RunQuery::set_plan(const ::std::string& value) {
-  set_has_plan();
-  if (plan_ == &::google::protobuf::internal::kEmptyString) {
-    plan_ = new ::std::string;
-  }
-  plan_->assign(value);
+inline void GetQueryPlanFragments::set_split_plan(bool value) {
+  set_has_split_plan();
+  split_plan_ = value;
 }
-inline void RunQuery::set_plan(const char* value) {
-  set_has_plan();
-  if (plan_ == &::google::protobuf::internal::kEmptyString) {
-    plan_ = new ::std::string;
-  }
-  plan_->assign(value);
+
+// -------------------------------------------------------------------
+
+// QueryPlanFragments
+
+// required .exec.shared.QueryResult.QueryState status = 1;
+inline bool QueryPlanFragments::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void RunQuery::set_plan(const char* value, size_t size) {
-  set_has_plan();
-  if (plan_ == &::google::protobuf::internal::kEmptyString) {
-    plan_ = new ::std::string;
-  }
-  plan_->assign(reinterpret_cast<const char*>(value), size);
+inline void QueryPlanFragments::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
 }
-inline ::std::string* RunQuery::mutable_plan() {
-  set_has_plan();
-  if (plan_ == &::google::protobuf::internal::kEmptyString) {
-    plan_ = new ::std::string;
-  }
-  return plan_;
+inline void QueryPlanFragments::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
 }
-inline ::std::string* RunQuery::release_plan() {
-  clear_has_plan();
-  if (plan_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
+inline void QueryPlanFragments::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::shared::QueryResult_QueryState QueryPlanFragments::status() const {
+  return static_cast< ::exec::shared::QueryResult_QueryState >(status_);
+}
+inline void QueryPlanFragments::set_status(::exec::shared::QueryResult_QueryState value) {
+  assert(::exec::shared::QueryResult_QueryState_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// optional .exec.shared.QueryId query_id = 2;
+inline bool QueryPlanFragments::has_query_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void QueryPlanFragments::set_has_query_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void QueryPlanFragments::clear_has_query_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void QueryPlanFragments::clear_query_id() {
+  if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
+  clear_has_query_id();
+}
+inline const ::exec::shared::QueryId& QueryPlanFragments::query_id() const {
+  return query_id_ != NULL ? *query_id_ : *default_instance_->query_id_;
+}
+inline ::exec::shared::QueryId* QueryPlanFragments::mutable_query_id() {
+  set_has_query_id();
+  if (query_id_ == NULL) query_id_ = new ::exec::shared::QueryId;
+  return query_id_;
+}
+inline ::exec::shared::QueryId* QueryPlanFragments::release_query_id() {
+  clear_has_query_id();
+  ::exec::shared::QueryId* temp = query_id_;
+  query_id_ = NULL;
+  return temp;
+}
+inline void QueryPlanFragments::set_allocated_query_id(::exec::shared::QueryId* query_id) {
+  delete query_id_;
+  query_id_ = query_id;
+  if (query_id) {
+    set_has_query_id();
   } else {
-    ::std::string* temp = plan_;
-    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
+    clear_has_query_id();
   }
 }
-inline void RunQuery::set_allocated_plan(::std::string* plan) {
-  if (plan_ != &::google::protobuf::internal::kEmptyString) {
-    delete plan_;
-  }
-  if (plan) {
-    set_has_plan();
-    plan_ = plan;
+
+// repeated .exec.bit.control.PlanFragment fragments = 3;
+inline int QueryPlanFragments::fragments_size() const {
+  return fragments_.size();
+}
+inline void QueryPlanFragments::clear_fragments() {
+  fragments_.Clear();
+}
+inline const ::exec::bit::control::PlanFragment& QueryPlanFragments::fragments(int index) const {
+  return fragments_.Get(index);
+}
+inline ::exec::bit::control::PlanFragment* QueryPlanFragments::mutable_fragments(int index) {
+  return fragments_.Mutable(index);
+}
+inline ::exec::bit::control::PlanFragment* QueryPlanFragments::add_fragments() {
+  return fragments_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+QueryPlanFragments::fragments() const {
+  return fragments_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+QueryPlanFragments::mutable_fragments() {
+  return &fragments_;
+}
+
+// optional .exec.shared.DrillPBError error = 4;
+inline bool QueryPlanFragments::has_error() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void QueryPlanFragments::set_has_error() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void QueryPlanFragments::clear_has_error() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void QueryPlanFragments::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& QueryPlanFragments::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* QueryPlanFragments::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* QueryPlanFragments::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void QueryPlanFragments::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
   } else {
-    clear_has_plan();
-    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_error();
   }
 }
 
@@ -1508,6 +4776,3815 @@ inline void BitToUserHandshake::set_allocated_errormessage(::std::string* errorm
   }
 }
 
+// optional .exec.user.RpcEndpointInfos server_infos = 6;
+inline bool BitToUserHandshake::has_server_infos() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void BitToUserHandshake::set_has_server_infos() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void BitToUserHandshake::clear_has_server_infos() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void BitToUserHandshake::clear_server_infos() {
+  if (server_infos_ != NULL) server_infos_->::exec::user::RpcEndpointInfos::Clear();
+  clear_has_server_infos();
+}
+inline const ::exec::user::RpcEndpointInfos& BitToUserHandshake::server_infos() const {
+  return server_infos_ != NULL ? *server_infos_ : *default_instance_->server_infos_;
+}
+inline ::exec::user::RpcEndpointInfos* BitToUserHandshake::mutable_server_infos() {
+  set_has_server_infos();
+  if (server_infos_ == NULL) server_infos_ = new ::exec::user::RpcEndpointInfos;
+  return server_infos_;
+}
+inline ::exec::user::RpcEndpointInfos* BitToUserHandshake::release_server_infos() {
+  clear_has_server_infos();
+  ::exec::user::RpcEndpointInfos* temp = server_infos_;
+  server_infos_ = NULL;
+  return temp;
+}
+inline void BitToUserHandshake::set_allocated_server_infos(::exec::user::RpcEndpointInfos* server_infos) {
+  delete server_infos_;
+  server_infos_ = server_infos;
+  if (server_infos) {
+    set_has_server_infos();
+  } else {
+    clear_has_server_infos();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// LikeFilter
+
+// optional string pattern = 1;
+inline bool LikeFilter::has_pattern() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LikeFilter::set_has_pattern() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LikeFilter::clear_has_pattern() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LikeFilter::clear_pattern() {
+  if (pattern_ != &::google::protobuf::internal::kEmptyString) {
+    pattern_->clear();
+  }
+  clear_has_pattern();
+}
+inline const ::std::string& LikeFilter::pattern() const {
+  return *pattern_;
+}
+inline void LikeFilter::set_pattern(const ::std::string& value) {
+  set_has_pattern();
+  if (pattern_ == &::google::protobuf::internal::kEmptyString) {
+    pattern_ = new ::std::string;
+  }
+  pattern_->assign(value);
+}
+inline void LikeFilter::set_pattern(const char* value) {
+  set_has_pattern();
+  if (pattern_ == &::google::protobuf::internal::kEmptyString) {
+    pattern_ = new ::std::string;
+  }
+  pattern_->assign(value);
+}
+inline void LikeFilter::set_pattern(const char* value, size_t size) {
+  set_has_pattern();
+  if (pattern_ == &::google::protobuf::internal::kEmptyString) {
+    pattern_ = new ::std::string;
+  }
+  pattern_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* LikeFilter::mutable_pattern() {
+  set_has_pattern();
+  if (pattern_ == &::google::protobuf::internal::kEmptyString) {
+    pattern_ = new ::std::string;
+  }
+  return pattern_;
+}
+inline ::std::string* LikeFilter::release_pattern() {
+  clear_has_pattern();
+  if (pattern_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = pattern_;
+    pattern_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void LikeFilter::set_allocated_pattern(::std::string* pattern) {
+  if (pattern_ != &::google::protobuf::internal::kEmptyString) {
+    delete pattern_;
+  }
+  if (pattern) {
+    set_has_pattern();
+    pattern_ = pattern;
+  } else {
+    clear_has_pattern();
+    pattern_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string escape = 2;
+inline bool LikeFilter::has_escape() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LikeFilter::set_has_escape() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LikeFilter::clear_has_escape() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LikeFilter::clear_escape() {
+  if (escape_ != &::google::protobuf::internal::kEmptyString) {
+    escape_->clear();
+  }
+  clear_has_escape();
+}
+inline const ::std::string& LikeFilter::escape() const {
+  return *escape_;
+}
+inline void LikeFilter::set_escape(const ::std::string& value) {
+  set_has_escape();
+  if (escape_ == &::google::protobuf::internal::kEmptyString) {
+    escape_ = new ::std::string;
+  }
+  escape_->assign(value);
+}
+inline void LikeFilter::set_escape(const char* value) {
+  set_has_escape();
+  if (escape_ == &::google::protobuf::internal::kEmptyString) {
+    escape_ = new ::std::string;
+  }
+  escape_->assign(value);
+}
+inline void LikeFilter::set_escape(const char* value, size_t size) {
+  set_has_escape();
+  if (escape_ == &::google::protobuf::internal::kEmptyString) {
+    escape_ = new ::std::string;
+  }
+  escape_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* LikeFilter::mutable_escape() {
+  set_has_escape();
+  if (escape_ == &::google::protobuf::internal::kEmptyString) {
+    escape_ = new ::std::string;
+  }
+  return escape_;
+}
+inline ::std::string* LikeFilter::release_escape() {
+  clear_has_escape();
+  if (escape_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = escape_;
+    escape_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void LikeFilter::set_allocated_escape(::std::string* escape) {
+  if (escape_ != &::google::protobuf::internal::kEmptyString) {
+    delete escape_;
+  }
+  if (escape) {
+    set_has_escape();
+    escape_ = escape;
+  } else {
+    clear_has_escape();
+    escape_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetCatalogsReq
+
+// optional .exec.user.LikeFilter catalog_name_filter = 1;
+inline bool GetCatalogsReq::has_catalog_name_filter() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetCatalogsReq::set_has_catalog_name_filter() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetCatalogsReq::clear_has_catalog_name_filter() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetCatalogsReq::clear_catalog_name_filter() {
+  if (catalog_name_filter_ != NULL) catalog_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_catalog_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetCatalogsReq::catalog_name_filter() const {
+  return catalog_name_filter_ != NULL ? *catalog_name_filter_ : *default_instance_->catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetCatalogsReq::mutable_catalog_name_filter() {
+  set_has_catalog_name_filter();
+  if (catalog_name_filter_ == NULL) catalog_name_filter_ = new ::exec::user::LikeFilter;
+  return catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetCatalogsReq::release_catalog_name_filter() {
+  clear_has_catalog_name_filter();
+  ::exec::user::LikeFilter* temp = catalog_name_filter_;
+  catalog_name_filter_ = NULL;
+  return temp;
+}
+inline void GetCatalogsReq::set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter) {
+  delete catalog_name_filter_;
+  catalog_name_filter_ = catalog_name_filter;
+  if (catalog_name_filter) {
+    set_has_catalog_name_filter();
+  } else {
+    clear_has_catalog_name_filter();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// CatalogMetadata
+
+// optional string catalog_name = 1;
+inline bool CatalogMetadata::has_catalog_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CatalogMetadata::set_has_catalog_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CatalogMetadata::clear_has_catalog_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CatalogMetadata::clear_catalog_name() {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_name_->clear();
+  }
+  clear_has_catalog_name();
+}
+inline const ::std::string& CatalogMetadata::catalog_name() const {
+  return *catalog_name_;
+}
+inline void CatalogMetadata::set_catalog_name(const ::std::string& value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void CatalogMetadata::set_catalog_name(const char* value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void CatalogMetadata::set_catalog_name(const char* value, size_t size) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CatalogMetadata::mutable_catalog_name() {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  return catalog_name_;
+}
+inline ::std::string* CatalogMetadata::release_catalog_name() {
+  clear_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_name_;
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CatalogMetadata::set_allocated_catalog_name(::std::string* catalog_name) {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_name_;
+  }
+  if (catalog_name) {
+    set_has_catalog_name();
+    catalog_name_ = catalog_name;
+  } else {
+    clear_has_catalog_name();
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string description = 2;
+inline bool CatalogMetadata::has_description() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CatalogMetadata::set_has_description() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CatalogMetadata::clear_has_description() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CatalogMetadata::clear_description() {
+  if (description_ != &::google::protobuf::internal::kEmptyString) {
+    description_->clear();
+  }
+  clear_has_description();
+}
+inline const ::std::string& CatalogMetadata::description() const {
+  return *description_;
+}
+inline void CatalogMetadata::set_description(const ::std::string& value) {
+  set_has_description();
+  if (description_ == &::google::protobuf::internal::kEmptyString) {
+    description_ = new ::std::string;
+  }
+  description_->assign(value);
+}
+inline void CatalogMetadata::set_description(const char* value) {
+  set_has_description();
+  if (description_ == &::google::protobuf::internal::kEmptyString) {
+    description_ = new ::std::string;
+  }
+  description_->assign(value);
+}
+inline void CatalogMetadata::set_description(const char* value, size_t size) {
+  set_has_description();
+  if (description_ == &::google::protobuf::internal::kEmptyString) {
+    description_ = new ::std::string;
+  }
+  description_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CatalogMetadata::mutable_description() {
+  set_has_description();
+  if (description_ == &::google::protobuf::internal::kEmptyString) {
+    description_ = new ::std::string;
+  }
+  return description_;
+}
+inline ::std::string* CatalogMetadata::release_description() {
+  clear_has_description();
+  if (description_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = description_;
+    description_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CatalogMetadata::set_allocated_description(::std::string* description) {
+  if (description_ != &::google::protobuf::internal::kEmptyString) {
+    delete description_;
+  }
+  if (description) {
+    set_has_description();
+    description_ = description;
+  } else {
+    clear_has_description();
+    description_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string connect = 3;
+inline bool CatalogMetadata::has_connect() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void CatalogMetadata::set_has_connect() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void CatalogMetadata::clear_has_connect() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void CatalogMetadata::clear_connect() {
+  if (connect_ != &::google::protobuf::internal::kEmptyString) {
+    connect_->clear();
+  }
+  clear_has_connect();
+}
+inline const ::std::string& CatalogMetadata::connect() const {
+  return *connect_;
+}
+inline void CatalogMetadata::set_connect(const ::std::string& value) {
+  set_has_connect();
+  if (connect_ == &::google::protobuf::internal::kEmptyString) {
+    connect_ = new ::std::string;
+  }
+  connect_->assign(value);
+}
+inline void CatalogMetadata::set_connect(const char* value) {
+  set_has_connect();
+  if (connect_ == &::google::protobuf::internal::kEmptyString) {
+    connect_ = new ::std::string;
+  }
+  connect_->assign(value);
+}
+inline void CatalogMetadata::set_connect(const char* value, size_t size) {
+  set_has_connect();
+  if (connect_ == &::google::protobuf::internal::kEmptyString) {
+    connect_ = new ::std::string;
+  }
+  connect_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CatalogMetadata::mutable_connect() {
+  set_has_connect();
+  if (connect_ == &::google::protobuf::internal::kEmptyString) {
+    connect_ = new ::std::string;
+  }
+  return connect_;
+}
+inline ::std::string* CatalogMetadata::release_connect() {
+  clear_has_connect();
+  if (connect_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = connect_;
+    connect_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CatalogMetadata::set_allocated_connect(::std::string* connect) {
+  if (connect_ != &::google::protobuf::internal::kEmptyString) {
+    delete connect_;
+  }
+  if (connect) {
+    set_has_connect();
+    connect_ = connect;
+  } else {
+    clear_has_connect();
+    connect_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetCatalogsResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool GetCatalogsResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetCatalogsResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetCatalogsResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetCatalogsResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus GetCatalogsResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void GetCatalogsResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// repeated .exec.user.CatalogMetadata catalogs = 2;
+inline int GetCatalogsResp::catalogs_size() const {
+  return catalogs_.size();
+}
+inline void GetCatalogsResp::clear_catalogs() {
+  catalogs_.Clear();
+}
+inline const ::exec::user::CatalogMetadata& GetCatalogsResp::catalogs(int index) const {
+  return catalogs_.Get(index);
+}
+inline ::exec::user::CatalogMetadata* GetCatalogsResp::mutable_catalogs(int index) {
+  return catalogs_.Mutable(index);
+}
+inline ::exec::user::CatalogMetadata* GetCatalogsResp::add_catalogs() {
+  return catalogs_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata >&
+GetCatalogsResp::catalogs() const {
+  return catalogs_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata >*
+GetCatalogsResp::mutable_catalogs() {
+  return &catalogs_;
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool GetCatalogsResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetCatalogsResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetCatalogsResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetCatalogsResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& GetCatalogsResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* GetCatalogsResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* GetCatalogsResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void GetCatalogsResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetSchemasReq
+
+// optional .exec.user.LikeFilter catalog_name_filter = 1;
+inline bool GetSchemasReq::has_catalog_name_filter() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetSchemasReq::set_has_catalog_name_filter() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetSchemasReq::clear_has_catalog_name_filter() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetSchemasReq::clear_catalog_name_filter() {
+  if (catalog_name_filter_ != NULL) catalog_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_catalog_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetSchemasReq::catalog_name_filter() const {
+  return catalog_name_filter_ != NULL ? *catalog_name_filter_ : *default_instance_->catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetSchemasReq::mutable_catalog_name_filter() {
+  set_has_catalog_name_filter();
+  if (catalog_name_filter_ == NULL) catalog_name_filter_ = new ::exec::user::LikeFilter;
+  return catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetSchemasReq::release_catalog_name_filter() {
+  clear_has_catalog_name_filter();
+  ::exec::user::LikeFilter* temp = catalog_name_filter_;
+  catalog_name_filter_ = NULL;
+  return temp;
+}
+inline void GetSchemasReq::set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter) {
+  delete catalog_name_filter_;
+  catalog_name_filter_ = catalog_name_filter;
+  if (catalog_name_filter) {
+    set_has_catalog_name_filter();
+  } else {
+    clear_has_catalog_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter schema_name_filter = 2;
+inline bool GetSchemasReq::has_schema_name_filter() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void GetSchemasReq::set_has_schema_name_filter() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void GetSchemasReq::clear_has_schema_name_filter() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void GetSchemasReq::clear_schema_name_filter() {
+  if (schema_name_filter_ != NULL) schema_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_schema_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetSchemasReq::schema_name_filter() const {
+  return schema_name_filter_ != NULL ? *schema_name_filter_ : *default_instance_->schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetSchemasReq::mutable_schema_name_filter() {
+  set_has_schema_name_filter();
+  if (schema_name_filter_ == NULL) schema_name_filter_ = new ::exec::user::LikeFilter;
+  return schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetSchemasReq::release_schema_name_filter() {
+  clear_has_schema_name_filter();
+  ::exec::user::LikeFilter* temp = schema_name_filter_;
+  schema_name_filter_ = NULL;
+  return temp;
+}
+inline void GetSchemasReq::set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter) {
+  delete schema_name_filter_;
+  schema_name_filter_ = schema_name_filter;
+  if (schema_name_filter) {
+    set_has_schema_name_filter();
+  } else {
+    clear_has_schema_name_filter();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// SchemaMetadata
+
+// optional string catalog_name = 1;
+inline bool SchemaMetadata::has_catalog_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SchemaMetadata::set_has_catalog_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SchemaMetadata::clear_has_catalog_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SchemaMetadata::clear_catalog_name() {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_name_->clear();
+  }
+  clear_has_catalog_name();
+}
+inline const ::std::string& SchemaMetadata::catalog_name() const {
+  return *catalog_name_;
+}
+inline void SchemaMetadata::set_catalog_name(const ::std::string& value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void SchemaMetadata::set_catalog_name(const char* value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void SchemaMetadata::set_catalog_name(const char* value, size_t size) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SchemaMetadata::mutable_catalog_name() {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  return catalog_name_;
+}
+inline ::std::string* SchemaMetadata::release_catalog_name() {
+  clear_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_name_;
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SchemaMetadata::set_allocated_catalog_name(::std::string* catalog_name) {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_name_;
+  }
+  if (catalog_name) {
+    set_has_catalog_name();
+    catalog_name_ = catalog_name;
+  } else {
+    clear_has_catalog_name();
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string schema_name = 2;
+inline bool SchemaMetadata::has_schema_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SchemaMetadata::set_has_schema_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SchemaMetadata::clear_has_schema_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SchemaMetadata::clear_schema_name() {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    schema_name_->clear();
+  }
+  clear_has_schema_name();
+}
+inline const ::std::string& SchemaMetadata::schema_name() const {
+  return *schema_name_;
+}
+inline void SchemaMetadata::set_schema_name(const ::std::string& value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void SchemaMetadata::set_schema_name(const char* value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void SchemaMetadata::set_schema_name(const char* value, size_t size) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SchemaMetadata::mutable_schema_name() {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  return schema_name_;
+}
+inline ::std::string* SchemaMetadata::release_schema_name() {
+  clear_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = schema_name_;
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SchemaMetadata::set_allocated_schema_name(::std::string* schema_name) {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete schema_name_;
+  }
+  if (schema_name) {
+    set_has_schema_name();
+    schema_name_ = schema_name;
+  } else {
+    clear_has_schema_name();
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string owner = 3;
+inline bool SchemaMetadata::has_owner() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SchemaMetadata::set_has_owner() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SchemaMetadata::clear_has_owner() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SchemaMetadata::clear_owner() {
+  if (owner_ != &::google::protobuf::internal::kEmptyString) {
+    owner_->clear();
+  }
+  clear_has_owner();
+}
+inline const ::std::string& SchemaMetadata::owner() const {
+  return *owner_;
+}
+inline void SchemaMetadata::set_owner(const ::std::string& value) {
+  set_has_owner();
+  if (owner_ == &::google::protobuf::internal::kEmptyString) {
+    owner_ = new ::std::string;
+  }
+  owner_->assign(value);
+}
+inline void SchemaMetadata::set_owner(const char* value) {
+  set_has_owner();
+  if (owner_ == &::google::protobuf::internal::kEmptyString) {
+    owner_ = new ::std::string;
+  }
+  owner_->assign(value);
+}
+inline void SchemaMetadata::set_owner(const char* value, size_t size) {
+  set_has_owner();
+  if (owner_ == &::google::protobuf::internal::kEmptyString) {
+    owner_ = new ::std::string;
+  }
+  owner_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SchemaMetadata::mutable_owner() {
+  set_has_owner();
+  if (owner_ == &::google::protobuf::internal::kEmptyString) {
+    owner_ = new ::std::string;
+  }
+  return owner_;
+}
+inline ::std::string* SchemaMetadata::release_owner() {
+  clear_has_owner();
+  if (owner_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = owner_;
+    owner_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SchemaMetadata::set_allocated_owner(::std::string* owner) {
+  if (owner_ != &::google::protobuf::internal::kEmptyString) {
+    delete owner_;
+  }
+  if (owner) {
+    set_has_owner();
+    owner_ = owner;
+  } else {
+    clear_has_owner();
+    owner_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string type = 4;
+inline bool SchemaMetadata::has_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SchemaMetadata::set_has_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SchemaMetadata::clear_has_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SchemaMetadata::clear_type() {
+  if (type_ != &::google::protobuf::internal::kEmptyString) {
+    type_->clear();
+  }
+  clear_has_type();
+}
+inline const ::std::string& SchemaMetadata::type() const {
+  return *type_;
+}
+inline void SchemaMetadata::set_type(const ::std::string& value) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(value);
+}
+inline void SchemaMetadata::set_type(const char* value) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(value);
+}
+inline void SchemaMetadata::set_type(const char* value, size_t size) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SchemaMetadata::mutable_type() {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  return type_;
+}
+inline ::std::string* SchemaMetadata::release_type() {
+  clear_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = type_;
+    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SchemaMetadata::set_allocated_type(::std::string* type) {
+  if (type_ != &::google::protobuf::internal::kEmptyString) {
+    delete type_;
+  }
+  if (type) {
+    set_has_type();
+    type_ = type;
+  } else {
+    clear_has_type();
+    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string mutable = 5;
+inline bool SchemaMetadata::has_mutable_() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void SchemaMetadata::set_has_mutable_() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void SchemaMetadata::clear_has_mutable_() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void SchemaMetadata::clear_mutable_() {
+  if (mutable__ != &::google::protobuf::internal::kEmptyString) {
+    mutable__->clear();
+  }
+  clear_has_mutable_();
+}
+inline const ::std::string& SchemaMetadata::mutable_() const {
+  return *mutable__;
+}
+inline void SchemaMetadata::set_mutable_(const ::std::string& value) {
+  set_has_mutable_();
+  if (mutable__ == &::google::protobuf::internal::kEmptyString) {
+    mutable__ = new ::std::string;
+  }
+  mutable__->assign(value);
+}
+inline void SchemaMetadata::set_mutable_(const char* value) {
+  set_has_mutable_();
+  if (mutable__ == &::google::protobuf::internal::kEmptyString) {
+    mutable__ = new ::std::string;
+  }
+  mutable__->assign(value);
+}
+inline void SchemaMetadata::set_mutable_(const char* value, size_t size) {
+  set_has_mutable_();
+  if (mutable__ == &::google::protobuf::internal::kEmptyString) {
+    mutable__ = new ::std::string;
+  }
+  mutable__->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SchemaMetadata::mutable_mutable_() {
+  set_has_mutable_();
+  if (mutable__ == &::google::protobuf::internal::kEmptyString) {
+    mutable__ = new ::std::string;
+  }
+  return mutable__;
+}
+inline ::std::string* SchemaMetadata::release_mutable_() {
+  clear_has_mutable_();
+  if (mutable__ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = mutable__;
+    mutable__ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SchemaMetadata::set_allocated_mutable_(::std::string* mutable_) {
+  if (mutable__ != &::google::protobuf::internal::kEmptyString) {
+    delete mutable__;
+  }
+  if (mutable_) {
+    set_has_mutable_();
+    mutable__ = mutable_;
+  } else {
+    clear_has_mutable_();
+    mutable__ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetSchemasResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool GetSchemasResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetSchemasResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetSchemasResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetSchemasResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus GetSchemasResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void GetSchemasResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// repeated .exec.user.SchemaMetadata schemas = 2;
+inline int GetSchemasResp::schemas_size() const {
+  return schemas_.size();
+}
+inline void GetSchemasResp::clear_schemas() {
+  schemas_.Clear();
+}
+inline const ::exec::user::SchemaMetadata& GetSchemasResp::schemas(int index) const {
+  return schemas_.Get(index);
+}
+inline ::exec::user::SchemaMetadata* GetSchemasResp::mutable_schemas(int index) {
+  return schemas_.Mutable(index);
+}
+inline ::exec::user::SchemaMetadata* GetSchemasResp::add_schemas() {
+  return schemas_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata >&
+GetSchemasResp::schemas() const {
+  return schemas_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata >*
+GetSchemasResp::mutable_schemas() {
+  return &schemas_;
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool GetSchemasResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetSchemasResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetSchemasResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetSchemasResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& GetSchemasResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* GetSchemasResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* GetSchemasResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void GetSchemasResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetTablesReq
+
+// optional .exec.user.LikeFilter catalog_name_filter = 1;
+inline bool GetTablesReq::has_catalog_name_filter() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetTablesReq::set_has_catalog_name_filter() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetTablesReq::clear_has_catalog_name_filter() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetTablesReq::clear_catalog_name_filter() {
+  if (catalog_name_filter_ != NULL) catalog_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_catalog_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetTablesReq::catalog_name_filter() const {
+  return catalog_name_filter_ != NULL ? *catalog_name_filter_ : *default_instance_->catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::mutable_catalog_name_filter() {
+  set_has_catalog_name_filter();
+  if (catalog_name_filter_ == NULL) catalog_name_filter_ = new ::exec::user::LikeFilter;
+  return catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::release_catalog_name_filter() {
+  clear_has_catalog_name_filter();
+  ::exec::user::LikeFilter* temp = catalog_name_filter_;
+  catalog_name_filter_ = NULL;
+  return temp;
+}
+inline void GetTablesReq::set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter) {
+  delete catalog_name_filter_;
+  catalog_name_filter_ = catalog_name_filter;
+  if (catalog_name_filter) {
+    set_has_catalog_name_filter();
+  } else {
+    clear_has_catalog_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter schema_name_filter = 2;
+inline bool GetTablesReq::has_schema_name_filter() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void GetTablesReq::set_has_schema_name_filter() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void GetTablesReq::clear_has_schema_name_filter() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void GetTablesReq::clear_schema_name_filter() {
+  if (schema_name_filter_ != NULL) schema_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_schema_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetTablesReq::schema_name_filter() const {
+  return schema_name_filter_ != NULL ? *schema_name_filter_ : *default_instance_->schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::mutable_schema_name_filter() {
+  set_has_schema_name_filter();
+  if (schema_name_filter_ == NULL) schema_name_filter_ = new ::exec::user::LikeFilter;
+  return schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::release_schema_name_filter() {
+  clear_has_schema_name_filter();
+  ::exec::user::LikeFilter* temp = schema_name_filter_;
+  schema_name_filter_ = NULL;
+  return temp;
+}
+inline void GetTablesReq::set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter) {
+  delete schema_name_filter_;
+  schema_name_filter_ = schema_name_filter;
+  if (schema_name_filter) {
+    set_has_schema_name_filter();
+  } else {
+    clear_has_schema_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter table_name_filter = 3;
+inline bool GetTablesReq::has_table_name_filter() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetTablesReq::set_has_table_name_filter() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetTablesReq::clear_has_table_name_filter() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetTablesReq::clear_table_name_filter() {
+  if (table_name_filter_ != NULL) table_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_table_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetTablesReq::table_name_filter() const {
+  return table_name_filter_ != NULL ? *table_name_filter_ : *default_instance_->table_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::mutable_table_name_filter() {
+  set_has_table_name_filter();
+  if (table_name_filter_ == NULL) table_name_filter_ = new ::exec::user::LikeFilter;
+  return table_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetTablesReq::release_table_name_filter() {
+  clear_has_table_name_filter();
+  ::exec::user::LikeFilter* temp = table_name_filter_;
+  table_name_filter_ = NULL;
+  return temp;
+}
+inline void GetTablesReq::set_allocated_table_name_filter(::exec::user::LikeFilter* table_name_filter) {
+  delete table_name_filter_;
+  table_name_filter_ = table_name_filter;
+  if (table_name_filter) {
+    set_has_table_name_filter();
+  } else {
+    clear_has_table_name_filter();
+  }
+}
+
+// repeated string table_type_filter = 4;
+inline int GetTablesReq::table_type_filter_size() const {
+  return table_type_filter_.size();
+}
+inline void GetTablesReq::clear_table_type_filter() {
+  table_type_filter_.Clear();
+}
+inline const ::std::string& GetTablesReq::table_type_filter(int index) const {
+  return table_type_filter_.Get(index);
+}
+inline ::std::string* GetTablesReq::mutable_table_type_filter(int index) {
+  return table_type_filter_.Mutable(index);
+}
+inline void GetTablesReq::set_table_type_filter(int index, const ::std::string& value) {
+  table_type_filter_.Mutable(index)->assign(value);
+}
+inline void GetTablesReq::set_table_type_filter(int index, const char* value) {
+  table_type_filter_.Mutable(index)->assign(value);
+}
+inline void GetTablesReq::set_table_type_filter(int index, const char* value, size_t size) {
+  table_type_filter_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* GetTablesReq::add_table_type_filter() {
+  return table_type_filter_.Add();
+}
+inline void GetTablesReq::add_table_type_filter(const ::std::string& value) {
+  table_type_filter_.Add()->assign(value);
+}
+inline void GetTablesReq::add_table_type_filter(const char* value) {
+  table_type_filter_.Add()->assign(value);
+}
+inline void GetTablesReq::add_table_type_filter(const char* value, size_t size) {
+  table_type_filter_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+GetTablesReq::table_type_filter() const {
+  return table_type_filter_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+GetTablesReq::mutable_table_type_filter() {
+  return &table_type_filter_;
+}
+
+// -------------------------------------------------------------------
+
+// TableMetadata
+
+// optional string catalog_name = 1;
+inline bool TableMetadata::has_catalog_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void TableMetadata::set_has_catalog_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void TableMetadata::clear_has_catalog_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void TableMetadata::clear_catalog_name() {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_name_->clear();
+  }
+  clear_has_catalog_name();
+}
+inline const ::std::string& TableMetadata::catalog_name() const {
+  return *catalog_name_;
+}
+inline void TableMetadata::set_catalog_name(const ::std::string& value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void TableMetadata::set_catalog_name(const char* value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void TableMetadata::set_catalog_name(const char* value, size_t size) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* TableMetadata::mutable_catalog_name() {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  return catalog_name_;
+}
+inline ::std::string* TableMetadata::release_catalog_name() {
+  clear_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_name_;
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void TableMetadata::set_allocated_catalog_name(::std::string* catalog_name) {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_name_;
+  }
+  if (catalog_name) {
+    set_has_catalog_name();
+    catalog_name_ = catalog_name;
+  } else {
+    clear_has_catalog_name();
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string schema_name = 2;
+inline bool TableMetadata::has_schema_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void TableMetadata::set_has_schema_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void TableMetadata::clear_has_schema_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void TableMetadata::clear_schema_name() {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    schema_name_->clear();
+  }
+  clear_has_schema_name();
+}
+inline const ::std::string& TableMetadata::schema_name() const {
+  return *schema_name_;
+}
+inline void TableMetadata::set_schema_name(const ::std::string& value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void TableMetadata::set_schema_name(const char* value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void TableMetadata::set_schema_name(const char* value, size_t size) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* TableMetadata::mutable_schema_name() {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  return schema_name_;
+}
+inline ::std::string* TableMetadata::release_schema_name() {
+  clear_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = schema_name_;
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void TableMetadata::set_allocated_schema_name(::std::string* schema_name) {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete schema_name_;
+  }
+  if (schema_name) {
+    set_has_schema_name();
+    schema_name_ = schema_name;
+  } else {
+    clear_has_schema_name();
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string table_name = 3;
+inline bool TableMetadata::has_table_name() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void TableMetadata::set_has_table_name() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void TableMetadata::clear_has_table_name() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void TableMetadata::clear_table_name() {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    table_name_->clear();
+  }
+  clear_has_table_name();
+}
+inline const ::std::string& TableMetadata::table_name() const {
+  return *table_name_;
+}
+inline void TableMetadata::set_table_name(const ::std::string& value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void TableMetadata::set_table_name(const char* value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void TableMetadata::set_table_name(const char* value, size_t size) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* TableMetadata::mutable_table_name() {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  return table_name_;
+}
+inline ::std::string* TableMetadata::release_table_name() {
+  clear_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = table_name_;
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void TableMetadata::set_allocated_table_name(::std::string* table_name) {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete table_name_;
+  }
+  if (table_name) {
+    set_has_table_name();
+    table_name_ = table_name;
+  } else {
+    clear_has_table_name();
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string type = 4;
+inline bool TableMetadata::has_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void TableMetadata::set_has_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void TableMetadata::clear_has_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void TableMetadata::clear_type() {
+  if (type_ != &::google::protobuf::internal::kEmptyString) {
+    type_->clear();
+  }
+  clear_has_type();
+}
+inline const ::std::string& TableMetadata::type() const {
+  return *type_;
+}
+inline void TableMetadata::set_type(const ::std::string& value) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(value);
+}
+inline void TableMetadata::set_type(const char* value) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(value);
+}
+inline void TableMetadata::set_type(const char* value, size_t size) {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  type_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* TableMetadata::mutable_type() {
+  set_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    type_ = new ::std::string;
+  }
+  return type_;
+}
+inline ::std::string* TableMetadata::release_type() {
+  clear_has_type();
+  if (type_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = type_;
+    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void TableMetadata::set_allocated_type(::std::string* type) {
+  if (type_ != &::google::protobuf::internal::kEmptyString) {
+    delete type_;
+  }
+  if (type) {
+    set_has_type();
+    type_ = type;
+  } else {
+    clear_has_type();
+    type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetTablesResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool GetTablesResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetTablesResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetTablesResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetTablesResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus GetTablesResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void GetTablesResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// repeated .exec.user.TableMetadata tables = 2;
+inline int GetTablesResp::tables_size() const {
+  return tables_.size();
+}
+inline void GetTablesResp::clear_tables() {
+  tables_.Clear();
+}
+inline const ::exec::user::TableMetadata& GetTablesResp::tables(int index) const {
+  return tables_.Get(index);
+}
+inline ::exec::user::TableMetadata* GetTablesResp::mutable_tables(int index) {
+  return tables_.Mutable(index);
+}
+inline ::exec::user::TableMetadata* GetTablesResp::add_tables() {
+  return tables_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata >&
+GetTablesResp::tables() const {
+  return tables_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata >*
+GetTablesResp::mutable_tables() {
+  return &tables_;
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool GetTablesResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetTablesResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetTablesResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetTablesResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& GetTablesResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* GetTablesResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* GetTablesResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void GetTablesResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// GetColumnsReq
+
+// optional .exec.user.LikeFilter catalog_name_filter = 1;
+inline bool GetColumnsReq::has_catalog_name_filter() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetColumnsReq::set_has_catalog_name_filter() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetColumnsReq::clear_has_catalog_name_filter() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetColumnsReq::clear_catalog_name_filter() {
+  if (catalog_name_filter_ != NULL) catalog_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_catalog_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetColumnsReq::catalog_name_filter() const {
+  return catalog_name_filter_ != NULL ? *catalog_name_filter_ : *default_instance_->catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::mutable_catalog_name_filter() {
+  set_has_catalog_name_filter();
+  if (catalog_name_filter_ == NULL) catalog_name_filter_ = new ::exec::user::LikeFilter;
+  return catalog_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::release_catalog_name_filter() {
+  clear_has_catalog_name_filter();
+  ::exec::user::LikeFilter* temp = catalog_name_filter_;
+  catalog_name_filter_ = NULL;
+  return temp;
+}
+inline void GetColumnsReq::set_allocated_catalog_name_filter(::exec::user::LikeFilter* catalog_name_filter) {
+  delete catalog_name_filter_;
+  catalog_name_filter_ = catalog_name_filter;
+  if (catalog_name_filter) {
+    set_has_catalog_name_filter();
+  } else {
+    clear_has_catalog_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter schema_name_filter = 2;
+inline bool GetColumnsReq::has_schema_name_filter() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void GetColumnsReq::set_has_schema_name_filter() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void GetColumnsReq::clear_has_schema_name_filter() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void GetColumnsReq::clear_schema_name_filter() {
+  if (schema_name_filter_ != NULL) schema_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_schema_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetColumnsReq::schema_name_filter() const {
+  return schema_name_filter_ != NULL ? *schema_name_filter_ : *default_instance_->schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::mutable_schema_name_filter() {
+  set_has_schema_name_filter();
+  if (schema_name_filter_ == NULL) schema_name_filter_ = new ::exec::user::LikeFilter;
+  return schema_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::release_schema_name_filter() {
+  clear_has_schema_name_filter();
+  ::exec::user::LikeFilter* temp = schema_name_filter_;
+  schema_name_filter_ = NULL;
+  return temp;
+}
+inline void GetColumnsReq::set_allocated_schema_name_filter(::exec::user::LikeFilter* schema_name_filter) {
+  delete schema_name_filter_;
+  schema_name_filter_ = schema_name_filter;
+  if (schema_name_filter) {
+    set_has_schema_name_filter();
+  } else {
+    clear_has_schema_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter table_name_filter = 3;
+inline bool GetColumnsReq::has_table_name_filter() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetColumnsReq::set_has_table_name_filter() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetColumnsReq::clear_has_table_name_filter() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetColumnsReq::clear_table_name_filter() {
+  if (table_name_filter_ != NULL) table_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_table_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetColumnsReq::table_name_filter() const {
+  return table_name_filter_ != NULL ? *table_name_filter_ : *default_instance_->table_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::mutable_table_name_filter() {
+  set_has_table_name_filter();
+  if (table_name_filter_ == NULL) table_name_filter_ = new ::exec::user::LikeFilter;
+  return table_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::release_table_name_filter() {
+  clear_has_table_name_filter();
+  ::exec::user::LikeFilter* temp = table_name_filter_;
+  table_name_filter_ = NULL;
+  return temp;
+}
+inline void GetColumnsReq::set_allocated_table_name_filter(::exec::user::LikeFilter* table_name_filter) {
+  delete table_name_filter_;
+  table_name_filter_ = table_name_filter;
+  if (table_name_filter) {
+    set_has_table_name_filter();
+  } else {
+    clear_has_table_name_filter();
+  }
+}
+
+// optional .exec.user.LikeFilter column_name_filter = 4;
+inline bool GetColumnsReq::has_column_name_filter() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void GetColumnsReq::set_has_column_name_filter() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void GetColumnsReq::clear_has_column_name_filter() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void GetColumnsReq::clear_column_name_filter() {
+  if (column_name_filter_ != NULL) column_name_filter_->::exec::user::LikeFilter::Clear();
+  clear_has_column_name_filter();
+}
+inline const ::exec::user::LikeFilter& GetColumnsReq::column_name_filter() const {
+  return column_name_filter_ != NULL ? *column_name_filter_ : *default_instance_->column_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::mutable_column_name_filter() {
+  set_has_column_name_filter();
+  if (column_name_filter_ == NULL) column_name_filter_ = new ::exec::user::LikeFilter;
+  return column_name_filter_;
+}
+inline ::exec::user::LikeFilter* GetColumnsReq::release_column_name_filter() {
+  clear_has_column_name_filter();
+  ::exec::user::LikeFilter* temp = column_name_filter_;
+  column_name_filter_ = NULL;
+  return temp;
+}
+inline void GetColumnsReq::set_allocated_column_name_filter(::exec::user::LikeFilter* column_name_filter) {
+  delete column_name_filter_;
+  column_name_filter_ = column_name_filter;
+  if (column_name_filter) {
+    set_has_column_name_filter();
+  } else {
+    clear_has_column_name_filter();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// ColumnMetadata
+
+// optional string catalog_name = 1;
+inline bool ColumnMetadata::has_catalog_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ColumnMetadata::set_has_catalog_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ColumnMetadata::clear_has_catalog_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ColumnMetadata::clear_catalog_name() {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_name_->clear();
+  }
+  clear_has_catalog_name();
+}
+inline const ::std::string& ColumnMetadata::catalog_name() const {
+  return *catalog_name_;
+}
+inline void ColumnMetadata::set_catalog_name(const ::std::string& value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void ColumnMetadata::set_catalog_name(const char* value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void ColumnMetadata::set_catalog_name(const char* value, size_t size) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_catalog_name() {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  return catalog_name_;
+}
+inline ::std::string* ColumnMetadata::release_catalog_name() {
+  clear_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_name_;
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_catalog_name(::std::string* catalog_name) {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_name_;
+  }
+  if (catalog_name) {
+    set_has_catalog_name();
+    catalog_name_ = catalog_name;
+  } else {
+    clear_has_catalog_name();
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string schema_name = 2;
+inline bool ColumnMetadata::has_schema_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ColumnMetadata::set_has_schema_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ColumnMetadata::clear_has_schema_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ColumnMetadata::clear_schema_name() {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    schema_name_->clear();
+  }
+  clear_has_schema_name();
+}
+inline const ::std::string& ColumnMetadata::schema_name() const {
+  return *schema_name_;
+}
+inline void ColumnMetadata::set_schema_name(const ::std::string& value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void ColumnMetadata::set_schema_name(const char* value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void ColumnMetadata::set_schema_name(const char* value, size_t size) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_schema_name() {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  return schema_name_;
+}
+inline ::std::string* ColumnMetadata::release_schema_name() {
+  clear_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = schema_name_;
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_schema_name(::std::string* schema_name) {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete schema_name_;
+  }
+  if (schema_name) {
+    set_has_schema_name();
+    schema_name_ = schema_name;
+  } else {
+    clear_has_schema_name();
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string table_name = 3;
+inline bool ColumnMetadata::has_table_name() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ColumnMetadata::set_has_table_name() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ColumnMetadata::clear_has_table_name() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ColumnMetadata::clear_table_name() {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    table_name_->clear();
+  }
+  clear_has_table_name();
+}
+inline const ::std::string& ColumnMetadata::table_name() const {
+  return *table_name_;
+}
+inline void ColumnMetadata::set_table_name(const ::std::string& value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void ColumnMetadata::set_table_name(const char* value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void ColumnMetadata::set_table_name(const char* value, size_t size) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_table_name() {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  return table_name_;
+}
+inline ::std::string* ColumnMetadata::release_table_name() {
+  clear_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = table_name_;
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_table_name(::std::string* table_name) {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete table_name_;
+  }
+  if (table_name) {
+    set_has_table_name();
+    table_name_ = table_name;
+  } else {
+    clear_has_table_name();
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string column_name = 4;
+inline bool ColumnMetadata::has_column_name() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ColumnMetadata::set_has_column_name() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ColumnMetadata::clear_has_column_name() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ColumnMetadata::clear_column_name() {
+  if (column_name_ != &::google::protobuf::internal::kEmptyString) {
+    column_name_->clear();
+  }
+  clear_has_column_name();
+}
+inline const ::std::string& ColumnMetadata::column_name() const {
+  return *column_name_;
+}
+inline void ColumnMetadata::set_column_name(const ::std::string& value) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(value);
+}
+inline void ColumnMetadata::set_column_name(const char* value) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(value);
+}
+inline void ColumnMetadata::set_column_name(const char* value, size_t size) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_column_name() {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  return column_name_;
+}
+inline ::std::string* ColumnMetadata::release_column_name() {
+  clear_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = column_name_;
+    column_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_column_name(::std::string* column_name) {
+  if (column_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete column_name_;
+  }
+  if (column_name) {
+    set_has_column_name();
+    column_name_ = column_name;
+  } else {
+    clear_has_column_name();
+    column_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int32 ordinal_position = 5;
+inline bool ColumnMetadata::has_ordinal_position() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ColumnMetadata::set_has_ordinal_position() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ColumnMetadata::clear_has_ordinal_position() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ColumnMetadata::clear_ordinal_position() {
+  ordinal_position_ = 0;
+  clear_has_ordinal_position();
+}
+inline ::google::protobuf::int32 ColumnMetadata::ordinal_position() const {
+  return ordinal_position_;
+}
+inline void ColumnMetadata::set_ordinal_position(::google::protobuf::int32 value) {
+  set_has_ordinal_position();
+  ordinal_position_ = value;
+}
+
+// optional string default_value = 6;
+inline bool ColumnMetadata::has_default_value() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ColumnMetadata::set_has_default_value() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ColumnMetadata::clear_has_default_value() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ColumnMetadata::clear_default_value() {
+  if (default_value_ != &::google::protobuf::internal::kEmptyString) {
+    default_value_->clear();
+  }
+  clear_has_default_value();
+}
+inline const ::std::string& ColumnMetadata::default_value() const {
+  return *default_value_;
+}
+inline void ColumnMetadata::set_default_value(const ::std::string& value) {
+  set_has_default_value();
+  if (default_value_ == &::google::protobuf::internal::kEmptyString) {
+    default_value_ = new ::std::string;
+  }
+  default_value_->assign(value);
+}
+inline void ColumnMetadata::set_default_value(const char* value) {
+  set_has_default_value();
+  if (default_value_ == &::google::protobuf::internal::kEmptyString) {
+    default_value_ = new ::std::string;
+  }
+  default_value_->assign(value);
+}
+inline void ColumnMetadata::set_default_value(const char* value, size_t size) {
+  set_has_default_value();
+  if (default_value_ == &::google::protobuf::internal::kEmptyString) {
+    default_value_ = new ::std::string;
+  }
+  default_value_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_default_value() {
+  set_has_default_value();
+  if (default_value_ == &::google::protobuf::internal::kEmptyString) {
+    default_value_ = new ::std::string;
+  }
+  return default_value_;
+}
+inline ::std::string* ColumnMetadata::release_default_value() {
+  clear_has_default_value();
+  if (default_value_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = default_value_;
+    default_value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_default_value(::std::string* default_value) {
+  if (default_value_ != &::google::protobuf::internal::kEmptyString) {
+    delete default_value_;
+  }
+  if (default_value) {
+    set_has_default_value();
+    default_value_ = default_value;
+  } else {
+    clear_has_default_value();
+    default_value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool is_nullable = 7;
+inline bool ColumnMetadata::has_is_nullable() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ColumnMetadata::set_has_is_nullable() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ColumnMetadata::clear_has_is_nullable() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ColumnMetadata::clear_is_nullable() {
+  is_nullable_ = false;
+  clear_has_is_nullable();
+}
+inline bool ColumnMetadata::is_nullable() const {
+  return is_nullable_;
+}
+inline void ColumnMetadata::set_is_nullable(bool value) {
+  set_has_is_nullable();
+  is_nullable_ = value;
+}
+
+// optional string data_type = 8;
+inline bool ColumnMetadata::has_data_type() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void ColumnMetadata::set_has_data_type() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void ColumnMetadata::clear_has_data_type() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void ColumnMetadata::clear_data_type() {
+  if (data_type_ != &::google::protobuf::internal::kEmptyString) {
+    data_type_->clear();
+  }
+  clear_has_data_type();
+}
+inline const ::std::string& ColumnMetadata::data_type() const {
+  return *data_type_;
+}
+inline void ColumnMetadata::set_data_type(const ::std::string& value) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(value);
+}
+inline void ColumnMetadata::set_data_type(const char* value) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(value);
+}
+inline void ColumnMetadata::set_data_type(const char* value, size_t size) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_data_type() {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  return data_type_;
+}
+inline ::std::string* ColumnMetadata::release_data_type() {
+  clear_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = data_type_;
+    data_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_data_type(::std::string* data_type) {
+  if (data_type_ != &::google::protobuf::internal::kEmptyString) {
+    delete data_type_;
+  }
+  if (data_type) {
+    set_has_data_type();
+    data_type_ = data_type;
+  } else {
+    clear_has_data_type();
+    data_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int32 char_max_length = 9;
+inline bool ColumnMetadata::has_char_max_length() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void ColumnMetadata::set_has_char_max_length() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void ColumnMetadata::clear_has_char_max_length() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void ColumnMetadata::clear_char_max_length() {
+  char_max_length_ = 0;
+  clear_has_char_max_length();
+}
+inline ::google::protobuf::int32 ColumnMetadata::char_max_length() const {
+  return char_max_length_;
+}
+inline void ColumnMetadata::set_char_max_length(::google::protobuf::int32 value) {
+  set_has_char_max_length();
+  char_max_length_ = value;
+}
+
+// optional int32 char_octet_length = 10;
+inline bool ColumnMetadata::has_char_octet_length() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void ColumnMetadata::set_has_char_octet_length() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void ColumnMetadata::clear_has_char_octet_length() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void ColumnMetadata::clear_char_octet_length() {
+  char_octet_length_ = 0;
+  clear_has_char_octet_length();
+}
+inline ::google::protobuf::int32 ColumnMetadata::char_octet_length() const {
+  return char_octet_length_;
+}
+inline void ColumnMetadata::set_char_octet_length(::google::protobuf::int32 value) {
+  set_has_char_octet_length();
+  char_octet_length_ = value;
+}
+
+// optional int32 numeric_precision = 11;
+inline bool ColumnMetadata::has_numeric_precision() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void ColumnMetadata::set_has_numeric_precision() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void ColumnMetadata::clear_has_numeric_precision() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void ColumnMetadata::clear_numeric_precision() {
+  numeric_precision_ = 0;
+  clear_has_numeric_precision();
+}
+inline ::google::protobuf::int32 ColumnMetadata::numeric_precision() const {
+  return numeric_precision_;
+}
+inline void ColumnMetadata::set_numeric_precision(::google::protobuf::int32 value) {
+  set_has_numeric_precision();
+  numeric_precision_ = value;
+}
+
+// optional int32 numeric_precision_radix = 12;
+inline bool ColumnMetadata::has_numeric_precision_radix() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void ColumnMetadata::set_has_numeric_precision_radix() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void ColumnMetadata::clear_has_numeric_precision_radix() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void ColumnMetadata::clear_numeric_precision_radix() {
+  numeric_precision_radix_ = 0;
+  clear_has_numeric_precision_radix();
+}
+inline ::google::protobuf::int32 ColumnMetadata::numeric_precision_radix() const {
+  return numeric_precision_radix_;
+}
+inline void ColumnMetadata::set_numeric_precision_radix(::google::protobuf::int32 value) {
+  set_has_numeric_precision_radix();
+  numeric_precision_radix_ = value;
+}
+
+// optional int32 numeric_scale = 13;
+inline bool ColumnMetadata::has_numeric_scale() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void ColumnMetadata::set_has_numeric_scale() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void ColumnMetadata::clear_has_numeric_scale() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void ColumnMetadata::clear_numeric_scale() {
+  numeric_scale_ = 0;
+  clear_has_numeric_scale();
+}
+inline ::google::protobuf::int32 ColumnMetadata::numeric_scale() const {
+  return numeric_scale_;
+}
+inline void ColumnMetadata::set_numeric_scale(::google::protobuf::int32 value) {
+  set_has_numeric_scale();
+  numeric_scale_ = value;
+}
+
+// optional int32 date_time_precision = 14;
+inline bool ColumnMetadata::has_date_time_precision() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void ColumnMetadata::set_has_date_time_precision() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void ColumnMetadata::clear_has_date_time_precision() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void ColumnMetadata::clear_date_time_precision() {
+  date_time_precision_ = 0;
+  clear_has_date_time_precision();
+}
+inline ::google::protobuf::int32 ColumnMetadata::date_time_precision() const {
+  return date_time_precision_;
+}
+inline void ColumnMetadata::set_date_time_precision(::google::protobuf::int32 value) {
+  set_has_date_time_precision();
+  date_time_precision_ = value;
+}
+
+// optional string interval_type = 15;
+inline bool ColumnMetadata::has_interval_type() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void ColumnMetadata::set_has_interval_type() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void ColumnMetadata::clear_has_interval_type() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void ColumnMetadata::clear_interval_type() {
+  if (interval_type_ != &::google::protobuf::internal::kEmptyString) {
+    interval_type_->clear();
+  }
+  clear_has_interval_type();
+}
+inline const ::std::string& ColumnMetadata::interval_type() const {
+  return *interval_type_;
+}
+inline void ColumnMetadata::set_interval_type(const ::std::string& value) {
+  set_has_interval_type();
+  if (interval_type_ == &::google::protobuf::internal::kEmptyString) {
+    interval_type_ = new ::std::string;
+  }
+  interval_type_->assign(value);
+}
+inline void ColumnMetadata::set_interval_type(const char* value) {
+  set_has_interval_type();
+  if (interval_type_ == &::google::protobuf::internal::kEmptyString) {
+    interval_type_ = new ::std::string;
+  }
+  interval_type_->assign(value);
+}
+inline void ColumnMetadata::set_interval_type(const char* value, size_t size) {
+  set_has_interval_type();
+  if (interval_type_ == &::google::protobuf::internal::kEmptyString) {
+    interval_type_ = new ::std::string;
+  }
+  interval_type_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ColumnMetadata::mutable_interval_type() {
+  set_has_interval_type();
+  if (interval_type_ == &::google::protobuf::internal::kEmptyString) {
+    interval_type_ = new ::std::string;
+  }
+  return interval_type_;
+}
+inline ::std::string* ColumnMetadata::release_interval_type() {
+  clear_has_interval_type();
+  if (interval_type_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = interval_type_;
+    interval_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ColumnMetadata::set_allocated_interval_type(::std::string* interval_type) {
+  if (interval_type_ != &::google::protobuf::internal::kEmptyString) {
+    delete interval_type_;
+  }
+  if (interval_type) {
+    set_has_interval_type();
+    interval_type_ = interval_type;
+  } else {
+    clear_has_interval_type();
+    interval_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int32 interval_precision = 16;
+inline bool ColumnMetadata::has_interval_precision() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void ColumnMetadata::set_has_interval_precision() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void ColumnMetadata::clear_has_interval_precision() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void ColumnMetadata::clear_interval_precision() {
+  interval_precision_ = 0;
+  clear_has_interval_precision();
+}
+inline ::google::protobuf::int32 ColumnMetadata::interval_precision() const {
+  return interval_precision_;
+}
+inline void ColumnMetadata::set_interval_precision(::google::protobuf::int32 value) {
+  set_has_interval_precision();
+  interval_precision_ = value;
+}
+
+// optional int32 column_size = 17;
+inline bool ColumnMetadata::has_column_size() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void ColumnMetadata::set_has_column_size() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void ColumnMetadata::clear_has_column_size() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void ColumnMetadata::clear_column_size() {
+  column_size_ = 0;
+  clear_has_column_size();
+}
+inline ::google::protobuf::int32 ColumnMetadata::column_size() const {
+  return column_size_;
+}
+inline void ColumnMetadata::set_column_size(::google::protobuf::int32 value) {
+  set_has_column_size();
+  column_size_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// GetColumnsResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool GetColumnsResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetColumnsResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetColumnsResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetColumnsResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus GetColumnsResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void GetColumnsResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// repeated .exec.user.ColumnMetadata columns = 2;
+inline int GetColumnsResp::columns_size() const {
+  return columns_.size();
+}
+inline void GetColumnsResp::clear_columns() {
+  columns_.Clear();
+}
+inline const ::exec::user::ColumnMetadata& GetColumnsResp::columns(int index) const {
+  return columns_.Get(index);
+}
+inline ::exec::user::ColumnMetadata* GetColumnsResp::mutable_columns(int index) {
+  return columns_.Mutable(index);
+}
+inline ::exec::user::ColumnMetadata* GetColumnsResp::add_columns() {
+  return columns_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata >&
+GetColumnsResp::columns() const {
+  return columns_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata >*
+GetColumnsResp::mutable_columns() {
+  return &columns_;
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool GetColumnsResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetColumnsResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetColumnsResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetColumnsResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& GetColumnsResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* GetColumnsResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* GetColumnsResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void GetColumnsResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// CreatePreparedStatementReq
+
+// optional string sql_query = 1;
+inline bool CreatePreparedStatementReq::has_sql_query() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CreatePreparedStatementReq::set_has_sql_query() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CreatePreparedStatementReq::clear_has_sql_query() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CreatePreparedStatementReq::clear_sql_query() {
+  if (sql_query_ != &::google::protobuf::internal::kEmptyString) {
+    sql_query_->clear();
+  }
+  clear_has_sql_query();
+}
+inline const ::std::string& CreatePreparedStatementReq::sql_query() const {
+  return *sql_query_;
+}
+inline void CreatePreparedStatementReq::set_sql_query(const ::std::string& value) {
+  set_has_sql_query();
+  if (sql_query_ == &::google::protobuf::internal::kEmptyString) {
+    sql_query_ = new ::std::string;
+  }
+  sql_query_->assign(value);
+}
+inline void CreatePreparedStatementReq::set_sql_query(const char* value) {
+  set_has_sql_query();
+  if (sql_query_ == &::google::protobuf::internal::kEmptyString) {
+    sql_query_ = new ::std::string;
+  }
+  sql_query_->assign(value);
+}
+inline void CreatePreparedStatementReq::set_sql_query(const char* value, size_t size) {
+  set_has_sql_query();
+  if (sql_query_ == &::google::protobuf::internal::kEmptyString) {
+    sql_query_ = new ::std::string;
+  }
+  sql_query_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CreatePreparedStatementReq::mutable_sql_query() {
+  set_has_sql_query();
+  if (sql_query_ == &::google::protobuf::internal::kEmptyString) {
+    sql_query_ = new ::std::string;
+  }
+  return sql_query_;
+}
+inline ::std::string* CreatePreparedStatementReq::release_sql_query() {
+  clear_has_sql_query();
+  if (sql_query_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sql_query_;
+    sql_query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CreatePreparedStatementReq::set_allocated_sql_query(::std::string* sql_query) {
+  if (sql_query_ != &::google::protobuf::internal::kEmptyString) {
+    delete sql_query_;
+  }
+  if (sql_query) {
+    set_has_sql_query();
+    sql_query_ = sql_query;
+  } else {
+    clear_has_sql_query();
+    sql_query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// ResultColumnMetadata
+
+// optional string catalog_name = 1;
+inline bool ResultColumnMetadata::has_catalog_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ResultColumnMetadata::set_has_catalog_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ResultColumnMetadata::clear_has_catalog_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ResultColumnMetadata::clear_catalog_name() {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_name_->clear();
+  }
+  clear_has_catalog_name();
+}
+inline const ::std::string& ResultColumnMetadata::catalog_name() const {
+  return *catalog_name_;
+}
+inline void ResultColumnMetadata::set_catalog_name(const ::std::string& value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_catalog_name(const char* value) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_catalog_name(const char* value, size_t size) {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  catalog_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_catalog_name() {
+  set_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_name_ = new ::std::string;
+  }
+  return catalog_name_;
+}
+inline ::std::string* ResultColumnMetadata::release_catalog_name() {
+  clear_has_catalog_name();
+  if (catalog_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_name_;
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_catalog_name(::std::string* catalog_name) {
+  if (catalog_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_name_;
+  }
+  if (catalog_name) {
+    set_has_catalog_name();
+    catalog_name_ = catalog_name;
+  } else {
+    clear_has_catalog_name();
+    catalog_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string schema_name = 2;
+inline bool ResultColumnMetadata::has_schema_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ResultColumnMetadata::set_has_schema_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ResultColumnMetadata::clear_has_schema_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ResultColumnMetadata::clear_schema_name() {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    schema_name_->clear();
+  }
+  clear_has_schema_name();
+}
+inline const ::std::string& ResultColumnMetadata::schema_name() const {
+  return *schema_name_;
+}
+inline void ResultColumnMetadata::set_schema_name(const ::std::string& value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_schema_name(const char* value) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_schema_name(const char* value, size_t size) {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  schema_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_schema_name() {
+  set_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    schema_name_ = new ::std::string;
+  }
+  return schema_name_;
+}
+inline ::std::string* ResultColumnMetadata::release_schema_name() {
+  clear_has_schema_name();
+  if (schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = schema_name_;
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_schema_name(::std::string* schema_name) {
+  if (schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete schema_name_;
+  }
+  if (schema_name) {
+    set_has_schema_name();
+    schema_name_ = schema_name;
+  } else {
+    clear_has_schema_name();
+    schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string table_name = 3;
+inline bool ResultColumnMetadata::has_table_name() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ResultColumnMetadata::set_has_table_name() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ResultColumnMetadata::clear_has_table_name() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ResultColumnMetadata::clear_table_name() {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    table_name_->clear();
+  }
+  clear_has_table_name();
+}
+inline const ::std::string& ResultColumnMetadata::table_name() const {
+  return *table_name_;
+}
+inline void ResultColumnMetadata::set_table_name(const ::std::string& value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_table_name(const char* value) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_table_name(const char* value, size_t size) {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  table_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_table_name() {
+  set_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    table_name_ = new ::std::string;
+  }
+  return table_name_;
+}
+inline ::std::string* ResultColumnMetadata::release_table_name() {
+  clear_has_table_name();
+  if (table_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = table_name_;
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_table_name(::std::string* table_name) {
+  if (table_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete table_name_;
+  }
+  if (table_name) {
+    set_has_table_name();
+    table_name_ = table_name;
+  } else {
+    clear_has_table_name();
+    table_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string column_name = 4;
+inline bool ResultColumnMetadata::has_column_name() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ResultColumnMetadata::set_has_column_name() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ResultColumnMetadata::clear_has_column_name() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ResultColumnMetadata::clear_column_name() {
+  if (column_name_ != &::google::protobuf::internal::kEmptyString) {
+    column_name_->clear();
+  }
+  clear_has_column_name();
+}
+inline const ::std::string& ResultColumnMetadata::column_name() const {
+  return *column_name_;
+}
+inline void ResultColumnMetadata::set_column_name(const ::std::string& value) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_column_name(const char* value) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_column_name(const char* value, size_t size) {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  column_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_column_name() {
+  set_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    column_name_ = new ::std::string;
+  }
+  return column_name_;
+}
+inline ::std::string* ResultColumnMetadata::release_column_name() {
+  clear_has_column_name();
+  if (column_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = column_name_;
+    column_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_column_name(::std::string* column_name) {
+  if (column_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete column_name_;
+  }
+  if (column_name) {
+    set_has_column_name();
+    column_name_ = column_name;
+  } else {
+    clear_has_column_name();
+    column_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string label = 5;
+inline bool ResultColumnMetadata::has_label() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ResultColumnMetadata::set_has_label() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ResultColumnMetadata::clear_has_label() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ResultColumnMetadata::clear_label() {
+  if (label_ != &::google::protobuf::internal::kEmptyString) {
+    label_->clear();
+  }
+  clear_has_label();
+}
+inline const ::std::string& ResultColumnMetadata::label() const {
+  return *label_;
+}
+inline void ResultColumnMetadata::set_label(const ::std::string& value) {
+  set_has_label();
+  if (label_ == &::google::protobuf::internal::kEmptyString) {
+    label_ = new ::std::string;
+  }
+  label_->assign(value);
+}
+inline void ResultColumnMetadata::set_label(const char* value) {
+  set_has_label();
+  if (label_ == &::google::protobuf::internal::kEmptyString) {
+    label_ = new ::std::string;
+  }
+  label_->assign(value);
+}
+inline void ResultColumnMetadata::set_label(const char* value, size_t size) {
+  set_has_label();
+  if (label_ == &::google::protobuf::internal::kEmptyString) {
+    label_ = new ::std::string;
+  }
+  label_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_label() {
+  set_has_label();
+  if (label_ == &::google::protobuf::internal::kEmptyString) {
+    label_ = new ::std::string;
+  }
+  return label_;
+}
+inline ::std::string* ResultColumnMetadata::release_label() {
+  clear_has_label();
+  if (label_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = label_;
+    label_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_label(::std::string* label) {
+  if (label_ != &::google::protobuf::internal::kEmptyString) {
+    delete label_;
+  }
+  if (label) {
+    set_has_label();
+    label_ = label;
+  } else {
+    clear_has_label();
+    label_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string data_type = 6;
+inline bool ResultColumnMetadata::has_data_type() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ResultColumnMetadata::set_has_data_type() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ResultColumnMetadata::clear_has_data_type() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ResultColumnMetadata::clear_data_type() {
+  if (data_type_ != &::google::protobuf::internal::kEmptyString) {
+    data_type_->clear();
+  }
+  clear_has_data_type();
+}
+inline const ::std::string& ResultColumnMetadata::data_type() const {
+  return *data_type_;
+}
+inline void ResultColumnMetadata::set_data_type(const ::std::string& value) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(value);
+}
+inline void ResultColumnMetadata::set_data_type(const char* value) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(value);
+}
+inline void ResultColumnMetadata::set_data_type(const char* value, size_t size) {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  data_type_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_data_type() {
+  set_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    data_type_ = new ::std::string;
+  }
+  return data_type_;
+}
+inline ::std::string* ResultColumnMetadata::release_data_type() {
+  clear_has_data_type();
+  if (data_type_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = data_type_;
+    data_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_data_type(::std::string* data_type) {
+  if (data_type_ != &::google::protobuf::internal::kEmptyString) {
+    delete data_type_;
+  }
+  if (data_type) {
+    set_has_data_type();
+    data_type_ = data_type;
+  } else {
+    clear_has_data_type();
+    data_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool is_nullable = 7;
+inline bool ResultColumnMetadata::has_is_nullable() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ResultColumnMetadata::set_has_is_nullable() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ResultColumnMetadata::clear_has_is_nullable() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ResultColumnMetadata::clear_is_nullable() {
+  is_nullable_ = false;
+  clear_has_is_nullable();
+}
+inline bool ResultColumnMetadata::is_nullable() const {
+  return is_nullable_;
+}
+inline void ResultColumnMetadata::set_is_nullable(bool value) {
+  set_has_is_nullable();
+  is_nullable_ = value;
+}
+
+// optional int32 precision = 8;
+inline bool ResultColumnMetadata::has_precision() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void ResultColumnMetadata::set_has_precision() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void ResultColumnMetadata::clear_has_precision() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void ResultColumnMetadata::clear_precision() {
+  precision_ = 0;
+  clear_has_precision();
+}
+inline ::google::protobuf::int32 ResultColumnMetadata::precision() const {
+  return precision_;
+}
+inline void ResultColumnMetadata::set_precision(::google::protobuf::int32 value) {
+  set_has_precision();
+  precision_ = value;
+}
+
+// optional int32 scale = 9;
+inline bool ResultColumnMetadata::has_scale() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void ResultColumnMetadata::set_has_scale() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void ResultColumnMetadata::clear_has_scale() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void ResultColumnMetadata::clear_scale() {
+  scale_ = 0;
+  clear_has_scale();
+}
+inline ::google::protobuf::int32 ResultColumnMetadata::scale() const {
+  return scale_;
+}
+inline void ResultColumnMetadata::set_scale(::google::protobuf::int32 value) {
+  set_has_scale();
+  scale_ = value;
+}
+
+// optional bool signed = 10;
+inline bool ResultColumnMetadata::has_signed_() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void ResultColumnMetadata::set_has_signed_() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void ResultColumnMetadata::clear_has_signed_() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void ResultColumnMetadata::clear_signed_() {
+  signed__ = false;
+  clear_has_signed_();
+}
+inline bool ResultColumnMetadata::signed_() const {
+  return signed__;
+}
+inline void ResultColumnMetadata::set_signed_(bool value) {
+  set_has_signed_();
+  signed__ = value;
+}
+
+// optional int32 display_size = 11;
+inline bool ResultColumnMetadata::has_display_size() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void ResultColumnMetadata::set_has_display_size() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void ResultColumnMetadata::clear_has_display_size() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void ResultColumnMetadata::clear_display_size() {
+  display_size_ = 0;
+  clear_has_display_size();
+}
+inline ::google::protobuf::int32 ResultColumnMetadata::display_size() const {
+  return display_size_;
+}
+inline void ResultColumnMetadata::set_display_size(::google::protobuf::int32 value) {
+  set_has_display_size();
+  display_size_ = value;
+}
+
+// optional bool is_aliased = 12;
+inline bool ResultColumnMetadata::has_is_aliased() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void ResultColumnMetadata::set_has_is_aliased() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void ResultColumnMetadata::clear_has_is_aliased() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void ResultColumnMetadata::clear_is_aliased() {
+  is_aliased_ = false;
+  clear_has_is_aliased();
+}
+inline bool ResultColumnMetadata::is_aliased() const {
+  return is_aliased_;
+}
+inline void ResultColumnMetadata::set_is_aliased(bool value) {
+  set_has_is_aliased();
+  is_aliased_ = value;
+}
+
+// optional .exec.user.ColumnSearchability searchability = 13;
+inline bool ResultColumnMetadata::has_searchability() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_searchability() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void ResultColumnMetadata::clear_has_searchability() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void ResultColumnMetadata::clear_searchability() {
+  searchability_ = 0;
+  clear_has_searchability();
+}
+inline ::exec::user::ColumnSearchability ResultColumnMetadata::searchability() const {
+  return static_cast< ::exec::user::ColumnSearchability >(searchability_);
+}
+inline void ResultColumnMetadata::set_searchability(::exec::user::ColumnSearchability value) {
+  assert(::exec::user::ColumnSearchability_IsValid(value));
+  set_has_searchability();
+  searchability_ = value;
+}
+
+// optional .exec.user.ColumnUpdatability updatability = 14;
+inline bool ResultColumnMetadata::has_updatability() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_updatability() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void ResultColumnMetadata::clear_has_updatability() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void ResultColumnMetadata::clear_updatability() {
+  updatability_ = 0;
+  clear_has_updatability();
+}
+inline ::exec::user::ColumnUpdatability ResultColumnMetadata::updatability() const {
+  return static_cast< ::exec::user::ColumnUpdatability >(updatability_);
+}
+inline void ResultColumnMetadata::set_updatability(::exec::user::ColumnUpdatability value) {
+  assert(::exec::user::ColumnUpdatability_IsValid(value));
+  set_has_updatability();
+  updatability_ = value;
+}
+
+// optional bool auto_increment = 15;
+inline bool ResultColumnMetadata::has_auto_increment() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_auto_increment() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void ResultColumnMetadata::clear_has_auto_increment() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void ResultColumnMetadata::clear_auto_increment() {
+  auto_increment_ = false;
+  clear_has_auto_increment();
+}
+inline bool ResultColumnMetadata::auto_increment() const {
+  return auto_increment_;
+}
+inline void ResultColumnMetadata::set_auto_increment(bool value) {
+  set_has_auto_increment();
+  auto_increment_ = value;
+}
+
+// optional bool case_sensitivity = 16;
+inline bool ResultColumnMetadata::has_case_sensitivity() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_case_sensitivity() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void ResultColumnMetadata::clear_has_case_sensitivity() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void ResultColumnMetadata::clear_case_sensitivity() {
+  case_sensitivity_ = false;
+  clear_has_case_sensitivity();
+}
+inline bool ResultColumnMetadata::case_sensitivity() const {
+  return case_sensitivity_;
+}
+inline void ResultColumnMetadata::set_case_sensitivity(bool value) {
+  set_has_case_sensitivity();
+  case_sensitivity_ = value;
+}
+
+// optional bool sortable = 17;
+inline bool ResultColumnMetadata::has_sortable() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_sortable() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void ResultColumnMetadata::clear_has_sortable() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void ResultColumnMetadata::clear_sortable() {
+  sortable_ = false;
+  clear_has_sortable();
+}
+inline bool ResultColumnMetadata::sortable() const {
+  return sortable_;
+}
+inline void ResultColumnMetadata::set_sortable(bool value) {
+  set_has_sortable();
+  sortable_ = value;
+}
+
+// optional string class_name = 18;
+inline bool ResultColumnMetadata::has_class_name() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_class_name() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void ResultColumnMetadata::clear_has_class_name() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void ResultColumnMetadata::clear_class_name() {
+  if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+    class_name_->clear();
+  }
+  clear_has_class_name();
+}
+inline const ::std::string& ResultColumnMetadata::class_name() const {
+  return *class_name_;
+}
+inline void ResultColumnMetadata::set_class_name(const ::std::string& value) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_class_name(const char* value) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(value);
+}
+inline void ResultColumnMetadata::set_class_name(const char* value, size_t size) {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  class_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ResultColumnMetadata::mutable_class_name() {
+  set_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    class_name_ = new ::std::string;
+  }
+  return class_name_;
+}
+inline ::std::string* ResultColumnMetadata::release_class_name() {
+  clear_has_class_name();
+  if (class_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = class_name_;
+    class_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ResultColumnMetadata::set_allocated_class_name(::std::string* class_name) {
+  if (class_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete class_name_;
+  }
+  if (class_name) {
+    set_has_class_name();
+    class_name_ = class_name;
+  } else {
+    clear_has_class_name();
+    class_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool is_currency = 20;
+inline bool ResultColumnMetadata::has_is_currency() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void ResultColumnMetadata::set_has_is_currency() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void ResultColumnMetadata::clear_has_is_currency() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void ResultColumnMetadata::clear_is_currency() {
+  is_currency_ = false;
+  clear_has_is_currency();
+}
+inline bool ResultColumnMetadata::is_currency() const {
+  return is_currency_;
+}
+inline void ResultColumnMetadata::set_is_currency(bool value) {
+  set_has_is_currency();
+  is_currency_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// PreparedStatementHandle
+
+// optional bytes server_info = 1;
+inline bool PreparedStatementHandle::has_server_info() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void PreparedStatementHandle::set_has_server_info() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void PreparedStatementHandle::clear_has_server_info() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void PreparedStatementHandle::clear_server_info() {
+  if (server_info_ != &::google::protobuf::internal::kEmptyString) {
+    server_info_->clear();
+  }
+  clear_has_server_info();
+}
+inline const ::std::string& PreparedStatementHandle::server_info() const {
+  return *server_info_;
+}
+inline void PreparedStatementHandle::set_server_info(const ::std::string& value) {
+  set_has_server_info();
+  if (server_info_ == &::google::protobuf::internal::kEmptyString) {
+    server_info_ = new ::std::string;
+  }
+  server_info_->assign(value);
+}
+inline void PreparedStatementHandle::set_server_info(const char* value) {
+  set_has_server_info();
+  if (server_info_ == &::google::protobuf::internal::kEmptyString) {
+    server_info_ = new ::std::string;
+  }
+  server_info_->assign(value);
+}
+inline void PreparedStatementHandle::set_server_info(const void* value, size_t size) {
+  set_has_server_info();
+  if (server_info_ == &::google::protobuf::internal::kEmptyString) {
+    server_info_ = new ::std::string;
+  }
+  server_info_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* PreparedStatementHandle::mutable_server_info() {
+  set_has_server_info();
+  if (server_info_ == &::google::protobuf::internal::kEmptyString) {
+    server_info_ = new ::std::string;
+  }
+  return server_info_;
+}
+inline ::std::string* PreparedStatementHandle::release_server_info() {
+  clear_has_server_info();
+  if (server_info_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = server_info_;
+    server_info_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void PreparedStatementHandle::set_allocated_server_info(::std::string* server_info) {
+  if (server_info_ != &::google::protobuf::internal::kEmptyString) {
+    delete server_info_;
+  }
+  if (server_info) {
+    set_has_server_info();
+    server_info_ = server_info;
+  } else {
+    clear_has_server_info();
+    server_info_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// PreparedStatement
+
+// repeated .exec.user.ResultColumnMetadata columns = 1;
+inline int PreparedStatement::columns_size() const {
+  return columns_.size();
+}
+inline void PreparedStatement::clear_columns() {
+  columns_.Clear();
+}
+inline const ::exec::user::ResultColumnMetadata& PreparedStatement::columns(int index) const {
+  return columns_.Get(index);
+}
+inline ::exec::user::ResultColumnMetadata* PreparedStatement::mutable_columns(int index) {
+  return columns_.Mutable(index);
+}
+inline ::exec::user::ResultColumnMetadata* PreparedStatement::add_columns() {
+  return columns_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata >&
+PreparedStatement::columns() const {
+  return columns_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata >*
+PreparedStatement::mutable_columns() {
+  return &columns_;
+}
+
+// optional .exec.user.PreparedStatementHandle server_handle = 2;
+inline bool PreparedStatement::has_server_handle() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void PreparedStatement::set_has_server_handle() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void PreparedStatement::clear_has_server_handle() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void PreparedStatement::clear_server_handle() {
+  if (server_handle_ != NULL) server_handle_->::exec::user::PreparedStatementHandle::Clear();
+  clear_has_server_handle();
+}
+inline const ::exec::user::PreparedStatementHandle& PreparedStatement::server_handle() const {
+  return server_handle_ != NULL ? *server_handle_ : *default_instance_->server_handle_;
+}
+inline ::exec::user::PreparedStatementHandle* PreparedStatement::mutable_server_handle() {
+  set_has_server_handle();
+  if (server_handle_ == NULL) server_handle_ = new ::exec::user::PreparedStatementHandle;
+  return server_handle_;
+}
+inline ::exec::user::PreparedStatementHandle* PreparedStatement::release_server_handle() {
+  clear_has_server_handle();
+  ::exec::user::PreparedStatementHandle* temp = server_handle_;
+  server_handle_ = NULL;
+  return temp;
+}
+inline void PreparedStatement::set_allocated_server_handle(::exec::user::PreparedStatementHandle* server_handle) {
+  delete server_handle_;
+  server_handle_ = server_handle;
+  if (server_handle) {
+    set_has_server_handle();
+  } else {
+    clear_has_server_handle();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// CreatePreparedStatementResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool CreatePreparedStatementResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CreatePreparedStatementResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CreatePreparedStatementResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CreatePreparedStatementResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus CreatePreparedStatementResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void CreatePreparedStatementResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// optional .exec.user.PreparedStatement prepared_statement = 2;
+inline bool CreatePreparedStatementResp::has_prepared_statement() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CreatePreparedStatementResp::set_has_prepared_statement() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CreatePreparedStatementResp::clear_has_prepared_statement() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CreatePreparedStatementResp::clear_prepared_statement() {
+  if (prepared_statement_ != NULL) prepared_statement_->::exec::user::PreparedStatement::Clear();
+  clear_has_prepared_statement();
+}
+inline const ::exec::user::PreparedStatement& CreatePreparedStatementResp::prepared_statement() const {
+  return prepared_statement_ != NULL ? *prepared_statement_ : *default_instance_->prepared_statement_;
+}
+inline ::exec::user::PreparedStatement* CreatePreparedStatementResp::mutable_prepared_statement() {
+  set_has_prepared_statement();
+  if (prepared_statement_ == NULL) prepared_statement_ = new ::exec::user::PreparedStatement;
+  return prepared_statement_;
+}
+inline ::exec::user::PreparedStatement* CreatePreparedStatementResp::release_prepared_statement() {
+  clear_has_prepared_statement();
+  ::exec::user::PreparedStatement* temp = prepared_statement_;
+  prepared_statement_ = NULL;
+  return temp;
+}
+inline void CreatePreparedStatementResp::set_allocated_prepared_statement(::exec::user::PreparedStatement* prepared_statement) {
+  delete prepared_statement_;
+  prepared_statement_ = prepared_statement;
+  if (prepared_statement) {
+    set_has_prepared_statement();
+  } else {
+    clear_has_prepared_statement();
+  }
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool CreatePreparedStatementResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void CreatePreparedStatementResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void CreatePreparedStatementResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void CreatePreparedStatementResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& CreatePreparedStatementResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* CreatePreparedStatementResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* CreatePreparedStatementResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void CreatePreparedStatementResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// RunQuery
+
+// optional .exec.user.QueryResultsMode results_mode = 1;
+inline bool RunQuery::has_results_mode() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void RunQuery::set_has_results_mode() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void RunQuery::clear_has_results_mode() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void RunQuery::clear_results_mode() {
+  results_mode_ = 1;
+  clear_has_results_mode();
+}
+inline ::exec::user::QueryResultsMode RunQuery::results_mode() const {
+  return static_cast< ::exec::user::QueryResultsMode >(results_mode_);
+}
+inline void RunQuery::set_results_mode(::exec::user::QueryResultsMode value) {
+  assert(::exec::user::QueryResultsMode_IsValid(value));
+  set_has_results_mode();
+  results_mode_ = value;
+}
+
+// optional .exec.shared.QueryType type = 2;
+inline bool RunQuery::has_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void RunQuery::set_has_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void RunQuery::clear_has_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void RunQuery::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::exec::shared::QueryType RunQuery::type() const {
+  return static_cast< ::exec::shared::QueryType >(type_);
+}
+inline void RunQuery::set_type(::exec::shared::QueryType value) {
+  assert(::exec::shared::QueryType_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional string plan = 3;
+inline bool RunQuery::has_plan() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void RunQuery::set_has_plan() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void RunQuery::clear_has_plan() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void RunQuery::clear_plan() {
+  if (plan_ != &::google::protobuf::internal::kEmptyString) {
+    plan_->clear();
+  }
+  clear_has_plan();
+}
+inline const ::std::string& RunQuery::plan() const {
+  return *plan_;
+}
+inline void RunQuery::set_plan(const ::std::string& value) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(value);
+}
+inline void RunQuery::set_plan(const char* value) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(value);
+}
+inline void RunQuery::set_plan(const char* value, size_t size) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RunQuery::mutable_plan() {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  return plan_;
+}
+inline ::std::string* RunQuery::release_plan() {
+  clear_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = plan_;
+    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RunQuery::set_allocated_plan(::std::string* plan) {
+  if (plan_ != &::google::protobuf::internal::kEmptyString) {
+    delete plan_;
+  }
+  if (plan) {
+    set_has_plan();
+    plan_ = plan;
+  } else {
+    clear_has_plan();
+    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated .exec.bit.control.PlanFragment fragments = 4;
+inline int RunQuery::fragments_size() const {
+  return fragments_.size();
+}
+inline void RunQuery::clear_fragments() {
+  fragments_.Clear();
+}
+inline const ::exec::bit::control::PlanFragment& RunQuery::fragments(int index) const {
+  return fragments_.Get(index);
+}
+inline ::exec::bit::control::PlanFragment* RunQuery::mutable_fragments(int index) {
+  return fragments_.Mutable(index);
+}
+inline ::exec::bit::control::PlanFragment* RunQuery::add_fragments() {
+  return fragments_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >&
+RunQuery::fragments() const {
+  return fragments_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::PlanFragment >*
+RunQuery::mutable_fragments() {
+  return &fragments_;
+}
+
+// optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;
+inline bool RunQuery::has_prepared_statement_handle() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void RunQuery::set_has_prepared_statement_handle() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void RunQuery::clear_has_prepared_statement_handle() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void RunQuery::clear_prepared_statement_handle() {
+  if (prepared_statement_handle_ != NULL) prepared_statement_handle_->::exec::user::PreparedStatementHandle::Clear();
+  clear_has_prepared_statement_handle();
+}
+inline const ::exec::user::PreparedStatementHandle& RunQuery::prepared_statement_handle() const {
+  return prepared_statement_handle_ != NULL ? *prepared_statement_handle_ : *default_instance_->prepared_statement_handle_;
+}
+inline ::exec::user::PreparedStatementHandle* RunQuery::mutable_prepared_statement_handle() {
+  set_has_prepared_statement_handle();
+  if (prepared_statement_handle_ == NULL) prepared_statement_handle_ = new ::exec::user::PreparedStatementHandle;
+  return prepared_statement_handle_;
+}
+inline ::exec::user::PreparedStatementHandle* RunQuery::release_prepared_statement_handle() {
+  clear_has_prepared_statement_handle();
+  ::exec::user::PreparedStatementHandle* temp = prepared_statement_handle_;
+  prepared_statement_handle_ = NULL;
+  return temp;
+}
+inline void RunQuery::set_allocated_prepared_statement_handle(::exec::user::PreparedStatementHandle* prepared_statement_handle) {
+  delete prepared_statement_handle_;
+  prepared_statement_handle_ = prepared_statement_handle;
+  if (prepared_statement_handle) {
+    set_has_prepared_statement_handle();
+  } else {
+    clear_has_prepared_statement_handle();
+  }
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -1529,6 +8606,18 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResultsMode>(
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::HandshakeStatus>() {
   return ::exec::user::HandshakeStatus_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::RequestStatus>() {
+  return ::exec::user::RequestStatus_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::ColumnSearchability>() {
+  return ::exec::user::ColumnSearchability_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::ColumnUpdatability>() {
+  return ::exec::user::ColumnUpdatability_descriptor();
 }
 
 }  // namespace google
