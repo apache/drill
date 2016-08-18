@@ -203,7 +203,7 @@ fi
 if [ -z "$DRILL_LOG_DIR" ]; then
   # Try the optional location
   DRILL_LOG_DIR=/var/log/drill
-  if [[ ! -d "$DRILL_LOG_DIR" && ! -w "$DRILL_LOG_DIR" ]]; then
+  if [[ ! -d "$DRILL_LOG_DIR" || ! -w "$DRILL_LOG_DIR" ]]; then
     # Default to the drill home folder. Create the directory
     # if not present.
 
@@ -215,7 +215,7 @@ fi
 # and be writable.
 
 mkdir -p "$DRILL_LOG_DIR"
-if [[ ! -d "$DRILL_LOG_DIR" && ! -w "$DRILL_LOG_DIR" ]]; then
+if [[ ! -d "$DRILL_LOG_DIR" || ! -w "$DRILL_LOG_DIR" ]]; then
   fatal_error "Log directory does not exist or is not writable: $DRILL_LOG_DIR"
 fi
 
