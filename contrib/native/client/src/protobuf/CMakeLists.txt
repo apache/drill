@@ -92,7 +92,7 @@ add_custom_target(fixProtobufs
     COMMAND ${PROJECT_SOURCE_DIR}/scripts/fixProtodefs.sh ${SRCDIR} ${TARGDIR} ${FNAME}
     )
 
-add_custom_target(genProtobufs DEPENDS ${GenProtoSources})
+add_custom_target(genProtobufs DEPENDS ${GenProtoSources} fixProtobufs)
 
 # copy protobuf CPP files to destinations in the source tree
 add_custom_target(cpProtobufs

@@ -84,6 +84,16 @@ OR
     ln -svf libboost_filesystem.a libboost_filesystem-mt.a
     ln -svf libboost_date_time.a libboost_date_time-mt.a
 
+(Optional) Refresh protobuf source files
+----------------------------------------
+When changes have been introduced to the protocol module, you might need to refresh the protobuf C++ source files too.
+    $> cd DRILL_DIR/contrib/native/client
+    $> mkdir build
+    $> cd build && cmake3 -G "Unix Makefiles" ..
+    $> make cpProtobufs
+
+Open a pull request with the changes to DRILL_DIR/contrib/native/client/src/protobuf
+
 Build drill client
 -------------------
     $> cd DRILL_DIR/contrib/native/client
