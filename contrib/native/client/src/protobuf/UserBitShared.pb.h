@@ -152,11 +152,13 @@ inline bool RpcChannel_Parse(
 enum QueryType {
   SQL = 1,
   LOGICAL = 2,
-  PHYSICAL = 3
+  PHYSICAL = 3,
+  EXECUTION = 4,
+  PREPARED_STATEMENT = 5
 };
 bool QueryType_IsValid(int value);
 const QueryType QueryType_MIN = SQL;
-const QueryType QueryType_MAX = PHYSICAL;
+const QueryType QueryType_MAX = PREPARED_STATEMENT;
 const int QueryType_ARRAYSIZE = QueryType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* QueryType_descriptor();
