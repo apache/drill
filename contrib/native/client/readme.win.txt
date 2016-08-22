@@ -59,6 +59,7 @@ Windows platforms should be more or less similar.
             boost
             zookeeper C API
             protobufs
+            cppunit
         The Drill client is linked with STATIC versions of these libraries. The
         libraries are themselves linked with the DYNAMIC C Runtime DLLs. It is
         important that the libraries all have the same linkage model, otherwise the
@@ -74,6 +75,8 @@ Windows platforms should be more or less similar.
             this is the directory for the full Zookeeper source not just the
             source for the C library.
             PROTOBUF_HOME - Directory where Protobuf source is installed.
+            CPPUNIT_HOME - Directory where CPPUnit source is installed
+    d) The build assumes that Powershell is installed
 
 2.1 Boost (version 1.55)
     a) Download Boost from:
@@ -133,13 +136,21 @@ Windows platforms should be more or less similar.
     fix that for the 64 bit build, apply patch zookeeper-3.4.6-x64.patch
     For example in Msysgit 
         $ cd <ZOOKEEPER_HOME> && git apply <DRILL_HOME>/contrib/native/client/patches/zookeeper-3.4.6-x64.patch
-    c) InVisual Studio 2010 Express open <ZOOKEEPER_HOME>/src/c/zookeeper.sln
+    c) In Visual Studio 2010 Express open <ZOOKEEPER_HOME>/src/c/zookeeper.sln
         i) Add a 64 bit project configuration for each project. (Make sure the
             platform toolset is set to Windows7.1SDK)
        ii) Change the output type for the zookeeper project to a static lib
             Properties->Configuration Properties->General->Configuration Type = Static Library
       iii) In the cli project add the preprocessor define USE_STATIC_LIB
-      iv) Build. Build zookeeper lib first, then build cli 
+       iv) Build. Build zookeeper lib first, then build cli 
+
+2.4 CppUnit (3.4.6) 
+    a) Download cppunit and unzip/untar it. 
+       Latest version is available at: http://dev-www.libreoffice.org/src/cppunit-1.13.2.tar.gz
+       More informations: https://www.freedesktop.org/wiki/Software/cppunit/
+    b) Set the CPPUNIT_HOME environment variable
+    c) InVisual Studio 2010 Express open <CPPUNIT_HOME>/src/CppUnitLibraries2010.sln
+       i) Build cppunit project
 
 3 Building Drill Clientlib
 3.1 SET the following environment variables
@@ -152,10 +163,10 @@ Windows platforms should be more or less similar.
     C:> cd build
 
     a) For the 32 bit build :
-        C:> cmake -G "Visual Studio 10" -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
+        C:> cmake -G "Visual Studio 10" -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
 
     b) For the 64 bit build :
-        C:> cmake -G "Visual Studio 10 Win64 " -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
+        C:> cmake -G "Visual Studio 10 Win64 " -D ZOOKEEPER_HOME=<ZOOKEPER_HOME> -D PROTOBUF_SRC_ROOT_FOLDER=<PROTOBUF_HOME> -D CPPUNIT_HOME=<CPPUNIT_HOME> -D CMAKE_BUILD_TYPE=Debug   ..
 
 3.3 Open the generated <DRILL_HOME>/contrib/native/client/build/drillclient.sln 
     file in Visual Studio.

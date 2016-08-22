@@ -62,7 +62,7 @@ class AllocatedBuffer{
 
 };
 
-class Utils{
+class DECLSPEC_DRILL_CLIENT Utils{
     public:
         static boost::random::random_device s_RNG;   //Truly random (expensive and device dependent)
         static boost::random::mt19937 s_URNG; //Pseudo random with a period of ( 2^19937 - 1 )
