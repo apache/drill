@@ -17,9 +17,47 @@
 #
 cmake_minimum_required(VERSION 2.6)
 
-project(drillclient)
+cmake_policy(SET CMP0043 NEW)
+cmake_policy(SET CMP0048 NEW)
+enable_testing()
+
+set (DRILL_ROOT ${CMAKE_SOURCE_DIR}/../../..)
+if (NOT DEFINED DRILL_VERSION)
+    message("Detecting Drill version:")
+    if (WIN32)
+        find_program(POWERSHELL Powershell)
+        file(TO_NATIVE_PATH "${DRILL_ROOT}/pom.xml" DRILL_POM_FILE)    
+        execute_process(
+            COMMAND ${POWERSHELL} "Select-Xml -Namespace @{'m'='http://maven.apache.org/POM/4.0.0'} -XPath '//m:project/m:version/text()' -Path ${DRILL_POM_FILE} | foreach {$_.Node.Value}"
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE DRILL_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    else ()
+        find_program(MVN mvn)
+        execute_process(
+            COMMAND ${MVN} -q -f ${DRILL_ROOT}/pom.xml -Dexec.executable=echo -Dexec.args=\${project.version} --non-recursive org.codehaus.mojo:exec-maven-plugin:1.3.1:exec
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE DRILL_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+    endif ()
+    if ("${DRILL_VERSION}" STREQUAL "")
+        message(FATAL_ERROR "Cannot detect Drill version")
+    endif()
+endif()
+
+string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1"
+       DRILL_VERSION
+       ${DRILL_VERSION}
+       )
+
+project(drillclient
+        VERSION ${DRILL_VERSION}
+        )
 
 message("Project Dir = ${PROJECT_SOURCE_DIR}")
+message("Project version = ${PROJECT_VERSION} ")
 message("Source Dir = ${CMAKE_SOURCE_DIR} ")
 
 cmake_policy(SET CMP0043 NEW)
@@ -76,7 +114,7 @@ find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #Find Zookeeper
-find_package(Zookeeper  REQUIRED )
+find_package(Zookeeper REQUIRED )
 
 
 # Generated sources
@@ -104,6 +142,8 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib/y2038")
 # Build the Client Library as a shared library
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib")
 include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS})
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/test")
 
 # add a DEBUG preprocessor macro
 set_property(
