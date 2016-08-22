@@ -15,32 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys;
+package org.apache.drill.exec.exception;
 
-import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 
-import java.util.Iterator;
-import java.util.Map;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public abstract class BasePersistentStore<V> implements PersistentStore<V> {
+public class VersionMismatchException extends DrillRuntimeException {
 
-  @Override
-  public Iterator<Map.Entry<String, V>> getAll() {
-    return getRange(0, Integer.MAX_VALUE);
+  public VersionMismatchException() {
+    super();
   }
 
-  /** By default get with version will behave the same way as without version.
-   * Override this method to add version support. */
-  @Override
-  public V get(String key, DataChangeVersion version) {
-    return get(key);
+  public VersionMismatchException(Throwable cause) {
+    super(cause);
   }
 
-  /** By default put with version will behave the same way as without version.
-   * Override this method to add version support. */
-  @Override
-  public void put(String key, V value, DataChangeVersion version) {
-    put(key, value);
+  public VersionMismatchException(String message) {
+    super(message);
+  }
+
+  public VersionMismatchException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public VersionMismatchException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 
 }

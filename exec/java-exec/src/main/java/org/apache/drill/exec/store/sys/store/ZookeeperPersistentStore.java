@@ -63,7 +63,18 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public V get(final String key) {
-    final byte[] bytes = client.get(key);
+    return get(key, null);
+  }
+
+  @Override
+  public V get(final String key, DataChangeVersion version) {
+    byte[] bytes;
+    if (version != null) {
+      bytes = client.get(key, version);
+    } else {
+      bytes = client.get(key);
+    }
+
     if (bytes == null) {
       return null;
     }
@@ -76,10 +87,15 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public void put(final String key, final V value) {
+    put(key, value, null);
+  }
+
+  @Override
+  public void put(final String key, final V value, DataChangeVersion version) {
     final InstanceSerializer<V> serializer = config.getSerializer();
     try {
       final byte[] bytes = serializer.serialize(value);
-      client.put(key, bytes);
+      client.put(key, bytes, version);
     } catch (final IOException e) {
       throw new DrillRuntimeException(String.format("unable to de/serialize value of type %s", value.getClass()), e);
     }
