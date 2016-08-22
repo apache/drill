@@ -17,42 +17,20 @@
  */
 package org.apache.drill.hbase;
 
-import static org.apache.drill.TestBuilder.listOf;
-import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import io.netty.buffer.DrillBuf;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import mockit.Injectable;
-
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
-import org.apache.drill.exec.compile.ClassTransformer;
-import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.util.ByteBufUtil.HadoopWritables;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.joda.time.DateTime;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;

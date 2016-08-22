@@ -89,6 +89,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.util.DecimalUtility;
 
 public class ExpressionTreeMaterializer {
 
@@ -267,6 +268,17 @@ public class ExpressionTreeMaterializer {
       return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
+    private int computePrecision(LogicalExpression currentArg) {
+        int precision = currentArg.getMajorType().getPrecision();
+        if (currentArg.getMajorType().getMinorType() == MinorType.INT) {
+            precision = DecimalUtility.MAX_DIGITS_INT;
+        }
+        else if (currentArg.getMajorType().getMinorType() == MinorType.BIGINT) {
+            precision = DecimalUtility.MAX_DIGITS_BIGINT;
+        }
+        return precision;
+    }
+
     @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionLookupContext functionLookupContext) {
       List<LogicalExpression> args = Lists.newArrayList();
@@ -313,7 +325,7 @@ public class ExpressionTreeMaterializer {
             if (CoreDecimalUtility.isDecimalType(parmType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
               parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
             }
             argsWithCast.add(addCastExpression(currentArg, parmType, functionLookupContext, errorCollector));
           }
@@ -339,7 +351,7 @@ public class ExpressionTreeMaterializer {
             if (CoreDecimalUtility.isDecimalType(parmType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
               parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(currentArg.getMajorType().getPrecision()).build();
+                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
             }
             extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, functionLookupContext, errorCollector));
           }

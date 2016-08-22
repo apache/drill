@@ -94,4 +94,19 @@ public class TestColumnReaderFactory extends BaseTestQuery {
     // query parquet file. We shouldn't get any exception
     testNoResult("SELECT * FROM cp.`parquet/decimal_nodictionary.parquet`");
   }
+
+  /**
+   * check if BigInt is read correctly with dictionary encoding.
+   */
+  @Test
+  public void testBigIntWithDictionary() throws Exception {
+    String query = "select sum(ts) as total from cp.`parquet/bigIntDictionary.parquet`";
+
+    testBuilder()
+    .sqlQuery(query)
+    .ordered()
+    .baselineColumns("total")
+    .baselineValues(190928593476806865L)
+    .build().run();
+  }
 }

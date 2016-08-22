@@ -19,16 +19,13 @@ package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.calcite.jdbc.SimpleCalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -41,21 +38,22 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.QueryOptionManager;
-import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
+import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.util.Utilities;
 
 import com.google.common.collect.Lists;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
-public class QueryContext implements AutoCloseable, OptimizerRulesContext {
+public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private final DrillbitContext drillbitContext;
@@ -70,8 +68,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   private final ContextInformation contextInformation;
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
-
-  private final List<SchemaPlus> schemaTreesToClose;
+  private final SchemaTreeProvider schemaTreeProvider;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -97,7 +94,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
         plannerSettings.getPlanningMemoryLimit());
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
-    schemaTreesToClose = Lists.newArrayList();
+    schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
   }
 
   @Override
@@ -146,9 +143,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
    * @return Root of the schema tree.
    */
   public SchemaPlus getRootSchema(final String userName) {
-    final String schemaUser = isImpersonationEnabled() ? userName : ImpersonationUtil.getProcessUserName();
-    final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, this).build();
-    return getRootSchema(schemaConfig);
+    return schemaTreeProvider.createRootSchema(userName, this);
   }
 
   /**
@@ -157,17 +152,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
    * @return
    */
   public SchemaPlus getRootSchema(SchemaConfig schemaConfig) {
-    try {
-      final SchemaPlus rootSchema = SimpleCalciteSchema.createRootSchema(false);
-      drillbitContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
-      schemaTreesToClose.add(rootSchema);
-      return rootSchema;
-    } catch(IOException e) {
-      // We can't proceed further without a schema, throw a runtime exception.
-      final String errMsg = String.format("Failed to create schema tree: %s", e.getMessage());
-      logger.error(errMsg, e);
-      throw new DrillRuntimeException(errMsg, e);
-    }
+    return schemaTreeProvider.createRootSchema(schemaConfig);
   }
 
   /**
@@ -211,8 +196,14 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     return drillbitContext.getFunctionImplementationRegistry();
   }
 
+  @Override
   public ViewExpansionContext getViewExpansionContext() {
     return viewExpansionContext;
+  }
+
+  @Override
+  public OptionValue getOption(String optionKey) {
+    return getOptions().getOption(optionKey);
   }
 
   public boolean isImpersonationEnabled() {
@@ -256,28 +247,12 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
         // allocator from the toClose list.
         toClose.add(bufferManager);
         toClose.add(allocator);
+        toClose.add(schemaTreeProvider);
 
-        for(SchemaPlus tree : schemaTreesToClose) {
-          addSchemasToCloseList(tree, toClose);
-        }
-
-        AutoCloseables.close(toClose.toArray(new AutoCloseable[0]));
+        AutoCloseables.close(toClose);
       }
     } finally {
       closed = true;
-    }
-  }
-
-  private void addSchemasToCloseList(final SchemaPlus tree, final List<AutoCloseable> toClose) {
-    for(String subSchemaName : tree.getSubSchemaNames()) {
-      addSchemasToCloseList(tree.getSubSchema(subSchemaName), toClose);
-    }
-
-    try {
-      AbstractSchema drillSchemaImpl =  tree.unwrap(AbstractSchema.class);
-      toClose.add(drillSchemaImpl);
-    } catch (ClassCastException e) {
-      // Ignore as the SchemaPlus is not an implementation of Drill schema.
     }
   }
 }

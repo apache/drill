@@ -26,7 +26,7 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
   private final String[] dirs;
   private final String file;
 
-  public DFSFilePartitionLocation(int max, String selectionRoot, String file) {
+  public DFSFilePartitionLocation(int max, String selectionRoot, String file, boolean hasDirsOnly) {
     this.file = file;
     this.dirs = new String[max];
 
@@ -42,8 +42,8 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
       postPath = postPath.substring(1);
     }
     String[] mostDirs = postPath.split("/");
-    int maxLoop = Math.min(max, mostDirs.length - 1);
-    for(int i =0; i < maxLoop; i++){
+    int maxLoop = Math.min(max, hasDirsOnly ? mostDirs.length : mostDirs.length - 1);
+    for(int i =0; i < maxLoop; i++) {
       this.dirs[i] = mostDirs[i];
     }
   }
@@ -71,5 +71,6 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
   public String[] getDirs() {
     return dirs;
   }
+
 }
 

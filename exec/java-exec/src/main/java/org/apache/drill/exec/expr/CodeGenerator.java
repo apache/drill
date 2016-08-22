@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
+import org.apache.drill.exec.server.options.OptionManager;
 
 /**
  * A code generator is responsible for generating the Java source code required to complete the implementation of an
@@ -52,12 +53,12 @@ public class CodeGenerator<T> {
   private String generatedCode;
   private String generifiedCode;
 
-  CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
-    this(ClassGenerator.getDefaultMapping(), definition, funcRegistry);
+  CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+    this(ClassGenerator.getDefaultMapping(), definition, funcRegistry, optionManager);
   }
 
   CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry) {
+      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
     Preconditions.checkNotNull(definition.getSignature(),
         "The signature for defintion %s was incorrectly initialized.", definition);
     this.definition = definition;
@@ -67,7 +68,7 @@ public class CodeGenerator<T> {
       this.model = new JCodeModel();
       JDefinedClass clazz = model._package(PACKAGE_NAME)._class(className);
       rootGenerator = new ClassGenerator<>(this, mappingSet, definition.getSignature(), new EvaluationVisitor(
-          funcRegistry), clazz, model);
+          funcRegistry), clazz, model, optionManager);
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalStateException(e);
     }
@@ -107,22 +108,27 @@ public class CodeGenerator<T> {
 
   public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition,
       FunctionImplementationRegistry funcRegistry) {
-    return new CodeGenerator<T>(definition, funcRegistry);
+    return get(definition, funcRegistry, null);
+  }
+
+  public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition,
+      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+    return new CodeGenerator<T>(definition, funcRegistry, optionManager);
   }
 
   public static <T> ClassGenerator<T> getRoot(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry) {
-    return get(definition, funcRegistry).getRoot();
+      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+    return get(definition, funcRegistry, optionManager).getRoot();
   }
 
   public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry) {
-    return get(mappingSet, definition, funcRegistry).getRoot();
+      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+    return get(mappingSet, definition, funcRegistry, optionManager).getRoot();
   }
 
   public static <T> CodeGenerator<T> get(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry) {
-    return new CodeGenerator<T>(mappingSet, definition, funcRegistry);
+      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+    return new CodeGenerator<T>(mappingSet, definition, funcRegistry, optionManager);
   }
 
   @Override

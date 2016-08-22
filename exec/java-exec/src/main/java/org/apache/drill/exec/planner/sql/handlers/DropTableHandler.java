@@ -19,7 +19,9 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
+import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
@@ -41,10 +43,12 @@ public class DropTableHandler extends DefaultSqlHandler {
   }
 
   /**
-   * Function resolves the schema and invokes the drop method. Raises an exception if the schema is
-   * immutable.
-   * @param sqlNode - Table name identifier
-   * @return - Single row indicating drop succeeded, raise exception otherwise
+   * Function resolves the schema and invokes the drop method
+   * (while IF EXISTS statement is used function invokes the drop method only if table exists).
+   * Raises an exception if the schema is immutable.
+   * @param sqlNode - SqlDropTable (SQL parse tree of drop table [if exists] query)
+   * @return - Single row indicating drop succeeded or table is not found while IF EXISTS statement is used,
+   * raise exception otherwise
    * @throws ValidationException
    * @throws RelConversionException
    * @throws IOException
@@ -62,11 +66,19 @@ public class DropTableHandler extends DefaultSqlHandler {
       drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, dropTableNode.getSchema());
     }
 
-    String tableName = ((SqlDropTable) sqlNode).getName();
+    String tableName = dropTableNode.getName();
     if (drillSchema == null) {
       throw UserException.validationError()
           .message("Invalid table_name [%s]", tableName)
           .build(logger);
+    }
+
+    if (dropTableNode.checkTableExistence()) {
+      final Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
+      if (tableToDrop == null || tableToDrop.getJdbcTableType() != Schema.TableType.TABLE) {
+        return DirectPlan.createDirectPlan(context, true,
+            String.format("Table [%s] not found", tableName));
+      }
     }
 
     drillSchema.dropTable(tableName);

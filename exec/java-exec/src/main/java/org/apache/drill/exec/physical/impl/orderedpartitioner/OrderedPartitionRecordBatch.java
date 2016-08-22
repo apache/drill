@@ -70,7 +70,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -421,7 +420,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       List<Ordering> orderings, List<ValueVector> localAllocationVectors) throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
-        context.getFunctionRegistry());
+        context.getFunctionRegistry(), context.getOptions());
 
     int i = 0;
     for (Ordering od : orderings) {
@@ -587,7 +586,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
-        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+        OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
 
     for (VectorWrapper<?> vw : batch) {
       TransferPair tp = vw.getValueVector().getTransferPair(oContext.getAllocator());
@@ -604,17 +603,17 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
       cg.setMappingSet(incomingMapping);
-      ClassGenerator.HoldingContainer left = cg.addExpr(expr, false);
+      ClassGenerator.HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(partitionMapping);
       ClassGenerator.HoldingContainer right = cg.addExpr(
-          new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), false);
+          new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(mainMapping);
 
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparator(od.nullsSortHigh(), left, right,
                                                          context.getFunctionRegistry());
-      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
+      ClassGenerator.HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       if (od.getDirection() == Direction.ASCENDING) {

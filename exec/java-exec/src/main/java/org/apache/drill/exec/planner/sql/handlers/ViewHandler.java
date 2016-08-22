@@ -106,7 +106,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
     }
   }
 
-  /** Handler for Drop View DDL command. */
+  /** Handler for Drop View [If Exists] DDL command. */
   public static class DropView extends ViewHandler {
     public DropView(SqlHandlerConfig config) {
       super(config);
@@ -115,27 +115,34 @@ public abstract class ViewHandler extends DefaultSqlHandler {
     @Override
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
       SqlDropView dropView = unwrap(sqlNode, SqlDropView.class);
-      final String viewToDrop = dropView.getName();
+      final String viewName = dropView.getName();
       final AbstractSchema drillSchema =
           SchemaUtilites.resolveToMutableDrillSchema(context.getNewDefaultSchema(), dropView.getSchemaPath());
 
       final String schemaPath = drillSchema.getFullSchemaName();
 
-      final Table existingTable = SqlHandlerUtil.getTableFromSchema(drillSchema, viewToDrop);
-      if (existingTable != null && existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
-        throw UserException.validationError()
-            .message("[%s] is not a VIEW in schema [%s]", viewToDrop, schemaPath)
-            .build(logger);
-      } else if (existingTable == null) {
-        throw UserException.validationError()
-            .message("Unknown view [%s] in schema [%s].", viewToDrop, schemaPath)
-            .build(logger);
+      final Table viewToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, viewName);
+      if (dropView.checkViewExistence()) {
+        if (viewToDrop == null || viewToDrop.getJdbcTableType() != Schema.TableType.VIEW){
+          return DirectPlan.createDirectPlan(context, true,
+              String.format("View [%s] not found in schema [%s].", viewName, schemaPath));
+        }
+      } else {
+        if (viewToDrop != null && viewToDrop.getJdbcTableType() != Schema.TableType.VIEW) {
+          throw UserException.validationError()
+              .message("[%s] is not a VIEW in schema [%s]", viewName, schemaPath)
+              .build(logger);
+        } else if (viewToDrop == null) {
+          throw UserException.validationError()
+              .message("Unknown view [%s] in schema [%s].", viewName, schemaPath)
+              .build(logger);
+        }
       }
 
-      drillSchema.dropView(viewToDrop);
+      drillSchema.dropView(viewName);
 
       return DirectPlan.createDirectPlan(context, true,
-          String.format("View [%s] deleted successfully from schema [%s].", viewToDrop, schemaPath));
+          String.format("View [%s] deleted successfully from schema [%s].", viewName, schemaPath));
     }
   }
 }

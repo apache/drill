@@ -31,18 +31,15 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -57,13 +54,11 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sun.codemodel.JClassAlreadyExistsException;
 
 import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
 public class TestSimpleFunctions extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
@@ -152,13 +147,7 @@ public class TestSimpleFunctions extends ExecTest {
   @Test
   public void testSubstring(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testSubstring.json"), Charsets.UTF_8));
@@ -191,13 +180,7 @@ public class TestSimpleFunctions extends ExecTest {
   @Test
   public void testSubstringNegative(@Injectable final DrillbitContext bitContext,
                                     @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testSubstringNegative.json"), Charsets.UTF_8));
@@ -231,13 +214,7 @@ public class TestSimpleFunctions extends ExecTest {
   @Test
   public void testByteSubstring(@Injectable final DrillbitContext bitContext,
                                   @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-    }};
+    mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testByteSubstring.json"), Charsets.UTF_8));

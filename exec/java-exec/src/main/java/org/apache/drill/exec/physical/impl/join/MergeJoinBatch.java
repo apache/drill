@@ -267,7 +267,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
 
-    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     // Generate members and initialization code
@@ -446,17 +446,17 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         ////////////////////////
         cg.setMappingSet(compareMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], false);
+        ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(leftExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         cg.setMappingSet(compareRightMapping);
         cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], false);
+        ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(rightExpression[i], ClassGenerator.BlkCreateMode.FALSE);
 
         LogicalExpression fh =
           FunctionGenerationHelper.getOrderingComparatorNullsHigh(compareLeftExprHolder,
             compareRightExprHolder,
             context.getFunctionRegistry());
-        HoldingContainer out = cg.addExpr(fh, false);
+        HoldingContainer out = cg.addExpr(fh, ClassGenerator.BlkCreateMode.FALSE);
 
         // If not 0, it means not equal.
         // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal.

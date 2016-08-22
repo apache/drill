@@ -198,6 +198,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       result = prime * result + ((lineDelimiter == null) ? 0 : lineDelimiter.hashCode());
       result = prime * result + quote;
       result = prime * result + (skipFirstLine ? 1231 : 1237);
+      result = prime * result + (extractHeader ? 1231 : 1237);
       return result;
     }
 
@@ -240,6 +241,9 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         return false;
       }
       if (skipFirstLine != other.skipFirstLine) {
+        return false;
+      }
+      if (extractHeader != other.extractHeader) {
         return false;
       }
       return true;

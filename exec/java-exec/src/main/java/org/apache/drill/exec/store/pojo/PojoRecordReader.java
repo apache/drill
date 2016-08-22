@@ -29,7 +29,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
 import org.apache.drill.exec.store.pojo.Writers.DoubleWriter;
@@ -47,24 +46,30 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class PojoRecordReader<T> extends AbstractRecordReader {
+public class PojoRecordReader<T> extends AbstractRecordReader implements Iterable<T> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(PojoRecordReader.class);
 
-  public final int forJsonIgnore = 1;
-
   private final Class<T> pojoClass;
-  private final Iterator<T> iterator;
+  private final List<T> pojoObjects;
   private PojoWriter[] writers;
   private boolean doCurrent;
   private T currentPojo;
   private OperatorContext operatorContext;
 
+  private Iterator<T> currentIterator;
+
+  /**
+   * TODO: Cleanup the callers to pass the List of POJO objects directly rather than iterator.
+   * @param pojoClass
+   * @param iterator
+   */
   public PojoRecordReader(Class<T> pojoClass, Iterator<T> iterator) {
     this.pojoClass = pojoClass;
-    this.iterator = iterator;
+    this.pojoObjects = ImmutableList.copyOf(iterator);
   }
 
   @Override
@@ -118,7 +123,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
       throw new ExecutionSetupException("Failure while setting up schema for PojoRecordReader.", e);
     }
 
-
+    currentIterator = pojoObjects.iterator();
   }
 
   @Override
@@ -146,11 +151,11 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
     injector.injectPause(operatorContext.getExecutionControls(), "read-next", logger);
     try {
       int i =0;
-      while (doCurrent || iterator.hasNext()) {
+      while (doCurrent || currentIterator.hasNext()) {
         if (doCurrent) {
           doCurrent = false;
         } else {
-          currentPojo = iterator.next();
+          currentPojo = currentIterator.next();
         }
 
         if (!allocated) {
@@ -171,6 +176,11 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
     } catch (IllegalArgumentException | IllegalAccessException e) {
       throw new RuntimeException("Failure while trying to use PojoRecordReader.", e);
     }
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return pojoObjects.iterator();
   }
 
   @Override

@@ -532,140 +532,6 @@ public final class SchemaUserProtos
         }
     }
 
-    public static final class RunQuery
-    {
-        public static final org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.MessageSchema WRITE =
-            new org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.MessageSchema();
-        public static final org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.BuilderSchema MERGE =
-            new org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.BuilderSchema();
-        
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RunQuery>
-        {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RunQuery message) throws java.io.IOException
-            {
-                if(message.hasResultsMode())
-                    output.writeEnum(1, message.getResultsMode().getNumber(), false);
-                if(message.hasType())
-                    output.writeEnum(2, message.getType().getNumber(), false);
-                if(message.hasPlan())
-                    output.writeString(3, message.getPlan(), false);
-                for(org.apache.drill.exec.proto.BitControl.PlanFragment fragments : message.getFragmentsList())
-                    output.writeObject(4, fragments, org.apache.drill.exec.proto.SchemaBitControl.PlanFragment.WRITE, true);
-
-            }
-            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RunQuery message)
-            {
-                return message.isInitialized();
-            }
-            public java.lang.String getFieldName(int number)
-            {
-                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldName(number);
-            }
-            public int getFieldNumber(java.lang.String name)
-            {
-                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldNumber(name);
-            }
-            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RunQuery> typeClass()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.class;
-            }
-            public java.lang.String messageName()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getSimpleName();
-            }
-            public java.lang.String messageFullName()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getName();
-            }
-            //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RunQuery message) throws java.io.IOException {}
-            public org.apache.drill.exec.proto.UserProtos.RunQuery newMessage() { return null; }
-        }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RunQuery.Builder>
-        {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder) throws java.io.IOException
-            {
-                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
-                {
-                    switch(number)
-                    {
-                        case 0:
-                            return;
-                        case 1:
-                            builder.setResultsMode(org.apache.drill.exec.proto.UserProtos.QueryResultsMode.valueOf(input.readEnum()));
-                            break;
-                        case 2:
-                            builder.setType(org.apache.drill.exec.proto.UserBitShared.QueryType.valueOf(input.readEnum()));
-                            break;
-                        case 3:
-                            builder.setPlan(input.readString());
-                            break;
-                        case 4:
-                            builder.addFragments(input.mergeObject(org.apache.drill.exec.proto.BitControl.PlanFragment.newBuilder(), org.apache.drill.exec.proto.SchemaBitControl.PlanFragment.MERGE));
-
-                            break;
-                        default:
-                            input.handleUnknownField(number, this);
-                    }
-                }
-            }
-            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder)
-            {
-                return builder.isInitialized();
-            }
-            public org.apache.drill.exec.proto.UserProtos.RunQuery.Builder newMessage()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder();
-            }
-            public java.lang.String getFieldName(int number)
-            {
-                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldName(number);
-            }
-            public int getFieldNumber(java.lang.String name)
-            {
-                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldNumber(name);
-            }
-            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RunQuery.Builder> typeClass()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.Builder.class;
-            }
-            public java.lang.String messageName()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getSimpleName();
-            }
-            public java.lang.String messageFullName()
-            {
-                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getName();
-            }
-            //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder) throws java.io.IOException {}
-        }
-        public static java.lang.String getFieldName(int number)
-        {
-            switch(number)
-            {
-                case 1: return "resultsMode";
-                case 2: return "type";
-                case 3: return "plan";
-                case 4: return "fragments";
-                default: return null;
-            }
-        }
-        public static int getFieldNumber(java.lang.String name)
-        {
-            java.lang.Integer number = fieldMap.get(name);
-            return number == null ? 0 : number.intValue();
-        }
-        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
-        static
-        {
-            fieldMap.put("resultsMode", 1);
-            fieldMap.put("type", 2);
-            fieldMap.put("plan", 3);
-            fieldMap.put("fragments", 4);
-        }
-    }
-
     public static final class GetQueryPlanFragments
     {
         public static final org.apache.drill.exec.proto.SchemaUserProtos.GetQueryPlanFragments.MessageSchema WRITE =
@@ -1058,6 +924,2612 @@ public final class SchemaUserProtos
             fieldMap.put("status", 3);
             fieldMap.put("errorId", 4);
             fieldMap.put("errorMessage", 5);
+        }
+    }
+
+    public static final class LikeFilter
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.LikeFilter>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.LikeFilter message) throws java.io.IOException
+            {
+                if(message.hasRegex())
+                    output.writeString(1, message.getRegex(), false);
+                if(message.hasEscape())
+                    output.writeString(2, message.getEscape(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.LikeFilter message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.LikeFilter> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.LikeFilter message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.LikeFilter newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setRegex(input.readString());
+                            break;
+                        case 2:
+                            builder.setEscape(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.LikeFilter.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "regex";
+                case 2: return "escape";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("regex", 1);
+            fieldMap.put("escape", 2);
+        }
+    }
+
+    public static final class GetCatalogsReq
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetCatalogsReq>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq message) throws java.io.IOException
+            {
+                if(message.hasCatalogNameFilter())
+                    output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetCatalogsReq message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetCatalogsReq> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetCatalogsReq newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetCatalogsReq.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogNameFilter";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogNameFilter", 1);
+        }
+    }
+
+    public static final class CatalogMetadata
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CatalogMetadata>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CatalogMetadata message) throws java.io.IOException
+            {
+                if(message.hasCatalogName())
+                    output.writeString(1, message.getCatalogName(), false);
+                if(message.hasDescription())
+                    output.writeString(2, message.getDescription(), false);
+                if(message.hasConnect())
+                    output.writeString(3, message.getConnect(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CatalogMetadata message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CatalogMetadata message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.CatalogMetadata newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogName(input.readString());
+                            break;
+                        case 2:
+                            builder.setDescription(input.readString());
+                            break;
+                        case 3:
+                            builder.setConnect(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CatalogMetadata.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogName";
+                case 2: return "description";
+                case 3: return "connect";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogName", 1);
+            fieldMap.put("description", 2);
+            fieldMap.put("connect", 3);
+        }
+    }
+
+    public static final class GetCatalogsResp
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetCatalogsResp>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp message) throws java.io.IOException
+            {
+                if(message.hasStatus())
+                    output.writeEnum(1, message.getStatus().getNumber(), false);
+                for(org.apache.drill.exec.proto.UserProtos.CatalogMetadata catalogs : message.getCatalogsList())
+                    output.writeObject(2, catalogs, org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.WRITE, true);
+
+                if(message.hasError())
+                    output.writeObject(3, message.getError(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetCatalogsResp message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetCatalogsResp> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetCatalogsResp newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.addCatalogs(input.mergeObject(org.apache.drill.exec.proto.UserProtos.CatalogMetadata.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.CatalogMetadata.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetCatalogsResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetCatalogsResp.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "status";
+                case 2: return "catalogs";
+                case 3: return "error";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("status", 1);
+            fieldMap.put("catalogs", 2);
+            fieldMap.put("error", 3);
+        }
+    }
+
+    public static final class GetSchemasReq
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetSchemasReq>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetSchemasReq message) throws java.io.IOException
+            {
+                if(message.hasCatalogNameFilter())
+                    output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasSchameNameFilter())
+                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetSchemasReq message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetSchemasReq> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetSchemasReq message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetSchemasReq newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasReq.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetSchemasReq.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogNameFilter";
+                case 2: return "schameNameFilter";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogNameFilter", 1);
+            fieldMap.put("schameNameFilter", 2);
+        }
+    }
+
+    public static final class SchemaMetadata
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.SchemaMetadata>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.SchemaMetadata message) throws java.io.IOException
+            {
+                if(message.hasCatalogName())
+                    output.writeString(1, message.getCatalogName(), false);
+                if(message.hasSchemaName())
+                    output.writeString(2, message.getSchemaName(), false);
+                if(message.hasOwner())
+                    output.writeString(3, message.getOwner(), false);
+                if(message.hasType())
+                    output.writeString(4, message.getType(), false);
+                if(message.hasMutable())
+                    output.writeString(5, message.getMutable(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.SchemaMetadata message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.SchemaMetadata message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.SchemaMetadata newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogName(input.readString());
+                            break;
+                        case 2:
+                            builder.setSchemaName(input.readString());
+                            break;
+                        case 3:
+                            builder.setOwner(input.readString());
+                            break;
+                        case 4:
+                            builder.setType(input.readString());
+                            break;
+                        case 5:
+                            builder.setMutable(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.SchemaMetadata.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogName";
+                case 2: return "schemaName";
+                case 3: return "owner";
+                case 4: return "type";
+                case 5: return "mutable";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogName", 1);
+            fieldMap.put("schemaName", 2);
+            fieldMap.put("owner", 3);
+            fieldMap.put("type", 4);
+            fieldMap.put("mutable", 5);
+        }
+    }
+
+    public static final class GetSchemasResp
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetSchemasResp>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetSchemasResp message) throws java.io.IOException
+            {
+                if(message.hasStatus())
+                    output.writeEnum(1, message.getStatus().getNumber(), false);
+                for(org.apache.drill.exec.proto.UserProtos.SchemaMetadata schemas : message.getSchemasList())
+                    output.writeObject(2, schemas, org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.WRITE, true);
+
+                if(message.hasError())
+                    output.writeObject(3, message.getError(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetSchemasResp message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetSchemasResp> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetSchemasResp message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetSchemasResp newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.addSchemas(input.mergeObject(org.apache.drill.exec.proto.UserProtos.SchemaMetadata.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.SchemaMetadata.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetSchemasResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetSchemasResp.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetSchemasResp.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "status";
+                case 2: return "schemas";
+                case 3: return "error";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("status", 1);
+            fieldMap.put("schemas", 2);
+            fieldMap.put("error", 3);
+        }
+    }
+
+    public static final class GetTablesReq
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetTablesReq>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetTablesReq message) throws java.io.IOException
+            {
+                if(message.hasCatalogNameFilter())
+                    output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasSchameNameFilter())
+                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasTableNameFilter())
+                    output.writeObject(3, message.getTableNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetTablesReq message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetTablesReq> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetTablesReq message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetTablesReq newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setTableNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesReq.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetTablesReq.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogNameFilter";
+                case 2: return "schameNameFilter";
+                case 3: return "tableNameFilter";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogNameFilter", 1);
+            fieldMap.put("schameNameFilter", 2);
+            fieldMap.put("tableNameFilter", 3);
+        }
+    }
+
+    public static final class TableMetadata
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.TableMetadata>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.TableMetadata message) throws java.io.IOException
+            {
+                if(message.hasCatalogName())
+                    output.writeString(1, message.getCatalogName(), false);
+                if(message.hasSchemaName())
+                    output.writeString(2, message.getSchemaName(), false);
+                if(message.hasTableName())
+                    output.writeString(3, message.getTableName(), false);
+                if(message.hasType())
+                    output.writeString(4, message.getType(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.TableMetadata message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.TableMetadata> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.TableMetadata message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.TableMetadata newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogName(input.readString());
+                            break;
+                        case 2:
+                            builder.setSchemaName(input.readString());
+                            break;
+                        case 3:
+                            builder.setTableName(input.readString());
+                            break;
+                        case 4:
+                            builder.setType(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.TableMetadata.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogName";
+                case 2: return "schemaName";
+                case 3: return "tableName";
+                case 4: return "type";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogName", 1);
+            fieldMap.put("schemaName", 2);
+            fieldMap.put("tableName", 3);
+            fieldMap.put("type", 4);
+        }
+    }
+
+    public static final class GetTablesResp
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetTablesResp>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetTablesResp message) throws java.io.IOException
+            {
+                if(message.hasStatus())
+                    output.writeEnum(1, message.getStatus().getNumber(), false);
+                for(org.apache.drill.exec.proto.UserProtos.TableMetadata tables : message.getTablesList())
+                    output.writeObject(2, tables, org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.WRITE, true);
+
+                if(message.hasError())
+                    output.writeObject(3, message.getError(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetTablesResp message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetTablesResp> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetTablesResp message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetTablesResp newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.addTables(input.mergeObject(org.apache.drill.exec.proto.UserProtos.TableMetadata.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.TableMetadata.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetTablesResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetTablesResp.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetTablesResp.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "status";
+                case 2: return "tables";
+                case 3: return "error";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("status", 1);
+            fieldMap.put("tables", 2);
+            fieldMap.put("error", 3);
+        }
+    }
+
+    public static final class GetColumnsReq
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetColumnsReq>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetColumnsReq message) throws java.io.IOException
+            {
+                if(message.hasCatalogNameFilter())
+                    output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasSchameNameFilter())
+                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasTableNameFilter())
+                    output.writeObject(3, message.getTableNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+                if(message.hasColumnNameFilter())
+                    output.writeObject(4, message.getColumnNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetColumnsReq message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetColumnsReq> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetColumnsReq message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetColumnsReq newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setTableNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        case 4:
+                            builder.setColumnNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsReq.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetColumnsReq.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogNameFilter";
+                case 2: return "schameNameFilter";
+                case 3: return "tableNameFilter";
+                case 4: return "columnNameFilter";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogNameFilter", 1);
+            fieldMap.put("schameNameFilter", 2);
+            fieldMap.put("tableNameFilter", 3);
+            fieldMap.put("columnNameFilter", 4);
+        }
+    }
+
+    public static final class ColumnMetadata
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.ColumnMetadata>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.ColumnMetadata message) throws java.io.IOException
+            {
+                if(message.hasCatalogName())
+                    output.writeString(1, message.getCatalogName(), false);
+                if(message.hasSchemaName())
+                    output.writeString(2, message.getSchemaName(), false);
+                if(message.hasTableName())
+                    output.writeString(3, message.getTableName(), false);
+                if(message.hasColumnName())
+                    output.writeString(4, message.getColumnName(), false);
+                if(message.hasOrdinalPosition())
+                    output.writeInt32(5, message.getOrdinalPosition(), false);
+                if(message.hasDefaultValue())
+                    output.writeString(6, message.getDefaultValue(), false);
+                if(message.hasIsNullable())
+                    output.writeBool(7, message.getIsNullable(), false);
+                if(message.hasDataType())
+                    output.writeString(8, message.getDataType(), false);
+                if(message.hasCharMaxLength())
+                    output.writeInt32(9, message.getCharMaxLength(), false);
+                if(message.hasCharOctetLength())
+                    output.writeInt32(10, message.getCharOctetLength(), false);
+                if(message.hasNumericPrecision())
+                    output.writeInt32(11, message.getNumericPrecision(), false);
+                if(message.hasNumericPrecisionRadix())
+                    output.writeInt32(12, message.getNumericPrecisionRadix(), false);
+                if(message.hasNumericScale())
+                    output.writeInt32(13, message.getNumericScale(), false);
+                if(message.hasDateTimePrecision())
+                    output.writeInt32(14, message.getDateTimePrecision(), false);
+                if(message.hasIntervalType())
+                    output.writeString(15, message.getIntervalType(), false);
+                if(message.hasIntervalPrecision())
+                    output.writeInt32(16, message.getIntervalPrecision(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ColumnMetadata message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.ColumnMetadata message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.ColumnMetadata newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogName(input.readString());
+                            break;
+                        case 2:
+                            builder.setSchemaName(input.readString());
+                            break;
+                        case 3:
+                            builder.setTableName(input.readString());
+                            break;
+                        case 4:
+                            builder.setColumnName(input.readString());
+                            break;
+                        case 5:
+                            builder.setOrdinalPosition(input.readInt32());
+                            break;
+                        case 6:
+                            builder.setDefaultValue(input.readString());
+                            break;
+                        case 7:
+                            builder.setIsNullable(input.readBool());
+                            break;
+                        case 8:
+                            builder.setDataType(input.readString());
+                            break;
+                        case 9:
+                            builder.setCharMaxLength(input.readInt32());
+                            break;
+                        case 10:
+                            builder.setCharOctetLength(input.readInt32());
+                            break;
+                        case 11:
+                            builder.setNumericPrecision(input.readInt32());
+                            break;
+                        case 12:
+                            builder.setNumericPrecisionRadix(input.readInt32());
+                            break;
+                        case 13:
+                            builder.setNumericScale(input.readInt32());
+                            break;
+                        case 14:
+                            builder.setDateTimePrecision(input.readInt32());
+                            break;
+                        case 15:
+                            builder.setIntervalType(input.readString());
+                            break;
+                        case 16:
+                            builder.setIntervalPrecision(input.readInt32());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ColumnMetadata.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogName";
+                case 2: return "schemaName";
+                case 3: return "tableName";
+                case 4: return "columnName";
+                case 5: return "ordinalPosition";
+                case 6: return "defaultValue";
+                case 7: return "isNullable";
+                case 8: return "dataType";
+                case 9: return "charMaxLength";
+                case 10: return "charOctetLength";
+                case 11: return "numericPrecision";
+                case 12: return "numericPrecisionRadix";
+                case 13: return "numericScale";
+                case 14: return "dateTimePrecision";
+                case 15: return "intervalType";
+                case 16: return "intervalPrecision";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogName", 1);
+            fieldMap.put("schemaName", 2);
+            fieldMap.put("tableName", 3);
+            fieldMap.put("columnName", 4);
+            fieldMap.put("ordinalPosition", 5);
+            fieldMap.put("defaultValue", 6);
+            fieldMap.put("isNullable", 7);
+            fieldMap.put("dataType", 8);
+            fieldMap.put("charMaxLength", 9);
+            fieldMap.put("charOctetLength", 10);
+            fieldMap.put("numericPrecision", 11);
+            fieldMap.put("numericPrecisionRadix", 12);
+            fieldMap.put("numericScale", 13);
+            fieldMap.put("dateTimePrecision", 14);
+            fieldMap.put("intervalType", 15);
+            fieldMap.put("intervalPrecision", 16);
+        }
+    }
+
+    public static final class GetColumnsResp
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetColumnsResp>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetColumnsResp message) throws java.io.IOException
+            {
+                if(message.hasStatus())
+                    output.writeEnum(1, message.getStatus().getNumber(), false);
+                for(org.apache.drill.exec.proto.UserProtos.ColumnMetadata columns : message.getColumnsList())
+                    output.writeObject(2, columns, org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.WRITE, true);
+
+                if(message.hasError())
+                    output.writeObject(3, message.getError(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetColumnsResp message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetColumnsResp> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetColumnsResp message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.GetColumnsResp newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.addColumns(input.mergeObject(org.apache.drill.exec.proto.UserProtos.ColumnMetadata.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.ColumnMetadata.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.GetColumnsResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.GetColumnsResp.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.GetColumnsResp.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "status";
+                case 2: return "columns";
+                case 3: return "error";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("status", 1);
+            fieldMap.put("columns", 2);
+            fieldMap.put("error", 3);
+        }
+    }
+
+    public static final class CreatePreparedStatementReq
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq message) throws java.io.IOException
+            {
+                if(message.hasSqlQuery())
+                    output.writeString(1, message.getSqlQuery(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setSqlQuery(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementReq.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "sqlQuery";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("sqlQuery", 1);
+        }
+    }
+
+    public static final class ResultColumnMetadata
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata message) throws java.io.IOException
+            {
+                if(message.hasCatalogName())
+                    output.writeString(1, message.getCatalogName(), false);
+                if(message.hasSchemaName())
+                    output.writeString(2, message.getSchemaName(), false);
+                if(message.hasTableName())
+                    output.writeString(3, message.getTableName(), false);
+                if(message.hasColumnName())
+                    output.writeString(4, message.getColumnName(), false);
+                if(message.hasLabel())
+                    output.writeString(5, message.getLabel(), false);
+                if(message.hasDataType())
+                    output.writeString(6, message.getDataType(), false);
+                if(message.hasIsNullable())
+                    output.writeBool(7, message.getIsNullable(), false);
+                if(message.hasPrecision())
+                    output.writeInt32(8, message.getPrecision(), false);
+                if(message.hasScale())
+                    output.writeInt32(9, message.getScale(), false);
+                if(message.hasSigned())
+                    output.writeBool(10, message.getSigned(), false);
+                if(message.hasDisplaySize())
+                    output.writeInt32(11, message.getDisplaySize(), false);
+                if(message.hasIsAliased())
+                    output.writeBool(12, message.getIsAliased(), false);
+                if(message.hasSearchability())
+                    output.writeEnum(13, message.getSearchability().getNumber(), false);
+                if(message.hasUpdatability())
+                    output.writeEnum(14, message.getUpdatability().getNumber(), false);
+                if(message.hasAutoIncrement())
+                    output.writeBool(15, message.getAutoIncrement(), false);
+                if(message.hasCaseSensitivity())
+                    output.writeBool(16, message.getCaseSensitivity(), false);
+                if(message.hasSortable())
+                    output.writeBool(17, message.getSortable(), false);
+                if(message.hasClassName())
+                    output.writeString(18, message.getClassName(), false);
+                if(message.hasIsCurrency())
+                    output.writeBool(20, message.getIsCurrency(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setCatalogName(input.readString());
+                            break;
+                        case 2:
+                            builder.setSchemaName(input.readString());
+                            break;
+                        case 3:
+                            builder.setTableName(input.readString());
+                            break;
+                        case 4:
+                            builder.setColumnName(input.readString());
+                            break;
+                        case 5:
+                            builder.setLabel(input.readString());
+                            break;
+                        case 6:
+                            builder.setDataType(input.readString());
+                            break;
+                        case 7:
+                            builder.setIsNullable(input.readBool());
+                            break;
+                        case 8:
+                            builder.setPrecision(input.readInt32());
+                            break;
+                        case 9:
+                            builder.setScale(input.readInt32());
+                            break;
+                        case 10:
+                            builder.setSigned(input.readBool());
+                            break;
+                        case 11:
+                            builder.setDisplaySize(input.readInt32());
+                            break;
+                        case 12:
+                            builder.setIsAliased(input.readBool());
+                            break;
+                        case 13:
+                            builder.setSearchability(org.apache.drill.exec.proto.UserProtos.ColumnSearchability.valueOf(input.readEnum()));
+                            break;
+                        case 14:
+                            builder.setUpdatability(org.apache.drill.exec.proto.UserProtos.ColumnUpdatability.valueOf(input.readEnum()));
+                            break;
+                        case 15:
+                            builder.setAutoIncrement(input.readBool());
+                            break;
+                        case 16:
+                            builder.setCaseSensitivity(input.readBool());
+                            break;
+                        case 17:
+                            builder.setSortable(input.readBool());
+                            break;
+                        case 18:
+                            builder.setClassName(input.readString());
+                            break;
+                        case 20:
+                            builder.setIsCurrency(input.readBool());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "catalogName";
+                case 2: return "schemaName";
+                case 3: return "tableName";
+                case 4: return "columnName";
+                case 5: return "label";
+                case 6: return "dataType";
+                case 7: return "isNullable";
+                case 8: return "precision";
+                case 9: return "scale";
+                case 10: return "signed";
+                case 11: return "displaySize";
+                case 12: return "isAliased";
+                case 13: return "searchability";
+                case 14: return "updatability";
+                case 15: return "autoIncrement";
+                case 16: return "caseSensitivity";
+                case 17: return "sortable";
+                case 18: return "className";
+                case 20: return "isCurrency";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("catalogName", 1);
+            fieldMap.put("schemaName", 2);
+            fieldMap.put("tableName", 3);
+            fieldMap.put("columnName", 4);
+            fieldMap.put("label", 5);
+            fieldMap.put("dataType", 6);
+            fieldMap.put("isNullable", 7);
+            fieldMap.put("precision", 8);
+            fieldMap.put("scale", 9);
+            fieldMap.put("signed", 10);
+            fieldMap.put("displaySize", 11);
+            fieldMap.put("isAliased", 12);
+            fieldMap.put("searchability", 13);
+            fieldMap.put("updatability", 14);
+            fieldMap.put("autoIncrement", 15);
+            fieldMap.put("caseSensitivity", 16);
+            fieldMap.put("sortable", 17);
+            fieldMap.put("className", 18);
+            fieldMap.put("isCurrency", 20);
+        }
+    }
+
+    public static final class PreparedStatementHandle
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle message) throws java.io.IOException
+            {
+                if(message.hasServerInfo())
+                    output.writeByteArray(1, message.getServerInfo().toByteArray(), false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setServerInfo(com.google.protobuf.ByteString.copyFrom(input.readByteArray()));
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "serverInfo";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("serverInfo", 1);
+        }
+    }
+
+    public static final class PreparedStatement
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.PreparedStatement>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.PreparedStatement message) throws java.io.IOException
+            {
+                for(org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata columns : message.getColumnsList())
+                    output.writeObject(1, columns, org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.WRITE, true);
+
+                if(message.hasServerHandle())
+                    output.writeObject(2, message.getServerHandle(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.PreparedStatement message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.PreparedStatement> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.PreparedStatement message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.PreparedStatement newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.addColumns(input.mergeObject(org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.ResultColumnMetadata.MERGE));
+
+                            break;
+                        case 2:
+                            builder.setServerHandle(input.mergeObject(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.PreparedStatement.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "columns";
+                case 2: return "serverHandle";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("columns", 1);
+            fieldMap.put("serverHandle", 2);
+        }
+    }
+
+    public static final class CreatePreparedStatementResp
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp message) throws java.io.IOException
+            {
+                if(message.hasStatus())
+                    output.writeEnum(1, message.getStatus().getNumber(), false);
+                if(message.hasPreparedStatement())
+                    output.writeObject(2, message.getPreparedStatement(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.WRITE, false);
+
+                if(message.hasError())
+                    output.writeObject(3, message.getError(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.setPreparedStatement(input.mergeObject(org.apache.drill.exec.proto.UserProtos.PreparedStatement.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatement.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.CreatePreparedStatementResp.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "status";
+                case 2: return "preparedStatement";
+                case 3: return "error";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("status", 1);
+            fieldMap.put("preparedStatement", 2);
+            fieldMap.put("error", 3);
+        }
+    }
+
+    public static final class RunQuery
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RunQuery>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RunQuery message) throws java.io.IOException
+            {
+                if(message.hasResultsMode())
+                    output.writeEnum(1, message.getResultsMode().getNumber(), false);
+                if(message.hasType())
+                    output.writeEnum(2, message.getType().getNumber(), false);
+                if(message.hasPlan())
+                    output.writeString(3, message.getPlan(), false);
+                for(org.apache.drill.exec.proto.BitControl.PlanFragment fragments : message.getFragmentsList())
+                    output.writeObject(4, fragments, org.apache.drill.exec.proto.SchemaBitControl.PlanFragment.WRITE, true);
+
+                if(message.hasPreparedStatementHandle())
+                    output.writeObject(5, message.getPreparedStatementHandle(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.WRITE, false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RunQuery message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RunQuery> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RunQuery message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.RunQuery newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RunQuery.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setResultsMode(org.apache.drill.exec.proto.UserProtos.QueryResultsMode.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.setType(org.apache.drill.exec.proto.UserBitShared.QueryType.valueOf(input.readEnum()));
+                            break;
+                        case 3:
+                            builder.setPlan(input.readString());
+                            break;
+                        case 4:
+                            builder.addFragments(input.mergeObject(org.apache.drill.exec.proto.BitControl.PlanFragment.newBuilder(), org.apache.drill.exec.proto.SchemaBitControl.PlanFragment.MERGE));
+
+                            break;
+                        case 5:
+                            builder.setPreparedStatementHandle(input.mergeObject(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.PreparedStatementHandle.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.RunQuery.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RunQuery.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RunQuery.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RunQuery.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RunQuery.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "resultsMode";
+                case 2: return "type";
+                case 3: return "plan";
+                case 4: return "fragments";
+                case 5: return "preparedStatementHandle";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("resultsMode", 1);
+            fieldMap.put("type", 2);
+            fieldMap.put("plan", 3);
+            fieldMap.put("fragments", 4);
+            fieldMap.put("preparedStatementHandle", 5);
         }
     }
 

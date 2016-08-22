@@ -51,7 +51,8 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
                                       SQLException {
     // Statement.isClosed() call is to avoid exception from getResultSet().
     if (statement.isClosed()
-        || statement.getResultSet().isClosed()) {
+        || (statement.getResultSet() != null // result set doesn't exist for prepared statement cases
+            && statement.getResultSet().isClosed())) {
         throw new AlreadyClosedSqlException(
             "ResultSetMetaData's ResultSet is already closed." );
     }

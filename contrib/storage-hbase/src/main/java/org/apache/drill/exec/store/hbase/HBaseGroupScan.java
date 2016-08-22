@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,11 +48,16 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.ServerName;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.RegionLocator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -146,28 +150,29 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private void init() {
     logger.debug("Getting region locations");
-    try {
-      HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
-      this.hTableDesc = table.getTableDescriptor();
-      NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
-      statsCalculator = new TableStatsCalculator(table, hbaseScanSpec, storagePlugin.getContext().getConfig(), storagePluginConfig);
+    TableName tableName = TableName.valueOf(hbaseScanSpec.getTableName());
+    Connection conn = storagePlugin.getConnection();
+
+    try (Admin admin = conn.getAdmin();
+         RegionLocator locator = conn.getRegionLocator(tableName)) {
+      this.hTableDesc = admin.getTableDescriptor(tableName);
+      List<HRegionLocation> regionLocations = locator.getAllRegionLocations();
+      statsCalculator = new TableStatsCalculator(conn, hbaseScanSpec, storagePlugin.getContext().getConfig(), storagePluginConfig);
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<HRegionInfo, ServerName>();
-      for (Entry<HRegionInfo, ServerName> mapEntry : regionsMap.entrySet()) {
-        HRegionInfo regionInfo = mapEntry.getKey();
+      for (HRegionLocation regionLocation : regionLocations) {
+        HRegionInfo regionInfo = regionLocation.getRegionInfo();
         if (!foundStartRegion && hbaseScanSpec.getStartRow() != null && hbaseScanSpec.getStartRow().length != 0 && !regionInfo.containsRow(hbaseScanSpec.getStartRow())) {
           continue;
         }
         foundStartRegion = true;
-        regionsToScan.put(regionInfo, mapEntry.getValue());
+        regionsToScan.put(regionInfo, regionLocation.getServerName());
         scanSizeInBytes += statsCalculator.getRegionSizeInBytes(regionInfo.getRegionName());
         if (hbaseScanSpec.getStopRow() != null && hbaseScanSpec.getStopRow().length != 0 && regionInfo.containsRow(hbaseScanSpec.getStopRow())) {
           break;
         }
       }
-
-      table.close();
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
     }

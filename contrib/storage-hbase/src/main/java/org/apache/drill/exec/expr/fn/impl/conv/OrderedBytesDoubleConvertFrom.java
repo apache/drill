@@ -40,7 +40,7 @@ public class OrderedBytesDoubleConvertFrom implements DrillSimpleFunc {
   @Override
   public void setup() {
     bytes = new byte[9];
-    br = new org.apache.hadoop.hbase.util.SimplePositionedByteRange();
+    br = new org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange();
   }
 
   @Override

@@ -176,7 +176,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException,
       IOException {
     CodeGenerator<HashAggregator> top =
-        CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+        CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
 
@@ -257,7 +257,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     cg.setMappingSet(UpdateAggrValuesMapping);
 
     for (LogicalExpression aggr : aggrExprs) {
-      HoldingContainer hc = cg.addExpr(aggr, true);
+      HoldingContainer hc = cg.addExpr(aggr, ClassGenerator.BlkCreateMode.TRUE);
     }
   }
 

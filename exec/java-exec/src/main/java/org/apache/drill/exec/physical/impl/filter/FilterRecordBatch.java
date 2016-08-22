@@ -22,9 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -142,14 +140,14 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV4Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry(), context.getOptions());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
-    cg.addExpr(new ReturnValueExpression(expr), false);
+    cg.addExpr(new ReturnValueExpression(expr), ClassGenerator.BlkCreateMode.FALSE);
 
     for (final VectorWrapper<?> vw : incoming) {
       for (final ValueVector vv : vw.getValueVectors()) {
@@ -176,7 +174,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV2Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry(), context.getOptions());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector,
             context.getFunctionRegistry(), false, unionTypeEnabled);
@@ -184,7 +182,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
-    cg.addExpr(new ReturnValueExpression(expr), false);
+    cg.addExpr(new ReturnValueExpression(expr), ClassGenerator.BlkCreateMode.FALSE);
 
     for (final VectorWrapper<?> v : incoming) {
       final TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));

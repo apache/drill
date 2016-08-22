@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.hbase.config;
 import java.io.IOException;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
@@ -33,11 +32,14 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStoreProvider.class);
@@ -46,13 +48,13 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
 
   static final byte[] QUALIFIER = Bytes.toBytes("d");
 
-  private final String storeTableName;
+  private final TableName hbaseTableName;
 
   private Configuration hbaseConf;
 
-  private HConnection connection;
+  private Connection connection;
 
-  private HTableInterface table;
+  private Table hbaseTable;
 
   public HBasePersistentStoreProvider(PersistentStoreRegistry registry) {
     @SuppressWarnings("unchecked")
@@ -64,13 +66,13 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
         this.hbaseConf.set(entry.getKey(), String.valueOf(entry.getValue()));
       }
     }
-    this.storeTableName = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE);
+    this.hbaseTableName = TableName.valueOf(registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE));
   }
 
   @VisibleForTesting
   public HBasePersistentStoreProvider(Configuration conf, String storeTableName) {
     this.hbaseConf = conf;
-    this.storeTableName = storeTableName;
+    this.hbaseTableName = TableName.valueOf(storeTableName);
   }
 
 
@@ -80,7 +82,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      return new HBasePersistentStore<>(config, this.table);
+      return new HBasePersistentStore<>(config, this.hbaseTable);
 
     default:
       throw new IllegalStateException();
@@ -89,35 +91,33 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
 
 
   @Override
-  @SuppressWarnings("deprecation")
   public void start() throws IOException {
-    this.connection = HConnectionManager.createConnection(hbaseConf);
+    this.connection = ConnectionFactory.createConnection(hbaseConf);
 
-    try(HBaseAdmin admin = new HBaseAdmin(connection)) {
-      if (!admin.tableExists(storeTableName)) {
-        HTableDescriptor desc = new HTableDescriptor(storeTableName);
+    try(Admin admin = connection.getAdmin()) {
+      if (!admin.tableExists(hbaseTableName)) {
+        HTableDescriptor desc = new HTableDescriptor(hbaseTableName);
         desc.addFamily(new HColumnDescriptor(FAMILY).setMaxVersions(1));
         admin.createTable(desc);
       } else {
-        HTableDescriptor desc = admin.getTableDescriptor(Bytes.toBytes(storeTableName));
+        HTableDescriptor desc = admin.getTableDescriptor(hbaseTableName);
         if (!desc.hasFamily(FAMILY)) {
-          throw new DrillRuntimeException("The HBase table " + storeTableName
+          throw new DrillRuntimeException("The HBase table " + hbaseTableName
               + " specified as persistent store exists but does not contain column family: "
               + (Bytes.toString(FAMILY)));
         }
       }
     }
 
-    this.table = connection.getTable(storeTableName);
-    this.table.setAutoFlush(true);
+    this.hbaseTable = connection.getTable(hbaseTableName);
   }
 
   @Override
   public synchronized void close() {
-    if (this.table != null) {
+    if (this.hbaseTable != null) {
       try {
-        this.table.close();
-        this.table = null;
+        this.hbaseTable.close();
+        this.hbaseTable = null;
       } catch (IOException e) {
         logger.warn("Caught exception while closing HBase table.", e);
       }

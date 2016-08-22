@@ -42,6 +42,7 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -64,12 +65,9 @@ import org.apache.drill.exec.physical.impl.project.ProjectorTemplate;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.TypeValidators;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.testing.ExecutionControls;
-import org.apache.drill.test.DrillTest;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -83,12 +81,11 @@ import java.util.Map;
 /**
  * Look! Doesn't extend BaseTestQuery!!
  */
-public class PhysicalOpUnitTestBase extends DrillTest {
+public class PhysicalOpUnitTestBase extends ExecTest {
 
   @Injectable FragmentContext fragContext;
   @Injectable OperatorContext opContext;
   @Injectable OperatorStats opStats;
-  @Injectable OptionManager optManager;
   @Injectable PhysicalOperator popConf;
   @Injectable ExecutionControls executionControls;
 
@@ -278,19 +275,19 @@ public class PhysicalOpUnitTestBase extends DrillTest {
     }
   }
 
-  private void mockFragmentContext(long initReservation, long maxAllocation) {
-    final CodeCompiler compiler = new CodeCompiler(drillConf, optManager);
+  private void mockFragmentContext(long initReservation, long maxAllocation) throws Exception{
+    final CodeCompiler compiler = new CodeCompiler(drillConf, optionManager);
     final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
     new NonStrictExpectations() {
       {
-        optManager.getOption(withAny(new TypeValidators.BooleanValidator("", false))); result = false;
-        // TODO(DRILL-4450) - Probably want to just create a default option manager, this is a hack to prevent
-        // the code compilation from failing when trying to decide of scalar replacement is turned on
-        // this will cause other code paths to fail because this return value won't be valid for most
-        // string options
-        optManager.getOption(withAny(new TypeValidators.StringValidator("", "try"))); result = "try";
-        optManager.getOption(withAny(new TypeValidators.PositiveLongValidator("", 1l, 1l))); result = 10;
-        fragContext.getOptions(); result = optManager;
+//        optManager.getOption(withAny(new TypeValidators.BooleanValidator("", false))); result = false;
+//        // TODO(DRILL-4450) - Probably want to just create a default option manager, this is a hack to prevent
+//        // the code compilation from failing when trying to decide of scalar replacement is turned on
+//        // this will cause other code paths to fail because this return value won't be valid for most
+//        // string options
+//        optManager.getOption(withAny(new TypeValidators.StringValidator("", "try"))); result = "try";
+//        optManager.getOption(withAny(new TypeValidators.PositiveLongValidator("", 1l, 1l))); result = 10;
+        fragContext.getOptions(); result = optionManager;
         fragContext.getManagedBuffer(); result = bufManager.getManagedBuffer();
         fragContext.shouldContinue(); result = true;
         fragContext.getExecutionControls(); result = executionControls;

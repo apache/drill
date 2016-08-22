@@ -203,6 +203,14 @@ public class WorkManager implements AutoCloseable {
     }
 
     /**
+     * Add a self contained runnable work to executor service.
+     * @param runnable
+     */
+    public void addNewWork(final Runnable runnable) {
+      executor.execute(runnable);
+    }
+
+    /**
      * Remove the given Foreman from the running query list.
      *
      * <p>The running query list is a bit of a misnomer, because it doesn't

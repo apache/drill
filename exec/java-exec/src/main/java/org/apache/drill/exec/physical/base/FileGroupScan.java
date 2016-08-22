@@ -26,4 +26,5 @@ public interface FileGroupScan extends GroupScan {
   public void modifyFileSelection(FileSelection selection);
 
   public FileGroupScan clone(FileSelection selection) throws IOException;
+
 }

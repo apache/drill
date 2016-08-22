@@ -33,6 +33,8 @@ import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 public class DecimalUtility extends CoreDecimalUtility{
 
     public final static int MAX_DIGITS = 9;
+    public final static int MAX_DIGITS_INT = 10;
+    public final static int MAX_DIGITS_BIGINT = 19;
     public final static int DIGITS_BASE = 1000000000;
     public final static int DIGITS_MAX = 999999999;
     public final static int INTEGER_SIZE = (Integer.SIZE/8);
