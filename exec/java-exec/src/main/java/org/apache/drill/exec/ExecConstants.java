@@ -20,7 +20,6 @@ package org.apache.drill.exec;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
-import org.apache.drill.exec.server.options.TypeValidators.AdminOptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
@@ -106,10 +105,23 @@ public interface ExecConstants {
   String RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS =
       "drill.exec.debug.return_error_for_failure_in_cancelled_fragments";
 
-
-
-
   String CLIENT_SUPPORT_COMPLEX_TYPES = "drill.client.supports-complex-types";
+
+  /**
+   * Configuration properties connected with dynamic UDFs support
+   */
+  String UDF_RETRY_ATTEMPTS = "drill.exec.udf.retry-attempts";
+  String UDF_DIRECTORY_FS = "drill.exec.udf.directory.fs";
+  String UDF_DIRECTORY_ROOT = "drill.exec.udf.directory.root";
+  String UDF_DIRECTORY_LOCAL = "drill.exec.udf.directory.local";
+  String UDF_DIRECTORY_STAGING = "drill.exec.udf.directory.staging";
+  String UDF_DIRECTORY_REGISTRY = "drill.exec.udf.directory.registry";
+  String UDF_DIRECTORY_TMP = "drill.exec.udf.directory.tmp";
+
+  /**
+   * Local temporary directory is used as base for temporary storage of Dynamic UDF jars.
+   */
+  String DRILL_TMP_DIR = "drill.tmp-dir";
 
   String OUTPUT_FORMAT_OPTION = "store.format";
   OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
@@ -296,15 +308,13 @@ public interface ExecConstants {
    * such as changing system options.
    */
   String ADMIN_USERS_KEY = "security.admin.users";
-  StringValidator ADMIN_USERS_VALIDATOR =
-      new AdminOptionValidator(ADMIN_USERS_KEY, ImpersonationUtil.getProcessUserName());
+  StringValidator ADMIN_USERS_VALIDATOR = new StringValidator(ADMIN_USERS_KEY, ImpersonationUtil.getProcessUserName(), true);
 
   /**
    * Option whose value is a comma separated list of admin usergroups.
    */
   String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
-  StringValidator ADMIN_USER_GROUPS_VALIDATOR = new AdminOptionValidator(ADMIN_USER_GROUPS_KEY, "");
-
+  StringValidator ADMIN_USER_GROUPS_VALIDATOR = new StringValidator(ADMIN_USER_GROUPS_KEY, "", true);
   /**
    * Option whose value is a string representing list of inbound impersonation policies.
    *
@@ -337,4 +347,7 @@ public interface ExecConstants {
   String CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS = "prepare.statement.create_timeout_ms";
   OptionValidator CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR =
       new PositiveLongValidator(CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS, Integer.MAX_VALUE, 10000);
+
+  String DYNAMIC_UDF_SUPPORT_ENABLED = "exec.udf.enable_dynamic_support";
+  BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED, true, true);
 }

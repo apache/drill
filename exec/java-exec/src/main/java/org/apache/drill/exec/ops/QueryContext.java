@@ -28,6 +28,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -220,6 +221,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public QueryContextInformation getQueryContextInfo() {
     return queryContextInfo;
+  }
+
+  public RemoteFunctionRegistry getRemoteFunctionRegistry() {
+    return drillbitContext.getRemoteFunctionRegistry();
   }
 
   @Override

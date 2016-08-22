@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +32,6 @@ import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
 
 /**
  * To avoid the cost of initializing all functions up front,
@@ -42,8 +40,8 @@ import com.google.common.io.Resources;
 public class FunctionInitializer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionInitializer.class);
 
-  private String className;
-
+  private final String className;
+  private final ClassLoader classLoader;
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
   private Map<String, String> methods;
   private List<String> imports;
@@ -51,11 +49,19 @@ public class FunctionInitializer {
 
   /**
    * @param className the fully qualified name of the class implementing the function
+   * @param classLoader class loader associated with the function, is unique for each jar that holds function
+   *                    to prevent classpath collisions during loading an unloading jars
    */
-  public FunctionInitializer(String className) {
+  public FunctionInitializer(String className, ClassLoader classLoader) {
     super();
     this.className = className;
+    this.classLoader = classLoader;
   }
+
+  /**
+   * @return returns class loader
+   */
+  public ClassLoader getClassLoader() { return classLoader; }
 
   /**
    * @return the fully qualified name of the class implementing the function
@@ -94,7 +100,7 @@ public class FunctionInitializer {
       // get function body.
 
       try {
-        final Class<?> clazz = Class.forName(className);
+        final Class<?> clazz = Class.forName(className, true, classLoader);
         final CompilationUnit cu = get(clazz);
 
         if (cu == null) {
@@ -123,8 +129,7 @@ public class FunctionInitializer {
       return cu;
     }
 
-    URL u = Resources.getResource(c, path);
-    try (InputStream is = Resources.asByteSource(u).openStream()) {
+    try (InputStream is = c.getResourceAsStream(path)) {
       if (is == null) {
         throw new IOException(String.format(
             "Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(),

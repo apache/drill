@@ -132,6 +132,34 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return attributes.isDeterministic();
   }
 
+  /**
+   * Generates string representation of function input parameters:
+   * PARAMETER_TYPE_1-PARAMETER_MODE_1,PARAMETER_TYPE_2-PARAMETER_MODE_2
+   * Example: VARCHAR-REQUIRED,VARCHAR-OPTIONAL
+   * Returns empty string if function has no input parameters.
+   *
+   * @return string representation of function input parameters
+   */
+  public String getInputParameters() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("");
+    for (ValueReference ref : parameters) {
+      final MajorType type = ref.getType();
+      builder.append(",");
+      builder.append(type.getMinorType().toString());
+      builder.append("-");
+      builder.append(type.getMode().toString());
+    }
+    return builder.length() == 0 ? builder.toString() : builder.substring(1);
+  }
+
+  /**
+   * @return instance of class loader used to load function
+   */
+  public ClassLoader getClassLoader() {
+    return initializer.getClassLoader();
+  }
+
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
     for (int i = 0; i < workspaceVars.length; i++) {
