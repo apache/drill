@@ -29,7 +29,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.TypeValidators;
+import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -84,10 +84,10 @@ public class InboundImpersonationManager {
   /**
    * Validator for impersonation policies.
    */
-  public static class InboundImpersonationPolicyValidator extends TypeValidators.AdminOptionValidator {
+  public static class InboundImpersonationPolicyValidator extends StringValidator {
 
     public InboundImpersonationPolicyValidator(String name, String def) {
-      super(name, def);
+      super(name, def, true);
     }
 
     @Override

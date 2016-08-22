@@ -366,11 +366,18 @@ if [ $? -eq 0 ]; then
   fatal_error "Java 1.7 or later is required to run Apache Drill."
 fi
 
+# Create Drill local udf area, if it does not exist
+DRILL_UDF_DIR="$DRILL_HOME/udf"
+if [[ ! -d "$DRILL_UDF_DIR" ]]; then
+  mkdir -p "$DRILL_UDF_DIR"
+fi
+
 # Adjust paths for CYGWIN
 if $is_cygwin; then
   DRILL_HOME=`cygpath -w "$DRILL_HOME"`
   DRILL_CONF_DIR=`cygpath -w "$DRILL_CONF_DIR"`
   DRILL_LOG_DIR=`cygpath -w "$DRILL_LOG_DIR"`
+  DRILL_UDF_DIR=`cygpath -w "$DRILL_UDF_DIR"`
   CP=`cygpath -w -p "$CP"`
   if [ -z "$HADOOP_HOME" ]; then
     export HADOOP_HOME=${DRILL_HOME}/winutils
@@ -391,6 +398,7 @@ export is_cygwin
 export DRILL_HOME
 export DRILL_CONF_DIR
 export DRILL_LOG_DIR
+export DRILL_UDF_DIR
 export CP
 export JAVA_HOME
 export JAVA

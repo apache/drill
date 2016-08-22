@@ -298,3 +298,17 @@ enum CoreOperatorType {
   NESTED_LOOP_JOIN = 35;
   AVRO_SUB_SCAN = 36;
 }
+
+message Func {
+  optional string name = 1;
+  repeated common.MajorType major_type = 2;
+}
+
+message Jar {
+  optional string name = 1;
+  repeated Func function = 2;
+}
+
+message Registry {
+  repeated Jar jar = 1;
+}
