@@ -32,6 +32,8 @@ import org.apache.drill.exec.expr.holders.RepeatedBitHolder;
 import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
 import org.apache.drill.exec.expr.holders.RepeatedFloat8Holder;
 import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
+import org.apache.drill.exec.expr.holders.RepeatedListHolder;
+import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.expr.holders.RepeatedTinyIntHolder;
 import org.apache.drill.exec.expr.holders.RepeatedVarCharHolder;
 import org.apache.drill.exec.expr.holders.TinyIntHolder;
@@ -77,8 +79,6 @@ public class SimpleRepeatedFunctions {
     }
   }
 
-  /*
-  // TODO - need to confirm that these work   SMP: They do not
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthMap implements DrillSimpleFunc {
 
@@ -95,7 +95,6 @@ public class SimpleRepeatedFunctions {
     }
   }
 
-  // TODO - need to confirm that these work   SMP: They do not
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthList implements DrillSimpleFunc {
 
@@ -111,7 +110,6 @@ public class SimpleRepeatedFunctions {
       out.value = input.end - input.start;
     }
   }
-  */
 
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class RepeatedLengthBit implements DrillSimpleFunc {

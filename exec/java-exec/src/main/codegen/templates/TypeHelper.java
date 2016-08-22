@@ -68,8 +68,23 @@ public class TypeHelper extends BasicTypeHelper {
     case UNION:
       return model._ref(UnionHolder.class);
     case MAP:
+        switch (mode) {
+          case REQUIRED:
+            return model._ref(ComplexHolder.class);
+          case OPTIONAL:
+            return model._ref(ComplexHolder.class);
+          case REPEATED:
+            return model._ref(RepeatedMapHolder.class);
+        }
     case LIST:
-      return model._ref(ComplexHolder.class);
+        switch (mode) {
+          case REQUIRED:
+            return model._ref(ComplexHolder.class);
+          case OPTIONAL:
+            return model._ref(ComplexHolder.class);
+          case REPEATED:
+            return model._ref(RepeatedListHolder.class);
+        }
       
 <#list vv.types as type>
   <#list type.minor as minor>

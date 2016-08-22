@@ -425,6 +425,10 @@ public class EvaluationVisitor {
         GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), indexVariable);
         generator.getEvalBlock().add(eval);
 
+      } else if (!hasReadPath && complex && repeated) {
+        JBlock eval = new JBlock();
+        GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), indexVariable);
+        generator.getEvalBlock().add(eval);
       } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
         JExpression expr = vector.invoke("getReader");
