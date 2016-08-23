@@ -20,7 +20,9 @@ package org.apache.drill.common.scanner;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 
@@ -73,6 +75,22 @@ public class RunTimeScan {
           scannedAnnotations,
           ClassPathScanner.emptyResult());
     }
+  }
+
+  /**
+   * Scanning packages at runtime only for marked paths and list of pre-scanned annotations
+   * @param config to retrieve the packages to scan
+   * @param markedPath list of paths where to scan
+   * @return the scan result
+   */
+  public static ScanResult dynamicPackageScan(DrillConfig config, Set<URL> markedPath) {
+    List<String> packagePrefixes = ClassPathScanner.getPackagePrefixes(config);
+    return ClassPathScanner.scan(
+        markedPath,
+        packagePrefixes,
+        Lists.<String>newArrayList(),
+        PRESCANNED.getScannedAnnotations(),
+        ClassPathScanner.emptyResult());
   }
 
 }

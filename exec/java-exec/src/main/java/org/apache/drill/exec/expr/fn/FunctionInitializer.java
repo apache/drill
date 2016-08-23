@@ -42,8 +42,8 @@ import com.google.common.io.Resources;
 public class FunctionInitializer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionInitializer.class);
 
-  private String className;
-
+  private final String className;
+  private final ClassLoader classloader;
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
   private Map<String, String> methods;
   private List<String> imports;
@@ -51,11 +51,18 @@ public class FunctionInitializer {
 
   /**
    * @param className the fully qualified name of the class implementing the function
+   * @param classLoader system or custom class loader
    */
-  public FunctionInitializer(String className) {
+  public FunctionInitializer(String className, ClassLoader classLoader) {
     super();
     this.className = className;
+    this.classloader = classLoader;
   }
+
+  /**
+   * @return returns class loader
+   */
+  public ClassLoader getClassLoader() { return classloader; }
 
   /**
    * @return the fully qualified name of the class implementing the function
@@ -94,7 +101,7 @@ public class FunctionInitializer {
       // get function body.
 
       try {
-        final Class<?> clazz = Class.forName(className);
+        final Class<?> clazz = Class.forName(className, true, classloader);
         final CompilationUnit cu = get(clazz);
 
         if (cu == null) {

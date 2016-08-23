@@ -64,6 +64,15 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     this.systemOptionManager = systemOptionManager;
   }
 
+  /** Cleanups all operator holders and reloads operators */
+  public void reloadOperators(FunctionImplementationRegistry registry) {
+    drillOperatorsWithoutInference.clear();
+    drillOperatorsWithInference.clear();
+    drillOperatorsWithoutInferenceMap.clear();
+    drillOperatorsWithInferenceMap.clear();
+    registry.register(this);
+  }
+
   /**
    * When the option planner.type_inference.enable is turned off, the operators which are added via this method
    * will be used.

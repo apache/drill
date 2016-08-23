@@ -21,9 +21,13 @@ import java.io.IOException;
 
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -55,7 +59,6 @@ public class DrillSqlWorker {
 
   public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException {
-
     final SqlConverter parser = new SqlConverter(
         context.getPlannerSettings(),
         context.getNewDefaultSchema(),
@@ -69,29 +72,43 @@ public class DrillSqlWorker {
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
     switch(sqlNode.getKind()){
-    case EXPLAIN:
-      handler = new ExplainHandler(config, textPlan);
-      break;
-    case SET_OPTION:
-      handler = new SetOptionHandler(context);
-      break;
-    case OTHER:
-      if(sqlNode instanceof SqlCreateTable) {
-        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
+      case EXPLAIN:
+        handler = new ExplainHandler(config, textPlan);
         break;
-      }
+      case SET_OPTION:
+        handler = new SetOptionHandler(context);
+        break;
+      case OTHER:
+        if(sqlNode instanceof SqlCreateTable) {
+          handler = ((DrillSqlCall)sqlNode).getSqlHandler(config, textPlan);
+          break;
+        }
 
-      if (sqlNode instanceof DrillSqlCall) {
-        handler = ((DrillSqlCall)sqlNode).getSqlHandler(config);
-        break;
-      }
-      // fallthrough
-    default:
-      handler = new DefaultSqlHandler(config, textPlan);
+        if (sqlNode instanceof DrillSqlCall) {
+          handler = ((DrillSqlCall)sqlNode).getSqlHandler(config);
+          break;
+        }
+        // fallthrough
+      default:
+        handler = new DefaultSqlHandler(config, textPlan);
     }
 
     try {
-      return handler.getPlan(sqlNode);
+      try {
+        return handler.getPlan(sqlNode);
+      } catch (UserException e) {
+        if (context.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
+          final Throwable rootCause = ExceptionUtils.getRootCause(e);
+          if (rootCause instanceof SqlValidatorException
+              && StringUtils.contains(rootCause.getMessage(), "No match found for function signature")) {
+            if (context.getFunctionRegistry().loadRemoteFunctions()) {
+              context.getDrillOperatorTable().reloadOperators(context.getFunctionRegistry());
+              return handler.getPlan(sqlNode);
+            }
+          }
+        }
+        throw e;
+      }
     } catch(ValidationException e) {
       String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
       throw UserException.validationError(e)
@@ -107,6 +124,5 @@ public class DrillSqlWorker {
       throw new QueryInputException("Failure handling SQL.", e);
     }
   }
-
 
 }
