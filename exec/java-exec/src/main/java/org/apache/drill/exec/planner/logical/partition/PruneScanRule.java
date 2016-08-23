@@ -61,6 +61,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.drill.exec.store.dfs.MetadataContext.PruneStatus;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -153,6 +154,12 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     PartitionDescriptor descriptor = getPartitionDescriptor(settings, scanRel);
     final BufferAllocator allocator = optimizerContext.getAllocator();
 
+    final Object selection = getDrillTable(scanRel).getSelection();
+    MetadataContext metaContext = null;
+    if (selection instanceof FormatSelection) {
+         metaContext = ((FormatSelection)selection).getSelection().getMetaContext();
+    }
+
     RexNode condition = null;
     if (projectRel == null) {
       condition = filterRel.getCondition();
@@ -186,6 +193,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     if (partitionColumnBitSet.isEmpty()) {
       logger.info("No partition columns are projected from the scan..continue. " +
           "Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
+      setPruneStatus(metaContext, PruneStatus.NOT_PRUNED);
       return;
     }
 
@@ -207,6 +215,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     if (pruneCondition == null) {
       logger.info("No conditions were found eligible for partition pruning." +
           "Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
+      setPruneStatus(metaContext, PruneStatus.NOT_PRUNED);
       return;
     }
 
@@ -260,6 +269,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
             // materializePruneExpr logs it already
             logger.info("Total pruning elapsed time: {} ms",
                 totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
+            setPruneStatus(metaContext, PruneStatus.NOT_PRUNED);
             return;
           }
         }
@@ -329,6 +339,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       } catch (Exception e) {
         logger.warn("Exception while trying to prune partition.", e);
         logger.info("Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
+
+        setPruneStatus(metaContext, PruneStatus.NOT_PRUNED);
         return; // continue without partition pruning
       } finally {
         container.clear();
@@ -407,11 +419,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
       }
 
-      final Object selection = getDrillTable(scanRel).getSelection();
-      MetadataContext metaContext = null;
-      if (selection instanceof FormatSelection) {
-           metaContext = ((FormatSelection)selection).getSelection().getMetaContext();
-      }
       RelNode inputRel = descriptor.supportsMetadataCachePruning() ?
           descriptor.createTableScan(newPartitions, cacheFileRoot, wasAllPartitionsPruned, metaContext) :
             descriptor.createTableScan(newPartitions, wasAllPartitionsPruned);
@@ -426,6 +433,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         final RelNode newFilter = filterRel.copy(filterRel.getTraitSet(), Collections.singletonList(inputRel));
         call.transformTo(newFilter);
       }
+
+      setPruneStatus(metaContext, PruneStatus.PRUNED);
 
     } catch (Exception e) {
       logger.warn("Exception while using the pruned partitions.", e);
@@ -518,6 +527,12 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown() && !((DrillScanRel)scan).partitionFilterPushdown();
     }
     return false;
+  }
+
+  private static void setPruneStatus(MetadataContext metaContext, PruneStatus pruneStatus) {
+    if (metaContext != null) {
+      metaContext.setPruneStatus(pruneStatus);
+    }
   }
 
 }
