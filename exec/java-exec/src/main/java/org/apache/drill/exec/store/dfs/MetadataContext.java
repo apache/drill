@@ -33,6 +33,14 @@ public class MetadataContext {
    */
   private Map<String, Boolean> dirModifCheckMap = Maps.newHashMap();
 
+  public enum PruneStatus {
+    NOT_STARTED,         // initial state
+    PRUNED,              // partitions were pruned
+    NOT_PRUNED           // partitions did not get pruned
+  }
+
+  private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
+
   public MetadataContext() {
   }
 
@@ -53,6 +61,18 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
+  }
+
+  public void setPruneStatus(PruneStatus status) {
+    pruneStatus = status;
+  }
+
+  public boolean wasPruningStarted() {
+    return pruneStatus != PruneStatus.NOT_STARTED;
+  }
+
+  public boolean wasPruned() {
+    return pruneStatus == PruneStatus.PRUNED;
   }
 
 }

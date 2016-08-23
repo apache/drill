@@ -173,8 +173,18 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     final FileSelection fileSelection = expandIfNecessary(selection);
 
     this.entries = Lists.newArrayList();
-    for (String fileName : fileSelection.getFiles()) {
-      entries.add(new ReadEntryWithPath(fileName));
+    if (fileSelection.getMetaContext() != null &&
+        (fileSelection.getMetaContext().wasPruningStarted() &&
+        ! fileSelection.getMetaContext().wasPruned())) {
+      // if pruning was attempted and nothing was pruned, initialize the entries with just
+      // the selection root instead of the fully expanded list to reduce overhead. The fully
+      // expanded list is already stored as part of the fileSet.
+      // TODO: at some point we should examine whether the list of entries is absolutely needed.
+      entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
+    } else {
+      for (String fileName : fileSelection.getFiles()) {
+        entries.add(new ReadEntryWithPath(fileName));
+      }
     }
 
     init(fileSelection.getMetaContext());
@@ -638,6 +648,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         cacheFileRoot, selection.wasAllPartitionsPruned());
 
     newSelection.setExpandedFully();
+    newSelection.setMetaContext(selection.getMetaContext());
     return newSelection;
   }
 
