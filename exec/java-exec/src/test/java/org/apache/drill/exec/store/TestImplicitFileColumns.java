@@ -63,7 +63,7 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   @Test
   public void testImplicitColumns() throws Exception {
     testBuilder()
-        .sqlQuery("select *, filename, suffix, fqn, filepath from dfs.`" + testFolder.getRoot().getPath() + "` order by filename")
+        .sqlQuery("select *, filename, suffix, fqn, filepath from dfs.`%s` order by filename", testFolder.getRoot().getPath())
         .ordered()
         .baselineColumns("columns", "dir0", "filename", "suffix", "fqn", "filepath")
         .baselineValues(mainColumnValues, null, mainFile.getName(), CSV, new Path(mainFile.getPath()).toString(), new Path(mainFile.getParent()).toString())
@@ -84,7 +84,7 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   @Test
   public void testImplicitColumnAlone() throws Exception {
     testBuilder()
-        .sqlQuery("select filename from dfs.`" + nestedFolder.getPath() + "`")
+        .sqlQuery("select filename from dfs.`%s`", nestedFolder.getPath())
         .unOrdered()
         .baselineColumns("filename")
         .baselineValues(nestedFile.getName())
@@ -94,10 +94,30 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   @Test
   public void testImplicitColumnWithTableColumns() throws Exception {
     testBuilder()
-        .sqlQuery("select columns, filename from dfs.`" + nestedFolder.getPath() + "`")
+        .sqlQuery("select columns, filename from dfs.`%s`", nestedFolder.getPath())
         .unOrdered()
         .baselineColumns("columns", "filename")
         .baselineValues(nestedColumnValues, nestedFile.getName())
+        .go();
+  }
+
+  @Test
+  public void testCountStarWithImplicitColumnsInWhereClause() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(*) as cnt from dfs.`%s` where filename = '%s'", nestedFolder.getPath(), nestedFile.getName())
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(1L)
+        .go();
+  }
+
+  @Test
+  public void testImplicitAndPartitionColumnsInSelectClause() throws Exception {
+    testBuilder()
+        .sqlQuery("select dir0, filename from dfs.`%s` order by filename", testFolder.getRoot().getPath()).ordered()
+        .baselineColumns("dir0", "filename")
+        .baselineValues(null, mainFile.getName())
+        .baselineValues(NESTED, nestedFile.getName())
         .go();
   }
 
