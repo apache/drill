@@ -39,7 +39,7 @@ public class ImplicitColumnExplorer {
 
   private final String partitionDesignator;
   private final List<SchemaPath> columns;
-  private final boolean selectAllColumns;
+  private final boolean isStarQuery;
   private final List<Integer> selectedPartitionColumns;
   private final List<SchemaPath> tableColumns;
   private final Map<String, ImplicitFileColumns> allImplicitColumns;
@@ -54,7 +54,7 @@ public class ImplicitColumnExplorer {
   public ImplicitColumnExplorer(FragmentContext context, List<SchemaPath> columns) {
     this.partitionDesignator = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     this.columns = columns;
-    this.selectAllColumns = columns != null && AbstractRecordReader.isStarQuery(columns);
+    this.isStarQuery = columns != null && AbstractRecordReader.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
     this.tableColumns = Lists.newArrayList();
     this.allImplicitColumns = initImplicitFileColumns(context.getOptions());
@@ -92,7 +92,7 @@ public class ImplicitColumnExplorer {
       if (p.length > r.length) {
         String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
         for (int a = 0; a < q.length; a++) {
-          if (selectAllColumns || selectedPartitionColumns.contains(a)) {
+          if (isStarQuery || selectedPartitionColumns.contains(a)) {
             implicitValues.put(partitionDesignator + a, q[a]);
           }
         }
@@ -105,8 +105,8 @@ public class ImplicitColumnExplorer {
     return implicitValues;
   }
 
-  public boolean isSelectAllColumns() {
-    return selectAllColumns;
+  public boolean isStarQuery() {
+    return isStarQuery;
   }
 
   public List<SchemaPath> getTableColumns() {
@@ -114,13 +114,13 @@ public class ImplicitColumnExplorer {
   }
 
   /**
-   * If it is not select all query, sorts out columns into three categories:
+   * If it is not star query, sorts out columns into three categories:
    * 1. table columns
    * 2. partition columns
    * 3. implicit file columns
    */
   private void init() {
-    if (selectAllColumns) {
+    if (isStarQuery) {
       selectedImplicitColumns.putAll(allImplicitColumns);
     } else {
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));

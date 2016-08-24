@@ -65,7 +65,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(context, rowGroupScan.getColumns());
 
-    if (!columnExplorer.isSelectAllColumns()) {
+    if (!columnExplorer.isStarQuery()) {
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),
           rowGroupScan.getRowGroupReadEntries(), columnExplorer.getTableColumns(), rowGroupScan.getSelectionRoot());
       rowGroupScan.setOperatorId(rowGroupScan.getOperatorId());

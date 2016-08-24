@@ -41,7 +41,6 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.ImplicitColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -126,13 +125,9 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   CloseableRecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(context, scan.getColumns());
 
-    if (!columnExplorer.isSelectAllColumns()) {
-      // We must make sure to pass a table column (not to be confused with implicit column) to the underlying record reader.
-      List<SchemaPath> tableColumns =
-          columnExplorer.getTableColumns().size() == 0 ?
-              Lists.<SchemaPath>newArrayList(AbstractRecordReader.STAR_COLUMN) : columnExplorer.getTableColumns();
+    if (!columnExplorer.isStarQuery()) {
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-          tableColumns, scan.getSelectionRoot());
+          columnExplorer.getTableColumns(), scan.getSelectionRoot());
       scan.setOperatorId(scan.getOperatorId());
     }
 
