@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -32,6 +34,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -468,11 +471,36 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
  public void readAllFixedFields(long recordsToRead) throws IOException {
-
-   for (ColumnReader<?> crs : columnStatuses) {
-     crs.processPages(recordsToRead);
+   boolean useAsyncColReader =
+       fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
+   if(useAsyncColReader){
+    readAllFixedFieldsParallel(recordsToRead) ;
+   } else {
+     readAllFixedFieldsiSerial(recordsToRead); ;
    }
  }
+
+  public void readAllFixedFieldsiSerial(long recordsToRead) throws IOException {
+    for (ColumnReader<?> crs : columnStatuses) {
+      crs.processPages(recordsToRead);
+    }
+  }
+
+  public void readAllFixedFieldsParallel(long recordsToRead) throws IOException {
+    ArrayList<Future<Long>> futures = Lists.newArrayList();
+    for (ColumnReader<?> crs : columnStatuses) {
+      Future<Long> f = crs.processPagesAsync(recordsToRead);
+      futures.add(f);
+    }
+    for(Future f: futures){
+      try {
+        f.get();
+      } catch (Exception e) {
+        f.cancel(true);
+        handleAndRaise(null, e);
+      }
+    }
+  }
 
   @Override
   public int next() {

@@ -20,6 +20,9 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -77,6 +80,7 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   // variables for a single read pass
   long readStartInBytes = 0, readLength = 0, readLengthInBits = 0, recordsReadInThisIteration = 0;
+  private ExecutorService threadPool;
 
   protected ColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
       ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -105,11 +109,18 @@ public abstract class ColumnReader<V extends ValueVector> {
         dataTypeLengthInBits = ParquetRecordReader.getTypeLengthInBits(columnDescriptor.getType());
       }
     }
-
+    if(threadPool == null) {
+      threadPool = parentReader.getOperatorContext().getScanDecodeExecutor();
+    }
   }
 
   public int getRecordsReadInCurrentPass() {
     return valuesReadInCurrentPass;
+  }
+
+  public Future<Long> processPagesAsync(long recordsToReadInThisPass){
+    Future<Long> r = threadPool.submit(new ColumnReaderProcessPagesTask(recordsToReadInThisPass));
+    return r;
   }
 
   public void processPages(long recordsToReadInThisPass) throws IOException {
@@ -120,6 +131,8 @@ public abstract class ColumnReader<V extends ValueVector> {
 
       } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReader.hasPage());
     }
+    logger.trace("Column Reader: {} - Values read in this pass: {} - ",
+        this.getColumnDescriptor().toString(), valuesReadInCurrentPass);
     valueVec.getMutator().setValueCount(valuesReadInCurrentPass);
   }
 
@@ -150,13 +163,22 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   protected abstract void readField(long recordsToRead);
 
+  /*
+  public Future<Boolean> determineSizeAsync(long recordsReadInCurrentPass,
+      Integer lengthVarFieldsInCurrentRecord) throws IOException {
+    Future<Boolean> r = threadPool.submit(
+        new ColumnReaderDetermineSizeTask(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord));
+    return r;
+  }
+  */
+
   /**
    * Determines the size of a single value in a variable column.
    *
    * Return value indicates if we have finished a row group and should stop reading
    *
    * @param recordsReadInCurrentPass
-   * @param lengthVarFieldsInCurrentRecord
+   * @ param lengthVarFieldsInCurrentRecord
    * @return - true if we should stop reading
    * @throws IOException
    */
@@ -172,7 +194,8 @@ public abstract class ColumnReader<V extends ValueVector> {
       return true;
     }
 
-    lengthVarFieldsInCurrentRecord += dataTypeLengthInBits;
+    //lengthVarFieldsInCurrentRecord += dataTypeLengthInBits;
+    lengthVarFieldsInCurrentRecord = -1;
 
     doneReading = checkVectorCapacityReached();
     if (doneReading) {
@@ -180,6 +203,11 @@ public abstract class ColumnReader<V extends ValueVector> {
     }
 
     return false;
+  }
+
+  protected Future<Integer> readRecordsAsync(int recordsToRead){
+    Future<Integer> r = threadPool.submit(new ColumnReaderReadRecordsTask(recordsToRead));
+    return r;
   }
 
   protected void readRecords(int recordsToRead) {
@@ -209,6 +237,15 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   public int capacity() {
     return (int) (valueVec.getValueCapacity() * dataTypeLengthInBits / 8.0);
+  }
+
+  public Future<Boolean> readPageAsync() {
+    Future<Boolean> f = threadPool.submit(new Callable<Boolean>() {
+      @Override public Boolean call() throws Exception {
+        return new Boolean(readPage());
+      }
+    });
+    return f;
   }
 
   // Read a page if we need more data, returns true if we need to exit the read loop
@@ -256,6 +293,76 @@ public abstract class ColumnReader<V extends ValueVector> {
     int ch2 = in.getByte(offset + 2) & 0xff;
     int ch1 = in.getByte(offset + 3) & 0xff;
     return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+  }
+
+  private class ColumnReaderProcessPagesTask implements Callable<Long> {
+
+    private final ColumnReader parent = ColumnReader.this;
+    private final long recordsToReadInThisPass;
+
+    public ColumnReaderProcessPagesTask(long recordsToReadInThisPass){
+      this.recordsToReadInThisPass = recordsToReadInThisPass;
+    }
+
+    @Override public Long call() throws IOException{
+
+      String oldname = Thread.currentThread().getName();
+      Thread.currentThread().setName(oldname+"Decode-"+this.parent.columnChunkMetaData.toString());
+
+      this.parent.processPages(recordsToReadInThisPass);
+
+      Thread.currentThread().setName(oldname);
+      return recordsToReadInThisPass;
+    }
+
+  }
+
+  /*
+  private class ColumnReaderDetermineSizeTask implements Callable<Boolean> {
+
+    private final ColumnReader parent = ColumnReader.this;
+    private final long recordsReadInCurrentPass;
+    private final Integer lengthVarFieldsInCurrentRecord;
+
+    public ColumnReaderDetermineSizeTask(long recordsReadInCurrentPass, Integer lengthVarFieldsInCurrentRecord){
+      this.recordsReadInCurrentPass = recordsReadInCurrentPass;
+      this.lengthVarFieldsInCurrentRecord = lengthVarFieldsInCurrentRecord;
+    }
+
+    @Override public Boolean call() throws IOException{
+
+      String oldname = Thread.currentThread().getName();
+      Thread.currentThread().setName(oldname+"Decode-"+this.parent.columnChunkMetaData.toString());
+
+      boolean b = this.parent.determineSize(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord);
+
+      Thread.currentThread().setName(oldname);
+      return b;
+    }
+
+  }
+  */
+
+  private class ColumnReaderReadRecordsTask implements Callable<Integer> {
+
+    private final ColumnReader parent = ColumnReader.this;
+    private final int recordsToRead;
+
+    public ColumnReaderReadRecordsTask(int recordsToRead){
+      this.recordsToRead = recordsToRead;
+    }
+
+    @Override public Integer call() throws IOException{
+
+      String oldname = Thread.currentThread().getName();
+      Thread.currentThread().setName("Decode-"+this.parent.columnChunkMetaData.toString());
+
+      this.parent.readRecords(recordsToRead);
+
+      Thread.currentThread().setName(oldname);
+      return recordsToRead;
+    }
+
   }
 
 }
