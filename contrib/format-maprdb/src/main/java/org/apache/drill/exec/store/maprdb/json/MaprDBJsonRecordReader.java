@@ -63,7 +63,7 @@ import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;
 import com.mapr.db.exceptions.DBException;
 import com.mapr.db.impl.IdCodec;
-import com.mapr.db.ojai.DBDocumentReader;
+import com.mapr.db.ojai.DBDocumentReaderBase;
 import com.mapr.db.util.ByteBufs;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 
@@ -168,7 +168,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     int recordCount = 0;
 
     while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
-      DBDocumentReader reader = nextDocumentReader();
+      DBDocumentReaderBase reader = nextDocumentReader();
       if (reader == null) break;
       writer.setPosition(recordCount);
       if (reader.next() != EventType.START_MAP) {
@@ -202,7 +202,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     return recordCount;
   }
 
-  private void writeToMap(DBDocumentReader reader, MapWriter map) {
+  private void writeToMap(DBDocumentReaderBase reader, MapWriter map) {
     String fieldName = null;
     map.start();
     outside: while (true) {
@@ -271,8 +271,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     map.end();
   }
 
-  private void writeToList(DBDocumentReader reader, ListWriter list) {
-    list.start();
+  private void writeToList(DBDocumentReaderBase reader, ListWriter list) {
+    list.startList();
     outside: while (true) {
       EventType event = reader.next();
       if (event == null) break outside;
@@ -335,7 +335,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         throw new UnsupportedOperationException("Unsupported type: " + event);
       }
     }
-    list.end();
+    list.endList();
   }
 
   private void writeBinary(VarBinaryWriter binaryWriter, ByteBuffer buf) {
@@ -351,7 +351,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     varCharWriter.writeVarChar(0, strBytes.length, buffer);
   }
 
-  private DBDocumentReader nextDocumentReader() {
+  private DBDocumentReaderBase nextDocumentReader() {
     final OperatorStats operatorStats = operatorContext == null ? null : operatorContext.getStats();
     try {
       if (operatorStats != null) {
@@ -361,7 +361,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         if (!documentReaderIterators.hasNext()) {
           return null;
         } else {
-          return (DBDocumentReader) documentReaderIterators.next();
+          return (DBDocumentReaderBase) documentReaderIterators.next();
         }
       } finally {
         if (operatorStats != null) {

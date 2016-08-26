@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mapr.fs.jni.MapRConstants;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
@@ -29,7 +30,7 @@ public class MapRDBSubScanSpec {
   protected byte[] stopRow;
   protected byte[] serializedFilter;
 
-  @parquet.org.codehaus.jackson.annotate.JsonCreator
+  @JsonCreator
   public MapRDBSubScanSpec(@JsonProperty("tableName") String tableName,
                            @JsonProperty("regionServer") String regionServer,
                            @JsonProperty("startRow") byte[] startRow,
