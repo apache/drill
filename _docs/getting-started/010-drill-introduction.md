@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2016-01-07
+date: 2016-08-30 23:12:06 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,41 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.8  
+
+Drill 1.8 provides the following new features and changes: 
+
+* Metadata cache pruning
+* IF EXISTS parameter with the DROP TABLE and DROP VIEW commands
+* DESCRIBE SCHEMA command
+* Multi-byte delimiter support
+* New parameters for filter selectivity estimates  
+* Changes to the configuration and launch scripts - See [Configuration and Launch Script Changes]({{site.baseurl}}/docs/apache-drill-1-8-0-release-notes/#configuration-and-launch-script-changes)
+
+## What's New in Apache Drill 1.7  
+
+Drill 1.7 provides the following new features:  
+
+* Monitoring via JMX
+* Hive CHAR data type support
+* HBase 1.x support  
+
+## What's New in Apache Drill 1.6  
+
+Drill 1.6 provides the following new features:  
+
+* Inbound impersonation 
+* Additional custom window frames 
+
+## What's New in Apache Drill 1.5  
+
+Drill 1.5 provides the following new features:  
+
+* Authentication and security for the Web interface and REST API
+* Experimental query support for Apache Kudu (incubating)
+* An improved memory allocator
+* Configurable caching for Hive metadata
 
 ## What's New in Apache Drill 1.4
 
