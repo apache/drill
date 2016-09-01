@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,6 +53,16 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
    */
   public static <VALUE> CaseInsensitiveMap<VALUE> newHashMap() {
     return new CaseInsensitiveMap<>(Maps.<String, VALUE>newHashMap());
+  }
+
+  /**
+   * Returns a new instance of {@link java.util.TreeMap} with key case-insensitivity. See {@link java.util.TreeMap}.
+   *
+   * @param <VALUE> type of values to be stored in the map
+   * @return key case-insensitive tree map
+   */
+  public static <VALUE> CaseInsensitiveMap<VALUE> newTreeMap(Comparator<String> comparator) {
+    return new CaseInsensitiveMap<>(Maps.<String, String, VALUE>newTreeMap(comparator));
   }
 
   /**
