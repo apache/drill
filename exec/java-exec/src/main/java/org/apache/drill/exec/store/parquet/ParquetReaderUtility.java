@@ -39,6 +39,8 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.OriginalType;
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
+import org.apache.parquet.example.data.simple.NanoTime;
+import org.apache.parquet.io.api.Binary;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,21 +78,21 @@ public class ParquetReaderUtility {
    * in the data pages themselves to see if they are likely corrupt.
    */
   public enum DateCorruptionStatus {
-    META_SHOWS_CORRUPTION{
+    META_SHOWS_CORRUPTION {
       @Override
-      public String toString(){
+      public String toString() {
         return "It is determined from metadata that the date values are definitely CORRUPT";
       }
     },
     META_SHOWS_NO_CORRUPTION {
       @Override
-      public String toString(){
+      public String toString() {
         return "It is determined from metadata that the date values are definitely CORRECT";
       }
     },
     META_UNCLEAR_TEST_VALUES {
       @Override
-      public String toString(){
+      public String toString() {
         return "Not enough info in metadata, parquet reader will test individual date values";
       }
     }
@@ -152,7 +154,7 @@ public class ParquetReaderUtility {
             OriginalType originalType = columnMetadata.getOriginalType();
             if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue() &&
                 (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
-              int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer)columnMetadata.getMaxValue());
+              int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) columnMetadata.getMaxValue());
               columnMetadata.setMax(newMinMax);
               columnMetadata.setMin(newMinMax);
             }
@@ -289,5 +291,32 @@ public class ParquetReaderUtility {
       }
     }
     return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
+  }
+
+  /**
+   * Utilities for converting from parquet INT96 binary (impala, hive timestamp)
+   * to date time value. This utilizes the Joda library.
+   */
+  public static class NanoTimeUtils {
+
+    public static final long NANOS_PER_MILLISECOND = 1000000;
+
+  /**
+   * @param binaryTimeStampValue
+   *          hive, impala timestamp values with nanoseconds precision
+   *          are stored in parquet Binary as INT96 (12 constant bytes)
+   *
+   * @return  Unix Timestamp - the number of milliseconds since January 1, 1970, 00:00:00 GMT
+   *          represented by @param binaryTimeStampValue .
+   */
+    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue) {
+      // This method represents binaryTimeStampValue as ByteBuffer, where timestamp is stored as sum of
+      // julian day number (32-bit) and nanos of day (64-bit)
+      NanoTime nt = NanoTime.fromBinary(binaryTimeStampValue);
+      int julianDay = nt.getJulianDay();
+      long nanosOfDay = nt.getTimeOfDayNanos();
+      return (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
+          + nanosOfDay / NANOS_PER_MILLISECOND;
+    }
   }
 }

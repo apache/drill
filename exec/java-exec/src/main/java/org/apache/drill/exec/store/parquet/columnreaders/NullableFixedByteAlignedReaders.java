@@ -46,6 +46,7 @@ import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeConstants;
 
 import io.netty.buffer.DrillBuf;
+import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class NullableFixedByteAlignedReaders {
 
@@ -102,6 +103,33 @@ public class NullableFixedByteAlignedReaders {
         int byteLength = dataTypeLengthInBits / 8;
         for (int i = 0; i < recordsToReadInThisPass; i++) {
           valueVec.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
+        }
+      }
+    }
+  }
+
+  /**
+   * Class for reading parquet fixed binary type INT96, which is used for storing hive,
+   * impala timestamp values with nanoseconds precision. So it reads such values as a drill timestamp.
+   */
+  static class NullableFixedBinaryAsTimeStampReader extends NullableFixedByteAlignedReader<NullableTimeStampVector> {
+    NullableFixedBinaryAsTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                              ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeStampVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      this.bytebuf = pageReader.pageData;
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++){
+          Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue));
+        }
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          Binary binaryTimeStampValue = pageReader.valueReader.readBytes();
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue));
         }
       }
     }

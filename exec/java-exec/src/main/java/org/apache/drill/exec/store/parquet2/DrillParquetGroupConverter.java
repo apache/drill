@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -80,6 +81,8 @@ import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
 
 import com.google.common.collect.Lists;
+
+import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class DrillParquetGroupConverter extends GroupConverter {
 
@@ -226,9 +229,15 @@ public class DrillParquetGroupConverter extends GroupConverter {
         }
       }
       case INT96: {
+        // TODO: replace null with TIMESTAMP_NANOS once parquet support such type annotation.
         if (type.getOriginalType() == null) {
-          VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
-          return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetRecordReader.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+          if (options.getOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP).bool_val) {
+            TimeStampWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).timeStamp() : mapWriter.timeStamp(name);
+            return new DrillFixedBinaryToTimeStampConverter(writer);
+          } else {
+            VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
+            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetRecordReader.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+          }
         }
 
       }
@@ -619,6 +628,25 @@ public class DrillParquetGroupConverter extends GroupConverter {
     @Override
     public void addBinary(Binary value) {
       holder.buffer.setBytes(0, value.toByteBuffer());
+      writer.write(holder);
+    }
+  }
+
+  /**
+   * Parquet currently supports a fixed binary type INT96 for storing hive, impala timestamp
+   * with nanoseconds precision.
+   */
+  public static class DrillFixedBinaryToTimeStampConverter extends PrimitiveConverter {
+    private TimeStampWriter writer;
+    private TimeStampHolder holder = new TimeStampHolder();
+
+    public DrillFixedBinaryToTimeStampConverter(TimeStampWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addBinary(Binary value) {
+      holder.value = getDateTimeValueFromBinary(value);
       writer.write(holder);
     }
   }
