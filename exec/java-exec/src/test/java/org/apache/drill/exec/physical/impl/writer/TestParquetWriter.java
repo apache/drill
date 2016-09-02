@@ -742,8 +742,18 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the reading of an int96 field. Impala encodes timestamps as int96 fields
    */
   @Test
-  public void testImpalaParquetInt96() throws Exception {
+  public void testImpalaParquetInt96AsVarBinary() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  @Test
+  public void testImpalaParquetInt96AsTimeStamp() throws Exception {
+    try {
+      test("alter session set %s = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+    } finally {
+      test("alter session reset %s", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
   }
 
   /*
@@ -754,12 +764,42 @@ public class TestParquetWriter extends BaseTestQuery {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
   }
 
+  @Test
+  public void testImpalaParquetBinaryTimeStamp_DictChange() throws Exception {
+    try {
+      test("alter session set %s = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+    } finally {
+      test("alter session reset %s", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
+  }
+
   /*
      Test the conversion from int96 to impala timestamp
    */
   @Test
-  public void testImpalaParquetTimestampAsInt96() throws Exception {
+  public void testImpalaParquetTimestampInt96AsVarBinary() throws Exception {
     compareParquetReadersColumnar("convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
+     Test reading parquet Int96 as TimeStamp and comparing obtained values with the
+     old results (reading the same values as VarBinary and convert_fromTIMESTAMP_IMPALA function using)
+   */
+  @Test
+  public void testImpalaParquetTimestampInt96AsTimeStamp() throws Exception {
+      String simpleQuery = "select field_impala_ts from cp.`parquet/int96_impala_1.parquet`";
+      String queryWithConvertFromFunction = "select convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')" +
+          " as `field_impala_ts` from cp.`parquet/int96_impala_1.parquet`";
+      try {
+        test("alter session set %s = false", ExecConstants.PARQUET_NEW_RECORD_READER);
+        compareParquetInt96Converters(simpleQuery, queryWithConvertFromFunction);
+        test("alter session set %s = true", ExecConstants.PARQUET_NEW_RECORD_READER);
+        compareParquetInt96Converters(simpleQuery, queryWithConvertFromFunction);
+      } finally {
+        test("alter session reset `%s`", ExecConstants.PARQUET_NEW_RECORD_READER);
+        test("alter session reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      }
   }
 
   /*
@@ -857,6 +897,20 @@ public class TestParquetWriter extends BaseTestQuery {
     compareParquetReadersColumnar(
         "c_varchar, c_integer, c_bigint, c_float, c_double, c_date, c_time, c_timestamp, c_boolean",
         "cp.`parquet/last_page_one_null.parquet`");
+  }
+
+  private void compareParquetInt96Converters(String newInt96ConverterQuery,
+      String oldInt96ConverterAndConvertFromFunctionQuery) throws Exception {
+    testBuilder()
+        .ordered()
+        .sqlQuery(newInt96ConverterQuery)
+        .optionSettingQueriesForTestQuery(
+            "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+        .sqlBaselineQuery(oldInt96ConverterAndConvertFromFunctionQuery)
+        .optionSettingQueriesForBaseline(
+            "alter session set `%s` = false", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+        .build()
+        .run();
   }
 
 }

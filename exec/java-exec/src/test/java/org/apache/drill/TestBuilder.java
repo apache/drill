@@ -190,12 +190,23 @@ public class TestBuilder {
     return this;
   }
 
+  public TestBuilder optionSettingQueriesForBaseline(String queries, Object... args) {
+    this.baselineOptionSettingQueries = String.format(queries, args);
+    return this;
+  }
+
   // list of queries to run before the test query, can be used to set several options
   // list takes the form of a semi-colon separated list
   public TestBuilder optionSettingQueriesForTestQuery(String queries) {
     this.testOptionSettingQueries = queries;
     return this;
   }
+
+  public TestBuilder optionSettingQueriesForTestQuery(String query, Object... args) throws Exception {
+    this.testOptionSettingQueries = String.format(query, args);
+    return this;
+  }
+
   public TestBuilder approximateEquality() {
     this.approximateEquality = true;
     return this;

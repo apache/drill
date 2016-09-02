@@ -248,6 +248,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
     return operatorContext;
   }
 
+  public FragmentContext getFragmentContext() {
+    return fragmentContext;
+  }
+
   /**
    * Returns data type length for a given {@see ColumnDescriptor} and it's corresponding
    * {@see SchemaElement}. Neither is enough information alone as the max

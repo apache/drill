@@ -39,6 +39,8 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.OriginalType;
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
+import org.apache.parquet.example.data.simple.NanoTime;
+import org.apache.parquet.io.api.Binary;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,21 +78,21 @@ public class ParquetReaderUtility {
    * in the data pages themselves to see if they are likely corrupt.
    */
   public enum DateCorruptionStatus {
-    META_SHOWS_CORRUPTION{
+    META_SHOWS_CORRUPTION {
       @Override
-      public String toString(){
+      public String toString() {
         return "It is determined from metadata that the date values are definitely CORRUPT";
       }
     },
     META_SHOWS_NO_CORRUPTION {
       @Override
-      public String toString(){
+      public String toString() {
         return "It is determined from metadata that the date values are definitely CORRECT";
       }
     },
     META_UNCLEAR_TEST_VALUES {
       @Override
-      public String toString(){
+      public String toString() {
         return "Not enough info in metadata, parquet reader will test individual date values";
       }
     }
@@ -152,7 +154,7 @@ public class ParquetReaderUtility {
             OriginalType originalType = columnMetadata.getOriginalType();
             if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue() &&
                 (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
-              int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer)columnMetadata.getMaxValue());
+              int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) columnMetadata.getMaxValue());
               columnMetadata.setMax(newMinMax);
               columnMetadata.setMin(newMinMax);
             }
@@ -174,8 +176,8 @@ public class ParquetReaderUtility {
    * Check for corrupted dates in a parquet file. See Drill-4203
    */
   public static DateCorruptionStatus detectCorruptDates(ParquetMetadata footer,
-                                           List<SchemaPath> columns,
-                                           boolean autoCorrectCorruptDates) {
+                                                        List<SchemaPath> columns,
+                                                        boolean autoCorrectCorruptDates) {
     // old drill files have "parquet-mr" as created by string, and no drill version, need to check min/max values to see
     // if they look corrupt
     //  - option to disable this auto-correction based on the date values, in case users are storing these
@@ -223,12 +225,12 @@ public class ParquetReaderUtility {
 
   /**
    * Detect corrupt date values by looking at the min/max values in the metadata.
-   *
+   * <p>
    * This should only be used when a file does not have enough metadata to determine if
    * the data was written with an older version of Drill, or an external tool. Drill
    * versions 1.3 and beyond should have enough metadata to confirm that the data was written
    * by Drill.
-   *
+   * <p>
    * This method only checks the first Row Group, because Drill has only ever written
    * a single Row Group per file.
    *
@@ -240,19 +242,20 @@ public class ParquetReaderUtility {
    *                                that would result in the date values being "corrected" into bad values.
    */
   public static DateCorruptionStatus checkForCorruptDateValuesInStatistics(ParquetMetadata footer,
-                                                              List<SchemaPath> columns,
-                                                              boolean autoCorrectCorruptDates) {
+                                                                           List<SchemaPath> columns,
+                                                                           boolean autoCorrectCorruptDates) {
     // Users can turn-off date correction in cases where we are detecting corruption based on the date values
     // that are unlikely to appear in common datasets. In this case report that no correction needs to happen
     // during the file read
-    if (! autoCorrectCorruptDates) {
+    if (!autoCorrectCorruptDates) {
       return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
     }
     // Drill produced files have only ever have a single row group, if this changes in the future it won't matter
     // as we will know from the Drill version written in the files that the dates are correct
     int rowGroupIndex = 0;
     Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
-    findDateColWithStatsLoop : for (SchemaPath schemaPath : columns) {
+    findDateColWithStatsLoop:
+    for (SchemaPath schemaPath : columns) {
       List<ColumnDescriptor> parquetColumns = footer.getFileMetaData().getSchema().getColumns();
       for (int i = 0; i < parquetColumns.size(); ++i) {
         ColumnDescriptor column = parquetColumns.get(i);
@@ -289,5 +292,32 @@ public class ParquetReaderUtility {
       }
     }
     return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
+  }
+
+  /**
+   * Utilities for converting from parquet INT96 binary (impala, hive timestamp)
+   * to date time value. This utilizes the Joda library.
+   */
+  public static class NanoTimeUtils {
+
+    public static final long NANOS_PER_MILLISECOND = 1000000;
+
+  /**
+   * @param binaryTimeStampValue
+   *          hive, impala timestamp values with nanoseconds precision
+   *          are stored in parquet Binary as INT96 (12 constant bytes)
+   *
+   * @return  Unix Timestamp - the number of milliseconds since January 1, 1970, 00:00:00 GMT
+   *          represented by @param binaryTimeStampValue .
+   */
+    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue) {
+      // This method represents binaryTimeStampValue as ByteBuffer, where timestamp is stored as sum of
+      // julian day number (32-bit) and nanos of day (64-bit)
+      NanoTime nt = NanoTime.fromBinary(binaryTimeStampValue);
+      int julianDay = nt.getJulianDay();
+      long nanosOfDay = nt.getTimeOfDayNanos();
+      return (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
+          + nanosOfDay / NANOS_PER_MILLISECOND;
+    }
   }
 }

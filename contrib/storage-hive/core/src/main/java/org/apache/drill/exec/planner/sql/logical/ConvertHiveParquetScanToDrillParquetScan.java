@@ -296,6 +296,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     if (outputType.getSqlTypeName() == SqlTypeName.TIMESTAMP) {
       // TIMESTAMP is stored as INT96 by Hive in ParquetFormat. Use convert_fromTIMESTAMP_IMPALA UDF to convert
       // INT96 format data to TIMESTAMP
+      // TODO: Remove this conversion once "store.parquet.int96_as_timestamp" will be true by default
       return rb.makeCall(INT96_TO_TIMESTAMP, inputRef);
     }
 
