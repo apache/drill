@@ -27,7 +27,9 @@ package org.apache.drill.exec.vector.complex.reader;
 <#include "/@includes/vv_imports.ftl" />
 
 
-
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public interface BaseReader extends Positionable{
   MajorType getType();

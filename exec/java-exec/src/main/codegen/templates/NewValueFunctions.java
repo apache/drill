@@ -34,6 +34,9 @@ import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.record.RecordBatch;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public class GNewValueFunctions {
 <#list vv.types as type>
 <#if type.major == "Fixed" || type.major = "Bit">

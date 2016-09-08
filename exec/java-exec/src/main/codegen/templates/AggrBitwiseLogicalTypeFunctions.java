@@ -27,7 +27,7 @@
 <#-- A utility class that is used to generate java code for aggr functions bit_and / bit_or -->
 
 /*
- * This class is automatically generated from AggrBitwiseLogicalTypes.tdd using FreeMarker.
+ * This class is generated using freemarker and the ${.template_name} template.
  */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;

@@ -29,6 +29,9 @@ package org.apache.drill.exec.expr.holders;
 
 <#include "/@includes/vv_imports.ftl" />
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 public final class ${className} implements ValueHolder{
   
   public static final MajorType TYPE = Types.${mode.name?lower_case}(MinorType.${minor.class?upper_case});

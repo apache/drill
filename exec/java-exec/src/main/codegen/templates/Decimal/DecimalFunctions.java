@@ -126,6 +126,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
@@ -1014,6 +1017,10 @@ import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
