@@ -49,6 +49,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.drill.exec.store.dfs.MetadataContext.PruneStatus;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -174,11 +175,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.entries = Lists.newArrayList();
     if (fileSelection.getMetaContext() != null &&
-        (fileSelection.getMetaContext().wasPruningStarted() &&
-        ! fileSelection.getMetaContext().wasPruned())) {
-      // if pruning was attempted and nothing was pruned, initialize the entries with just
-      // the selection root instead of the fully expanded list to reduce overhead. The fully
-      // expanded list is already stored as part of the fileSet.
+        (fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_STARTED ||
+          fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_PRUNED)) {
+      // if pruning was not applicable or was attempted and nothing was pruned, initialize the
+      // entries with just the selection root instead of the fully expanded list to reduce overhead.
+      // The fully expanded list is already stored as part of the fileSet.
       // TODO: at some point we should examine whether the list of entries is absolutely needed.
       entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
     } else {

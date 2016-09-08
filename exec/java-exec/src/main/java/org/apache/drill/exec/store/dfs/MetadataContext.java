@@ -67,12 +67,8 @@ public class MetadataContext {
     pruneStatus = status;
   }
 
-  public boolean wasPruningStarted() {
-    return pruneStatus != PruneStatus.NOT_STARTED;
-  }
-
-  public boolean wasPruned() {
-    return pruneStatus == PruneStatus.PRUNED;
+  public PruneStatus getPruneStatus() {
+    return pruneStatus;
   }
 
 }
