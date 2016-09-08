@@ -43,6 +43,9 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 public class ${datetype}${intervaltype}Functions {
 
@@ -158,6 +161,10 @@ import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 
 public class ${datetype}${intervaltype}Functions {
 <#macro timeIntervalArithmeticBlock left right temp op output intervaltype>

@@ -31,6 +31,10 @@ import java.io.IOException;
 import java.lang.UnsupportedOperationException;
 import java.util.Map;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 /** RecordWriter interface. */
 public interface RecordWriter {
 

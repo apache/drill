@@ -28,7 +28,9 @@ package org.apache.drill.exec.vector.complex.impl;
 
 import org.apache.drill.common.types.TypeProtos;
 
-
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public class NullReader extends AbstractBaseReader implements FieldReader{
   

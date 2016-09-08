@@ -50,6 +50,10 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 
 public class Decimal${aggrtype.className}Functions {
