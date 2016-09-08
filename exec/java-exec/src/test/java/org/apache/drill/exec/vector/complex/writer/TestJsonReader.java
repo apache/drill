@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -719,6 +721,104 @@ public class TestJsonReader extends BaseTestQuery {
     } finally {
       testNoResult("alter session reset `store.json.all_text_mode`");
       testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
+
+  @Test // DRILL-4842
+  public void testSelectStarWithAllTextMode() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "tooManyNulls.json")))) {
+      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+        writer.write("{ \"c1\" : null }\n");
+      }
+      writer.write("{ \"c1\" : \"Hello World\" }\n");
+    }
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "json_null_fields.json")))) {
+      writer.write("{ \"c1\" : null, \"c2\" : null, \"c3\" : null }");
+    }
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "json_nested_null_fields.json")))) {
+      writer.write("{\"c0\":{\"c11\": \"I am not NULL\", \"c1\": null}, \"c1\": \"I am not NULL\", \"c11\":null}");
+    }
+
+    try {
+      testNoResult("alter session set `store.json.all_text_mode` = true");
+      testBuilder()
+        .sqlQuery(String.format("select c1 from dfs_test.`%s/tooManyNulls.json` WHERE c1 IN ('Hello World')", pathString))
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues("Hello World")
+        .go();
+
+      testBuilder()
+        .sqlQuery(String.format("select * from dfs_test.`%s/tooManyNulls.json` WHERE c1 IN ('Hello World')", pathString))
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues("Hello World")
+        .go();
+
+      testBuilder()
+        .sqlQuery(String.format("select * from dfs_test.`%s/tooManyNulls.json` WHERE c1 is not null", pathString))
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues("Hello World")
+        .go();
+
+      testBuilder()
+        .sqlQuery(String.format("select * from dfs_test.`%s/json_nested_null_fields.json`", pathString))
+        .unOrdered()
+        .sqlBaselineQuery(String.format("select c0,c1,c11 from dfs_test.`%s/json_nested_null_fields.json`", pathString))
+        .go();
+
+      testNoResult("alter session set `store.json.all_text_mode` = false");
+
+      testBuilder()
+        .sqlQuery(String.format("select * from dfs_test.`%s/json_null_fields.json`", pathString))
+        .unOrdered()
+        .baselineColumns("c1", "c2", "c3")
+        .baselineValues(null, null, null)
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+      deleteQuietly(path);
+    }
+  }
+
+
+  /**
+   * See DRILL-4653 and DRILL-4842
+   */
+  @Test
+  public void testSelectStarWithAllTextModeAndInvalidRecords() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "json_nested_null_fields_with_err.json")))) {
+      writer.write("{\"c11\":null, \"c2\":{\"c0\":{\"c11\": \"1\", \"c1\": {\"c0: null}}, \"c1\": \"I am not NULL\"}}"
+        + "{\"c11\":null, \"c2\":{\"c0\":{\"c11\": \"2\", \"c1\": {\"c0\": null}}, \"c1\": \"I am not NULL\"}}"
+        + "{\"c11\":null, \"c2\":{\"c0\":{\"c11\": \"3\", \"c1\": {\"c0\": null}}, \"c1\": \"I am not NULL\"}}"
+        + "{\"c11\":null, \"c2\":{\"c0\":{\"c11\": \"4\", \"c1\": {\"c0\": null}}, \"c1\": \"I am not NULL\"}}");
+    }
+
+    try {
+      testNoResult("alter session set `" + ExecConstants.JSON_ALL_TEXT_MODE + "` = true");
+
+      testNoResult("alter session set `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = true");
+
+      testBuilder()
+        .unOrdered()
+        .sqlQuery(String.format("select * from dfs_test.`%s/json_nested_null_fields_with_err.json` t WHERE t.c2.c0.c1.c0 IN ('Hello World')", pathString))
+        .expectsEmptyResultSet();
+    } finally {
+      testNoResult("alter session reset `" + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "`");
+      testNoResult("alter session reset `" + ExecConstants.JSON_ALL_TEXT_MODE + "`");
+      deleteQuietly(path);
     }
   }
 }

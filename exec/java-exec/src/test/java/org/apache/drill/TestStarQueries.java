@@ -126,7 +126,7 @@ public class TestStarQueries extends BaseTestQuery{
         .ordered()
         .sqlQuery(" select * from cp.`employee.json` order by last_name")
         .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role,end_date " +
             " from cp.`employee.json` " +
             " order by last_name ")
         .build().run();
@@ -139,7 +139,7 @@ public class TestStarQueries extends BaseTestQuery{
         .ordered()
         .sqlQuery(" select * from cp.`employee.json` order by last_name limit 2")
         .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role,end_date " +
             " from cp.`employee.json` " +
             " order by last_name limit 2")
         .build().run();
@@ -162,7 +162,7 @@ public class TestStarQueries extends BaseTestQuery{
         .ordered()
         .sqlQuery("select * from cp.`employee.json` where first_name = 'James' order by last_name")
         .sqlBaselineQuery("select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
+            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role,end_date " +
             " from cp.`employee.json` " +
             " where first_name = 'James' order by last_name")
         .build().run();
