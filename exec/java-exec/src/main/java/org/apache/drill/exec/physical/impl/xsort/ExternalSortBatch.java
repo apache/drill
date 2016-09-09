@@ -592,11 +592,14 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
       injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       // we only need to cleanup newGroup if spill failed
-      AutoCloseables.close(e, newGroup);
+      try {
+        AutoCloseables.close(e, newGroup);
+      } catch (Throwable t) { /* close() may hit the same IO issue; just ignore */ }
       throw UserException.resourceError(e)
         .message("External Sort encountered an error while spilling to disk")
+              .addContext(e.getMessage() /* more detail */)
         .build(logger);
     } finally {
       hyperBatch.clear();
