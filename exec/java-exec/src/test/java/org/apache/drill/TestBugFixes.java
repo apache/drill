@@ -17,11 +17,16 @@
  */
 package org.apache.drill;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
@@ -199,5 +204,21 @@ public class TestBugFixes extends BaseTestQuery {
             .baselineValues("F", 601L, 10.416666666666666)
             .baselineValues("M", 554L, 11.9)
             .build().run();
+  }
+
+  @Test
+  public void testDRILL4884() throws Exception {
+    int limit = 65536;
+    ImmutableList.Builder<Map<String, Object>> baselineBuilder = ImmutableList.builder();
+    for (int i = 0; i < limit; i++) {
+      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", String.valueOf(i + 1)));
+    }
+    List<Map<String, Object>> baseline = baselineBuilder.build();
+
+    testBuilder()
+            .sqlQuery(String.format("select id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id limit %s", TEST_RES_PATH, limit))
+            .unOrdered()
+            .baselineRecords(baseline)
+            .go();
   }
 }
