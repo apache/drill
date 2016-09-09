@@ -163,8 +163,8 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
 
     int svIndex = 0;
-    for(char i = (char) offset; i < fetch; svIndex++, i++) {
-      outgoingSv.setIndex(svIndex, i);
+    for(int i = offset; i < fetch; svIndex++, i++) {
+      outgoingSv.setIndex(svIndex, (char) i);
     }
     outgoingSv.setRecordCount(svIndex);
   }
