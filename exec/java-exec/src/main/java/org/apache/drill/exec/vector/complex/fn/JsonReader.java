@@ -185,19 +185,15 @@ public class JsonReader extends BaseJsonProcessor {
   public ReadState write(ComplexWriter writer) throws IOException {
 
     ReadState readState = null;
-
     try {
       JsonToken t = lastSeenJsonToken;
-      if (t == null) {
+      if (t == null || t == JsonToken.END_OBJECT) {
         t = parser.nextToken();
       }
       while (!parser.hasCurrentToken() && !parser.isClosed()) {
         t = parser.nextToken();
       }
-
-      if (lastSeenJsonToken != null) {
-        lastSeenJsonToken = null;
-      }
+      lastSeenJsonToken = null;
 
       if (parser.isClosed()) {
         return ReadState.END_OF_STREAM;
@@ -356,7 +352,6 @@ public class JsonReader extends BaseJsonProcessor {
           t = parser.getCurrentToken();
           moveForward = true;
         }
-
         if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
           return;
         }
@@ -436,8 +431,7 @@ public class JsonReader extends BaseJsonProcessor {
         t = parser.getCurrentToken();
         moveForward = true;
       }
-
-      if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
+       if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
         return;
       }
 

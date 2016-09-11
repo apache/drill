@@ -37,11 +37,10 @@ public class CountingJsonReader extends BaseJsonProcessor {
   public ReadState write(BaseWriter.ComplexWriter writer) throws IOException {
     try {
       JsonToken token = lastSeenJsonToken;
-      if (token == null){
+      if (token == null || token == JsonToken.END_OBJECT){
         token = parser.nextToken();
       }
       lastSeenJsonToken = null;
-
       if (!parser.hasCurrentToken()) {
         return ReadState.END_OF_STREAM;
       } else if (token != JsonToken.START_OBJECT) {

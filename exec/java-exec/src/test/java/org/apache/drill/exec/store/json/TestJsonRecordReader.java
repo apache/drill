@@ -21,6 +21,7 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -63,13 +64,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   public void testNestedArrayInRepeatedMap() throws Exception {
     test("select a[0].b[0] from cp.`jsoninput/nestedArray.json`");
     test("select a[0].b[1] from cp.`jsoninput/nestedArray.json`");
-    test("select a[1].b[1] from cp.`jsoninput/nestedArray.json`"); // index out
-                                                                   // of the
-                                                                   // range.
-                                                                   // Should
-                                                                   // return
-                                                                   // empty
-                                                                   // list.
+    test("select a[1].b[1] from cp.`jsoninput/nestedArray.json`"); // index out of the range. Should return empty list.
   }
 
   @Test
@@ -191,6 +186,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
           + ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG
           + "` = true";
       String query = "select count(*) from cp.`jsoninput/drill4653/file.json`";
+
       testNoResult(set);
       testNoResult(set1);
       testBuilder().unOrdered().sqlQuery(query).sqlBaselineQuery(query).build()
@@ -212,7 +208,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
           .run();
     } catch (Exception ex) {
       // do nothing just return
-      return;
+       return;
     }
     throw new Exception("testCountingQueryNotSkippingInvalidJSONRecords");
   }
@@ -225,11 +221,16 @@ public class TestJsonRecordReader extends BaseTestQuery {
 
       String set = "alter session set `"
           + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = true";
+      String set1 = "alter session set `"
+          + ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG
+          + "` = true";
       String query = "select sum(balance) from cp.`jsoninput/drill4653/file.json`";
       testNoResult(set);
+      testNoResult(set1);
       testBuilder().unOrdered().sqlQuery(query).sqlBaselineQuery(query).build()
           .run();
-    } finally {
+    }
+    finally {
       String set = "alter session set `"
           + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = false";
       testNoResult(set);
