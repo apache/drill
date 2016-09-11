@@ -118,7 +118,9 @@
         <exclude>org.apache.drill</exclude>
         <exclude>org.apache.drill.exec</exclude>
         <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.data</exclude>
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.apache.drill.memory</exclude>
         <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
         <exclude>org.apache.hive:hive-common</exclude>
         <exclude>org.apache.hive:hive-serde</exclude>
