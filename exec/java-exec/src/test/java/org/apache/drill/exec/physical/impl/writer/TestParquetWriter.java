@@ -929,6 +929,7 @@ public class TestParquetWriter extends BaseTestQuery {
     }
   }
 
+  @Ignore ("Used to test decompression in AsyncPageReader. Takes too long.")
   @Test
   public void testTPCHReadWriteRunRepeated() throws Exception {
     for (int i = 1; i <= repeat; i++) {
@@ -945,7 +946,6 @@ public class TestParquetWriter extends BaseTestQuery {
     try {
       test(String.format("alter session set `%s` = 'gzip'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
       String inputTable = "cp.`tpch/supplier.parquet`";
-//      runTestAndValidate("s_suppkey, s_nationkey, s_acctbal", "s_suppkey, s_nationkey, s_acctbal", inputTable, "suppkey_parquet_dict_gzip");
         runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
     } finally {
       test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
@@ -957,7 +957,6 @@ public class TestParquetWriter extends BaseTestQuery {
     try {
       test(String.format("alter session set `%s` = 'snappy'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
       String inputTable = "cp.`supplier_snappy.parquet`";
-      //      runTestAndValidate("s_suppkey, s_nationkey, s_acctbal", "s_suppkey, s_nationkey, s_acctbal", inputTable, "suppkey_parquet_dict_gzip");
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
     } finally {
       test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));

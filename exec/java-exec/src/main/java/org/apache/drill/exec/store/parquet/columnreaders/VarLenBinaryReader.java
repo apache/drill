@@ -57,11 +57,7 @@ public class VarLenBinaryReader {
       columnReader.reset();
     }
 
-    //if(useAsyncTasks){
-    //  recordsReadInCurrentPass = determineSizesParallel(recordsToReadInThisPass);
-    //} else {
-      recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
-    //}
+    recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
     if(useAsyncTasks){
       readRecordsParallel(recordsReadInCurrentPass);
     }else{
