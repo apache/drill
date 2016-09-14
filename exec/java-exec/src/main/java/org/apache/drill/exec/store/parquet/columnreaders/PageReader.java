@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import com.google.common.base.Stopwatch;
+import io.netty.buffer.ByteBufUtil;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.filereader.BufferedDirectBufInputStream;
 import io.netty.buffer.ByteBuf;
@@ -63,9 +64,8 @@ class PageReader {
   public static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
 
   protected final org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentColumnReader;
-  //private final ColumnDataReader dataReader;
   protected final DirectBufInputStream dataReader;
-  //der; buffer to store bytes of current page
+  //buffer to store bytes of current page
   protected DrillBuf pageData;
 
   // for variable length data we need to keep track of our current position in the page data
@@ -189,6 +189,11 @@ class PageReader {
     if (parentColumnReader.columnChunkMetaData.getCodec() == CompressionCodecName.UNCOMPRESSED) {
       timer.start();
       pageDataBuf = dataReader.getNext(compressedSize);
+      if (logger.isTraceEnabled()) {
+        logger.trace("PageReaderTask==> Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+            parentColumnReader.columnChunkMetaData.toString(), dataReader.getPos(),
+            pageHeader.getUncompressed_page_size(), ByteBufUtil.hexDump(pageData));
+      }
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
       this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, uncompressedSize);
     } else {
@@ -247,9 +252,6 @@ class PageReader {
       }
     } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
 
-    //TODO: Handle buffer allocation exception
-
-    //allocatePageData(pageHeader.getUncompressed_page_size());
     int compressedSize = pageHeader.getCompressed_page_size();
     int uncompressedSize = pageHeader.getUncompressed_page_size();
     pageData = readPage(pageHeader, compressedSize, uncompressedSize);
@@ -270,7 +272,7 @@ class PageReader {
 
     // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
     // and submit a bug report
-    if(!dataReader.hasRemainder() || parentColumnReader.totalValuesRead == parentColumnReader.columnChunkMetaData.getValueCount()) {
+    if(parentColumnReader.totalValuesRead == parentColumnReader.columnChunkMetaData.getValueCount()) {
       return false;
     }
     clearBuffers();
@@ -395,7 +397,7 @@ class PageReader {
 
   public void clear(){
     try {
-      this.inputStream.close();
+      // data reader also owns the input stream and will close it.
       this.dataReader.close();
     } catch (IOException e) {
       //Swallow the exception which is OK for input streams

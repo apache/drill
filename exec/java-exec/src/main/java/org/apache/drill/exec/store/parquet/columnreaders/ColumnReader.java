@@ -163,22 +163,13 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   protected abstract void readField(long recordsToRead);
 
-  /*
-  public Future<Boolean> determineSizeAsync(long recordsReadInCurrentPass,
-      Integer lengthVarFieldsInCurrentRecord) throws IOException {
-    Future<Boolean> r = threadPool.submit(
-        new ColumnReaderDetermineSizeTask(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord));
-    return r;
-  }
-  */
-
   /**
    * Determines the size of a single value in a variable column.
    *
    * Return value indicates if we have finished a row group and should stop reading
    *
    * @param recordsReadInCurrentPass
-   * @ param lengthVarFieldsInCurrentRecord
+   * @param lengthVarFieldsInCurrentRecord
    * @return - true if we should stop reading
    * @throws IOException
    */
@@ -194,7 +185,7 @@ public abstract class ColumnReader<V extends ValueVector> {
       return true;
     }
 
-    //lengthVarFieldsInCurrentRecord += dataTypeLengthInBits;
+    // Never used in this code path. Hard to remove because the method is overidden by subclasses
     lengthVarFieldsInCurrentRecord = -1;
 
     doneReading = checkVectorCapacityReached();
@@ -307,41 +298,18 @@ public abstract class ColumnReader<V extends ValueVector> {
     @Override public Long call() throws IOException{
 
       String oldname = Thread.currentThread().getName();
-      Thread.currentThread().setName(oldname+"Decode-"+this.parent.columnChunkMetaData.toString());
+      try {
+        Thread.currentThread().setName(oldname + "Decode-" + this.parent.columnChunkMetaData.toString());
 
-      this.parent.processPages(recordsToReadInThisPass);
+        this.parent.processPages(recordsToReadInThisPass);
+        return recordsToReadInThisPass;
 
-      Thread.currentThread().setName(oldname);
-      return recordsToReadInThisPass;
+      } finally {
+        Thread.currentThread().setName(oldname);
+      }
     }
 
   }
-
-  /*
-  private class ColumnReaderDetermineSizeTask implements Callable<Boolean> {
-
-    private final ColumnReader parent = ColumnReader.this;
-    private final long recordsReadInCurrentPass;
-    private final Integer lengthVarFieldsInCurrentRecord;
-
-    public ColumnReaderDetermineSizeTask(long recordsReadInCurrentPass, Integer lengthVarFieldsInCurrentRecord){
-      this.recordsReadInCurrentPass = recordsReadInCurrentPass;
-      this.lengthVarFieldsInCurrentRecord = lengthVarFieldsInCurrentRecord;
-    }
-
-    @Override public Boolean call() throws IOException{
-
-      String oldname = Thread.currentThread().getName();
-      Thread.currentThread().setName(oldname+"Decode-"+this.parent.columnChunkMetaData.toString());
-
-      boolean b = this.parent.determineSize(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord);
-
-      Thread.currentThread().setName(oldname);
-      return b;
-    }
-
-  }
-  */
 
   private class ColumnReaderReadRecordsTask implements Callable<Integer> {
 
@@ -355,12 +323,15 @@ public abstract class ColumnReader<V extends ValueVector> {
     @Override public Integer call() throws IOException{
 
       String oldname = Thread.currentThread().getName();
-      Thread.currentThread().setName("Decode-"+this.parent.columnChunkMetaData.toString());
+      try {
+        Thread.currentThread().setName("Decode-" + this.parent.columnChunkMetaData.toString());
 
-      this.parent.readRecords(recordsToRead);
+        this.parent.readRecords(recordsToRead);
+        return recordsToRead;
 
-      Thread.currentThread().setName(oldname);
-      return recordsToRead;
+      } finally {
+        Thread.currentThread().setName(oldname);
+      }
     }
 
   }

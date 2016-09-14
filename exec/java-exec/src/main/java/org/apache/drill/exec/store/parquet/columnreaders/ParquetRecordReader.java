@@ -476,11 +476,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
    if(useAsyncColReader){
     readAllFixedFieldsParallel(recordsToRead) ;
    } else {
-     readAllFixedFieldsiSerial(recordsToRead); ;
+     readAllFixedFieldsSerial(recordsToRead); ;
    }
  }
 
-  public void readAllFixedFieldsiSerial(long recordsToRead) throws IOException {
+  public void readAllFixedFieldsSerial(long recordsToRead) throws IOException {
     for (ColumnReader<?> crs : columnStatuses) {
       crs.processPages(recordsToRead);
     }
@@ -492,13 +492,21 @@ public class ParquetRecordReader extends AbstractRecordReader {
       Future<Long> f = crs.processPagesAsync(recordsToRead);
       futures.add(f);
     }
+    Exception exception = null;
     for(Future f: futures){
-      try {
-        f.get();
-      } catch (Exception e) {
+      if(exception != null) {
         f.cancel(true);
-        handleAndRaise(null, e);
+      } else {
+        try {
+          f.get();
+        } catch (Exception e) {
+          f.cancel(true);
+          exception = e;
+        }
       }
+    }
+    if(exception != null){
+      handleAndRaise(null, exception);
     }
   }
 
