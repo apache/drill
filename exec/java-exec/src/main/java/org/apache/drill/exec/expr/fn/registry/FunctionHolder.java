@@ -15,19 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.exception;
+package org.apache.drill.exec.expr.fn.registry;
 
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+/**
+ * Holder class that contains:
+ * <ol>
+ *   <li>function name</li>
+ *   <li>function signature which is string representation of function name and its input parameters</li>
+ *   <li>{@link DrillFuncHolder} associated with the function</li>
+ * </ol>
+ */
+public class FunctionHolder {
 
-public class VersionMismatchException extends DrillRuntimeException {
+  private final String name;
+  private final String signature;
+  private final DrillFuncHolder holder;
 
-  public VersionMismatchException(String message, int expectedVersion, Throwable cause) {
-    super(message + ". Expected version : " + expectedVersion, cause);
+  public FunctionHolder(String name, String signature, DrillFuncHolder holder) {
+    this.name = name;
+    this.signature = signature;
+    this.holder = holder;
   }
 
-  public VersionMismatchException(String message, int expectedVersion) {
-    super(message + ". Expected version : " + expectedVersion);
+  public String getName() {
+    return name;
+  }
+
+  public DrillFuncHolder getHolder() {
+    return holder;
+  }
+
+  public String getSignature() {
+    return signature;
   }
 
 }

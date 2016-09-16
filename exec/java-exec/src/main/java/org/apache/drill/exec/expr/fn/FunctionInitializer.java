@@ -43,7 +43,7 @@ public class FunctionInitializer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionInitializer.class);
 
   private final String className;
-  private final ClassLoader classloader;
+  private final ClassLoader classLoader;
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
   private Map<String, String> methods;
   private List<String> imports;
@@ -51,18 +51,19 @@ public class FunctionInitializer {
 
   /**
    * @param className the fully qualified name of the class implementing the function
-   * @param classLoader system or custom class loader
+   * @param classLoader class loader associated with the function, is unique for each jar that holds function
+   *                    to prevent classpath collisions during loading an unloading jars
    */
   public FunctionInitializer(String className, ClassLoader classLoader) {
     super();
     this.className = className;
-    this.classloader = classLoader;
+    this.classLoader = classLoader;
   }
 
   /**
    * @return returns class loader
    */
-  public ClassLoader getClassLoader() { return classloader; }
+  public ClassLoader getClassLoader() { return classLoader; }
 
   /**
    * @return the fully qualified name of the class implementing the function
@@ -101,7 +102,7 @@ public class FunctionInitializer {
       // get function body.
 
       try {
-        final Class<?> clazz = Class.forName(className, true, classloader);
+        final Class<?> clazz = Class.forName(className, true, classLoader);
         final CompilationUnit cu = get(clazz);
 
         if (cu == null) {

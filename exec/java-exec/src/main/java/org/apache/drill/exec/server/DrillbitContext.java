@@ -29,7 +29,7 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.RemoteFunctionRegistry;
+import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -186,5 +186,6 @@ public class DrillbitContext implements AutoCloseable {
   @Override
   public void close() throws Exception {
     getOptionManager().close();
+    getRemoteFunctionRegistry().close();
   }
 }

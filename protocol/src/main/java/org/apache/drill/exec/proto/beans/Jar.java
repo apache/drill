@@ -50,7 +50,7 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
 
     
     private String name;
-    private List<Func> function;
+    private List<String> functionSignature;
 
     public Jar()
     {
@@ -72,16 +72,16 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
         return this;
     }
 
-    // function
+    // functionSignature
 
-    public List<Func> getFunctionList()
+    public List<String> getFunctionSignatureList()
     {
-        return function;
+        return functionSignature;
     }
 
-    public Jar setFunctionList(List<Func> function)
+    public Jar setFunctionSignatureList(List<String> functionSignature)
     {
-        this.function = function;
+        this.functionSignature = functionSignature;
         return this;
     }
 
@@ -143,11 +143,10 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
                     message.name = input.readString();
                     break;
                 case 2:
-                    if(message.function == null)
-                        message.function = new ArrayList<Func>();
-                    message.function.add(input.mergeObject(null, Func.getSchema()));
+                    if(message.functionSignature == null)
+                        message.functionSignature = new ArrayList<String>();
+                    message.functionSignature.add(input.readString());
                     break;
-
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -160,15 +159,14 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
         if(message.name != null)
             output.writeString(1, message.name, false);
 
-        if(message.function != null)
+        if(message.functionSignature != null)
         {
-            for(Func function : message.function)
+            for(String functionSignature : message.functionSignature)
             {
-                if(function != null)
-                    output.writeObject(2, function, Func.getSchema(), true);
+                if(functionSignature != null)
+                    output.writeString(2, functionSignature, true);
             }
         }
-
     }
 
     public String getFieldName(int number)
@@ -176,7 +174,7 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
         switch(number)
         {
             case 1: return "name";
-            case 2: return "function";
+            case 2: return "functionSignature";
             default: return null;
         }
     }
@@ -191,7 +189,7 @@ public final class Jar implements Externalizable, Message<Jar>, Schema<Jar>
     static
     {
         __fieldMap.put("name", 1);
-        __fieldMap.put("function", 2);
+        __fieldMap.put("functionSignature", 2);
     }
     
 }

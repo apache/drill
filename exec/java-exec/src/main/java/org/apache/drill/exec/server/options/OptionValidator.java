@@ -28,6 +28,7 @@ public abstract class OptionValidator {
   private final String optionName;
   private final boolean isAdminOption;
 
+  /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
     this(optionName, false);
   }
@@ -75,7 +76,7 @@ public abstract class OptionValidator {
   }
 
   /**
-   * @return true is option can be set on system level only
+   * @return true is option is system-level property that can be only specified by admin (not user).
    */
   public boolean isAdminOption() {
     return isAdminOption;

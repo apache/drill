@@ -40,6 +40,8 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
   private final String drillFuncClass;
+  // each function should be wrapped unique class loader associated with its jar
+  // to prevent classpath collisions during loading and unloading jars
   private final ClassLoader classLoader;
 
   public DrillSimpleFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {

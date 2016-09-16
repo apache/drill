@@ -15,14 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.exception;
+package org.apache.drill.exec.expr.fn.registry;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 
-public class FunctionValidationException extends DrillRuntimeException {
+/**
+ * Holder class that contains:
+ * <ol>
+ *   <li>jar name</li>
+ *   <li>scan of packages, classes, annotations found in jar</li>
+ *   <li>unique jar classLoader</li>
+ * </ol>
+ */
+public class JarScan {
 
-  public FunctionValidationException(String message) {
-    super(message);
+  private final String jarName;
+  private final ScanResult scanResult;
+  private final ClassLoader classLoader;
+
+  public JarScan(String jarName, ScanResult scanResult, ClassLoader classLoader) {
+    this.jarName = jarName;
+    this.scanResult = scanResult;
+    this.classLoader = classLoader;
   }
 
+  public String getJarName() {
+    return jarName;
+  }
+
+  public ClassLoader getClassLoader() {
+    return classLoader;
+  }
+
+  public ScanResult getScanResult() {
+    return scanResult;
+  }
 }

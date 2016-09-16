@@ -37,12 +37,17 @@ import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.EnsurePath;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.exception.VersionMismatchException;
+import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.zookeeper.CreateMode;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TestZookeeperClient {
   private final static String root = "/test";
@@ -139,13 +144,13 @@ public class TestZookeeperClient {
         .when(client.getCache().getCurrentData(abspath))
         .thenReturn(null);
 
-    Assert.assertEquals("get should return null", null, client.get(path));
+    assertEquals("get should return null", null, client.get(path));
 
     Mockito
         .when(client.getCache().getCurrentData(abspath))
         .thenReturn(new ChildData(abspath, null, data));
 
-    Assert.assertEquals("get should return data", data, client.get(path, false));
+    assertEquals("get should return data", data, client.get(path, false));
   }
 
   @Test
@@ -194,8 +199,46 @@ public class TestZookeeperClient {
     // returned entry must contain the given relative path
     final Map.Entry<String, byte[]> expected = new ImmutableEntry<>(path, data);
 
-    Assert.assertEquals("entries do not match", expected, entries.next());
+    assertEquals("entries do not match", expected, entries.next());
   }
 
+  @Test
+  public void testGetWithVersion() {
+    client.put(path, data);
+    DataChangeVersion version0 = new DataChangeVersion();
+    client.get(path, version0);
+    assertEquals("Versions should match", 0, version0.getVersion());
+    client.put(path, data);
+    DataChangeVersion version1 = new DataChangeVersion();
+    client.get(path, version1);
+    assertEquals("Versions should match", 1, version1.getVersion());
+  }
+
+  @Test
+  public void testPutWithMatchingVersion() {
+    client.put(path, data);
+    DataChangeVersion version = new DataChangeVersion();
+    client.get(path, version);
+    client.put(path, data, version);
+  }
+
+  @Test (expected = VersionMismatchException.class)
+  public void testPutWithNonMatchingVersion() {
+    client.put(path, data);
+    DataChangeVersion version = new DataChangeVersion();
+    version.setVersion(123);
+    client.put(path, data, version);
+  }
+
+  @Test
+  public void testPutIfAbsentWhenAbsent() {
+    assertNull(client.putIfAbsent(path, data));
+  }
+
+  @Test
+  public void testPutIfAbsentWhenPresent() {
+    client.putIfAbsent(path, data);
+    assertEquals("Data should match", new String(data), new String(client.putIfAbsent(path, "new_data".getBytes())));
+  }
 
 }

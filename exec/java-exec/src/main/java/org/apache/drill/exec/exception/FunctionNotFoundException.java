@@ -19,10 +19,9 @@ package org.apache.drill.exec.exception;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class FunctionValidationException extends DrillRuntimeException {
+public class FunctionNotFoundException extends DrillRuntimeException {
 
-  public FunctionValidationException(String message) {
-    super(message);
+  public FunctionNotFoundException(String message, Throwable cause) {
+    super(message, cause);
   }
-
 }

@@ -26,12 +26,13 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.FunctionValidationException;
+import org.apache.drill.exec.exception.JarValidationException;
 import org.apache.drill.exec.exception.VersionMismatchException;
-import org.apache.drill.exec.expr.fn.RemoteFunctionRegistry;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateFunction;
-import org.apache.drill.exec.proto.UserBitShared.Func;
 import org.apache.drill.exec.proto.UserBitShared.Jar;
 import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
@@ -55,141 +56,273 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
   }
 
   /**
-   * Creates UDFs dynamically.
+   * Registers UDFs dynamically. Process consists of several steps:
+   * <ol>
+   * <li>Registering jar in jar registry to ensure that several jars with the same name is not registered.</li>
+   * <li>Binary and source jars validation and back up.</li>
+   * <li>Validation against local function registry.</li>
+   * <li>Validation against remote function registry.</li>
+   * <li>Remote function registry update.</li>
+   * <li>Copying of jars to registry area and clean up.</li>
+   * </ol>
    *
-   * @return - Single row indicating list of registered UDFs, raise exception otherwise
+   * UDFs registration is allowed only if dynamic UDFs support is enabled.
+   *
+   * @return - Single row indicating list of registered UDFs, or error message otherwise.
    */
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException, IOException {
-    if (context.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
-      SqlCreateFunction node = unwrap(sqlNode, SqlCreateFunction.class);
-      String jarName = ((SqlCharStringLiteral) node.getJar()).toValue();
-      String sourceName = JarUtil.getSourceName(jarName);
-
-      RemoteFunctionRegistry remoteRegistry = context.getRemoteFunctionRegistry();
-      FileSystem fs = remoteRegistry.getFs();
-      Path tmpDir = new Path(remoteRegistry.getTmpArea(), UUID.randomUUID().toString());
-      File localTmpDir = Files.createTempDir();
-
-      boolean inProgress = false;
-      try {
-        final String action = remoteRegistry.addToJars(jarName, RemoteFunctionRegistry.Action.REGISTRATION);
-        if (!(inProgress = action == null)) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("Jar with %s name is used. Action: %s", jarName, action));
-        }
-
-        // verify that binary and source exist
-        Path remoteBinary = new Path(remoteRegistry.getStagingArea(), jarName);
-        Path remoteSource = new Path(remoteRegistry.getStagingArea(), sourceName);
-        if (!fs.exists(remoteBinary) || !fs.exists(remoteSource)) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("Binary [%s] or source [%s] is absent in udf staging area [%s].", jarName, sourceName, remoteRegistry.getStagingArea().toUri().getPath()));
-        }
-
-        // backup binary & source (copy to udf tmp directory)
-        fs.mkdirs(tmpDir);
-        Path tmpBinary = new Path(tmpDir, jarName);
-        Path tmpSource = new Path(tmpDir, sourceName);
-
-        FileUtil.copy(fs, remoteBinary, fs, tmpBinary, false, fs.getConf());
-        FileUtil.copy(fs, remoteSource, fs, tmpSource, false, fs.getConf());
-
-        // copy binary to local fs, we don't need source for validation
-        Path localBinary = new Path(new Path(localTmpDir.toURI()), jarName);
-        fs.copyToLocalFile(tmpBinary, localBinary);
-
-        // validate functions locally
-        List<Func> functions;
-        try {
-          functions = context.getFunctionRegistry().validate(localBinary);
-        } catch (FunctionValidationException ex) {
-          return DirectPlan.createDirectPlan(context, false, ex.getMessage());
-        }
-
-        if (functions.size() == 0) {
-          return DirectPlan.createDirectPlan(context, false,
-              String.format("Jar %s does not contain functions", jarName));
-        }
-
-        // validate and register remotely
-        Jar jar = Jar.newBuilder().setName(jarName).addAllFunction(functions).build();
-        String error = register(remoteRegistry, jar, tmpBinary, tmpSource, remoteRegistry.getRetryTimes());
-
-        if (error != null) {
-          return DirectPlan.createDirectPlan(context, false, error);
-        }
-
-        // remove jars from staging area
-        try {
-          fs.delete(remoteBinary, false);
-          fs.delete(remoteSource, false);
-        } catch (IOException ex) {
-          logger.warn("Failed to delete binary {} and source {} from staging area", jarName, sourceName);
-        }
-
-        return DirectPlan.createDirectPlan(context, true,
-            String.format("The following UDFs in jar %s have been registered:\n%s", jarName, functions));
-
-      } finally {
-        if (inProgress) {
-          remoteRegistry.removeFromJars(jarName);
-        }
-        FileUtils.deleteQuietly(localTmpDir);
-        if (fs.exists(tmpDir)) {
-          fs.delete(tmpDir, true);
-        }
-      }
+    if (!context.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
+      throw UserException.validationError()
+          .message("Dynamic UDFs support is disabled.")
+          .build(logger);
     }
-    throw UserException.validationError()
-        .message("Dynamic UDFs support is disabled.")
-        .build(logger);
+    RemoteFunctionRegistry remoteRegistry = context.getRemoteFunctionRegistry();
+    JarManager jarManager = new JarManager(sqlNode, remoteRegistry);
+
+    boolean inProgress = false;
+    try {
+      final String action = remoteRegistry.addToJars(jarManager.getBinaryName(), RemoteFunctionRegistry.Action.REGISTRATION);
+      if (!(inProgress = action == null)) {
+        return DirectPlan.createDirectPlan(context, false,
+            String.format("Jar with %s name is used. Action: %s", jarManager.getBinaryName(), action));
+      }
+
+      jarManager.initRemoteBackup();
+      List<String> functions = validateAgainstLocalRegistry(jarManager, context.getFunctionRegistry());
+      initRemoteRegistration(functions, jarManager, remoteRegistry, remoteRegistry.getRetryAttempts());
+      jarManager.deleteQuietlyFromStagingArea();
+
+      return DirectPlan.createDirectPlan(context, true,
+          String.format("The following UDFs in jar %s have been registered:\n%s", jarManager.getBinaryName(), functions));
+
+    } catch (Exception e) {
+      logger.error("Error during UDF registration", e);
+      return DirectPlan.createDirectPlan(context, false, e.getMessage());
+    } finally {
+      if (inProgress) {
+        remoteRegistry.removeFromJars(jarManager.getBinaryName());
+      }
+      jarManager.cleanUp();
+    }
   }
 
-  private String validate(Registry registry, Jar jar) {
-    for (Jar remoteJar : registry.getJarList()) {
-      if (remoteJar.getName().equals(jar.getName())) {
-        return String.format("Jar with %s name has been already registered", jar.getName());
+
+  /**
+   * Instantiates coping of binary to local file system
+   * and validates functions from this jar against local function registry.
+   *
+   * @param jarManager helps coping binary to local file system
+   * @param localFunctionRegistry instance of local function registry to instantiate local validation
+   * @return list of validated function signatures
+   * @throws IOException in case of problems during copying binary to local file system
+   * @throws FunctionValidationException in case duplicated function was found
+   */
+  private List<String> validateAgainstLocalRegistry(JarManager jarManager,
+                                                    FunctionImplementationRegistry localFunctionRegistry) throws IOException {
+    Path localBinary = jarManager.copyBinaryToLocal();
+    return localFunctionRegistry.validate(localBinary);
+  }
+
+  /**
+   * Validates jar and its functions against remote jars.
+   * First checks if there is no duplicate by jar name and then looks for duplicates among functions.
+   *
+   * @param remoteJars list of remote jars to validate against
+   * @param jarName jar name to be validated
+   * @param functions list of functions present in jar to be validated
+   * @throws JarValidationException in case of jar with the same name was found
+   * @throws FunctionValidationException in case duplicated function was found
+   */
+  private void validateAgainstRemoteRegistry(List<Jar> remoteJars, String jarName, List<String> functions) {
+    for (Jar remoteJar : remoteJars) {
+      if (remoteJar.getName().equals(jarName)) {
+        throw new JarValidationException(String.format("Jar with %s name has been already registered", jarName));
       }
-      for (Func remoteFunction : remoteJar.getFunctionList()) {
-        for (Func func : jar.getFunctionList()) {
-          if (remoteFunction.getName().equals(func.getName()) && remoteFunction.getMajorTypeList().equals(func.getMajorTypeList())) {
-            return String.format("Found duplicated function in %s - %s", remoteJar.getName(), remoteFunction);
+      for (String remoteFunction : remoteJar.getFunctionSignatureList()) {
+        for (String func : functions) {
+          if (remoteFunction.equals(func)) {
+            throw new FunctionValidationException(
+                String.format("Found duplicated function in %s: %s", remoteJar.getName(), remoteFunction));
           }
         }
       }
     }
-    return null;
   }
 
-  private String register(RemoteFunctionRegistry remoteFunctionRegistry, Jar jar, Path tmpBinary, Path tmpSource, int retryTimes) throws IOException {
+  /**
+   * Instantiates remote registration. First gets remote function registry with version.
+   * Version is used to ensure that we update the same registry we validated against.
+   * Then validates against list of remote jars.
+   * If validation is successful, starts updating remote function registry.
+   * If during update {@link VersionMismatchException} was detected,
+   * calls itself recursively to instantiate new remote registration process.
+   * Since remote registry version has changed, we need to re-validate against remote function registry one more time.
+   * Each time recursive call occurs, decreases retry attempts counter by one.
+   * If retry attempts number hits 0, throws exception that failed to update remote function registry.
+   *
+   * @param functions list of functions present in jar
+   * @param jarManager helper class for copying jars to registry area
+   * @param remoteRegistry remote function registry
+   * @param retryAttempts number of retry attempts
+   * @throws IOException in case of problems with copying jars to registry area
+   */
+  private void initRemoteRegistration(List<String> functions,
+                                      JarManager jarManager,
+                                      RemoteFunctionRegistry remoteRegistry,
+                                      int retryAttempts) throws IOException {
     DataChangeVersion version = new DataChangeVersion();
-    Registry registry = remoteFunctionRegistry.getRegistry(version);
-    // validate against remote registry
-    String error = validate(registry, jar);
-    if (error == null) {
-      // copy jars to registry area
-      FileSystem fs = remoteFunctionRegistry.getFs();
-      Path binary = new Path(remoteFunctionRegistry.getRegistryArea(), tmpBinary.getName());
-      Path source = new Path(remoteFunctionRegistry.getRegistryArea(), tmpSource.getName());
-      FileUtil.copy(fs, tmpBinary, fs, binary, false, true, fs.getConf());
-      FileUtil.copy(fs, tmpSource, fs, source, false, true, fs.getConf());
-
-      // add jar info into remote registry if all validation has passed
-      List<Jar> remoteJars = Lists.newArrayList(registry.getJarList());
-      remoteJars.add(jar);
-      Registry updatedRegistry = Registry.newBuilder().addAllJar(remoteJars).build();
-      try {
-        remoteFunctionRegistry.updateRegistry(updatedRegistry, version);
-      } catch (VersionMismatchException ex) {
-        if (retryTimes-- == 0) {
-          fs.delete(binary, false);
-          fs.delete(source, false);
-          throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry times limit.");
-        }
-        register(remoteFunctionRegistry, jar, tmpBinary, tmpSource, retryTimes);
+    List<Jar> remoteJars = remoteRegistry.getRegistry(version).getJarList();
+    validateAgainstRemoteRegistry(remoteJars, jarManager.getBinaryName(), functions);
+    jarManager.copyToRegistryArea();
+    boolean cleanUp = true;
+    List<Jar> jars = Lists.newArrayList(remoteJars);
+    jars.add(Jar.newBuilder().setName(jarManager.getBinaryName()).addAllFunctionSignature(functions).build());
+    Registry updatedRegistry = Registry.newBuilder().addAllJar(jars).build();
+    try {
+      remoteRegistry.updateRegistry(updatedRegistry, version);
+      cleanUp = false;
+    } catch (VersionMismatchException ex) {
+      if (retryAttempts-- == 0) {
+        throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry attempts limit.");
+      }
+      initRemoteRegistration(functions, jarManager, remoteRegistry, retryAttempts);
+    } finally {
+      if (cleanUp) {
+        jarManager.deleteQuietlyFromRegistryArea();
       }
     }
-    return error;
+  }
+
+  /**
+   * Inner helper class that encapsulates logic for working with jars.
+   * During initialization it creates path to staging jar, local and remote temporary jars, registry jars.
+   * Is responsible for validation, copying and deletion actions.
+   */
+  private class JarManager {
+
+    private final String binaryName;
+    private final FileSystem fs;
+
+    private final Path remoteTmpDir;
+    private final Path localTmpDir;
+
+    private final Path stagingBinary;
+    private final Path stagingSource;
+
+    private final Path tmpRemoteBinary;
+    private final Path tmpRemoteSource;
+
+    private final Path registryBinary;
+    private final Path registrySource;
+
+    JarManager(SqlNode sqlNode, RemoteFunctionRegistry remoteRegistry) throws ForemanSetupException {
+      SqlCreateFunction node = unwrap(sqlNode, SqlCreateFunction.class);
+      this.binaryName = ((SqlCharStringLiteral) node.getJar()).toValue();
+      String sourceName = JarUtil.getSourceName(binaryName);
+
+      this.stagingBinary = new Path(remoteRegistry.getStagingArea(), binaryName);
+      this.stagingSource = new Path(remoteRegistry.getStagingArea(), sourceName);
+
+      this.remoteTmpDir = new Path(remoteRegistry.getTmpArea(), UUID.randomUUID().toString());
+      this.tmpRemoteBinary = new Path(remoteTmpDir, binaryName);
+      this.tmpRemoteSource = new Path(remoteTmpDir, sourceName);
+
+      this.registryBinary = new Path(remoteRegistry.getRegistryArea(), binaryName);
+      this.registrySource = new Path(remoteRegistry.getRegistryArea(), sourceName);
+
+      this.localTmpDir = new Path(Files.createTempDir().toURI());
+      this.fs = remoteRegistry.getFs();
+    }
+
+    /**
+     * @return binary jar name
+     */
+    String getBinaryName() {
+      return binaryName;
+    }
+
+    /**
+     * Validates that both binary and source jar are present in staging area,
+     * it is expected that binary and source have standard naming convention.
+     * Backs up both jars to unique folder in remote temporary area.
+     *
+     * @throws IOException in case of binary or source absence or problems during copying jars
+     */
+    void initRemoteBackup() throws IOException {
+      fs.getFileStatus(stagingBinary);
+      fs.getFileStatus(stagingSource);
+      fs.mkdirs(remoteTmpDir);
+      FileUtil.copy(fs, stagingBinary, fs, tmpRemoteBinary, false, true, fs.getConf());
+      FileUtil.copy(fs, stagingSource, fs, tmpRemoteSource, false, true, fs.getConf());
+    }
+
+    /**
+     * Copies binary jar to unique folder on local file system.
+     * Source jar is not needed for local validation.
+     *
+     * @return path to local binary jar
+     * @throws IOException in case of problems during copying binary jar
+     */
+    Path copyBinaryToLocal() throws IOException {
+      Path localBinary = new Path(localTmpDir, binaryName);
+      fs.copyToLocalFile(tmpRemoteBinary, localBinary);
+      return localBinary;
+    }
+
+    /**
+     * Copies binary and source jars to registry area,
+     * in case of {@link IOException} removes copied jar(-s) from registry area
+     *
+     * @throws IOException is re-thrown in case of problems during copying process
+     */
+    void copyToRegistryArea() throws IOException {
+      FileUtil.copy(fs, tmpRemoteBinary, fs, registryBinary, false, true, fs.getConf());
+      try {
+        FileUtil.copy(fs, tmpRemoteSource, fs, registrySource, false, true, fs.getConf());
+      } catch (IOException e) {
+        deleteQuietly(registryBinary, false);
+        throw new IOException(e);
+      }
+    }
+
+    /**
+     * Deletes binary and sources jars from staging area, in case of problems, logs warning and proceeds.
+     */
+    void deleteQuietlyFromStagingArea() {
+      deleteQuietly(stagingBinary, false);
+      deleteQuietly(stagingSource, false);
+    }
+
+    /**
+     * Deletes binary and sources jars from registry area, in case of problems, logs warning and proceeds.
+     */
+    void deleteQuietlyFromRegistryArea() {
+      deleteQuietly(registryBinary, false);
+      deleteQuietly(registrySource, false);
+    }
+
+    /**
+     * Removes quietly remote and local unique folders in temporary directories.
+     */
+    void cleanUp() {
+      FileUtils.deleteQuietly(new File(localTmpDir.toUri()));
+      deleteQuietly(remoteTmpDir, true);
+    }
+
+    /**
+     * Deletes quietly file or directory, in case of errors, logs warning and proceeds.
+     *
+     * @param path path to file or directory
+     * @param isDirectory set to true if we need to delete a directory
+     */
+    private void deleteQuietly(Path path, boolean isDirectory) {
+      try {
+        fs.delete(path, isDirectory);
+      } catch (IOException e) {
+        logger.warn(String.format("Error during deletion [%s]", path.toUri().getPath()), e);
+      }
+    }
+
   }
 }

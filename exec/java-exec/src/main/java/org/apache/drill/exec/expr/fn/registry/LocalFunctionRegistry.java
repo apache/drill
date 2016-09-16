@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.fn;
+package org.apache.drill.exec.expr.fn.registry;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
@@ -31,13 +30,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.FunctionValidationException;
+import org.apache.drill.exec.exception.JarValidationException;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.expr.fn.FunctionConverter;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
@@ -46,20 +45,16 @@ import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
 import com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.exec.planner.sql.DrillSqlOperatorWithoutInference;
-import org.apache.drill.exec.proto.UserBitShared.Func;
 
 /**
  * Registry of Drill functions.
  */
-public class DrillFunctionRegistry {
+public class LocalFunctionRegistry {
 
   public static final String BUILT_IN = "built-in";
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
-
-  // function registry holder
-  // Jar names, function names and signatures are stored as String, function holders as DrillFuncHolder.
-  private final GenericRegistryHolder<String, DrillFuncHolder> registryHolder = new GenericRegistryHolder<>();
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalFunctionRegistry.class);
+  private static final String functionSignaturePattern = "%s(%s)";
 
   private static final ImmutableMap<String, Pair<Integer, Integer>> registeredFuncNameToArgRange = ImmutableMap.<String, Pair<Integer, Integer>> builder()
       // CONCAT is allowed to take [1, infinity) number of arguments.
@@ -76,10 +71,14 @@ public class DrillFunctionRegistry {
       .put("CONVERT_FROM", Pair.of(2, 2))
       .put("FLATTEN", Pair.of(1, 1)).build();
 
-  /** Registers all functions present in Drill classpath on start-up. All functions will be marked as built-in.*/
-  public DrillFunctionRegistry(ScanResult classpathScan) {
+  private final FunctionRegistryHolder registryHolder;
+
+  /** Registers all functions present in Drill classpath on start-up. All functions will be marked as built-in.
+   * Built-in functions are not allowed to be unregistered. */
+  public LocalFunctionRegistry(ScanResult classpathScan) {
+    registryHolder = new FunctionRegistryHolder();
     validate(BUILT_IN, classpathScan);
-    register(BUILT_IN, classpathScan, this.getClass().getClassLoader());
+    register(Lists.newArrayList(new JarScan(BUILT_IN, classpathScan, this.getClass().getClassLoader())));
     if (logger.isTraceEnabled()) {
       StringBuilder allFunctions = new StringBuilder();
       for (DrillFuncHolder method: registryHolder.getAllFunctionsWithHolders().values()) {
@@ -90,21 +89,31 @@ public class DrillFunctionRegistry {
   }
 
   /**
+   * @return local function registry version number
+   */
+  public long getVersion() {
+    return registryHolder.getVersion();
+  }
+
+  /**
    * Validates all functions, present in jars.
    * Will throw {@link FunctionValidationException} if:
-   * 1. Jar with the same name has been already registered.
-   * 2. Conflicting function with the similar signature is found.
-   * 3. Aggregating function is not deterministic.
-   *
-   * @return list of validated functions
+   * <ol>
+   *  <li>Jar with the same name has been already registered.</li>
+   *  <li>Conflicting function with the similar signature is found.</li>
+   *  <li>Aggregating function is not deterministic.</li>
+   *</ol>
+   * @param jarName jar name to be validated
+   * @param scanResult scan of all classes present in jar
+   * @return list of validated function signatures
    */
-  public List<Func> validate(String jarName, ScanResult classpathScan) {
-    List<Func> functions = Lists.newArrayList();
+  public List<String> validate(String jarName, ScanResult scanResult) {
+    List<String> functions = Lists.newArrayList();
     FunctionConverter converter = new FunctionConverter();
-    List<AnnotatedClassDescriptor> providerClasses = classpathScan.getAnnotatedClasses();
+    List<AnnotatedClassDescriptor> providerClasses = scanResult.getAnnotatedClasses();
 
     if (registryHolder.containsJar(jarName)) {
-      throw new FunctionValidationException(String.format("Jar %s is already registered", jarName));
+      throw new JarValidationException(String.format("Jar with %s name has been already registered", jarName));
     }
 
     final ListMultimap<String, String> allFuncWithSignatures = registryHolder.getAllFunctionsWithSignatures();
@@ -112,29 +121,21 @@ public class DrillFunctionRegistry {
     for (AnnotatedClassDescriptor func : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(func, ClassLoader.getSystemClassLoader());
       if (holder != null) {
-
-        String functionInput = "";
-        List<MajorType> types = Lists.newArrayList();
-        for (DrillFuncHolder.ValueReference ref : holder.parameters) {
-          functionInput += ref.getType().toString();
-          types.add(ref.getType());
-        }
+        String functionInput = holder.getInputParameters();
 
         String[] names = holder.getRegisteredNames();
         for (String name : names) {
           String functionName = name.toLowerCase();
-          String functionSignature = functionName + functionInput;
+          String functionSignature = String.format(functionSignaturePattern, functionName, functionInput);
 
           if (allFuncWithSignatures.get(functionName).contains(functionSignature)) {
-            throw new FunctionValidationException(
-                String.format("Conflicting function with similar signature found. " +
-                        "Function name: %s, class name: %s, input parameters : %s",
-                    functionName, func.getClassName(), functionInput));
+            throw new FunctionValidationException(String.format("Found duplicated function in %s: %s",
+                registryHolder.getJarNameByFunctionSignature(functionName, functionSignature), functionSignature));
           } else if (holder.isAggregating() && !holder.isDeterministic()) {
             throw new FunctionValidationException(
                 String.format("Aggregate functions must be deterministic: %s", func.getClassName()));
           } else {
-            functions.add(Func.newBuilder().setName(functionName).addAllMajorType(types).build());
+            functions.add(functionSignature);
             allFuncWithSignatures.put(functionName, functionSignature);
           }
         }
@@ -147,35 +148,42 @@ public class DrillFunctionRegistry {
 
   /**
    * Registers all functions present in jar.
-   * If jar name is already registered, all jar related functions are overridden.
+   * If jar name is already registered, all jar related functions will be overridden.
+   * To prevent classpath collisions during loading and unloading jars,
+   * each jar is shipped with its own class loader.
+   *
+   * @param jars list of jars to be registered
    */
-  public void register(String jarName, ScanResult classpathScan, ClassLoader classloader) {
-    FunctionConverter converter = new FunctionConverter();
-    List<AnnotatedClassDescriptor> providerClasses = classpathScan.getAnnotatedClasses();
-    Map<String, Pair<String, DrillFuncHolder>> functions = Maps.newHashMap();
-    for (AnnotatedClassDescriptor func : providerClasses) {
-      DrillFuncHolder holder = converter.getHolder(func, classloader);
-      if (holder != null) {
-        String functionInput = "";
-        for (DrillFuncHolder.ValueReference ref : holder.parameters) {
-          functionInput += ref.getType().toString();
-        }
-
-        String[] names = holder.getRegisteredNames();
-        for (String name : names) {
-          String functionName = name.toLowerCase();
-          String functionSignature = functionName + functionInput;
-          functions.put(functionSignature, new ImmutablePair<>(functionName, holder));
+  public void register(List<JarScan> jars) {
+    Map<String, List<FunctionHolder>> newJars = Maps.newHashMap();
+    for (JarScan jarScan : jars) {
+      FunctionConverter converter = new FunctionConverter();
+      List<AnnotatedClassDescriptor> providerClasses = jarScan.getScanResult().getAnnotatedClasses();
+      List<FunctionHolder> functions = Lists.newArrayList();
+      newJars.put(jarScan.getJarName(), functions);
+      for (AnnotatedClassDescriptor func : providerClasses) {
+        DrillFuncHolder holder = converter.getHolder(func, jarScan.getClassLoader());
+        if (holder != null) {
+          String functionInput = holder.getInputParameters();
+          String[] names = holder.getRegisteredNames();
+          for (String name : names) {
+            String functionName = name.toLowerCase();
+            String functionSignature = String.format(functionSignaturePattern, functionName, functionInput);
+            functions.add(new FunctionHolder(functionName, functionSignature, holder));
+          }
         }
       }
     }
-    registryHolder.addJar(jarName, functions);
+    registryHolder.addJars(newJars);
   }
 
   /**
    * Removes all function associated with the given jar name.
    * Functions marked as built-in is not allowed to be unregistered.
+   * If user attempts to unregister built-in functions, logs warning and does nothing.
    * Jar name is case-sensitive.
+   *
+   * @param jarName jar name to be unregistered
    */
   public void unregister(String jarName) {
     if (BUILT_IN.equals(jarName)) {
@@ -186,7 +194,9 @@ public class DrillFunctionRegistry {
   }
 
   /**
-   * @return list of jar names registered in function registry
+   * Returns list of jar names registered in function registry.
+   *
+   * @return list of jar names
    */
   public List<String> getAllJarNames() {
     return registryHolder.getAllJarNames();
@@ -200,21 +210,27 @@ public class DrillFunctionRegistry {
   }
 
   /**
-   *  @return all function holders associated with the function name. Function name is case insensitive.
+   * @param name function name
+   * @return all function holders associated with the function name. Function name is case insensitive.
    */
+  public List<DrillFuncHolder> getMethods(String name, AtomicLong version) {
+    return registryHolder.getHoldersByFunctionName(name.toLowerCase(), version);
+  }
+
   public List<DrillFuncHolder> getMethods(String name) {
     return registryHolder.getHoldersByFunctionName(name.toLowerCase());
   }
 
-  public void register(DrillOperatorTable operatorTable) {
-    registerOperatorsWithInference(operatorTable);
-    registerOperatorsWithoutInference(operatorTable);
+  public void register(DrillOperatorTable operatorTable, AtomicLong version) {
+    final Map<String, Collection<DrillFuncHolder>> registeredFunctions = registryHolder.getAllFunctionsWithHolders(version).asMap();
+    registerOperatorsWithInference(operatorTable, registeredFunctions);
+    registerOperatorsWithoutInference(operatorTable, registeredFunctions);
   }
 
-  private void registerOperatorsWithInference(DrillOperatorTable operatorTable) {
+  private void registerOperatorsWithInference(DrillOperatorTable operatorTable, Map<String, Collection<DrillFuncHolder>> registeredFunctions) {
     final Map<String, DrillSqlOperator.DrillSqlOperatorBuilder> map = Maps.newHashMap();
     final Map<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> mapAgg = Maps.newHashMap();
-    for (Entry<String, Collection<DrillFuncHolder>> function : registryHolder.getAllFunctionsWithHolders().asMap().entrySet()) {
+    for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.entrySet()) {
       final ArrayListMultimap<Pair<Integer, Integer>, DrillFuncHolder> functions = ArrayListMultimap.create();
       final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
       final String name = function.getKey().toUpperCase();
@@ -277,9 +293,9 @@ public class DrillFunctionRegistry {
     }
   }
 
-  private void registerOperatorsWithoutInference(DrillOperatorTable operatorTable) {
+  private void registerOperatorsWithoutInference(DrillOperatorTable operatorTable, Map<String, Collection<DrillFuncHolder>> registeredFunctions) {
     SqlOperator op;
-    for (Entry<String, Collection<DrillFuncHolder>> function : registryHolder.getAllFunctionsWithHolders().asMap().entrySet()) {
+    for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.entrySet()) {
       Set<Integer> argCounts = Sets.newHashSet();
       String name = function.getKey().toUpperCase();
       for (DrillFuncHolder func : function.getValue()) {
@@ -301,142 +317,5 @@ public class DrillFunctionRegistry {
         }
       }
     }
-  }
-
-  /**
-   * Function registry holder. Stores function implementations by jar name, function name.
-   */
-  private class GenericRegistryHolder<T, U> {
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
-    private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
-
-    // jar name, Map<function name, List<signature>
-    private final Map<T, Map<T, List<T>>> jars;
-
-    // function name, Map<signature, function holder>
-    private final Map<T, Map<T, U>> functions;
-
-    public GenericRegistryHolder() {
-      this.functions = Maps.newHashMap();
-      this.jars = Maps.newHashMap();
-    }
-
-    public void addJar(T jName, Map<T, Pair<T, U>> sNameMap) {
-      try (AutoCloseableLock lock = writeLock.open()) {
-        Map<T, List<T>> map = jars.get(jName);
-        if (map != null) {
-          removeAllByJar(jName);
-        }
-        map = Maps.newHashMap();
-        jars.put(jName, map);
-
-        for (Entry<T, Pair<T, U>> entry : sNameMap.entrySet()) {
-          T sName = entry.getKey();
-          Pair<T, U> pair = entry.getValue();
-          addFunction(jName, pair.getKey(), sName, pair.getValue());
-        }
-      }
-    }
-
-    public void removeJar(T jName) {
-      try (AutoCloseableLock lock = writeLock.open()) {
-        removeAllByJar(jName);
-      }
-    }
-
-    public List<T> getAllJarNames() {
-      try (AutoCloseableLock lock = readLock.open()) {
-        return Lists.newArrayList(jars.keySet());
-      }
-    }
-
-    public List<T> getAllFunctionNames(T jName) {
-      try  (AutoCloseableLock lock = readLock.open()){
-        Map<T, List<T>> map = jars.get(jName);
-        return map == null ? Lists.<T>newArrayList() : Lists.newArrayList(map.keySet());
-      }
-    }
-
-    public ListMultimap<T, U> getAllFunctionsWithHolders() {
-      try (AutoCloseableLock lock = readLock.open()) {
-        ListMultimap<T, U> multimap = ArrayListMultimap.create();
-        for (Entry<T, Map<T, U>> entry : functions.entrySet()) {
-          multimap.putAll(entry.getKey(), Lists.newArrayList(entry.getValue().values()));
-        }
-        return multimap;
-      }
-    }
-
-    public ListMultimap<T, T> getAllFunctionsWithSignatures() {
-      try (AutoCloseableLock lock = readLock.open()) {
-        ListMultimap<T, T> multimap = ArrayListMultimap.create();
-        for (Entry<T, Map<T, U>> entry : functions.entrySet()) {
-          multimap.putAll(entry.getKey(), Lists.newArrayList(entry.getValue().keySet()));
-        }
-        return multimap;
-      }
-    }
-
-    public List<U> getHoldersByFunctionName(T fName) {
-      try (AutoCloseableLock lock = readLock.open()) {
-        Map<T, U> map = functions.get(fName);
-        return map == null ? Lists.<U>newArrayList() : Lists.newArrayList(map.values());
-      }
-    }
-
-    public boolean containsJar(T jName) {
-      try (AutoCloseableLock lock = readLock.open()) {
-        return jars.containsKey(jName);
-      }
-    }
-
-    public int functionsSize() {
-      try (AutoCloseableLock lock = readLock.open()) {
-        return functions.size();
-      }
-    }
-
-    private void addFunction(T jName, T fName, T sName, U fHolder) {
-      Map<T, List<T>> map = jars.get(jName);
-
-      List<T> list = map.get(fName);
-      if (list == null) {
-        list = Lists.newArrayList();
-        map.put(fName, list);
-      }
-
-      if (!list.contains(sName)) {
-        list.add(sName);
-
-        Map<T, U> sigsMap = functions.get(fName);
-        if (sigsMap == null) {
-          sigsMap = Maps.newHashMap();
-          functions.put(fName, sigsMap);
-        }
-
-        U u = sigsMap.get(sName);
-        if (u == null) {
-          sigsMap.put(sName, fHolder);
-        }
-      }
-    }
-
-    private void removeAllByJar(T jName) {
-      Map<T, List<T>> removeMap = jars.remove(jName);
-      if (removeMap == null) {
-        return;
-      }
-
-      for (Map.Entry<T, List<T>> remEntry : removeMap.entrySet()) {
-        Map<T, U> fNameMap = functions.get(remEntry.getKey());
-        List<T> value = remEntry.getValue();
-        fNameMap.keySet().removeAll(value);
-        if (fNameMap.isEmpty()) {
-          functions.remove(remEntry.getKey());
-        }
-      }
-    }
-
   }
 }

@@ -78,10 +78,13 @@ public class RunTimeScan {
   }
 
   /**
-   * Scanning packages at runtime only for marked paths and list of pre-scanned annotations
+   * Scans packages retrieved from config.
+   * Returns scan result with list of packages, classes and annotations found.
+   * Is used to scan specific jars not associated with classpath at runtime.
+   *
    * @param config to retrieve the packages to scan
    * @param markedPath list of paths where to scan
-   * @return the scan result
+   * @return the scan result with list of packages, classes and annotations found
    */
   public static ScanResult dynamicPackageScan(DrillConfig config, Set<URL> markedPath) {
     List<String> packagePrefixes = ClassPathScanner.getPackagePrefixes(config);

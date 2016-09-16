@@ -164,12 +164,14 @@ public class ZookeeperClient implements AutoCloseable {
    * the check is eventually consistent.
    *
    * If consistency flag is set to true and version holder is not null, passes version holder to get data change version.
+   * Data change version is retrieved from {@link Stat} object, it increases each time znode data change is performed.
+   * Link to Zookeeper documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
    *
    * @param path  target path
    * @param consistent consistency check
    * @param version version holder
    */
-  private byte[] get(final String path, final boolean consistent, final DataChangeVersion version) {
+  public byte[] get(final String path, final boolean consistent, final DataChangeVersion version) {
     Preconditions.checkNotNull(path, "path is required");
 
     final String target = PathUtils.join(root, path);
@@ -228,8 +230,12 @@ public class ZookeeperClient implements AutoCloseable {
    *
    * If path does not exists, this call creates it.
    *
-   * If version holder is not null, passes given version for comparison.
-   * Throws {@link VersionMismatchException} if versions mismatch was detected.
+   * If version holder is not null and path already exists, passes given version for comparison.
+   * Zookeeper maintains stat structure that holds version number which increases each time znode data change is performed.
+   * If we pass version that doesn't match the actual version of the data,
+   * the update will fail {@link org.apache.zookeeper.KeeperException.BadVersionException}.
+   * We catch such exception and re-throw it as {@link VersionMismatchException}.
+   * Link to documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
    *
    * @param path  target path
    * @param data  data to store
@@ -257,14 +263,47 @@ public class ZookeeperClient implements AutoCloseable {
       }
       if (hasNode) {
         if (version != null) {
-          curator.setData().withVersion(version.getVersion()).forPath(target, data);
+          try {
+            curator.setData().withVersion(version.getVersion()).forPath(target, data);
+          } catch (final KeeperException.BadVersionException e) {
+            throw new VersionMismatchException("Unable to put data. Version mismatch is detected.", version.getVersion(), e);
+          }
         } else {
           curator.setData().forPath(target, data);
         }
       }
       getCache().rebuildNode(target);
-    } catch (final KeeperException.BadVersionException e) {
-      throw new VersionMismatchException(e);
+    } catch (final VersionMismatchException e) {
+      throw e;
+    } catch (final Exception e) {
+      throw new DrillRuntimeException("unable to put ", e);
+    }
+  }
+
+  /**
+   * Puts the given byte sequence into the given path if path is does not exist.
+   *
+   * @param path  target path
+   * @param data  data to store
+   * @return null if path was created, else data stored for the given path
+   */
+  public byte[] putIfAbsent(final String path, final byte[] data) {
+    Preconditions.checkNotNull(path, "path is required");
+    Preconditions.checkNotNull(data, "data is required");
+
+    final String target = PathUtils.join(root, path);
+    try {
+      boolean hasNode = hasPath(path, true);
+      if (!hasNode) {
+        try {
+          curator.create().withMode(mode).forPath(target, data);
+          getCache().rebuildNode(target);
+          return null;
+        } catch (NodeExistsException e) {
+          // do nothing
+        }
+      }
+      return curator.getData().forPath(target);
     } catch (final Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }

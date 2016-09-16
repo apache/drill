@@ -64,7 +64,6 @@ import org.junit.runner.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 public class BaseTestQuery extends ExecTest {
@@ -422,19 +421,6 @@ public class BaseTestQuery extends ExecTest {
 
     return file.getPath();
   }
-
-  /**
-   * Create a temp directory to store the given <i>dirName</i>
-   * @param dirName
-   * @return Full path including temp parent directory and given directory name.
-   */
-  public static String getTempDir(final String dirName) {
-    final File dir = Files.createTempDir();
-    dir.deleteOnExit();
-
-    return dir.getAbsolutePath() + File.separator + dirName;
-  }
-
 
   protected static void setSessionOption(final String option, final String value) {
     try {

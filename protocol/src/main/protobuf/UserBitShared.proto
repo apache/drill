@@ -299,16 +299,22 @@ enum CoreOperatorType {
   AVRO_SUB_SCAN = 36;
 }
 
-message Func {
-  optional string name = 1;
-  repeated common.MajorType major_type = 2;
-}
+/* Registry that contains list of jars, each jar contains its name and list of function signatures.
+Structure example:
+REGISTRY    -> Jar1.jar   -> upper(VARCHAR-REQUIRED)
+                          -> upper(VARCHAR-OPTIONAL)
 
-message Jar {
-  optional string name = 1;
-  repeated Func function = 2;
-}
-
+            -> Jar2.jar   -> lower(VARCHAR-REQUIRED)
+                          -> lower(VARCHAR-OPTIONAL)
+*/
 message Registry {
   repeated Jar jar = 1;
 }
+
+/* Jar contains jar name and list of function signatures.
+ Function signature is concatenation of function name and its input parameters. */
+message Jar {
+  optional string name = 1;
+  repeated string function_signature = 2;
+}
+

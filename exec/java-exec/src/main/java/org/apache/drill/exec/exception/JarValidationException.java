@@ -19,9 +19,9 @@ package org.apache.drill.exec.exception;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class FunctionValidationException extends DrillRuntimeException {
+public class JarValidationException extends DrillRuntimeException {
 
-  public FunctionValidationException(String message) {
+  public JarValidationException(String message) {
     super(message);
   }
 

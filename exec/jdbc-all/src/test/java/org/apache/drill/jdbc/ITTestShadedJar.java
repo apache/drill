@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -27,8 +28,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.UUID;
 import java.util.Vector;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,6 +48,22 @@ public class ITTestShadedJar {
             System.getProperty("project.version")
             ));
 
+  }
+
+  static {
+    String dirConfDir = "DRILL_CONF_DIR";
+    if (System.getProperty(dirConfDir) == null) {
+      final File condDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+      condDir.mkdirs();
+      condDir.deleteOnExit();
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          FileUtils.deleteQuietly(condDir);
+        }
+      });
+      System.setProperty(dirConfDir, condDir.getAbsolutePath());
+    }
   }
 
   @Test

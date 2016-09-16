@@ -110,11 +110,10 @@ public interface ExecConstants {
   /**
    * Configuration properties connected with dynamic UDFs support
    */
-  String UDF_RETRY_TIMES = "drill.exec.udf.retry.times";
+  String UDF_RETRY_ATTEMPTS= "drill.exec.udf.retry-attempts";
   String UDF_DIRECTORY_STAGING = "drill.exec.udf.directory.staging";
   String UDF_DIRECTORY_REGISTRY = "drill.exec.udf.directory.registry";
   String UDF_DIRECTORY_TMP = "drill.exec.udf.directory.tmp";
-  String UDF_DIRECTORY_BASE = "drill.exec.udf.directory.base";
   String UDF_DIRECTORY_FS = "drill.exec.udf.directory.fs";
 
 

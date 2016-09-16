@@ -20697,1672 +20697,6 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.MetricValue)
   }
 
-  public interface FuncOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
-
-    // optional string name = 1;
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    boolean hasName();
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    java.lang.String getName();
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getNameBytes();
-
-    // repeated .common.MajorType major_type = 2;
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    java.util.List<org.apache.drill.common.types.TypeProtos.MajorType> 
-        getMajorTypeList();
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    org.apache.drill.common.types.TypeProtos.MajorType getMajorType(int index);
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    int getMajorTypeCount();
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    java.util.List<? extends org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
-        getMajorTypeOrBuilderList();
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code exec.shared.Func}
-   */
-  public static final class Func extends
-      com.google.protobuf.GeneratedMessage
-      implements FuncOrBuilder {
-    // Use Func.newBuilder() to construct.
-    private Func(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    private Func(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final Func defaultInstance;
-    public static Func getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    public Func getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
-    }
-    private Func(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              name_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                majorType_ = new java.util.ArrayList<org.apache.drill.common.types.TypeProtos.MajorType>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              majorType_.add(input.readMessage(org.apache.drill.common.types.TypeProtos.MajorType.PARSER, extensionRegistry));
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          majorType_ = java.util.Collections.unmodifiableList(majorType_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Func_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Func_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.apache.drill.exec.proto.UserBitShared.Func.class, org.apache.drill.exec.proto.UserBitShared.Func.Builder.class);
-    }
-
-    public static com.google.protobuf.Parser<Func> PARSER =
-        new com.google.protobuf.AbstractParser<Func>() {
-      public Func parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Func(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Func> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    // optional string name = 1;
-    public static final int NAME_FIELD_NUMBER = 1;
-    private java.lang.Object name_;
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public java.lang.String getName() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          name_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getNameBytes() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        name_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    // repeated .common.MajorType major_type = 2;
-    public static final int MAJOR_TYPE_FIELD_NUMBER = 2;
-    private java.util.List<org.apache.drill.common.types.TypeProtos.MajorType> majorType_;
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    public java.util.List<org.apache.drill.common.types.TypeProtos.MajorType> getMajorTypeList() {
-      return majorType_;
-    }
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    public java.util.List<? extends org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
-        getMajorTypeOrBuilderList() {
-      return majorType_;
-    }
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    public int getMajorTypeCount() {
-      return majorType_.size();
-    }
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    public org.apache.drill.common.types.TypeProtos.MajorType getMajorType(int index) {
-      return majorType_.get(index);
-    }
-    /**
-     * <code>repeated .common.MajorType major_type = 2;</code>
-     */
-    public org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder(
-        int index) {
-      return majorType_.get(index);
-    }
-
-    private void initFields() {
-      name_ = "";
-      majorType_ = java.util.Collections.emptyList();
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getNameBytes());
-      }
-      for (int i = 0; i < majorType_.size(); i++) {
-        output.writeMessage(2, majorType_.get(i));
-      }
-      getUnknownFields().writeTo(output);
-    }
-
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getNameBytes());
-      }
-      for (int i = 0; i < majorType_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, majorType_.get(i));
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Func parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.Func prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code exec.shared.Func}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Func_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Func_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.apache.drill.exec.proto.UserBitShared.Func.class, org.apache.drill.exec.proto.UserBitShared.Func.Builder.class);
-      }
-
-      // Construct using org.apache.drill.exec.proto.UserBitShared.Func.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getMajorTypeFieldBuilder();
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      public Builder clear() {
-        super.clear();
-        name_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        if (majorTypeBuilder_ == null) {
-          majorType_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          majorTypeBuilder_.clear();
-        }
-        return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Func_descriptor;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Func getDefaultInstanceForType() {
-        return org.apache.drill.exec.proto.UserBitShared.Func.getDefaultInstance();
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Func build() {
-        org.apache.drill.exec.proto.UserBitShared.Func result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Func buildPartial() {
-        org.apache.drill.exec.proto.UserBitShared.Func result = new org.apache.drill.exec.proto.UserBitShared.Func(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.name_ = name_;
-        if (majorTypeBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            majorType_ = java.util.Collections.unmodifiableList(majorType_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.majorType_ = majorType_;
-        } else {
-          result.majorType_ = majorTypeBuilder_.build();
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.apache.drill.exec.proto.UserBitShared.Func) {
-          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.Func)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.Func other) {
-        if (other == org.apache.drill.exec.proto.UserBitShared.Func.getDefaultInstance()) return this;
-        if (other.hasName()) {
-          bitField0_ |= 0x00000001;
-          name_ = other.name_;
-          onChanged();
-        }
-        if (majorTypeBuilder_ == null) {
-          if (!other.majorType_.isEmpty()) {
-            if (majorType_.isEmpty()) {
-              majorType_ = other.majorType_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureMajorTypeIsMutable();
-              majorType_.addAll(other.majorType_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.majorType_.isEmpty()) {
-            if (majorTypeBuilder_.isEmpty()) {
-              majorTypeBuilder_.dispose();
-              majorTypeBuilder_ = null;
-              majorType_ = other.majorType_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              majorTypeBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getMajorTypeFieldBuilder() : null;
-            } else {
-              majorTypeBuilder_.addAllMessages(other.majorType_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.apache.drill.exec.proto.UserBitShared.Func parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.Func) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      // optional string name = 1;
-      private java.lang.Object name_ = "";
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public java.lang.String getName() {
-        java.lang.Object ref = name_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          name_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getNameBytes() {
-        java.lang.Object ref = name_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          name_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder setName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        name_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder clearName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        name_ = getDefaultInstance().getName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder setNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        name_ = value;
-        onChanged();
-        return this;
-      }
-
-      // repeated .common.MajorType major_type = 2;
-      private java.util.List<org.apache.drill.common.types.TypeProtos.MajorType> majorType_ =
-        java.util.Collections.emptyList();
-      private void ensureMajorTypeIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-          majorType_ = new java.util.ArrayList<org.apache.drill.common.types.TypeProtos.MajorType>(majorType_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> majorTypeBuilder_;
-
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public java.util.List<org.apache.drill.common.types.TypeProtos.MajorType> getMajorTypeList() {
-        if (majorTypeBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(majorType_);
-        } else {
-          return majorTypeBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public int getMajorTypeCount() {
-        if (majorTypeBuilder_ == null) {
-          return majorType_.size();
-        } else {
-          return majorTypeBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public org.apache.drill.common.types.TypeProtos.MajorType getMajorType(int index) {
-        if (majorTypeBuilder_ == null) {
-          return majorType_.get(index);
-        } else {
-          return majorTypeBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder setMajorType(
-          int index, org.apache.drill.common.types.TypeProtos.MajorType value) {
-        if (majorTypeBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureMajorTypeIsMutable();
-          majorType_.set(index, value);
-          onChanged();
-        } else {
-          majorTypeBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder setMajorType(
-          int index, org.apache.drill.common.types.TypeProtos.MajorType.Builder builderForValue) {
-        if (majorTypeBuilder_ == null) {
-          ensureMajorTypeIsMutable();
-          majorType_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          majorTypeBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder addMajorType(org.apache.drill.common.types.TypeProtos.MajorType value) {
-        if (majorTypeBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureMajorTypeIsMutable();
-          majorType_.add(value);
-          onChanged();
-        } else {
-          majorTypeBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder addMajorType(
-          int index, org.apache.drill.common.types.TypeProtos.MajorType value) {
-        if (majorTypeBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureMajorTypeIsMutable();
-          majorType_.add(index, value);
-          onChanged();
-        } else {
-          majorTypeBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder addMajorType(
-          org.apache.drill.common.types.TypeProtos.MajorType.Builder builderForValue) {
-        if (majorTypeBuilder_ == null) {
-          ensureMajorTypeIsMutable();
-          majorType_.add(builderForValue.build());
-          onChanged();
-        } else {
-          majorTypeBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder addMajorType(
-          int index, org.apache.drill.common.types.TypeProtos.MajorType.Builder builderForValue) {
-        if (majorTypeBuilder_ == null) {
-          ensureMajorTypeIsMutable();
-          majorType_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          majorTypeBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder addAllMajorType(
-          java.lang.Iterable<? extends org.apache.drill.common.types.TypeProtos.MajorType> values) {
-        if (majorTypeBuilder_ == null) {
-          ensureMajorTypeIsMutable();
-          super.addAll(values, majorType_);
-          onChanged();
-        } else {
-          majorTypeBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder clearMajorType() {
-        if (majorTypeBuilder_ == null) {
-          majorType_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          majorTypeBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public Builder removeMajorType(int index) {
-        if (majorTypeBuilder_ == null) {
-          ensureMajorTypeIsMutable();
-          majorType_.remove(index);
-          onChanged();
-        } else {
-          majorTypeBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public org.apache.drill.common.types.TypeProtos.MajorType.Builder getMajorTypeBuilder(
-          int index) {
-        return getMajorTypeFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder(
-          int index) {
-        if (majorTypeBuilder_ == null) {
-          return majorType_.get(index);  } else {
-          return majorTypeBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public java.util.List<? extends org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
-           getMajorTypeOrBuilderList() {
-        if (majorTypeBuilder_ != null) {
-          return majorTypeBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(majorType_);
-        }
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public org.apache.drill.common.types.TypeProtos.MajorType.Builder addMajorTypeBuilder() {
-        return getMajorTypeFieldBuilder().addBuilder(
-            org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public org.apache.drill.common.types.TypeProtos.MajorType.Builder addMajorTypeBuilder(
-          int index) {
-        return getMajorTypeFieldBuilder().addBuilder(
-            index, org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .common.MajorType major_type = 2;</code>
-       */
-      public java.util.List<org.apache.drill.common.types.TypeProtos.MajorType.Builder> 
-           getMajorTypeBuilderList() {
-        return getMajorTypeFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
-          getMajorTypeFieldBuilder() {
-        if (majorTypeBuilder_ == null) {
-          majorTypeBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder>(
-                  majorType_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
-                  getParentForChildren(),
-                  isClean());
-          majorType_ = null;
-        }
-        return majorTypeBuilder_;
-      }
-
-      // @@protoc_insertion_point(builder_scope:exec.shared.Func)
-    }
-
-    static {
-      defaultInstance = new Func(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:exec.shared.Func)
-  }
-
-  public interface JarOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
-
-    // optional string name = 1;
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    boolean hasName();
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    java.lang.String getName();
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getNameBytes();
-
-    // repeated .exec.shared.Func function = 2;
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.Func> 
-        getFunctionList();
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.Func getFunction(int index);
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    int getFunctionCount();
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder> 
-        getFunctionOrBuilderList();
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder getFunctionOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code exec.shared.Jar}
-   */
-  public static final class Jar extends
-      com.google.protobuf.GeneratedMessage
-      implements JarOrBuilder {
-    // Use Jar.newBuilder() to construct.
-    private Jar(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    private Jar(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final Jar defaultInstance;
-    public static Jar getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    public Jar getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
-    }
-    private Jar(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              name_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                function_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.Func>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              function_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.Func.PARSER, extensionRegistry));
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-          function_ = java.util.Collections.unmodifiableList(function_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.apache.drill.exec.proto.UserBitShared.Jar.class, org.apache.drill.exec.proto.UserBitShared.Jar.Builder.class);
-    }
-
-    public static com.google.protobuf.Parser<Jar> PARSER =
-        new com.google.protobuf.AbstractParser<Jar>() {
-      public Jar parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Jar(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Jar> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
-    // optional string name = 1;
-    public static final int NAME_FIELD_NUMBER = 1;
-    private java.lang.Object name_;
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public java.lang.String getName() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          name_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>optional string name = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getNameBytes() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        name_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    // repeated .exec.shared.Func function = 2;
-    public static final int FUNCTION_FIELD_NUMBER = 2;
-    private java.util.List<org.apache.drill.exec.proto.UserBitShared.Func> function_;
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    public java.util.List<org.apache.drill.exec.proto.UserBitShared.Func> getFunctionList() {
-      return function_;
-    }
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder> 
-        getFunctionOrBuilderList() {
-      return function_;
-    }
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    public int getFunctionCount() {
-      return function_.size();
-    }
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.Func getFunction(int index) {
-      return function_.get(index);
-    }
-    /**
-     * <code>repeated .exec.shared.Func function = 2;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder getFunctionOrBuilder(
-        int index) {
-      return function_.get(index);
-    }
-
-    private void initFields() {
-      name_ = "";
-      function_ = java.util.Collections.emptyList();
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getNameBytes());
-      }
-      for (int i = 0; i < function_.size(); i++) {
-        output.writeMessage(2, function_.get(i));
-      }
-      getUnknownFields().writeTo(output);
-    }
-
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getNameBytes());
-      }
-      for (int i = 0; i < function_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, function_.get(i));
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.Jar prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code exec.shared.Jar}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.UserBitShared.JarOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.apache.drill.exec.proto.UserBitShared.Jar.class, org.apache.drill.exec.proto.UserBitShared.Jar.Builder.class);
-      }
-
-      // Construct using org.apache.drill.exec.proto.UserBitShared.Jar.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getFunctionFieldBuilder();
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      public Builder clear() {
-        super.clear();
-        name_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        if (functionBuilder_ == null) {
-          function_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          functionBuilder_.clear();
-        }
-        return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Jar getDefaultInstanceForType() {
-        return org.apache.drill.exec.proto.UserBitShared.Jar.getDefaultInstance();
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Jar build() {
-        org.apache.drill.exec.proto.UserBitShared.Jar result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.Jar buildPartial() {
-        org.apache.drill.exec.proto.UserBitShared.Jar result = new org.apache.drill.exec.proto.UserBitShared.Jar(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.name_ = name_;
-        if (functionBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
-            function_ = java.util.Collections.unmodifiableList(function_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.function_ = function_;
-        } else {
-          result.function_ = functionBuilder_.build();
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.apache.drill.exec.proto.UserBitShared.Jar) {
-          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.Jar)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.Jar other) {
-        if (other == org.apache.drill.exec.proto.UserBitShared.Jar.getDefaultInstance()) return this;
-        if (other.hasName()) {
-          bitField0_ |= 0x00000001;
-          name_ = other.name_;
-          onChanged();
-        }
-        if (functionBuilder_ == null) {
-          if (!other.function_.isEmpty()) {
-            if (function_.isEmpty()) {
-              function_ = other.function_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureFunctionIsMutable();
-              function_.addAll(other.function_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.function_.isEmpty()) {
-            if (functionBuilder_.isEmpty()) {
-              functionBuilder_.dispose();
-              functionBuilder_ = null;
-              function_ = other.function_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              functionBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getFunctionFieldBuilder() : null;
-            } else {
-              functionBuilder_.addAllMessages(other.function_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.apache.drill.exec.proto.UserBitShared.Jar parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.Jar) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      // optional string name = 1;
-      private java.lang.Object name_ = "";
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public java.lang.String getName() {
-        java.lang.Object ref = name_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          name_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getNameBytes() {
-        java.lang.Object ref = name_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          name_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder setName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        name_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder clearName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        name_ = getDefaultInstance().getName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string name = 1;</code>
-       */
-      public Builder setNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        name_ = value;
-        onChanged();
-        return this;
-      }
-
-      // repeated .exec.shared.Func function = 2;
-      private java.util.List<org.apache.drill.exec.proto.UserBitShared.Func> function_ =
-        java.util.Collections.emptyList();
-      private void ensureFunctionIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
-          function_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.Func>(function_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.Func, org.apache.drill.exec.proto.UserBitShared.Func.Builder, org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder> functionBuilder_;
-
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.Func> getFunctionList() {
-        if (functionBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(function_);
-        } else {
-          return functionBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public int getFunctionCount() {
-        if (functionBuilder_ == null) {
-          return function_.size();
-        } else {
-          return functionBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public org.apache.drill.exec.proto.UserBitShared.Func getFunction(int index) {
-        if (functionBuilder_ == null) {
-          return function_.get(index);
-        } else {
-          return functionBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder setFunction(
-          int index, org.apache.drill.exec.proto.UserBitShared.Func value) {
-        if (functionBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureFunctionIsMutable();
-          function_.set(index, value);
-          onChanged();
-        } else {
-          functionBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder setFunction(
-          int index, org.apache.drill.exec.proto.UserBitShared.Func.Builder builderForValue) {
-        if (functionBuilder_ == null) {
-          ensureFunctionIsMutable();
-          function_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          functionBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder addFunction(org.apache.drill.exec.proto.UserBitShared.Func value) {
-        if (functionBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureFunctionIsMutable();
-          function_.add(value);
-          onChanged();
-        } else {
-          functionBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder addFunction(
-          int index, org.apache.drill.exec.proto.UserBitShared.Func value) {
-        if (functionBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureFunctionIsMutable();
-          function_.add(index, value);
-          onChanged();
-        } else {
-          functionBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder addFunction(
-          org.apache.drill.exec.proto.UserBitShared.Func.Builder builderForValue) {
-        if (functionBuilder_ == null) {
-          ensureFunctionIsMutable();
-          function_.add(builderForValue.build());
-          onChanged();
-        } else {
-          functionBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder addFunction(
-          int index, org.apache.drill.exec.proto.UserBitShared.Func.Builder builderForValue) {
-        if (functionBuilder_ == null) {
-          ensureFunctionIsMutable();
-          function_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          functionBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder addAllFunction(
-          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.Func> values) {
-        if (functionBuilder_ == null) {
-          ensureFunctionIsMutable();
-          super.addAll(values, function_);
-          onChanged();
-        } else {
-          functionBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder clearFunction() {
-        if (functionBuilder_ == null) {
-          function_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          functionBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public Builder removeFunction(int index) {
-        if (functionBuilder_ == null) {
-          ensureFunctionIsMutable();
-          function_.remove(index);
-          onChanged();
-        } else {
-          functionBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public org.apache.drill.exec.proto.UserBitShared.Func.Builder getFunctionBuilder(
-          int index) {
-        return getFunctionFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder getFunctionOrBuilder(
-          int index) {
-        if (functionBuilder_ == null) {
-          return function_.get(index);  } else {
-          return functionBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder> 
-           getFunctionOrBuilderList() {
-        if (functionBuilder_ != null) {
-          return functionBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(function_);
-        }
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public org.apache.drill.exec.proto.UserBitShared.Func.Builder addFunctionBuilder() {
-        return getFunctionFieldBuilder().addBuilder(
-            org.apache.drill.exec.proto.UserBitShared.Func.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public org.apache.drill.exec.proto.UserBitShared.Func.Builder addFunctionBuilder(
-          int index) {
-        return getFunctionFieldBuilder().addBuilder(
-            index, org.apache.drill.exec.proto.UserBitShared.Func.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .exec.shared.Func function = 2;</code>
-       */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.Func.Builder> 
-           getFunctionBuilderList() {
-        return getFunctionFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.Func, org.apache.drill.exec.proto.UserBitShared.Func.Builder, org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder> 
-          getFunctionFieldBuilder() {
-        if (functionBuilder_ == null) {
-          functionBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.drill.exec.proto.UserBitShared.Func, org.apache.drill.exec.proto.UserBitShared.Func.Builder, org.apache.drill.exec.proto.UserBitShared.FuncOrBuilder>(
-                  function_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
-                  getParentForChildren(),
-                  isClean());
-          function_ = null;
-        }
-        return functionBuilder_;
-      }
-
-      // @@protoc_insertion_point(builder_scope:exec.shared.Jar)
-    }
-
-    static {
-      defaultInstance = new Jar(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:exec.shared.Jar)
-  }
-
   public interface RegistryOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -22393,6 +20727,16 @@ public final class UserBitShared {
   }
   /**
    * Protobuf type {@code exec.shared.Registry}
+   *
+   * <pre>
+   * Registry that contains list of jars, each jar contains its name and list of function signatures.
+   *Structure example:
+   *REGISTRY    -&gt; Jar1.jar   -&gt; upper(VARCHAR-REQUIRED)
+   *-&gt; upper(VARCHAR-OPTIONAL)
+   *
+   *-&gt; Jar2.jar   -&gt; lower(VARCHAR-REQUIRED)
+   *-&gt; lower(VARCHAR-OPTIONAL)
+   * </pre>
    */
   public static final class Registry extends
       com.google.protobuf.GeneratedMessage
@@ -22639,6 +20983,16 @@ public final class UserBitShared {
     }
     /**
      * Protobuf type {@code exec.shared.Registry}
+     *
+     * <pre>
+     * Registry that contains list of jars, each jar contains its name and list of function signatures.
+     *Structure example:
+     *REGISTRY    -&gt; Jar1.jar   -&gt; upper(VARCHAR-REQUIRED)
+     *-&gt; upper(VARCHAR-OPTIONAL)
+     *
+     *-&gt; Jar2.jar   -&gt; lower(VARCHAR-REQUIRED)
+     *-&gt; lower(VARCHAR-OPTIONAL)
+     * </pre>
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
@@ -23037,6 +21391,672 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.Registry)
   }
 
+  public interface JarOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string name = 1;
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    boolean hasName();
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    java.lang.String getName();
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
+
+    // repeated string function_signature = 2;
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    java.util.List<java.lang.String>
+    getFunctionSignatureList();
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    int getFunctionSignatureCount();
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    java.lang.String getFunctionSignature(int index);
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getFunctionSignatureBytes(int index);
+  }
+  /**
+   * Protobuf type {@code exec.shared.Jar}
+   *
+   * <pre>
+   * Jar contains jar name and list of function signatures.
+   *Function signature is concatenation of function name and its input parameters. 
+   * </pre>
+   */
+  public static final class Jar extends
+      com.google.protobuf.GeneratedMessage
+      implements JarOrBuilder {
+    // Use Jar.newBuilder() to construct.
+    private Jar(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Jar(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Jar defaultInstance;
+    public static Jar getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Jar getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Jar(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              name_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                functionSignature_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              functionSignature_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          functionSignature_ = new com.google.protobuf.UnmodifiableLazyStringList(functionSignature_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.Jar.class, org.apache.drill.exec.proto.UserBitShared.Jar.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Jar> PARSER =
+        new com.google.protobuf.AbstractParser<Jar>() {
+      public Jar parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Jar(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Jar> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string name = 1;
+    public static final int NAME_FIELD_NUMBER = 1;
+    private java.lang.Object name_;
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated string function_signature = 2;
+    public static final int FUNCTION_SIGNATURE_FIELD_NUMBER = 2;
+    private com.google.protobuf.LazyStringList functionSignature_;
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    public java.util.List<java.lang.String>
+        getFunctionSignatureList() {
+      return functionSignature_;
+    }
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    public int getFunctionSignatureCount() {
+      return functionSignature_.size();
+    }
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    public java.lang.String getFunctionSignature(int index) {
+      return functionSignature_.get(index);
+    }
+    /**
+     * <code>repeated string function_signature = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getFunctionSignatureBytes(int index) {
+      return functionSignature_.getByteString(index);
+    }
+
+    private void initFields() {
+      name_ = "";
+      functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getNameBytes());
+      }
+      for (int i = 0; i < functionSignature_.size(); i++) {
+        output.writeBytes(2, functionSignature_.getByteString(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getNameBytes());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < functionSignature_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(functionSignature_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getFunctionSignatureList().size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.Jar parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.Jar prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.Jar}
+     *
+     * <pre>
+     * Jar contains jar name and list of function signatures.
+     *Function signature is concatenation of function name and its input parameters. 
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.JarOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.Jar.class, org.apache.drill.exec.proto.UserBitShared.Jar.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.Jar.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_Jar_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.Jar getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.Jar.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.Jar build() {
+        org.apache.drill.exec.proto.UserBitShared.Jar result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.Jar buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.Jar result = new org.apache.drill.exec.proto.UserBitShared.Jar(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.name_ = name_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          functionSignature_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              functionSignature_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.functionSignature_ = functionSignature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.Jar) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.Jar)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.Jar other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.Jar.getDefaultInstance()) return this;
+        if (other.hasName()) {
+          bitField0_ |= 0x00000001;
+          name_ = other.name_;
+          onChanged();
+        }
+        if (!other.functionSignature_.isEmpty()) {
+          if (functionSignature_.isEmpty()) {
+            functionSignature_ = other.functionSignature_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureFunctionSignatureIsMutable();
+            functionSignature_.addAll(other.functionSignature_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.Jar parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.Jar) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string name = 1;
+      private java.lang.Object name_ = "";
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public Builder clearName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 1;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated string function_signature = 2;
+      private com.google.protobuf.LazyStringList functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureFunctionSignatureIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          functionSignature_ = new com.google.protobuf.LazyStringArrayList(functionSignature_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public java.util.List<java.lang.String>
+          getFunctionSignatureList() {
+        return java.util.Collections.unmodifiableList(functionSignature_);
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public int getFunctionSignatureCount() {
+        return functionSignature_.size();
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public java.lang.String getFunctionSignature(int index) {
+        return functionSignature_.get(index);
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getFunctionSignatureBytes(int index) {
+        return functionSignature_.getByteString(index);
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public Builder setFunctionSignature(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureFunctionSignatureIsMutable();
+        functionSignature_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public Builder addFunctionSignature(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureFunctionSignatureIsMutable();
+        functionSignature_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public Builder addAllFunctionSignature(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureFunctionSignatureIsMutable();
+        super.addAll(values, functionSignature_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public Builder clearFunctionSignature() {
+        functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string function_signature = 2;</code>
+       */
+      public Builder addFunctionSignatureBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureFunctionSignatureIsMutable();
+        functionSignature_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.Jar)
+    }
+
+    static {
+      defaultInstance = new Jar(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.Jar)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_UserCredentials_descriptor;
   private static
@@ -23133,20 +22153,15 @@ public final class UserBitShared {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_MetricValue_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_exec_shared_Func_descriptor;
+    internal_static_exec_shared_Registry_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_exec_shared_Func_fieldAccessorTable;
+      internal_static_exec_shared_Registry_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_Jar_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_Jar_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_exec_shared_Registry_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_exec_shared_Registry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -23241,37 +22256,36 @@ public final class UserBitShared {
       "\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sch" +
       "emas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001" +
       " \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value" +
-      "\030\003 \001(\001\";\n\004Func\022\014\n\004name\030\001 \001(\t\022%\n\nmajor_ty" +
-      "pe\030\002 \003(\0132\021.common.MajorType\"8\n\003Jar\022\014\n\004na" +
-      "me\030\001 \001(\t\022#\n\010function\030\002 \003(\0132\021.exec.shared" +
-      ".Func\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.sh" +
-      "ared.Jar*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022",
-      "\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003" +
-      "SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXEC" +
-      "UTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFrag" +
-      "mentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOC" +
-      "ATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCA" +
-      "NCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_RE" +
-      "QUESTED\020\006*\335\005\n\020CoreOperatorType\022\021\n\rSINGLE" +
-      "_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTE" +
-      "R\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016" +
-      "\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDER\020",
-      "\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030OR" +
-      "DERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n" +
-      "\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022" +
-      "\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REMOVER\020" +
-      "\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT" +
-      "\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNIO" +
-      "N\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_S" +
-      "CAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE" +
-      "_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WR" +
-      "ITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRIT",
-      "ER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN" +
-      "\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_" +
-      "TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBAS" +
-      "E_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_" +
-      "JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033org.apache." +
-      "drill.exec.protoB\rUserBitSharedH\001"
+      "\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.s" +
+      "hared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022functi" +
+      "on_signature\030\002 \003(\t*5\n\nRpcChannel\022\017\n\013BIT_" +
+      "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue" +
+      "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL",
+      "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020" +
+      "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI" +
+      "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH" +
+      "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE" +
+      "LLATION_REQUESTED\020\006*\335\005\n\020CoreOperatorType" +
+      "\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020" +
+      "\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHAS" +
+      "H_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITI" +
+      "ON_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIV" +
+      "ER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PR",
+      "OJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE" +
+      "_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTO" +
+      "R_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\n" +
+      "TOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE" +
+      "\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_R" +
+      "OW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SY" +
+      "STEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016" +
+      "PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n" +
+      "\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSO" +
+      "N_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023",
+      "\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER" +
+      "\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NE" +
+      "STED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033o" +
+      "rg.apache.drill.exec.protoB\rUserBitShare" +
+      "dH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -23392,24 +22406,18 @@ public final class UserBitShared {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MetricValue_descriptor,
               new java.lang.String[] { "MetricId", "LongValue", "DoubleValue", });
-          internal_static_exec_shared_Func_descriptor =
+          internal_static_exec_shared_Registry_descriptor =
             getDescriptor().getMessageTypes().get(19);
-          internal_static_exec_shared_Func_fieldAccessorTable = new
+          internal_static_exec_shared_Registry_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_shared_Func_descriptor,
-              new java.lang.String[] { "Name", "MajorType", });
+              internal_static_exec_shared_Registry_descriptor,
+              new java.lang.String[] { "Jar", });
           internal_static_exec_shared_Jar_descriptor =
             getDescriptor().getMessageTypes().get(20);
           internal_static_exec_shared_Jar_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_Jar_descriptor,
-              new java.lang.String[] { "Name", "Function", });
-          internal_static_exec_shared_Registry_descriptor =
-            getDescriptor().getMessageTypes().get(21);
-          internal_static_exec_shared_Registry_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_shared_Registry_descriptor,
-              new java.lang.String[] { "Jar", });
+              new java.lang.String[] { "Name", "FunctionSignature", });
           return null;
         }
       };
