@@ -78,6 +78,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final int MAXIMUM_RECORD_COUNT_FOR_CHECK = 10000;
 
   public static final String DRILL_VERSION_PROPERTY = "drill.version";
+  public static final String IS_DATE_CORRECT_PROPERTY = "is.date.correct";
 
   private ParquetFileWriter parquetFileWriter;
   private MessageType schema;
@@ -115,6 +116,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.partitionColumns = writer.getPartitionColumns();
     this.hasPartitions = partitionColumns != null && partitionColumns.size() > 0;
     this.extraMetaData.put(DRILL_VERSION_PROPERTY, DrillVersionInfo.getVersion());
+    this.extraMetaData.put(IS_DATE_CORRECT_PROPERTY, "true");
   }
 
   @Override
