@@ -23,7 +23,6 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
@@ -68,9 +67,8 @@ import java.util.regex.Pattern;
 public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   // 4 files are in the directory:
-  //    - one created with the fixed version of the reader, right before 1.9
-  //        - the code was changed to write the version number 1.9 (without snapshot) into the file
-  //        - for compatibility all 1.9-SNAPSHOT files are read to correct the corrupt dates
+  //    - one created with the fixed version of the reader
+  //        - files have extra meta field: is.date.correct = true
   //    - one from and old version of Drill, before we put in proper created by in metadata
   //        - this is read properly by looking at a Max value in the file statistics, to see that
   //          it is way off of a typical date value
@@ -97,7 +95,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   private static final String VARCHAR_PARTITIONED =
       "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/fewtypes_varcharpartition";
   private static final String DATE_PARTITIONED =
-      "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/fewtypes_varcharpartition";
+      "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/fewtypes_datepartition";
 
   private static FileSystem fs;
   private static Path path;
@@ -123,9 +121,9 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   /**
    * Test reading a directory full of partitioned parquet files with dates, these files have a drill version
-   * number of 1.9.0 in their footers, so we can be certain they do not have corruption. The option to disable the
-   * correction is passed, but it will not change the result in the case where we are certain correction
-   * is NOT needed. For more info see DRILL-4203.
+   * number of 1.9.0-SNAPSHOT and is.date.correct = true label in their footers, so we can be certain
+   * they do not have corruption. The option to disable the correction is passed, but it will not change the result
+   * in the case where we are certain correction is NOT needed. For more info see DRILL-4203.
    */
   @Test
   public void testReadPartitionedOnCorrectedDates() throws Exception {
@@ -298,7 +296,8 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   @Test
   public void testReadCorruptDatesWithNullFilledColumns() throws Exception {
     testBuilder()
-        .sqlQuery("select null_dates_1, null_dates_2, non_existent_field, date_col from dfs.`" + PARQUET_DATE_FILE_WITH_NULL_FILLED_COLS + "`")
+        .sqlQuery("select null_dates_1, null_dates_2, non_existent_field, date_col from dfs.`" +
+            PARQUET_DATE_FILE_WITH_NULL_FILLED_COLS + "`")
         .unOrdered()
         .baselineColumns("null_dates_1", "null_dates_2", "non_existent_field", "date_col")
         .baselineValues(null, null, null, new DateTime(1970, 1, 1, 0, 0))
@@ -345,90 +344,6 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
     } finally {
       test(String.format("alter session set %s = false", ExecConstants.PARQUET_NEW_RECORD_READER));
     }
-  }
-
-  public void addDateBaselineVals(TestBuilder builder) {
-    builder
-        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
-        .baselineValues(new DateTime(1970, 1, 2, 0, 0))
-        .baselineValues(new DateTime(1969, 12, 31, 0, 0))
-        .baselineValues(new DateTime(1969, 12, 30, 0, 0))
-        .baselineValues(new DateTime(1900, 1, 1, 0, 0))
-        .baselineValues(new DateTime(2015, 1, 1, 0, 0));
-  }
-
-  /**
-   * These are the same values added in the addDateBaselineVals, shifted as corrupt values
-   */
-  public void addCorruptedDateBaselineVals(TestBuilder builder) {
-    builder
-        .baselineValues(new DateTime(15334, 03, 17, 0, 0))
-        .baselineValues(new DateTime(15334, 03, 18, 0, 0))
-        .baselineValues(new DateTime(15334, 03, 15, 0, 0))
-        .baselineValues(new DateTime(15334, 03, 16, 0, 0))
-        .baselineValues(new DateTime(15264, 03, 16, 0, 0))
-        .baselineValues(new DateTime(15379, 03, 17, 0, 0));
-  }
-
-  public void readFilesWithUserDisabledAutoCorrection() throws Exception {
-    // ensure that selecting the date column explicitly or as part of a star still results
-    // in checking the file metadata for date columns (when we need to check the statistics
-    // for bad values) to set the flag that the values are corrupt
-    for (String selection : new String[] {"*", "date_col"}) {
-      TestBuilder builder = testBuilder()
-          .sqlQuery("select " + selection + " from table(dfs.`" + MIXED_CORRUPTED_AND_CORRECTED_DATES_PATH + "`" +
-              "(type => 'parquet', autoCorrectCorruptDates => false))")
-          .unOrdered()
-          .baselineColumns("date_col");
-      addDateBaselineVals(builder);
-      addDateBaselineVals(builder);
-      addCorruptedDateBaselineVals(builder);
-      addCorruptedDateBaselineVals(builder);
-      builder.go();
-    }
-  }
-
-  private static String replaceWorkingPathInString(String orig) {
-    return orig.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
-  }
-
-  private static void copyDirectoryIntoTempSpace(String resourcesDir) throws IOException {
-    copyDirectoryIntoTempSpace(resourcesDir, null);
-  }
-
-  private static void copyDirectoryIntoTempSpace(String resourcesDir, String destinationSubDir) throws IOException {
-    Path destination = path;
-    if (destinationSubDir != null) {
-      destination = new Path(path, destinationSubDir);
-    }
-    fs.copyFromLocalFile(
-        new Path(replaceWorkingPathInString(resourcesDir)),
-        destination);
-  }
-
-  /**
-   * Metadata cache files include full paths to the files that have been scanned.
-   *
-   * There is no way to generate a metadata cache file with absolute paths that
-   * will be guarenteed to be available on an arbitrary test machine.
-   *
-   * To enable testing older metadata cache files, they were generated manually
-   * using older drill versions, and the absolute path up to the folder where
-   * the metadata cache file appeared was manually replaced with the string
-   * REPLACED_IN_TEST. Here the file is re-written into the given temporary
-   * location after the REPLACED_IN_TEST string has been replaced by the actual
-   * location generated during this run of the tests.
-   *
-   * @param srcFileOnClassPath
-   * @param destFolderInTmp
-   * @throws IOException
-   */
-  private static void copyMetaDataCacheToTempReplacingInternalPaths(String srcFileOnClassPath, String destFolderInTmp) throws IOException {
-    String metadataFileContents = getFile(srcFileOnClassPath);
-    Path newMetaCache = new Path(new Path(path, destFolderInTmp), ".drill.parquet_metadata");
-    FSDataOutputStream outSteam = fs.create(newMetaCache);
-    outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", path.toString()));
-    outSteam.close();
   }
 
   @Test
@@ -488,8 +403,8 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   @Test
   public void testReadNewMetadataCacheFileOverOldAndNewFiles() throws Exception {
     String table = "dfs.`" + new Path(path, MIXED_CORRUPTED_AND_CORRECTED_PARTITIONED_FOLDER) + "`";
-    copyMetaDataCacheToTempReplacingInternalPaths("parquet/4203_corrupt_dates/mixed_version_partitioned_metadata.requires_replace.txt",
-        MIXED_CORRUPTED_AND_CORRECTED_PARTITIONED_FOLDER);
+    copyMetaDataCacheToTempReplacingInternalPaths("parquet/4203_corrupt_dates/" +
+        "mixed_version_partitioned_metadata.requires_replace.txt", MIXED_CORRUPTED_AND_CORRECTED_PARTITIONED_FOLDER);
     // for sanity, try reading all partitions without a filter
     TestBuilder builder = testBuilder()
         .sqlQuery("select date_col from " + table)
@@ -520,7 +435,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
    * Read a directory with parquet files where some have corrupted dates, see DRILL-4203.
    * @throws Exception
    */
-  public void readMixedCorruptedAndCorrectedDates() throws Exception {
+  private void readMixedCorruptedAndCorrectedDates() throws Exception {
     // ensure that selecting the date column explicitly or as part of a star still results
     // in checking the file metadata for date columns (when we need to check the statistics
     // for bad values) to set the flag that the values are corrupt
@@ -534,6 +449,92 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
       }
       builder.go();
     }
+  }
+
+
+  private void addDateBaselineVals(TestBuilder builder) {
+    builder
+        .baselineValues(new DateTime(1970, 1, 1, 0, 0))
+        .baselineValues(new DateTime(1970, 1, 2, 0, 0))
+        .baselineValues(new DateTime(1969, 12, 31, 0, 0))
+        .baselineValues(new DateTime(1969, 12, 30, 0, 0))
+        .baselineValues(new DateTime(1900, 1, 1, 0, 0))
+        .baselineValues(new DateTime(2015, 1, 1, 0, 0));
+  }
+
+  /**
+   * These are the same values added in the addDateBaselineVals, shifted as corrupt values
+   */
+  private void addCorruptedDateBaselineVals(TestBuilder builder) {
+    builder
+        .baselineValues(new DateTime(15334, 03, 17, 0, 0))
+        .baselineValues(new DateTime(15334, 03, 18, 0, 0))
+        .baselineValues(new DateTime(15334, 03, 15, 0, 0))
+        .baselineValues(new DateTime(15334, 03, 16, 0, 0))
+        .baselineValues(new DateTime(15264, 03, 16, 0, 0))
+        .baselineValues(new DateTime(15379, 03, 17, 0, 0));
+  }
+
+  private void readFilesWithUserDisabledAutoCorrection() throws Exception {
+    // ensure that selecting the date column explicitly or as part of a star still results
+    // in checking the file metadata for date columns (when we need to check the statistics
+    // for bad values) to set the flag that the values are corrupt
+    for (String selection : new String[] {"*", "date_col"}) {
+      TestBuilder builder = testBuilder()
+          .sqlQuery("select " + selection + " from table(dfs.`" + MIXED_CORRUPTED_AND_CORRECTED_DATES_PATH + "`" +
+              "(type => 'parquet', autoCorrectCorruptDates => false))")
+          .unOrdered()
+          .baselineColumns("date_col");
+      addDateBaselineVals(builder);
+      addDateBaselineVals(builder);
+      addCorruptedDateBaselineVals(builder);
+      addCorruptedDateBaselineVals(builder);
+      builder.go();
+    }
+  }
+
+  private static String replaceWorkingPathInString(String orig) {
+    return orig.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
+  }
+
+  private static void copyDirectoryIntoTempSpace(String resourcesDir) throws IOException {
+    copyDirectoryIntoTempSpace(resourcesDir, null);
+  }
+
+  private static void copyDirectoryIntoTempSpace(String resourcesDir, String destinationSubDir) throws IOException {
+    Path destination = path;
+    if (destinationSubDir != null) {
+      destination = new Path(path, destinationSubDir);
+    }
+    fs.copyFromLocalFile(
+        new Path(replaceWorkingPathInString(resourcesDir)),
+        destination);
+  }
+
+  /**
+   * Metadata cache files include full paths to the files that have been scanned.
+   *
+   * There is no way to generate a metadata cache file with absolute paths that
+   * will be guaranteed to be available on an arbitrary test machine.
+   *
+   * To enable testing older metadata cache files, they were generated manually
+   * using older drill versions, and the absolute path up to the folder where
+   * the metadata cache file appeared was manually replaced with the string
+   * REPLACED_IN_TEST. Here the file is re-written into the given temporary
+   * location after the REPLACED_IN_TEST string has been replaced by the actual
+   * location generated during this run of the tests.
+   *
+   * @param srcFileOnClassPath
+   * @param destFolderInTmp
+   * @throws IOException
+   */
+  private static void copyMetaDataCacheToTempReplacingInternalPaths(String srcFileOnClassPath, String destFolderInTmp)
+      throws IOException {
+    String metadataFileContents = getFile(srcFileOnClassPath);
+    Path newMetaCache = new Path(new Path(path, destFolderInTmp), ".drill.parquet_metadata");
+    FSDataOutputStream outSteam = fs.create(newMetaCache);
+    outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", path.toString()));
+    outSteam.close();
   }
 
 }

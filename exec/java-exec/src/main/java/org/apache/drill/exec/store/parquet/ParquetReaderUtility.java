@@ -39,8 +39,9 @@ import org.apache.parquet.hadoop.metadata.ColumnPath;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.OriginalType;
 import org.joda.time.Chronology;
-import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeConstants;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,6 @@ public class ParquetReaderUtility {
 
   // Note the negation symbol in the beginning
   public static final double CORRECT_CORRUPT_DATE_SHIFT = -ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5;
-  public static final double SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY = ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5;
   // The year 5000 is the threshold for auto-detecting date corruption.
   // This balances two possible cases of bad auto-correction. External tools writing dates in the future will not
   // be shifted unless they are past this threshold (and we cannot identify them as external files based on the metadata).
@@ -61,7 +61,7 @@ public class ParquetReaderUtility {
   // something like 10,000 years in the past.
   private static final Chronology UTC = org.joda.time.chrono.ISOChronology.getInstanceUTC();
   public static final int DATE_CORRUPTION_THRESHOLD =
-      (int) (DateTimeUtils.toJulianDayNumber(UTC.getDateTimeMillis(5000, 1, 1, 0)) - ParquetOutputRecordWriter.JULIAN_DAY_EPOC);
+      (int) (UTC.getDateTimeMillis(5000, 1, 1, 0) / DateTimeConstants.MILLIS_PER_DAY);
 
   /**
    * For most recently created parquet files, we can determine if we have corrupted dates (see DRILL-4203)
@@ -106,30 +106,42 @@ public class ParquetReaderUtility {
   }
 
   public static void correctDatesInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
-    DateCorruptionStatus cacheFileContainsCorruptDates;
-    String drillVersionStr = parquetTableMetadata.getDrillVersion();
-    if (drillVersionStr != null) {
-      try {
-        cacheFileContainsCorruptDates = ParquetReaderUtility.drillVersionHasCorruptedDates(drillVersionStr);
-      } catch (VersionParser.VersionParseException e) {
-        cacheFileContainsCorruptDates = DateCorruptionStatus.META_SHOWS_CORRUPTION;
-      }
-    } else {
-      cacheFileContainsCorruptDates = DateCorruptionStatus.META_SHOWS_CORRUPTION;
-    }
+    boolean isDateCorrect = parquetTableMetadata.isDateCorrect();
+    DateCorruptionStatus cacheFileContainsCorruptDates = isDateCorrect ?
+        DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_SHOWS_CORRUPTION;
     if (cacheFileContainsCorruptDates == DateCorruptionStatus.META_SHOWS_CORRUPTION) {
+      // Looking for the DATE data type of column names in the metadata cache file ("metadata_version" : "v2")
+      String[] names = new String[0];
+      if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v2) {
+        for (Metadata.ColumnTypeMetadata_v2 columnTypeMetadata :
+            ((Metadata.ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
+          if (OriginalType.DATE.equals(columnTypeMetadata.originalType)) {
+            names = columnTypeMetadata.name;
+          }
+        }
+      }
       for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
         // Drill has only ever written a single row group per file, only need to correct the statistics
         // on the first row group
         Metadata.RowGroupMetadata rowGroupMetadata = file.getRowGroups().get(0);
         for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
-          OriginalType originalType = columnMetadata.getOriginalType();
-          if (originalType != null && originalType.equals(OriginalType.DATE) &&
-              columnMetadata.hasSingleValue() &&
-              (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
-            int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer)columnMetadata.getMaxValue());
-            columnMetadata.setMax(newMinMax);
-            columnMetadata.setMin(newMinMax);
+          // Setting Min/Max values for ParquetTableMetadata_v1
+          if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v1) {
+            OriginalType originalType = columnMetadata.getOriginalType();
+            if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue() &&
+                (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+              int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer)columnMetadata.getMaxValue());
+              columnMetadata.setMax(newMinMax);
+              columnMetadata.setMin(newMinMax);
+            }
+          }
+          // Setting Max values for ParquetTableMetadata_v2
+          else if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v2 &&
+              columnMetadata.getName() != null && Arrays.equals(columnMetadata.getName(), names) &&
+              columnMetadata.hasSingleValue() && (Integer) columnMetadata.getMaxValue() >
+              ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+            int newMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) columnMetadata.getMaxValue());
+            columnMetadata.setMax(newMax);
           }
         }
       }
@@ -138,9 +150,6 @@ public class ParquetReaderUtility {
 
   /**
    * Check for corrupted dates in a parquet file. See Drill-4203
-   * @param footer
-   * @param columns
-   * @return
    */
   public static DateCorruptionStatus detectCorruptDates(ParquetMetadata footer,
                                            List<SchemaPath> columns,
@@ -152,60 +161,45 @@ public class ParquetReaderUtility {
 
     // migrated parquet files have 1.8.1 parquet-mr version with drill-r0 in the part of the name usually containing "SNAPSHOT"
 
-    // new parquet files 1.4+ have drill version number
-    //  - below 1.9.0 dates are corrupt
-    //  - this includes 1.9.0-SNAPSHOT
+    // new parquet files are generated with "is.date.correct" property have no corruption dates
 
-    String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
     String createdBy = footer.getFileMetaData().getCreatedBy();
-    try {
-      if (drillVersion == null) {
-        // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
-        // only applies if there is a date column selected
-        if (createdBy.equals("parquet-mr")) {
-          // loop through parquet column metadata to find date columns, check for corrupt valuues
-          return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
-        } else {
-          // check the created by to see if it is a migrated Drill file
+    String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
+    String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.IS_DATE_CORRECT_PROPERTY);
+    if (drillVersion != null) {
+      return Boolean.valueOf(isDateCorrect) ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
+          : DateCorruptionStatus.META_SHOWS_CORRUPTION;
+    } else {
+      // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
+      // only applies if there is a date column selected
+      if (createdBy.equals("parquet-mr")) {
+        // loop through parquet column metadata to find date columns, check for corrupt values
+        return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
+      } else {
+        // check the created by to see if it is a migrated Drill file
+        try {
           VersionParser.ParsedVersion parsedCreatedByVersion = VersionParser.parse(createdBy);
           // check if this is a migrated Drill file, lacking a Drill version number, but with
           // "drill" in the parquet created-by string
-          SemanticVersion semVer = parsedCreatedByVersion.getSemanticVersion();
-          String pre = semVer.pre + "";
-          if (semVer != null && semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
-            return DateCorruptionStatus.META_SHOWS_CORRUPTION;
-          } else {
-            // written by a tool that wasn't Drill, the dates are not corrupted
-            return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
+          if (parsedCreatedByVersion.hasSemanticVersion()) {
+            SemanticVersion semVer = parsedCreatedByVersion.getSemanticVersion();
+            String pre = semVer.pre + "";
+            if (semVer != null && semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
+              return DateCorruptionStatus.META_SHOWS_CORRUPTION;
+            }
           }
+          // written by a tool that wasn't Drill, the dates are not corrupted
+          return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
+        } catch (VersionParser.VersionParseException e) {
+          // Default value of "false" if we cannot parse the version is fine, we are covering all
+          // of the metadata values produced by historical versions of Drill
+          // If Drill didn't write it the dates should be fine
+          return DateCorruptionStatus.META_SHOWS_CORRUPTION;
         }
-      } else {
-        // this parser expects an application name before the semantic version, just prepending Drill
-        // we know from the property name "drill.version" that we wrote this
-        return drillVersionHasCorruptedDates(drillVersion);
       }
-    } catch (VersionParser.VersionParseException e) {
-      // Default value of "false" if we cannot parse the version is fine, we are covering all
-      // of the metadata values produced by historical versions of Drill
-      // If Drill didn't write it the dates should be fine
-      return DateCorruptionStatus.META_SHOWS_CORRUPTION;
     }
   }
 
-  public static DateCorruptionStatus drillVersionHasCorruptedDates(String drillVersion) throws VersionParser.VersionParseException {
-    VersionParser.ParsedVersion parsedDrillVersion = parseDrillVersion(drillVersion);
-    SemanticVersion semVer = parsedDrillVersion.getSemanticVersion();
-    if (semVer == null || semVer.compareTo(new SemanticVersion(1, 9, 0)) < 0) {
-      return DateCorruptionStatus.META_SHOWS_CORRUPTION;
-    } else {
-      return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
-    }
-
-  }
-
-  public static VersionParser.ParsedVersion parseDrillVersion(String drillVersion) throws VersionParser.VersionParseException {
-    return VersionParser.parse("drill version " + drillVersion + " (build 1234)");
-  }
 
   /**
    * Detect corrupt date values by looking at the min/max values in the metadata.
@@ -224,7 +218,6 @@ public class ParquetReaderUtility {
    *                                of corrupt dates. There are some rare cases (storing dates thousands
    *                                of years into the future, with tools other than Drill writing files)
    *                                that would result in the date values being "corrected" into bad values.
-   * @return
    */
   public static DateCorruptionStatus checkForCorruptDateValuesInStatistics(ParquetMetadata footer,
                                                               List<SchemaPath> columns,

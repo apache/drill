@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("parquet")
+@JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig{
 
   public boolean autoCorrectCorruptDates = true;
@@ -44,6 +45,6 @@ public class ParquetFormatConfig implements FormatPluginConfig{
 
   @Override
   public int hashCode() {
-    return (autoCorrectCorruptDates ? 1 : 0);
+    return (autoCorrectCorruptDates ? 1231 : 1237);
   }
 }

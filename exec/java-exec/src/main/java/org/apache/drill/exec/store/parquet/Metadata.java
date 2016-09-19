@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
@@ -49,13 +48,13 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
@@ -184,7 +183,7 @@ public class Metadata {
         childFiles.add(file);
       }
     }
-    ParquetTableMetadata_v2 parquetTableMetadata = new ParquetTableMetadata_v2();
+    ParquetTableMetadata_v2 parquetTableMetadata = new ParquetTableMetadata_v2(true);
     if (childFiles.size() > 0) {
       List<ParquetFileMetadata_v2> childFilesMetadata =
           getParquetFileMetadata_v2(parquetTableMetadata, childFiles);
@@ -596,7 +595,8 @@ public class Metadata {
     @JsonIgnore public abstract OriginalType getOriginalType(String[] columnName);
 
     @JsonIgnore public abstract ParquetTableMetadataBase clone();
-    @JsonIgnore public abstract String getDrillVersion();
+
+    @JsonIgnore public abstract boolean isDateCorrect();
   }
 
   public static abstract class ParquetFileMetadata {
@@ -635,16 +635,14 @@ public class Metadata {
      *
      * This object would just be immutable, but due to Drill-4203 we need to correct
      * date values that had been corrupted by earlier versions of Drill.
-     * @return
      */
     public abstract void setMax(Object newMax);
 
     /**
-     * Set the max value recorded in the parquet metadata statistics.
+     * Set the min value recorded in the parquet metadata statistics.
      *
      * This object would just be immutable, but due to Drill-4203 we need to correct
      * date values that had been corrupted by earlier versions of Drill.
-     * @return
      */
     public abstract void setMin(Object newMax);
 
@@ -711,9 +709,9 @@ public class Metadata {
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v1(files, directories);
     }
-    @Override
-    public String getDrillVersion() {
-      return null;
+    @JsonIgnore @Override
+    public boolean isDateCorrect() {
+      return false;
     }
   }
 
@@ -918,18 +916,22 @@ public class Metadata {
     @JsonProperty public ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfo;
     @JsonProperty List<ParquetFileMetadata_v2> files;
     @JsonProperty List<String> directories;
-    @JsonProperty String drillVersion;
+    @JsonProperty boolean isDateCorrect;
 
     public ParquetTableMetadata_v2() {
-      this.drillVersion = DrillVersionInfo.getVersion();
+      super();
+    }
+
+    public ParquetTableMetadata_v2(boolean isDateCorrect) {
+      this.isDateCorrect = isDateCorrect;
     }
 
     public ParquetTableMetadata_v2(ParquetTableMetadataBase parquetTable,
-        List<ParquetFileMetadata_v2> files, List<String> directories) {
+        List<ParquetFileMetadata_v2> files, List<String> directories, boolean isDateCorrect) {
       this.files = files;
       this.directories = directories;
       this.columnTypeInfo = ((ParquetTableMetadata_v2) parquetTable).columnTypeInfo;
-      this.drillVersion = DrillVersionInfo.getVersion();
+      this.isDateCorrect = isDateCorrect;
     }
 
     public ParquetTableMetadata_v2(List<ParquetFileMetadata_v2> files, List<String> directories,
@@ -970,9 +972,9 @@ public class Metadata {
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v2(files, directories, columnTypeInfo);
     }
-    @Override
-    public String getDrillVersion() {
-      return drillVersion;
+
+    @JsonIgnore @Override public boolean isDateCorrect() {
+      return isDateCorrect;
     }
 
   }
@@ -1187,7 +1189,7 @@ public class Metadata {
     }
 
     @Override public PrimitiveTypeName getPrimitiveType() {
-      return null;
+      return primitiveType;
     }
 
     @Override public OriginalType getOriginalType() {
