@@ -54,7 +54,7 @@ import com.google.common.collect.Lists;
  * schema, table or field.
  */
 public abstract class InfoSchemaRecordGenerator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaRecordGenerator.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaRecordGenerator.class);
   protected InfoSchemaFilter filter;
 
   protected OptionManager optionManager;
@@ -306,12 +306,12 @@ public abstract class InfoSchemaRecordGenerator {
       }
     }
 
-    public boolean visitTableWithType(String schemaName, String tableName, TableType type) {
+    private void visitTableWithType(String schemaName, String tableName, TableType type) {
       Preconditions
           .checkNotNull(type, "Error. Type information for table %s.%s provided is null.", schemaName,
               tableName);
       records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName, type.toString()));
-      return false;
+      return;
     }
 
     @Override

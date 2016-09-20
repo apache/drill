@@ -122,12 +122,11 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
       );
   }
 
-  @Ignore("Returns results in different order depeding on forkCount")
   @Test
   public void testSimilarNotSimilar() throws Exception{
     JdbcAssert.withNoDefaultSchema()
       .sql("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.`TABLES` "+
-        "WHERE TABLE_NAME SIMILAR TO '%(H|I)E%' AND TABLE_NAME NOT SIMILAR TO 'C%'")
+        "WHERE TABLE_NAME SIMILAR TO '%(H|I)E%' AND TABLE_NAME NOT SIMILAR TO 'C%' ORDER BY TABLE_NAME")
       .returns(
         "TABLE_NAME=SCHEMATA\n" +
         "TABLE_NAME=VIEWS\n"

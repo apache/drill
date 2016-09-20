@@ -741,7 +741,8 @@ public class WorkspaceSchemaFactory {
       }
     }
 
-    @Override public List<Pair<String, TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
+    @Override
+    public List<Pair<String, TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
       final List<Pair<String, TableType>> tableNamesAndTypes = Lists.newArrayList();
 
       // Look for raw tables first

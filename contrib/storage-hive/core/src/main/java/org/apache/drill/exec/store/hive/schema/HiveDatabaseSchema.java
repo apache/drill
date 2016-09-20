@@ -79,18 +79,19 @@ public class HiveDatabaseSchema extends AbstractSchema{
   }
 
   @Override
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, final int bulkSize) {
+  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames,
+      final int bulkSize) {
     final int totalTables = tableNames.size();
     final String schemaName = getName();
     final List<org.apache.hadoop.hive.metastore.api.Table> tables = Lists.newArrayList();
 
     // In each round, Drill asks for a sub-list of all the requested tables
-    for(int fromIndex = 0; fromIndex < totalTables; fromIndex += bulkSize) {
+    for (int fromIndex = 0; fromIndex < totalTables; fromIndex += bulkSize) {
       final int toIndex = Math.min(fromIndex + bulkSize, totalTables);
       final List<String> eachBulkofTableNames = tableNames.subList(fromIndex, toIndex);
       List<org.apache.hadoop.hive.metastore.api.Table> eachBulkofTables;
       // Retries once if the first call to fetch the metadata fails
-      synchronized(mClient) {
+      synchronized (mClient) {
         try {
           eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
         } catch (TException tException) {
@@ -98,7 +99,8 @@ public class HiveDatabaseSchema extends AbstractSchema{
             mClient.reconnect();
             eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
           } catch (Exception e) {
-            logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName, e.getCause());
+            logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName,
+                e.getCause());
             return ImmutableList.of();
           }
         }
@@ -107,26 +109,24 @@ public class HiveDatabaseSchema extends AbstractSchema{
     }
 
     final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
-    for(final org.apache.hadoop.hive.metastore.api.Table table : tables) {
-      if(table == null) {
+    for (final org.apache.hadoop.hive.metastore.api.Table table : tables) {
+      if (table == null) {
         continue;
       }
 
       final String tableName = table.getTableName();
       final TableType tableType;
-      if(table.getTableType().equals(org.apache.hadoop.hive.metastore.TableType.VIRTUAL_VIEW.toString())) {
+      if (table.getTableType().equals(org.apache.hadoop.hive.metastore.TableType.VIRTUAL_VIEW.toString())) {
         tableType = TableType.VIEW;
       } else {
         tableType = TableType.TABLE;
       }
-      tableNameToTable.add(Pair.of(
-          tableName,
-          new HiveTableWithoutStatisticAndRowType(tableType)));
+      tableNameToTable.add(Pair.of(tableName, new HiveTableWithoutStatisticAndRowType(tableType)));
     }
     return tableNameToTable;
   }
 
-   private static class HiveTableWithoutStatisticAndRowType implements Table {
+  private static class HiveTableWithoutStatisticAndRowType implements Table {
     private final TableType tableType;
 
     public HiveTableWithoutStatisticAndRowType(final TableType tableType) {
@@ -135,12 +135,14 @@ public class HiveDatabaseSchema extends AbstractSchema{
 
     @Override
     public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-      throw new UnsupportedOperationException("RowType was not retrieved when this table had been being requested");
+      throw new UnsupportedOperationException(
+          "RowType was not retrieved when this table had been being requested");
     }
 
     @Override
     public Statistic getStatistic() {
-      throw new UnsupportedOperationException("Statistic was not retrieved when this table had been being requested");
+      throw new UnsupportedOperationException(
+          "Statistic was not retrieved when this table had been being requested");
     }
 
     @Override
