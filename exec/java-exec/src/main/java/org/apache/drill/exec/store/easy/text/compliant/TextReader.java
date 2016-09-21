@@ -231,7 +231,7 @@ final class TextReader {
     final TextInput input = this.input;
     final byte quote = this.quote;
 
-    ch = input.nextChar();
+    ch = input.nextCharNoNewLineCheck();
 
     while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
       if (ch != quote) {
@@ -257,7 +257,7 @@ final class TextReader {
       } else {
         prev = ch;
       }
-      ch = input.nextChar();
+      ch = input.nextCharNoNewLineCheck();
     }
 
     // Handles whitespaces after quoted value:

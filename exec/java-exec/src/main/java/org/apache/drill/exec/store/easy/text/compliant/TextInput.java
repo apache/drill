@@ -261,6 +261,41 @@ final class TextInput {
    * @throws IOException
    */
   public final byte nextChar() throws IOException {
+    byte byteChar = nextCharNoNewLineCheck();
+    int bufferPtrTemp = bufferPtr - 1;
+    if (byteChar == lineSeparator[0]) {
+       for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
+         if (lineSeparator[i] != buffer.getByte(bufferPtrTemp)) {
+           return byteChar;
+         }
+       }
+
+        lineCount++;
+        byteChar = normalizedLineSeparator;
+
+        // we don't need to update buffer position if line separator is one byte long
+        if (lineSeparator.length > 1) {
+          bufferPtr += (lineSeparator.length - 1);
+          if (bufferPtr >= length) {
+            if (length != -1) {
+              updateBuffer();
+            } else {
+              throw StreamFinishedPseudoException.INSTANCE;
+            }
+          }
+        }
+      }
+
+    return byteChar;
+  }
+
+  /**
+   * Get next byte from stream.  Do no maintain any line count  Will throw a StreamFinishedPseudoException
+   * when the stream has run out of bytes.
+   * @return next byte from stream.
+   * @throws IOException
+   */
+  public final byte nextCharNoNewLineCheck() throws IOException {
 
     if (length == -1) {
       throw StreamFinishedPseudoException.INSTANCE;
@@ -282,31 +317,6 @@ final class TextInput {
     }
 
     bufferPtr++;
-
-    // monitor for next line.
-    int bufferPtrTemp = bufferPtr - 1;
-    if (byteChar == lineSeparator[0]) {
-      for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
-        if (lineSeparator[i] !=  buffer.getByte(bufferPtrTemp)) {
-          return byteChar;
-        }
-      }
-
-      lineCount++;
-      byteChar = normalizedLineSeparator;
-
-      // we don't need to update buffer position if line separator is one byte long
-      if (lineSeparator.length > 1) {
-        bufferPtr += (lineSeparator.length - 1);
-        if (bufferPtr >= length) {
-          if (length != -1) {
-            updateBuffer();
-          } else {
-            throw StreamFinishedPseudoException.INSTANCE;
-          }
-        }
-      }
-    }
 
     return byteChar;
   }
