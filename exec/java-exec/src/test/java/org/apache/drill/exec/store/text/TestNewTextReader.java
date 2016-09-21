@@ -112,4 +112,21 @@ public class TestNewTextReader extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // see DRILL-3718
+  public void testCrLfSeparatedWithQuote() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/WithQuotedCrLf.tbl").toURI().toString();
+    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+        "from dfs_test.`%s` ", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c0", "c1", "c2")
+        .baselineValues("a\r\n1", "a", "a")
+        .baselineValues("a", "a\r\n2", "a")
+        .baselineValues("a", "a", "a\r\n3")
+        .build()
+        .run();
+  }
 }

@@ -88,6 +88,11 @@ final class TextInput {
   private boolean endFound = false;
 
   /**
+   * Switch for enabling/disabling new line detection
+   */
+  private boolean monitorForNewLine = true;
+
+  /**
    * Creates a new instance with the mandatory characters for handling newlines transparently.
    * lineSeparator the sequence of characters that represent a newline, as defined in {@link Format#getLineSeparator()}
    * normalizedLineSeparator the normalized newline character (as defined in {@link Format#getNormalizedNewline()}) that is used to replace any lineSeparator sequence found in the input.
@@ -273,7 +278,7 @@ final class TextInput {
     byte byteChar = PlatformDependent.getByte(bStartMinus1 + bufferPtr);
 
     if (bufferPtr >= length) {
-      if (length != -1) {
+      if(length != -1) {
         updateBuffer();
         bufferPtr--;
       } else {
@@ -283,26 +288,28 @@ final class TextInput {
 
     bufferPtr++;
 
-    // monitor for next line.
     int bufferPtrTemp = bufferPtr - 1;
-    if (byteChar == lineSeparator[0]) {
-      for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
-        if (lineSeparator[i] !=  buffer.getByte(bufferPtrTemp)) {
-          return byteChar;
+    // monitor for next line.
+    if (monitorForNewLine) {
+      if (byteChar == lineSeparator[0]) {
+        for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
+          if (lineSeparator[i] != buffer.getByte(bufferPtrTemp)) {
+            return byteChar;
+          }
         }
-      }
 
-      lineCount++;
-      byteChar = normalizedLineSeparator;
+        lineCount++;
+        byteChar = normalizedLineSeparator;
 
-      // we don't need to update buffer position if line separator is one byte long
-      if (lineSeparator.length > 1) {
-        bufferPtr += (lineSeparator.length - 1);
-        if (bufferPtr >= length) {
-          if (length != -1) {
-            updateBuffer();
-          } else {
-            throw StreamFinishedPseudoException.INSTANCE;
+        // we don't need to update buffer position if line separator is one byte long
+        if (lineSeparator.length > 1) {
+          bufferPtr += (lineSeparator.length - 1);
+          if (bufferPtr >= length) {
+            if (length != -1) {
+              updateBuffer();
+            } else {
+              throw StreamFinishedPseudoException.INSTANCE;
+            }
           }
         }
       }
@@ -351,7 +358,17 @@ final class TextInput {
     return lineCount;
   }
 
-  public void close() throws IOException{
+  /**
+   * TextInput will monitor for new line characters if this flag is set to true.<br>
+   * This flag is useful when reading escaped data where new line characters may occurs.
+   *
+   * @param monitorForNewLine
+   */
+  public void setMonitorForNewLine(boolean monitorForNewLine) {
+    this.monitorForNewLine = monitorForNewLine;
+  }
+
+  public void close() throws IOException {
     input.close();
   }
 }

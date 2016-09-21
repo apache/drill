@@ -68,7 +68,7 @@ final class TextReader {
   /**
    * The CsvParser supports all settings provided by {@link CsvParserSettings}, and requires this configuration to be
    * properly initialized.
-   * @param settings  the parser configuration
+   * @param settings the parser configuration
    * @param input  input stream
    * @param output  interface to produce output record batch
    * @param workBuf  working buffer to handle whitespaces
@@ -231,33 +231,34 @@ final class TextReader {
     final TextInput input = this.input;
     final byte quote = this.quote;
 
-    ch = input.nextChar();
-
-    while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
-      if (ch != quote) {
-        if (prev == quote) { // unescaped quote detected
-          if (parseUnescapedQuotes) {
-            output.append(quote);
-            output.append(ch);
-            parseQuotedValue(ch);
-            break;
-          } else {
-            throw new TextParsingException(
-                context,
-                "Unescaped quote character '"
-                    + quote
-                    + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
-          }
-        }
-        output.append(ch);
-        prev = ch;
-      } else if (prev == quoteEscape) {
-        output.append(quote);
-        prev = NULL_BYTE;
-      } else {
-        prev = ch;
-      }
+    try {
+      input.setMonitorForNewLine(false);
       ch = input.nextChar();
+
+      while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
+        if (ch != quote) {
+          if (prev == quote) { // unescaped quote detected
+            if (parseUnescapedQuotes) {
+              output.append(quote);
+              output.append(ch);
+              parseQuotedValue(ch);
+              break;
+            } else {
+              throw new TextParsingException(context, "Unescaped quote character '" + quote + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
+            }
+          }
+          output.append(ch);
+          prev = ch;
+        } else if (prev == quoteEscape) {
+          output.append(quote);
+          prev = NULL_BYTE;
+        } else {
+          prev = ch;
+        }
+        ch = input.nextChar();
+      }
+    } finally {
+      input.setMonitorForNewLine(true);
     }
 
     // Handles whitespaces after quoted value:
@@ -295,8 +296,7 @@ final class TextReader {
     }
 
     if (!(ch == delimiter || ch == newLine)) {
-      throw new TextParsingException(context, "Unexpected character '" + ch
-          + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
+      throw new TextParsingException(context, "Unexpected character '" + ch + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
     }
   }
 
