@@ -278,7 +278,7 @@ final class TextInput {
     byte byteChar = PlatformDependent.getByte(bStartMinus1 + bufferPtr);
 
     if (bufferPtr >= length) {
-      if(length != -1) {
+      if (length != -1) {
         updateBuffer();
         bufferPtr--;
       } else {
