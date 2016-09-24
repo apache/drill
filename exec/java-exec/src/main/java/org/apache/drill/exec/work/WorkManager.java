@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.work;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,8 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
@@ -103,7 +107,7 @@ public class WorkManager implements AutoCloseable {
       final DataConnectionCreator data,
       final ClusterCoordinator coord,
       final PersistentStoreProvider provider) {
-    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
+    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, this);
     statusThread.start();
 
     DrillMetrics.register("drill.fragments.running",
@@ -133,6 +137,22 @@ public class WorkManager implements AutoCloseable {
 
   public WorkerBee getBee() {
     return bee;
+  }
+
+  public Collection<FragmentExecutor> getRunningFragments() {
+    return runningFragments.values();
+  }
+
+  public Collection<QueryProfile> getQueries() {
+    List<QueryProfile> profiles = new ArrayList<>();
+    for (Foreman foreman : queries.values()) {
+      QueryState state = foreman.getState();
+      if (state == QueryState.RUNNING ||
+              state == QueryState.STARTING) {
+        profiles.add(foreman.getQueryManager().getQueryProfile());
+      }
+    }
+    return profiles;
   }
 
   @Override

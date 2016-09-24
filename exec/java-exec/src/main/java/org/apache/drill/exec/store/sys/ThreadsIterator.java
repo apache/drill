@@ -18,42 +18,77 @@
 package org.apache.drill.exec.store.sys;
 
 import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.ThreadStatCollector;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
+/**
+ * Iterator that returns a {@link ThreadSummary} for every thread in this JVM
+ */
 public class ThreadsIterator implements Iterator<Object> {
 
-  private boolean beforeFirst = true;
   private final FragmentContext context;
+  private final Iterator<Long> threadIdIterator;
+  private final ThreadMXBean threadMXBean;
+  private final ThreadStatCollector threadStatCollector;
 
   public ThreadsIterator(final FragmentContext context) {
     this.context = context;
+    threadMXBean = ManagementFactory.getThreadMXBean();
+    final long[] ids = threadMXBean.getAllThreadIds();
+    threadIdIterator = new ArrayList<Long>() {{
+      for (long id : ids) {
+        add(id);
+      }
+    }}.iterator();
+    this.threadStatCollector = context.getDrillbitContext().getThreadStatCollector();
   }
 
-  @Override
   public boolean hasNext() {
-    return beforeFirst;
+    return threadIdIterator.hasNext();
   }
 
   @Override
   public Object next() {
-    if (!beforeFirst) {
-      throw new IllegalStateException();
-    }
-    beforeFirst = false;
-    final ThreadsInfo threadsInfo = new ThreadsInfo();
+    long id = threadIdIterator.next();
+    ThreadInfo currentThread = threadMXBean.getThreadInfo(id, 100);
+    final ThreadSummary threadSummary = new ThreadSummary();
 
     final DrillbitEndpoint endpoint = context.getIdentity();
-    threadsInfo.hostname = endpoint.getAddress();
-    threadsInfo.user_port = endpoint.getUserPort();
+    threadSummary.hostname = endpoint.getAddress();
+    threadSummary.user_port = endpoint.getUserPort();
+    threadSummary.threadName = currentThread.getThreadName();
+    threadSummary.threadState = currentThread.getThreadState().name();
+    threadSummary.threadId = currentThread.getThreadId();
+    threadSummary.inNative = currentThread.isInNative();
+    threadSummary.suspended = currentThread.isSuspended();
+    currentThread.getStackTrace();
+    threadSummary.cpuTime = threadStatCollector.getCpuTrailingAverage(id, 1);
+    threadSummary.userTime = threadStatCollector.getUserTrailingAverage(id, 1);
+    threadSummary.stackTrace = getStackTrace(currentThread);
 
-    final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-    threadsInfo.total_threads = threadMXBean.getPeakThreadCount();
-    threadsInfo.busy_threads = threadMXBean.getThreadCount();
-    return threadsInfo;
+    return threadSummary;
+  }
+
+  private String getStackTrace(ThreadInfo currentThread) {
+    StringBuilder builder = new StringBuilder();
+    StackTraceElement[] stackTrace = currentThread.getStackTrace();
+    for (int i = 0; i < stackTrace.length - 1; i++) {
+      builder.append(stackTrace[i]);
+      builder.append("\n");
+    }
+    if (stackTrace.length > 0) {
+      builder.append(stackTrace[stackTrace.length - 1]);
+    }
+    return builder.toString();
   }
 
   @Override
@@ -61,10 +96,29 @@ public class ThreadsIterator implements Iterator<Object> {
     throw new UnsupportedOperationException();
   }
 
-  public static class ThreadsInfo {
+  public static class ThreadSummary {
+    /**
+     * The Drillbit hostname
+     */
     public String hostname;
+
+    /**
+     * The Drillbit user port
+     */
     public long user_port;
-    public long total_threads;
-    public long busy_threads;
+    public String threadName;
+    public long threadId;
+    public boolean inNative;
+    public boolean suspended;
+    public String threadState;
+    /**
+     * Thread cpu time during last second. Between 0 and 100
+     */
+    public Integer cpuTime;
+    /**
+     * Thread user cpu time during last second. Between 0 and 100
+     */
+    public Integer userTime;
+    public String stackTrace;
   }
 }

@@ -32,6 +32,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.metrics.DrillMetrics;
+import org.apache.drill.exec.ops.ThreadStatCollector;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
 
@@ -45,6 +46,8 @@ public class BootStrapContext implements AutoCloseable {
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
   private final ExecutorService executor;
+
+  private final ThreadStatCollector threadStatCollector;
 
   public BootStrapContext(DrillConfig config, ScanResult classpathScan) {
     this.config = config;
@@ -65,6 +68,7 @@ public class BootStrapContext implements AutoCloseable {
         super.afterExecute(r, t);
       }
     };
+    this.threadStatCollector = new ThreadStatCollector();
   }
 
   public ExecutorService getExecutor() {
@@ -93,6 +97,10 @@ public class BootStrapContext implements AutoCloseable {
 
   public ScanResult getClasspathScan() {
     return classpathScan;
+  }
+
+  public ThreadStatCollector getThreadStatCollector() {
+    return threadStatCollector;
   }
 
   @Override

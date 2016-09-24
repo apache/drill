@@ -125,6 +125,7 @@ public class Drillbit implements AutoCloseable {
     javaPropertiesToSystemOptions();
     registrationHandle = coord.register(md);
     webServer.start();
+    context.getExecutor().submit(context.getThreadStatCollector());
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));

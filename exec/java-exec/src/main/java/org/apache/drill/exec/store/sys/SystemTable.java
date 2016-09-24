@@ -53,12 +53,25 @@ public enum SystemTable {
     }
   },
 
+  // TODO - should be possibly make this a distributed table so that we can figure out if
+  // users have inconsistent versions installed across their cluster?
   VERSION("version", false, VersionIterator.VersionInfo.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
       return new VersionIterator();
     }
   },
+
+  /*
+
+   TODO - DRILL-4258: fill in these system tables
+    cpu: Drillbit, # Cores, CPU consumption (with different windows?)
+    queries: Foreman, QueryId, User, SQL, Start Time, rows processed, query plan, # nodes involved, number of running fragments, memory consumed
+    fragments: Drillbit, queryid, major fragmentid, minorfragmentid, coordinate, memory usage, rows processed, start time
+    threads: name, priority, state, id, thread-level cpu stats
+    threadtraces: threads, stack trace
+    connections: client, server, type, establishedDate, messagesSent, bytesSent
+   */
 
   MEMORY("memory", true, MemoryIterator.MemoryInfo.class) {
     @Override
@@ -67,10 +80,24 @@ public enum SystemTable {
     }
   },
 
-  THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
+  THREADS("threads", true, ThreadsIterator.ThreadSummary.class) {
     @Override
-  public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final FragmentContext context) {
       return new ThreadsIterator(context);
+    }
+  },
+
+  QUERIES("queries", true, QueryIterator.QueryInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new QueryIterator(context);
+    }
+  },
+
+  FRAGMENTS("fragments", true, FragmentIterator.FragmentInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new FragmentIterator(context);
     }
   };
 
