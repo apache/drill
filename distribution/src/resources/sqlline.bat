@@ -114,6 +114,10 @@ if "test%DRILL_LOG_DIR%" == "test" (
   set DRILL_LOG_DIR=%DRILL_HOME%\log
 )
 
+if "test%DRILL_TMP_DIR%" == "test" (
+  set DRILL_TMP_DIR=\tmp
+)
+
 rem ----
 rem Deal with Hadoop JARs, if HADOOP_HOME was specified
 rem ----

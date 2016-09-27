@@ -81,10 +81,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class FunctionRegistryHolder {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionRegistryHolder.class);
+
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
-  private final AtomicLong version = new AtomicLong();
+  private long version = 0;
 
   // jar name, Map<function name, Queue<function signature>
   private final Map<String, Map<String, Queue<String>>> jars;
@@ -103,7 +105,7 @@ public class FunctionRegistryHolder {
    */
   public long getVersion() {
     try (AutoCloseableLock lock = readLock.open()) {
-      return version.get();
+      return version;
     }
   }
 
@@ -128,7 +130,7 @@ public class FunctionRegistryHolder {
         addFunctions(jar, newJar.getValue());
       }
       if (!newJars.isEmpty()) {
-        version.incrementAndGet();
+        version++;
       }
     }
   }
@@ -144,7 +146,7 @@ public class FunctionRegistryHolder {
   public void removeJar(String jarName) {
     try (AutoCloseableLock lock = writeLock.open()) {
       if (removeAllByJar(jarName)) {
-        version.incrementAndGet();
+        version++;
       }
     }
   }
@@ -180,7 +182,7 @@ public class FunctionRegistryHolder {
    * Returns list of functions with list of function holders for each functions.
    * Uses guava {@link ListMultimap} structure to return data.
    * If no functions present, will return empty {@link ListMultimap}.
-   * If version holder is not null, updates it current registry version number.
+   * If version holder is not null, updates it with current registry version number.
    * This is read operation, so several users can perform this operation at the same time.
    *
    * @param version version holder
@@ -189,7 +191,7 @@ public class FunctionRegistryHolder {
   public ListMultimap<String, DrillFuncHolder> getAllFunctionsWithHolders(AtomicLong version) {
     try (AutoCloseableLock lock = readLock.open()) {
       if (version != null) {
-        version.set(this.version.get());
+        version.set(this.version);
       }
       ListMultimap<String, DrillFuncHolder> functionsWithHolders = ArrayListMultimap.create();
       for (Map.Entry<String, Map<String, DrillFuncHolder>> function : functions.entrySet()) {
@@ -230,7 +232,7 @@ public class FunctionRegistryHolder {
   /**
    * Returns all function holders associated with function name.
    * If function is not present, will return empty list.
-   * If version holder is not null, updates it current registry version number.
+   * If version holder is not null, updates it with current registry version number.
    * This is read operation, so several users can perform this operation at the same time.
    *
    * @param functionName function name
@@ -240,7 +242,7 @@ public class FunctionRegistryHolder {
   public List<DrillFuncHolder> getHoldersByFunctionName(String functionName, AtomicLong version) {
     try (AutoCloseableLock lock = readLock.open()) {
       if (version != null) {
-        version.set(this.version.get());
+        version.set(this.version);
       }
       Map<String, DrillFuncHolder> holders = functions.get(functionName);
       return holders == null ? Lists.<DrillFuncHolder>newArrayList() : Lists.newArrayList(holders.values());
@@ -334,6 +336,9 @@ public class FunctionRegistryHolder {
 
   /**
    * Removes jar from {@link #jars} and all associated with jars functions from {@link #functions}
+   * Since each jar is loaded with separate class loader before
+   * removing we need to close class loader to release opened connection to jar.
+   * All jar functions have the same class loader, so we need to close only one time.
    *
    * @param jarName jar name to be removed
    * @return true if jar was removed, false otherwise
@@ -348,13 +353,25 @@ public class FunctionRegistryHolder {
       final String function = functionEntry.getKey();
       Map<String, DrillFuncHolder> functionHolders = functions.get(function);
       Queue<String> functionSignatures = functionEntry.getValue();
+      for (Map.Entry<String, DrillFuncHolder> entry : functionHolders.entrySet()) {
+        if (functionSignatures.contains(entry.getKey())) {
+          ClassLoader classLoader = entry.getValue().getClassLoader();
+          if (classLoader instanceof AutoCloseable) {
+            try {
+              ((AutoCloseable) classLoader).close();
+            } catch (Exception e) {
+              logger.warn("Problem during closing class loader", e);
+            }
+          }
+          break;
+        }
+      }
       functionHolders.keySet().removeAll(functionSignatures);
+
       if (functionHolders.isEmpty()) {
         functions.remove(function);
       }
     }
     return true;
   }
-
-
 }

@@ -57,6 +57,11 @@ public class DropFunctionHandler extends DefaultSqlHandler {
    * </ol>
    *
    * UDFs unregistration is allowed only if dynamic UDFs support is enabled.
+   * Only jars registered dynamically can be unregistered,
+   * built-in functions loaded at start up are not allowed to be unregistered.
+   *
+   * Limitation: before jar unregistration make sure no one is using functions from this jar.
+   * There is no guarantee that running queries will finish successfully or give correct result.
    *
    * @return - Single row indicating list of unregistered UDFs, raise exception otherwise
    */

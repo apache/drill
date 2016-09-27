@@ -293,15 +293,12 @@ public class ZookeeperClient implements AutoCloseable {
 
     final String target = PathUtils.join(root, path);
     try {
-      boolean hasNode = hasPath(path, true);
-      if (!hasNode) {
-        try {
-          curator.create().withMode(mode).forPath(target, data);
-          getCache().rebuildNode(target);
-          return null;
-        } catch (NodeExistsException e) {
-          // do nothing
-        }
+      try {
+        curator.create().withMode(mode).forPath(target, data);
+        getCache().rebuildNode(target);
+        return null;
+      } catch (NodeExistsException e) {
+        // do nothing
       }
       return curator.getData().forPath(target);
     } catch (final Exception e) {

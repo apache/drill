@@ -324,6 +324,21 @@ if [ -n "$DRILL_CLASSPATH" ]; then
   CP="$CP:$DRILL_CLASSPATH"
 fi
 
+# If tmp dir is given, it must exist.
+if [ -n "$DRILL_TMP_DIR" ]; then
+  if [[ ! -d "$DRILL_TMP_DIR" ]]; then
+    fatal_error "temporary dir does not exist:" $DRILL_TMP_DIR
+  fi
+else
+  # Otherwise, use the default
+  DRILL_TMP_DIR="/tmp"
+fi
+
+mkdir -p "$DRILL_TMP_DIR"
+if [[ ! -d "$DRILL_TMP_DIR" || ! -w "$DRILL_TMP_DIR" ]]; then
+  fatal_error "Temporary directory does not exist or is not writable: $DRILL_TMP_DIR"
+fi
+
 # Test for cygwin
 is_cygwin=false
 case "`uname`" in
@@ -371,6 +386,7 @@ if $is_cygwin; then
   DRILL_HOME=`cygpath -w "$DRILL_HOME"`
   DRILL_CONF_DIR=`cygpath -w "$DRILL_CONF_DIR"`
   DRILL_LOG_DIR=`cygpath -w "$DRILL_LOG_DIR"`
+  DRILL_TMP_DIR=`cygpath -w "$DRILL_TMP_DIR"`
   CP=`cygpath -w -p "$CP"`
   if [ -z "$HADOOP_HOME" ]; then
     export HADOOP_HOME=${DRILL_HOME}/winutils
@@ -391,6 +407,7 @@ export is_cygwin
 export DRILL_HOME
 export DRILL_CONF_DIR
 export DRILL_LOG_DIR
+export DRILL_TMP_DIR
 export CP
 export JAVA_HOME
 export JAVA

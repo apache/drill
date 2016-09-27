@@ -54,12 +54,12 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithInferenceMap = ArrayListMultimap.create();
   // indicates local function registry version based on which drill operator were loaded
   // is used to define if we need to reload operator table in case when function signature was not found
-  private final AtomicLong functionRegistryVersion = new AtomicLong();
+  private long functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
 
   public DrillOperatorTable(FunctionImplementationRegistry registry, OptionManager systemOptionManager) {
-    registry.register(this, functionRegistryVersion);
+    registry.register(this);
     calciteOperators.addAll(inner.getOperatorList());
     populateWrappedCalciteOperators();
     this.systemOptionManager = systemOptionManager;
@@ -71,11 +71,15 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     drillOperatorsWithInference.clear();
     drillOperatorsWithoutInferenceMap.clear();
     drillOperatorsWithInferenceMap.clear();
-    registry.register(this, functionRegistryVersion);
+    registry.register(this);
+  }
+
+  public long setFunctionRegistryVersion(long version) {
+    return functionRegistryVersion = version;
   }
 
   public long getFunctionRegistryVersion() {
-    return functionRegistryVersion.get();
+    return functionRegistryVersion;
   }
 
   /**

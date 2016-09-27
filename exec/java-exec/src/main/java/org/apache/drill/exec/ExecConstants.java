@@ -115,6 +115,7 @@ public interface ExecConstants {
   String UDF_DIRECTORY_REGISTRY = "drill.exec.udf.directory.registry";
   String UDF_DIRECTORY_TMP = "drill.exec.udf.directory.tmp";
   String UDF_DIRECTORY_FS = "drill.exec.udf.directory.fs";
+  String UDF_DIRECTORY_LOCAL = "drill.exec.udf.directory.local";
 
 
   String OUTPUT_FORMAT_OPTION = "store.format";

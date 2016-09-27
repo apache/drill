@@ -44,7 +44,7 @@ public class ExecTest extends DrillTest {
   private static final DrillConfig c = DrillConfig.create();
 
   static {
-    System.setProperty("DRILL_CONF_DIR", getTempDir("conf"));
+    System.setProperty("DRILL_TMP_DIR", getTempDir("/tmp"));
   }
 
   @After

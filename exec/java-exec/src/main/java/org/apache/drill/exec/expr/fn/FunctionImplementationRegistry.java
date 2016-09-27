@@ -21,18 +21,18 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.CommonConstants;
@@ -73,8 +73,6 @@ import org.apache.hadoop.fs.Path;
  */
 public class FunctionImplementationRegistry implements FunctionLookupContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
-  private static final String jar_suffix_pattern = "_(\\d+)\\.jar";
-  private static final String generated_jar_name_pattern = "%s_%s.%s";
 
   private final LocalFunctionRegistry localFunctionRegistry;
   private final RemoteFunctionRegistry remoteFunctionRegistry;
@@ -117,7 +115,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
     }
     logger.info("Function registry loaded.  {} functions loaded in {} ms.", localFunctionRegistry.size(), w.elapsed(TimeUnit.MILLISECONDS));
     this.remoteFunctionRegistry = new RemoteFunctionRegistry(new UnregistrationListener());
-    this.localUdfDir = getLocalUdfDir();
+    this.localUdfDir = getLocalUdfDir(config);
   }
 
   public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan, OptionManager optionManager) {
@@ -129,9 +127,9 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
    * Register functions in given operator table.
    * @param operatorTable
    */
-  public void register(DrillOperatorTable operatorTable, AtomicLong version) {
+  public void register(DrillOperatorTable operatorTable) {
     // Register Drill functions first and move to pluggable function registries.
-    localFunctionRegistry.register(operatorTable, version);
+    localFunctionRegistry.register(operatorTable);
 
     for(PluggableFunctionRegistry registry : pluggableFuncRegistries) {
       registry.register(operatorTable);
@@ -244,6 +242,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
 
   /**
    * Using given local path to jar creates unique class loader for this jar.
+   * Class loader is closed to release opened connection to jar when validation is finished.
    * Scan jar content to receive list of all scanned classes
    * and starts validation process against local function registry.
    * Checks if received list of validated function is not empty.
@@ -254,13 +253,14 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   public List<String> validate(Path path) throws IOException {
     URL url = path.toUri().toURL();
     URL[] urls = {url};
-    ClassLoader classLoader = new URLClassLoader(urls);
-    ScanResult jarScanResult = scan(classLoader, path, urls);
-    List<String> functions = localFunctionRegistry.validate(path.getName(), jarScanResult);
-    if (functions.isEmpty()) {
-      throw new FunctionValidationException(String.format("Jar %s does not contain functions", path.getName()));
+    try (URLClassLoader classLoader = new URLClassLoader(urls)) {
+      ScanResult jarScanResult = scan(classLoader, path, urls);
+      List<String> functions = localFunctionRegistry.validate(path.getName(), jarScanResult);
+      if (functions.isEmpty()) {
+        throw new FunctionValidationException(String.format("Jar %s does not contain functions", path.getName()));
+      }
+      return functions;
     }
-    return functions;
   }
 
   /**
@@ -269,6 +269,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
    * If yes, enters synchronized block to prevent other loading the same jars.
    * Again re-checks if there are no missing jars in case someone has already loaded them (double-check lock).
    * If there are still missing jars, first copies jars to local udf area and prepares {@link JarScan} for each jar.
+   * Jar registration timestamp represented in milliseconds is used as suffix.
    * Then registers all jars at the same time. Returns true when finished.
    * In case if any errors during jars coping or registration, logs errors and proceeds.
    *
@@ -287,18 +288,25 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
         for (String jarName : missingJars) {
           Path binary = null;
           Path source = null;
+          URLClassLoader classLoader = null;
           try {
-            long suffix = System.nanoTime();
-            binary = copyJarToLocal(jarName, remoteFunctionRegistry, suffix);
-            source = copyJarToLocal(JarUtil.getSourceName(jarName), remoteFunctionRegistry, suffix);
+            binary = copyJarToLocal(jarName, remoteFunctionRegistry);
+            source = copyJarToLocal(JarUtil.getSourceName(jarName), remoteFunctionRegistry);
             URL[] urls = {binary.toUri().toURL(), source.toUri().toURL()};
-            ClassLoader classLoader = new URLClassLoader(urls);
+            classLoader = new URLClassLoader(urls);
             ScanResult scanResult = scan(classLoader, binary, urls);
             localFunctionRegistry.validate(jarName, scanResult);
             jars.add(new JarScan(jarName, scanResult, classLoader));
           } catch (Exception e) {
             deleteQuietlyLocalJar(binary);
             deleteQuietlyLocalJar(source);
+            if (classLoader != null) {
+              try {
+                classLoader.close();
+              } catch (Exception ex) {
+                logger.warn("Problem during closing class loader for {}", jarName, e);
+              }
+            }
             logger.error("Problem during remote functions load from {}", jarName, e);
           }
         }
@@ -314,6 +322,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   /**
    * First finds path to marker file url, otherwise throws {@link JarValidationException}.
    * Then scans jar classes according to list indicated in marker files.
+   * Additional logic is added to close {@link URL} after {@link ConfigFactory#parseURL(URL)}.
+   * This is extremely important for Windows users where system doesn't allow to delete file if it's being used.
    *
    * @param classLoader unique class loader for jar
    * @param path local path to jar
@@ -321,12 +331,21 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
    * @return scan result of packages, classes, annotations found in jar
    */
   private ScanResult scan(ClassLoader classLoader, Path path, URL[] urls) throws IOException {
-    Enumeration<URL> e = classLoader.getResources(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
-    while (e.hasMoreElements()) {
-      URL res = e.nextElement();
-      if (res.getPath().contains(path.toUri().getPath())) {
-        DrillConfig drillConfig = DrillConfig.create(ConfigFactory.parseURL(res));
-        return RunTimeScan.dynamicPackageScan(drillConfig, Sets.newHashSet(urls));
+    Enumeration<URL> markerFileEnumeration = classLoader.getResources(
+        CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
+    while (markerFileEnumeration.hasMoreElements()) {
+      URL markerFile = markerFileEnumeration.nextElement();
+      if (markerFile.getPath().contains(path.toUri().getPath())) {
+        URLConnection markerFileConnection = null;
+        try {
+          markerFileConnection = markerFile.openConnection();
+          DrillConfig drillConfig = DrillConfig.create(ConfigFactory.parseURL(markerFile));
+          return RunTimeScan.dynamicPackageScan(drillConfig, Sets.newHashSet(urls));
+        } finally {
+          if (markerFileConnection instanceof JarURLConnection) {
+            ((JarURLConnection) markerFile.openConnection()).getJarFile().close();
+          }
+        }
       }
     }
     throw new JarValidationException(String.format("Marker file %s is missing in %s",
@@ -356,14 +375,16 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
 
   /**
    * Creates local udf directory, if it doesn't exist.
-   * Checks if local is a directory and if current application has write rights on it.
-   * Attempts to clean up local idf directory in case jars were left after previous drillbit run.
+   * Checks if local udf directory is a directory and if current application has write rights on it.
+   * Attempts to clean up local udf directory in case jars were left after previous drillbit run.
+   * Local udf directory path is concatenated from $DRILL_TMP_DRILL and ${drill.exec.udf.directory.local}.
    *
+   * @param config drill config
    * @return path to local udf directory
    */
-  private Path getLocalUdfDir() {
-    String confDir = getConfDir();
-    File udfDir = new File(confDir, "udf");
+  private Path getLocalUdfDir(DrillConfig config) {
+    String tmpDir = getTmpDir();
+    File udfDir = new File(tmpDir, config.getString(ExecConstants.UDF_DIRECTORY_LOCAL));
     String udfPath = udfDir.getPath();
     udfDir.mkdirs();
     Preconditions.checkState(udfDir.exists(), "Local udf directory [%s] must exist", udfPath);
@@ -378,38 +399,33 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   }
 
   /**
-   * First tries to get drill conf directory value from system properties,
+   * First tries to get drill temporary directory value from system properties,
    * if value is missing, checks environment properties.
    * Throws exception is value is null.
-   * @return drill conf dir path
+   * @return drill temporary directory path
    */
-  private String getConfDir() {
-    String drillConfDir = "DRILL_CONF_DIR";
-    String value = System.getProperty(drillConfDir);
+  private String getTmpDir() {
+    String drillTempDir = "DRILL_TMP_DIR";
+    String value = System.getProperty(drillTempDir);
     if (value == null) {
-      value = Preconditions.checkNotNull(System.getenv(drillConfDir), "%s variable is not set", drillConfDir);
+      value = Preconditions.checkNotNull(System.getenv(drillTempDir), "%s variable is not set", drillTempDir);
     }
     return value;
   }
 
   /**
-   * Copies jar from remote udf area to local udf area with numeric suffix,
-   * in order to achieve uniqueness for each locally copied jar.
-   * Ex: DrillUDF-1.0.jar -> DrillUDF-1.0_12200255588.jar
+   * Copies jar from remote udf area to local udf area.
    *
    * @param jarName jar name to be copied
    * @param remoteFunctionRegistry remote function registry
-   * @param suffix numeric suffix
    * @return local path to jar that was copied
    * @throws IOException in case of problems during jar coping process
    */
-  private Path copyJarToLocal(String jarName, RemoteFunctionRegistry remoteFunctionRegistry, long suffix) throws IOException {
-    String generatedName = String.format(generated_jar_name_pattern,
-        Files.getNameWithoutExtension(jarName), suffix, Files.getFileExtension(jarName));
+  private Path copyJarToLocal(String jarName, RemoteFunctionRegistry remoteFunctionRegistry) throws IOException {
     Path registryArea = remoteFunctionRegistry.getRegistryArea();
     FileSystem fs = remoteFunctionRegistry.getFs();
     Path remoteJar = new Path(registryArea, jarName);
-    Path localJar = new Path(localUdfDir, generatedName);
+    Path localJar = new Path(localUdfDir, jarName);
     try {
       fs.copyToLocalFile(remoteJar, localJar);
     } catch (IOException e) {
@@ -435,7 +451,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
    * Fires when jar name is submitted for unregistration.
    * Will unregister all functions associated with the jar name
    * and delete binary and source associated with the jar from local udf directory
-   * according to pattern jar name + {@link #jar_suffix_pattern}.
    */
   public class UnregistrationListener implements TransientStoreListener {
 
@@ -443,18 +458,9 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
     public void onChange(TransientStoreEvent event) {
       String jarName = (String) event.getValue();
       localFunctionRegistry.unregister(jarName);
-
-      Pattern binaryPattern = Pattern.compile(Files.getNameWithoutExtension(jarName) + jar_suffix_pattern);
-      Pattern sourcePattern = Pattern.compile(Files.getNameWithoutExtension(JarUtil.getSourceName(jarName)) + jar_suffix_pattern);
-
-      File[] files = new File(localUdfDir.toUri().getPath()).listFiles();
-      if (files != null) {
-        for (File file : files) {
-          if (binaryPattern.matcher(file.getName()).matches() || sourcePattern.matcher(file.getName()).matches()) {
-            FileUtils.deleteQuietly(file);
-          }
-        }
-      }
+      String localDir = localUdfDir.toUri().getPath();
+      FileUtils.deleteQuietly(new File(localDir, jarName));
+      FileUtils.deleteQuietly(new File(localDir, JarUtil.getSourceName(jarName)));
     }
   }
 

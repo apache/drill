@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +32,6 @@ import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
 
 /**
  * To avoid the cost of initializing all functions up front,
@@ -131,8 +129,7 @@ public class FunctionInitializer {
       return cu;
     }
 
-    URL u = Resources.getResource(c, path);
-    try (InputStream is = Resources.asByteSource(u).openStream()) {
+    try (InputStream is = c.getResourceAsStream(path)) {
       if (is == null) {
         throw new IOException(String.format(
             "Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(),

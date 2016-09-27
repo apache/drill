@@ -221,8 +221,16 @@ public class LocalFunctionRegistry {
     return registryHolder.getHoldersByFunctionName(name.toLowerCase());
   }
 
-  public void register(DrillOperatorTable operatorTable, AtomicLong version) {
-    final Map<String, Collection<DrillFuncHolder>> registeredFunctions = registryHolder.getAllFunctionsWithHolders(version).asMap();
+  /**
+   * Registers all functions present in {@link DrillOperatorTable},
+   * also sets local registry version used at the moment of registering.
+   *
+   * @param operatorTable drill operator table
+   */
+  public void register(DrillOperatorTable operatorTable) {
+    AtomicLong versionHolder = new AtomicLong();
+    final Map<String, Collection<DrillFuncHolder>> registeredFunctions = registryHolder.getAllFunctionsWithHolders(versionHolder).asMap();
+    operatorTable.setFunctionRegistryVersion(versionHolder.get());
     registerOperatorsWithInference(operatorTable, registeredFunctions);
     registerOperatorsWithoutInference(operatorTable, registeredFunctions);
   }

@@ -153,6 +153,13 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return builder.length() == 0 ? builder.toString() : builder.substring(1);
   }
 
+  /**
+   * @return instance of class loader used to load function
+   */
+  public ClassLoader getClassLoader() {
+    return initializer.getClassLoader();
+  }
+
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
     for (int i = 0; i < workspaceVars.length; i++) {

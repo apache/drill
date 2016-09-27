@@ -18,7 +18,6 @@
 package org.apache.drill;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import mockit.Deencapsulation;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
@@ -45,12 +44,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
-import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -337,29 +334,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     Path localUdfDirPath = Deencapsulation.getField(getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
     File localUdfDir = new File(localUdfDirPath.toUri().getPath());
 
-    String suffixPattern = Deencapsulation.getField(getDrillbitContext().getFunctionImplementationRegistry(), "jar_suffix_pattern");
-    final Pattern bPattern = Pattern.compile(Files.getNameWithoutExtension(default_binary_name) + suffixPattern);
-    final Pattern sPattern = Pattern.compile(Files.getNameWithoutExtension(default_source_name) + suffixPattern);
-
-    String[] binaryList = localUdfDir.list(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return bPattern.matcher(name).matches();
-      }
-    });
-    assertTrue("Binary should be present in local udf directory", binaryList.length == 1);
-
-    String[] sourceList = localUdfDir.list(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return sPattern.matcher(name).matches();
-      }
-    });
-    assertTrue("Source should be present in local udf directory", sourceList.length == 1);
-
-    assertEquals("Numeric suffix should match",
-        binaryList[0].replace(Files.getNameWithoutExtension(default_binary_name), ""),
-        sourceList[0].replace(Files.getNameWithoutExtension(default_source_name), ""));
+    assertTrue("Binary should exist in local udf directory", new File(localUdfDir, default_binary_name).exists());
+    assertTrue("Source should exist in local udf directory", new File(localUdfDir, default_source_name).exists());
   }
 
   @Test
@@ -367,6 +343,12 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     copyDefaultJarsToStagingArea();
     test("create function using jar '%s'", default_binary_name);
     test("select custom_lower('A') from (values(1))");
+
+    Path localUdfDirPath = Deencapsulation.getField(getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
+    File localUdfDir = new File(localUdfDirPath.toUri().getPath());
+
+    assertTrue("Binary should exist in local udf directory", new File(localUdfDir, default_binary_name).exists());
+    assertTrue("Source should exist in local udf directory", new File(localUdfDir, default_source_name).exists());
 
     String summary = "The following UDFs in jar %s have been unregistered:\n" +
         "[custom_lower(VARCHAR-REQUIRED)]";
@@ -385,30 +367,18 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     }
 
     RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
-
-    Registry registry = remoteFunctionRegistry.getRegistry();
-    assertEquals("Remote registry should be empty", registry.getJarList().size(), 0);
+    assertEquals("Remote registry should be empty", remoteFunctionRegistry.getRegistry().getJarList().size(), 0);
 
     FileSystem fs = remoteFunctionRegistry.getFs();
-
     assertFalse("Binary should not be present in registry area",
         fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
     assertFalse("Source should not be present in registry area",
         fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
 
-    Path localUdfDir = Deencapsulation.getField(getDrillbitContext().getFunctionImplementationRegistry(), "localUdfDir");
-
-    String suffixPattern = Deencapsulation.getField(getDrillbitContext().getFunctionImplementationRegistry(), "jar_suffix_pattern");
-    final Pattern binaryPattern = Pattern.compile(Files.getNameWithoutExtension(default_binary_name) + suffixPattern);
-    final Pattern sourcePattern = Pattern.compile(Files.getNameWithoutExtension(default_source_name) + suffixPattern);
-
-    assertTrue("Binary and source should not be present in local UDF directory",
-        new File(localUdfDir.toUri().getPath()).list(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return binaryPattern.matcher(name).matches() || sourcePattern.matcher(name).matches();
-      }
-    }).length == 0);
+    assertFalse("Binary should not be present in local udf directory",
+        new File(localUdfDir, default_binary_name).exists());
+    assertFalse("Source should not be present in local udf directory",
+        new File(localUdfDir, default_source_name).exists());
   }
 
   @Test
@@ -422,6 +392,8 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .baselineValues("a")
         .go();
     test("drop function using jar '%s'", default_binary_name);
+
+    Thread.sleep(1000);
 
     Path src = new Path(jars.toURI().getPath(), "v2");
     copyJarsToStagingArea(src, default_binary_name, default_source_name);
