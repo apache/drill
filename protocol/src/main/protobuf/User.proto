@@ -120,7 +120,7 @@ enum RequestStatus {
  * Simple filter which encapsulates the SQL LIKE ... ESCAPE function
  */
 message LikeFilter {
-  optional string regex = 1; // pattern to match
+  optional string pattern = 1; // pattern to match
   optional string escape = 2; // escape character (if any) present in the pattern
 }
 
@@ -154,7 +154,7 @@ message GetCatalogsResp {
  */
 message GetSchemasReq {
   optional LikeFilter catalog_name_filter = 1;
-  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter schema_name_filter = 2;
 }
 
 /*
@@ -182,8 +182,9 @@ message GetSchemasResp {
  */
 message GetTablesReq {
   optional LikeFilter catalog_name_filter = 1;
-  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter schema_name_filter = 2;
   optional LikeFilter table_name_filter = 3;
+  repeated string table_type_filter = 4;
 }
 
 /*
@@ -210,7 +211,7 @@ message GetTablesResp {
  */
 message GetColumnsReq {
   optional LikeFilter catalog_name_filter = 1;
-  optional LikeFilter schame_name_filter = 2;
+  optional LikeFilter schema_name_filter = 2;
   optional LikeFilter table_name_filter = 3;
   optional LikeFilter column_name_filter = 4;
 }

@@ -48,7 +48,7 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
 
     
     private LikeFilter catalogNameFilter;
-    private LikeFilter schameNameFilter;
+    private LikeFilter schemaNameFilter;
     private LikeFilter tableNameFilter;
     private LikeFilter columnNameFilter;
 
@@ -72,16 +72,16 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
         return this;
     }
 
-    // schameNameFilter
+    // schemaNameFilter
 
-    public LikeFilter getSchameNameFilter()
+    public LikeFilter getSchemaNameFilter()
     {
-        return schameNameFilter;
+        return schemaNameFilter;
     }
 
-    public GetColumnsReq setSchameNameFilter(LikeFilter schameNameFilter)
+    public GetColumnsReq setSchemaNameFilter(LikeFilter schemaNameFilter)
     {
-        this.schameNameFilter = schameNameFilter;
+        this.schemaNameFilter = schemaNameFilter;
         return this;
     }
 
@@ -170,7 +170,7 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
                     break;
 
                 case 2:
-                    message.schameNameFilter = input.mergeObject(message.schameNameFilter, LikeFilter.getSchema());
+                    message.schemaNameFilter = input.mergeObject(message.schemaNameFilter, LikeFilter.getSchema());
                     break;
 
                 case 3:
@@ -194,8 +194,8 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
              output.writeObject(1, message.catalogNameFilter, LikeFilter.getSchema(), false);
 
 
-        if(message.schameNameFilter != null)
-             output.writeObject(2, message.schameNameFilter, LikeFilter.getSchema(), false);
+        if(message.schemaNameFilter != null)
+             output.writeObject(2, message.schemaNameFilter, LikeFilter.getSchema(), false);
 
 
         if(message.tableNameFilter != null)
@@ -212,7 +212,7 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
         switch(number)
         {
             case 1: return "catalogNameFilter";
-            case 2: return "schameNameFilter";
+            case 2: return "schemaNameFilter";
             case 3: return "tableNameFilter";
             case 4: return "columnNameFilter";
             default: return null;
@@ -229,7 +229,7 @@ public final class GetColumnsReq implements Externalizable, Message<GetColumnsRe
     static
     {
         __fieldMap.put("catalogNameFilter", 1);
-        __fieldMap.put("schameNameFilter", 2);
+        __fieldMap.put("schemaNameFilter", 2);
         __fieldMap.put("tableNameFilter", 3);
         __fieldMap.put("columnNameFilter", 4);
     }

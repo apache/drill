@@ -17,17 +17,15 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.SchemaPlus;
-
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Views;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 /**
@@ -43,18 +41,19 @@ public enum InfoSchemaTableType {
   COLUMNS(new Columns()),
   TABLES(new Tables());
 
-  private final InfoSchemaTable tableDef;
+  private final InfoSchemaTable<?> tableDef;
 
   /**
    * ...
    * @param  tableDef  the definition (columns and data generator) of the table
    */
-  InfoSchemaTableType(InfoSchemaTable tableDef) {
+  InfoSchemaTableType(InfoSchemaTable<?> tableDef) {
     this.tableDef = tableDef;
   }
 
-  public PojoRecordReader<?> getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter, OptionManager optionManager) {
-    InfoSchemaRecordGenerator recordGenerator = tableDef.getRecordGenerator(optionManager);
+  public <S> PojoRecordReader<S> getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter, OptionManager optionManager) {
+    @SuppressWarnings("unchecked")
+    InfoSchemaRecordGenerator<S> recordGenerator = (InfoSchemaRecordGenerator<S>) tableDef.getRecordGenerator(optionManager);
     recordGenerator.setInfoSchemaFilter(filter);
     recordGenerator.scanSchema(rootSchema);
     return recordGenerator.getRecordReader();

@@ -47,7 +47,7 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
     static final LikeFilter DEFAULT_INSTANCE = new LikeFilter();
 
     
-    private String regex;
+    private String pattern;
     private String escape;
 
     public LikeFilter()
@@ -57,16 +57,16 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
 
     // getters and setters
 
-    // regex
+    // pattern
 
-    public String getRegex()
+    public String getPattern()
     {
-        return regex;
+        return pattern;
     }
 
-    public LikeFilter setRegex(String regex)
+    public LikeFilter setPattern(String pattern)
     {
-        this.regex = regex;
+        this.pattern = pattern;
         return this;
     }
 
@@ -138,7 +138,7 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
                 case 0:
                     return;
                 case 1:
-                    message.regex = input.readString();
+                    message.pattern = input.readString();
                     break;
                 case 2:
                     message.escape = input.readString();
@@ -152,8 +152,8 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
 
     public void writeTo(Output output, LikeFilter message) throws IOException
     {
-        if(message.regex != null)
-            output.writeString(1, message.regex, false);
+        if(message.pattern != null)
+            output.writeString(1, message.pattern, false);
 
         if(message.escape != null)
             output.writeString(2, message.escape, false);
@@ -163,7 +163,7 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
     {
         switch(number)
         {
-            case 1: return "regex";
+            case 1: return "pattern";
             case 2: return "escape";
             default: return null;
         }
@@ -178,7 +178,7 @@ public final class LikeFilter implements Externalizable, Message<LikeFilter>, Sc
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("regex", 1);
+        __fieldMap.put("pattern", 1);
         __fieldMap.put("escape", 2);
     }
     
