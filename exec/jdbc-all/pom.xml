@@ -388,7 +388,16 @@
                <exclude>**/logback.xml</exclude>
                <exclude>**/LICENSE.txt</exclude>
                <exclude>**/*.java</exclude>
-               <exclude>**/META-INF/**</exclude>
+               <exclude>META-INF/ASL2.0</exclude>
+               <exclude>META-INF/NOTICE.txt</exclude>
+               <exclude>META-INF/drill-module-scan/**</exclude>
+               <exclude>META-INF/jboss-beans.xml</exclude>
+               <exclude>META-INF/license/**</exclude>
+               <exclude>META-INF/maven/**</exclude>
+               <exclude>META-INF/native/**</exclude>
+               <exclude>META-INF/services/com.fasterxml.*</exclude>
+               <exclude>META-INF/services/javax.ws.*</exclude>
+               <exclude>META-INF/**/*.properties</exclude>
                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
                <exclude>**/*.SF</exclude>
                <exclude>**/*.RSA</exclude>

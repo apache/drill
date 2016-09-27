@@ -117,6 +117,7 @@
             <exclude>**/donuts-output-data.txt</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/derby.log</exclude>
+            <exclude>src/main/resources/META-INF/services/**</exclude>
           </excludes>
         </configuration>
       </plugin>
