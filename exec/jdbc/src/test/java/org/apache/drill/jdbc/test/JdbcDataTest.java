@@ -19,10 +19,14 @@ package org.apache.drill.jdbc.test;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -37,7 +41,6 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
-import org.apache.calcite.rel.core.JoinRelType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -80,6 +83,22 @@ public class JdbcDataTest extends JdbcTestBase {
     Class.forName("org.apache.drill.jdbc.Driver");
   }
 
+  /**
+   * Load the driver using ServiceLoader
+   */
+  @Test
+  public void testLoadDriverServiceLoader() {
+    ServiceLoader<Driver> sl = ServiceLoader.load(Driver.class);
+    for(Iterator<Driver> it = sl.iterator(); it.hasNext(); ) {
+      Driver driver = it.next();
+      if (driver instanceof org.apache.drill.jdbc.Driver) {
+        return;
+      }
+    }
+
+    Assert.fail("org.apache.drill.jdbc.Driver not found using ServiceLoader");
+  }
+
   /** Load driver and make a connection. */
   @Test
   public void testConnect() throws Exception {
@@ -92,6 +111,7 @@ public class JdbcDataTest extends JdbcTestBase {
   @Test
   public void testPrepare() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS").withConnection(new Function<Connection, Void>() {
+      @Override
       public Void apply(Connection connection) {
         try {
           final Statement statement = connection.prepareStatement("select * from donuts");
