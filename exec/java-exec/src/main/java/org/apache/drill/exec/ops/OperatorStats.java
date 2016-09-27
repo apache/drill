@@ -131,7 +131,7 @@ public class OperatorStats {
   /**
    * Clear stats
    */
-  public void clear() {
+  public synchronized void clear() {
     processingNanos = 0l;
     setupNanos = 0l;
     waitNanos = 0l;
@@ -139,47 +139,47 @@ public class OperatorStats {
     doubleMetrics.clear();
   }
 
-  public void startSetup() {
+  public synchronized void startSetup() {
     assert !inSetup  : assertionError("starting setup");
     stopProcessing();
     inSetup = true;
     setupMark = System.nanoTime();
   }
 
-  public void stopSetup() {
+  public synchronized void stopSetup() {
     assert inSetup :  assertionError("stopping setup");
     startProcessing();
     setupNanos += System.nanoTime() - setupMark;
     inSetup = false;
   }
 
-  public void startProcessing() {
+  public synchronized void startProcessing() {
     assert !inProcessing : assertionError("starting processing");
     processingMark = System.nanoTime();
     inProcessing = true;
   }
 
-  public void stopProcessing() {
+  public synchronized void stopProcessing() {
     assert inProcessing : assertionError("stopping processing");
     processingNanos += System.nanoTime() - processingMark;
     inProcessing = false;
   }
 
-  public void startWait() {
+  public synchronized void startWait() {
     assert !inWait : assertionError("starting waiting");
     stopProcessing();
     inWait = true;
     waitMark = System.nanoTime();
   }
 
-  public void stopWait() {
+  public synchronized void stopWait() {
     assert inWait : assertionError("stopping waiting");
     startProcessing();
     waitNanos += System.nanoTime() - waitMark;
     inWait = false;
   }
 
-  public void batchReceived(int inputIndex, long records, boolean newSchema) {
+  public synchronized void batchReceived(int inputIndex, long records, boolean newSchema) {
     recordsReceivedByInput[inputIndex] += records;
     batchesReceivedByInput[inputIndex]++;
     if(newSchema){

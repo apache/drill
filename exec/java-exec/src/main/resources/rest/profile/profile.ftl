@@ -221,7 +221,7 @@
             </h4>
           </div>
           <div id="${op.getId()}-metrics" class="panel-collapse collapse">
-            <div class="panel-body">
+            <div class="panel-body" style="display:block;overflow-x:auto">
               ${op.getMetricsTable()}
             </div>
           </div>

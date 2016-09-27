@@ -23,7 +23,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -73,7 +72,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
   /**
    * The current read position in the buffer; the index of the next
    * character to be read from the <code>internalBuffer</code> array.
-   * <p>
+   * <p/>
    * This value is always in the range <code>[0,count]</code>.
    * If <code>curPosInBuffer</code> is equal to <code>count></code> then we have read
    * all the buffered data and the next read (or skip) will require more data to be read
@@ -128,8 +127,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
 
   }
 
-  @Override
-  public void init() throws UnsupportedOperationException, IOException {
+  @Override public void init() throws UnsupportedOperationException, IOException {
     super.init();
     this.internalBuffer = this.allocator.buffer(this.bufSize);
     this.tempBuffer = this.allocator.buffer(defaultTempBufferSize);
@@ -180,10 +178,10 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
         this.curPosInStream = getInputStream().getPos();
         bytesRead = nBytes;
         logger.trace(
-            "Stream: {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, BytesRead: {}, Count: {}, " +
-            "CurPosInStream: {}, CurPosInBuffer: {}",
-            this.streamId, this.startOffset, this.totalByteSize, this.bufSize, bytesRead, this.count,
-            this.curPosInStream, this.curPosInBuffer);
+            "Stream: {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, BytesRead: {}, Count: {}, "
+                + "CurPosInStream: {}, CurPosInBuffer: {}", this.streamId, this.startOffset,
+            this.totalByteSize, this.bufSize, bytesRead, this.count, this.curPosInStream,
+            this.curPosInBuffer);
       }
     }
     return this.count - this.curPosInBuffer;
@@ -252,8 +250,8 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
   }
 
   /**
-   Has the same contract as {@link java.io.InputStream#read(byte[], int, int)}
-   Except with DrillBuf
+   * Has the same contract as {@link java.io.InputStream#read(byte[], int, int)}
+   * Except with DrillBuf
    */
   public synchronized int read(DrillBuf buf, int off, int len) throws IOException {
     checkInputStreamState();
@@ -296,7 +294,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
       return 0;
     }
     DrillBuf byteBuf;
-    if(len <= defaultTempBufferSize){
+    if (len <= defaultTempBufferSize) {
       byteBuf = tempBuffer;
     } else {
       byteBuf = this.allocator.buffer(len);
@@ -318,7 +316,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
       }
     } while (bytesRead < len);
 
-    if(len > defaultTempBufferSize){
+    if (len > defaultTempBufferSize) {
       byteBuf.release();
     }
 
@@ -327,12 +325,11 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
 
 
   /**
-   Has the same contract as {@link java.io.InputStream#skip(long)}
+   * Has the same contract as {@link java.io.InputStream#skip(long)}
    * Skips upto the next n bytes.
    * Skip may return with less than n bytes skipped
    */
-  @Override
-  public synchronized long skip(long n) throws IOException {
+  @Override public synchronized long skip(long n) throws IOException {
     checkInputStreamState();
     long bytesAvailable = this.count - this.curPosInBuffer;
     long bytesSkipped = 0;
@@ -353,8 +350,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
   }
 
 
-  @Override
-  public synchronized int available() throws IOException {
+  @Override public synchronized int available() throws IOException {
     checkInputStreamState();
     int bytesAvailable = this.count - this.curPosInBuffer;
     int underlyingAvailable = getInputStream().available();
@@ -365,18 +361,15 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     return available;
   }
 
-  @Override
-  public synchronized void mark(int readlimit) {
+  @Override public synchronized void mark(int readlimit) {
     throw new UnsupportedOperationException("Mark/reset is not supported.");
   }
 
-  @Override
-  public synchronized void reset() throws IOException {
+  @Override public synchronized void reset() throws IOException {
     throw new UnsupportedOperationException("Mark/reset is not supported.");
   }
 
-  @Override
-  public boolean markSupported() {
+  @Override public boolean markSupported() {
     return false;
   }
 
@@ -384,7 +377,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     Returns the current position from the beginning of the underlying input stream
    */
   public long getPos() throws IOException {
-    return curPosInBuffer+startOffset;
+    return curPosInBuffer + startOffset;
   }
 
   public boolean hasRemainder() throws IOException {
@@ -412,6 +405,11 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     }
   }
 
+  /**
+   * Uncomment For testing Parquet files that are too big to use in unit tests
+   * @param args
+   */
+  /*
   public static void main(String[] args) {
     final DrillConfig config = DrillConfig.create();
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(config);
@@ -433,8 +431,8 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
           long totalByteSize = columnMetadata.getTotalSize();
           String streamId = fileName + ":" + columnMetadata.toString();
           BufferedDirectBufInputStream reader =
-              new BufferedDirectBufInputStream(inputStream, allocator, streamId, startOffset,
-                  totalByteSize, BUFSZ, true);
+              new BufferedDirectBufInputStream(inputStream, allocator, streamId, startOffset, totalByteSize,
+                  BUFSZ, true);
           reader.init();
           while (true) {
             try {
@@ -457,4 +455,5 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     allocator.close();
     return;
   }
+  */
 }

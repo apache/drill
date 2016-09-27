@@ -20,11 +20,11 @@ package org.apache.drill.exec.server;
 import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
+import java.util.concurrent.SynchronousQueue;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -37,6 +37,7 @@ import org.apache.drill.exec.rpc.TransportCheck;
 
 public class BootStrapContext implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
+  private static final int MIN_SCAN_THREADPOOL_SIZE = 8; // Magic num
 
   private final DrillConfig config;
   private final EventLoopGroup loop;
@@ -45,12 +46,15 @@ public class BootStrapContext implements AutoCloseable {
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
   private final ExecutorService executor;
+  private final ExecutorService scanExecutor;
+  private final ExecutorService scanDecodeExecutor;
 
   public BootStrapContext(DrillConfig config, ScanResult classpathScan) {
     this.config = config;
     this.classpathScan = classpathScan;
     this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
-    this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
+    this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS),
+        "BitClient-");
     // Note that metrics are stored in a static instance
     this.metrics = DrillMetrics.getRegistry();
     this.allocator = RootAllocatorFactory.newRoot(config);
@@ -65,10 +69,33 @@ public class BootStrapContext implements AutoCloseable {
         super.afterExecute(r, t);
       }
     };
+    // Setup two threadpools one for reading raw data from disk and another for decoding the data
+    // A good guideline is to have the number threads in the scan pool to be a multiple (fractional
+    // numbers are ok) of the number of disks.
+    // A good guideline is to have the number threads in the decode pool to be a small multiple (fractional
+    // numbers are ok) of the number of cores.
+    final int numCores = Runtime.getRuntime().availableProcessors();
+    final int numScanThreads = (int) (config.getDouble(ExecConstants.SCAN_THREADPOOL_SIZE));
+    final int numScanDecodeThreads = (int) config.getDouble(ExecConstants.SCAN_DECODE_THREADPOOL_SIZE);
+    final int scanThreadPoolSize =
+        MIN_SCAN_THREADPOOL_SIZE > numScanThreads ? MIN_SCAN_THREADPOOL_SIZE : numScanThreads;
+    final int scanDecodeThreadPoolSize = numCores > numScanDecodeThreads ? numCores : numScanDecodeThreads;
+
+    this.scanExecutor = Executors.newFixedThreadPool(scanThreadPoolSize, new NamedThreadFactory("scan-"));
+    this.scanDecodeExecutor =
+        Executors.newFixedThreadPool(scanDecodeThreadPoolSize, new NamedThreadFactory("scan-decode-"));
   }
 
   public ExecutorService getExecutor() {
     return executor;
+  }
+
+  public ExecutorService getScanExecutor() {
+    return scanExecutor;
+  }
+
+  public ExecutorService getScanDecodeExecutor() {
+    return scanDecodeExecutor;
   }
 
   public DrillConfig getConfig() {

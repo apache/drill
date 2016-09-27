@@ -17,28 +17,30 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class ParquetReaderStats {
 
-  public long numDictPageHeaders;
-  public long numPageHeaders;
-  public long numDictPageLoads;
-  public long numPageLoads;
-  public long numDictPagesDecompressed;
-  public long numPagesDecompressed;
+  public AtomicLong numDictPageLoads = new AtomicLong();
+  public AtomicLong numDataPageLoads = new AtomicLong();
+  public AtomicLong numDataPagesDecoded = new AtomicLong();
+  public AtomicLong numDictPagesDecompressed = new AtomicLong();
+  public AtomicLong numDataPagesDecompressed = new AtomicLong();
 
-  public long totalDictPageHeaderBytes;
-  public long totalPageHeaderBytes;
-  public long totalDictPageReadBytes;
-  public long totalPageReadBytes;
-  public long totalDictDecompressedBytes;
-  public long totalDecompressedBytes;
+  public AtomicLong totalDictPageReadBytes = new AtomicLong();
+  public AtomicLong totalDataPageReadBytes = new AtomicLong();
+  public AtomicLong totalDictDecompressedBytes = new AtomicLong();
+  public AtomicLong totalDataDecompressedBytes = new AtomicLong();
 
-  public long timeDictPageHeaders;
-  public long timePageHeaders;
-  public long timeDictPageLoads;
-  public long timePageLoads;
-  public long timeDictPagesDecompressed;
-  public long timePagesDecompressed;
+  public AtomicLong timeDictPageLoads = new AtomicLong();
+  public AtomicLong timeDataPageLoads = new AtomicLong();
+  public AtomicLong timeDataPageDecode = new AtomicLong();
+  public AtomicLong timeDictPageDecode = new AtomicLong();
+  public AtomicLong timeDictPagesDecompressed = new AtomicLong();
+  public AtomicLong timeDataPagesDecompressed = new AtomicLong();
+
+  public AtomicLong timeDiskScanWait = new AtomicLong();
+  public AtomicLong timeDiskScan = new AtomicLong();
 
   public ParquetReaderStats() {
   }

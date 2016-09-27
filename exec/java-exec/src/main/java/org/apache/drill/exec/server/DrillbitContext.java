@@ -172,6 +172,12 @@ public class DrillbitContext implements AutoCloseable {
   public ExecutorService getExecutor() {
     return context.getExecutor();
   }
+  public ExecutorService getScanExecutor() {
+    return context.getScanExecutor();
+  }
+  public ExecutorService getScanDecodeExecutor() {
+    return context.getScanDecodeExecutor();
+  }
 
   public LogicalPlanPersistence getLpPersistence() {
     return lpPersistence;

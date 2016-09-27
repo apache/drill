@@ -73,10 +73,18 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     DrillFileSystem fs;
     try {
-      fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
-    } catch(IOException e) {
-      throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
+      boolean useAsyncPageReader =
+          context.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+      if (useAsyncPageReader) {
+        fs = oContext.newNonTrackingFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      } else {
+        fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      }
+    } catch (IOException e) {
+      throw new ExecutionSetupException(
+          String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
     }
+
     Configuration conf = new Configuration(fs.getConf());
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);

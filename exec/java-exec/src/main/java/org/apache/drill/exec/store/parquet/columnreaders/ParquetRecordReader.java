@@ -35,6 +35,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -117,16 +118,39 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
 
+  public enum Metric implements MetricDef {
+    NUM_DICT_PAGE_LOADS,         // Number of dictionary pages read
+    NUM_DATA_PAGE_lOADS,         // Number of data pages read
+    NUM_DATA_PAGES_DECODED,      // Number of data pages decoded
+    NUM_DICT_PAGES_DECOMPRESSED, // Number of dictionary pages decompressed
+    NUM_DATA_PAGES_DECOMPRESSED, // Number of data pages decompressed
+    TOTAL_DICT_PAGE_READ_BYTES,  // Total bytes read from disk for dictionary pages
+    TOTAL_DATA_PAGE_READ_BYTES,  // Total bytes read from disk for data pages
+    TOTAL_DICT_DECOMPRESSED_BYTES, // Total bytes decompressed for dictionary pages (same as compressed bytes on disk)
+    TOTAL_DATA_DECOMPRESSED_BYTES, // Total bytes decompressed for data pages (same as compressed bytes on disk)
+    TIME_DICT_PAGE_LOADS,          // Time in nanos in reading dictionary pages from disk
+    TIME_DATA_PAGE_LOADS,          // Time in nanos in reading data pages from disk
+    TIME_DATA_PAGE_DECODE,         // Time in nanos in decoding data pages
+    TIME_DICT_PAGE_DECODE,         // Time in nanos in decoding dictionary pages
+    TIME_DICT_PAGES_DECOMPRESSED,  // Time in nanos in decompressing dictionary pages
+    TIME_DATA_PAGES_DECOMPRESSED,  // Time in nanos in decompressing data pages
+    TIME_DISK_SCAN_WAIT,           // Time in nanos spent in waiting for an async disk read to complete
+    TIME_DISK_SCAN;                // Time in nanos spent in reading data from disk.
+
+    @Override public int metricId() {
+      return ordinal();
+    }
+  }
+
   public ParquetRecordReader(FragmentContext fragmentContext,
       String path,
       int rowGroupIndex,
-                             long numRecordsToRead,
+      long numRecordsToRead,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
-                             List<SchemaPath> columns,
-                             ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
-                             throws ExecutionSetupException {
+      List<SchemaPath> columns,
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
     this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, numRecordsToRead,
          path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
   }
@@ -470,6 +494,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       // No columns found in the file were selected, simply return a full batch of null records for each column requested
       if (firstColumnStatus == null) {
         if (mockRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount()) {
+          updateStats();
           return 0;
         }
         recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH, footer.getBlocks().get(rowGroupIndex).getRowCount() - mockRecordsRead);
@@ -483,6 +508,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         mockRecordsRead += recordsToRead;
         totalRecordsRead += recordsToRead;
         numRecordsToRead -= recordsToRead;
+        updateStats();
         return (int) recordsToRead;
       }
 
@@ -514,6 +540,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 //      logger.debug("So far read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
       totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
       numRecordsToRead -= firstColumnStatus.getRecordsReadInCurrentPass();
+      updateStats();
       return firstColumnStatus.getRecordsReadInCurrentPass();
     } catch (Exception e) {
       handleAndRaise("\nHadoop path: " + hadoopPath.toUri().getPath() +
@@ -530,7 +557,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   @Override
   public void close() {
-    logger.debug("Read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
+    logger.debug("Read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex,
+        hadoopPath.toUri().getPath());
     // enable this for debugging when it is know that a whole file will be read
     // limit kills upstream operators once it has enough records, so this assert will fail
 //    assert totalRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount();
@@ -552,29 +580,67 @@ public class ParquetRecordReader extends AbstractRecordReader {
       varLengthReader = null;
     }
 
+
     if(parquetReaderStats != null) {
-      logger.trace("ParquetTrace,Summary,{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+      logger.trace("ParquetTrace,Summary,{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
           hadoopPath,
-          parquetReaderStats.numDictPageHeaders,
-          parquetReaderStats.numPageHeaders,
           parquetReaderStats.numDictPageLoads,
-          parquetReaderStats.numPageLoads,
+          parquetReaderStats.numDataPageLoads,
+          parquetReaderStats.numDataPagesDecoded,
           parquetReaderStats.numDictPagesDecompressed,
-          parquetReaderStats.numPagesDecompressed,
-          parquetReaderStats.totalDictPageHeaderBytes,
-          parquetReaderStats.totalPageHeaderBytes,
+          parquetReaderStats.numDataPagesDecompressed,
           parquetReaderStats.totalDictPageReadBytes,
-          parquetReaderStats.totalPageReadBytes,
+          parquetReaderStats.totalDataPageReadBytes,
           parquetReaderStats.totalDictDecompressedBytes,
-          parquetReaderStats.totalDecompressedBytes,
-          parquetReaderStats.timeDictPageHeaders,
-          parquetReaderStats.timePageHeaders,
+          parquetReaderStats.totalDataDecompressedBytes,
           parquetReaderStats.timeDictPageLoads,
-          parquetReaderStats.timePageLoads,
+          parquetReaderStats.timeDataPageLoads,
+          parquetReaderStats.timeDataPageDecode,
+          parquetReaderStats.timeDictPageDecode,
           parquetReaderStats.timeDictPagesDecompressed,
-          parquetReaderStats.timePagesDecompressed);
+          parquetReaderStats.timeDataPagesDecompressed,
+          parquetReaderStats.timeDiskScanWait,
+          parquetReaderStats.timeDiskScan
+      );
       parquetReaderStats=null;
     }
+
+  }
+
+  private void updateStats(){
+
+    operatorContext.getStats().setLongStat(Metric.NUM_DICT_PAGE_LOADS,
+        parquetReaderStats.numDictPageLoads.longValue());
+    operatorContext.getStats().setLongStat(Metric.NUM_DATA_PAGE_lOADS, parquetReaderStats.numDataPageLoads.longValue());
+    operatorContext.getStats().setLongStat(Metric.NUM_DATA_PAGES_DECODED, parquetReaderStats.numDataPagesDecoded.longValue());
+    operatorContext.getStats().setLongStat(Metric.NUM_DICT_PAGES_DECOMPRESSED,
+        parquetReaderStats.numDictPagesDecompressed.longValue());
+    operatorContext.getStats().setLongStat(Metric.NUM_DATA_PAGES_DECOMPRESSED,
+        parquetReaderStats.numDataPagesDecompressed.longValue());
+    operatorContext.getStats().setLongStat(Metric.TOTAL_DICT_PAGE_READ_BYTES,
+        parquetReaderStats.totalDictPageReadBytes.longValue());
+    operatorContext.getStats().setLongStat(Metric.TOTAL_DATA_PAGE_READ_BYTES,
+        parquetReaderStats.totalDataPageReadBytes.longValue());
+    operatorContext.getStats().setLongStat(Metric.TOTAL_DICT_DECOMPRESSED_BYTES,
+        parquetReaderStats.totalDictDecompressedBytes.longValue());
+    operatorContext.getStats().setLongStat(Metric.TOTAL_DATA_DECOMPRESSED_BYTES,
+        parquetReaderStats.totalDataDecompressedBytes.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DICT_PAGE_LOADS,
+        parquetReaderStats.timeDictPageLoads.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DATA_PAGE_LOADS,
+        parquetReaderStats.timeDataPageLoads.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DATA_PAGE_DECODE,
+        parquetReaderStats.timeDataPageDecode.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DICT_PAGE_DECODE,
+        parquetReaderStats.timeDictPageDecode.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DICT_PAGES_DECOMPRESSED,
+        parquetReaderStats.timeDictPagesDecompressed.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DATA_PAGES_DECOMPRESSED,
+        parquetReaderStats.timeDataPagesDecompressed.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DISK_SCAN_WAIT,
+        parquetReaderStats.timeDiskScanWait.longValue());
+    operatorContext.getStats().setLongStat(Metric.TIME_DISK_SCAN, parquetReaderStats.timeDiskScan.longValue());
+
   }
 
   @Override

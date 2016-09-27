@@ -22,6 +22,8 @@ import io.netty.buffer.DrillBuf;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -70,7 +72,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   protected DrillBuf vectorData;
   // when reading definition levels for nullable columns, it is a one-way stream of integers
   // when reading var length data, where we don't know if all of the records will fit until we've read all of them
-  // we must store the last definition level an use it in at the start of the next batch
+  // we must store the last definition level and use it at the start of the next batch
   int currDefLevel;
 
   // variables for a single read pass
@@ -84,7 +86,17 @@ public abstract class ColumnReader<V extends ValueVector> {
     this.isFixedLength = fixedLength;
     this.schemaElement = schemaElement;
     this.valueVec =  v;
-    this.pageReader = new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(), columnChunkMetaData);
+    boolean useAsyncPageReader  = parentReader.getFragmentContext().getOptions()
+        .getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+    if (useAsyncPageReader) {
+      this.pageReader =
+          new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
+              columnChunkMetaData);
+    } else {
+      this.pageReader =
+          new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
+              columnChunkMetaData);
+    }
 
     if (columnDescriptor.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
       if (columnDescriptor.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
@@ -117,11 +129,23 @@ public abstract class ColumnReader<V extends ValueVector> {
   }
 
   public void readValues(long recordsToRead) {
-    readField(recordsToRead);
+    try {
+      readField(recordsToRead);
 
-    valuesReadInCurrentPass += recordsReadInThisIteration;
-    pageReader.valuesRead += recordsReadInThisIteration;
-    pageReader.readPosInBytes = readStartInBytes + readLength;
+      valuesReadInCurrentPass += recordsReadInThisIteration;
+      pageReader.valuesRead += recordsReadInThisIteration;
+      pageReader.readPosInBytes = readStartInBytes + readLength;
+    } catch (Exception e) {
+      UserException ex = UserException.dataReadError(e)
+          .message("Error reading from Parquet file")
+          .pushContext("Row Group Start: ", this.columnChunkMetaData.getStartingPos())
+          .pushContext("Column: ", this.schemaElement.getName())
+          .pushContext("File: ", this.parentReader.getHadoopPath().toString() )
+          .build(logger);
+      throw ex;
+
+    }
+
   }
 
   protected abstract void readField(long recordsToRead);

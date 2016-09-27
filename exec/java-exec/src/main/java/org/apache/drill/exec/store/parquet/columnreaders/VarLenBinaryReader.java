@@ -17,15 +17,17 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.drill.exec.vector.ValueVector;
+
 import java.io.IOException;
 import java.util.List;
 
 public class VarLenBinaryReader {
 
   ParquetRecordReader parentReader;
-  final List<VarLengthColumn<?>> columns;
+  final List<VarLengthColumn<? extends ValueVector>> columns;
 
-  public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn<?>> columns) {
+  public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn<? extends ValueVector>> columns) {
     this.parentReader = parentReader;
     this.columns = columns;
   }
