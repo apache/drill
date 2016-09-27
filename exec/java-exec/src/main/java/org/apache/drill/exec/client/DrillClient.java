@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.client;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
-import io.netty.buffer.DrillBuf;
-import io.netty.channel.EventLoopGroup;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -55,8 +53,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
-import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
@@ -91,6 +89,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
+
+import io.netty.buffer.DrillBuf;
+import io.netty.channel.EventLoopGroup;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms
@@ -463,7 +464,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     return client.send(RpcType.GET_SCHEMAS, reqBuilder.build(), GetSchemasResp.class);
@@ -475,21 +476,26 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
    * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
    * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
+   * @param tableTypeFilter Filter in <code>table type</code>. Pass null to apply no filter
    * @return
    */
   public DrillRpcFuture<GetTablesResp> getTables(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
-      LikeFilter tableNameFilter) {
+      LikeFilter tableNameFilter, List<String> tableTypeFilter) {
     final GetTablesReq.Builder reqBuilder = GetTablesReq.newBuilder();
     if (catalogNameFilter != null) {
       reqBuilder.setCatalogNameFilter(catalogNameFilter);
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     if (tableNameFilter != null) {
       reqBuilder.setTableNameFilter(tableNameFilter);
+    }
+
+    if (tableTypeFilter != null) {
+      reqBuilder.addAllTableTypeFilter(tableTypeFilter);
     }
 
     return client.send(RpcType.GET_TABLES, reqBuilder.build(), GetTablesResp.class);
@@ -512,7 +518,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     if (tableNameFilter != null) {

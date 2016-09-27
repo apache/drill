@@ -18,9 +18,11 @@
 package org.apache.drill.exec.work.metadata;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.CATALOGS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.COLUMNS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.SCHEMATA;
@@ -38,8 +40,8 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.UserProtos.CatalogMetadata;
 import org.apache.drill.exec.proto.UserProtos.ColumnMetadata;
-import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
@@ -58,7 +60,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.store.SchemaTreeProvider;
-import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ConstantExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode;
@@ -82,6 +83,7 @@ import com.google.common.collect.Ordering;
 public class MetadataProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetadataProvider.class);
 
+  private static final String IN_FUNCTION = "in";
   private static final String LIKE_FUNCTION = "like";
   private static final String AND_FUNCTION = "booleanand";
   private static final String OR_FUNCTION = "booleanor";
@@ -171,11 +173,11 @@ public class MetadataProvider {
     protected Response runInternal(final UserSession session, final SchemaTreeProvider schemaProvider) {
       final GetCatalogsResp.Builder respBuilder = GetCatalogsResp.newBuilder();
       final InfoSchemaFilter filter = createInfoSchemaFilter(
-          req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null, null, null, null);
+          req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null, null, null, null, null);
 
       try {
         final PojoRecordReader<Catalog> records =
-            (PojoRecordReader<Catalog>) getPojoRecordReader(CATALOGS, filter, schemaProvider, session);
+            getPojoRecordReader(CATALOGS, filter, schemaProvider, session);
 
         List<CatalogMetadata> metadata = new ArrayList<>();
         for(Catalog c : records) {
@@ -226,11 +228,11 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
-          null, null);
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
+          null, null, null);
 
       try {
-        final PojoRecordReader<Schema> records = (PojoRecordReader<Schema>)
+        final PojoRecordReader<Schema> records =
             getPojoRecordReader(SCHEMATA, filter, schemaProvider, session);
 
         List<SchemaMetadata> metadata = new ArrayList<>();
@@ -284,13 +286,14 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
           req.hasTableNameFilter() ? req.getTableNameFilter() : null,
+          req.getTableTypeFilterCount() != 0 ? req.getTableTypeFilterList() : null,
           null);
 
       try {
         final PojoRecordReader<Table> records =
-            (PojoRecordReader<Table>)getPojoRecordReader(TABLES, filter, schemaProvider, session);
+            getPojoRecordReader(TABLES, filter, schemaProvider, session);
 
         List<TableMetadata> metadata = new ArrayList<>();
         for(Table t : records) {
@@ -344,14 +347,14 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
           req.hasTableNameFilter() ? req.getTableNameFilter() : null,
-          req.hasColumnNameFilter() ? req.getColumnNameFilter() : null
+          null, req.hasColumnNameFilter() ? req.getColumnNameFilter() : null
       );
 
       try {
         final PojoRecordReader<Column> records =
-            (PojoRecordReader<Column>)getPojoRecordReader(COLUMNS, filter, schemaProvider, session);
+            getPojoRecordReader(COLUMNS, filter, schemaProvider, session);
 
         List<ColumnMetadata> metadata = new ArrayList<>();
         for(Column c : records) {
@@ -407,7 +410,7 @@ public class MetadataProvider {
 
         respBuilder.addAllColumns(metadata);
         respBuilder.setStatus(RequestStatus.OK);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
         respBuilder.setError(createPBError("get columns", e));
       } finally {
@@ -421,11 +424,12 @@ public class MetadataProvider {
    * @param catalogNameFilter Optional filter on <code>catalog name</code>
    * @param schemaNameFilter Optional filter on <code>schema name</code>
    * @param tableNameFilter Optional filter on <code>table name</code>
+   * @param tableTypeFilter Optional filter on <code>table type</code>
    * @param columnNameFilter Optional filter on <code>column name</code>
    * @return
    */
   private static InfoSchemaFilter createInfoSchemaFilter(final LikeFilter catalogNameFilter,
-      final LikeFilter schemaNameFilter, final LikeFilter tableNameFilter, final LikeFilter columnNameFilter) {
+      final LikeFilter schemaNameFilter, final LikeFilter tableNameFilter, List<String> tableTypeFilter, final LikeFilter columnNameFilter) {
 
     FunctionExprNode exprNode = createLikeFunctionExprNode(CATS_COL_CATALOG_NAME,  catalogNameFilter);
 
@@ -444,7 +448,12 @@ public class MetadataProvider {
 
     exprNode = combineFunctions(AND_FUNCTION,
         exprNode,
-        createLikeFunctionExprNode(InfoSchemaConstants.COLS_COL_COLUMN_NAME, columnNameFilter)
+        createInFunctionExprNode(TBLS_COL_TABLE_TYPE, tableTypeFilter)
+        );
+
+    exprNode = combineFunctions(AND_FUNCTION,
+        exprNode,
+        createLikeFunctionExprNode(COLS_COL_COLUMN_NAME, columnNameFilter)
     );
 
     return exprNode != null ? new InfoSchemaFilter(exprNode) : null;
@@ -465,12 +474,32 @@ public class MetadataProvider {
         likeFilter.hasEscape() ?
             ImmutableList.of(
                 new FieldExprNode(fieldName),
-                new ConstantExprNode(likeFilter.getRegex()),
+                new ConstantExprNode(likeFilter.getPattern()),
                 new ConstantExprNode(likeFilter.getEscape())) :
             ImmutableList.of(
                 new FieldExprNode(fieldName),
-                new ConstantExprNode(likeFilter.getRegex()))
+                new ConstantExprNode(likeFilter.getPattern()))
     );
+  }
+
+  /**
+   * Helper method to create {@link FunctionExprNode} from {@code List<String>}.
+   * @param fieldName Name of the filed on which the like expression is applied.
+   * @param valuesFilter a list of values
+   * @return {@link FunctionExprNode} for given arguments. Null if the <code>valuesFilter</code> is null.
+   */
+  private static FunctionExprNode createInFunctionExprNode(String fieldName, List<String> valuesFilter) {
+    if (valuesFilter == null) {
+      return null;
+    }
+
+    ImmutableList.Builder<ExprNode> nodes = ImmutableList.builder();
+    nodes.add(new FieldExprNode(fieldName));
+    for(String type: valuesFilter) {
+      nodes.add(new ConstantExprNode(type));
+    }
+
+    return new FunctionExprNode(IN_FUNCTION, nodes.build());
   }
 
   /**
@@ -498,7 +527,7 @@ public class MetadataProvider {
    * @param userSession
    * @return
    */
-  private static PojoRecordReader getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter,
+  private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter,
       final SchemaTreeProvider provider, final UserSession userSession) {
     final SchemaPlus rootSchema =
         provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(userSession));

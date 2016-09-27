@@ -6667,32 +6667,32 @@ public final class UserProtos {
   public interface LikeFilterOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // optional string regex = 1;
+    // optional string pattern = 1;
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
-    boolean hasRegex();
+    boolean hasPattern();
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
-    java.lang.String getRegex();
+    java.lang.String getPattern();
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
     com.google.protobuf.ByteString
-        getRegexBytes();
+        getPatternBytes();
 
     // optional string escape = 2;
     /**
@@ -6779,7 +6779,7 @@ public final class UserProtos {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              regex_ = input.readBytes();
+              pattern_ = input.readBytes();
               break;
             }
             case 18: {
@@ -6827,28 +6827,28 @@ public final class UserProtos {
     }
 
     private int bitField0_;
-    // optional string regex = 1;
-    public static final int REGEX_FIELD_NUMBER = 1;
-    private java.lang.Object regex_;
+    // optional string pattern = 1;
+    public static final int PATTERN_FIELD_NUMBER = 1;
+    private java.lang.Object pattern_;
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
-    public boolean hasRegex() {
+    public boolean hasPattern() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
-    public java.lang.String getRegex() {
-      java.lang.Object ref = regex_;
+    public java.lang.String getPattern() {
+      java.lang.Object ref = pattern_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -6856,26 +6856,26 @@ public final class UserProtos {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          regex_ = s;
+          pattern_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string regex = 1;</code>
+     * <code>optional string pattern = 1;</code>
      *
      * <pre>
      * pattern to match
      * </pre>
      */
     public com.google.protobuf.ByteString
-        getRegexBytes() {
-      java.lang.Object ref = regex_;
+        getPatternBytes() {
+      java.lang.Object ref = pattern_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        regex_ = b;
+        pattern_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -6938,7 +6938,7 @@ public final class UserProtos {
     }
 
     private void initFields() {
-      regex_ = "";
+      pattern_ = "";
       escape_ = "";
     }
     private byte memoizedIsInitialized = -1;
@@ -6954,7 +6954,7 @@ public final class UserProtos {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getRegexBytes());
+        output.writeBytes(1, getPatternBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, getEscapeBytes());
@@ -6970,7 +6970,7 @@ public final class UserProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getRegexBytes());
+          .computeBytesSize(1, getPatternBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -7097,7 +7097,7 @@ public final class UserProtos {
 
       public Builder clear() {
         super.clear();
-        regex_ = "";
+        pattern_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
         escape_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7132,7 +7132,7 @@ public final class UserProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.regex_ = regex_;
+        result.pattern_ = pattern_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -7153,9 +7153,9 @@ public final class UserProtos {
 
       public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.LikeFilter other) {
         if (other == org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) return this;
-        if (other.hasRegex()) {
+        if (other.hasPattern()) {
           bitField0_ |= 0x00000001;
-          regex_ = other.regex_;
+          pattern_ = other.pattern_;
           onChanged();
         }
         if (other.hasEscape()) {
@@ -7190,100 +7190,100 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      // optional string regex = 1;
-      private java.lang.Object regex_ = "";
+      // optional string pattern = 1;
+      private java.lang.Object pattern_ = "";
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
-      public boolean hasRegex() {
+      public boolean hasPattern() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
-      public java.lang.String getRegex() {
-        java.lang.Object ref = regex_;
+      public java.lang.String getPattern() {
+        java.lang.Object ref = pattern_;
         if (!(ref instanceof java.lang.String)) {
           java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
-          regex_ = s;
+          pattern_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
         }
       }
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
       public com.google.protobuf.ByteString
-          getRegexBytes() {
-        java.lang.Object ref = regex_;
+          getPatternBytes() {
+        java.lang.Object ref = pattern_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          regex_ = b;
+          pattern_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
-      public Builder setRegex(
+      public Builder setPattern(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        regex_ = value;
+        pattern_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
-      public Builder clearRegex() {
+      public Builder clearPattern() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        regex_ = getDefaultInstance().getRegex();
+        pattern_ = getDefaultInstance().getPattern();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string regex = 1;</code>
+       * <code>optional string pattern = 1;</code>
        *
        * <pre>
        * pattern to match
        * </pre>
        */
-      public Builder setRegexBytes(
+      public Builder setPatternBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        regex_ = value;
+        pattern_ = value;
         onChanged();
         return this;
       }
@@ -9693,19 +9693,19 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    boolean hasSchameNameFilter();
+    boolean hasSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder();
   }
   /**
    * Protobuf type {@code exec.user.GetSchemasReq}
@@ -9779,12 +9779,12 @@ public final class UserProtos {
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                subBuilder = schameNameFilter_.toBuilder();
+                subBuilder = schemaNameFilter_.toBuilder();
               }
-              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(schameNameFilter_);
-                schameNameFilter_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(schemaNameFilter_);
+                schemaNameFilter_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
               break;
@@ -9851,31 +9851,31 @@ public final class UserProtos {
       return catalogNameFilter_;
     }
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
-    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
-    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
+    public static final int SCHEMA_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public boolean hasSchameNameFilter() {
+    public boolean hasSchemaNameFilter() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+      return schemaNameFilter_;
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+      return schemaNameFilter_;
     }
 
     private void initFields() {
       catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
-      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -9893,7 +9893,7 @@ public final class UserProtos {
         output.writeMessage(1, catalogNameFilter_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(2, schameNameFilter_);
+        output.writeMessage(2, schemaNameFilter_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -9910,7 +9910,7 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, schameNameFilter_);
+          .computeMessageSize(2, schemaNameFilter_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -10026,7 +10026,7 @@ public final class UserProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getCatalogNameFilterFieldBuilder();
-          getSchameNameFilterFieldBuilder();
+          getSchemaNameFilterFieldBuilder();
         }
       }
       private static Builder create() {
@@ -10041,10 +10041,10 @@ public final class UserProtos {
           catalogNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
@@ -10086,10 +10086,10 @@ public final class UserProtos {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        if (schameNameFilterBuilder_ == null) {
-          result.schameNameFilter_ = schameNameFilter_;
+        if (schemaNameFilterBuilder_ == null) {
+          result.schemaNameFilter_ = schemaNameFilter_;
         } else {
-          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -10110,8 +10110,8 @@ public final class UserProtos {
         if (other.hasCatalogNameFilter()) {
           mergeCatalogNameFilter(other.getCatalogNameFilter());
         }
-        if (other.hasSchameNameFilter()) {
-          mergeSchameNameFilter(other.getSchameNameFilter());
+        if (other.hasSchemaNameFilter()) {
+          mergeSchemaNameFilter(other.getSchemaNameFilter());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -10257,121 +10257,121 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      // optional .exec.user.LikeFilter schame_name_filter = 2;
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      // optional .exec.user.LikeFilter schema_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public boolean hasSchameNameFilter() {
+      public boolean hasSchemaNameFilter() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          return schameNameFilter_;
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          return schemaNameFilter_;
         } else {
-          return schameNameFilterBuilder_.getMessage();
+          return schemaNameFilterBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder setSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          schameNameFilter_ = value;
+          schemaNameFilter_ = value;
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(value);
+          schemaNameFilterBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(
+      public Builder setSchemaNameFilter(
           org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = builderForValue.build();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = builderForValue.build();
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(builderForValue.build());
+          schemaNameFilterBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
-              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
-            schameNameFilter_ =
-              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+              schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schemaNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schemaNameFilter_).mergeFrom(value).buildPartial();
           } else {
-            schameNameFilter_ = value;
+            schemaNameFilter_ = value;
           }
           onChanged();
         } else {
-          schameNameFilterBuilder_.mergeFrom(value);
+          schemaNameFilterBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder clearSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      public Builder clearSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
           onChanged();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchemaNameFilterBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getSchameNameFilterFieldBuilder().getBuilder();
+        return getSchemaNameFilterFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-        if (schameNameFilterBuilder_ != null) {
-          return schameNameFilterBuilder_.getMessageOrBuilder();
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+        if (schemaNameFilterBuilder_ != null) {
+          return schemaNameFilterBuilder_.getMessageOrBuilder();
         } else {
-          return schameNameFilter_;
+          return schemaNameFilter_;
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
-          getSchameNameFilterFieldBuilder() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          getSchemaNameFilterFieldBuilder() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
-                  schameNameFilter_,
+                  schemaNameFilter_,
                   getParentForChildren(),
                   isClean());
-          schameNameFilter_ = null;
+          schemaNameFilter_ = null;
         }
-        return schameNameFilterBuilder_;
+        return schemaNameFilterBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.GetSchemasReq)
@@ -12524,19 +12524,19 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    boolean hasSchameNameFilter();
+    boolean hasSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder();
 
     // optional .exec.user.LikeFilter table_name_filter = 3;
     /**
@@ -12551,6 +12551,26 @@ public final class UserProtos {
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getTableNameFilterOrBuilder();
+
+    // repeated string table_type_filter = 4;
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    java.util.List<java.lang.String>
+    getTableTypeFilterList();
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    int getTableTypeFilterCount();
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    java.lang.String getTableTypeFilter(int index);
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getTableTypeFilterBytes(int index);
   }
   /**
    * Protobuf type {@code exec.user.GetTablesReq}
@@ -12624,12 +12644,12 @@ public final class UserProtos {
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                subBuilder = schameNameFilter_.toBuilder();
+                subBuilder = schemaNameFilter_.toBuilder();
               }
-              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(schameNameFilter_);
-                schameNameFilter_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(schemaNameFilter_);
+                schemaNameFilter_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
               break;
@@ -12647,6 +12667,14 @@ public final class UserProtos {
               bitField0_ |= 0x00000004;
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                tableTypeFilter_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              tableTypeFilter_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -12655,6 +12683,9 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          tableTypeFilter_ = new com.google.protobuf.UnmodifiableLazyStringList(tableTypeFilter_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -12709,26 +12740,26 @@ public final class UserProtos {
       return catalogNameFilter_;
     }
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
-    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
-    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
+    public static final int SCHEMA_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public boolean hasSchameNameFilter() {
+    public boolean hasSchemaNameFilter() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+      return schemaNameFilter_;
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+      return schemaNameFilter_;
     }
 
     // optional .exec.user.LikeFilter table_name_filter = 3;
@@ -12753,10 +12784,41 @@ public final class UserProtos {
       return tableNameFilter_;
     }
 
+    // repeated string table_type_filter = 4;
+    public static final int TABLE_TYPE_FILTER_FIELD_NUMBER = 4;
+    private com.google.protobuf.LazyStringList tableTypeFilter_;
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    public java.util.List<java.lang.String>
+        getTableTypeFilterList() {
+      return tableTypeFilter_;
+    }
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    public int getTableTypeFilterCount() {
+      return tableTypeFilter_.size();
+    }
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    public java.lang.String getTableTypeFilter(int index) {
+      return tableTypeFilter_.get(index);
+    }
+    /**
+     * <code>repeated string table_type_filter = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTableTypeFilterBytes(int index) {
+      return tableTypeFilter_.getByteString(index);
+    }
+
     private void initFields() {
       catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
-      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -12774,10 +12836,13 @@ public final class UserProtos {
         output.writeMessage(1, catalogNameFilter_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(2, schameNameFilter_);
+        output.writeMessage(2, schemaNameFilter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, tableNameFilter_);
+      }
+      for (int i = 0; i < tableTypeFilter_.size(); i++) {
+        output.writeBytes(4, tableTypeFilter_.getByteString(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -12794,11 +12859,20 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, schameNameFilter_);
+          .computeMessageSize(2, schemaNameFilter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, tableNameFilter_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < tableTypeFilter_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(tableTypeFilter_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getTableTypeFilterList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -12914,7 +12988,7 @@ public final class UserProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getCatalogNameFilterFieldBuilder();
-          getSchameNameFilterFieldBuilder();
+          getSchemaNameFilterFieldBuilder();
           getTableNameFilterFieldBuilder();
         }
       }
@@ -12930,10 +13004,10 @@ public final class UserProtos {
           catalogNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         if (tableNameFilterBuilder_ == null) {
@@ -12942,6 +13016,8 @@ public final class UserProtos {
           tableNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -12981,10 +13057,10 @@ public final class UserProtos {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        if (schameNameFilterBuilder_ == null) {
-          result.schameNameFilter_ = schameNameFilter_;
+        if (schemaNameFilterBuilder_ == null) {
+          result.schemaNameFilter_ = schemaNameFilter_;
         } else {
-          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
@@ -12994,6 +13070,12 @@ public final class UserProtos {
         } else {
           result.tableNameFilter_ = tableNameFilterBuilder_.build();
         }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          tableTypeFilter_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              tableTypeFilter_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.tableTypeFilter_ = tableTypeFilter_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13013,11 +13095,21 @@ public final class UserProtos {
         if (other.hasCatalogNameFilter()) {
           mergeCatalogNameFilter(other.getCatalogNameFilter());
         }
-        if (other.hasSchameNameFilter()) {
-          mergeSchameNameFilter(other.getSchameNameFilter());
+        if (other.hasSchemaNameFilter()) {
+          mergeSchemaNameFilter(other.getSchemaNameFilter());
         }
         if (other.hasTableNameFilter()) {
           mergeTableNameFilter(other.getTableNameFilter());
+        }
+        if (!other.tableTypeFilter_.isEmpty()) {
+          if (tableTypeFilter_.isEmpty()) {
+            tableTypeFilter_ = other.tableTypeFilter_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureTableTypeFilterIsMutable();
+            tableTypeFilter_.addAll(other.tableTypeFilter_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -13163,121 +13255,121 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      // optional .exec.user.LikeFilter schame_name_filter = 2;
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      // optional .exec.user.LikeFilter schema_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public boolean hasSchameNameFilter() {
+      public boolean hasSchemaNameFilter() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          return schameNameFilter_;
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          return schemaNameFilter_;
         } else {
-          return schameNameFilterBuilder_.getMessage();
+          return schemaNameFilterBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder setSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          schameNameFilter_ = value;
+          schemaNameFilter_ = value;
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(value);
+          schemaNameFilterBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(
+      public Builder setSchemaNameFilter(
           org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = builderForValue.build();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = builderForValue.build();
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(builderForValue.build());
+          schemaNameFilterBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
-              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
-            schameNameFilter_ =
-              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+              schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schemaNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schemaNameFilter_).mergeFrom(value).buildPartial();
           } else {
-            schameNameFilter_ = value;
+            schemaNameFilter_ = value;
           }
           onChanged();
         } else {
-          schameNameFilterBuilder_.mergeFrom(value);
+          schemaNameFilterBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder clearSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      public Builder clearSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
           onChanged();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchemaNameFilterBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getSchameNameFilterFieldBuilder().getBuilder();
+        return getSchemaNameFilterFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-        if (schameNameFilterBuilder_ != null) {
-          return schameNameFilterBuilder_.getMessageOrBuilder();
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+        if (schemaNameFilterBuilder_ != null) {
+          return schemaNameFilterBuilder_.getMessageOrBuilder();
         } else {
-          return schameNameFilter_;
+          return schemaNameFilter_;
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
-          getSchameNameFilterFieldBuilder() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          getSchemaNameFilterFieldBuilder() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
-                  schameNameFilter_,
+                  schemaNameFilter_,
                   getParentForChildren(),
                   isClean());
-          schameNameFilter_ = null;
+          schemaNameFilter_ = null;
         }
-        return schameNameFilterBuilder_;
+        return schemaNameFilterBuilder_;
       }
 
       // optional .exec.user.LikeFilter table_name_filter = 3;
@@ -13395,6 +13487,99 @@ public final class UserProtos {
           tableNameFilter_ = null;
         }
         return tableNameFilterBuilder_;
+      }
+
+      // repeated string table_type_filter = 4;
+      private com.google.protobuf.LazyStringList tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureTableTypeFilterIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          tableTypeFilter_ = new com.google.protobuf.LazyStringArrayList(tableTypeFilter_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public java.util.List<java.lang.String>
+          getTableTypeFilterList() {
+        return java.util.Collections.unmodifiableList(tableTypeFilter_);
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public int getTableTypeFilterCount() {
+        return tableTypeFilter_.size();
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public java.lang.String getTableTypeFilter(int index) {
+        return tableTypeFilter_.get(index);
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTableTypeFilterBytes(int index) {
+        return tableTypeFilter_.getByteString(index);
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public Builder setTableTypeFilter(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTableTypeFilterIsMutable();
+        tableTypeFilter_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public Builder addTableTypeFilter(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTableTypeFilterIsMutable();
+        tableTypeFilter_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public Builder addAllTableTypeFilter(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureTableTypeFilterIsMutable();
+        super.addAll(values, tableTypeFilter_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public Builder clearTableTypeFilter() {
+        tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string table_type_filter = 4;</code>
+       */
+      public Builder addTableTypeFilterBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTableTypeFilterIsMutable();
+        tableTypeFilter_.add(value);
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.GetTablesReq)
@@ -15391,19 +15576,19 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getCatalogNameFilterOrBuilder();
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    boolean hasSchameNameFilter();
+    boolean hasSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter();
+    org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder();
+    org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder();
 
     // optional .exec.user.LikeFilter table_name_filter = 3;
     /**
@@ -15505,12 +15690,12 @@ public final class UserProtos {
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                subBuilder = schameNameFilter_.toBuilder();
+                subBuilder = schemaNameFilter_.toBuilder();
               }
-              schameNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
+              schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(schameNameFilter_);
-                schameNameFilter_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(schemaNameFilter_);
+                schemaNameFilter_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
               break;
@@ -15603,26 +15788,26 @@ public final class UserProtos {
       return catalogNameFilter_;
     }
 
-    // optional .exec.user.LikeFilter schame_name_filter = 2;
-    public static final int SCHAME_NAME_FILTER_FIELD_NUMBER = 2;
-    private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_;
+    // optional .exec.user.LikeFilter schema_name_filter = 2;
+    public static final int SCHEMA_NAME_FILTER_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public boolean hasSchameNameFilter() {
+    public boolean hasSchemaNameFilter() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+      return schemaNameFilter_;
     }
     /**
-     * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+     * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-      return schameNameFilter_;
+    public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+      return schemaNameFilter_;
     }
 
     // optional .exec.user.LikeFilter table_name_filter = 3;
@@ -15671,7 +15856,7 @@ public final class UserProtos {
 
     private void initFields() {
       catalogNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
-      schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       tableNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       columnNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
     }
@@ -15691,7 +15876,7 @@ public final class UserProtos {
         output.writeMessage(1, catalogNameFilter_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(2, schameNameFilter_);
+        output.writeMessage(2, schemaNameFilter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, tableNameFilter_);
@@ -15714,7 +15899,7 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, schameNameFilter_);
+          .computeMessageSize(2, schemaNameFilter_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
@@ -15838,7 +16023,7 @@ public final class UserProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getCatalogNameFilterFieldBuilder();
-          getSchameNameFilterFieldBuilder();
+          getSchemaNameFilterFieldBuilder();
           getTableNameFilterFieldBuilder();
           getColumnNameFilterFieldBuilder();
         }
@@ -15855,10 +16040,10 @@ public final class UserProtos {
           catalogNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         if (tableNameFilterBuilder_ == null) {
@@ -15912,10 +16097,10 @@ public final class UserProtos {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        if (schameNameFilterBuilder_ == null) {
-          result.schameNameFilter_ = schameNameFilter_;
+        if (schemaNameFilterBuilder_ == null) {
+          result.schemaNameFilter_ = schemaNameFilter_;
         } else {
-          result.schameNameFilter_ = schameNameFilterBuilder_.build();
+          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
@@ -15952,8 +16137,8 @@ public final class UserProtos {
         if (other.hasCatalogNameFilter()) {
           mergeCatalogNameFilter(other.getCatalogNameFilter());
         }
-        if (other.hasSchameNameFilter()) {
-          mergeSchameNameFilter(other.getSchameNameFilter());
+        if (other.hasSchemaNameFilter()) {
+          mergeSchemaNameFilter(other.getSchemaNameFilter());
         }
         if (other.hasTableNameFilter()) {
           mergeTableNameFilter(other.getTableNameFilter());
@@ -16105,121 +16290,121 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      // optional .exec.user.LikeFilter schame_name_filter = 2;
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      // optional .exec.user.LikeFilter schema_name_filter = 2;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schameNameFilterBuilder_;
+          org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public boolean hasSchameNameFilter() {
+      public boolean hasSchemaNameFilter() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          return schameNameFilter_;
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          return schemaNameFilter_;
         } else {
-          return schameNameFilterBuilder_.getMessage();
+          return schemaNameFilterBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder setSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          schameNameFilter_ = value;
+          schemaNameFilter_ = value;
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(value);
+          schemaNameFilterBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder setSchameNameFilter(
+      public Builder setSchemaNameFilter(
           org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder builderForValue) {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = builderForValue.build();
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = builderForValue.build();
           onChanged();
         } else {
-          schameNameFilterBuilder_.setMessage(builderForValue.build());
+          schemaNameFilterBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder mergeSchameNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
-        if (schameNameFilterBuilder_ == null) {
+      public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
+        if (schemaNameFilterBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
-              schameNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
-            schameNameFilter_ =
-              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schameNameFilter_).mergeFrom(value).buildPartial();
+              schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
+            schemaNameFilter_ =
+              org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(schemaNameFilter_).mergeFrom(value).buildPartial();
           } else {
-            schameNameFilter_ = value;
+            schemaNameFilter_ = value;
           }
           onChanged();
         } else {
-          schameNameFilterBuilder_.mergeFrom(value);
+          schemaNameFilterBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public Builder clearSchameNameFilter() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
+      public Builder clearSchemaNameFilter() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilter_ = org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance();
           onChanged();
         } else {
-          schameNameFilterBuilder_.clear();
+          schemaNameFilterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchameNameFilterBuilder() {
+      public org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder getSchemaNameFilterBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getSchameNameFilterFieldBuilder().getBuilder();
+        return getSchemaNameFilterFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchameNameFilterOrBuilder() {
-        if (schameNameFilterBuilder_ != null) {
-          return schameNameFilterBuilder_.getMessageOrBuilder();
+      public org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder getSchemaNameFilterOrBuilder() {
+        if (schemaNameFilterBuilder_ != null) {
+          return schemaNameFilterBuilder_.getMessageOrBuilder();
         } else {
-          return schameNameFilter_;
+          return schemaNameFilter_;
         }
       }
       /**
-       * <code>optional .exec.user.LikeFilter schame_name_filter = 2;</code>
+       * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> 
-          getSchameNameFilterFieldBuilder() {
-        if (schameNameFilterBuilder_ == null) {
-          schameNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+          getSchemaNameFilterFieldBuilder() {
+        if (schemaNameFilterBuilder_ == null) {
+          schemaNameFilterBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder>(
-                  schameNameFilter_,
+                  schemaNameFilter_,
                   getParentForChildren(),
                   isClean());
-          schameNameFilter_ = null;
+          schemaNameFilter_ = null;
         }
-        return schameNameFilterBuilder_;
+        return schemaNameFilterBuilder_;
       }
 
       // optional .exec.user.LikeFilter table_name_filter = 3;
@@ -27286,104 +27471,105 @@ public final class UserProtos {
       "ec.shared.DrillPBError\"|\n\022BitToUserHands" +
       "hake\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(" +
       "\0162\032.exec.user.HandshakeStatus\022\017\n\007errorId" +
-      "\030\004 \001(\t\022\024\n\014errorMessage\030\005 \001(\t\"+\n\nLikeFilt" +
-      "er\022\r\n\005regex\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n\016Get" +
-      "CatalogsReq\0222\n\023catalog_name_filter\030\001 \001(\013" +
-      "2\025.exec.user.LikeFilter\"M\n\017CatalogMetada" +
-      "ta\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013description\030",
-      "\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalogsRe" +
-      "sp\022(\n\006status\030\001 \001(\0162\030.exec.user.RequestSt" +
-      "atus\022,\n\010catalogs\030\002 \003(\0132\032.exec.user.Catal" +
-      "ogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shared." +
-      "DrillPBError\"v\n\rGetSchemasReq\0222\n\023catalog" +
-      "_name_filter\030\001 \001(\0132\025.exec.user.LikeFilte" +
-      "r\0221\n\022schame_name_filter\030\002 \001(\0132\025.exec.use" +
-      "r.LikeFilter\"i\n\016SchemaMetadata\022\024\n\014catalo" +
-      "g_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n\005own" +
-      "er\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 \001(\t\"",
-      "\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(\0162\030.exe" +
-      "c.user.RequestStatus\022*\n\007schemas\030\002 \003(\0132\031." +
-      "exec.user.SchemaMetadata\022(\n\005error\030\003 \001(\0132" +
-      "\031.exec.shared.DrillPBError\"\247\001\n\014GetTables" +
-      "Req\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec." +
-      "user.LikeFilter\0221\n\022schame_name_filter\030\002 " +
-      "\001(\0132\025.exec.user.LikeFilter\0220\n\021table_name" +
-      "_filter\030\003 \001(\0132\025.exec.user.LikeFilter\"\\\n\r" +
-      "TableMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013s" +
-      "chema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\014\n\004",
-      "type\030\004 \001(\t\"\215\001\n\rGetTablesResp\022(\n\006status\030\001" +
-      " \001(\0162\030.exec.user.RequestStatus\022(\n\006tables" +
-      "\030\002 \003(\0132\030.exec.user.TableMetadata\022(\n\005erro" +
-      "r\030\003 \001(\0132\031.exec.shared.DrillPBError\"\333\001\n\rG" +
-      "etColumnsReq\0222\n\023catalog_name_filter\030\001 \001(" +
-      "\0132\025.exec.user.LikeFilter\0221\n\022schame_name_" +
-      "filter\030\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021t" +
-      "able_name_filter\030\003 \001(\0132\025.exec.user.LikeF" +
-      "ilter\0221\n\022column_name_filter\030\004 \001(\0132\025.exec" +
-      ".user.LikeFilter\"\224\003\n\016ColumnMetadata\022\024\n\014c",
-      "atalog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022" +
-      "\n\ntable_name\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022" +
-      "\030\n\020ordinal_position\030\005 \001(\005\022\025\n\rdefault_val" +
-      "ue\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tdata_ty" +
-      "pe\030\010 \001(\t\022\027\n\017char_max_length\030\t \001(\005\022\031\n\021cha" +
-      "r_octet_length\030\n \001(\005\022\031\n\021numeric_precisio" +
-      "n\030\013 \001(\005\022\037\n\027numeric_precision_radix\030\014 \001(\005" +
-      "\022\025\n\rnumeric_scale\030\r \001(\005\022\033\n\023date_time_pre" +
-      "cision\030\016 \001(\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022i" +
-      "nterval_precision\030\020 \001(\005\"\220\001\n\016GetColumnsRe",
-      "sp\022(\n\006status\030\001 \001(\0162\030.exec.user.RequestSt" +
-      "atus\022*\n\007columns\030\002 \003(\0132\031.exec.user.Column" +
-      "Metadata\022(\n\005error\030\003 \001(\0132\031.exec.shared.Dr" +
-      "illPBError\"/\n\032CreatePreparedStatementReq" +
-      "\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024ResultColumnMeta" +
-      "data\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_nam" +
-      "e\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_na" +
-      "me\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\tdata_type\030\006 \001" +
-      "(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tprecision\030\010 \001" +
-      "(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014dis",
-      "play_size\030\013 \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n\rs" +
-      "earchability\030\r \001(\0162\036.exec.user.ColumnSea" +
-      "rchability\0223\n\014updatability\030\016 \001(\0162\035.exec." +
-      "user.ColumnUpdatability\022\026\n\016auto_incremen" +
-      "t\030\017 \001(\010\022\030\n\020case_sensitivity\030\020 \001(\010\022\020\n\010sor" +
-      "table\030\021 \001(\010\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_cu" +
-      "rrency\030\024 \001(\010\".\n\027PreparedStatementHandle\022" +
-      "\023\n\013server_info\030\001 \001(\014\"\200\001\n\021PreparedStateme" +
-      "nt\0220\n\007columns\030\001 \003(\0132\037.exec.user.ResultCo" +
-      "lumnMetadata\0229\n\rserver_handle\030\002 \001(\0132\".ex",
-      "ec.user.PreparedStatementHandle\"\253\001\n\033Crea" +
-      "tePreparedStatementResp\022(\n\006status\030\001 \001(\0162" +
-      "\030.exec.user.RequestStatus\0228\n\022prepared_st" +
-      "atement\030\002 \001(\0132\034.exec.user.PreparedStatem" +
-      "ent\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPB" +
-      "Error\"\353\001\n\010RunQuery\0221\n\014results_mode\030\001 \001(\016" +
-      "2\033.exec.user.QueryResultsMode\022$\n\004type\030\002 " +
-      "\001(\0162\026.exec.shared.QueryType\022\014\n\004plan\030\003 \001(" +
-      "\t\0221\n\tfragments\030\004 \003(\0132\036.exec.bit.control." +
-      "PlanFragment\022E\n\031prepared_statement_handl",
-      "e\030\005 \001(\0132\".exec.user.PreparedStatementHan" +
-      "dle*\310\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022" +
-      "\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QU" +
-      "ERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023RESUME_PAU" +
-      "SED_QUERY\020\013\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020" +
-      "\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\n" +
-      "GET_TABLES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_" +
-      "PREPARED_STATEMENT\020\026\022\016\n\nQUERY_DATA\020\006\022\020\n\014" +
-      "QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r" +
-      "\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022",
-      "\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STATEMENT\020\027\022\026\n\022" +
-      "REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LI" +
-      "ST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMo" +
-      "de\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus\022\013" +
-      "\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n" +
-      "\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004*D\n\rR" +
-      "equestStatus\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001" +
-      "\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearc" +
-      "hability\022\031\n\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004N" +
-      "ONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022",
-      "ColumnUpdatability\022\030\n\024UNKNOWN_UPDATABILI" +
-      "TY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org" +
-      ".apache.drill.exec.protoB\nUserProtosH\001"
+      "\030\004 \001(\t\022\024\n\014errorMessage\030\005 \001(\t\"-\n\nLikeFilt" +
+      "er\022\017\n\007pattern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n\016G" +
+      "etCatalogsReq\0222\n\023catalog_name_filter\030\001 \001" +
+      "(\0132\025.exec.user.LikeFilter\"M\n\017CatalogMeta" +
+      "data\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013descriptio",
+      "n\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalogs" +
+      "Resp\022(\n\006status\030\001 \001(\0162\030.exec.user.Request" +
+      "Status\022,\n\010catalogs\030\002 \003(\0132\032.exec.user.Cat" +
+      "alogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.share" +
+      "d.DrillPBError\"v\n\rGetSchemasReq\0222\n\023catal" +
+      "og_name_filter\030\001 \001(\0132\025.exec.user.LikeFil" +
+      "ter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec.u" +
+      "ser.LikeFilter\"i\n\016SchemaMetadata\022\024\n\014cata" +
+      "log_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n\005o" +
+      "wner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 \001(",
+      "\t\"\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(\0162\030.e" +
+      "xec.user.RequestStatus\022*\n\007schemas\030\002 \003(\0132" +
+      "\031.exec.user.SchemaMetadata\022(\n\005error\030\003 \001(" +
+      "\0132\031.exec.shared.DrillPBError\"\302\001\n\014GetTabl" +
+      "esReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exe" +
+      "c.user.LikeFilter\0221\n\022schema_name_filter\030" +
+      "\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021table_na" +
+      "me_filter\030\003 \001(\0132\025.exec.user.LikeFilter\022\031" +
+      "\n\021table_type_filter\030\004 \003(\t\"\\\n\rTableMetada" +
+      "ta\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_name\030",
+      "\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\"" +
+      "\215\001\n\rGetTablesResp\022(\n\006status\030\001 \001(\0162\030.exec" +
+      ".user.RequestStatus\022(\n\006tables\030\002 \003(\0132\030.ex" +
+      "ec.user.TableMetadata\022(\n\005error\030\003 \001(\0132\031.e" +
+      "xec.shared.DrillPBError\"\333\001\n\rGetColumnsRe" +
+      "q\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec.us" +
+      "er.LikeFilter\0221\n\022schema_name_filter\030\002 \001(" +
+      "\0132\025.exec.user.LikeFilter\0220\n\021table_name_f" +
+      "ilter\030\003 \001(\0132\025.exec.user.LikeFilter\0221\n\022co" +
+      "lumn_name_filter\030\004 \001(\0132\025.exec.user.LikeF",
+      "ilter\"\224\003\n\016ColumnMetadata\022\024\n\014catalog_name" +
+      "\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_nam" +
+      "e\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\030\n\020ordinal_" +
+      "position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022\023\n" +
+      "\013is_nullable\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022\027\n" +
+      "\017char_max_length\030\t \001(\005\022\031\n\021char_octet_len" +
+      "gth\030\n \001(\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037\n\027" +
+      "numeric_precision_radix\030\014 \001(\005\022\025\n\rnumeric" +
+      "_scale\030\r \001(\005\022\033\n\023date_time_precision\030\016 \001(" +
+      "\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022interval_pre",
+      "cision\030\020 \001(\005\"\220\001\n\016GetColumnsResp\022(\n\006statu" +
+      "s\030\001 \001(\0162\030.exec.user.RequestStatus\022*\n\007col" +
+      "umns\030\002 \003(\0132\031.exec.user.ColumnMetadata\022(\n" +
+      "\005error\030\003 \001(\0132\031.exec.shared.DrillPBError\"" +
+      "/\n\032CreatePreparedStatementReq\022\021\n\tsql_que" +
+      "ry\030\001 \001(\t\"\326\003\n\024ResultColumnMetadata\022\024\n\014cat" +
+      "alog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\n" +
+      "table_name\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\r\n" +
+      "\005label\030\005 \001(\t\022\021\n\tdata_type\030\006 \001(\t\022\023\n\013is_nu" +
+      "llable\030\007 \001(\010\022\021\n\tprecision\030\010 \001(\005\022\r\n\005scale",
+      "\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014display_size\030\013" +
+      " \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n\rsearchabilit" +
+      "y\030\r \001(\0162\036.exec.user.ColumnSearchability\022" +
+      "3\n\014updatability\030\016 \001(\0162\035.exec.user.Column" +
+      "Updatability\022\026\n\016auto_increment\030\017 \001(\010\022\030\n\020" +
+      "case_sensitivity\030\020 \001(\010\022\020\n\010sortable\030\021 \001(\010" +
+      "\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_currency\030\024 \001(" +
+      "\010\".\n\027PreparedStatementHandle\022\023\n\013server_i" +
+      "nfo\030\001 \001(\014\"\200\001\n\021PreparedStatement\0220\n\007colum" +
+      "ns\030\001 \003(\0132\037.exec.user.ResultColumnMetadat",
+      "a\0229\n\rserver_handle\030\002 \001(\0132\".exec.user.Pre" +
+      "paredStatementHandle\"\253\001\n\033CreatePreparedS" +
+      "tatementResp\022(\n\006status\030\001 \001(\0162\030.exec.user" +
+      ".RequestStatus\0228\n\022prepared_statement\030\002 \001" +
+      "(\0132\034.exec.user.PreparedStatement\022(\n\005erro" +
+      "r\030\003 \001(\0132\031.exec.shared.DrillPBError\"\353\001\n\010R" +
+      "unQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec.use" +
+      "r.QueryResultsMode\022$\n\004type\030\002 \001(\0162\026.exec." +
+      "shared.QueryType\022\014\n\004plan\030\003 \001(\t\0221\n\tfragme" +
+      "nts\030\004 \003(\0132\036.exec.bit.control.PlanFragmen",
+      "t\022E\n\031prepared_statement_handle\030\005 \001(\0132\".e" +
+      "xec.user.PreparedStatementHandle*\310\003\n\007Rpc" +
+      "Type\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020" +
+      "\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017RE" +
+      "QUEST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUERY\020\013" +
+      "\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET_CA" +
+      "TALOGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABLES\020" +
+      "\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_PREPARED_ST" +
+      "ATEMENT\020\026\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDL" +
+      "E\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOG",
+      "S\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020" +
+      "\025\022\026\n\022PREPARED_STATEMENT\020\027\022\026\n\022REQ_META_FU" +
+      "NCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUE" +
+      "RY_RESULT\020\n*#\n\020QueryResultsMode\022\017\n\013STREA" +
+      "M_FULL\020\001*^\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001" +
+      "\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_FAILE" +
+      "D\020\003\022\023\n\017UNKNOWN_FAILURE\020\004*D\n\rRequestStatu" +
+      "s\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020" +
+      "\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n" +
+      "\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CH",
+      "AR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdat" +
+      "ability\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREA" +
+      "D_ONLY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org.apache.dri" +
+      "ll.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -27437,7 +27623,7 @@ public final class UserProtos {
           internal_static_exec_user_LikeFilter_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_LikeFilter_descriptor,
-              new java.lang.String[] { "Regex", "Escape", });
+              new java.lang.String[] { "Pattern", "Escape", });
           internal_static_exec_user_GetCatalogsReq_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_exec_user_GetCatalogsReq_fieldAccessorTable = new
@@ -27461,7 +27647,7 @@ public final class UserProtos {
           internal_static_exec_user_GetSchemasReq_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_GetSchemasReq_descriptor,
-              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", });
+              new java.lang.String[] { "CatalogNameFilter", "SchemaNameFilter", });
           internal_static_exec_user_SchemaMetadata_descriptor =
             getDescriptor().getMessageTypes().get(12);
           internal_static_exec_user_SchemaMetadata_fieldAccessorTable = new
@@ -27479,7 +27665,7 @@ public final class UserProtos {
           internal_static_exec_user_GetTablesReq_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_GetTablesReq_descriptor,
-              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", "TableNameFilter", });
+              new java.lang.String[] { "CatalogNameFilter", "SchemaNameFilter", "TableNameFilter", "TableTypeFilter", });
           internal_static_exec_user_TableMetadata_descriptor =
             getDescriptor().getMessageTypes().get(15);
           internal_static_exec_user_TableMetadata_fieldAccessorTable = new
@@ -27497,7 +27683,7 @@ public final class UserProtos {
           internal_static_exec_user_GetColumnsReq_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_GetColumnsReq_descriptor,
-              new java.lang.String[] { "CatalogNameFilter", "SchameNameFilter", "TableNameFilter", "ColumnNameFilter", });
+              new java.lang.String[] { "CatalogNameFilter", "SchemaNameFilter", "TableNameFilter", "ColumnNameFilter", });
           internal_static_exec_user_ColumnMetadata_descriptor =
             getDescriptor().getMessageTypes().get(18);
           internal_static_exec_user_ColumnMetadata_fieldAccessorTable = new

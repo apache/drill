@@ -17,25 +17,56 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_CONNECT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_DESCRIPTION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_CHARACTER_MAXIMUM_LENGTH;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_CHARACTER_OCTET_LENGTH;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_DEFAULT;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_DATA_TYPE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_DATETIME_PRECISION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_INTERVAL_PRECISION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_INTERVAL_TYPE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_IS_NULLABLE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_PRECISION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_PRECISION_RADIX;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_NUMERIC_SCALE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_ORDINAL_POSITION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_IS_MUTABLE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_OWNER;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_TYPE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_CATALOG;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_CATALOGS;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_COLUMNS;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_SCHEMATA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_TABLES;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TAB_VIEWS;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.VIEWS_COL_VIEW_DEFINITION;
+
 import java.util.List;
 
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.server.options.OptionManager;
 
 /**
  * Base class for tables in INFORMATION_SCHEMA.  Defines the table (fields and
  * types).
  */
-public abstract class InfoSchemaTable {
+public abstract class InfoSchemaTable<S> {
 
   public static class Field {
     public String name;
@@ -86,10 +117,10 @@ public abstract class InfoSchemaTable {
     return typeFactory.createStructType(relTypes, fieldNames);
   }
 
-  public abstract InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager);
+  public abstract InfoSchemaRecordGenerator<S> getRecordGenerator(OptionManager optionManager);
 
   /** Layout for the CATALOGS table. */
-  static public class Catalogs extends InfoSchemaTable {
+  static public class Catalogs extends InfoSchemaTable<Records.Catalog> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Catalogs).
     private static final List<Field> fields = ImmutableList.of(
@@ -102,13 +133,13 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+    public InfoSchemaRecordGenerator<Records.Catalog> getRecordGenerator(OptionManager optionManager) {
       return new InfoSchemaRecordGenerator.Catalogs(optionManager);
     }
   }
 
   /** Layout for the SCHEMATA table. */
-  public static class Schemata extends InfoSchemaTable {
+  public static class Schemata extends InfoSchemaTable<Records.Schema> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Schemata).
     private static final List<Field> fields = ImmutableList.of(
@@ -123,13 +154,13 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+    public InfoSchemaRecordGenerator<Records.Schema> getRecordGenerator(OptionManager optionManager) {
       return new InfoSchemaRecordGenerator.Schemata(optionManager);
     }
   }
 
   /** Layout for the TABLES table. */
-  public static class Tables extends InfoSchemaTable {
+  public static class Tables extends InfoSchemaTable<Records.Table> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Tables).
     private static final List<Field> fields = ImmutableList.of(
@@ -143,13 +174,13 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+    public InfoSchemaRecordGenerator<Records.Table> getRecordGenerator(OptionManager optionManager) {
       return new InfoSchemaRecordGenerator.Tables(optionManager);
     }
   }
 
   /** Layout for the VIEWS table. */
-  static public class Views extends InfoSchemaTable {
+  static public class Views extends InfoSchemaTable<Records.View> {
     // NOTE:  Nothing seems to verify that the types here (apparently used
     // by SQL validation) match the types of the fields in Records.Views).
     private static final List<Field> fields = ImmutableList.of(
@@ -163,13 +194,13 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+    public InfoSchemaRecordGenerator<Records.View> getRecordGenerator(OptionManager optionManager) {
       return new InfoSchemaRecordGenerator.Views(optionManager);
     }
   }
 
   /** Layout for the COLUMNS table. */
-  public static class Columns extends InfoSchemaTable {
+  public static class Columns extends InfoSchemaTable<Records.Column> {
     // COLUMNS columns, from SQL standard:
     // 1. TABLE_CATALOG
     // 2. TABLE_SCHEMA
@@ -215,7 +246,7 @@ public abstract class InfoSchemaTable {
     }
 
     @Override
-    public InfoSchemaRecordGenerator getRecordGenerator(OptionManager optionManager) {
+    public InfoSchemaRecordGenerator<Records.Column> getRecordGenerator(OptionManager optionManager) {
       return new InfoSchemaRecordGenerator.Columns(optionManager);
     }
   }
