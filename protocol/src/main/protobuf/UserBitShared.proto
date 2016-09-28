@@ -86,6 +86,10 @@ message DrillPBError{
      * - invalid entries in SQL tree
      */
     VALIDATION = 10;
+    /* equivalent to SQLRecoverableException or SQLTransientException
+     * - some error on the client side
+     */
+    CLIENT = 11;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;

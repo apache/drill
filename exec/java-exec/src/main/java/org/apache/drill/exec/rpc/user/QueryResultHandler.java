@@ -128,7 +128,7 @@ public class QueryResultHandler {
         try {
           resultsListener.queryCompleted(queryState);
         } catch ( Exception e ) {
-          resultsListener.submissionFailed(UserException.systemError(e).build(logger));
+          resultsListener.submissionFailed(UserException.clientError(e).build(logger));
         }
       } else {
         logger.warn("queryState {} was ignored", queryState);
@@ -171,7 +171,7 @@ public class QueryResultHandler {
       // That releases batch if successful.
     } catch ( Exception e ) {
       batch.release();
-      resultsListener.submissionFailed(UserException.systemError(e).build(logger));
+      resultsListener.submissionFailed(UserException.clientError(e).build(logger));
     }
   }
 
@@ -290,8 +290,7 @@ public class QueryResultHandler {
       // However, the results could not be transferred to this resultListener because
       // there is no query id mapped to this resultListener. Look out for the warning
       // message from ChannelClosedHandler in the client logs.
-      // TODO(DRILL-4586)
-      resultsListener.submissionFailed(UserException.systemError(ex)
+      resultsListener.submissionFailed(UserException.clientError(ex)
           .addContext("Query submission to Drillbit failed.")
           .build(logger));
     }
@@ -341,8 +340,7 @@ public class QueryResultHandler {
         return;
       }
 
-      // TODO(DRILL-4586)
-      resultsListener.submissionFailed(UserException.systemError(ex)
+      resultsListener.submissionFailed(UserException.clientError(ex)
           .addContext("The client had been asked to wait as the Drillbit is potentially being over-utilized." +
               " But the client was interrupted while waiting.")
           .build(logger));
