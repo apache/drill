@@ -104,4 +104,24 @@ public class TestCaseNullableTypes extends BaseTestQuery {
         .baselineValues(true)
         .go();
   }
+
+  @Test
+  public void testNestedCaseNullableTypes() throws Exception {
+    testBuilder()
+      .sqlQuery("select (case when (false) then null else (case when (false) then null else cast(0.1 as float) end) end) res1 from (values(1))")
+      .unOrdered()
+      .baselineColumns("res1")
+      .baselineValues(0.1f)
+      .go();
+  }
+
+  @Test
+  public void testMultipleCasesNullableTypes() throws Exception {
+    testBuilder()
+      .sqlQuery("select (case when (false) then null else 1 end) res1, (case when (false) then null else cast(0.1 as float) end) res2 from (values(1))")
+      .unOrdered()
+      .baselineColumns("res1", "res2")
+      .baselineValues(1, 0.1f)
+      .go();
+  }
 }
