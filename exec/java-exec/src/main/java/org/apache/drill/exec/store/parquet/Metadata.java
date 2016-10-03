@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
@@ -352,6 +353,7 @@ public class Metadata {
     ALL_COLS.add(AbstractRecordReader.STAR_COLUMN);
     boolean autoCorrectCorruptDates = formatConfig.autoCorrectCorruptDates;
     ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
+    logger.info(containsCorruptDates.toString());
     for (BlockMetaData rowGroup : metadata.getBlocks()) {
       List<ColumnMetadata_v2> columnMetadataList = Lists.newArrayList();
       long length = 0;
@@ -596,6 +598,8 @@ public class Metadata {
 
     @JsonIgnore public abstract ParquetTableMetadataBase clone();
 
+    @JsonIgnore public abstract String getDrillVersion();
+
     @JsonIgnore public abstract boolean isDateCorrect();
   }
 
@@ -709,6 +713,12 @@ public class Metadata {
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v1(files, directories);
     }
+
+    @Override
+    public String getDrillVersion() {
+      return null;
+    }
+
     @JsonIgnore @Override
     public boolean isDateCorrect() {
       return false;
@@ -916,6 +926,7 @@ public class Metadata {
     @JsonProperty public ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfo;
     @JsonProperty List<ParquetFileMetadata_v2> files;
     @JsonProperty List<String> directories;
+    @JsonProperty String drillVersion;
     @JsonProperty boolean isDateCorrect;
 
     public ParquetTableMetadata_v2() {
@@ -923,15 +934,17 @@ public class Metadata {
     }
 
     public ParquetTableMetadata_v2(boolean isDateCorrect) {
+      this.drillVersion = DrillVersionInfo.getVersion();
       this.isDateCorrect = isDateCorrect;
     }
 
     public ParquetTableMetadata_v2(ParquetTableMetadataBase parquetTable,
-        List<ParquetFileMetadata_v2> files, List<String> directories, boolean isDateCorrect) {
+        List<ParquetFileMetadata_v2> files, List<String> directories) {
       this.files = files;
       this.directories = directories;
       this.columnTypeInfo = ((ParquetTableMetadata_v2) parquetTable).columnTypeInfo;
-      this.isDateCorrect = isDateCorrect;
+      this.drillVersion = DrillVersionInfo.getVersion();
+      this.isDateCorrect = true;
     }
 
     public ParquetTableMetadata_v2(List<ParquetFileMetadata_v2> files, List<String> directories,
@@ -971,6 +984,11 @@ public class Metadata {
 
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v2(files, directories, columnTypeInfo);
+    }
+
+    @JsonIgnore @Override
+    public String getDrillVersion() {
+      return drillVersion;
     }
 
     @JsonIgnore @Override public boolean isDateCorrect() {

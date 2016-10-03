@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import org.joda.time.DateTimeUtils;
 import org.apache.parquet.io.api.Binary;
 
 import java.lang.Override;
@@ -49,7 +48,6 @@ import org.apache.drill.exec.record.MaterializedField;
 
 import org.apache.drill.common.types.TypeProtos;
 
-import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
@@ -72,7 +70,6 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
 
   private RecordConsumer consumer;
   private MessageType schema;
-  public static final long JULIAN_DAY_EPOC = DateTimeUtils.toJulianDayNumber(0);
 
   public void setUp(MessageType schema, RecordConsumer consumer) {
     this.schema = schema;

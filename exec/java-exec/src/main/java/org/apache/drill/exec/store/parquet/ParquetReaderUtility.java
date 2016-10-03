@@ -23,7 +23,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.parquet.SemanticVersion;
 import org.apache.parquet.VersionParser;
@@ -46,15 +45,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
+/**
  * Utility class where we can capture common logic between the two parquet readers
  */
 public class ParquetReaderUtility {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetReaderUtility.class);
 
-  // Note the negation symbol in the beginning
-  public static final double CORRECT_CORRUPT_DATE_SHIFT = -ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5;
-  // The year 5000 is the threshold for auto-detecting date corruption.
+  /**
+   * Number of days between Julian day epoch (January 1, 4713 BC) and Unix day epoch (January 1, 1970).
+   * The value of this constant is {@value}.
+   */
+  public static final long JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH = 2440588;
+  /**
+   * All old parquet files (which haven't "is.date.correct=true" property in metadata) have
+   * a corrupt date shift: {@value} days or 2 * {@value #JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH}
+   */
+  public static final long CORRECT_CORRUPT_DATE_SHIFT = 2 * JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH;
+  // The year 5000 (or 1106685 day from Unix epoch) is chosen as the threshold for auto-detecting date corruption.
   // This balances two possible cases of bad auto-correction. External tools writing dates in the future will not
   // be shifted unless they are past this threshold (and we cannot identify them as external files based on the metadata).
   // On the other hand, historical dates written with Drill wouldn't risk being incorrectly shifted unless they were
@@ -69,9 +76,24 @@ public class ParquetReaderUtility {
    * in the data pages themselves to see if they are likely corrupt.
    */
   public enum DateCorruptionStatus {
-    META_SHOWS_CORRUPTION, // metadata can determine if the values are definitely CORRUPT
-    META_SHOWS_NO_CORRUPTION, // metadata can determine if the values are definitely CORRECT
-    META_UNCLEAR_TEST_VALUES // not enough info in metadata, parquet reader must test individual values
+    META_SHOWS_CORRUPTION{
+      @Override
+      public String toString(){
+        return "It is determined from metadata that the date values are definitely CORRUPT";
+      }
+    },
+    META_SHOWS_NO_CORRUPTION {
+      @Override
+      public String toString(){
+        return "It is determined from metadata that the date values are definitely CORRECT";
+      }
+    },
+    META_UNCLEAR_TEST_VALUES {
+      @Override
+      public String toString(){
+        return "Not enough info in metadata, parquet reader will test individual date values";
+      }
+    }
   }
 
   public static void checkDecimalTypeEnabled(OptionManager options) {
@@ -102,7 +124,7 @@ public class ParquetReaderUtility {
   }
 
   public static int autoCorrectCorruptedDate(int corruptedDate) {
-    return (int) (corruptedDate - 2 * ParquetOutputRecordWriter.JULIAN_DAY_EPOC);
+    return (int) (corruptedDate - CORRECT_CORRUPT_DATE_SHIFT);
   }
 
   public static void correctDatesInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
@@ -184,17 +206,15 @@ public class ParquetReaderUtility {
           if (parsedCreatedByVersion.hasSemanticVersion()) {
             SemanticVersion semVer = parsedCreatedByVersion.getSemanticVersion();
             String pre = semVer.pre + "";
-            if (semVer != null && semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
+            if (semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
               return DateCorruptionStatus.META_SHOWS_CORRUPTION;
             }
           }
           // written by a tool that wasn't Drill, the dates are not corrupted
           return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
         } catch (VersionParser.VersionParseException e) {
-          // Default value of "false" if we cannot parse the version is fine, we are covering all
-          // of the metadata values produced by historical versions of Drill
-          // If Drill didn't write it the dates should be fine
-          return DateCorruptionStatus.META_SHOWS_CORRUPTION;
+          // If we couldn't parse "created by" field, check column metadata of date columns
+          return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
         }
       }
     }

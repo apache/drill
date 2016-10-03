@@ -96,6 +96,8 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
       "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/fewtypes_varcharpartition";
   private static final String DATE_PARTITIONED =
       "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/fewtypes_datepartition";
+  private static final String EXCEPTION_WHILE_PARSING_CREATED_BY_META =
+      "[WORKING_PATH]/src/test/resources/parquet/4203_corrupt_dates/hive1dot2_fewtypes_null";
 
   private static FileSystem fs;
   private static Path path;
@@ -182,6 +184,21 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
     String sql = "select date_col from dfs.`" + DATE_PARTITIONED + "` where date_col > '1999-04-08'";
     testPlanMatchingPatterns(sql, new String[]{"numFiles=6"}, null);
+  }
+
+  @Test
+  public void testCorrectDatesAndExceptionWhileParsingCreatedBy() throws Exception {
+    testBuilder()
+        .sqlQuery("select date_col from " +
+            "dfs.`" + EXCEPTION_WHILE_PARSING_CREATED_BY_META +
+            "` where to_date(date_col, 'yyyy-mm-dd') < '1997-01-02'")
+        .baselineColumns("date_col")
+        .unOrdered()
+        .baselineValues(new DateTime(1996, 1, 29, 0, 0))
+        .baselineValues(new DateTime(1996, 3, 1, 0, 0))
+        .baselineValues(new DateTime(1996, 3, 2, 0, 0))
+        .baselineValues(new DateTime(1997, 3, 1, 0, 0))
+        .go();
   }
 
   /**

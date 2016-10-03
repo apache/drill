@@ -66,7 +66,6 @@ import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeUtils;
 
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.Converter;
@@ -358,7 +357,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     @Override
     public void addInt(int value) {
       if (value > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
-        holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT);
+        holder.value = (value - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY;
       } else {
         holder.value = value * (long) DateTimeConstants.MILLIS_PER_DAY;
       }
@@ -376,7 +375,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addInt(int value) {
-      holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT);
+      holder.value = (value - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY;
       writer.write(holder);
     }
   }

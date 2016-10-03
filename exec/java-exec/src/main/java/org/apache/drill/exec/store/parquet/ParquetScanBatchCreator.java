@@ -107,6 +107,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
         boolean autoCorrectCorruptDates = rowGroupScan.formatConfig.autoCorrectCorruptDates;
         ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footers.get(e.getPath()), rowGroupScan.getColumns(),
                 autoCorrectCorruptDates);
+        logger.info(containsCorruptDates.toString());
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(
               new ParquetRecordReader(

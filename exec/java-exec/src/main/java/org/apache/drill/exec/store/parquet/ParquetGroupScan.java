@@ -667,9 +667,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       }
       if (metaPath != null && fs.exists(metaPath)) {
         usedMetadataCache = true;
-        if (parquetTableMetadata == null) {
-          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
-        }
+        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
       } else {
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString(), formatConfig);
       }
@@ -682,15 +680,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
         }
         if (fileSet != null) {
-          if (parquetTableMetadata == null) {
-            parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig));
-          } else {
-            parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
-          }
-        } else {
-          if (parquetTableMetadata == null) {
-            parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
-          }
+          parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
         }
       } else {
         final List<FileStatus> fileStatuses = Lists.newArrayList();
