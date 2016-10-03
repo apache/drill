@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.ops;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -50,6 +48,8 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
 
 import com.google.common.collect.Lists;
+
+import io.netty.buffer.DrillBuf;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
@@ -142,6 +142,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * @param userName User who owns the schema tree.
    * @return Root of the schema tree.
    */
+  @Override
   public SchemaPlus getRootSchema(final String userName) {
     return schemaTreeProvider.createRootSchema(userName, this);
   }

@@ -2702,7 +2702,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SOURCE_DATA_TYPE_hasRightValue_mdrOptBOOLEAN() throws SQLException {
-    assertThat( getIntOrNull( mdrOptBOOLEAN, "SOURCE_DATA_TYPE" ), nullValue() );
+    assertThat( mdrOptBOOLEAN.getString( "SOURCE_DATA_TYPE" ), nullValue() );
   }
 
   @Test
@@ -2712,22 +2712,18 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SOURCE_DATA_TYPE_hasRightTypeString() throws SQLException {
-    // TODO(DRILL-2135):  Resolve workaround:
-    //assertThat( rsMetadata.getColumnTypeName( 22 ), equalTo( "SMALLINT" ) );
-    assertThat( rowsMetadata.getColumnTypeName( 22 ), equalTo( "INTEGER" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 22 ), equalTo( "SMALLINT" ) );
   }
 
   @Test
   public void test_SOURCE_DATA_TYPE_hasRightTypeCode() throws SQLException {
-    // TODO(DRILL-2135):  Resolve workaround:
-    //assertThat( rsMetadata.getColumnType( 22 ), equalTo( Types.SMALLINT ) );
-    assertThat( rowsMetadata.getColumnType( 22 ), equalTo( Types.INTEGER ) );
+    assertThat( rowsMetadata.getColumnType( 22 ), equalTo( Types.SMALLINT ) );
   }
 
   @Test
   public void test_SOURCE_DATA_TYPE_hasRightClass() throws SQLException {
     assertThat( rowsMetadata.getColumnClassName( 22 ),
-                equalTo( Integer.class.getName() ) );
+                equalTo( Short.class.getName() ) );
   }
 
   @Test
