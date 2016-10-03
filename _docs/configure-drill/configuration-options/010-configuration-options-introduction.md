@@ -1,12 +1,12 @@
 ---
 title: "Configuration Options Introduction"
-date: 2016-10-03 22:33:36 UTC
+date: 2016-10-03 22:44:17 UTC
 parent: "Configuration Options"
 ---
 
 Drill provides many configuration options that you can enable, disable, or modify. Modifying certain configuration options can impact Drill performance. Many of the configuration options reside in the `drill-env.sh` script and the `drill-override.conf` configuration file located in the `$DRILL_HOME/conf` directory. Drill loads these files from `/etc/drill/conf`, if it exists. Otherwise, Drill loads the files from the `$DRILL_HOME/conf` directory.  
 
-{% include startnote.html %}As of Drill 1.8, most of the system options listed below are set in `$DRILL_HOME/conf/drill-override.conf`. Settings controlled through environment variables reside in `$DRILL_HOME/bin/drill-config.sh`. You can create an entry in `$DRILL_HOME/conf/drill-env.sh` to override many of the settings in `drill-config.sh`.{% include endnote.html %}  
+{% include startnote.html %}As of Drill 1.8, most of the system options listed below are set in $DRILL_HOME/conf/drill-override.conf. Settings controlled through environment variables reside in $DRILL_HOME/bin/drill-config.sh. You can create an entry in $DRILL_HOME/conf/drill-env.sh to override many of the settings in drill-config.sh.{% include endnote.html %}  
 
 See [Configuration and Launch Script Changes]({{site.baseurl}}/docs/apache-drill-1-8-0-release-notes) in the Drill 1.8 release notes.
 
