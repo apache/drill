@@ -52,7 +52,7 @@ public class HashJoinPrel  extends JoinPrel {
       JoinRelType joinType, boolean swapped) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
     this.swapped = swapped;
-    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys);
+    joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
   @Override

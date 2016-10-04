@@ -45,7 +45,7 @@ public class NestedLoopJoinPrel  extends JoinPrel {
   public NestedLoopJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
                       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
   @Override
