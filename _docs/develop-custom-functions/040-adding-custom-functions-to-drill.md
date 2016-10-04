@@ -1,6 +1,6 @@
 ---
 title: "Adding Custom Functions to Drill"
-date:  
+date: 2016-10-04 23:35:34 UTC
 parent: "Develop Custom Functions"
 ---
 After you develop your custom function and generate the sources and classes
@@ -13,7 +13,7 @@ To add a custom function to Drill, complete the following steps:
   1. Add the sources JAR file and the classes JAR file for the custom function to the Drill classpath on all nodes running a Drillbit. To add the JAR files, copy them to `<drill installation directory>/jars/3rdparty`.
   2. Your class jar file should contain a `drill-module.conf` file at its root. 
   3. The `drill-module.conf` file should contain the packages to scan for functions
-  	`drill.classpath.scanning.package+=`. Separate package names with a comma.
+  	`drill.classpath.scanning.packages+= "com.mydomain.drill.fn"`. Separate package names with a comma.
 	
     **Example**
 		
