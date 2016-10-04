@@ -53,8 +53,9 @@ public class DrillFilterJoinRules {
           List<RexNode> tmpLeftKeys = Lists.newArrayList();
           List<RexNode> tmpRightKeys = Lists.newArrayList();
           List<RelDataTypeField> sysFields = Lists.newArrayList();
+          List<Integer> filterNulls = Lists.newArrayList();
 
-          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(), exp, tmpLeftKeys, tmpRightKeys, null, null);
+          RexNode remaining = RelOptUtil.splitJoinCondition(sysFields, join.getLeft(), join.getRight(), exp, tmpLeftKeys, tmpRightKeys, filterNulls, null);
 
           if (remaining.isAlwaysTrue()) {
             return true;

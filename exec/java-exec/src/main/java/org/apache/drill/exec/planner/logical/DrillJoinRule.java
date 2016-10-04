@@ -63,14 +63,15 @@ public class DrillJoinRule extends RelOptRule {
 
     List<Integer> leftKeys = Lists.newArrayList();
     List<Integer> rightKeys = Lists.newArrayList();
+    List<Boolean> filterNulls = Lists.newArrayList();
     int numLeftFields = convertedLeft.getRowType().getFieldCount();
 
     boolean addFilter = false;
     RexNode origJoinCondition = join.getCondition();
     RexNode newJoinCondition = origJoinCondition;
 
-    RexNode remaining = RelOptUtil.splitJoinCondition(convertedLeft, convertedRight, origJoinCondition, leftKeys, rightKeys);
-    boolean hasEquijoins = (leftKeys.size() == rightKeys.size() && leftKeys.size() > 0) ? true : false;
+    RexNode remaining = RelOptUtil.splitJoinCondition(convertedLeft, convertedRight, origJoinCondition, leftKeys, rightKeys, filterNulls);
+    boolean hasEquijoins = leftKeys.size() == rightKeys.size() && leftKeys.size() > 0;
 
     // If the join involves equijoins and non-equijoins, then we can process the non-equijoins through
     // a filter right after the join
@@ -79,35 +80,15 @@ public class DrillJoinRule extends RelOptRule {
     if (! remaining.isAlwaysTrue()) {
       if (hasEquijoins && join.getJoinType()== JoinRelType.INNER) {
         addFilter = true;
-        List<RexNode> equijoinList = Lists.newArrayList();
-        List<RelDataTypeField> leftTypes = convertedLeft.getRowType().getFieldList();
-        List<RelDataTypeField> rightTypes = convertedRight.getRowType().getFieldList();
-        RexBuilder builder = join.getCluster().getRexBuilder();
-
-        for (int i=0; i < leftKeys.size(); i++) {
-          int leftKeyOrdinal = leftKeys.get(i).intValue();
-          int rightKeyOrdinal = rightKeys.get(i).intValue();
-
-          equijoinList.add(builder.makeCall(
-              SqlStdOperatorTable.EQUALS,
-              builder.makeInputRef(leftTypes.get(leftKeyOrdinal).getType(), leftKeyOrdinal),
-              builder.makeInputRef(rightTypes.get(rightKeyOrdinal).getType(), rightKeyOrdinal + numLeftFields)
-             ) );
-        }
-        newJoinCondition = RexUtil.composeConjunction(builder, equijoinList, false);
-      } else {
-//        tracer.warning("Non-equijoins are only supported in the presence of an equijoin.");
-//        return;
+        newJoinCondition = buildJoinCondition(convertedLeft, convertedRight, leftKeys, rightKeys, filterNulls, join.getCluster().getRexBuilder());
       }
+    } else {
+      newJoinCondition = buildJoinCondition(convertedLeft, convertedRight, leftKeys, rightKeys, filterNulls, join.getCluster().getRexBuilder());
     }
-    //else {
-    //
-    //  return;
-    // }
 
     try {
       if (!addFilter) {
-       RelNode joinRel = new DrillJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, origJoinCondition,
+       RelNode joinRel = new DrillJoinRel(join.getCluster(), traits, convertedLeft, convertedRight, newJoinCondition,
                                          join.getJoinType(), leftKeys, rightKeys);
        call.transformTo(joinRel);
       } else {
@@ -118,5 +99,25 @@ public class DrillJoinRule extends RelOptRule {
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
+  }
+
+  private RexNode buildJoinCondition(RelNode convertedLeft, RelNode convertedRight, List<Integer> leftKeys,
+      List<Integer> rightKeys, List<Boolean> filterNulls, RexBuilder builder) {
+    List<RexNode> equijoinList = Lists.newArrayList();
+    final int numLeftFields = convertedLeft.getRowType().getFieldCount();
+    List<RelDataTypeField> leftTypes = convertedLeft.getRowType().getFieldList();
+    List<RelDataTypeField> rightTypes = convertedRight.getRowType().getFieldList();
+
+    for (int i=0; i < leftKeys.size(); i++) {
+      int leftKeyOrdinal = leftKeys.get(i).intValue();
+      int rightKeyOrdinal = rightKeys.get(i).intValue();
+
+      equijoinList.add(builder.makeCall(
+           filterNulls.get(i) ? SqlStdOperatorTable.EQUALS : SqlStdOperatorTable.IS_NOT_DISTINCT_FROM,
+           builder.makeInputRef(leftTypes.get(leftKeyOrdinal).getType(), leftKeyOrdinal),
+           builder.makeInputRef(rightTypes.get(rightKeyOrdinal).getType(), rightKeyOrdinal + numLeftFields)
+      ));
+    }
+    return RexUtil.composeConjunction(builder, equijoinList, false);
   }
 }

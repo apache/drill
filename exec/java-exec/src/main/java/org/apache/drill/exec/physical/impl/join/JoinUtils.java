@@ -86,17 +86,19 @@ public class JoinUtils {
      * Check if the given RelNode contains any Cartesian join.
      * Return true if find one. Otherwise, return false.
      *
-     * @param relNode   the RelNode to be inspected.
-     * @param leftKeys  a list used for the left input into the join which has
-     *                  equi-join keys. It can be empty or not (but not null),
-     *                  this method will clear this list before using it.
-     * @param rightKeys a list used for the right input into the join which has
-     *                  equi-join keys. It can be empty or not (but not null),
-     *                  this method will clear this list before using it.
-     * @return          Return true if the given relNode contains Cartesian join.
-     *                  Otherwise, return false
+     * @param relNode     the RelNode to be inspected.
+     * @param leftKeys    a list used for the left input into the join which has
+     *                    equi-join keys. It can be empty or not (but not null),
+     *                    this method will clear this list before using it.
+     * @param rightKeys   a list used for the right input into the join which has
+     *                    equi-join keys. It can be empty or not (but not null),
+     *                    this method will clear this list before using it.
+     * @param filterNulls The join key positions for which null values will not
+     *                    match.
+     * @return            Return true if the given relNode contains Cartesian join.
+     *                    Otherwise, return false
      */
-  public static boolean checkCartesianJoin(RelNode relNode, List<Integer> leftKeys, List<Integer> rightKeys) {
+  public static boolean checkCartesianJoin(RelNode relNode, List<Integer> leftKeys, List<Integer> rightKeys, List<Boolean> filterNulls) {
     if (relNode instanceof Join) {
       leftKeys.clear();
       rightKeys.clear();
@@ -105,20 +107,20 @@ public class JoinUtils {
       RelNode left = joinRel.getLeft();
       RelNode right = joinRel.getRight();
 
-      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys);
-      if(joinRel.getJoinType() == JoinRelType.INNER) {
-        if(leftKeys.isEmpty() || rightKeys.isEmpty()) {
+      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys, filterNulls);
+      if (joinRel.getJoinType() == JoinRelType.INNER) {
+        if (leftKeys.isEmpty() || rightKeys.isEmpty()) {
           return true;
         }
       } else {
-        if(!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
+        if (!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
           return true;
         }
       }
     }
 
     for (RelNode child : relNode.getInputs()) {
-      if(checkCartesianJoin(child, leftKeys, rightKeys)) {
+      if (checkCartesianJoin(child, leftKeys, rightKeys, filterNulls)) {
         return true;
       }
     }
@@ -249,13 +251,14 @@ public class JoinUtils {
   }
 
   public static JoinCategory getJoinCategory(RelNode left, RelNode right, RexNode condition,
-      List<Integer> leftKeys, List<Integer> rightKeys) {
+      List<Integer> leftKeys, List<Integer> rightKeys, List<Boolean> filterNulls) {
     if (condition.isAlwaysTrue()) {
       return JoinCategory.CARTESIAN;
     }
     leftKeys.clear();
     rightKeys.clear();
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+    filterNulls.clear();
+    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
 
     if (!remaining.isAlwaysTrue() || (leftKeys.size() == 0 || rightKeys.size() == 0) ) {
       // for practical purposes these cases could be treated as inequality
