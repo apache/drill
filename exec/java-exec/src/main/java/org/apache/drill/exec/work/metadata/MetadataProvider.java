@@ -26,6 +26,9 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.COLUMNS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.SCHEMATA;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.TABLES;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -69,7 +72,9 @@ import org.apache.drill.exec.store.ischema.Records.Table;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * Contains worker {@link Runnable} classes for providing the metadata and related helper methods.
@@ -147,6 +152,13 @@ public class MetadataProvider {
    * Runnable that fetches the catalog metadata for given {@link GetCatalogsReq} and sends response at the end.
    */
   private static class CatalogsProvider extends MetadataRunnable {
+    private static final Ordering<CatalogMetadata> CATALOGS_ORDERING = new Ordering<CatalogMetadata>() {
+      @Override
+      public int compare(CatalogMetadata left, CatalogMetadata right) {
+        return Ordering.natural().compare(left.getCatalogName(), right.getCatalogName());
+      }
+    };
+
     private final GetCatalogsReq req;
 
     public CatalogsProvider(final UserSession session, final DrillbitContext dContext,
@@ -158,7 +170,6 @@ public class MetadataProvider {
     @Override
     protected Response runInternal(final UserSession session, final SchemaTreeProvider schemaProvider) {
       final GetCatalogsResp.Builder respBuilder = GetCatalogsResp.newBuilder();
-
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null, null, null, null);
 
@@ -166,15 +177,20 @@ public class MetadataProvider {
         final PojoRecordReader<Catalog> records =
             (PojoRecordReader<Catalog>) getPojoRecordReader(CATALOGS, filter, schemaProvider, session);
 
+        List<CatalogMetadata> metadata = new ArrayList<>();
         for(Catalog c : records) {
           final CatalogMetadata.Builder catBuilder = CatalogMetadata.newBuilder();
           catBuilder.setCatalogName(c.CATALOG_NAME);
           catBuilder.setDescription(c.CATALOG_DESCRIPTION);
           catBuilder.setConnect(c.CATALOG_CONNECT);
 
-          respBuilder.addCatalogs(catBuilder.build());
+          metadata.add(catBuilder.build());
         }
 
+        // Reorder results according to JDBC spec
+        Collections.sort(metadata, CATALOGS_ORDERING);
+
+        respBuilder.addAllCatalogs(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -186,6 +202,16 @@ public class MetadataProvider {
   }
 
   private static class SchemasProvider extends MetadataRunnable {
+    private static final Ordering<SchemaMetadata> SCHEMAS_ORDERING = new Ordering<SchemaMetadata>() {
+      @Override
+      public int compare(SchemaMetadata left, SchemaMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .result();
+      };
+    };
+
     private final GetSchemasReq req;
 
     private SchemasProvider(final UserSession session, final DrillbitContext dContext,
@@ -207,6 +233,7 @@ public class MetadataProvider {
         final PojoRecordReader<Schema> records = (PojoRecordReader<Schema>)
             getPojoRecordReader(SCHEMATA, filter, schemaProvider, session);
 
+        List<SchemaMetadata> metadata = new ArrayList<>();
         for(Schema s : records) {
           final SchemaMetadata.Builder schemaBuilder = SchemaMetadata.newBuilder();
           schemaBuilder.setCatalogName(s.CATALOG_NAME);
@@ -215,9 +242,12 @@ public class MetadataProvider {
           schemaBuilder.setType(s.TYPE);
           schemaBuilder.setMutable(s.IS_MUTABLE);
 
-          respBuilder.addSchemas(schemaBuilder.build());
+          metadata.add(schemaBuilder.build());
         }
+        // Reorder results according to JDBC spec
+        Collections.sort(metadata, SCHEMAS_ORDERING);
 
+        respBuilder.addAllSchemas(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -229,6 +259,17 @@ public class MetadataProvider {
   }
 
   private static class TablesProvider extends MetadataRunnable {
+    private static final Ordering<TableMetadata> TABLES_ORDERING = new Ordering<TableMetadata>() {
+      @Override
+      public int compare(TableMetadata left, TableMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getType(), right.getType())
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .compare(left.getTableName(), right.getTableName())
+            .result();
+      }
+    };
     private final GetTablesReq req;
 
     private TablesProvider(final UserSession session, final DrillbitContext dContext,
@@ -251,6 +292,7 @@ public class MetadataProvider {
         final PojoRecordReader<Table> records =
             (PojoRecordReader<Table>)getPojoRecordReader(TABLES, filter, schemaProvider, session);
 
+        List<TableMetadata> metadata = new ArrayList<>();
         for(Table t : records) {
           final TableMetadata.Builder tableBuilder = TableMetadata.newBuilder();
           tableBuilder.setCatalogName(t.TABLE_CATALOG);
@@ -258,9 +300,13 @@ public class MetadataProvider {
           tableBuilder.setTableName(t.TABLE_NAME);
           tableBuilder.setType(t.TABLE_TYPE);
 
-          respBuilder.addTables(tableBuilder.build());
+          metadata.add(tableBuilder.build());
         }
 
+        // Reorder results according to JDBC/ODBC spec
+        Collections.sort(metadata, TABLES_ORDERING);
+
+        respBuilder.addAllTables(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -272,6 +318,18 @@ public class MetadataProvider {
   }
 
   private static class ColumnsProvider extends MetadataRunnable {
+    private static final Ordering<ColumnMetadata> COLUMNS_ORDERING = new Ordering<ColumnMetadata>() {
+      @Override
+      public int compare(ColumnMetadata left, ColumnMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .compare(left.getTableName(), right.getTableName())
+            .compare(left.getOrdinalPosition(), right.getOrdinalPosition())
+            .result();
+      }
+    };
+
     private final GetColumnsReq req;
 
     private ColumnsProvider(final UserSession session, final DrillbitContext dContext,
@@ -295,6 +353,7 @@ public class MetadataProvider {
         final PojoRecordReader<Column> records =
             (PojoRecordReader<Column>)getPojoRecordReader(COLUMNS, filter, schemaProvider, session);
 
+        List<ColumnMetadata> metadata = new ArrayList<>();
         for(Column c : records) {
           final ColumnMetadata.Builder columnBuilder = ColumnMetadata.newBuilder();
           columnBuilder.setCatalogName(c.TABLE_CATALOG);
@@ -340,9 +399,13 @@ public class MetadataProvider {
             columnBuilder.setIntervalPrecision(c.INTERVAL_PRECISION);
           }
 
-          respBuilder.addColumns(columnBuilder.build());
+          metadata.add(columnBuilder.build());
         }
 
+        // Reorder results according to JDBC/ODBC spec
+        Collections.sort(metadata, COLUMNS_ORDERING);
+
+        respBuilder.addAllColumns(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Exception e) {
         respBuilder.setStatus(RequestStatus.FAILED);
