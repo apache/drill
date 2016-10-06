@@ -73,6 +73,8 @@ public class ServiceEngine implements AutoCloseable {
         "drill.exec.rpc.bit.server.memory.control.reservation", "drill.exec.rpc.bit.server.memory.control.maximum");
     dataAllocator = newAllocator(context, "rpc:bit-data",
         "drill.exec.rpc.bit.server.memory.data.reservation", "drill.exec.rpc.bit.server.memory.data.maximum");
+    useIP = context.getConfig().getBoolean(ExecConstants.USE_IP_ADDRESS);
+    logger.debug("Running Service Engine {} IP Address.", (useIP?"with":"without"));
     final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
         context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
     this.userServer = new UserServer(
@@ -88,7 +90,6 @@ public class ServiceEngine implements AutoCloseable {
     this.allowPortHunting = allowPortHunting;
     this.isDistributedMode = isDistributedMode;
     registerMetrics(context.getMetrics());
-
   }
 
   private void registerMetrics(final MetricRegistry registry) {
