@@ -61,6 +61,9 @@ public class TestFormatPluginOptionExtractor {
         case "avro":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
           break;
+        case "httpd":
+          assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());
+          break;
         default:
           fail("add validation for format plugin type " + d.typeName);
       }
