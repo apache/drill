@@ -20,7 +20,7 @@ package org.apache.drill.exec.memory;
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ public class TestEndianess {
     assertEquals(b.getByte(2), 0);
     assertEquals(b.getByte(3), 0);
     b.release();
-    DrillAutoCloseables.closeNoChecked(a);
+    AutoCloseables.closeNoChecked(a);
   }
 
 }

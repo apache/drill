@@ -53,7 +53,10 @@ public class TestMultiInputAdd extends PopUnitTestBase {
     {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();

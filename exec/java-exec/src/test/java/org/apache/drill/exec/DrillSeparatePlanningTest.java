@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec;
 
-import static org.junit.Assert.*;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
@@ -28,7 +27,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
@@ -57,6 +56,12 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Class to test different planning use cases (separate form query execution)
@@ -304,7 +309,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
 
     @Override
     public void submissionFailed(UserException ex) {
-      DrillAutoCloseables.closeNoChecked(allocator);
+      AutoCloseables.closeNoChecked(allocator);
       this.ex = ex;
     }
 

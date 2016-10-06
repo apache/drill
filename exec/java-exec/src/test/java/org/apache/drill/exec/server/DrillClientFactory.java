@@ -21,6 +21,10 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.glassfish.hk2.api.Factory;
 
+/**
+ * @deprecated Does not provide any additional functionality compared to {@link DrillClient.Builder}.
+ */
+@Deprecated
 public class DrillClientFactory implements Factory<DrillClient> {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClientFactory.class);
 

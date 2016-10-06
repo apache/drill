@@ -34,7 +34,10 @@ public class TestHBaseCFAsJSONString extends BaseHBaseTest {
   @BeforeClass
   public static void openMyClient() throws Exception {
     parent_client = client;
-    client = new DrillClient(config, serviceSet.getCoordinator());
+    client = DrillClient.newBuilder()
+        .setConfig(config)
+        .setClusterCoordinator(serviceSet.getCoordinator())
+        .build();
     client.setSupportComplexTypes(false);
     client.connect();
   }

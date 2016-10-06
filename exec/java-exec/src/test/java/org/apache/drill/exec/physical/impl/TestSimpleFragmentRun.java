@@ -45,8 +45,11 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
   @Test
   public void runNoExchangeFragment() throws Exception {
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-        final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final Drillbit bit = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
     // run query.
     bit.run();
@@ -107,7 +110,10 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
   public void runJSONScanPopFragment() throws Exception {
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       // run query.
       bit.run();

@@ -138,8 +138,11 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     DrillConfig config = DrillConfig.create("drill-external-sort.conf");
 
     try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        Drillbit bit2 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         Drillbit bit2 = new Drillbit(config, serviceSet);
+         DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       bit2.run();
@@ -192,7 +195,10 @@ public class TestSimpleExternalSort extends BaseTestQuery {
     DrillConfig config = DrillConfig.create("drill-oom-xsort.conf");
 
     try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();

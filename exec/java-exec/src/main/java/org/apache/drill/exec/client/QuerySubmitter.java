@@ -115,11 +115,17 @@ public class QuerySubmitter {
           drillbits[i] = new Drillbit(config, serviceSet);
           drillbits[i].run();
         }
-        client = new DrillClient(config, serviceSet.getCoordinator());
+        client = DrillClient.newBuilder()
+            .setConfig(config)
+            .setClusterCoordinator(serviceSet.getCoordinator())
+            .build();
       } else {
         ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);
         clusterCoordinator.start(10000);
-        client = new DrillClient(config, clusterCoordinator);
+        client = DrillClient.newBuilder()
+            .setConfig(config)
+            .setClusterCoordinator(clusterCoordinator)
+            .build();
       }
       client.connect();
 

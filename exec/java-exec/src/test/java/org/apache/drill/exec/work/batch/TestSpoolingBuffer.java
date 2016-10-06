@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -43,7 +42,10 @@ public class TestSpoolingBuffer extends BaseTestQuery {
     DrillConfig conf = DrillConfig.create("drill-spool-test-module.conf");
 
     try(Drillbit bit1 = new Drillbit(conf, serviceSet);
-        DrillClient client = new DrillClient(conf, serviceSet.getCoordinator());) {
+        DrillClient client = DrillClient.newBuilder()
+            .setConfig(conf)
+            .setClusterCoordinator(serviceSet.getCoordinator())
+            .build()) {
 
       bit1.run();
       client.connect();

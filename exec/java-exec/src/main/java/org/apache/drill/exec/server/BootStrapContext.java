@@ -25,7 +25,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
@@ -41,6 +41,7 @@ public class BootStrapContext implements AutoCloseable {
   private final DrillConfig config;
   private final EventLoopGroup loop;
   private final EventLoopGroup loop2;
+  private final EventLoopGroup userLoopGroup;
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
@@ -53,6 +54,8 @@ public class BootStrapContext implements AutoCloseable {
     this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
     // Note that metrics are stored in a static instance
     this.metrics = DrillMetrics.getRegistry();
+    this.userLoopGroup = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.USER_SERVER_RPC_THREADS),
+        "UserServer-");
     this.allocator = RootAllocatorFactory.newRoot(config);
     this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
         new SynchronousQueue<Runnable>(),
@@ -81,6 +84,10 @@ public class BootStrapContext implements AutoCloseable {
 
   public EventLoopGroup getBitClientLoopGroup() {
     return loop2;
+  }
+
+  public EventLoopGroup getUserLoopGroup() {
+    return userLoopGroup;
   }
 
   public MetricRegistry getMetrics() {
@@ -124,6 +131,6 @@ public class BootStrapContext implements AutoCloseable {
       }
     }
 
-    DrillAutoCloseables.closeNoChecked(allocator);
+    AutoCloseables.closeNoChecked(allocator);
   }
 }

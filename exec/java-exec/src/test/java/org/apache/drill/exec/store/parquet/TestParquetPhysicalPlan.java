@@ -54,7 +54,11 @@ public class TestParquetPhysicalPlan extends ExecTest {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(config, serviceSet);
+         DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
@@ -124,7 +128,9 @@ public class TestParquetPhysicalPlan extends ExecTest {
   public void testParseParquetPhysicalPlanRemote() throws Exception {
     DrillConfig config = DrillConfig.create();
 
-    try(DrillClient client = new DrillClient(config);) {
+    try(DrillClient client = DrillClient.newBuilder()
+        .setConfig(config)
+        .build()) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       Stopwatch watch = Stopwatch.createStarted();

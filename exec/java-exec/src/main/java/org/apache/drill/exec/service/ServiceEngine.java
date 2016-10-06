@@ -19,7 +19,6 @@ package org.apache.drill.exec.service;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import io.netty.buffer.PooledByteBufAllocatorL;
-import io.netty.channel.EventLoopGroup;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -35,7 +34,6 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.ControllerImpl;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -73,13 +71,11 @@ public class ServiceEngine implements AutoCloseable {
         "drill.exec.rpc.bit.server.memory.control.reservation", "drill.exec.rpc.bit.server.memory.control.maximum");
     dataAllocator = newAllocator(context, "rpc:bit-data",
         "drill.exec.rpc.bit.server.memory.data.reservation", "drill.exec.rpc.bit.server.memory.data.maximum");
-    final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
-        context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
     this.userServer = new UserServer(
         context.getConfig(),
         context.getClasspathScan(),
         userAllocator,
-        eventLoopGroup,
+        context.getUserLoopGroup(),
         userWorker,
         context.getExecutor());
     this.controller = new ControllerImpl(context, controlMessageHandler, controlAllocator, allowPortHunting);
