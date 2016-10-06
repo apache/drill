@@ -22,13 +22,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -37,8 +34,6 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -62,34 +57,24 @@ import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
 public class TestCastFunctions extends PopUnitTestBase{
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
-  private final DrillConfig c = DrillConfig.create();
 
   @Test
   // cast to bigint.
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
 
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
+    mockDrillbitContext(bitContext);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastBigInt.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -111,7 +96,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -124,19 +108,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
+    mockDrillbitContext(bitContext);
 
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
-
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastInt.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -157,7 +133,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -169,18 +144,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   //cast to float4
   public void testCastFloat4(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
+    mockDrillbitContext(bitContext);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastFloat4.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -202,7 +170,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -214,18 +181,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   //cast to float8
   public void testCastFloat8(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
+    mockDrillbitContext(bitContext);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastFloat8.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -247,7 +207,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -259,19 +218,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   //cast to varchar(length)
   public void testCastVarChar(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    mockDrillbitContext(bitContext);
 
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
-
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarChar.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -292,7 +243,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -304,19 +254,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   //cast to varbinary(length)
   public void testCastVarBinary(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
+    mockDrillbitContext(bitContext);
 
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
-
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarBinary.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -337,7 +279,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -350,18 +291,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastNested(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
+    mockDrillbitContext(bitContext);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastNested.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -382,7 +316,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     if(context.getFailureCause() != null) {
       throw context.getFailureCause();
@@ -395,19 +328,12 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test(expected = NumberFormatException.class)
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
 
-    new NonStrictExpectations() {{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getConfig(); result = c;
-      bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c));
-    }};
+    mockDrillbitContext(bitContext);
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastNumException.json"), Charsets.UTF_8));
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(CONFIG);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
@@ -417,7 +343,6 @@ public class TestCastFunctions extends PopUnitTestBase{
     exec.close();
 
     context.close();
-    allocator.close();
 
     assertTrue(context.isFailed());
 

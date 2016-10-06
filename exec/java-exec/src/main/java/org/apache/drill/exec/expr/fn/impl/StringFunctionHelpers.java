@@ -21,6 +21,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
@@ -191,6 +192,13 @@ public class StringFunctionHelpers {
    * @return              String of the bytes interpreted as UTF-8
    */
   public static String getStringFromVarCharHolder(VarCharHolder varCharHolder) {
+    return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
+  }
+
+  /**
+   * Convert a NullableVarCharHolder to a String.
+   */
+  public static String getStringFromVarCharHolder(NullableVarCharHolder varCharHolder) {
     return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
   }
 

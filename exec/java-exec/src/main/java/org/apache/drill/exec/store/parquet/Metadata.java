@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.store.dfs.MetadataContext;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -46,6 +48,7 @@ import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -74,8 +77,12 @@ public class Metadata {
 
   public static final String[] OLD_METADATA_FILENAMES = {".drill.parquet_metadata.v2"};
   public static final String METADATA_FILENAME = ".drill.parquet_metadata";
+  public static final String METADATA_DIRECTORIES_FILENAME = ".drill.parquet_metadata_directories";
 
   private final FileSystem fs;
+
+  private ParquetTableMetadataBase parquetTableMetadata;
+  private ParquetTableMetadataDirs parquetTableMetadataDirs;
 
   /**
    * Create the parquet metadata file for the directory at the given path, and for any subdirectories
@@ -125,13 +132,20 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path) throws IOException {
+  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
     Metadata metadata = new Metadata(fs);
-    return metadata.readBlockMeta(path);
+    metadata.readBlockMeta(path, false, metaContext);
+    return metadata.parquetTableMetadata;
+  }
+
+  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
+    Metadata metadata = new Metadata(fs);
+    metadata.readBlockMeta(path, true, metaContext);
+    return metadata.parquetTableMetadataDirs;
   }
 
   private Metadata(FileSystem fs) {
-    this.fs = fs;
+    this.fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fs.getConf());
   }
 
   /**
@@ -140,7 +154,9 @@ public class Metadata {
    * @param path
    * @throws IOException
    */
-  private ParquetTableMetadata_v2 createMetaFilesRecursively(final String path) throws IOException {
+  private Pair<ParquetTableMetadata_v2, ParquetTableMetadataDirs>
+  createMetaFilesRecursively(final String path) throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     List<ParquetFileMetadata_v2> metaDataList = Lists.newArrayList();
     List<String> directoryList = Lists.newArrayList();
     ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfoSet =
@@ -153,7 +169,7 @@ public class Metadata {
 
     for (final FileStatus file : fs.listStatus(p, new DrillPathFilter())) {
       if (file.isDirectory()) {
-        ParquetTableMetadata_v2 subTableMetadata = createMetaFilesRecursively(file.getPath().toString());
+        ParquetTableMetadata_v2 subTableMetadata = (createMetaFilesRecursively(file.getPath().toString())).getLeft();
         metaDataList.addAll(subTableMetadata.files);
         directoryList.addAll(subTableMetadata.directories);
         directoryList.add(file.getPath().toString());
@@ -185,7 +201,18 @@ public class Metadata {
       fs.delete(new Path(p, oldname), false);
     }
     writeFile(parquetTableMetadata, new Path(p, METADATA_FILENAME));
-    return parquetTableMetadata;
+
+    if (directoryList.size() > 0 && childFiles.size() == 0) {
+      ParquetTableMetadataDirs parquetTableMetadataDirs = new ParquetTableMetadataDirs(directoryList);
+      writeFile(parquetTableMetadataDirs, new Path(p, METADATA_DIRECTORIES_FILENAME));
+      logger.info("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+      return Pair.of(parquetTableMetadata, parquetTableMetadataDirs);
+    }
+    List<String> emptyDirList = Lists.newArrayList();
+    logger.info("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+    timer.stop();
+    return Pair.of(parquetTableMetadata, new ParquetTableMetadataDirs(emptyDirList));
   }
 
   /**
@@ -416,6 +443,19 @@ public class Metadata {
     os.close();
   }
 
+  private void writeFile(ParquetTableMetadataDirs parquetTableMetadataDirs, Path p) throws IOException {
+    JsonFactory jsonFactory = new JsonFactory();
+    jsonFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
+    jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
+    ObjectMapper mapper = new ObjectMapper(jsonFactory);
+    SimpleModule module = new SimpleModule();
+    mapper.registerModule(module);
+    FSDataOutputStream os = fs.create(p);
+    mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadataDirs);
+    os.flush();
+    os.close();
+  }
+
   /**
    * Read the parquet metadata from a file
    *
@@ -423,9 +463,12 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private ParquetTableMetadataBase readBlockMeta(String path) throws IOException {
+  private void readBlockMeta(String path,
+      boolean dirsOnly,
+      MetadataContext metaContext) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     Path p = new Path(path);
+    Path parentDir = p.getParent(); // parent directory of the metadata file
     ObjectMapper mapper = new ObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
@@ -440,14 +483,38 @@ public class Metadata {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     FSDataInputStream is = fs.open(p);
 
-    ParquetTableMetadataBase parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
-    logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
-    timer.stop();
-    if (tableModified(parquetTableMetadata, p)) {
-      parquetTableMetadata =
-          createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString());
+    boolean alreadyCheckedModification = false;
+    boolean newMetadata = false;
+
+    if (metaContext != null) {
+      alreadyCheckedModification = metaContext.getStatus(parentDir.toString());
     }
-    return parquetTableMetadata;
+
+    if (dirsOnly) {
+      parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
+      logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), p, parentDir, metaContext)) {
+        parquetTableMetadataDirs =
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getRight();
+        newMetadata = true;
+      }
+    } else {
+      parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
+      logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
+      timer.stop();
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), p, parentDir, metaContext)) {
+        parquetTableMetadata =
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
+        newMetadata = true;
+      }
+    }
+
+    if (newMetadata && metaContext != null) {
+      // if new metadata files were created, invalidate the existing metadata context
+      metaContext.clear();
+    }
+
   }
 
   /**
@@ -459,19 +526,42 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private boolean tableModified(ParquetTableMetadataBase tableMetadata, Path metaFilePath)
+  private boolean tableModified(List<String> directories, Path metaFilePath,
+      Path parentDir,
+      MetadataContext metaContext)
       throws IOException {
+
+    Stopwatch timer = Stopwatch.createStarted();
+
+    if (metaContext != null) {
+      metaContext.setStatus(parentDir.toString());
+    }
     long metaFileModifyTime = fs.getFileStatus(metaFilePath).getModificationTime();
-    FileStatus directoryStatus = fs.getFileStatus(metaFilePath.getParent());
+    FileStatus directoryStatus = fs.getFileStatus(parentDir);
+    int numDirs = 1;
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+      logger.info("Directory {} was modified. Took {} ms to check modification time of {} directories", directoryStatus.getPath().toString(),
+          timer.elapsed(TimeUnit.MILLISECONDS),
+          numDirs);
+      timer.stop();
       return true;
     }
-    for (String directory : tableMetadata.getDirectories()) {
+    for (String directory : directories) {
+      numDirs++;
+      if (metaContext != null) {
+        metaContext.setStatus(directory);
+      }
       directoryStatus = fs.getFileStatus(new Path(directory));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
+        logger.info("Directory {} was modified. Took {} ms to check modification time of {} directories", directoryStatus.getPath().toString(),
+            timer.elapsed(TimeUnit.MILLISECONDS),
+            numDirs);
+        timer.stop();
         return true;
       }
     }
+    logger.info("No directories were modified. Took {} ms to check modification time of {} directories", timer.elapsed(TimeUnit.MILLISECONDS), numDirs);
+    timer.stop();
     return false;
   }
 
@@ -533,7 +623,22 @@ public class Metadata {
     public abstract OriginalType getOriginalType();
   }
 
+  public static class ParquetTableMetadataDirs {
+    @JsonProperty List<String> directories;
 
+    public ParquetTableMetadataDirs() {
+      // default constructor needed for deserialization
+    }
+
+    public ParquetTableMetadataDirs(List<String> directories) {
+      this.directories = directories;
+    }
+
+    @JsonIgnore public List<String> getDirectories() {
+      return directories;
+    }
+
+  }
 
   @JsonTypeName("v1")
   public static class ParquetTableMetadata_v1 extends ParquetTableMetadataBase {

@@ -81,8 +81,10 @@ public class DrillTestWrapper {
   // for the baseline data. In this case there needs to be a call back into the TestBuilder once we know the type information
   // from the test query.
   private TestBuilder testBuilder;
-  // test query to run
-  private String query;
+  /**
+   * Test query to run. Type of object depends on the {@link #queryType}
+   */
+  private Object query;
   // The type of query provided
   private UserBitShared.QueryType queryType;
   // The type of query provided for the baseline
@@ -106,7 +108,7 @@ public class DrillTestWrapper {
 
   private int expectedNumBatches;
 
-  public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, String query, QueryType queryType,
+  public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, Object query, QueryType queryType,
                           String baselineOptionSettingQueries, String testOptionSettingQueries,
                           QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
                           List<Map<String, Object>> baselineRecords, int expectedNumBatches) {

@@ -40,7 +40,7 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.hadoop.hbase.util.Order;
 import org.apache.hadoop.hbase.util.PositionedByteRange;
-import org.apache.hadoop.hbase.util.SimplePositionedByteRange;
+import org.apache.hadoop.hbase.util.SimplePositionedMutableByteRange;
 
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -254,7 +254,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         case "DOUBLE_OBD":
           if (valueArg instanceof DoubleExpression) {
             bb = newByteBuf(9, true);
-            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 9);
+            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
             if (encodingType.endsWith("_OBD")) {
               org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
                   ((DoubleExpression)valueArg).getDouble(), Order.DESCENDING);
@@ -269,7 +269,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         case "FLOAT_OBD":
           if (valueArg instanceof FloatExpression) {
             bb = newByteBuf(5, true);
-            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 5);
+            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
             if (encodingType.endsWith("_OBD")) {
               org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
                   ((FloatExpression)valueArg).getFloat(), Order.DESCENDING);
@@ -284,7 +284,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         case "BIGINT_OBD":
           if (valueArg instanceof LongExpression) {
             bb = newByteBuf(9, true);
-            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 9);
+            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 9);
             if (encodingType.endsWith("_OBD")) {
               org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
                         ((LongExpression)valueArg).getLong(), Order.DESCENDING);
@@ -299,7 +299,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
         case "INT_OBD":
           if (valueArg instanceof IntExpression) {
             bb = newByteBuf(5, true);
-            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 5);
+            PositionedByteRange br = new SimplePositionedMutableByteRange(bb.array(), 0, 5);
             if (encodingType.endsWith("_OBD")) {
               org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
                   ((IntExpression)valueArg).getInt(), Order.DESCENDING);

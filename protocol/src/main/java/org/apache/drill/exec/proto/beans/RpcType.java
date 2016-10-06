@@ -30,9 +30,19 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
     REQUEST_RESULTS(5),
     RESUME_PAUSED_QUERY(11),
     GET_QUERY_PLAN_FRAGMENTS(12),
+    GET_CATALOGS(14),
+    GET_SCHEMAS(15),
+    GET_TABLES(16),
+    GET_COLUMNS(17),
+    CREATE_PREPARED_STATEMENT(22),
     QUERY_DATA(6),
     QUERY_HANDLE(7),
     QUERY_PLAN_FRAGMENTS(13),
+    CATALOGS(18),
+    SCHEMAS(19),
+    TABLES(20),
+    COLUMNS(21),
+    PREPARED_STATEMENT(23),
     REQ_META_FUNCTIONS(8),
     RESP_FUNCTION_LIST(9),
     QUERY_RESULT(10);
@@ -67,6 +77,16 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
             case 11: return RESUME_PAUSED_QUERY;
             case 12: return GET_QUERY_PLAN_FRAGMENTS;
             case 13: return QUERY_PLAN_FRAGMENTS;
+            case 14: return GET_CATALOGS;
+            case 15: return GET_SCHEMAS;
+            case 16: return GET_TABLES;
+            case 17: return GET_COLUMNS;
+            case 18: return CATALOGS;
+            case 19: return SCHEMAS;
+            case 20: return TABLES;
+            case 21: return COLUMNS;
+            case 22: return CREATE_PREPARED_STATEMENT;
+            case 23: return PREPARED_STATEMENT;
             default: return null;
         }
     }

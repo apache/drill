@@ -20,7 +20,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.7.0-SNAPSHOT</version>
+  <version>1.9.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -37,6 +37,8 @@
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.1</jackson.version>
+    <mapr.release.version>5.2.0-mapr</mapr.release.version>
+    <ojai.version>1.1</ojai.version>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
@@ -44,6 +46,7 @@
     -->
     <hive.version>1.2.1</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
+    <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.21</freemarker.version>
   </properties>
@@ -102,6 +105,17 @@
     </repository>
 
     <repository>
+      <id>mapr-releases</id>
+      <url>http://repository.mapr.com/maven/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
       <!-- Keep until we move back to released calcite versions. -->
       <id>mapr-drill-optiq-snapshots</id>
       <name>MapR Drill Optiq Snapshots</name>
@@ -124,7 +138,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>    
+    </repository>
 
     <repository>
       <id>mapr-drill-thirdparty</id>
@@ -574,8 +588,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <!-- Mockito needs to be on the class path after JUnit (or Hamcrest) as 
-           long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. --> 
+      <!-- Mockito needs to be on the class path after JUnit (or Hamcrest) as
+           long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. -->
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>1.9.5</version>
@@ -784,6 +798,88 @@
           <exclusion>
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.mapr.db</groupId>
+        <artifactId>maprdb</artifactId>
+        <version>${mapr.release.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mapr.fs</groupId>
+        <artifactId>mapr-hbase</artifactId>
+        <version>${mapr.release.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>servlet-api-2.5</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.mapr.hadoop</groupId>
+        <artifactId>maprfs</artifactId>
+        <version>${mapr.release.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.ojai</groupId>
+        <artifactId>ojai</artifactId>
+        <version>${ojai.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1041,7 +1137,7 @@
               <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-              </exclusion>              
+              </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
@@ -1127,8 +1223,12 @@
           <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
-            <version>0.98.7-hadoop2</version>
+            <version>${hbase.version}</version>
             <exclusions>
+              <exclusion>
+                <artifactId>netty-all</artifactId>
+                <groupId>io.netty</groupId>
+              </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
@@ -1222,6 +1322,37 @@
                 <groupId>org.apache.zookeeper</groupId>
               </exclusion>
               <exclusion>
+                <artifactId>stax-api</artifactId>
+                <groupId>stax</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-compiler</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-runtime</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
                 <artifactId>jsp-2.1</artifactId>
                 <groupId>org.mortbay.jetty</groupId>
               </exclusion>
@@ -1230,8 +1361,40 @@
                 <groupId>org.mortbay.jetty</groupId>
               </exclusion>
               <exclusion>
-                <artifactId>stax-api</artifactId>
-                <groupId>stax</groupId>
+                <artifactId>jetty-sslengine</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jamon-runtime</artifactId>
+                <groupId>org.jamon</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1239,9 +1402,13 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
             <classifier>tests</classifier>
-            <version>0.98.7-hadoop2</version>
+            <version>${hbase.version}</version>
             <scope>test</scope>
             <exclusions>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
@@ -1279,7 +1446,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r11</version>
+            <version>1.4.0-drill-r18</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
@@ -1389,10 +1556,9 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.2.0-mapr-1601</hive.version>
-        <hbase.version>0.98.12-mapr-1602-m7-5.1.0</hbase.version>
-        <hadoop.version>2.7.0-mapr-1602</hadoop.version>
-        <mapr.core.version>5.1.0-mapr</mapr.core.version>
+        <hive.version>1.2.0-mapr-1608</hive.version>
+        <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
+        <hadoop.version>2.7.0-mapr-1607</hadoop.version>
       </properties>
       <dependencyManagement>
         <dependencies>
@@ -1496,7 +1662,7 @@
               <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
-              </exclusion>              
+              </exclusion>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
                 <groupId>commons-logging</groupId>
@@ -1584,72 +1750,6 @@
             </exclusions>
           </dependency>
           <dependency>
-            <groupId>com.mapr.fs</groupId>
-            <artifactId>mapr-hbase</artifactId>
-            <version>${mapr.core.version}</version>
-            <exclusions>
-              <exclusion>
-                <artifactId>log4j</artifactId>
-                <groupId>log4j</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>slf4j-log4j12</artifactId>
-                <groupId>org.slf4j</groupId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-core</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-server</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-json</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>asm</groupId>
-                <artifactId>asm</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-          <dependency>
-            <groupId>com.mapr.hadoop</groupId>
-            <artifactId>maprfs</artifactId>
-            <version>${mapr.core.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>com.mapr.db</groupId>
-            <artifactId>maprdb</artifactId>
-            <version>${mapr.core.version}</version>
-            <exclusions>
-              <exclusion>
-                <groupId>com.mapr</groupId>
-                <artifactId>mapr-java-utils</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-          <dependency>
-            <groupId>org.ojai</groupId>
-            <artifactId>ojai</artifactId>
-            <version>1.0</version>
-            <exclusions>
-              <exclusion>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-          <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>4.5</version>
@@ -1716,6 +1816,10 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
+                <artifactId>netty-all</artifactId>
+                <groupId>io.netty</groupId>
+              </exclusion>
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
@@ -1763,12 +1867,40 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-compiler</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-runtime</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>servlet-api-2.5</artifactId>
                 <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jsp-2.1</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jsp-api-2.1</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jetty-sslengine</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jamon-runtime</artifactId>
+                <groupId>org.jamon</groupId>
               </exclusion>
               <exclusion>
                 <groupId>commons-logging</groupId>
@@ -1872,18 +2004,6 @@
           </dependency>
         </dependencies>
       </dependencyManagement>
-      <repositories>
-        <repository>
-          <id>mapr-releases</id>
-          <url>http://repository.mapr.com/maven/</url>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-        </repository>
-      </repositories>
     </profile>
     <profile>
       <id>cdh</id>

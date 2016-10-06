@@ -167,4 +167,37 @@ public class TestBugFixes extends BaseTestQuery {
         .baselineValues("single_top_partition", "nested_partition_1")
         .go();
   }
+
+  @Test
+  public void testDRILL4771() throws Exception {
+    final String query = "select count(*) cnt, avg(distinct emp.department_id) avd\n"
+        + " from cp.`employee.json` emp";
+    final String[] expectedPlans = {
+        ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[\\$SUM0\\(\\$1\\)\\], agg#1=\\[\\$SUM0\\(\\$0\\)\\], agg#2=\\[COUNT\\(\\$0\\)\\]\\)",
+        ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
+    final String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt", "avd")
+        .baselineValues(1155L, 10.416666666666666)
+        .build().run();
+
+    final String query1 = "select emp.gender, count(*) cnt, avg(distinct emp.department_id) avd\n"
+            + " from cp.`employee.json` emp\n"
+            + " group by gender";
+    final String[] expectedPlans1 = {
+            ".*Agg\\(group=\\[\\{0\\}\\], agg#0=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)\\], agg#2=\\[COUNT\\(\\$1\\)\\]\\)",
+            ".*Agg\\(group=\\[\\{0, 1\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
+    final String[] excludedPlans1 = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+    PlanTestBase.testPlanMatchingPatterns(query1, expectedPlans1, excludedPlans1);
+    testBuilder()
+            .sqlQuery(query1)
+            .unOrdered()
+            .baselineColumns("gender", "cnt", "avd")
+            .baselineValues("F", 601L, 10.416666666666666)
+            .baselineValues("M", 554L, 11.9)
+            .build().run();
+  }
 }

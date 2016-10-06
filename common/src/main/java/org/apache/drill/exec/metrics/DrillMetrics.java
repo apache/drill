@@ -18,77 +18,86 @@
 package org.apache.drill.exec.metrics;
 
 import java.lang.management.ManagementFactory;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.drill.common.config.DrillConfig;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.jvm.BufferPoolMetricSet;
+import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
+import org.apache.drill.exec.util.SystemPropertyUtil;
 
-public class DrillMetrics {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetrics.class);
+public final class DrillMetrics {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetrics.class);
 
-  public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.metrics.jmx.enabled";
-  public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.metrics.log.enabled";
-  public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.metrics.log.interval";
-
-  static final DrillConfig config = DrillConfig.create();
-
-  private DrillMetrics() {
-  }
+  public static final boolean METRICS_JMX_OUTPUT_ENABLED =
+      SystemPropertyUtil.getBoolean("drill.metrics.jmx.enabled", true);
+  public static final boolean METRICS_LOG_OUTPUT_ENABLED =
+      SystemPropertyUtil.getBoolean("drill.metrics.log.enabled", false);
+  public static final int METRICS_LOG_OUTPUT_INTERVAL =
+      SystemPropertyUtil.getInt("drill.metrics.log.interval", 60);
 
   private static class RegistryHolder {
-    public static final MetricRegistry REGISTRY;
+
+    private static final MetricRegistry REGISTRY;
     private static final JmxReporter JMX_REPORTER;
     private static final Slf4jReporter LOG_REPORTER;
 
     static {
       REGISTRY = new MetricRegistry();
-      registerSysStats();
+      registerSystemMetrics();
       JMX_REPORTER = getJmxReporter();
       LOG_REPORTER = getLogReporter();
     }
 
-    private static void registerSysStats(){
+    private static void registerSystemMetrics() {
       REGISTRY.registerAll(new GarbageCollectorMetricSet());
       REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
       REGISTRY.registerAll(new MemoryUsageGaugeSet());
       REGISTRY.registerAll(new ThreadStatesGaugeSet());
+      register("fd.usage", new FileDescriptorRatioGauge());
     }
 
     private static JmxReporter getJmxReporter() {
-      if (config.getBoolean(METRICS_JMX_OUTPUT_ENABLED)) {
-        JmxReporter reporter = JmxReporter.forRegistry(getInstance()).build();
+      if (METRICS_JMX_OUTPUT_ENABLED) {
+        JmxReporter reporter = JmxReporter.forRegistry(REGISTRY).build();
         reporter.start();
 
         return reporter;
-      } else {
-        return null;
       }
+      return null;
     }
 
     private static Slf4jReporter getLogReporter() {
-      if (config.getBoolean(METRICS_LOG_OUTPUT_ENABLED)) {
-        Slf4jReporter reporter = Slf4jReporter.forRegistry(getInstance()).outputTo(logger)
-            .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS).build();
-        reporter.start(config.getInt(METRICS_LOG_OUTPUT_INTERVAL), TimeUnit.SECONDS);
+      if (METRICS_LOG_OUTPUT_ENABLED) {
+        Slf4jReporter reporter = Slf4jReporter.forRegistry(REGISTRY)
+            .outputTo(logger)
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .build();
+        reporter.start(METRICS_LOG_OUTPUT_INTERVAL, TimeUnit.SECONDS);
 
         return reporter;
-      } else {
-        return null;
       }
+      return null;
     }
   }
 
+  /**
+   * Note: For counters, histograms, meters and timers, use get or create methods on {@link #getRegistry the
+   * registry} (e.g. {@link MetricRegistry#counter}). For {@link com.codahale.metrics.Gauge gauges} or custom
+   * metric implementations use this method. The registry does not allow registering multiple metrics with
+   * the same name, which is a problem when multiple drillbits are started in the same JVM (e.g. unit tests).
+   *
+   * @param name metric name
+   * @param metric metric instance
+   * @param <T> metric type
+   */
   public synchronized static <T extends Metric> void register(String name, T metric) {
     boolean removed = RegistryHolder.REGISTRY.remove(name);
     if (removed) {
@@ -97,27 +106,16 @@ public class DrillMetrics {
     RegistryHolder.REGISTRY.register(name, metric);
   }
 
-  private static void registerAll(String prefix, MetricSet metricSet, MetricRegistry registry) {
-    for (Entry<String, Metric> entry : metricSet.getMetrics().entrySet()) {
-      if (entry.getValue() instanceof MetricSet) {
-        registerAll(prefix + "." + entry.getKey(), (MetricSet) entry.getValue(), registry);
-      } else {
-        registry.register(prefix + "." + entry.getKey(), entry.getValue());
-      }
-    }
-  }
-
-  public static MetricRegistry getInstance() {
+  public static MetricRegistry getRegistry() {
     return RegistryHolder.REGISTRY;
   }
 
-  public static void resetMetrics(){
-    RegistryHolder.REGISTRY.removeMatching(new MetricFilter(){
-      @Override
-      public boolean matches(String name, Metric metric) {
-        return true;
-      }});
-    RegistryHolder.registerSysStats();
+  public static void resetMetrics() {
+    RegistryHolder.REGISTRY.removeMatching(MetricFilter.ALL);
+    RegistryHolder.registerSystemMetrics();
   }
 
+  // prevents instantiation
+  private DrillMetrics() {
+  }
 }

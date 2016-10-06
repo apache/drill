@@ -218,6 +218,8 @@ void DrillClientImpl::handleHeartbeatTimeout(const boost::system::error_code & e
                 // Close connection.
                 DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl:: No heartbeat. Closing connection.";)
                 shutdownSocket();
+                //broadcast to any executing queries
+                handleConnError(CONN_FAILURE, getMessage(ERR_QRY_COMMERR, "Connection to drillbit lost."));
             }
         }
     }
@@ -469,33 +471,49 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
 
     uint64_t coordId;
     DrillClientQueryResult* pQuery=NULL;
+    connectionStatus_t cStatus=CONN_SUCCESS;
     {
         boost::lock_guard<boost::mutex> prLock(this->m_prMutex);
         boost::lock_guard<boost::mutex> dcLock(this->m_dcMutex);
         coordId = this->getNextCoordinationId();
         OutBoundRpcMessage out_msg(exec::rpc::REQUEST, exec::user::RUN_QUERY, coordId, &query);
-        sendSync(out_msg);
 
+        // Create the result object and register the listener before we send the query
+        // because sometimes the caller is not checking the status of the submitQuery call.
+        // This way, the broadcast error call will cause the results listener to be called
+        // with a COMM_ERROR status.
         pQuery = new DrillClientQueryResult(this, coordId, plan);
         pQuery->registerListener(l, lCtx);
-        bool sendRequest=false;
         this->m_queryIds[coordId]=pQuery;
 
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query request. " << "[" << m_connectedHost << "]"  << "Coordination id = " << coordId << std::endl;)
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query " <<  "Coordination id = " << coordId << " query: " << plan << std::endl;)
+        connectionStatus_t cStatus=sendSync(out_msg);
+        if(cStatus == CONN_SUCCESS){
+            bool sendRequest=false;
 
-        if(m_pendingRequests++==0){
-            sendRequest=true;
-        }else{
-            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Queueing query request to server" << std::endl;)
-            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Number of pending requests = " << m_pendingRequests << std::endl;)
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query request. " << "[" << m_connectedHost << "]"  << "Coordination id = " << coordId << std::endl;)
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query " <<  "Coordination id = " << coordId << " query: " << plan << std::endl;)
+
+                if(m_pendingRequests++==0){
+                    sendRequest=true;
+                }else{
+                    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Queueing query request to server" << std::endl;)
+                        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Number of pending requests = " << m_pendingRequests << std::endl;)
+                }
+            if(sendRequest){
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Sending query request. Number of pending requests = "
+                        << m_pendingRequests << std::endl;)
+                    getNextResult(); // async wait for results
+            }
         }
-        if(sendRequest){
-            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Sending query request. Number of pending requests = "
-                << m_pendingRequests << std::endl;)
-            getNextResult(); // async wait for results
-        }
+
     }
+    if(cStatus!=CONN_SUCCESS){
+        this->m_queryIds.erase(coordId);
+        delete pQuery;
+        return NULL;
+    }
+
+
 
     //run this in a new thread
     startMessageListener();

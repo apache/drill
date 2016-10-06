@@ -1897,7 +1897,17 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   protected DrillResultSetImpl execute() throws SQLException{
-    client.runQuery(QueryType.SQL, this.prepareResult.getSql(), resultsListener);
+    final DrillPrepareResult drillPrepareResult = ((DrillPrepareResult)prepareResult);
+    /**
+     * {@link DrillPrepareResult} is created both for normal queries and prepared queries.
+     * If the prepared statement exists submit the query as prepared statement, otherwise
+     * regular submission.
+     */
+    if (drillPrepareResult.getPreparedStatement() != null) {
+      client.executePreparedStatement(drillPrepareResult.getPreparedStatement().getServerHandle(), resultsListener);
+    } else {
+      client.runQuery(QueryType.SQL, this.prepareResult.getSql(), resultsListener);
+    }
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     super.execute();

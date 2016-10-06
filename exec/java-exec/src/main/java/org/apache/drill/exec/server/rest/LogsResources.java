@@ -21,6 +21,7 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
@@ -48,7 +49,6 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -111,19 +111,20 @@ public class LogsResources {
     final int maxLines = work.getContext().getOptionManager().getOption(ExecConstants.WEB_LOGS_MAX_LINES).num_val.intValue();
 
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      Map<String, String> cache = new LinkedHashMap<String, String>(maxLines, .75f, true) {
+      Map<Integer, String> cache = new LinkedHashMap<Integer, String>(maxLines, .75f, true) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Integer, String> eldest) {
           return size() > maxLines;
         }
       };
 
       String line;
+      int i = 0;
       while ((line = br.readLine()) != null) {
-        cache.put(line, null);
+        cache.put(i++, line);
       }
 
-      return new LogContent(file.getName(), cache.keySet(), maxLines);
+      return new LogContent(file.getName(), cache.values(), maxLines);
     }
   }
 
@@ -133,12 +134,12 @@ public class LogsResources {
   public Response getFullLog(@PathParam("name") final String name) {
     File file = getFileByName(getLogFolder(), name);
     Response.ResponseBuilder response = Response.ok(file);
-    response.header("Content-Disposition", String.format("attachment;filename\"%s\"", name));
+    response.header("Content-Disposition", String.format("attachment;filename=\"%s\"", name));
     return response.build();
   }
 
   private File getLogFolder() {
-    return new File(System.getenv("DRILL_LOG_DIR"));
+    return new File(Preconditions.checkNotNull(System.getenv("DRILL_LOG_DIR"), "DRILL_LOG_DIR variable is not set"));
   }
 
   private File getFileByName(File folder, final String name) {

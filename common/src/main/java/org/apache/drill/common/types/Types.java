@@ -163,84 +163,42 @@ public class Types {
   }
 
   /***
-   * Gets JDBC type code for given Drill RPC-/protobuf-level type.
+   * Gets JDBC type code for given SQL data type name.
    */
-  public static int getJdbcTypeCode(final MajorType type) {
-    if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
-      return java.sql.Types.ARRAY;
-    }
+  public static int getJdbcTypeCode(final String sqlTypeName) {
 
-    switch (type.getMinorType()) {
-    case BIGINT:
-      return java.sql.Types.BIGINT;
-    case BIT:
-      return java.sql.Types.BOOLEAN;
-    case DATE:
-      return java.sql.Types.DATE;
-    case DECIMAL9:
-    case DECIMAL18:
-    case DECIMAL28DENSE:
-    case DECIMAL28SPARSE:
-    case DECIMAL38DENSE:
-    case DECIMAL38SPARSE:
-      return java.sql.Types.DECIMAL;
-    case FIXED16CHAR:
-      return java.sql.Types.NCHAR;
-    case FIXEDBINARY:
-      return java.sql.Types.BINARY;
-    case FIXEDCHAR:
-      return java.sql.Types.NCHAR;
-    case FLOAT4:
-      return java.sql.Types.FLOAT;
-    case FLOAT8:
-      return java.sql.Types.DOUBLE;
-    case INT:
-      return java.sql.Types.INTEGER;
-    case MAP:
-      return java.sql.Types.STRUCT;
-    case MONEY:
-      return java.sql.Types.DECIMAL;
-    case NULL:
-      return java.sql.Types.NULL;
-    case INTERVAL:
-    case INTERVALYEAR:
-    case INTERVALDAY:
-      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
-    case LATE:
-      return java.sql.Types.OTHER;
-    case SMALLINT:
-      return java.sql.Types.SMALLINT;
-    case TIME:
-      return java.sql.Types.TIME;
-    case TIMESTAMPTZ:
-    case TIMESTAMP:
-      return java.sql.Types.TIMESTAMP;
-    case TIMETZ:
-      return java.sql.Types.TIME;
-    case TINYINT:
-      return java.sql.Types.TINYINT;
-    case UINT1:
-      return java.sql.Types.TINYINT;
-    case UINT2:
-      return java.sql.Types.SMALLINT;
-    case UINT4:
-      return java.sql.Types.INTEGER;
-    case UINT8:
-      return java.sql.Types.BIGINT;
-    case VAR16CHAR:
-      return java.sql.Types.NVARCHAR;
-    case VARBINARY:
-      return java.sql.Types.VARBINARY;
-    case VARCHAR:
-      return java.sql.Types.VARCHAR;
-    case UNION:
-      return java.sql.Types.OTHER;
-    default:
-      // TODO:  This isn't really an unsupported-operation/-type case; this
-      //   is an unexpected, code-out-of-sync-with-itself case, so use an
-      //   exception intended for that.
-      throw new UnsupportedOperationException(
-          "Unexpected/unhandled MinorType value " + type.getMinorType() );
+    switch (sqlTypeName) {
+      case "ANY":                           return java.sql.Types.OTHER;
+      case "ARRAY":                         return java.sql.Types.ARRAY;
+      case "BIGINT":                        return java.sql.Types.BIGINT;
+      case "BINARY VARYING":                return java.sql.Types.VARBINARY;
+      case "BINARY":                        return java.sql.Types.BINARY;
+      case "BOOLEAN":                       return java.sql.Types.BOOLEAN;
+      case "CHARACTER VARYING":             return java.sql.Types.VARCHAR;
+      case "CHARACTER":                     return java.sql.Types.NCHAR;
+      case "DATE":                          return java.sql.Types.DATE;
+      case "DECIMAL":                       return java.sql.Types.DECIMAL;
+      case "DOUBLE":                        return java.sql.Types.DOUBLE;
+      case "FLOAT":                         return java.sql.Types.FLOAT;
+      case "INTEGER":                       return java.sql.Types.INTEGER;
+      case "INTERVAL":                      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
+      case "MAP":                           return java.sql.Types.STRUCT;
+      case "NATIONAL CHARACTER VARYING":    return java.sql.Types.NVARCHAR;
+      case "NATIONAL CHARACTER":            return java.sql.Types.NCHAR;
+      case "NULL":                          return java.sql.Types.NULL;
+      case "SMALLINT":                      return java.sql.Types.SMALLINT;
+      case "TIME WITH TIME ZONE":           // fall through
+      case "TIME":                          return java.sql.Types.TIME;
+      case "TIMESTAMP WITH TIME ZONE":      // fall through
+      case "TIMESTAMP":                     return java.sql.Types.TIMESTAMP;
+      case "TINYINT":                       return java.sql.Types.TINYINT;
+      case "UNION":                         return java.sql.Types.OTHER;
+      default:
+        // TODO:  This isn't really an unsupported-operation/-type case; this
+        //   is an unexpected, code-out-of-sync-with-itself case, so use an
+        //   exception intended for that.
+        throw new UnsupportedOperationException(
+            "Unexpected/unhandled SqlType value " + sqlTypeName );
     }
   }
 
@@ -591,4 +549,45 @@ public class Types {
     return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
   }
 
+  /**
+   * Get the <code>precision</code> of given type.
+   * @param majorType
+   * @return
+   */
+  public static int getPrecision(MajorType majorType) {
+    MinorType type = majorType.getMinorType();
+
+    if (type == MinorType.VARBINARY || type == MinorType.VARCHAR) {
+      return 65536;
+    }
+
+    if (majorType.hasPrecision()) {
+      return majorType.getPrecision();
+    }
+
+    return 0;
+  }
+
+  /**
+   * Get the <code>scale</code> of given type.
+   * @param majorType
+   * @return
+   */
+  public static int getScale(MajorType majorType) {
+    if (majorType.hasScale()) {
+      return majorType.getScale();
+    }
+
+    return 0;
+  }
+
+  /**
+   * Is the given type column be used in ORDER BY clause?
+   * @param type
+   * @return
+   */
+  public static boolean isSortable(MinorType type) {
+    // Currently only map and list columns are not sortable.
+    return type != MinorType.MAP && type != MinorType.LIST;
+  }
 }

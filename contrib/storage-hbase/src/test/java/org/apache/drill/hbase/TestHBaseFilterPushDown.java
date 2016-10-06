@@ -18,7 +18,6 @@
 package org.apache.drill.hbase;
 
 import org.apache.drill.PlanTestBase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHBaseFilterPushDown extends BaseHBaseTest {

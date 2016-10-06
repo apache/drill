@@ -76,6 +76,11 @@ public interface ExecConstants {
   String HTTP_ENABLE = "drill.exec.http.enabled";
   String HTTP_PORT = "drill.exec.http.port";
   String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
+  String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
+  String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";
+  String HTTP_CORS_ALLOWED_METHODS = "drill.exec.http.cors.allowedMethods";
+  String HTTP_CORS_ALLOWED_HEADERS = "drill.exec.http.cors.allowedHeaders";
+  String HTTP_CORS_CREDENTIALS = "drill.exec.http.cors.credentials";
   String HTTP_SESSION_MAX_IDLE_SECS = "drill.exec.http.session_max_idle_secs";
   String HTTP_KEYSTORE_PATH = "javax.net.ssl.keyStore";
   String HTTP_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
@@ -134,6 +139,7 @@ public interface ExecConstants {
   BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
   BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator("store.json.extended_types", false);
   BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator("store.json.writer.uglify", false);
+  BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator("store.json.writer.skip_null_fields", true);
 
   DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator(
       "store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE, 100.0);
@@ -147,6 +153,18 @@ public interface ExecConstants {
    */
   String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
   OptionValidator FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR = new StringValidator(FILESYSTEM_PARTITION_COLUMN_LABEL, "dir");
+
+  /**
+   * Implicit file columns
+   */
+  String IMPLICIT_FILENAME_COLUMN_LABEL = "drill.exec.storage.implicit.filename.column.label";
+  OptionValidator IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FILENAME_COLUMN_LABEL, "filename");
+  String IMPLICIT_SUFFIX_COLUMN_LABEL = "drill.exec.storage.implicit.suffix.column.label";
+  OptionValidator IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_SUFFIX_COLUMN_LABEL, "suffix");
+  String IMPLICIT_FQN_COLUMN_LABEL = "drill.exec.storage.implicit.fqn.column.label";
+  OptionValidator IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FQN_COLUMN_LABEL, "fqn");
+  String IMPLICIT_FILEPATH_COLUMN_LABEL = "drill.exec.storage.implicit.filepath.column.label";
+  OptionValidator IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FILEPATH_COLUMN_LABEL, "filepath");
 
   String JSON_READ_NUMBERS_AS_DOUBLE = "store.json.read_numbers_as_double";
   BooleanValidator JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(JSON_READ_NUMBERS_AS_DOUBLE, false);
@@ -308,4 +326,15 @@ public interface ExecConstants {
    */
   String WEB_LOGS_MAX_LINES = "web.logs.max_lines";
   OptionValidator WEB_LOGS_MAX_LINES_VALIDATOR = new PositiveLongValidator(WEB_LOGS_MAX_LINES, Integer.MAX_VALUE, 10000);
+
+  String CODE_GEN_EXP_IN_METHOD_SIZE = "exec.java.compiler.exp_in_method_size";
+  LongValidator CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR = new LongValidator(CODE_GEN_EXP_IN_METHOD_SIZE, 50);
+
+  /**
+   * Timeout for create prepare statement request. If the request exceeds this timeout, then request is timed out.
+   * Default value is 10mins.
+   */
+  String CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS = "prepare.statement.create_timeout_ms";
+  OptionValidator CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR =
+      new PositiveLongValidator(CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS, Integer.MAX_VALUE, 10000);
 }

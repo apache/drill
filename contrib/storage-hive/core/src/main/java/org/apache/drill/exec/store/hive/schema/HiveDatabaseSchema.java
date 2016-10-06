@@ -17,26 +17,23 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Table;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory.HiveSchema;
-
 import org.apache.thrift.TException;
+
+import java.util.List;
+import java.util.Set;
 
 public class HiveDatabaseSchema extends AbstractSchema{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDatabaseSchema.class);
@@ -85,19 +82,11 @@ public class HiveDatabaseSchema extends AbstractSchema{
     final String schemaName = getName();
     final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
     List<org.apache.hadoop.hive.metastore.api.Table> tables;
-    // Retries once if the first call to fetch the metadata fails
-    synchronized(mClient) {
-      try {
-        tables = mClient.getTableObjectsByName(schemaName, tableNames);
-      } catch(TException tException) {
-        try {
-          mClient.reconnect();
-          tables = mClient.getTableObjectsByName(schemaName, tableNames);
-        } catch(Exception e) {
-          logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName, e.getCause());
-          return tableNameToTable;
-        }
-      }
+    try {
+      tables = DrillHiveMetaStoreClient.getTableObjectsByNameHelper(mClient, schemaName, tableNames);
+    } catch (TException e) {
+      logger.warn("Exception occurred while trying to list tables by names from {}: {}", schemaName, e.getCause());
+      return tableNameToTable;
     }
 
     for(final org.apache.hadoop.hive.metastore.api.Table table : tables) {

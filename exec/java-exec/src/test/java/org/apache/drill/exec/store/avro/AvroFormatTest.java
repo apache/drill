@@ -326,6 +326,71 @@ public class AvroFormatTest extends BaseTestQuery {
     test(sql);
   }
 
+  /**
+   *  See <a href="https://issues.apache.org/jira/browse/DRILL-4574"></a>
+   *
+   */
+  @Test
+  public void testFlattenPrimitiveArray() throws Exception {
+    final String file = AvroTestUtil.generateSimpleArraySchema_NoNullValues().getFilePath();
+
+    final String sql = "select a_string, flatten(c_string_array) as array_item "
+        + "from dfs_test.`" + file + "` t";
+
+    TestBuilder testBuilder = testBuilder().sqlQuery(sql).unOrdered()
+        .baselineColumns("a_string", "array_item");
+
+    for (int i = 0; i < AvroTestUtil.RECORD_COUNT; i++) {
+
+      for (int j = 0; j < AvroTestUtil.ARRAY_SIZE; j++) {
+        testBuilder.baselineValues("a_" + i, "c_string_array_" + i + "_" + j);
+      }
+    }
+
+
+    testBuilder.go();
+
+  }
+
+  private TestBuilder nestedArrayQueryTestBuilder(String file) {
+
+    final String sql = "select rec_nr, array_item['nested_1_int'] as array_item_nested_int from "
+        + "(select a_int as rec_nr, flatten(t.b_array) as array_item " + "from dfs_test.`" + file + "` t) a";
+
+    TestBuilder testBuilder = testBuilder().sqlQuery(sql).unOrdered().baselineColumns("rec_nr",
+        "array_item_nested_int");
+
+    return testBuilder;
+
+  }
+
+
+  /**
+   * See <a href="https://issues.apache.org/jira/browse/DRILL-4574"></a>
+   */
+  @Test
+  public void testFlattenComplexArray() throws Exception {
+    final String file = AvroTestUtil.generateNestedArraySchema().getFilePath();
+
+    TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
+    for (int i = 0; i < AvroTestUtil.RECORD_COUNT; i++) {
+      for (int j = 0; j < AvroTestUtil.ARRAY_SIZE; j++) {
+        testBuilder.baselineValues(i, j);
+      }
+    }
+    testBuilder.go();
+
+  }
+  /**
+   * See <a href="https://issues.apache.org/jira/browse/DRILL-4574"></a>
+   */
+  @Test
+  public void testFlattenEmptyComplexArrayMustYieldNoResults() throws Exception {
+    final String file = AvroTestUtil.generateNestedArraySchema(AvroTestUtil.RECORD_COUNT, 0).getFilePath();
+    TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
+    testBuilder.expectsEmptyResultSet();
+  }
+
   @Test
   public void testNestedUnionArraySchema_withNullValues() throws Exception {
 

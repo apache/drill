@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
  */
 public class VectorAccessibleSerializable extends AbstractStreamSerializable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
-  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final MetricRegistry metrics = DrillMetrics.getRegistry();
   static final String WRITER_TIMER = MetricRegistry.name(VectorAccessibleSerializable.class, "writerTime");
 
   private VectorContainer va;

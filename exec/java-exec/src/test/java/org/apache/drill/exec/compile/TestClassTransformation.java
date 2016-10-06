@@ -117,7 +117,7 @@ public class TestClassTransformation extends BaseTestQuery {
 
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
-    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry());
+    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry(), getDrillbitContext().getOptionManager());
 
     ClassGenerator<T> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));

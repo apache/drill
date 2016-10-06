@@ -362,4 +362,73 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 10);
   }
 
+  @Test  //DRILL-4665: Partition pruning should occur when LIKE predicate on non-partitioning column
+  public void testPartitionFilterWithLike() throws Exception {
+    // Also should be insensitive to the order of the predicates
+    String query1 = "select yr, qrtr from dfs_test.tmp.parquet where yr=1994 and o_custkey LIKE '%5%'";
+    String query2 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%5%' and yr=1994";
+    testIncludeFilter(query1, 4, "Filter", 9);
+    testIncludeFilter(query2, 4, "Filter", 9);
+    // Test when LIKE predicate on partitioning column
+    String query3 = "select yr, qrtr from dfs_test.tmp.parquet where yr LIKE '%1995%' and o_custkey LIKE '%3%'";
+    String query4 = "select yr, qrtr from dfs_test.tmp.parquet where o_custkey LIKE '%3%' and yr LIKE '%1995%'";
+    testIncludeFilter(query3, 4, "Filter", 16);
+    testIncludeFilter(query4, 4, "Filter", 16);
+  }
+
+  @Test //DRILL-3710 Partition pruning should occur with varying IN-LIST size
+  public void testPartitionFilterWithInSubquery() throws Exception {
+    String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)", TEST_RES_PATH);
+    /* In list size exceeds threshold - no partition pruning since predicate converted to join */
+    test("alter session set `planner.in_subquery_threshold` = 2");
+    testExcludeFilter(query, 12, "Filter", 40);
+    /* In list size does not exceed threshold - partition pruning */
+    test("alter session set `planner.in_subquery_threshold` = 10");
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
+
+  @Test // DRILL-4825: querying same table with different filter in UNION ALL.
+  public void testPruneSameTableInUnionAll() throws Exception {
+    final String query = String.format("select count(*) as cnt from "
+        + "( select dir0 from dfs_test.`%s/multilevel/parquet` where dir0 in ('1994') union all "
+        + "  select dir0 from dfs_test.`%s/multilevel/parquet` where dir0 in ('1995', '1996') )",
+        TEST_RES_PATH, TEST_RES_PATH);
+
+    String [] excluded = {"Filter"};
+
+    // verify plan that filter is applied in partition pruning.
+    testPlanMatchingPatterns(query, null, excluded);
+
+    // verify we get correct count(*).
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long)120)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-4825: querying same table with different filter in Join.
+  public void testPruneSameTableInJoin() throws Exception {
+    final String query = String.format("select *  from "
+            + "( select sum(o_custkey) as x from dfs_test.`%s/multilevel/parquet` where dir0 in ('1994') ) join "
+            + " ( select sum(o_custkey) as y from dfs_test.`%s/multilevel/parquet` where dir0 in ('1995', '1996')) "
+            + " on x = y ",
+        TEST_RES_PATH, TEST_RES_PATH);
+
+    String [] excluded = {"Filter"};
+    // verify plan that filter is applied in partition pruning.
+    testPlanMatchingPatterns(query, null, excluded);
+
+    // verify we get empty result.
+    testBuilder()
+        .sqlQuery(query)
+        .expectsEmptyResultSet()
+        .build()
+        .run();
+
+  }
+
 }
