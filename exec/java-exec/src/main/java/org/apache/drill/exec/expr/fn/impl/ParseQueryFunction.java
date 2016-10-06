@@ -57,6 +57,13 @@ public class ParseQueryFunction implements DrillSimpleFunc {
             queryString = "";
         }
 
+        String firstLetter = queryString.substring(0, 1);
+
+        //If the first character is a &, it doesn't split properly.  This checks to see if the first character is an & and if so, removes it.
+        if(firstLetter.equals("&")){
+            queryString = queryString.substring(1);
+        }
+
         String[] arguments = queryString.split("&");
 
         for (int i = 0; i < arguments.length; i++) {
