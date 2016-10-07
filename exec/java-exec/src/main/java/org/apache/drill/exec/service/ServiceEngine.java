@@ -142,7 +142,13 @@ public class ServiceEngine implements AutoCloseable {
 
   public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException{
     int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
-    String address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
+    String configIP = config.getString(ExecConstants.BIT_ADVERTISED_HOST);
+    String address = null;
+    if (configIP == "") {
+        address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
+    } else {
+        address = configIP;
+    }
     checkLoopbackAddress(address);
 
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
