@@ -20,6 +20,12 @@ package org.apache.drill.exec.store.schedule;
 import java.util.Iterator;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.List;
+import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.Comparator;
 
 import com.carrotsearch.hppc.ObjectLongHashMap;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
@@ -57,5 +63,60 @@ public class EndpointByteMapImpl implements EndpointByteMap{
     return map.iterator();
   }
 
+  /**
+   * Comparator used to sort in order of decreasing affinity
+   */
+  private static Comparator<Entry<DrillbitEndpoint, Long>> comparator = new Comparator<Entry<DrillbitEndpoint, Long>>() {
+    @Override
+    public int compare(Entry<DrillbitEndpoint, Long> o1, Entry<DrillbitEndpoint, Long> o2) {
+      return (int) (o1.getValue() - o2.getValue());
+    }
+  };
 
+  /*
+   * Returns the list of DrillbitEndpoints which have (equal) highest value
+   */
+  public List<DrillbitEndpoint> getTopEndpoints() {
+    List<Map.Entry<DrillbitEndpoint, Long>> entries = Lists.newArrayList();
+    for (ObjectLongCursor<DrillbitEndpoint> cursor : map) {
+      final DrillbitEndpoint ep = cursor.key;
+      final Long val = cursor.value;
+      Map.Entry<DrillbitEndpoint, Long> entry = new Entry<DrillbitEndpoint, Long>() {
+
+        @Override
+        public DrillbitEndpoint getKey() {
+          return ep;
+        }
+
+        @Override
+        public Long getValue() {
+          return val;
+        }
+
+        @Override
+        public Long setValue(Long value) {
+          throw new UnsupportedOperationException();
+        }
+      };
+      entries.add(entry);
+    }
+
+    if (entries.size() == 0) {
+      return null;
+    }
+
+    Collections.sort(entries, comparator);
+    Long value = entries.get(0).getValue();
+    List<DrillbitEndpoint> topEndpoints = Lists.newArrayList();
+
+    for (Entry<DrillbitEndpoint, Long> entry : entries) {
+      if (entry.getValue().equals(value)) {
+        topEndpoints.add(entry.getKey());
+      } else {
+        break;
+      }
+    }
+
+    return topEndpoints;
+  }
 }

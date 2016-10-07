@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.schedule;
 
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 /**
  * Container that holds a complete work unit.  Can contain one or more partial units.
@@ -26,4 +27,5 @@ public interface CompleteWork extends Comparable<CompleteWork>{
 
   public long getTotalBytes();
   public EndpointByteMap getByteMap();
+  public DrillbitEndpoint getPreferredEndpoint();
 }

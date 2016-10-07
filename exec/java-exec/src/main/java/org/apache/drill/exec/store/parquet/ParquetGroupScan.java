@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.generic.GenericData;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -49,7 +52,6 @@ import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
-import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
@@ -572,6 +574,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     private String root;
     private long rowCount;  // rowCount = -1 indicates to include all rows.
     private long numRecordsToRead;
+    private DrillbitEndpoint preferredEndpoint;
 
     @JsonCreator
     public RowGroupInfo(@JsonProperty("path") String path, @JsonProperty("start") long start,
@@ -612,6 +615,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     public void setNumRecordsToRead(long numRecords) {
       numRecordsToRead = numRecords;
+    }
+
+    @Override
+    public DrillbitEndpoint getPreferredEndpoint() {
+      return preferredEndpoint;
     }
 
     public void setEndpointByteMap(EndpointByteMap byteMap) {
@@ -786,6 +794,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.endpointAffinities = AffinityCreator.getAffinityMap(rowGroupInfos);
 
+    // If we are going to use local affinity for scan fragment placement,
+    // compute preferred endpoint to scan each rowGroup on.
+    if (this.formatPlugin.getContext().getOptionManager().getOption(ExecConstants.PARQUET_LOCAL_AFFINITY).bool_val) {
+      computeRowGroupAssignment();
+    }
+
     columnValueCounts = Maps.newHashMap();
     this.rowCount = 0;
     boolean first = true;
@@ -872,10 +886,102 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
   }
 
+  /*
+   * Figure out the best node to scan each of the rowGroups and update the preferredEndpoint.
+   * Based on this, update the total work units assigned to the endpoint in the endpointAffinity.
+   */
+  private void computeRowGroupAssignment() {
+    Map<DrillbitEndpoint, Integer> numEndpointAssignments = Maps.newHashMap();
+    Map<DrillbitEndpoint, Long> numAssignedBytes = Maps.newHashMap();
+
+    // Do this for 2 iterations to adjust node assignments after first iteration.
+    int numIterations = 2;
+
+    while (numIterations-- > 0) {
+      for (RowGroupInfo rowGroupInfo : rowGroupInfos) {
+        EndpointByteMap endpointByteMap = rowGroupInfo.getByteMap();
+        // This can be empty for local file system or if drilbit is not running
+        // on hosts which have data.
+        if (endpointByteMap.isEmpty()) {
+          continue;
+        }
+
+        // Get the list of endpoints which have maximum (equal) data.
+        final List<DrillbitEndpoint> topEndpoints = endpointByteMap.getTopEndpoints();
+        long assignedBytesOnNodePicked = 0, assignedBytesOnThisEndpoint = 0;
+
+        DrillbitEndpoint nodePicked = rowGroupInfo.preferredEndpoint;
+        if (nodePicked != null && numAssignedBytes.containsKey(nodePicked)) {
+          assignedBytesOnNodePicked = numAssignedBytes.get(nodePicked);
+        }
+
+        DrillbitEndpoint previousNodePicked = nodePicked;
+        for (DrillbitEndpoint endpoint : topEndpoints) {
+          // If no node is picked so far, pick this node
+          if (nodePicked == null) {
+            nodePicked = endpoint;
+            if (numAssignedBytes.containsKey(nodePicked)) {
+              assignedBytesOnNodePicked = numAssignedBytes.get(nodePicked);
+            }
+          }
+
+          // Get the number of bytes assigned to this endpoint so far.
+          if (numAssignedBytes.containsKey(endpoint)) {
+            assignedBytesOnThisEndpoint = numAssignedBytes.get(endpoint);
+          } else {
+            assignedBytesOnThisEndpoint = 0;
+          }
+
+          // If number of bytes assigned to this endpoint is less than that
+          // assigned to the current node that we picked, pick this endpoint instead.
+          if (assignedBytesOnThisEndpoint < assignedBytesOnNodePicked) {
+            nodePicked = endpoint;
+            assignedBytesOnNodePicked = assignedBytesOnThisEndpoint;
+          }
+        }
+
+        // If a different node is picked in second iteration, update number of bytes
+        // and endpointAssignments for both nodes.
+        if (nodePicked != null && nodePicked != previousNodePicked) {
+          numAssignedBytes.put(nodePicked, assignedBytesOnNodePicked + endpointByteMap.get(nodePicked));
+          if (numEndpointAssignments.containsKey(nodePicked)) {
+            numEndpointAssignments.put(nodePicked, numEndpointAssignments.get(nodePicked) + 1);
+          } else {
+            numEndpointAssignments.put(nodePicked, 1);
+          }
+
+          if (previousNodePicked != null) {
+            numAssignedBytes.put(previousNodePicked,
+                                 numAssignedBytes.get(previousNodePicked) - endpointByteMap.get(previousNodePicked));
+            numEndpointAssignments.put(previousNodePicked, numEndpointAssignments.get(previousNodePicked) - 1);
+          }
+        }
+        rowGroupInfo.preferredEndpoint = nodePicked;
+      }
+    }
+
+    // Set the number of local work units for each endpoint in the endpointAffinity.
+    for (EndpointAffinity epAff : endpointAffinities) {
+      DrillbitEndpoint endpoint = epAff.getEndpoint();
+      if (numEndpointAssignments.containsKey(endpoint)) {
+        epAff.setNumLocalWorkUnits(numEndpointAssignments.get(endpoint));
+      }
+    }
+  }
+
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    if (this.formatPlugin.getContext().getOptionManager().getOption(ExecConstants.PARQUET_LOCAL_AFFINITY).bool_val) {
+      return DistributionAffinity.LOCAL;
+    } else {
+      return DistributionAffinity.SOFT;
+    }
+  }
+
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) throws PhysicalOperatorSetupException {
-
-    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos);
+      this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos,
+          this.formatPlugin.getContext().getOptionManager().getOption(ExecConstants.PARQUET_LOCAL_AFFINITY).bool_val);
   }
 
   @Override public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {

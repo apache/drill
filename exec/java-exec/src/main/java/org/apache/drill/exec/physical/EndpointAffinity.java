@@ -31,6 +31,9 @@ public class EndpointAffinity {
   private final DrillbitEndpoint endpoint;
   private double affinity = 0.0d;
 
+  // work assignments for this endpoint
+  private int numLocalWorkUnits;
+
   // Requires including this endpoint at least once? Default is not required.
   private boolean mandatory;
 
@@ -68,13 +71,31 @@ public class EndpointAffinity {
    * @param mandatory Is this endpoint requires at least one mandatory assignment?
    * @param maxWidth Maximum allowed assignments for this endpoint.
    */
-  public EndpointAffinity(final DrillbitEndpoint endpoint, final double affinity, final boolean mandatory,
-      final int maxWidth) {
+  public EndpointAffinity(final DrillbitEndpoint endpoint, final double affinity, final boolean mandatory, final int maxWidth) {
     Preconditions.checkArgument(maxWidth >= 1, "MaxWidth for given endpoint should be at least one.");
     this.endpoint = endpoint;
     this.affinity = affinity;
     this.mandatory = mandatory;
     this.maxWidth = maxWidth;
+  }
+
+  /**
+   * Creates EndpointAffinity instance for given DrillbitEndpoint, affinity,
+   * mandatory assignment requirement flag and numLocalWorkUnits.
+   * @param endpoint Drillbit endpoint
+   * @param affinity Initial affinity value
+   * @param mandatory Is this endpoint requires at least one mandatory assignment?
+   * @param maxWidth Maximum allowed assignments for this endpoint.
+   * @param numLocalWorkUnits Number of local work units.
+   */
+  public EndpointAffinity(final DrillbitEndpoint endpoint, final double affinity, final boolean mandatory,
+                          final int maxWidth, int numLocalWorkUnits) {
+    Preconditions.checkArgument(maxWidth >= 1, "MaxWidth for given endpoint should be at least one.");
+    this.endpoint = endpoint;
+    this.affinity = affinity;
+    this.mandatory = mandatory;
+    this.maxWidth = maxWidth;
+    this.numLocalWorkUnits = numLocalWorkUnits;
   }
 
   /**
@@ -140,6 +161,14 @@ public class EndpointAffinity {
   public void setMaxWidth(final int maxWidth) {
     Preconditions.checkArgument(maxWidth >= 1, "MaxWidth for given endpoint should be at least one.");
     this.maxWidth = Math.min(this.maxWidth, maxWidth);
+  }
+
+  public void setNumLocalWorkUnits(final int localWorkUnits) {
+    numLocalWorkUnits = localWorkUnits;
+  }
+
+  public int getNumLocalWorkUnits() {
+    return numLocalWorkUnits;
   }
 
   @Override

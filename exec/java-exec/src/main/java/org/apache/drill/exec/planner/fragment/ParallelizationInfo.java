@@ -54,7 +54,7 @@ public class ParallelizationInfo {
   public static ParallelizationInfo create(int minWidth, int maxWidth, List<EndpointAffinity> endpointAffinities) {
     Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
 
-    for(EndpointAffinity epAffinity : endpointAffinities) {
+    for (EndpointAffinity epAffinity : endpointAffinities) {
       affinityMap.put(epAffinity.getEndpoint(), epAffinity);
     }
 

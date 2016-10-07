@@ -28,6 +28,12 @@ public enum DistributionAffinity {
   NONE(SoftAffinityFragmentParallelizer.INSTANCE),
 
   /**
+   * Local distribution affinity to one or more endpoints.
+   * Fragments will be scheduled on nodes based on locality of data.
+   */
+  LOCAL(LocalAffinityFragmentParallelizer.INSTANCE),
+
+  /**
    * Operator has soft distribution affinity to one or more endpoints. Operator performs better when fragments are
    * assigned to the endpoints with affinity, but not a mandatory requirement.
    */

@@ -169,6 +169,8 @@ public interface ExecConstants {
   String PARQUET_PAGEREADER_USE_FADVISE = "store.parquet.reader.pagereader.usefadvise";
   OptionValidator PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR = new  BooleanValidator(PARQUET_PAGEREADER_USE_FADVISE, false);
 
+  String PARQUET_LOCAL_AFFINITY = "store.parquet.use_local_affinity";
+  OptionValidator PARQUET_LOCAL_AFFINITY_IMPLEMENTATION_VALIDATOR = new BooleanValidator(PARQUET_LOCAL_AFFINITY, false);
   OptionValidator COMPILE_SCALAR_REPLACEMENT = new BooleanValidator("exec.compile.scalar_replacement", false);
 
   String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
