@@ -32,7 +32,9 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -739,15 +741,13 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
-  Test the reading of an int96 field. Impala encodes timestamps as int96 fields
+    Impala encodes timestamp values as int96 fields. Test the reading of an int96 field with two converters:
+    the first one converts parquet INT96 into drill VARBINARY and the second one (works while
+    store.parquet.reader.int96_as_timestamp option is enabled) converts parquet INT96 into drill TIMESTAMP.
    */
   @Test
-  public void testImpalaParquetInt96AsVarBinary() throws Exception {
+  public void testImpalaParquetInt96() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
-  }
-
-  @Test
-  public void testImpalaParquetInt96AsTimeStamp() throws Exception {
     try {
       test("alter session set %s = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
       compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
@@ -757,20 +757,32 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
-  Test the reading of a binary field where data is in dicationary _and_ non-dictionary encoded pages
+  Test the reading of a binary field as drill varbinary where data is in dicationary _and_ non-dictionary encoded pages
    */
   @Test
-  public void testImpalaParquetVarBinary_DictChange() throws Exception {
+  public void testImpalaParquetBinaryAsVarBinary_DictChange() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
   }
 
+  /*
+  Test the reading of a binary field as drill timestamp where data is in dicationary _and_ non-dictionary encoded pages
+   */
   @Test
-  public void testImpalaParquetBinaryTimeStamp_DictChange() throws Exception {
+  public void testImpalaParquetBinaryAsTimeStamp_DictChange() throws Exception {
+    final String WORKING_PATH = TestTools.getWorkingPath();
+    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
     try {
-      test("alter session set %s = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
-      compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+      testBuilder()
+          .sqlQuery("select int96_ts from dfs_test.`%s/parquet/int96_dict_change`", TEST_RES_PATH)
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .ordered()
+          .csvBaselineFile("testframework/testParquetReader/testInt96DictChange/q1.tsv")
+          .baselineTypes(TypeProtos.MinorType.TIMESTAMP)
+          .baselineColumns("int96_ts")
+          .build().run();
     } finally {
-      test("alter session reset %s", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
@@ -778,7 +790,7 @@ public class TestParquetWriter extends BaseTestQuery {
      Test the conversion from int96 to impala timestamp
    */
   @Test
-  public void testImpalaParquetTimestampInt96AsVarBinary() throws Exception {
+  public void testTimestampImpalaConvertFrom() throws Exception {
     compareParquetReadersColumnar("convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')", "cp.`parquet/int96_impala_1.parquet`");
   }
 
@@ -788,18 +800,14 @@ public class TestParquetWriter extends BaseTestQuery {
    */
   @Test
   public void testImpalaParquetTimestampInt96AsTimeStamp() throws Exception {
-      String simpleQuery = "select field_impala_ts from cp.`parquet/int96_impala_1.parquet`";
-      String queryWithConvertFromFunction = "select convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')" +
-          " as `field_impala_ts` from cp.`parquet/int96_impala_1.parquet`";
-      try {
-        test("alter session set %s = false", ExecConstants.PARQUET_NEW_RECORD_READER);
-        compareParquetInt96Converters(simpleQuery, queryWithConvertFromFunction);
-        test("alter session set %s = true", ExecConstants.PARQUET_NEW_RECORD_READER);
-        compareParquetInt96Converters(simpleQuery, queryWithConvertFromFunction);
-      } finally {
-        test("alter session reset `%s`", ExecConstants.PARQUET_NEW_RECORD_READER);
-        test("alter session reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
-      }
+    try {
+      test("alter session set %s = false", ExecConstants.PARQUET_NEW_RECORD_READER);
+      compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+      test("alter session set %s = true", ExecConstants.PARQUET_NEW_RECORD_READER);
+      compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+    } finally {
+      test("alter session reset `%s`", ExecConstants.PARQUET_NEW_RECORD_READER);
+    }
   }
 
   /*
@@ -899,18 +907,21 @@ public class TestParquetWriter extends BaseTestQuery {
         "cp.`parquet/last_page_one_null.parquet`");
   }
 
-  private void compareParquetInt96Converters(String newInt96ConverterQuery,
-      String oldInt96ConverterAndConvertFromFunctionQuery) throws Exception {
-    testBuilder()
-        .ordered()
-        .sqlQuery(newInt96ConverterQuery)
-        .optionSettingQueriesForTestQuery(
-            "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
-        .sqlBaselineQuery(oldInt96ConverterAndConvertFromFunctionQuery)
-        .optionSettingQueriesForBaseline(
-            "alter session set `%s` = false", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
-        .build()
-        .run();
+  private void compareParquetInt96Converters(String selection, String table) throws Exception {
+    try {
+      testBuilder()
+          .ordered()
+          .sqlQuery("select `%s` from %s", selection, table)
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .sqlBaselineQuery("select convert_from(`%1$s`, 'TIMESTAMP_IMPALA') as `%1$s` from %2$s", selection, table)
+          .optionSettingQueriesForBaseline(
+              "alter session set `%s` = false", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .build()
+          .run();
+    } finally {
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
   }
 
 }

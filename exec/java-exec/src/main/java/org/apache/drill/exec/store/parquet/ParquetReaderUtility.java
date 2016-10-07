@@ -176,8 +176,8 @@ public class ParquetReaderUtility {
    * Check for corrupted dates in a parquet file. See Drill-4203
    */
   public static DateCorruptionStatus detectCorruptDates(ParquetMetadata footer,
-                                                        List<SchemaPath> columns,
-                                                        boolean autoCorrectCorruptDates) {
+                                           List<SchemaPath> columns,
+                                           boolean autoCorrectCorruptDates) {
     // old drill files have "parquet-mr" as created by string, and no drill version, need to check min/max values to see
     // if they look corrupt
     //  - option to disable this auto-correction based on the date values, in case users are storing these
@@ -225,12 +225,12 @@ public class ParquetReaderUtility {
 
   /**
    * Detect corrupt date values by looking at the min/max values in the metadata.
-   * <p>
+   *
    * This should only be used when a file does not have enough metadata to determine if
    * the data was written with an older version of Drill, or an external tool. Drill
    * versions 1.3 and beyond should have enough metadata to confirm that the data was written
    * by Drill.
-   * <p>
+   *
    * This method only checks the first Row Group, because Drill has only ever written
    * a single Row Group per file.
    *
@@ -242,20 +242,19 @@ public class ParquetReaderUtility {
    *                                that would result in the date values being "corrected" into bad values.
    */
   public static DateCorruptionStatus checkForCorruptDateValuesInStatistics(ParquetMetadata footer,
-                                                                           List<SchemaPath> columns,
-                                                                           boolean autoCorrectCorruptDates) {
+                                                              List<SchemaPath> columns,
+                                                              boolean autoCorrectCorruptDates) {
     // Users can turn-off date correction in cases where we are detecting corruption based on the date values
     // that are unlikely to appear in common datasets. In this case report that no correction needs to happen
     // during the file read
-    if (!autoCorrectCorruptDates) {
+    if (! autoCorrectCorruptDates) {
       return DateCorruptionStatus.META_SHOWS_NO_CORRUPTION;
     }
     // Drill produced files have only ever have a single row group, if this changes in the future it won't matter
     // as we will know from the Drill version written in the files that the dates are correct
     int rowGroupIndex = 0;
     Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
-    findDateColWithStatsLoop:
-    for (SchemaPath schemaPath : columns) {
+    findDateColWithStatsLoop : for (SchemaPath schemaPath : columns) {
       List<ColumnDescriptor> parquetColumns = footer.getFileMetaData().getSchema().getColumns();
       for (int i = 0; i < parquetColumns.size(); ++i) {
         ColumnDescriptor column = parquetColumns.get(i);
