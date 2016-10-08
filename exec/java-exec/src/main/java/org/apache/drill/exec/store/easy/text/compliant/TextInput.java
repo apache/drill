@@ -261,7 +261,7 @@ final class TextInput {
    * @throws IOException
    */
   public final byte nextChar() throws IOException {
-    byte byteChar = getNextChar();
+    byte byteChar = nextCharNoNewLineCheck();
     int bufferPtrTemp = bufferPtr - 1;
     if (byteChar == lineSeparator[0]) {
        for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
@@ -295,7 +295,7 @@ final class TextInput {
    * @return next byte from stream.
    * @throws IOException
    */
-  public final byte getNextChar() throws IOException {
+  public final byte nextCharNoNewLineCheck() throws IOException {
 
     if (length == -1) {
       throw StreamFinishedPseudoException.INSTANCE;
@@ -320,7 +320,6 @@ final class TextInput {
 
     return byteChar;
   }
-
 
   /**
    * Number of lines read since the start of this split.
@@ -362,7 +361,7 @@ final class TextInput {
     return lineCount;
   }
 
-  public void close() throws IOException {
+  public void close() throws IOException{
     input.close();
   }
 }

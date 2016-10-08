@@ -231,7 +231,7 @@ final class TextReader {
     final TextInput input = this.input;
     final byte quote = this.quote;
 
-    ch = input.getNextChar();
+    ch = input.nextCharNoNewLineCheck();
 
     while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
       if (ch != quote) {
@@ -243,10 +243,10 @@ final class TextReader {
             break;
           } else {
             throw new TextParsingException(
-                    context,
-                    "Unescaped quote character '"
-                            + quote
-                            + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
+                context,
+                "Unescaped quote character '"
+                    + quote
+                    + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
           }
         }
         output.append(ch);
@@ -257,7 +257,7 @@ final class TextReader {
       } else {
         prev = ch;
       }
-      ch = input.getNextChar();
+      ch = input.nextCharNoNewLineCheck();
     }
 
     // Handles whitespaces after quoted value:
@@ -296,7 +296,7 @@ final class TextReader {
 
     if (!(ch == delimiter || ch == newLine)) {
       throw new TextParsingException(context, "Unexpected character '" + ch
-              + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
+          + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
     }
   }
 
@@ -442,15 +442,15 @@ final class TextReader {
       int length = chars.length;
       if (length > settings.getMaxCharsPerColumn()) {
         message = "Length of parsed input (" + length
-                + ") exceeds the maximum number of characters defined in your parser settings ("
-                + settings.getMaxCharsPerColumn() + "). ";
+            + ") exceeds the maximum number of characters defined in your parser settings ("
+            + settings.getMaxCharsPerColumn() + "). ";
       }
 
       if (tmp.contains("\n") || tmp.contains("\r")) {
         tmp = displayLineSeparators(tmp, true);
         String lineSeparator = displayLineSeparators(settings.getLineSeparatorString(), false);
         message += "\nIdentified line separator characters in the parsed content. This may be the cause of the error. The line separator in your parser settings is set to '"
-                + lineSeparator + "'. Parsed content:\n\t" + tmp;
+            + lineSeparator + "'. Parsed content:\n\t" + tmp;
       }
 
       int nullCharacterCount = 0;
@@ -470,9 +470,9 @@ final class TextReader {
 
       if (nullCharacterCount > 0) {
         message += "\nIdentified "
-                + nullCharacterCount
-                + " null characters ('\0') on parsed content. This may indicate the data is corrupt or its encoding is invalid. Parsed content:\n\t"
-                + tmp;
+            + nullCharacterCount
+            + " null characters ('\0') on parsed content. This may indicate the data is corrupt or its encoding is invalid. Parsed content:\n\t"
+            + tmp;
       }
 
     }
