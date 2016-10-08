@@ -88,11 +88,6 @@ final class TextInput {
   private boolean endFound = false;
 
   /**
-   * Switch for enabling/disabling new line detection
-   */
-  private boolean monitorForNewLine = true;
-
-  /**
    * Creates a new instance with the mandatory characters for handling newlines transparently.
    * lineSeparator the sequence of characters that represent a newline, as defined in {@link Format#getLineSeparator()}
    * normalizedLineSeparator the normalized newline character (as defined in {@link Format#getNormalizedNewline()}) that is used to replace any lineSeparator sequence found in the input.
@@ -266,6 +261,41 @@ final class TextInput {
    * @throws IOException
    */
   public final byte nextChar() throws IOException {
+    byte byteChar = getNextChar();
+    int bufferPtrTemp = bufferPtr - 1;
+    if (byteChar == lineSeparator[0]) {
+       for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
+         if (lineSeparator[i] != buffer.getByte(bufferPtrTemp)) {
+           return byteChar;
+         }
+       }
+
+        lineCount++;
+        byteChar = normalizedLineSeparator;
+
+        // we don't need to update buffer position if line separator is one byte long
+        if (lineSeparator.length > 1) {
+          bufferPtr += (lineSeparator.length - 1);
+          if (bufferPtr >= length) {
+            if (length != -1) {
+              updateBuffer();
+            } else {
+              throw StreamFinishedPseudoException.INSTANCE;
+            }
+          }
+        }
+      }
+
+    return byteChar;
+  }
+
+  /**
+   * Get next byte from stream.  Do no maintain any line count  Will throw a StreamFinishedPseudoException
+   * when the stream has run out of bytes.
+   * @return next byte from stream.
+   * @throws IOException
+   */
+  public final byte getNextChar() throws IOException {
 
     if (length == -1) {
       throw StreamFinishedPseudoException.INSTANCE;
@@ -288,35 +318,9 @@ final class TextInput {
 
     bufferPtr++;
 
-    int bufferPtrTemp = bufferPtr - 1;
-    // monitor for next line.
-    if (monitorForNewLine) {
-      if (byteChar == lineSeparator[0]) {
-        for (int i = 1; i < lineSeparator.length; i++, bufferPtrTemp++) {
-          if (lineSeparator[i] != buffer.getByte(bufferPtrTemp)) {
-            return byteChar;
-          }
-        }
-
-        lineCount++;
-        byteChar = normalizedLineSeparator;
-
-        // we don't need to update buffer position if line separator is one byte long
-        if (lineSeparator.length > 1) {
-          bufferPtr += (lineSeparator.length - 1);
-          if (bufferPtr >= length) {
-            if (length != -1) {
-              updateBuffer();
-            } else {
-              throw StreamFinishedPseudoException.INSTANCE;
-            }
-          }
-        }
-      }
-    }
-
     return byteChar;
   }
+
 
   /**
    * Number of lines read since the start of this split.
@@ -356,16 +360,6 @@ final class TextInput {
 
   public long getLineCount() {
     return lineCount;
-  }
-
-  /**
-   * TextInput will monitor for new line characters if this flag is set to true.<br>
-   * This flag is useful when reading escaped data where new line characters may occurs.
-   *
-   * @param monitorForNewLine
-   */
-  public void setMonitorForNewLine(boolean monitorForNewLine) {
-    this.monitorForNewLine = monitorForNewLine;
   }
 
   public void close() throws IOException {

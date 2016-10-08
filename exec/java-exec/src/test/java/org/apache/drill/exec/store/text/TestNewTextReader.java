@@ -123,9 +123,9 @@ public class TestNewTextReader extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("c0", "c1", "c2")
-        .baselineValues("a\r\n1", "a", "a")
-        .baselineValues("a", "a\r\n2", "a")
-        .baselineValues("a", "a", "a\r\n3")
+        .baselineValues("a\n1", "a", "a")
+        .baselineValues("a", "a\n2", "a")
+        .baselineValues("a", "a", "a\n3")
         .build()
         .run();
   }

@@ -68,7 +68,7 @@ final class TextReader {
   /**
    * The CsvParser supports all settings provided by {@link CsvParserSettings}, and requires this configuration to be
    * properly initialized.
-   * @param settings the parser configuration
+   * @param settings  the parser configuration
    * @param input  input stream
    * @param output  interface to produce output record batch
    * @param workBuf  working buffer to handle whitespaces
@@ -231,34 +231,33 @@ final class TextReader {
     final TextInput input = this.input;
     final byte quote = this.quote;
 
-    try {
-      input.setMonitorForNewLine(false);
-      ch = input.nextChar();
+    ch = input.getNextChar();
 
-      while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
-        if (ch != quote) {
-          if (prev == quote) { // unescaped quote detected
-            if (parseUnescapedQuotes) {
-              output.append(quote);
-              output.append(ch);
-              parseQuotedValue(ch);
-              break;
-            } else {
-              throw new TextParsingException(context, "Unescaped quote character '" + quote + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
-            }
+    while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
+      if (ch != quote) {
+        if (prev == quote) { // unescaped quote detected
+          if (parseUnescapedQuotes) {
+            output.append(quote);
+            output.append(ch);
+            parseQuotedValue(ch);
+            break;
+          } else {
+            throw new TextParsingException(
+                    context,
+                    "Unescaped quote character '"
+                            + quote
+                            + "' inside quoted value of CSV field. To allow unescaped quotes, set 'parseUnescapedQuotes' to 'true' in the CSV parser settings. Cannot parse CSV input.");
           }
-          output.append(ch);
-          prev = ch;
-        } else if (prev == quoteEscape) {
-          output.append(quote);
-          prev = NULL_BYTE;
-        } else {
-          prev = ch;
         }
-        ch = input.nextChar();
+        output.append(ch);
+        prev = ch;
+      } else if (prev == quoteEscape) {
+        output.append(quote);
+        prev = NULL_BYTE;
+      } else {
+        prev = ch;
       }
-    } finally {
-      input.setMonitorForNewLine(true);
+      ch = input.getNextChar();
     }
 
     // Handles whitespaces after quoted value:
@@ -296,7 +295,8 @@ final class TextReader {
     }
 
     if (!(ch == delimiter || ch == newLine)) {
-      throw new TextParsingException(context, "Unexpected character '" + ch + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
+      throw new TextParsingException(context, "Unexpected character '" + ch
+              + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
     }
   }
 
@@ -428,11 +428,11 @@ final class TextReader {
 
     if (ex instanceof ArrayIndexOutOfBoundsException) {
       ex = UserException
-          .dataReadError(ex)
-          .message(
-              "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
-              RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
-          .build(logger);
+              .dataReadError(ex)
+              .message(
+                      "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
+                      RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
+              .build(logger);
     }
 
     String message = null;
@@ -442,15 +442,15 @@ final class TextReader {
       int length = chars.length;
       if (length > settings.getMaxCharsPerColumn()) {
         message = "Length of parsed input (" + length
-            + ") exceeds the maximum number of characters defined in your parser settings ("
-            + settings.getMaxCharsPerColumn() + "). ";
+                + ") exceeds the maximum number of characters defined in your parser settings ("
+                + settings.getMaxCharsPerColumn() + "). ";
       }
 
       if (tmp.contains("\n") || tmp.contains("\r")) {
         tmp = displayLineSeparators(tmp, true);
         String lineSeparator = displayLineSeparators(settings.getLineSeparatorString(), false);
         message += "\nIdentified line separator characters in the parsed content. This may be the cause of the error. The line separator in your parser settings is set to '"
-            + lineSeparator + "'. Parsed content:\n\t" + tmp;
+                + lineSeparator + "'. Parsed content:\n\t" + tmp;
       }
 
       int nullCharacterCount = 0;
@@ -470,9 +470,9 @@ final class TextReader {
 
       if (nullCharacterCount > 0) {
         message += "\nIdentified "
-            + nullCharacterCount
-            + " null characters ('\0') on parsed content. This may indicate the data is corrupt or its encoding is invalid. Parsed content:\n\t"
-            + tmp;
+                + nullCharacterCount
+                + " null characters ('\0') on parsed content. This may indicate the data is corrupt or its encoding is invalid. Parsed content:\n\t"
+                + tmp;
       }
 
     }
