@@ -393,6 +393,6 @@ export DRILL_CONF_DIR
 export DRILL_LOG_DIR
 export CP
 # DRILL-4870: Don't export JAVA_HOME. Java can find it just fine from the java
-# command. If we attempt to work out out, we do so incorrectly for the Mac.
+# command. If we attempt to work it out, we do so incorrectly for the Mac.
 #export JAVA_HOME
 export JAVA
