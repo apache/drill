@@ -428,11 +428,11 @@ final class TextReader {
 
     if (ex instanceof ArrayIndexOutOfBoundsException) {
       ex = UserException
-              .dataReadError(ex)
-              .message(
-                      "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
-                      RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
-              .build(logger);
+          .dataReadError(ex)
+          .message(
+              "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
+              RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
+          .build(logger);
     }
 
     String message = null;
