@@ -186,6 +186,7 @@ public class DrillbitContext implements AutoCloseable {
   @Override
   public void close() throws Exception {
     getOptionManager().close();
+    getFunctionImplementationRegistry().close();
     getRemoteFunctionRegistry().close();
   }
 }

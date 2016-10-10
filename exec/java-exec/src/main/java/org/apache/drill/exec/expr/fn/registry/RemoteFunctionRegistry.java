@@ -44,6 +44,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import java.io.File;
 import java.io.IOException;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
@@ -184,6 +185,8 @@ public class RemoteFunctionRegistry implements AutoCloseable {
 
   /**
    * Creates if absent and validates three udf areas: STAGING, REGISTRY and TMP.
+   * Generated udf ares root from {@link ExecConstants#UDF_DIRECTORY_ROOT},
+   * if not set, uses user home directory instead.
    */
   private void prepareAreas(DrillConfig config) {
     Configuration conf = new Configuration();
@@ -196,22 +199,30 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     } catch (IOException e) {
       DrillRuntimeException.format(e, "Error during file system %s setup", conf.get(FileSystem.FS_DEFAULT_NAME_KEY));
     }
-    this.registryArea = createArea(fs, config.getString(ExecConstants.UDF_DIRECTORY_REGISTRY));
-    this.stagingArea = createArea(fs, config.getString(ExecConstants.UDF_DIRECTORY_STAGING));
-    this.tmpArea = createArea(fs, config.getString(ExecConstants.UDF_DIRECTORY_TMP));
+
+    String root = fs.getHomeDirectory().toUri().getPath();
+    if (config.hasPath(ExecConstants.UDF_DIRECTORY_ROOT)) {
+      root = config.getString(ExecConstants.UDF_DIRECTORY_ROOT);
+    }
+
+    this.registryArea = createArea(fs, root, config.getString(ExecConstants.UDF_DIRECTORY_REGISTRY));
+    this.stagingArea = createArea(fs, root, config.getString(ExecConstants.UDF_DIRECTORY_STAGING));
+    this.tmpArea = createArea(fs, root, config.getString(ExecConstants.UDF_DIRECTORY_TMP));
   }
 
   /**
+   * Concatenates udf are with root directory.
    * Creates udf area, if area does not exist.
    * Checks if area exists and is directory, if it is writable for current user,
    * throws {@link DrillRuntimeException} otherwise.
    *
    * @param fs file system where area should be created or checked
+   * @param root root directory
    * @param directory directory path
    * @return path to area
    */
-  private Path createArea(FileSystem fs, String directory) {
-    Path path = new Path(directory);
+  private Path createArea(FileSystem fs, String root, String directory) {
+    Path path = new Path(new File(root, directory).toURI().getPath());
     String fullPath = path.toUri().getPath();
     try {
       fs.mkdirs(path);
@@ -238,7 +249,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     try {
       AutoCloseables.close(
           fs,

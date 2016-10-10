@@ -324,10 +324,11 @@ if [ -n "$DRILL_CLASSPATH" ]; then
   CP="$CP:$DRILL_CLASSPATH"
 fi
 
+# Drill temporary directory is used as base for temporary storage of Dynamic UDF jars.
 # If tmp dir is given, it must exist.
 if [ -n "$DRILL_TMP_DIR" ]; then
   if [[ ! -d "$DRILL_TMP_DIR" ]]; then
-    fatal_error "temporary dir does not exist:" $DRILL_TMP_DIR
+    fatal_error "Temporary dir does not exist:" $DRILL_TMP_DIR
   fi
 else
   # Otherwise, use the default

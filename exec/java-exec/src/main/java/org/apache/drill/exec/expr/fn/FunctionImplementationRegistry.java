@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.CommonConstants;
@@ -71,12 +72,14 @@ import org.apache.hadoop.fs.Path;
  * (in {@link LocalFunctionRegistry}), other PluggableFunctionRegistry (e.g., {@link org.apache.drill.exec.expr.fn.HiveFunctionRegistry})
  * is also registered in this class
  */
-public class FunctionImplementationRegistry implements FunctionLookupContext {
+public class FunctionImplementationRegistry implements FunctionLookupContext, AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private final LocalFunctionRegistry localFunctionRegistry;
   private final RemoteFunctionRegistry remoteFunctionRegistry;
   private final Path localUdfDir;
+  private boolean deleteTmpDir = false;
+  private File tmpDir;
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
   private OptionManager optionManager = null;
 
@@ -377,16 +380,16 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
    * Creates local udf directory, if it doesn't exist.
    * Checks if local udf directory is a directory and if current application has write rights on it.
    * Attempts to clean up local udf directory in case jars were left after previous drillbit run.
-   * Local udf directory path is concatenated from $DRILL_TMP_DRILL and ${drill.exec.udf.directory.local}.
+   * Local udf directory path is concatenated from drill temporary directory and ${drill.exec.udf.directory.local}.
    *
    * @param config drill config
    * @return path to local udf directory
    */
   private Path getLocalUdfDir(DrillConfig config) {
-    String tmpDir = getTmpDir();
+    tmpDir = getTmpDir(config);
     File udfDir = new File(tmpDir, config.getString(ExecConstants.UDF_DIRECTORY_LOCAL));
-    String udfPath = udfDir.getPath();
     udfDir.mkdirs();
+    String udfPath = udfDir.getPath();
     Preconditions.checkState(udfDir.exists(), "Local udf directory [%s] must exist", udfPath);
     Preconditions.checkState(udfDir.isDirectory(), "Local udf directory [%s] must be a directory", udfPath);
     Preconditions.checkState(udfDir.canWrite(), "Local udf directory [%s] must be writable for application user", udfPath);
@@ -399,18 +402,26 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   }
 
   /**
-   * First tries to get drill temporary directory value from system properties,
-   * if value is missing, checks environment properties.
-   * Throws exception is value is null.
+   * First tries to get drill temporary directory value from environmental variable $DRILL_TMP_DIR,
+   * then from config ${drill.tmp-dir}.
+   * If value is still missing, generates directory using {@link Files#createTempDir()}.
+   * If temporary directory was generated, sets {@link #deleteTmpDir} to true
+   * to delete directory on drillbit exit.
    * @return drill temporary directory path
    */
-  private String getTmpDir() {
-    String drillTempDir = "DRILL_TMP_DIR";
-    String value = System.getProperty(drillTempDir);
-    if (value == null) {
-      value = Preconditions.checkNotNull(System.getenv(drillTempDir), "%s variable is not set", drillTempDir);
+  private File getTmpDir(DrillConfig config) {
+    String drillTempDir = System.getenv("DRILL_TMP_DIR");
+
+    if (drillTempDir == null && config.hasPath(ExecConstants.DRILL_TMP_DIR)) {
+      drillTempDir = config.getString(ExecConstants.DRILL_TMP_DIR);
     }
-    return value;
+
+    if (drillTempDir == null) {
+      deleteTmpDir = true;
+      return Files.createTempDir();
+    }
+
+    return new File(drillTempDir);
   }
 
   /**
@@ -444,6 +455,23 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   private void deleteQuietlyLocalJar(Path jar) {
     if (jar != null) {
       FileUtils.deleteQuietly(new File(jar.toUri().getPath()));
+    }
+  }
+
+  /**
+   * If {@link #deleteTmpDir} is set to true, deletes generated temporary directory.
+   * Otherwise cleans up {@link #localUdfDir}.
+   */
+  @Override
+  public void close() {
+    if (deleteTmpDir) {
+      FileUtils.deleteQuietly(tmpDir);
+    } else {
+      try {
+        FileUtils.cleanDirectory(new File(localUdfDir.toUri().getPath()));
+      } catch (IOException e) {
+        logger.warn("Problems during local udf directory clean up", e);
+      }
     }
   }
 

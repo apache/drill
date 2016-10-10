@@ -43,10 +43,6 @@ public class ExecTest extends DrillTest {
   protected static SystemOptionManager optionManager;
   private static final DrillConfig c = DrillConfig.create();
 
-  static {
-    System.setProperty("DRILL_TMP_DIR", getTempDir("/tmp"));
-  }
-
   @After
   public void clear(){
     // TODO:  (Re DRILL-1735) Check whether still needed now that
