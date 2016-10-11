@@ -38,12 +38,15 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
 
   private String connection;
 
+  private boolean directConnection;
+
   @JsonIgnore
   private MongoClientURI clientURI;
 
   @JsonCreator
-  public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
+  public MongoStoragePluginConfig(@JsonProperty("connection") String connection, @JsonProperty("direct-connection")boolean directConnection) {
     this.connection = connection;
+    this.directConnection = directConnection;
     this.clientURI = new MongoClientURI(connection);
   }
 
@@ -81,5 +84,19 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
 
   public String getConnection() {
     return connection;
+  }
+
+  /**
+   * The direct connection is used to force Drill to only connect to the node listed in the connection string
+   * This is mandatory when Drill has to access specific nodes of a cluster/replica-set without having access to other.
+   * It is a common pattern for MongoDB when used for analytics, see: https://github.com/mongodb/specifications/blob/master/source/server-selection/server-selection.rst#terms
+   *
+   * The default value is false, meaning that the default behavior of the plugin is to connect to the full cluster.
+   *
+   * @return true if the plugin is configured to use direct connection to MongoDB nodes
+   */
+  @JsonProperty("direct-connection")
+  public boolean isDirectConnection() {
+    return directConnection;
   }
 }

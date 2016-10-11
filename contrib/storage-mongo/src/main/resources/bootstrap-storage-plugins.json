@@ -3,7 +3,8 @@
     mongo : {
       type:"mongo",
       enabled: false,
-      connection:"mongodb://localhost:27017/"
+      connection:"mongodb://localhost:27017/",
+      "direct-connection" : false
     }
   }
 }
