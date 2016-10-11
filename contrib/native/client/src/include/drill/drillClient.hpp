@@ -1276,6 +1276,13 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         status_t executeQuery(const PreparedStatement& pstmt, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
 
         /*
+         * Cancel a query.
+         *
+         * @param[in] the handle of the query to cancel
+         */
+        void cancelQuery(QueryHandle_t handle);
+
+        /*
          * The client application should call this function to wait for results if it has registered a
          * listener.
          */
