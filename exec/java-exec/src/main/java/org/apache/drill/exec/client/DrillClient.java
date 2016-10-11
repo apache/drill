@@ -223,7 +223,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         }
       }
 
-      final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+      final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getCompatibleEndpoints());
       checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
       // shuffle the collection then get the first endpoint
       Collections.shuffle(endpoints);
@@ -270,7 +270,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       retry--;
       try {
         Thread.sleep(this.reconnectDelay);
-        final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+        final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getCompatibleEndpoints());
         if (endpoints.isEmpty()) {
           continue;
         }

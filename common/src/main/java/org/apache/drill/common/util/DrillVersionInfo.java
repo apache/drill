@@ -18,6 +18,7 @@
 package org.apache.drill.common.util;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
@@ -27,13 +28,16 @@ import java.util.jar.Manifest;
  */
 public class DrillVersionInfo {
 
+  public static final String UNKNOWN_VERSION = "Unknown";
+  private static final BigDecimal version_increment = new BigDecimal(0.1);
+
   /**
    * Get the Drill version from the Manifest file
    * @return the version number as x.y.z
    */
   public static String getVersion() {
     String appName = "";
-    String appVersion = "Unknown";
+    String appVersion = UNKNOWN_VERSION;
     try {
       Enumeration<URL> resources = DrillVersionInfo.class.getClassLoader()
               .getResources("META-INF/MANIFEST.MF");
@@ -49,10 +53,52 @@ public class DrillVersionInfo {
         }
       }
     } catch (IOException except) {
-      appVersion = "Unknown";
+      appVersion = UNKNOWN_VERSION;
     }
     return appVersion;
   }
 
+  /**
+   * Compare two Drill versions disregarding build number and comparing only major and minor versions.
+   * Versions are considered to be compatible:
+   * 1. if current version is the same as version to compare.
+   * 2. if current version minor version + 1 is the same as version to compare.
+   */
+  public static boolean isVersionsCompatible(String currentVersion, String versionToCompare) {
+    if (currentVersion != null && currentVersion.equals(versionToCompare)) {
+      return true;
+    }
+
+    BigDecimal currentVersionDecimal = getVersionAsDecimal(currentVersion);
+    BigDecimal versionToCompareDecimal = getVersionAsDecimal(versionToCompare);
+
+    if (currentVersionDecimal != null && versionToCompareDecimal != null) {
+      BigDecimal currentVersionIncr = currentVersionDecimal.add(version_increment)
+          .setScale(1, BigDecimal.ROUND_HALF_UP);
+      return currentVersionDecimal.equals(versionToCompareDecimal)
+          || currentVersionIncr.equals(versionToCompareDecimal);
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the Drill version as big decimal, if version is invalid return null
+   * @return the version number from x.y.z as x.y
+   */
+  private static BigDecimal getVersionAsDecimal(String version) {
+    BigDecimal decimalValue = null;
+    if (version != null) {
+      String[] arr = version.split("\\.");
+      if (arr.length >= 2) {
+        try {
+          decimalValue = new BigDecimal(arr[0] + "." + arr[1]);
+        } catch (NumberFormatException e) {
+          // do nothing
+        }
+      }
+    }
+    return decimalValue;
+  }
 
 }

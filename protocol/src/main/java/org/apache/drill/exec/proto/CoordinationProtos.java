@@ -86,6 +86,21 @@ public final class CoordinationProtos {
      * <code>optional .exec.Roles roles = 5;</code>
      */
     org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder getRolesOrBuilder();
+
+    // optional string version = 6;
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    java.lang.String getVersion();
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getVersionBytes();
   }
   /**
    * Protobuf type {@code exec.DrillbitEndpoint}
@@ -169,6 +184,11 @@ public final class CoordinationProtos {
                 roles_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000010;
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              version_ = input.readBytes();
               break;
             }
           }
@@ -324,12 +344,56 @@ public final class CoordinationProtos {
       return roles_;
     }
 
+    // optional string version = 6;
+    public static final int VERSION_FIELD_NUMBER = 6;
+    private java.lang.Object version_;
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    public java.lang.String getVersion() {
+      java.lang.Object ref = version_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          version_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string version = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getVersionBytes() {
+      java.lang.Object ref = version_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        version_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       address_ = "";
       userPort_ = 0;
       controlPort_ = 0;
       dataPort_ = 0;
       roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
+      version_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -357,6 +421,9 @@ public final class CoordinationProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeMessage(5, roles_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getVersionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -386,6 +453,10 @@ public final class CoordinationProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, roles_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -518,6 +589,8 @@ public final class CoordinationProtos {
           rolesBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000010);
+        version_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -570,6 +643,10 @@ public final class CoordinationProtos {
         } else {
           result.roles_ = rolesBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -602,6 +679,11 @@ public final class CoordinationProtos {
         }
         if (other.hasRoles()) {
           mergeRoles(other.getRoles());
+        }
+        if (other.hasVersion()) {
+          bitField0_ |= 0x00000020;
+          version_ = other.version_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -918,6 +1000,80 @@ public final class CoordinationProtos {
           roles_ = null;
         }
         return rolesBuilder_;
+      }
+
+      // optional string version = 6;
+      private java.lang.Object version_ = "";
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public java.lang.String getVersion() {
+        java.lang.Object ref = version_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          version_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getVersionBytes() {
+        java.lang.Object ref = version_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          version_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public Builder setVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        version_ = getDefaultInstance().getVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string version = 6;</code>
+       */
+      public Builder setVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        version_ = value;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.DrillbitEndpoint)
@@ -2419,18 +2575,19 @@ public final class CoordinationProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022Coordination.proto\022\004exec\"{\n\020DrillbitEn" +
-      "dpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 \001" +
-      "(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004 " +
-      "\001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\"i\n\024Drill" +
-      "ServiceInstance\022\n\n\002id\030\001 \001(\t\022\033\n\023registrat" +
-      "ionTimeUTC\030\002 \001(\003\022(\n\010endpoint\030\003 \001(\0132\026.exe" +
-      "c.DrillbitEndpoint\"\227\001\n\005Roles\022\027\n\tsql_quer" +
-      "y\030\001 \001(\010:\004true\022\032\n\014logical_plan\030\002 \001(\010:\004tru" +
-      "e\022\033\n\rphysical_plan\030\003 \001(\010:\004true\022\033\n\rjava_e" +
-      "xecutor\030\004 \001(\010:\004true\022\037\n\021distributed_cache",
-      "\030\005 \001(\010:\004trueB3\n\033org.apache.drill.exec.pr" +
-      "otoB\022CoordinationProtosH\001"
+      "\n\022Coordination.proto\022\004exec\"\214\001\n\020DrillbitE" +
+      "ndpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 " +
+      "\001(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004" +
+      " \001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\022\017\n\007vers" +
+      "ion\030\006 \001(\t\"i\n\024DrillServiceInstance\022\n\n\002id\030" +
+      "\001 \001(\t\022\033\n\023registrationTimeUTC\030\002 \001(\003\022(\n\010en" +
+      "dpoint\030\003 \001(\0132\026.exec.DrillbitEndpoint\"\227\001\n" +
+      "\005Roles\022\027\n\tsql_query\030\001 \001(\010:\004true\022\032\n\014logic" +
+      "al_plan\030\002 \001(\010:\004true\022\033\n\rphysical_plan\030\003 \001" +
+      "(\010:\004true\022\033\n\rjava_executor\030\004 \001(\010:\004true\022\037\n",
+      "\021distributed_cache\030\005 \001(\010:\004trueB3\n\033org.ap" +
+      "ache.drill.exec.protoB\022CoordinationProto" +
+      "sH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2442,7 +2599,7 @@ public final class CoordinationProtos {
           internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_DrillbitEndpoint_descriptor,
-              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", });
+              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", "Version", });
           internal_static_exec_DrillServiceInstance_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_DrillServiceInstance_fieldAccessorTable = new
