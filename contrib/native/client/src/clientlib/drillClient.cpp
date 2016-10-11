@@ -400,6 +400,14 @@ status_t DrillClient::executeQuery(const PreparedStatement& pstmt, pfnQueryResul
 	return QRY_SUCCESS;
 }
 
+void DrillClient::cancelQuery(QueryHandle_t handle) {
+	if (!handle) {
+		return;
+	}
+	DrillClientQueryHandle* pHandle = static_cast<DrillClientQueryHandle*>(handle);
+	pHandle->cancel();
+}
+
 void* DrillClient::getApplicationContext(QueryHandle_t handle){
     assert(handle!=NULL);
     return (static_cast<DrillClientQueryHandle*>(handle))->getApplicationContext();
