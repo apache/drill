@@ -152,7 +152,7 @@ Add the following required authorization parameters in hive-site.xml to configur
 **Value:** org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory  
 
 **hive.server2.enable.doAs**  
-**Description:** Tells HiveServer2 to execute Hive operations as the user submitting the query. Must be set to false for the storage based model. 
+**Description:** Tells HiveServer2 to execute Hive operations as the user submitting the query. Must be set to false for the SQL standard based model. 
 **Value:** false
 
 **hive.users.in.admin.role**  
