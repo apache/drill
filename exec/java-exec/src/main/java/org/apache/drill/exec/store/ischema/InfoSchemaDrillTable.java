@@ -17,18 +17,20 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.Schema.TableType;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
-public class InfoSchemaDrillTable extends DrillTable{
+public class InfoSchemaDrillTable extends DrillTable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaDrillTable.class);
 
   private final InfoSchemaTableType table;
 
   public InfoSchemaDrillTable(InfoSchemaStoragePlugin plugin, String storageEngineName, InfoSchemaTableType selection, StoragePluginConfig storageEngineConfig) {
-    super(storageEngineName, plugin, selection);
+    super(storageEngineName, plugin, TableType.SYSTEM_TABLE, ImpersonationUtil.getProcessUserName(), selection);
     this.table = selection;
   }
 

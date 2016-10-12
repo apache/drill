@@ -938,8 +938,8 @@ public final class SchemaUserProtos
         {
             public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.LikeFilter message) throws java.io.IOException
             {
-                if(message.hasRegex())
-                    output.writeString(1, message.getRegex(), false);
+                if(message.hasPattern())
+                    output.writeString(1, message.getPattern(), false);
                 if(message.hasEscape())
                     output.writeString(2, message.getEscape(), false);
             }
@@ -982,7 +982,7 @@ public final class SchemaUserProtos
                         case 0:
                             return;
                         case 1:
-                            builder.setRegex(input.readString());
+                            builder.setPattern(input.readString());
                             break;
                         case 2:
                             builder.setEscape(input.readString());
@@ -1027,7 +1027,7 @@ public final class SchemaUserProtos
         {
             switch(number)
             {
-                case 1: return "regex";
+                case 1: return "pattern";
                 case 2: return "escape";
                 default: return null;
             }
@@ -1040,7 +1040,7 @@ public final class SchemaUserProtos
         private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
         static
         {
-            fieldMap.put("regex", 1);
+            fieldMap.put("pattern", 1);
             fieldMap.put("escape", 2);
         }
     }
@@ -1426,8 +1426,8 @@ public final class SchemaUserProtos
                 if(message.hasCatalogNameFilter())
                     output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
-                if(message.hasSchameNameFilter())
-                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+                if(message.hasSchemaNameFilter())
+                    output.writeObject(2, message.getSchemaNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetSchemasReq message)
@@ -1473,7 +1473,7 @@ public final class SchemaUserProtos
 
                             break;
                         case 2:
-                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+                            builder.setSchemaNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
 
                             break;
                         default:
@@ -1517,7 +1517,7 @@ public final class SchemaUserProtos
             switch(number)
             {
                 case 1: return "catalogNameFilter";
-                case 2: return "schameNameFilter";
+                case 2: return "schemaNameFilter";
                 default: return null;
             }
         }
@@ -1530,7 +1530,7 @@ public final class SchemaUserProtos
         static
         {
             fieldMap.put("catalogNameFilter", 1);
-            fieldMap.put("schameNameFilter", 2);
+            fieldMap.put("schemaNameFilter", 2);
         }
     }
 
@@ -1816,12 +1816,14 @@ public final class SchemaUserProtos
                 if(message.hasCatalogNameFilter())
                     output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
-                if(message.hasSchameNameFilter())
-                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+                if(message.hasSchemaNameFilter())
+                    output.writeObject(2, message.getSchemaNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
                 if(message.hasTableNameFilter())
                     output.writeObject(3, message.getTableNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
+                for(String tableTypeFilter : message.getTableTypeFilterList())
+                    output.writeString(4, tableTypeFilter, true);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.GetTablesReq message)
             {
@@ -1866,12 +1868,15 @@ public final class SchemaUserProtos
 
                             break;
                         case 2:
-                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+                            builder.setSchemaNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
 
                             break;
                         case 3:
                             builder.setTableNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
 
+                            break;
+                        case 4:
+                            builder.addTableTypeFilter(input.readString());
                             break;
                         default:
                             input.handleUnknownField(number, this);
@@ -1914,8 +1919,9 @@ public final class SchemaUserProtos
             switch(number)
             {
                 case 1: return "catalogNameFilter";
-                case 2: return "schameNameFilter";
+                case 2: return "schemaNameFilter";
                 case 3: return "tableNameFilter";
+                case 4: return "tableTypeFilter";
                 default: return null;
             }
         }
@@ -1928,8 +1934,9 @@ public final class SchemaUserProtos
         static
         {
             fieldMap.put("catalogNameFilter", 1);
-            fieldMap.put("schameNameFilter", 2);
+            fieldMap.put("schemaNameFilter", 2);
             fieldMap.put("tableNameFilter", 3);
+            fieldMap.put("tableTypeFilter", 4);
         }
     }
 
@@ -2208,8 +2215,8 @@ public final class SchemaUserProtos
                 if(message.hasCatalogNameFilter())
                     output.writeObject(1, message.getCatalogNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
-                if(message.hasSchameNameFilter())
-                    output.writeObject(2, message.getSchameNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
+                if(message.hasSchemaNameFilter())
+                    output.writeObject(2, message.getSchemaNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
 
                 if(message.hasTableNameFilter())
                     output.writeObject(3, message.getTableNameFilter(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.WRITE, false);
@@ -2261,7 +2268,7 @@ public final class SchemaUserProtos
 
                             break;
                         case 2:
-                            builder.setSchameNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
+                            builder.setSchemaNameFilter(input.mergeObject(org.apache.drill.exec.proto.UserProtos.LikeFilter.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.LikeFilter.MERGE));
 
                             break;
                         case 3:
@@ -2313,7 +2320,7 @@ public final class SchemaUserProtos
             switch(number)
             {
                 case 1: return "catalogNameFilter";
-                case 2: return "schameNameFilter";
+                case 2: return "schemaNameFilter";
                 case 3: return "tableNameFilter";
                 case 4: return "columnNameFilter";
                 default: return null;
@@ -2328,7 +2335,7 @@ public final class SchemaUserProtos
         static
         {
             fieldMap.put("catalogNameFilter", 1);
-            fieldMap.put("schameNameFilter", 2);
+            fieldMap.put("schemaNameFilter", 2);
             fieldMap.put("tableNameFilter", 3);
             fieldMap.put("columnNameFilter", 4);
         }
