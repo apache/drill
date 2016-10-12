@@ -223,4 +223,38 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("2", " key_2")
         .go();
   }
+
+  @Test // DRILL-4577
+  public void showInfoSchema() throws Exception {
+    final String query = "select * \n" +
+        "from INFORMATION_SCHEMA.`TABLES` \n" +
+        "where TABLE_SCHEMA like 'hive%'";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE")
+        .baselineValues("DRILL", "hive.db1", "kv_db1", "TABLE")
+        .baselineValues("DRILL", "hive.db1", "avro", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv", "TABLE")
+        .baselineValues("DRILL", "hive.default", "empty_table", "TABLE")
+        .baselineValues("DRILL", "hive.default", "readtest", "TABLE")
+        .baselineValues("DRILL", "hive.default", "infoschematest", "TABLE")
+        .baselineValues("DRILL", "hive.default", "readtest_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "hiveview", "VIEW")
+        .baselineValues("DRILL", "hive.default", "partition_pruning_test", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "countstar_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "kv_sh", "TABLE")
+        .baselineValues("DRILL", "hive.default", "simple_json", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_small", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_text_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_header", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_footer", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_rcfile_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_parquet_large", "TABLE")
+        .baselineValues("DRILL", "hive.skipper", "kv_sequencefile_large", "TABLE")
+        .go();
+  }
+
 }
