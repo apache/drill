@@ -20,7 +20,7 @@ package org.apache.drill.jdbc;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.ConnectionConfigImpl;
+import org.apache.calcite.avatica.ConnectionConfigImpl;
 
 
 // TODO(DRILL-3730):  Change public DrillConnectionConfig from class to

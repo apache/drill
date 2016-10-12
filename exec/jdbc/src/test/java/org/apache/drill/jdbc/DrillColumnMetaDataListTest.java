@@ -17,10 +17,22 @@
  */
 package org.apache.drill.jdbc;
 
-import net.hydromatic.avatica.ColumnMetaData;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.apache.drill.common.expression.SchemaPath;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
@@ -30,20 +42,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.apache.drill.common.types.TypeProtos.MajorType;
-import static org.apache.drill.common.types.TypeProtos.MinorType;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DrillColumnMetaDataListTest {
 

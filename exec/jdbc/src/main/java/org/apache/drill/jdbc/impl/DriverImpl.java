@@ -17,10 +17,11 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import net.hydromatic.avatica.DriverVersion;
-import net.hydromatic.avatica.Handler;
-import net.hydromatic.avatica.HandlerImpl;
-import net.hydromatic.avatica.UnregisteredDriver;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.DriverVersion;
+import org.apache.calcite.avatica.Handler;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.UnregisteredDriver;
 
 /**
  * Optiq JDBC driver.
@@ -67,6 +68,10 @@ public class DriverImpl extends UnregisteredDriver {
         "<Properties resource " + METADATA_PROPERTIES_RESOURCE_PATH + " not loaded>");
   }
 
+  @Override
+  public Meta createMeta(AvaticaConnection connection) {
+    return new DrillMetaImpl((DrillConnectionImpl) connection);
+  }
 
   @Override
   protected Handler createHandler() {

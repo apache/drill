@@ -21,9 +21,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-avatica</artifactId>
-      <version>0.9-drill-r20</version>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-avatica</artifactId>
+      <version>${avatica.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -53,6 +53,11 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

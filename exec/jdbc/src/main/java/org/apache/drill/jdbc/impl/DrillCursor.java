@@ -17,19 +17,18 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.sql.SQLException;
-import java.sql.ResultSet;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import net.hydromatic.avatica.ArrayImpl.Factory;
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.Cursor;
-import net.hydromatic.avatica.AvaticaResultSet;
-
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.util.ArrayImpl.Factory;
+import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
@@ -37,7 +36,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.slf4j.Logger;
-import static org.slf4j.LoggerFactory.getLogger;
 
 
 class DrillCursor implements Cursor {
@@ -134,7 +132,7 @@ class DrillCursor implements Cursor {
     // DrillAccessorList blocks iterator() (throwing exception).)
     for ( int ax = 0; ax < accessors.size(); ax++ ) {
       final AvaticaDrillSqlAccessor accessor =
-          (AvaticaDrillSqlAccessor) accessors.get( ax );
+          accessors.get( ax );
       getObjectClasses.add( accessor.getObjectClass() );
     }
 
