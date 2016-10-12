@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2016-05-26 19:04:18 UTC
+date: 2016-10-12 17:07:42 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -28,7 +28,7 @@ First, you need the Drill source code. You can use Git to put the source code on
 
 ## Step 2: Get approval and modify the source code.
 
-Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/) or file a bug report in [JIRA](https://issues.apache.org/jira/browse/DRILL) describing your proposed changes. Doing this helps to verify that your changes will work with what others are doing and have planned for the project. Be patient, it may take folks a while to understand your requirements.
+Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/) or file a bug report in [JIRA](https://issues.apache.org/jira/browse/DRILL) describing your proposed changes. Doing this helps to verify that your changes will work with what others are doing and have planned for the project. Be patient, it may take folks a while to understand your requirements. For detailed designs, the Drill team uses [this design document template](https://docs.google.com/document/d/1PnBiOMV5mYBi5N6fLci-bRTva1gieCuxwlSYH9crMhU/edit?usp=sharing).
 
 Once your suggested changes are approved, you can modify the source code and add some features using your favorite IDE.
 
