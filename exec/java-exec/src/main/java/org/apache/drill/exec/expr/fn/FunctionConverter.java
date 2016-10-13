@@ -50,7 +50,7 @@ import com.google.common.collect.Lists;
 public class FunctionConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
 
-  public <T extends DrillFunc> DrillFuncHolder getHolder(AnnotatedClassDescriptor func) {
+  public <T extends DrillFunc> DrillFuncHolder getHolder(AnnotatedClassDescriptor func, ClassLoader classLoader) {
     FunctionTemplate template = func.getAnnotationProxy(FunctionTemplate.class);
     if (template == null) {
       return failure("Class does not declare FunctionTemplate annotation.", func);
@@ -173,7 +173,7 @@ public class FunctionConverter {
       return failure("This function declares zero output fields.  A function must declare one output field.", func);
     }
 
-    FunctionInitializer initializer = new FunctionInitializer(func.getClassName());
+    FunctionInitializer initializer = new FunctionInitializer(func.getClassName(), classLoader);
     try{
       // return holder
       ValueReference[] ps = params.toArray(new ValueReference[params.size()]);

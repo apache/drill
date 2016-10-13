@@ -54,11 +54,15 @@ import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.AggregatingSelectScope;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
+import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.FunctionNotFoundException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
@@ -160,6 +164,11 @@ public class SqlConverter {
       SqlNode validatedNode = validator.validate(parsedNode);
       return validatedNode;
     } catch (RuntimeException e) {
+      final Throwable rootCause = ExceptionUtils.getRootCause(e);
+      if (rootCause instanceof SqlValidatorException
+          && StringUtils.contains(rootCause.getMessage(), "No match found for function signature")) {
+        throw new FunctionNotFoundException(rootCause.getMessage(), e);
+      }
       UserException.Builder builder = UserException
           .validationError(e)
           .addContext("SQL Query", sql);

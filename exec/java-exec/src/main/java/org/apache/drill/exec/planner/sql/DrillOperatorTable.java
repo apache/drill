@@ -22,9 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunction;
-import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.drill.common.expression.FunctionCallFactory;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.calcite.sql.SqlFunctionCategory;
@@ -35,10 +33,10 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.SystemOptionManager;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Implementation of {@link SqlOperatorTable} that contains standard operators and functions provided through
@@ -54,6 +52,9 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithoutInferenceMap = ArrayListMultimap.create();
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithInferenceMap = ArrayListMultimap.create();
+  // indicates local function registry version based on which drill operator were loaded
+  // is used to define if we need to reload operator table in case when function signature was not found
+  private long functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
 
@@ -62,6 +63,23 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     calciteOperators.addAll(inner.getOperatorList());
     populateWrappedCalciteOperators();
     this.systemOptionManager = systemOptionManager;
+  }
+
+  /** Cleans up all operator holders and reloads operators */
+  public void reloadOperators(FunctionImplementationRegistry registry) {
+    drillOperatorsWithoutInference.clear();
+    drillOperatorsWithInference.clear();
+    drillOperatorsWithoutInferenceMap.clear();
+    drillOperatorsWithInferenceMap.clear();
+    registry.register(this);
+  }
+
+  public long setFunctionRegistryVersion(long version) {
+    return functionRegistryVersion = version;
+  }
+
+  public long getFunctionRegistryVersion() {
+    return functionRegistryVersion;
   }
 
   /**

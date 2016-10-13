@@ -298,3 +298,43 @@ SqlNode SqlDescribeSchema() :
         return new SqlDescribeSchema(pos, schema);
    }
 }
+
+/**
+* Parse create UDF statement
+* CREATE FUNCTION USING JAR 'jar_name'
+*/
+SqlNode SqlCreateFunction() :
+{
+   SqlParserPos pos;
+   SqlNode jar;
+}
+{
+   <CREATE> { pos = getPos(); }
+   <FUNCTION>
+   <USING>
+   <JAR>
+   jar = StringLiteral()
+   {
+       return new SqlCreateFunction(pos, jar);
+   }
+}
+
+/**
+* Parse drop UDF statement
+* DROP FUNCTION USING JAR 'jar_name'
+*/
+SqlNode SqlDropFunction() :
+{
+   SqlParserPos pos;
+   SqlNode jar;
+}
+{
+   <DROP> { pos = getPos(); }
+   <FUNCTION>
+   <USING>
+   <JAR>
+   jar = StringLiteral()
+   {
+       return new SqlDropFunction(pos, jar);
+   }
+}

@@ -2678,4 +2678,235 @@ public final class SchemaUserBitShared
         }
     }
 
+    public static final class Registry
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.Registry.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.Registry.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.Registry.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.Registry.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException
+            {
+                for(org.apache.drill.exec.proto.UserBitShared.Jar jar : message.getJarList())
+                    output.writeObject(1, jar, org.apache.drill.exec.proto.SchemaUserBitShared.Jar.WRITE, true);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.Registry message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Registry.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Registry.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.Registry> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.Registry newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.addJar(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.Jar.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.Jar.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.Registry.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Registry.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Registry.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.Registry.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Registry.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "jar";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("jar", 1);
+        }
+    }
+
+    public static final class Jar
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.Jar.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.Jar.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.Jar.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.Jar.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException
+            {
+                if(message.hasName())
+                    output.writeString(1, message.getName(), false);
+                for(String functionSignature : message.getFunctionSignatureList())
+                    output.writeString(2, functionSignature, true);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.Jar message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Jar.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Jar.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.Jar> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.Jar newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setName(input.readString());
+                            break;
+                        case 2:
+                            builder.addFunctionSignature(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.Jar.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Jar.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.Jar.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.Jar.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.Jar.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "name";
+                case 2: return "functionSignature";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("name", 1);
+            fieldMap.put("functionSignature", 2);
+        }
+    }
+
 }

@@ -164,6 +164,15 @@ public class DrillConfig extends NestedConfig {
   }
 
   /**
+   * Creates a drill configuration using the provided config file.
+   * @param config custom configuration file
+   * @return {@link DrillConfig} instance
+   */
+  public static DrillConfig create(Config config) {
+    return new DrillConfig(config.resolve(), true);
+  }
+
+  /**
    * @param overrideFileResourcePathname
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
    * @param overriderProps

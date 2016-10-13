@@ -65,17 +65,17 @@ public class TestSimpleFunctions extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
 
   @Test
-  public void testHashFunctionResolution(@Injectable DrillConfig config) throws JClassAlreadyExistsException, IOException {
-    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
+  public void testHashFunctionResolution() throws JClassAlreadyExistsException, IOException {
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     // test required vs nullable Int input
-    resolveHash(config,
+    resolveHash(c,
         new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
         Types.optional(TypeProtos.MinorType.INT),
         Types.required(TypeProtos.MinorType.INT),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(config,
+    resolveHash(c,
         new ValueExpressions.IntExpression(1, ExpressionPosition.UNKNOWN),
         Types.required(TypeProtos.MinorType.INT),
         Types.required(TypeProtos.MinorType.INT),
@@ -83,14 +83,14 @@ public class TestSimpleFunctions extends ExecTest {
         registry);
 
     // test required vs nullable float input
-    resolveHash(config,
+    resolveHash(c,
         new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT4)),
         Types.optional(TypeProtos.MinorType.FLOAT4),
         Types.required(TypeProtos.MinorType.FLOAT4),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(config,
+    resolveHash(c,
         new ValueExpressions.FloatExpression(5.0f, ExpressionPosition.UNKNOWN),
         Types.required(TypeProtos.MinorType.FLOAT4),
         Types.required(TypeProtos.MinorType.FLOAT4),
@@ -98,14 +98,14 @@ public class TestSimpleFunctions extends ExecTest {
         registry);
 
     // test required vs nullable long input
-    resolveHash(config,
+    resolveHash(c,
         new TypedNullConstant(Types.optional(TypeProtos.MinorType.BIGINT)),
         Types.optional(TypeProtos.MinorType.BIGINT),
         Types.required(TypeProtos.MinorType.BIGINT),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(config,
+    resolveHash(c,
         new ValueExpressions.LongExpression(100L, ExpressionPosition.UNKNOWN),
         Types.required(TypeProtos.MinorType.BIGINT),
         Types.required(TypeProtos.MinorType.BIGINT),
@@ -113,14 +113,14 @@ public class TestSimpleFunctions extends ExecTest {
         registry);
 
     // test required vs nullable double input
-    resolveHash(config,
+    resolveHash(c,
         new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT8)),
         Types.optional(TypeProtos.MinorType.FLOAT8),
         Types.required(TypeProtos.MinorType.FLOAT8),
         TypeProtos.DataMode.OPTIONAL,
         registry);
 
-    resolveHash(config,
+    resolveHash(c,
         new ValueExpressions.DoubleExpression(100.0, ExpressionPosition.UNKNOWN),
         Types.required(TypeProtos.MinorType.FLOAT8),
         Types.required(TypeProtos.MinorType.FLOAT8),

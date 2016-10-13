@@ -114,6 +114,11 @@ if "test%DRILL_LOG_DIR%" == "test" (
   set DRILL_LOG_DIR=%DRILL_HOME%\log
 )
 
+@rem Drill temporary directory is used as base for temporary storage of Dynamic UDF jars.
+if "test%DRILL_TMP_DIR%" == "test" (
+  set DRILL_TMP_DIR=%TEMP%
+)
+
 rem ----
 rem Deal with Hadoop JARs, if HADOOP_HOME was specified
 rem ----

@@ -31,8 +31,12 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.exception.VersionMismatchException;
+import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
+import org.apache.zookeeper.data.Stat;
 
 /**
  * A namespace aware Zookeeper client.
@@ -133,13 +137,52 @@ public class ZookeeperClient implements AutoCloseable {
    * the check is eventually consistent.
    *
    * @param path  target path
+   * @param consistent consistency flag
    */
   public byte[] get(final String path, final boolean consistent) {
+    return get(path, consistent, null);
+  }
+
+  /**
+   * Returns the value corresponding to the given key, null otherwise.
+   *
+   * The check is consistent as it is made against Zookeeper directly.
+   *
+   * Passes version holder to get data change version.
+   *
+   * @param path  target path
+   * @param version version holder
+   */
+  public byte[] get(final String path, DataChangeVersion version) {
+    return get(path, true, version);
+  }
+
+  /**
+   * Returns the value corresponding to the given key, null otherwise.
+   *
+   * If the flag consistent is set, the check is consistent as it is made against Zookeeper directly. Otherwise,
+   * the check is eventually consistent.
+   *
+   * If consistency flag is set to true and version holder is not null, passes version holder to get data change version.
+   * Data change version is retrieved from {@link Stat} object, it increases each time znode data change is performed.
+   * Link to Zookeeper documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
+   *
+   * @param path  target path
+   * @param consistent consistency check
+   * @param version version holder
+   */
+  public byte[] get(final String path, final boolean consistent, final DataChangeVersion version) {
     Preconditions.checkNotNull(path, "path is required");
 
     final String target = PathUtils.join(root, path);
     if (consistent) {
       try {
+        if (version != null) {
+          Stat stat = new Stat();
+          final byte[] bytes = curator.getData().storingStatIn(stat).forPath(target);
+          version.setVersion(stat.getVersion());
+          return bytes;
+        }
         return curator.getData().forPath(target);
       } catch (final Exception ex) {
         throw new DrillRuntimeException(String.format("error retrieving value for [%s]", path), ex);
@@ -179,6 +222,26 @@ public class ZookeeperClient implements AutoCloseable {
    * @param data  data to store
    */
   public void put(final String path, final byte[] data) {
+    put(path, data, null);
+  }
+
+  /**
+   * Puts the given byte sequence into the given path.
+   *
+   * If path does not exists, this call creates it.
+   *
+   * If version holder is not null and path already exists, passes given version for comparison.
+   * Zookeeper maintains stat structure that holds version number which increases each time znode data change is performed.
+   * If we pass version that doesn't match the actual version of the data,
+   * the update will fail {@link org.apache.zookeeper.KeeperException.BadVersionException}.
+   * We catch such exception and re-throw it as {@link VersionMismatchException}.
+   * Link to documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
+   *
+   * @param path  target path
+   * @param data  data to store
+   * @param version version holder
+   */
+  public void put(final String path, final byte[] data, DataChangeVersion version) {
     Preconditions.checkNotNull(path, "path is required");
     Preconditions.checkNotNull(data, "data is required");
 
@@ -199,9 +262,45 @@ public class ZookeeperClient implements AutoCloseable {
         }
       }
       if (hasNode) {
-        curator.setData().forPath(target, data);
+        if (version != null) {
+          try {
+            curator.setData().withVersion(version.getVersion()).forPath(target, data);
+          } catch (final KeeperException.BadVersionException e) {
+            throw new VersionMismatchException("Unable to put data. Version mismatch is detected.", version.getVersion(), e);
+          }
+        } else {
+          curator.setData().forPath(target, data);
+        }
       }
       getCache().rebuildNode(target);
+    } catch (final VersionMismatchException e) {
+      throw e;
+    } catch (final Exception e) {
+      throw new DrillRuntimeException("unable to put ", e);
+    }
+  }
+
+  /**
+   * Puts the given byte sequence into the given path if path is does not exist.
+   *
+   * @param path  target path
+   * @param data  data to store
+   * @return null if path was created, else data stored for the given path
+   */
+  public byte[] putIfAbsent(final String path, final byte[] data) {
+    Preconditions.checkNotNull(path, "path is required");
+    Preconditions.checkNotNull(data, "data is required");
+
+    final String target = PathUtils.join(root, path);
+    try {
+      try {
+        curator.create().withMode(mode).forPath(target, data);
+        getCache().rebuildNode(target);
+        return null;
+      } catch (NodeExistsException e) {
+        // do nothing
+      }
+      return curator.getData().forPath(target);
     } catch (final Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
     }

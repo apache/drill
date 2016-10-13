@@ -26,9 +26,16 @@ public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
   private final String optionName;
+  private final boolean isAdminOption;
 
+  /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
+    this(optionName, false);
+  }
+
+  public OptionValidator(String optionName, boolean isAdminOption) {
     this.optionName = optionName;
+    this.isAdminOption = isAdminOption;
   }
 
   /**
@@ -66,6 +73,13 @@ public abstract class OptionValidator {
       throw new UnsupportedOperationException("This option is not short-lived.");
     }
     return 0;
+  }
+
+  /**
+   * @return true is option is system-level property that can be only specified by admin (not user).
+   */
+  public boolean isAdminOption() {
+    return isAdminOption;
   }
 
   /**

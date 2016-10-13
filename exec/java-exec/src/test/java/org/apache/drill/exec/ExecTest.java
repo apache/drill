@@ -18,7 +18,9 @@
 package org.apache.drill.exec;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.io.Files;
 import mockit.NonStrictExpectations;
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.compile.CodeCompilerTestFactory;
@@ -33,6 +35,8 @@ import org.apache.drill.test.DrillTest;
 import org.junit.After;
 import org.junit.BeforeClass;
 
+import java.io.File;
+
 
 public class ExecTest extends DrillTest {
 
@@ -46,13 +50,29 @@ public class ExecTest extends DrillTest {
     DrillMetrics.resetMetrics();
   }
 
-
   @BeforeClass
   public static void setupOptionManager() throws Exception{
     final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(c);
     provider.start();
     optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider);
     optionManager.init();
+  }
+
+  /**
+   * Create a temp directory to store the given <i>dirName</i>.
+   * Directory will be deleted on exit.
+   * @param dirName directory name
+   * @return Full path including temp parent directory and given directory name.
+   */
+  public static String getTempDir(final String dirName) {
+    final File dir = Files.createTempDir();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        FileUtils.deleteQuietly(dir);
+      }
+    });
+    return dir.getAbsolutePath() + File.separator + dirName;
   }
 
   protected void mockDrillbitContext(final DrillbitContext bitContext) throws Exception {

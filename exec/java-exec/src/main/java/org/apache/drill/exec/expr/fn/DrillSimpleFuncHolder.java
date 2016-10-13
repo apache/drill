@@ -40,10 +40,14 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
   private final String drillFuncClass;
+  // each function should be wrapped unique class loader associated with its jar
+  // to prevent classpath collisions during loading and unloading jars
+  private final ClassLoader classLoader;
 
   public DrillSimpleFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
     super(functionAttributes, initializer);
     drillFuncClass = checkNotNull(initializer.getClassName());
+    classLoader = checkNotNull(initializer.getClassLoader());
   }
 
   private String setupBody() {
@@ -65,7 +69,7 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   }
 
   public DrillSimpleFunc createInterpreter() throws Exception {
-    return (DrillSimpleFunc)Class.forName(drillFuncClass).newInstance();
+    return (DrillSimpleFunc)Class.forName(drillFuncClass, true, classLoader).newInstance();
   }
 
   @Override

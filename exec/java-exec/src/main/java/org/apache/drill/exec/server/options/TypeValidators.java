@@ -141,25 +141,41 @@ public class TypeValidators {
 
   public static class BooleanValidator extends TypeValidator {
     public BooleanValidator(String name, boolean def) {
-      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def));
+      this(name, def, false);
+    }
+
+    public BooleanValidator(String name, boolean def, boolean isAdminOption) {
+      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def), isAdminOption);
     }
   }
 
   public static class StringValidator extends TypeValidator {
     public StringValidator(String name, String def) {
-      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
+      this(name, def, false);
+    }
+
+    public StringValidator(String name, String def, boolean isAdminOption) {
+      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def), isAdminOption);
     }
   }
 
   public static class LongValidator extends TypeValidator {
     public LongValidator(String name, long def) {
-      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def));
+      this(name, def, false);
+    }
+
+    public LongValidator(String name, long def, boolean isAdminOption) {
+      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def), isAdminOption);
     }
   }
 
   public static class DoubleValidator extends TypeValidator {
     public DoubleValidator(String name, double def) {
-      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def));
+      this(name, def, false);
+    }
+
+    public DoubleValidator(String name, double def, boolean isAdminOption) {
+      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def), isAdminOption);
     }
   }
 
@@ -181,22 +197,6 @@ public class TypeValidators {
             .message(String.format("Option %s must be between %d and %d.", getOptionName(), min, max))
             .build(logger);
       }
-    }
-  }
-
-  public static class AdminOptionValidator extends StringValidator {
-    public AdminOptionValidator(String name, String def) {
-      super(name, def);
-    }
-
-    @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      if (v.type != OptionType.SYSTEM) {
-        throw UserException.validationError()
-            .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
-            .build(logger);
-      }
-      super.validate(v, manager);
     }
   }
 
@@ -229,7 +229,11 @@ public class TypeValidators {
     private final OptionValue defaultValue;
 
     public TypeValidator(final String name, final Kind kind, final OptionValue defValue) {
-      super(name);
+      this(name, kind, defValue, false);
+    }
+
+    public TypeValidator(final String name, final Kind kind, final OptionValue defValue, final boolean isAdminOption) {
+      super(name, isAdminOption);
       checkArgument(defValue.type == OptionType.SYSTEM, "Default value must be SYSTEM type.");
       this.kind = kind;
       this.defaultValue = defValue;
@@ -246,6 +250,11 @@ public class TypeValidators {
         throw UserException.validationError()
             .message(String.format("Option %s must be of type %s but you tried to set to %s.", getOptionName(),
               kind.name(), v.kind.name()))
+            .build(logger);
+      }
+      if (isAdminOption() && v.type != OptionType.SYSTEM) {
+        throw UserException.validationError()
+            .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
             .build(logger);
       }
     }
