@@ -74,7 +74,7 @@ public class TestJdbcMetadata extends JdbcTestActionBase {
   public void tablesWithConditions() throws Exception{
     this.testAction(new JdbcAction(){
       public ResultSet getResult(Connection c) throws SQLException {
-        return c.getMetaData().getTables("DRILL", "sys", "opt%", new String[]{"TABLE", "VIEW"});
+        return c.getMetaData().getTables("DRILL", "sys", "opt%", new String[]{"SYSTEM_TABLE", "SYSTEM_VIEW"});
       }
     }, 1);
   }

@@ -811,7 +811,7 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holder, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer hc = getPrevious(holder, generator.getMappingSet());
-      if (hc == null) {
+      if (hc == null || holder.isRandom()) {
         hc = super.visitFunctionHolderExpression(holder, generator);
         put(holder, hc, generator.getMappingSet());
       }

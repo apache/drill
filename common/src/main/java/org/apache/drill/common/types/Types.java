@@ -19,6 +19,8 @@ package org.apache.drill.common.types;
 
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
+import java.sql.ResultSetMetaData;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -169,7 +171,7 @@ public class Types {
 
     switch (sqlTypeName) {
       case "ANY":                           return java.sql.Types.OTHER;
-      case "ARRAY":                         return java.sql.Types.ARRAY;
+      case "ARRAY":                         return java.sql.Types.OTHER; // Drill doesn't support java.sql.Array
       case "BIGINT":                        return java.sql.Types.BIGINT;
       case "BINARY VARYING":                return java.sql.Types.VARBINARY;
       case "BINARY":                        return java.sql.Types.BINARY;
@@ -182,7 +184,7 @@ public class Types {
       case "FLOAT":                         return java.sql.Types.FLOAT;
       case "INTEGER":                       return java.sql.Types.INTEGER;
       case "INTERVAL":                      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
-      case "MAP":                           return java.sql.Types.STRUCT;
+      case "MAP":                           return java.sql.Types.OTHER; // Drill doesn't support java.sql.Struct
       case "NATIONAL CHARACTER VARYING":    return java.sql.Types.NVARCHAR;
       case "NATIONAL CHARACTER":            return java.sql.Types.NCHAR;
       case "NULL":                          return java.sql.Types.NULL;

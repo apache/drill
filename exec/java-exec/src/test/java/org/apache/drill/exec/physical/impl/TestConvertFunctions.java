@@ -655,6 +655,36 @@ public class TestConvertFunctions extends BaseTestQuery {
     buffer.release();
   }
 
+  @Test // DRILL-4862
+  public void testBinaryString() throws Exception {
+    // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
+    final OptionValue srOption = setupScalarReplacementOption(bits[0], ScalarReplacementOption.TRY);
+
+    try {
+      final String[] queries = {
+          "SELECT convert_from(binary_string(key), 'INT_BE') as intkey \n" +
+              "FROM cp.`functions/conv/conv.json`"
+      };
+
+      for (String query: queries) {
+        testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .baselineColumns("intkey")
+            .baselineValues(1244739896)
+            .baselineValues(new Object[] { null })
+            .baselineValues(1313814865)
+            .baselineValues(1852782897)
+            .build()
+            .run();
+      }
+
+    } finally {
+      // restore the system option
+      restoreScalarReplacementOption(bits[0], srOption);
+    }
+  }
+
   protected <T> void verifySQL(String sql, T expectedResults) throws Throwable {
     verifyResults(sql, expectedResults, getRunResult(QueryType.SQL, sql));
   }

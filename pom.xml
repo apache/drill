@@ -35,6 +35,7 @@
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
+    <calcite.version>1.4.0-drill-r19</calcite.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.1</jackson.version>
     <mapr.release.version>5.2.0-mapr</mapr.release.version>
@@ -1446,7 +1447,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r18</version>
+            <version>${calcite.version}</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

@@ -1540,15 +1540,16 @@ public class StringFunctions{
   public static class BinaryString implements DrillSimpleFunc {
     @Param  VarCharHolder in;
     @Output VarBinaryHolder out;
+    @Inject DrillBuf buffer;
 
     @Override
     public void setup() {}
 
     @Override
     public void eval() {
-      out.buffer = in.buffer;
-      out.start = in.start;
-      out.end = org.apache.drill.common.util.DrillStringUtils.parseBinaryString(in.buffer, in.start, in.end);
+      out.buffer = buffer.reallocIfNeeded(in.end - in.start);
+      out.start = out.end = 0;
+      out.end = org.apache.drill.common.util.DrillStringUtils.parseBinaryString(in.buffer, in.start, in.end, out.buffer);
       out.buffer.setIndex(out.start, out.end);
     }
   }
