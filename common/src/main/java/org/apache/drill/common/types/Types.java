@@ -134,8 +134,8 @@ public class Types {
       case TIMESTAMP:       return "TIMESTAMP";
       case TIMESTAMPTZ:     return "TIMESTAMP WITH TIME ZONE";
 
-      case INTERVALYEAR:
-      case INTERVALDAY:     return "INTERVAL";
+      case INTERVALYEAR:    return "INTERVAL YEAR TO MONTH";
+      case INTERVALDAY:     return "INTERVAL DAY TO SECOND";
 
       // Non-standard SQL atomic data types:
 
@@ -184,6 +184,8 @@ public class Types {
       case "FLOAT":                         return java.sql.Types.FLOAT;
       case "INTEGER":                       return java.sql.Types.INTEGER;
       case "INTERVAL":                      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
+      case "INTERVAL YEAR TO MONTH":        return java.sql.Types.OTHER;
+      case "INTERVAL DAY TO SECOND":        return java.sql.Types.OTHER;
       case "MAP":                           return java.sql.Types.OTHER; // Drill doesn't support java.sql.Struct
       case "NATIONAL CHARACTER VARYING":    return java.sql.Types.NVARCHAR;
       case "NATIONAL CHARACTER":            return java.sql.Types.NCHAR;
