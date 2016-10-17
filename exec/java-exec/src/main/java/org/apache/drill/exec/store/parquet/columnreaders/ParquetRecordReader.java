@@ -68,6 +68,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
   private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
+  private static final int NUM_RECORDS_TO_READ_NOT_SPECIFIED = -1;
 
   // When no column is required by the downstrea operator, ask SCAN to return a DEFAULT column. If such column does not exist,
   // it will return as a nullable-int column. If that column happens to exist, return that column.
@@ -91,6 +92,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private List<ColumnReader<?>> columnStatuses;
   private FileSystem fileSystem;
   private long batchSize;
+  private long numRecordsToRead; // number of records to read
+
   Path hadoopPath;
   private VarLenBinaryReader varLengthReader;
   private ParquetMetadata footer;
@@ -117,19 +120,34 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public ParquetRecordReader(FragmentContext fragmentContext,
                              String path,
                              int rowGroupIndex,
+                             long numRecordsToRead,
                              FileSystem fs,
                              CodecFactory codecFactory,
                              ParquetMetadata footer,
                              List<SchemaPath> columns,
                              ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
                              throws ExecutionSetupException {
-    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactory, footer,
-        columns, dateCorruptionStatus);
+    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, numRecordsToRead,
+         path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+  }
+
+  public ParquetRecordReader(FragmentContext fragmentContext,
+      String path,
+      int rowGroupIndex,
+      FileSystem fs,
+      CodecFactory codecFactory,
+      ParquetMetadata footer,
+      List<SchemaPath> columns,
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
+      throws ExecutionSetupException {
+      this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, footer.getBlocks().get(rowGroupIndex).getRowCount(),
+           path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(
       FragmentContext fragmentContext,
       long batchSize,
+      long numRecordsToRead,
       String path,
       int rowGroupIndex,
       FileSystem fs,
@@ -145,6 +163,13 @@ public class ParquetRecordReader extends AbstractRecordReader {
     this.footer = footer;
     this.dateCorruptionStatus = dateCorruptionStatus;
     this.fragmentContext = fragmentContext;
+    // Callers can pass -1 if they want to read all rows.
+    if (numRecordsToRead == NUM_RECORDS_TO_READ_NOT_SPECIFIED) {
+      this.numRecordsToRead = footer.getBlocks().get(rowGroupIndex).getRowCount();
+    } else {
+      assert (numRecordsToRead >= 0);
+      this.numRecordsToRead = Math.min(numRecordsToRead, footer.getBlocks().get(rowGroupIndex).getRowCount());
+    }
     setColumns(columns);
   }
 
@@ -444,11 +469,16 @@ public class ParquetRecordReader extends AbstractRecordReader {
           return 0;
         }
         recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH, footer.getBlocks().get(rowGroupIndex).getRowCount() - mockRecordsRead);
+
+        // Pick the minimum of recordsToRead calculated above and numRecordsToRead (based on rowCount and limit).
+        recordsToRead = Math.min(recordsToRead, numRecordsToRead);
+
         for (final ValueVector vv : nullFilledVectors ) {
           vv.getMutator().setValueCount( (int) recordsToRead);
         }
         mockRecordsRead += recordsToRead;
         totalRecordsRead += recordsToRead;
+        numRecordsToRead -= recordsToRead;
         return (int) recordsToRead;
       }
 
@@ -458,6 +488,9 @@ public class ParquetRecordReader extends AbstractRecordReader {
         recordsToRead = DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH;
 
       }
+
+      // Pick the minimum of recordsToRead calculated above and numRecordsToRead (based on rowCount and limit)
+      recordsToRead = Math.min(recordsToRead, numRecordsToRead);
 
       if (allFieldsFixedLength) {
         readAllFixedFields(recordsToRead);
@@ -476,6 +509,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
 //      logger.debug("So far read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
       totalRecordsRead += firstColumnStatus.getRecordsReadInCurrentPass();
+      numRecordsToRead -= firstColumnStatus.getRecordsReadInCurrentPass();
       return firstColumnStatus.getRecordsReadInCurrentPass();
     } catch (Exception e) {
       handleAndRaise("\nHadoop path: " + hadoopPath.toUri().getPath() +
