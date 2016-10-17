@@ -521,6 +521,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     private int rowGroupIndex;
     private String root;
     private long rowCount;  // rowCount = -1 indicates to include all rows.
+    private long numRecordsToRead;
 
     @JsonCreator
     public RowGroupInfo(@JsonProperty("path") String path, @JsonProperty("start") long start,
@@ -528,10 +529,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       super(path, start, length);
       this.rowGroupIndex = rowGroupIndex;
       this.rowCount = rowCount;
+      this.numRecordsToRead = rowCount;
     }
 
     public RowGroupReadEntry getRowGroupReadEntry() {
-      return new RowGroupReadEntry(this.getPath(), this.getStart(), this.getLength(), this.rowGroupIndex);
+      return new RowGroupReadEntry(this.getPath(), this.getStart(), this.getLength(),
+                                   this.rowGroupIndex, this.getNumRecordsToRead());
     }
 
     public int getRowGroupIndex() {
@@ -551,6 +554,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     @Override
     public EndpointByteMap getByteMap() {
       return byteMap;
+    }
+
+    public long getNumRecordsToRead() {
+      return numRecordsToRead;
+    }
+
+    public void setNumRecordsToRead(long numRecords) {
+      numRecordsToRead = numRecords;
     }
 
     public void setEndpointByteMap(EndpointByteMap byteMap) {
@@ -834,7 +845,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups) {
     List<RowGroupReadEntry> entries = Lists.newArrayList();
     for (RowGroupInfo rgi : rowGroups) {
-      RowGroupReadEntry entry = new RowGroupReadEntry(rgi.getPath(), rgi.getStart(), rgi.getLength(), rgi.getRowGroupIndex());
+      RowGroupReadEntry entry = new RowGroupReadEntry(rgi.getPath(), rgi.getStart(), rgi.getLength(), rgi.getRowGroupIndex(), rgi.getNumRecordsToRead());
       entries.add(entry);
     }
     return entries;
@@ -867,6 +878,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return toString();
   }
 
+  public void setCacheFileRoot(String cacheFileRoot) {
+    this.cacheFileRoot = cacheFileRoot;
+  }
+
   @Override
   public String toString() {
     String cacheFileString = "";
@@ -893,12 +908,41 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return newScan;
   }
 
+  // Based on maxRecords to read for the scan,
+  // figure out how many rowGroups to read and update number of records to read for each of them.
+  // Returns total number of rowGroups to read.
+  private int updateRowGroupInfo(long maxRecords) {
+    long count = 0;
+    int index = 0;
+    for (RowGroupInfo rowGroupInfo : rowGroupInfos) {
+      long rowCount = rowGroupInfo.getRowCount();
+      if (count + rowCount <= maxRecords) {
+        count += rowCount;
+        rowGroupInfo.setNumRecordsToRead(rowCount);
+        index++;
+        continue;
+      } else if (count < maxRecords) {
+        rowGroupInfo.setNumRecordsToRead(maxRecords - count);
+        index++;
+      }
+      break;
+    }
+
+    return index;
+  }
+
   @Override
-  public FileGroupScan clone(FileSelection selection) throws IOException {
+  public ParquetGroupScan clone(FileSelection selection) throws IOException {
     ParquetGroupScan newScan = new ParquetGroupScan(this);
     newScan.modifyFileSelection(selection);
-    newScan.cacheFileRoot = selection.cacheFileRoot;
+    newScan.setCacheFileRoot(selection.cacheFileRoot);
     newScan.init(selection.getMetaContext());
+    return newScan;
+  }
+
+  public ParquetGroupScan clone(FileSelection selection, long maxRecords) throws IOException {
+    ParquetGroupScan newScan = clone(selection);
+    newScan.updateRowGroupInfo(maxRecords);
     return newScan;
   }
 
@@ -913,22 +957,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 rowGroup.
     // further optimization : minimize # of files chosen, or the affinity of files chosen.
-    long count = 0;
-    int index = 0;
-    for (RowGroupInfo rowGroupInfo : rowGroupInfos) {
-      if (count < maxRecords) {
-        count += rowGroupInfo.getRowCount();
-        index ++;
-      } else {
-        break;
-      }
-    }
+
+    // Calculate number of rowGroups to read based on maxRecords and update
+    // number of records to read for each of those rowGroups.
+    int index = updateRowGroupInfo(maxRecords);
 
     Set<String> fileNames = Sets.newHashSet(); // HashSet keeps a fileName unique.
     for (RowGroupInfo rowGroupInfo : rowGroupInfos.subList(0, index)) {
       fileNames.add(rowGroupInfo.getPath());
     }
 
+    // If there is no change in fileSet, no need to create new groupScan.
     if (fileNames.size() == fileSet.size() ) {
       // There is no reduction of rowGroups. Return the original groupScan.
       logger.debug("applyLimit() does not apply!");
@@ -938,7 +977,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     try {
       FileSelection newSelection = new FileSelection(null, Lists.newArrayList(fileNames), getSelectionRoot(), cacheFileRoot, false);
       logger.debug("applyLimit() reduce parquet file # from {} to {}", fileSet.size(), fileNames.size());
-      return this.clone(newSelection);
+      return this.clone(newSelection, maxRecords);
     } catch (IOException e) {
       logger.warn("Could not apply rowcount based prune due to Exception : {}", e);
       return null;
