@@ -16,7 +16,7 @@
 # limitations under the License.
 
 bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=`cd -P "$bin">/dev/null; pwd`
 
 # Start sqlline session by connection to locally running Drillbit
 exec ${bin}/sqlline -u "jdbc:drill:drillbit=localhost" "$@"
