@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.util.GuavaPatcher;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -33,8 +32,8 @@ public class BaseJsonTest extends BaseTestQuery {
 
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
-    // Invoke the Guava patcher before any code
-    GuavaPatcher.patch();
+    // GuavaPatcher.patch is invoked in ExecTest ExecTest-->BaseTestQuery
+    // GuavaPatcher.patch();
 
     // Since we override the class initializer of parent class,
     // invoke it explicitly. This will setup a Drill cluster.
