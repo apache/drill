@@ -17,14 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.UUID;
@@ -71,8 +63,16 @@ import org.apache.drill.exec.work.user.UserWorker;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+
 public class UserServer extends BasicServer<RpcType, UserClientConnectionImpl> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
+  private static final String SERVER_NAME = "Apache Drill Server";
 
   final UserWorker worker;
   final BufferAllocator alloc;
@@ -336,7 +336,8 @@ public class UserServer extends BasicServer<RpcType, UserClientConnectionImpl> {
         }
 
         BitToUserHandshake.Builder respBuilder = BitToUserHandshake.newBuilder()
-            .setRpcVersion(UserRpcConfig.RPC_VERSION);
+            .setRpcVersion(UserRpcConfig.RPC_VERSION)
+            .setServerInfos(UserRpcUtils.getRpcEndpointInfos(SERVER_NAME));
 
         try {
           if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
@@ -364,7 +365,6 @@ public class UserServer extends BasicServer<RpcType, UserClientConnectionImpl> {
           }
 
           connection.setUser(inbound);
-
           return respBuilder.setStatus(HandshakeStatus.SUCCESS).build();
         } catch (Exception e) {
           return handleFailure(respBuilder, HandshakeStatus.UNKNOWN_FAILURE, e.getMessage(), e);

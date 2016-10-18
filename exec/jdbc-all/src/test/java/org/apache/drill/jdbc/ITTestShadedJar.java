@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -25,6 +27,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -64,6 +67,33 @@ public class ITTestShadedJar {
       });
       System.setProperty(dirConfDir, condDir.getAbsolutePath());
     }
+  }
+
+  @Test
+  public void testDatabaseVersion() throws Exception {
+
+    // print class path for debugging
+    System.out.println("java.class.path:");
+    System.out.println(System.getProperty("java.class.path"));
+
+    final URLClassLoader loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+    method.setAccessible(true);
+    method.invoke(loader, getJdbcUrl());
+
+    Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
+    try {
+      Driver driver = (Driver) clazz.newInstance();
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
+        DatabaseMetaData metadata = c.getMetaData();
+        assertEquals("Apache Drill JDBC Driver", metadata.getDriverName());
+        assertEquals("Apache Drill Server", metadata.getDatabaseProductName());
+        //assertEquals()
+      }
+    } catch (Exception ex) {
+      throw ex;
+    }
+
   }
 
   @Test

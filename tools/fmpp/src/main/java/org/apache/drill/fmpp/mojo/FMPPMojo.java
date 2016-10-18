@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.fmpp.mojo.MavenDataLoader.MavenData;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -62,7 +63,6 @@ public class FMPPMojo extends AbstractMojo {
    */
   private File templates;
 
-
   /**
    * Where to write the generated files of the output files.
    *
@@ -86,6 +86,14 @@ public class FMPPMojo extends AbstractMojo {
    * @required
    */
   private String scope;
+
+  /**
+   * if maven properties are added as data
+   *
+   * @parameter default-value="true"
+   * @required
+   */
+  private boolean addMavenDataLoader;
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -121,8 +129,8 @@ public class FMPPMojo extends AbstractMojo {
       String tmpPath = tmp.getAbsolutePath();
       final String tmpPathNormalized = tmpPath.endsWith(File.separator) ? tmpPath : tmpPath + File.separator;
       Settings settings = new Settings(new File("."));
-      settings.set("sourceRoot", templatesPath);
-      settings.set("outputRoot", tmp.getAbsolutePath());
+      settings.set(Settings.NAME_SOURCE_ROOT, templatesPath);
+      settings.set(Settings.NAME_OUTPUT_ROOT, tmp.getAbsolutePath());
       settings.load(config);
       settings.addProgressListener(new TerseConsoleProgressListener());
       settings.addProgressListener(new ProgressListener() {
@@ -146,6 +154,11 @@ public class FMPPMojo extends AbstractMojo {
           }
         }
       } );
+      if (addMavenDataLoader) {
+        getLog().info("Adding maven data loader");
+        settings.setEngineAttribute(MavenDataLoader.MAVEN_DATA_ATTRIBUTE, new MavenData(project));
+        settings.add(Settings.NAME_DATA, format("maven: %s()", MavenDataLoader.class.getName()));
+      }
       settings.execute();
     } catch (Exception e) {
       throw new MojoFailureException(MiscUtil.causeMessages(e), e);

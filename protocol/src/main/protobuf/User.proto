@@ -54,6 +54,15 @@ message UserProperties {
   repeated Property properties = 1;
 }
 
+message RpcEndpointInfos {
+    optional string name = 1;           // example: Apache Drill Server, Apache Drill C++ client
+    optional string version = 2;        // example: 1.9.0
+    optional uint32 majorVersion = 3;   // example: 1
+    optional uint32 minorVersion = 4;   // example: 9
+    optional uint32 patchVersion = 5;   // example: 0
+    optional string application = 6;    // example: Tableau 9.3
+}
+
 message UserToBitHandshake {
   optional exec.shared.RpcChannel channel = 1 [default = USER];
   optional bool support_listening = 2;
@@ -62,6 +71,7 @@ message UserToBitHandshake {
   optional UserProperties properties = 5;
   optional bool support_complex_types = 6 [default = false];
   optional bool support_timeout = 7 [default = false];
+  optional RpcEndpointInfos client_infos = 8;
 }
 
 message RequestResults {
@@ -100,6 +110,7 @@ message BitToUserHandshake {
   optional HandshakeStatus status = 3;
   optional string errorId = 4;
   optional string errorMessage = 5;
+  optional RpcEndpointInfos server_infos = 6;
 }
 
 /*

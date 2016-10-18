@@ -96,6 +96,8 @@ class DrillConnectionImpl extends AvaticaConnection
     this.config = new DrillConnectionConfig(info);
 
     try {
+      String connect = null;
+
       if (config.isLocal()) {
         try {
           Class.forName("org.eclipse.jetty.server.Handler");
@@ -133,12 +135,11 @@ class DrillConnectionImpl extends AvaticaConnection
         makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
 
         this.client = new DrillClient(dConfig, set.getCoordinator());
-        this.client.connect(null, info);
       } else if(config.isDirect()) {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = RootAllocatorFactory.newRoot(dConfig);
         this.client = new DrillClient(dConfig, true); // Get a direct connection
-        this.client.connect(config.getZookeeperConnectionString(), info);
+        connect = config.getZookeeperConnectionString();
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = RootAllocatorFactory.newRoot(dConfig);
@@ -147,8 +148,10 @@ class DrillConnectionImpl extends AvaticaConnection
         // implementations (needed by a server, but not by a client-only
         // process, right?)?  Probably pass dConfig to construction.
         this.client = new DrillClient();
-        this.client.connect(config.getZookeeperConnectionString(), info);
+        connect = config.getZookeeperConnectionString();
       }
+      this.client.setClientName("Apache Drill JDBC Driver");
+      this.client.connect(connect, info);
     } catch (OutOfMemoryException e) {
       throw new SQLException("Failure creating root allocator", e);
     } catch (RpcException e) {

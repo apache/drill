@@ -51,6 +51,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     private HandshakeStatus status;
     private String errorId;
     private String errorMessage;
+    private RpcEndpointInfos serverInfos;
 
     public BitToUserHandshake()
     {
@@ -108,6 +109,19 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     public BitToUserHandshake setErrorMessage(String errorMessage)
     {
         this.errorMessage = errorMessage;
+        return this;
+    }
+
+    // serverInfos
+
+    public RpcEndpointInfos getServerInfos()
+    {
+        return serverInfos;
+    }
+
+    public BitToUserHandshake setServerInfos(RpcEndpointInfos serverInfos)
+    {
+        this.serverInfos = serverInfos;
         return this;
     }
 
@@ -177,6 +191,10 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                 case 5:
                     message.errorMessage = input.readString();
                     break;
+                case 6:
+                    message.serverInfos = input.mergeObject(message.serverInfos, RpcEndpointInfos.getSchema());
+                    break;
+
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -197,6 +215,10 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
 
         if(message.errorMessage != null)
             output.writeString(5, message.errorMessage, false);
+
+        if(message.serverInfos != null)
+             output.writeObject(6, message.serverInfos, RpcEndpointInfos.getSchema(), false);
+
     }
 
     public String getFieldName(int number)
@@ -207,6 +229,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
             case 3: return "status";
             case 4: return "errorId";
             case 5: return "errorMessage";
+            case 6: return "serverInfos";
             default: return null;
         }
     }
@@ -224,6 +247,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         __fieldMap.put("status", 3);
         __fieldMap.put("errorId", 4);
         __fieldMap.put("errorMessage", 5);
+        __fieldMap.put("serverInfos", 6);
     }
     
 }

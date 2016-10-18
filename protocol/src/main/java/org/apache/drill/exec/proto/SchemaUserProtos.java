@@ -255,6 +255,152 @@ public final class SchemaUserProtos
         }
     }
 
+    public static final class RpcEndpointInfos
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos message) throws java.io.IOException
+            {
+                if(message.hasName())
+                    output.writeString(1, message.getName(), false);
+                if(message.hasVersion())
+                    output.writeString(2, message.getVersion(), false);
+                if(message.hasMajorVersion())
+                    output.writeUInt32(3, message.getMajorVersion(), false);
+                if(message.hasMinorVersion())
+                    output.writeUInt32(4, message.getMinorVersion(), false);
+                if(message.hasPatchVersion())
+                    output.writeUInt32(5, message.getPatchVersion(), false);
+                if(message.hasApplication())
+                    output.writeString(6, message.getApplication(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setName(input.readString());
+                            break;
+                        case 2:
+                            builder.setVersion(input.readString());
+                            break;
+                        case 3:
+                            builder.setMajorVersion(input.readUInt32());
+                            break;
+                        case 4:
+                            builder.setMinorVersion(input.readUInt32());
+                            break;
+                        case 5:
+                            builder.setPatchVersion(input.readUInt32());
+                            break;
+                        case 6:
+                            builder.setApplication(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "name";
+                case 2: return "version";
+                case 3: return "majorVersion";
+                case 4: return "minorVersion";
+                case 5: return "patchVersion";
+                case 6: return "application";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("name", 1);
+            fieldMap.put("version", 2);
+            fieldMap.put("majorVersion", 3);
+            fieldMap.put("minorVersion", 4);
+            fieldMap.put("patchVersion", 5);
+            fieldMap.put("application", 6);
+        }
+    }
+
     public static final class UserToBitHandshake
     {
         public static final org.apache.drill.exec.proto.SchemaUserProtos.UserToBitHandshake.MessageSchema WRITE =
@@ -282,6 +428,9 @@ public final class SchemaUserProtos
                     output.writeBool(6, message.getSupportComplexTypes(), false);
                 if(message.hasSupportTimeout())
                     output.writeBool(7, message.getSupportTimeout(), false);
+                if(message.hasClientInfos())
+                    output.writeObject(8, message.getClientInfos(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.WRITE, false);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.UserToBitHandshake message)
             {
@@ -344,6 +493,10 @@ public final class SchemaUserProtos
                         case 7:
                             builder.setSupportTimeout(input.readBool());
                             break;
+                        case 8:
+                            builder.setClientInfos(input.mergeObject(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -391,6 +544,7 @@ public final class SchemaUserProtos
                 case 5: return "properties";
                 case 6: return "supportComplexTypes";
                 case 7: return "supportTimeout";
+                case 8: return "clientInfos";
                 default: return null;
             }
         }
@@ -409,6 +563,7 @@ public final class SchemaUserProtos
             fieldMap.put("properties", 5);
             fieldMap.put("supportComplexTypes", 6);
             fieldMap.put("supportTimeout", 7);
+            fieldMap.put("clientInfos", 8);
         }
     }
 
@@ -814,6 +969,9 @@ public final class SchemaUserProtos
                     output.writeString(4, message.getErrorId(), false);
                 if(message.hasErrorMessage())
                     output.writeString(5, message.getErrorMessage(), false);
+                if(message.hasServerInfos())
+                    output.writeObject(6, message.getServerInfos(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.WRITE, false);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.BitToUserHandshake message)
             {
@@ -865,6 +1023,10 @@ public final class SchemaUserProtos
                         case 5:
                             builder.setErrorMessage(input.readString());
                             break;
+                        case 6:
+                            builder.setServerInfos(input.mergeObject(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -909,6 +1071,7 @@ public final class SchemaUserProtos
                 case 3: return "status";
                 case 4: return "errorId";
                 case 5: return "errorMessage";
+                case 6: return "serverInfos";
                 default: return null;
             }
         }
@@ -924,6 +1087,7 @@ public final class SchemaUserProtos
             fieldMap.put("status", 3);
             fieldMap.put("errorId", 4);
             fieldMap.put("errorMessage", 5);
+            fieldMap.put("serverInfos", 6);
         }
     }
 
