@@ -66,7 +66,7 @@ done
 # convert relative path to absolute path
 bin=`dirname "$this"`
 script=`basename "$this"`
-home=`cd "$bin/..">/dev/null; pwd`
+home=`cd -P "$bin/..">/dev/null; pwd`
 this="$home/bin/$script"
 
 # the root of the drill installation

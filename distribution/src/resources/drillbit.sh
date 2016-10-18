@@ -59,7 +59,7 @@ usage="Usage: drillbit.sh [--config|--site <site-dir>]\
  (start|stop|status|restart|run) [args]"
 
 bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=`cd -P "$bin">/dev/null; pwd`
 
 base=`basename "${BASH_SOURCE-$0}"`
 command=${base/.*/}
