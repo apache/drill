@@ -185,19 +185,6 @@ class DrillCursor implements Cursor {
             qrb.release();
 
             qrb = resultsListener.getNext();
-
-            // NOTE:  It is unclear why this check does not check getRowCount()
-            // as the loop condition above does.
-            if ( qrb != null && qrb.getData() == null ) {
-              // Got another batch with null data--dispose of and report "no more
-              // rows".
-
-              qrb.release();
-
-              // NOTE:  It is unclear why this returns false but doesn't set
-              // afterLastRow (as we do when we normally return false).
-              return false;
-            }
           }
         }
 
