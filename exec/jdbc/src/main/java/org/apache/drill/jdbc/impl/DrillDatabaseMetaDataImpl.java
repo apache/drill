@@ -26,6 +26,7 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
+import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
 
@@ -54,6 +55,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     }
   }
 
+  private RpcEndpointInfos getServerInfos() throws SQLException {
+    DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
+    return connection.getClient().getServerInfos();
+  }
 
   // Note:  Dynamic proxies could be used to reduce the quantity (450?) of
   // method overrides by eliminating those that exist solely to check whether
@@ -125,13 +130,21 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public String getDatabaseProductName() throws SQLException {
     throwIfClosed();
-    return super.getDatabaseProductName();
+    RpcEndpointInfos infos = getServerInfos();
+    if (infos == null) {
+      return super.getDatabaseProductName();
+    }
+    return infos.getName();
   }
 
   @Override
   public String getDatabaseProductVersion() throws SQLException {
     throwIfClosed();
-    return super.getDatabaseProductVersion();
+    RpcEndpointInfos infos = getServerInfos();
+    if (infos == null) {
+      return super.getDatabaseProductVersion();
+    }
+    return infos.getVersion();
   }
 
   @Override
@@ -1171,13 +1184,21 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getDatabaseMajorVersion() throws SQLException {
     throwIfClosed();
-    return super.getDatabaseMajorVersion();
+    RpcEndpointInfos infos = getServerInfos();
+    if (infos == null) {
+      return super.getDatabaseMajorVersion();
+    }
+    return infos.getMajorVersion();
   }
 
   @Override
   public int getDatabaseMinorVersion() throws SQLException {
     throwIfClosed();
-    return super.getDatabaseMinorVersion();
+    RpcEndpointInfos infos = getServerInfos();
+    if (infos == null) {
+      return super.getDatabaseMinorVersion();
+    }
+    return infos.getMinorVersion();
   }
 
   @Override

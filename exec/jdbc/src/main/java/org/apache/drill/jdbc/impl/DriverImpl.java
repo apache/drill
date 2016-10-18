@@ -22,6 +22,7 @@ import org.apache.calcite.avatica.DriverVersion;
 import org.apache.calcite.avatica.Handler;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.UnregisteredDriver;
+import org.apache.drill.common.util.DrillVersionInfo;
 
 /**
  * Optiq JDBC driver.
@@ -62,7 +63,7 @@ public class DriverImpl extends UnregisteredDriver {
         METADATA_PROPERTIES_RESOURCE_PATH,
         // Driver name and version:
         "Apache Drill JDBC Driver",
-        "<Properties resource " + METADATA_PROPERTIES_RESOURCE_PATH + " not loaded>",
+        DrillVersionInfo.getVersion(),
         // Database product name and version:
         "Apache Drill",
         "<Properties resource " + METADATA_PROPERTIES_RESOURCE_PATH + " not loaded>");

@@ -17,6 +17,15 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+//import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,12 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-//import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.nullValue;
+import com.google.common.io.Resources;
 
 /**
  * (Some) unit and integration tests for org.apache.drill.jdbc.Driver.
@@ -202,18 +206,24 @@ public class DriverTest extends DrillTest {
 
 
   // Tests for getMajorVersion() (defined by JDBC/java.sql.Driver):
-  // TODO:  Determine what major version number should be.
   @Test
-  public void test_getMajorVersion() {
-    assertThat( uut.getMajorVersion(), org.hamcrest.CoreMatchers.is( 0 ) );
+  public void test_getMajorVersion() throws IOException {
+    Properties properties = new Properties();
+    properties.load(Resources.getResource("apache-drill-jdbc.properties").openStream());
+
+    assertThat( uut.getMajorVersion(),
+        org.hamcrest.CoreMatchers.is( Integer.parseInt(properties.getProperty("driver.version.major"))) );
   }
 
 
   // Tests for getMinorVersion() (defined by JDBC/java.sql.Driver):
-  // TODO:  Determine what minor version number should be.
   @Test
-  public void test_getMinorVersion() {
-    assertThat( uut.getMinorVersion(), org.hamcrest.core.Is.is( 0 ) );
+  public void test_getMinorVersion() throws IOException {
+    Properties properties = new Properties();
+    properties.load(Resources.getResource("apache-drill-jdbc.properties").openStream());
+
+    assertThat( uut.getMinorVersion(),
+        org.hamcrest.CoreMatchers.is( Integer.parseInt(properties.getProperty("driver.version.minor"))) );
   }
 
 

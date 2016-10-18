@@ -18,6 +18,7 @@
 package org.apache.drill.exec.client;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
@@ -66,6 +67,7 @@ import org.apache.drill.exec.proto.UserProtos.LikeFilter;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -98,6 +100,8 @@ import io.netty.channel.EventLoopGroup;
  * String into ByteBuf.
  */
 public class DrillClient implements Closeable, ConnectionThrottle {
+  public static final String DEFAULT_CLIENT_NAME = "Apache Drill Java client";
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -115,6 +119,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private final boolean isDirectConnection; // true if the connection bypasses zookeeper and connects directly to a drillbit
   private EventLoopGroup eventLoopGroup;
   private ExecutorService executor;
+  private String clientName = DEFAULT_CLIENT_NAME;
 
   public DrillClient() throws OutOfMemoryException {
     this(DrillConfig.create(), false);
@@ -173,6 +178,23 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   @Override
   public void setAutoRead(boolean enableAutoRead) {
     client.setAutoRead(enableAutoRead);
+  }
+
+  /**
+   * Sets the client name.
+   *
+   * If not set, default is {@code DrillClient#DEFAULT_CLIENT_NAME}.
+   *
+   * @param name the client name
+   *
+   * @throws IllegalStateException if called after a connection has been established.
+   * @throws NullPointerException if client name is null
+   */
+  public void setClientName(String name) {
+    if (connected) {
+      throw new IllegalStateException("Attempted to modify client connection property after connection has been established.");
+    }
+    this.clientName = checkNotNull(name, "client name should not be null");
   }
 
   /**
@@ -252,7 +274,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         super.afterExecute(r, t);
       }
     };
-    client = new UserClient(config, supportComplexTypes, allocator, eventLoopGroup, executor);
+    client = new UserClient(clientName, config, supportComplexTypes, allocator, eventLoopGroup, executor);
     logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
     connect(endpoint);
     connected = true;
@@ -328,6 +350,19 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     // TODO: fix tests that fail when this is called.
     //allocator.close();
     connected = false;
+  }
+
+
+  /**
+   * Return the server infos. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the informations.
+   *
+   * @return the server informations, or null if not connected or if the server
+   *         doesn't provide the information
+   */
+  public RpcEndpointInfos getServerInfos() {
+    return client != null ? client.getServerInfos() : null;
   }
 
   /**

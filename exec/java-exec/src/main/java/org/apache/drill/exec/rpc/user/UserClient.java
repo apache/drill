@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.EventLoopGroup;
-
 import java.util.concurrent.Executor;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -39,6 +36,7 @@ import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -55,14 +53,20 @@ import org.apache.drill.exec.rpc.RpcException;
 
 import com.google.protobuf.MessageLite;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.EventLoopGroup;
+
 public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHandshake, BitToUserHandshake> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
 
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
+  private final String clientName;
+  private RpcEndpointInfos serverInfos = null;
+
   private boolean supportComplexTypes = true;
 
-  public UserClient(DrillConfig config, boolean supportComplexTypes, BufferAllocator alloc,
-      EventLoopGroup eventLoopGroup, Executor eventExecutor) {
+  public UserClient(String clientName, DrillConfig config, boolean supportComplexTypes,
+      BufferAllocator alloc, EventLoopGroup eventLoopGroup, Executor eventExecutor) {
     super(
         UserRpcConfig.getMapping(config, eventExecutor),
         alloc,
@@ -71,7 +75,12 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
         BitToUserHandshake.class,
         BitToUserHandshake.PARSER,
         "user client");
+    this.clientName = clientName;
     this.supportComplexTypes = supportComplexTypes;
+  }
+
+  public RpcEndpointInfos getServerInfos() {
+    return serverInfos;
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
@@ -85,7 +94,8 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
         .setSupportListening(true)
         .setSupportComplexTypes(supportComplexTypes)
         .setSupportTimeout(true)
-        .setCredentials(credentials);
+        .setCredentials(credentials)
+        .setClientInfos(UserRpcUtils.getRpcEndpointInfos(clientName));
 
     if (props != null) {
       hsBuilder.setProperties(props);
@@ -141,6 +151,9 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   protected void validateHandshake(BitToUserHandshake inbound) throws RpcException {
 //    logger.debug("Handling handshake from bit to user. {}", inbound);
+    if (inbound.hasServerInfos()) {
+      serverInfos = inbound.getServerInfos();
+    }
     if (inbound.getStatus() != HandshakeStatus.SUCCESS) {
       final String errMsg = String.format("Status: %s, Error Id: %s, Error message: %s",
           inbound.getStatus(), inbound.getErrorId(), inbound.getErrorMessage());
