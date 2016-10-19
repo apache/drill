@@ -158,6 +158,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     }
   }
 
+  @Override
   public void close() throws Exception {
     // discovery attempts to close its caches(ie serviceCache) already. however, being good citizens we make sure to
     // explicitly close serviceCache. Not only that we make sure to close serviceCache before discovery to prevent
@@ -231,13 +232,17 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       Set<DrillbitEndpoint> unregisteredBits = new HashSet<>(endpoints);
       unregisteredBits.removeAll(newDrillbitSet);
 
+      // Set of newly live bits : new set of active bits - original bits.
+      Set<DrillbitEndpoint> registeredBits = new HashSet<>(newDrillbitSet);
+      registeredBits.removeAll(endpoints);
+
       endpoints = newDrillbitSet;
 
       if (logger.isDebugEnabled()) {
         StringBuilder builder = new StringBuilder();
         builder.append("Active drillbit set changed.  Now includes ");
         builder.append(newDrillbitSet.size());
-        builder.append(" total bits.  New active drillbits: \n");
+        builder.append(" total bits. New active drillbits:\n");
         for (DrillbitEndpoint bit: newDrillbitSet) {
           builder.append('\t');
           builder.append(bit.getAddress());
@@ -252,11 +257,14 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
         logger.debug(builder.toString());
       }
 
-      // Notify the drillbit listener for newly unregistered bits. For now, we only care when drillbits are down / unregistered.
-      if (! (unregisteredBits.isEmpty()) ) {
+      // Notify listeners of newly unregistered Drillbits.
+      if (!unregisteredBits.isEmpty()) {
         drillbitUnregistered(unregisteredBits);
       }
-
+      // Notify listeners of newly registered Drillbits.
+      if (!registeredBits.isEmpty()) {
+        drillbitRegistered(registeredBits);
+      }
     } catch (Exception e) {
       logger.error("Failure while update Drillbit service location cache.", e);
     }
