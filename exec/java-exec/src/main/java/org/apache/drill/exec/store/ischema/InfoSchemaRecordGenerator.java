@@ -290,7 +290,8 @@ public abstract class InfoSchemaRecordGenerator {
       return new PojoRecordReader<>(Records.Table.class, records.iterator());
     }
 
-    @Override public void visitTables(String schemaPath, SchemaPlus schema) {
+    @Override
+    public void visitTables(String schemaPath, SchemaPlus schema) {
       final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
       final List<Pair<String, TableType>> tableNamesAndTypes = drillSchema
           .getTableNamesAndTypes(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST),
