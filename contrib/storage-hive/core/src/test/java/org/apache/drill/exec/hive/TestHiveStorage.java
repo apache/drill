@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.hive;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.hadoop.fs.FileSystem;
 import org.joda.time.DateTime;
@@ -45,7 +44,7 @@ public class TestHiveStorage extends HiveTestBase {
 
   @Test // DRILL-4083
   public void testNativeScanWhenNoColumnIsRead() throws Exception {
-    String query = "SELECT count(*) FROM hive.readtest_parquet";
+    String query = "SELECT count(*) as col FROM hive.countStar_Parquet";
     testPhysicalPlan(query, "hive-drill-native-parquet-scan");
 
     testBuilder()
@@ -220,6 +219,7 @@ public class TestHiveStorage extends HiveTestBase {
             "string_field",
             "varchar_field",
             "timestamp_field",
+            "date_field",
             "char_field",
             // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
             //"binary_part",
@@ -257,6 +257,7 @@ public class TestHiveStorage extends HiveTestBase {
             "stringfield",
             "varcharfield",
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+            new DateTime(Date.valueOf("2013-07-05").getTime()),
             "charfield",
             // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
             //"binary",
@@ -278,7 +279,7 @@ public class TestHiveStorage extends HiveTestBase {
             new DateTime(Date.valueOf("2013-07-05").getTime()),
             "char")
         .baselineValues( // All fields are null, but partition fields have non-null values
-            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
             //"binary",
             true,
