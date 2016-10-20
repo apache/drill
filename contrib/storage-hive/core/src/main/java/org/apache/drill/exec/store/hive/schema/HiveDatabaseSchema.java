@@ -81,32 +81,9 @@ public class HiveDatabaseSchema extends AbstractSchema{
   @Override
   public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames,
       final int bulkSize) {
-    final int totalTables = tableNames.size();
     final String schemaName = getName();
-    final List<org.apache.hadoop.hive.metastore.api.Table> tables = Lists.newArrayList();
-
-    // In each round, Drill asks for a sub-list of all the requested tables
-    for (int fromIndex = 0; fromIndex < totalTables; fromIndex += bulkSize) {
-      final int toIndex = Math.min(fromIndex + bulkSize, totalTables);
-      final List<String> eachBulkofTableNames = tableNames.subList(fromIndex, toIndex);
-      List<org.apache.hadoop.hive.metastore.api.Table> eachBulkofTables;
-      // Retries once if the first call to fetch the metadata fails
-      synchronized (mClient) {
-        try {
-          eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
-        } catch (TException tException) {
-          try {
-            mClient.reconnect();
-            eachBulkofTables = mClient.getTableObjectsByName(schemaName, eachBulkofTableNames);
-          } catch (Exception e) {
-            logger.warn("Exception occurred while trying to read tables from {}: {}", schemaName,
-                e.getCause());
-            return ImmutableList.of();
-          }
-        }
-        tables.addAll(eachBulkofTables);
-      }
-    }
+    final List<org.apache.hadoop.hive.metastore.api.Table> tables = DrillHiveMetaStoreClient
+        .getTablesByNamesByBulkLoadHelper(mClient, tableNames, schemaName, bulkSize);
 
     final List<Pair<String, ? extends Table>> tableNameToTable = Lists.newArrayList();
     for (final org.apache.hadoop.hive.metastore.api.Table table : tables) {
