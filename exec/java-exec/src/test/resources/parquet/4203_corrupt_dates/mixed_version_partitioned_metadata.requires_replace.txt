@@ -297,5 +297,5 @@
     } ]
   } ],
   "directories" : [ "file:REPLACED_IN_TEST/mixed_partitioned/1_9_0_partitioned_no_corruption", "file:REPLACED_IN_TEST/mixed_partitioned/partitioned_with_corruption_4203" ],
-  "isDateCorrect" : "true"
+  "drillVersion" : "1.9.0-SNAPSHOT"
 }
