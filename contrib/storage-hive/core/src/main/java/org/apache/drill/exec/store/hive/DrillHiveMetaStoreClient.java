@@ -204,8 +204,12 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     try {
       return mClient.getAllDatabases();
     } catch (MetaException e) {
-      throw e;
-    } catch (TException e) {
+      /*
+         HiveMetaStoreClient is encapsulating both the MetaException/TExceptions inside MetaException.
+         Since we don't have good way to differentiate, we will close older connection and retry once.
+         This is only applicable for getAllTables and getAllDatabases method since other methods are
+         properly throwing correct exceptions.
+      */
       logger.warn("Failure while attempting to get hive databases. Retries once.", e);
       try {
         mClient.close();
@@ -222,9 +226,13 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       throws TException {
     try {
       return mClient.getAllTables(dbName);
-    } catch (MetaException | UnknownDBException e) {
-      throw e;
-    } catch (TException e) {
+    } catch (MetaException e) {
+      /*
+         HiveMetaStoreClient is encapsulating both the MetaException/TExceptions inside MetaException.
+         Since we don't have good way to differentiate, we will close older connection and retry once.
+         This is only applicable for getAllTables and getAllDatabases method since other methods are
+         properly throwing correct exceptions.
+      */
       logger.warn("Failure while attempting to get hive tables. Retries once.", e);
       try {
         mClient.close();
