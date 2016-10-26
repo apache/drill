@@ -18499,6 +18499,16 @@ public final class UserProtos {
      * <code>optional int32 interval_precision = 16;</code>
      */
     int getIntervalPrecision();
+
+    // optional int32 column_size = 17;
+    /**
+     * <code>optional int32 column_size = 17;</code>
+     */
+    boolean hasColumnSize();
+    /**
+     * <code>optional int32 column_size = 17;</code>
+     */
+    int getColumnSize();
   }
   /**
    * Protobuf type {@code exec.user.ColumnMetadata}
@@ -18634,6 +18644,11 @@ public final class UserProtos {
             case 128: {
               bitField0_ |= 0x00008000;
               intervalPrecision_ = input.readInt32();
+              break;
+            }
+            case 136: {
+              bitField0_ |= 0x00010000;
+              columnSize_ = input.readInt32();
               break;
             }
           }
@@ -19121,6 +19136,22 @@ public final class UserProtos {
       return intervalPrecision_;
     }
 
+    // optional int32 column_size = 17;
+    public static final int COLUMN_SIZE_FIELD_NUMBER = 17;
+    private int columnSize_;
+    /**
+     * <code>optional int32 column_size = 17;</code>
+     */
+    public boolean hasColumnSize() {
+      return ((bitField0_ & 0x00010000) == 0x00010000);
+    }
+    /**
+     * <code>optional int32 column_size = 17;</code>
+     */
+    public int getColumnSize() {
+      return columnSize_;
+    }
+
     private void initFields() {
       catalogName_ = "";
       schemaName_ = "";
@@ -19138,6 +19169,7 @@ public final class UserProtos {
       dateTimePrecision_ = 0;
       intervalType_ = "";
       intervalPrecision_ = 0;
+      columnSize_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -19198,6 +19230,9 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00008000) == 0x00008000)) {
         output.writeInt32(16, intervalPrecision_);
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        output.writeInt32(17, columnSize_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -19271,6 +19306,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00008000) == 0x00008000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(16, intervalPrecision_);
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(17, columnSize_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -19425,6 +19464,8 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00004000);
         intervalPrecision_ = 0;
         bitField0_ = (bitField0_ & ~0x00008000);
+        columnSize_ = 0;
+        bitField0_ = (bitField0_ & ~0x00010000);
         return this;
       }
 
@@ -19517,6 +19558,10 @@ public final class UserProtos {
           to_bitField0_ |= 0x00008000;
         }
         result.intervalPrecision_ = intervalPrecision_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00010000;
+        }
+        result.columnSize_ = columnSize_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -19594,6 +19639,9 @@ public final class UserProtos {
         }
         if (other.hasIntervalPrecision()) {
           setIntervalPrecision(other.getIntervalPrecision());
+        }
+        if (other.hasColumnSize()) {
+          setColumnSize(other.getColumnSize());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -20433,6 +20481,39 @@ public final class UserProtos {
       public Builder clearIntervalPrecision() {
         bitField0_ = (bitField0_ & ~0x00008000);
         intervalPrecision_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 column_size = 17;
+      private int columnSize_ ;
+      /**
+       * <code>optional int32 column_size = 17;</code>
+       */
+      public boolean hasColumnSize() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional int32 column_size = 17;</code>
+       */
+      public int getColumnSize() {
+        return columnSize_;
+      }
+      /**
+       * <code>optional int32 column_size = 17;</code>
+       */
+      public Builder setColumnSize(int value) {
+        bitField0_ |= 0x00010000;
+        columnSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 column_size = 17;</code>
+       */
+      public Builder clearColumnSize() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        columnSize_ = 0;
         onChanged();
         return this;
       }
@@ -29167,7 +29248,7 @@ public final class UserProtos {
       "\001(\0132\025.exec.user.LikeFilter\0220\n\021table_name" +
       "_filter\030\003 \001(\0132\025.exec.user.LikeFilter\0221\n\022" +
       "column_name_filter\030\004 \001(\0132\025.exec.user.Lik" +
-      "eFilter\"\224\003\n\016ColumnMetadata\022\024\n\014catalog_na" +
+      "eFilter\"\251\003\n\016ColumnMetadata\022\024\n\014catalog_na" +
       "me\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_n" +
       "ame\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\030\n\020ordina" +
       "l_position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022",
@@ -29177,60 +29258,61 @@ public final class UserProtos {
       "\n\027numeric_precision_radix\030\014 \001(\005\022\025\n\rnumer" +
       "ic_scale\030\r \001(\005\022\033\n\023date_time_precision\030\016 " +
       "\001(\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022interval_p" +
-      "recision\030\020 \001(\005\"\220\001\n\016GetColumnsResp\022(\n\006sta" +
-      "tus\030\001 \001(\0162\030.exec.user.RequestStatus\022*\n\007c" +
-      "olumns\030\002 \003(\0132\031.exec.user.ColumnMetadata\022" +
-      "(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPBErro",
-      "r\"/\n\032CreatePreparedStatementReq\022\021\n\tsql_q" +
-      "uery\030\001 \001(\t\"\326\003\n\024ResultColumnMetadata\022\024\n\014c" +
-      "atalog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022" +
-      "\n\ntable_name\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022" +
-      "\r\n\005label\030\005 \001(\t\022\021\n\tdata_type\030\006 \001(\t\022\023\n\013is_" +
-      "nullable\030\007 \001(\010\022\021\n\tprecision\030\010 \001(\005\022\r\n\005sca" +
-      "le\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014display_size" +
-      "\030\013 \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n\rsearchabil" +
-      "ity\030\r \001(\0162\036.exec.user.ColumnSearchabilit" +
-      "y\0223\n\014updatability\030\016 \001(\0162\035.exec.user.Colu",
-      "mnUpdatability\022\026\n\016auto_increment\030\017 \001(\010\022\030" +
-      "\n\020case_sensitivity\030\020 \001(\010\022\020\n\010sortable\030\021 \001" +
-      "(\010\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_currency\030\024 " +
-      "\001(\010\".\n\027PreparedStatementHandle\022\023\n\013server" +
-      "_info\030\001 \001(\014\"\200\001\n\021PreparedStatement\0220\n\007col" +
-      "umns\030\001 \003(\0132\037.exec.user.ResultColumnMetad" +
-      "ata\0229\n\rserver_handle\030\002 \001(\0132\".exec.user.P" +
-      "reparedStatementHandle\"\253\001\n\033CreatePrepare" +
-      "dStatementResp\022(\n\006status\030\001 \001(\0162\030.exec.us" +
-      "er.RequestStatus\0228\n\022prepared_statement\030\002",
-      " \001(\0132\034.exec.user.PreparedStatement\022(\n\005er" +
-      "ror\030\003 \001(\0132\031.exec.shared.DrillPBError\"\353\001\n" +
-      "\010RunQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec.u" +
-      "ser.QueryResultsMode\022$\n\004type\030\002 \001(\0162\026.exe" +
-      "c.shared.QueryType\022\014\n\004plan\030\003 \001(\t\0221\n\tfrag" +
-      "ments\030\004 \003(\0132\036.exec.bit.control.PlanFragm" +
-      "ent\022E\n\031prepared_statement_handle\030\005 \001(\0132\"" +
-      ".exec.user.PreparedStatementHandle*\310\003\n\007R" +
-      "pcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBY" +
-      "E\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017",
-      "REQUEST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUERY" +
-      "\020\013\022\034\n\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET_" +
-      "CATALOGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABLE" +
-      "S\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_PREPARED_" +
-      "STATEMENT\020\026\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HAN" +
-      "DLE\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATAL" +
-      "OGS\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMN" +
-      "S\020\025\022\026\n\022PREPARED_STATEMENT\020\027\022\026\n\022REQ_META_" +
-      "FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014Q" +
-      "UERY_RESULT\020\n*#\n\020QueryResultsMode\022\017\n\013STR",
-      "EAM_FULL\020\001*^\n\017HandshakeStatus\022\013\n\007SUCCESS" +
-      "\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_FAI" +
-      "LED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004*D\n\rRequestSta" +
-      "tus\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILE" +
-      "D\020\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022" +
-      "\031\n\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004" +
-      "CHAR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpd" +
-      "atability\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tR" +
-      "EAD_ONLY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org.apache.d" +
-      "rill.exec.protoB\nUserProtosH\001"
+      "recision\030\020 \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016" +
+      "GetColumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.us" +
+      "er.RequestStatus\022*\n\007columns\030\002 \003(\0132\031.exec" +
+      ".user.ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.ex",
+      "ec.shared.DrillPBError\"/\n\032CreatePrepared" +
+      "StatementReq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024Resu" +
+      "ltColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023" +
+      "\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022" +
+      "\023\n\013column_name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\td" +
+      "ata_type\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tp" +
+      "recision\030\010 \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030" +
+      "\n \001(\010\022\024\n\014display_size\030\013 \001(\005\022\022\n\nis_aliase" +
+      "d\030\014 \001(\010\0225\n\rsearchability\030\r \001(\0162\036.exec.us" +
+      "er.ColumnSearchability\0223\n\014updatability\030\016",
+      " \001(\0162\035.exec.user.ColumnUpdatability\022\026\n\016a" +
+      "uto_increment\030\017 \001(\010\022\030\n\020case_sensitivity\030" +
+      "\020 \001(\010\022\020\n\010sortable\030\021 \001(\010\022\022\n\nclass_name\030\022 " +
+      "\001(\t\022\023\n\013is_currency\030\024 \001(\010\".\n\027PreparedStat" +
+      "ementHandle\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021Pre" +
+      "paredStatement\0220\n\007columns\030\001 \003(\0132\037.exec.u" +
+      "ser.ResultColumnMetadata\0229\n\rserver_handl" +
+      "e\030\002 \001(\0132\".exec.user.PreparedStatementHan" +
+      "dle\"\253\001\n\033CreatePreparedStatementResp\022(\n\006s" +
+      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\0228\n",
+      "\022prepared_statement\030\002 \001(\0132\034.exec.user.Pr" +
+      "eparedStatement\022(\n\005error\030\003 \001(\0132\031.exec.sh" +
+      "ared.DrillPBError\"\353\001\n\010RunQuery\0221\n\014result" +
+      "s_mode\030\001 \001(\0162\033.exec.user.QueryResultsMod" +
+      "e\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022" +
+      "\014\n\004plan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec." +
+      "bit.control.PlanFragment\022E\n\031prepared_sta" +
+      "tement_handle\030\005 \001(\0132\".exec.user.Prepared" +
+      "StatementHandle*\310\003\n\007RpcType\022\r\n\tHANDSHAKE" +
+      "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022",
+      "\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027" +
+      "\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLA" +
+      "N_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_S" +
+      "CHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020" +
+      "\021\022\035\n\031CREATE_PREPARED_STATEMENT\020\026\022\016\n\nQUER" +
+      "Y_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN" +
+      "_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022" +
+      "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA" +
+      "TEMENT\020\027\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP" +
+      "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020Qu",
+      "eryResultsMode\022\017\n\013STREAM_FULL\020\001*^\n\017Hands" +
+      "hakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_M" +
+      "ISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FA" +
+      "ILURE\020\004*D\n\rRequestStatus\022\022\n\016UNKNOWN_STAT" +
+      "US\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n" +
+      "\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHAB" +
+      "ILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022" +
+      "\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNOW" +
+      "N_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITA" +
+      "BLE\020\002B+\n\033org.apache.drill.exec.protoB\nUs",
+      "erProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -29356,7 +29438,7 @@ public final class UserProtos {
           internal_static_exec_user_ColumnMetadata_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_ColumnMetadata_descriptor,
-              new java.lang.String[] { "CatalogName", "SchemaName", "TableName", "ColumnName", "OrdinalPosition", "DefaultValue", "IsNullable", "DataType", "CharMaxLength", "CharOctetLength", "NumericPrecision", "NumericPrecisionRadix", "NumericScale", "DateTimePrecision", "IntervalType", "IntervalPrecision", });
+              new java.lang.String[] { "CatalogName", "SchemaName", "TableName", "ColumnName", "OrdinalPosition", "DefaultValue", "IsNullable", "DataType", "CharMaxLength", "CharOctetLength", "NumericPrecision", "NumericPrecisionRadix", "NumericScale", "DateTimePrecision", "IntervalType", "IntervalPrecision", "ColumnSize", });
           internal_static_exec_user_GetColumnsResp_descriptor =
             getDescriptor().getMessageTypes().get(20);
           internal_static_exec_user_GetColumnsResp_fieldAccessorTable = new
