@@ -40,6 +40,18 @@ import com.google.common.base.Preconditions;
 public class ParquetWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriter.class);
 
+/** Version of Drill's Parquet writer. Increment this version (by 1) any time we make any format change to the file.
+ * Format changes include:
+ * <ul>
+ * <li>Supporting new data types,
+ * <li>Changes to the format of data fields,
+ * <li>Adding new metadata to the file footer, etc.
+ * </ul>
+ * Newer readers must be able to read old files. The Writer version tells the Parquet reader how to interpret fields
+ * or metadata when that data changes format from one writer version to another.
+ */
+  public static final int WRITER_VERSION = 2;
+
   private final String location;
   private final List<String> partitionColumns;
   private final ParquetFormatPlugin formatPlugin;

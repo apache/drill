@@ -59,19 +59,26 @@ public class ParquetReaderUtility {
    */
   public static final long JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH = 2440588;
   /**
-   * All old parquet files (which haven't "is.date.correct=true" property in metadata) have
-   * a corrupt date shift: {@value} days or 2 * {@value #JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH}
+   * All old parquet files (which haven't "is.date.correct=true" or "parquet-writer.version" properties
+   * in metadata) have a corrupt date shift: {@value} days or 2 * {@value #JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH}
    */
   public static final long CORRECT_CORRUPT_DATE_SHIFT = 2 * JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH;
-  // The year 5000 (or 1106685 day from Unix epoch) is chosen as the threshold for auto-detecting date corruption.
-  // This balances two possible cases of bad auto-correction. External tools writing dates in the future will not
-  // be shifted unless they are past this threshold (and we cannot identify them as external files based on the metadata).
-  // On the other hand, historical dates written with Drill wouldn't risk being incorrectly shifted unless they were
-  // something like 10,000 years in the past.
   private static final Chronology UTC = org.joda.time.chrono.ISOChronology.getInstanceUTC();
+  /**
+   * The year 5000 (or 1106685 day from Unix epoch) is chosen as the threshold for auto-detecting date corruption.
+   * This balances two possible cases of bad auto-correction. External tools writing dates in the future will not
+   * be shifted unless they are past this threshold (and we cannot identify them as external files based on the metadata).
+   * On the other hand, historical dates written with Drill wouldn't risk being incorrectly shifted unless they were
+   * something like 10,000 years in the past.
+   */
   public static final int DATE_CORRUPTION_THRESHOLD =
       (int) (UTC.getDateTimeMillis(5000, 1, 1, 0) / DateTimeConstants.MILLIS_PER_DAY);
-
+  /**
+   * Version 2 (and later) of the Drill Parquet writer uses the date format described in the
+   * <a href="https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md#date">Parquet spec</a>.
+   * Prior versions had dates formatted with {@link org.apache.drill.exec.store.parquet.ParquetReaderUtility#CORRECT_CORRUPT_DATE_SHIFT}
+   */
+  public static final int DRILL_WRITER_VERSION_STD_DATE_FORMAT = 2;
   /**
    * For most recently created parquet files, we can determine if we have corrupted dates (see DRILL-4203)
    * based on the file metadata. For older files that lack statistics we must actually test the values
@@ -130,10 +137,9 @@ public class ParquetReaderUtility {
   }
 
   public static void correctDatesInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
-    boolean isDateCorrect = parquetTableMetadata.isDateCorrect();
-    DateCorruptionStatus cacheFileContainsCorruptDates = isDateCorrect ?
-        DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_SHOWS_CORRUPTION;
-    if (cacheFileContainsCorruptDates == DateCorruptionStatus.META_SHOWS_CORRUPTION) {
+    DateCorruptionStatus cacheFileCanContainsCorruptDates = parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3 ?
+        DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
+    if (cacheFileCanContainsCorruptDates == DateCorruptionStatus.META_UNCLEAR_TEST_VALUES) {
       // Looking for the DATE data type of column names in the metadata cache file ("metadata_version" : "v2")
       String[] names = new String[0];
       if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v2) {
@@ -189,9 +195,20 @@ public class ParquetReaderUtility {
 
     String createdBy = footer.getFileMetaData().getCreatedBy();
     String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
-    String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.IS_DATE_CORRECT_PROPERTY);
+    String stringWriterVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
+    // This flag can be present in parquet files which were generated with 1.9.0-SNAPSHOT and 1.9.0 drill versions.
+    // If this flag is present it means that the version of the drill parquet writer is 2
+    final String isDateCorrectFlag = "is.date.correct";
+    String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(isDateCorrectFlag);
     if (drillVersion != null) {
-      return Boolean.valueOf(isDateCorrect) ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
+      int writerVersion = 1;
+      if (stringWriterVersion != null) {
+        writerVersion = Integer.parseInt(stringWriterVersion);
+      }
+      else if (Boolean.valueOf(isDateCorrect)) {
+        writerVersion = DRILL_WRITER_VERSION_STD_DATE_FORMAT;
+      }
+      return writerVersion >= DRILL_WRITER_VERSION_STD_DATE_FORMAT ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
           : DateCorruptionStatus.META_SHOWS_CORRUPTION;
     } else {
       // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
@@ -261,7 +278,8 @@ public class ParquetReaderUtility {
         // this reader only supports flat data, this is restricted in the ParquetScanBatchCreator
         // creating a NameSegment makes sure we are using the standard code for comparing names,
         // currently it is all case-insensitive
-        if (AbstractRecordReader.isStarQuery(columns) || new PathSegment.NameSegment(column.getPath()[0]).equals(schemaPath.getRootSegment())) {
+        if (AbstractRecordReader.isStarQuery(columns)
+            || new PathSegment.NameSegment(column.getPath()[0]).equals(schemaPath.getRootSegment())) {
           int colIndex = -1;
           ConvertedType convertedType = schemaElements.get(column.getPath()[0]).getConverted_type();
           if (convertedType != null && convertedType.equals(ConvertedType.DATE)) {

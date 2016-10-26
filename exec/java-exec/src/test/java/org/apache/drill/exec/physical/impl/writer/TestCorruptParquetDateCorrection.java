@@ -67,8 +67,8 @@ import java.util.regex.Pattern;
 public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   // 4 files are in the directory:
-  //    - one created with the fixed version of the reader
-  //        - files have extra meta field: is.date.correct = true
+  //    - one created with the parquet-writer version number of "2"
+  //        - files have extra meta field: parquet-writer.version = 2
   //    - one from and old version of Drill, before we put in proper created by in metadata
   //        - this is read properly by looking at a Max value in the file statistics, to see that
   //          it is way off of a typical date value
@@ -123,7 +123,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   /**
    * Test reading a directory full of partitioned parquet files with dates, these files have a drill version
-   * number of 1.9.0-SNAPSHOT and is.date.correct = true label in their footers, so we can be certain
+   * number of "1.9.0-SNAPSHOT" and parquet-writer version number of "2" in their footers, so we can be certain
    * they do not have corruption. The option to disable the correction is passed, but it will not change the result
    * in the case where we are certain correction is NOT needed. For more info see DRILL-4203.
    */
