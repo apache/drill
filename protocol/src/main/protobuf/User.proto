@@ -247,6 +247,7 @@ message ColumnMetadata {
   optional int32 date_time_precision = 14;
   optional string interval_type = 15;
   optional int32 interval_precision = 16;
+  optional int32 column_size = 17;
 }
 
 /*

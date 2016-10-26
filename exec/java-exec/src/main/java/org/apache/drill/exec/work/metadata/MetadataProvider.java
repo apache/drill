@@ -402,6 +402,10 @@ public class MetadataProvider {
             columnBuilder.setIntervalPrecision(c.INTERVAL_PRECISION);
           }
 
+          if (c.COLUMN_SIZE != null) {
+            columnBuilder.setColumnSize(c.COLUMN_SIZE);
+          }
+
           metadata.add(columnBuilder.build());
         }
 

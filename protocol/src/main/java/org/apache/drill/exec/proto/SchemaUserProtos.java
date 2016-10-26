@@ -2548,6 +2548,8 @@ public final class SchemaUserProtos
                     output.writeString(15, message.getIntervalType(), false);
                 if(message.hasIntervalPrecision())
                     output.writeInt32(16, message.getIntervalPrecision(), false);
+                if(message.hasColumnSize())
+                    output.writeInt32(17, message.getColumnSize(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.ColumnMetadata message)
             {
@@ -2635,6 +2637,9 @@ public final class SchemaUserProtos
                         case 16:
                             builder.setIntervalPrecision(input.readInt32());
                             break;
+                        case 17:
+                            builder.setColumnSize(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -2691,6 +2696,7 @@ public final class SchemaUserProtos
                 case 14: return "dateTimePrecision";
                 case 15: return "intervalType";
                 case 16: return "intervalPrecision";
+                case 17: return "columnSize";
                 default: return null;
             }
         }
@@ -2718,6 +2724,7 @@ public final class SchemaUserProtos
             fieldMap.put("dateTimePrecision", 14);
             fieldMap.put("intervalType", 15);
             fieldMap.put("intervalPrecision", 16);
+            fieldMap.put("columnSize", 17);
         }
     }
 
