@@ -22,6 +22,18 @@ import static org.apache.drill.exec.proto.UserProtos.RequestStatus.FAILED;
 import static org.apache.drill.exec.proto.UserProtos.RequestStatus.OK;
 import static org.apache.drill.exec.proto.UserProtos.RequestStatus.TIMEOUT;
 
+import java.math.BigDecimal;
+import java.net.SocketAddress;
+import java.sql.Date;
+import java.sql.ResultSetMetaData;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -61,17 +73,6 @@ import com.google.common.collect.ImmutableMap;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
-import java.math.BigDecimal;
-import java.net.SocketAddress;
-import java.sql.Date;
-import java.sql.ResultSetMetaData;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Contains worker {@link Runnable} for creating a prepared statement and helper methods.
@@ -371,9 +372,9 @@ public class PreparedStatementProvider {
     builder.setSigned(Types.isNumericType(majorType));
 
     /**
-     * Maximum number of characters required to display data from the column. Initial implementation hard coded to 10.
+     * Maximum number of characters required to display data from the column.
      */
-    builder.setDisplaySize(10);
+    builder.setDisplaySize(Types.getJdbcDisplaySize(majorType));
 
     /**
      * Is the column an aliased column. Initial implementation defaults to true as we derive schema from LIMIT 0 query and

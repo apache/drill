@@ -144,10 +144,9 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
       //   getColumns()'s COLUMN_SIZE)
       // - scale for getScale(...), and
       // - and displaySize for getColumnDisplaySize(...).
-      final int precision =
-          rpcDataType.hasPrecision() ? rpcDataType.getPrecision() : 0;
-      final int scale = rpcDataType.hasScale() ? rpcDataType.getScale() : 0;
-      final int displaySize = 10;
+      final int precision = Types.getPrecision(rpcDataType);
+      final int scale = Types.getScale(rpcDataType);
+      final int displaySize = Types.getJdbcDisplaySize(rpcDataType);
 
       ColumnMetaData col = new ColumnMetaData(
           colOffset,    // (zero-based ordinal (for Java arrays/lists).)
