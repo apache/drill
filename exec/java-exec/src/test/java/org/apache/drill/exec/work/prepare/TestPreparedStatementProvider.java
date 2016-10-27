@@ -20,6 +20,9 @@ package org.apache.drill.exec.work.prepare;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Date;
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.UserProtos.ColumnSearchability;
@@ -32,9 +35,6 @@ import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-
-import java.sql.Date;
-import java.util.List;
 
 /**
  * Tests for creating and executing prepared statements.
@@ -52,13 +52,13 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
     PreparedStatement preparedStatement = createPrepareStmt(query, false, null);
 
     List<ExpectedColumnResult> expMetadata = ImmutableList.of(
-        new ExpectedColumnResult("region_id", "BIGINT", true, 0, 0, true, Long.class.getName()),
-        new ExpectedColumnResult("sales_city", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("sales_state_province", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("sales_district", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("sales_region", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("sales_country", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("sales_district_id", "BIGINT", true, 0, 0, true, Long.class.getName())
+        new ExpectedColumnResult("region_id", "BIGINT", true, 20, 0, 0, true, Long.class.getName()),
+        new ExpectedColumnResult("sales_city", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("sales_state_province", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("sales_district", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("sales_region", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("sales_country", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("sales_district_id", "BIGINT", true, 20, 0, 0, true, Long.class.getName())
     );
 
     verifyMetadata(expMetadata, preparedStatement.getColumnsList());
@@ -82,8 +82,8 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
     PreparedStatement preparedStatement = createPrepareStmt(query, false, null);
 
     List<ExpectedColumnResult> expMetadata = ImmutableList.of(
-        new ExpectedColumnResult("sales_city", "CHARACTER VARYING", true, 65536, 0, false, String.class.getName()),
-        new ExpectedColumnResult("cnt", "BIGINT", false, 0, 0, true, Long.class.getName())
+        new ExpectedColumnResult("sales_city", "CHARACTER VARYING", true, 65536, 65536, 0, false, String.class.getName()),
+        new ExpectedColumnResult("cnt", "BIGINT", false, 20, 0, 0, true, Long.class.getName())
     );
 
     verifyMetadata(expMetadata, preparedStatement.getColumnsList());
@@ -107,9 +107,9 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
     PreparedStatement preparedStatement = createPrepareStmt(query, false, null);
 
     List<ExpectedColumnResult> expMetadata = ImmutableList.of(
-        new ExpectedColumnResult("l_quantity", "DOUBLE", false, 0, 0, true, Double.class.getName()),
-        new ExpectedColumnResult("l_shipdate", "DATE", false, 0, 0, false, Date.class.getName()),
-        new ExpectedColumnResult("o_custkey", "INTEGER", false, 0, 0, true, Integer.class.getName())
+        new ExpectedColumnResult("l_quantity", "DOUBLE", false, 24, 0, 0, true, Double.class.getName()),
+        new ExpectedColumnResult("l_shipdate", "DATE", false, 10, 0, 0, false, Date.class.getName()),
+        new ExpectedColumnResult("o_custkey", "INTEGER", false, 11, 0, 0, true, Integer.class.getName())
     );
 
     verifyMetadata(expMetadata, preparedStatement.getColumnsList());
@@ -152,16 +152,18 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
     final String columnName;
     final String type;
     final boolean nullable;
+    final int displaySize;
     final int precision;
     final int scale;
     final boolean signed;
     final String className;
 
-    ExpectedColumnResult(String columnName, String type, boolean nullable, int precision, int scale, boolean signed,
-        String className) {
+    ExpectedColumnResult(String columnName, String type, boolean nullable, int displaySize, int precision, int scale,
+        boolean signed, String className) {
       this.columnName = columnName;
       this.type = type;
       this.nullable = nullable;
+      this.displaySize = displaySize;
       this.precision = precision;
       this.scale = scale;
       this.signed = signed;
@@ -180,7 +182,7 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
           result.getPrecision() == precision &&
           result.getScale() == scale &&
           result.getSigned() == signed &&
-          result.getDisplaySize() == 10 &&
+          result.getDisplaySize() == displaySize &&
           result.getClassName().equals(className) &&
           result.getSearchability() == ColumnSearchability.ALL &&
           result.getAutoIncrement() == false &&
@@ -196,6 +198,7 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
           "columnName='" + columnName + '\'' +
           ", type='" + type + '\'' +
           ", nullable=" + nullable +
+          ", displaySize=" + displaySize +
           ", precision=" + precision +
           ", scale=" + scale +
           ", signed=" + signed +
@@ -204,19 +207,28 @@ public class TestPreparedStatementProvider extends BaseTestQuery {
     }
   }
 
+  private static String toString(ResultColumnMetadata metadata) {
+    return "ResultColumnMetadata[" +
+        "columnName='" + metadata.getColumnName() + '\'' +
+        ", type='" + metadata.getDataType() + '\'' +
+        ", nullable=" + metadata.getIsNullable() +
+        ", displaySize=" + metadata.getDisplaySize() +
+        ", precision=" + metadata.getPrecision() +
+        ", scale=" + metadata.getScale() +
+        ", signed=" + metadata.getSigned() +
+        ", className='" + metadata.getClassName() + '\'' +
+        ']';
+  }
+
   private static void verifyMetadata(List<ExpectedColumnResult> expMetadata,
       List<ResultColumnMetadata> actMetadata) {
     assertEquals(expMetadata.size(), actMetadata.size());
 
+    int i = 0;
     for(ExpectedColumnResult exp : expMetadata) {
-      boolean found = false;
-      for(ResultColumnMetadata act : actMetadata) {
-        found = exp.isEqualsTo(act);
-        if (found) {
-          break;
-        }
-      }
-      assertTrue("Failed to find the expected column metadata: " + exp, found);
+      ResultColumnMetadata act = actMetadata.get(i++);
+
+      assertTrue("Failed to find the expected column metadata: " + exp + ". Was: " + toString(act), exp.isEqualsTo(act));
     }
   }
 }

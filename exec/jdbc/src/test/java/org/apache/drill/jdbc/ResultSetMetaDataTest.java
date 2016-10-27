@@ -385,11 +385,10 @@ public class ResultSetMetaDataTest extends JdbcTestBase {
   //       designated column"
   // (What exactly is the "normal maximum" number of characters?)
 
-  @Ignore( "TODO(DRILL-3355): unignore when getColumnDisplaySize(...) implemented" )
   @Test
   public void test_getColumnDisplaySize_forBOOLEAN() throws SQLException {
     assertThat( rowMetadata.getColumnDisplaySize( ordOptBOOLEAN ),
-                equalTo( 5 ) );
+                equalTo( 1 ) );
   }
 
   // TODO(DRILL-3355):  Do more types when metadata is available.
