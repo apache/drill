@@ -23,8 +23,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.apache.calcite.schema.Schema;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -270,9 +268,9 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   /** Helper method which gets table metadata. Retries once if the first call to fetch the metadata fails */
   protected static HiveReadEntry getHiveReadEntryHelper(final IMetaStoreClient mClient, final String dbName,
       final String tableName) throws TException {
-    Table t = null;
+    Table table = null;
     try {
-      t = mClient.getTable(dbName, tableName);
+      table = mClient.getTable(dbName, tableName);
     } catch (MetaException | NoSuchObjectException e) {
       throw e;
     } catch (TException e) {
@@ -283,10 +281,10 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
         logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
       }
       mClient.reconnect();
-      t = mClient.getTable(dbName, tableName);
+      table = mClient.getTable(dbName, tableName);
     }
 
-    if (t == null) {
+    if (table == null) {
       throw new UnknownTableException(String.format("Unable to find table '%s'.", tableName));
     }
 
@@ -306,16 +304,34 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       partitions = mClient.listPartitions(dbName, tableName, (short) -1);
     }
 
-    List<HiveTable.HivePartition> hivePartitions = Lists.newArrayList();
-    for (Partition part : partitions) {
-      hivePartitions.add(new HiveTable.HivePartition(part));
+    List<HiveTableWrapper.HivePartitionWrapper> hivePartitionWrappers = Lists.newArrayList();
+    HiveTableWithColumnCache hiveTable = new HiveTableWithColumnCache(table, new ColumnListsCache(table));
+    for (Partition partition : partitions) {
+      hivePartitionWrappers.add(createPartitionWithSpecColumns(hiveTable, partition));
     }
 
-    if (hivePartitions.size() == 0) {
-      hivePartitions = null;
+    if (hivePartitionWrappers.isEmpty()) {
+      hivePartitionWrappers = null;
     }
 
-    return new HiveReadEntry(new HiveTable(t), hivePartitions);
+    return new HiveReadEntry(new HiveTableWrapper(hiveTable), hivePartitionWrappers);
+  }
+
+  /**
+   * Helper method which stores partition columns in table columnListCache. If table columnListCache has exactly the
+   * same columns as partition, in partition stores columns index that corresponds to identical column list.
+   * If table columnListCache hasn't such column list, the column list adds to table columnListCache and in partition
+   * stores columns index that corresponds to column list.
+   *
+   * @param table     hive table instance
+   * @param partition partition instance
+   * @return hive partition wrapper
+   */
+  public static HiveTableWrapper.HivePartitionWrapper createPartitionWithSpecColumns(HiveTableWithColumnCache table, Partition partition) {
+    int listIndex = table.getColumnListsCache().addOrGet(partition.getSd().getCols());
+    HivePartition hivePartition = new HivePartition(partition, listIndex);
+    HiveTableWrapper.HivePartitionWrapper hivePartitionWrapper = new HiveTableWrapper.HivePartitionWrapper(hivePartition);
+    return hivePartitionWrapper;
   }
 
   /**

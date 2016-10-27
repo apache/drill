@@ -28,7 +28,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
+import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -103,7 +103,7 @@ public class HiveDrillNativeParquetScan extends HiveScan {
 
   @Override
   public String toString() {
-    final List<HivePartition> partitions = hiveReadEntry.getHivePartitionWrappers();
+    final List<HivePartitionWrapper> partitions = hiveReadEntry.getHivePartitionWrappers();
     int numPartitions = partitions == null ? 0 : partitions.size();
     return "HiveDrillNativeParquetScan [table=" + hiveReadEntry.getHiveTableWrapper()
         + ", columns=" + columns

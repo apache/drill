@@ -26,7 +26,6 @@ import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,10 +34,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Lists;
 
 @JsonTypeName("table")
-public class HiveTable {
+public class HiveTableWrapper {
 
   @JsonIgnore
-  private Table table;
+  private HiveTableWithColumnCache table;
 
   @JsonProperty
   public String tableName;
@@ -64,15 +63,19 @@ public class HiveTable {
   public String viewExpandedText;
   @JsonProperty
   public String tableType;
+  @JsonProperty
+  public ColumnsCacheWrapper columnsCache;
 
   @JsonIgnore
   public final Map<String, String> partitionNameTypeMap = new HashMap<>();
 
   @JsonCreator
-  public HiveTable(@JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("owner") String owner, @JsonProperty("createTime") int createTime,
-                   @JsonProperty("lastAccessTime") int lastAccessTime, @JsonProperty("retention") int retention, @JsonProperty("sd") StorageDescriptorWrapper sd,
-                   @JsonProperty("partitionKeys") List<FieldSchemaWrapper> partitionKeys, @JsonProperty("parameters") Map<String, String> parameters,
-                   @JsonProperty("viewOriginalText") String viewOriginalText, @JsonProperty("viewExpandedText") String viewExpandedText, @JsonProperty("tableType") String tableType
+  public HiveTableWrapper(@JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("owner") String owner,
+                          @JsonProperty("createTime") int createTime, @JsonProperty("lastAccessTime") int lastAccessTime,
+                          @JsonProperty("retention") int retention, @JsonProperty("sd") StorageDescriptorWrapper sd,
+                          @JsonProperty("partitionKeys") List<FieldSchemaWrapper> partitionKeys, @JsonProperty("parameters") Map<String, String> parameters,
+                          @JsonProperty("viewOriginalText") String viewOriginalText, @JsonProperty("viewExpandedText") String viewExpandedText,
+                          @JsonProperty("tableType") String tableType, @JsonProperty("columnsCache") ColumnsCacheWrapper columnsCache
   ) {
     this.tableName = tableName;
     this.dbName = dbName;
@@ -86,6 +89,7 @@ public class HiveTable {
     this.viewOriginalText = viewOriginalText;
     this.viewExpandedText = viewExpandedText;
     this.tableType = tableType;
+    this.columnsCache = columnsCache;
 
     List<FieldSchema> partitionKeysUnwrapped = Lists.newArrayList();
     for (FieldSchemaWrapper w : partitionKeys) {
@@ -93,11 +97,11 @@ public class HiveTable {
       partitionNameTypeMap.put(w.name, w.type);
     }
     StorageDescriptor sdUnwrapped = sd.getSd();
-    this.table = new Table(tableName, dbName, owner, createTime, lastAccessTime, retention, sdUnwrapped, partitionKeysUnwrapped,
-        parameters, viewOriginalText, viewExpandedText, tableType);
+    this.table = new HiveTableWithColumnCache(tableName, dbName, owner, createTime, lastAccessTime, retention, sdUnwrapped, partitionKeysUnwrapped,
+        parameters, viewOriginalText, viewExpandedText, tableType, columnsCache.getColumnListsCache());
   }
 
-  public HiveTable(Table table) {
+  public HiveTableWrapper(HiveTableWithColumnCache table) {
     if (table == null) {
       return;
     }
@@ -118,10 +122,11 @@ public class HiveTable {
     this.viewOriginalText = table.getViewOriginalText();
     this.viewExpandedText = table.getViewExpandedText();
     this.tableType = table.getTableType();
+    this.columnsCache = new ColumnsCacheWrapper(table.getColumnListsCache());
   }
 
   @JsonIgnore
-  public Table getTable() {
+  public HiveTableWithColumnCache getTable() {
     return table;
   }
 
@@ -140,31 +145,43 @@ public class HiveTable {
     return sb.toString();
   }
 
-  public static class HivePartition {
+  /**
+   * Wrapper for {@link Partition} class. Used for serialization and deserialization of {@link HivePartition}.
+   */
+  public static class HivePartitionWrapper {
 
     @JsonIgnore
-    private Partition partition;
+    private HivePartition partition;
 
     @JsonProperty
     public List<String> values;
+
     @JsonProperty
     public String tableName;
+
     @JsonProperty
     public String dbName;
+
     @JsonProperty
     public int createTime;
+
     @JsonProperty
     public int lastAccessTime;
+
     @JsonProperty
     public StorageDescriptorWrapper sd;
+
     @JsonProperty
-    public Map<String,String> parameters;
+    public Map<String, String> parameters;
+
+    @JsonProperty
+    private int columnListIndex;
 
     @JsonCreator
-    public HivePartition(@JsonProperty("values") List<String> values, @JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("createTime") int createTime,
-                         @JsonProperty("lastAccessTime") int lastAccessTime,  @JsonProperty("sd") StorageDescriptorWrapper sd,
-                         @JsonProperty("parameters") Map<String, String> parameters
-    ) {
+    public HivePartitionWrapper(@JsonProperty("values") List<String> values, @JsonProperty("tableName") String tableName,
+                                @JsonProperty("dbName") String dbName, @JsonProperty("createTime") int createTime,
+                                @JsonProperty("lastAccessTime") int lastAccessTime, @JsonProperty("sd") StorageDescriptorWrapper sd,
+                                @JsonProperty("parameters") Map<String, String> parameters, @JsonProperty("columnListIndex") int columnListIndex) {
       this.values = values;
       this.tableName = tableName;
       this.dbName = dbName;
@@ -172,12 +189,13 @@ public class HiveTable {
       this.lastAccessTime = lastAccessTime;
       this.sd = sd;
       this.parameters = parameters;
+      this.columnListIndex = columnListIndex;
 
       StorageDescriptor sdUnwrapped = sd.getSd();
-      this.partition = new org.apache.hadoop.hive.metastore.api.Partition(values, tableName, dbName, createTime, lastAccessTime, sdUnwrapped, parameters);
+      this.partition = new HivePartition(values, tableName, dbName, createTime, lastAccessTime, sdUnwrapped, parameters, columnListIndex);
     }
 
-    public HivePartition(Partition partition) {
+    public HivePartitionWrapper(HivePartition partition) {
       if (partition == null) {
         return;
       }
@@ -189,10 +207,11 @@ public class HiveTable {
       this.lastAccessTime = partition.getLastAccessTime();
       this.sd = new StorageDescriptorWrapper(partition.getSd());
       this.parameters = partition.getParameters();
+      this.columnListIndex = partition.getColumnListIndex();
     }
 
     @JsonIgnore
-    public Partition getPartition() {
+    public HivePartition getPartition() {
       return partition;
     }
 
@@ -206,85 +225,108 @@ public class HiveTable {
     }
   }
 
+  /**
+   * Wrapper for {@link StorageDescriptor} class.
+   * Used in {@link HivePartitionWrapper} and {@link HiveTableWrapper}
+   * for serialization and deserialization of {@link StorageDescriptor}.
+   */
   public static class StorageDescriptorWrapper {
+
     @JsonIgnore
     private StorageDescriptor sd;
-    @JsonProperty
-    public List<FieldSchemaWrapper> cols;
+
+    // column lists stored in ColumnListsCache
+    @JsonIgnore
+    public List<FieldSchemaWrapper> columns;
+
     @JsonProperty
     public String location;
+
     @JsonProperty
     public String inputFormat;
+
     @JsonProperty
     public String outputFormat;
+
     @JsonProperty
     public boolean compressed;
+
     @JsonProperty
     public int numBuckets;
+
     @JsonProperty
     public SerDeInfoWrapper serDeInfo;
-    //    @JsonProperty
-//    public List<String> bucketCols;
+
     @JsonProperty
     public List<OrderWrapper> sortCols;
+
     @JsonProperty
-    public Map<String,String> parameters;
+    public Map<String, String> parameters;
 
     @JsonCreator
-    public StorageDescriptorWrapper(@JsonProperty("cols") List<FieldSchemaWrapper> cols, @JsonProperty("location") String location, @JsonProperty("inputFormat") String inputFormat,
+    public StorageDescriptorWrapper(@JsonProperty("columns") List<FieldSchemaWrapper> columns, @JsonProperty("location") String location, @JsonProperty("inputFormat") String inputFormat,
                                     @JsonProperty("outputFormat") String outputFormat, @JsonProperty("compressed") boolean compressed, @JsonProperty("numBuckets") int numBuckets,
                                     @JsonProperty("serDeInfo") SerDeInfoWrapper serDeInfo,  @JsonProperty("sortCols") List<OrderWrapper> sortCols,
                                     @JsonProperty("parameters") Map<String,String> parameters) {
-      this.cols = cols;
+      this.columns = columns;
       this.location = location;
       this.inputFormat = inputFormat;
       this.outputFormat = outputFormat;
       this.compressed = compressed;
       this.numBuckets = numBuckets;
       this.serDeInfo = serDeInfo;
-//      this.bucketCols = bucketCols;
       this.sortCols = sortCols;
       this.parameters = parameters;
-      List<FieldSchema> colsUnwrapped = Lists.newArrayList();
-      for (FieldSchemaWrapper w: cols) {
-        colsUnwrapped.add(w.getFieldSchema());
+      List<FieldSchema> colsUnwrapped;
+      if (columns != null) {
+        colsUnwrapped = Lists.newArrayList();
+        for (FieldSchemaWrapper fieldSchema : columns) {
+          colsUnwrapped.add(fieldSchema.getFieldSchema());
+        }
+      } else {
+        colsUnwrapped = null;
       }
       SerDeInfo serDeInfoUnwrapped = serDeInfo.getSerDeInfo();
-      List<Order> sortColsUnwrapped = Lists.newArrayList();
-      for (OrderWrapper w : sortCols) {
-        sortColsUnwrapped.add(w.getOrder());
+      List<Order> sortColsUnwrapped;
+      if (sortCols != null) {
+        sortColsUnwrapped = Lists.newArrayList();
+        for (OrderWrapper order : sortCols) {
+          sortColsUnwrapped.add(order.getOrder());
+        }
+      } else {
+        sortColsUnwrapped = null;
       }
-//      this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
-//              bucketCols, sortColsUnwrapped, parameters);
-      this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
-          null, sortColsUnwrapped, parameters);
+      sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat,
+        compressed, numBuckets, serDeInfoUnwrapped, null, sortColsUnwrapped, parameters);
     }
 
-    public StorageDescriptorWrapper(StorageDescriptor sd) {
-      this.sd = sd;
-      this.cols = Lists.newArrayList();
-      for (FieldSchema f : sd.getCols()) {
-        this.cols.add(new FieldSchemaWrapper(f));
+    public StorageDescriptorWrapper(StorageDescriptor storageDescriptor) {
+      sd = storageDescriptor;
+      location = storageDescriptor.getLocation();
+      inputFormat = storageDescriptor.getInputFormat();
+      outputFormat = storageDescriptor.getOutputFormat();
+      compressed = storageDescriptor.isCompressed();
+      numBuckets = storageDescriptor.getNumBuckets();
+      serDeInfo = new SerDeInfoWrapper(storageDescriptor.getSerdeInfo());
+      if (sd.getSortCols() != null) {
+        sortCols = Lists.newArrayList();
+        for (Order order : sd.getSortCols()) {
+          sortCols.add(new OrderWrapper(order));
+        }
       }
-      this.location = sd.getLocation();
-      this.inputFormat = sd.getInputFormat();
-      this.outputFormat = sd.getOutputFormat();
-      this.compressed = sd.isCompressed();
-      this.numBuckets = sd.getNumBuckets();
-      this.serDeInfo = new SerDeInfoWrapper(sd.getSerdeInfo());
-//      this.bucketCols = sd.getBucketCols();
-      this.sortCols = Lists.newArrayList();
-      for (Order o : sd.getSortCols()) {
-        this.sortCols.add(new OrderWrapper(o));
+      parameters = storageDescriptor.getParameters();
+      if (sd.getCols() != null) {
+        this.columns = Lists.newArrayList();
+        for (FieldSchema fieldSchema : sd.getCols()) {
+          this.columns.add(new FieldSchemaWrapper(fieldSchema));
+        }
       }
-      this.parameters = sd.getParameters();
     }
 
     @JsonIgnore
     public StorageDescriptor getSd() {
       return sd;
     }
-
   }
 
   public static class SerDeInfoWrapper {
@@ -379,4 +421,46 @@ public class HiveTable {
     return partitionNameTypeMap;
   }
 
+  /**
+   * Wrapper for {@link ColumnListsCache} class.
+   * Used in {@link HiveTableWrapper} for serialization and deserialization of {@link ColumnListsCache}.
+   */
+  public static class ColumnsCacheWrapper {
+    @JsonIgnore
+    private final ColumnListsCache columnListsCache;
+
+    @JsonProperty
+    private final List<List<FieldSchemaWrapper>> keys;
+
+    @JsonCreator
+    public ColumnsCacheWrapper(@JsonProperty("keys") List<List<FieldSchemaWrapper>> keys) {
+      this.keys = keys;
+      this.columnListsCache = new ColumnListsCache();
+      for (List<FieldSchemaWrapper> columns : keys) {
+        final List<FieldSchema> columnsUnwrapped = Lists.newArrayList();
+        for (FieldSchemaWrapper field : columns) {
+          columnsUnwrapped.add(field.getFieldSchema());
+        }
+        columnListsCache.addOrGet(columnsUnwrapped);
+      }
+    }
+
+    public ColumnsCacheWrapper(ColumnListsCache columnListsCache) {
+      this.columnListsCache = columnListsCache;
+      final List<List<FieldSchemaWrapper>> keysWrapped = Lists.newArrayList();
+      for (List<FieldSchema> columns : columnListsCache.getFields()) {
+        final List<FieldSchemaWrapper> columnsWrapped = Lists.newArrayList();
+        for (FieldSchema field : columns) {
+          columnsWrapped.add(new FieldSchemaWrapper(field));
+        }
+        keysWrapped.add(columnsWrapped);
+      }
+      this.keys = keysWrapped;
+    }
+
+    @JsonIgnore
+    public ColumnListsCache getColumnListsCache() {
+      return columnListsCache;
+    }
+  }
 }

@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
+import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
@@ -43,11 +44,11 @@ import com.google.common.collect.Lists;
 public class DrillHiveTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveTable.class);
 
-  protected final Table hiveTable;
+  protected final HiveTableWithColumnCache hiveTable;
 
   public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, String userName, HiveReadEntry readEntry) {
     super(storageEngineName, plugin, userName, readEntry);
-    this.hiveTable = new Table(readEntry.getTable());
+    this.hiveTable = new HiveTableWithColumnCache(readEntry.getTable());
   }
 
   @Override
@@ -55,7 +56,7 @@ public class DrillHiveTable extends DrillTable{
     List<RelDataType> typeList = Lists.newArrayList();
     List<String> fieldNameList = Lists.newArrayList();
 
-    List<FieldSchema> hiveFields = hiveTable.getCols();
+    List<FieldSchema> hiveFields = hiveTable.getColumnListsCache().getColumns(0);
     for(FieldSchema hiveField : hiveFields) {
       fieldNameList.add(hiveField.getName());
       typeList.add(getNullableRelDataTypeFromHiveType(
