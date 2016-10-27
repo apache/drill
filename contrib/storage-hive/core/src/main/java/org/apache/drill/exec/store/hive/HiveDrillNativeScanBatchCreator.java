@@ -42,8 +42,6 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.parquet.ProjectionPusher;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
@@ -62,9 +60,9 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
   @Override
   public ScanBatch getBatch(FragmentContext context, HiveDrillNativeParquetSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    final Table table = config.getTable();
+    final HiveTableWithColumnCache table = config.getTable();
     final List<InputSplit> splits = config.getInputSplits();
-    final List<Partition> partitions = config.getPartitions();
+    final List<HivePartition> partitions = config.getPartitions();
     final List<SchemaPath> columns = config.getColumns();
     final String partitionDesignator = context.getOptions()
         .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
