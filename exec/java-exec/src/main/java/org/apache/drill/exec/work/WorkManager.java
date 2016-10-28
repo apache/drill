@@ -295,7 +295,7 @@ public class WorkManager implements AutoCloseable {
    */
   private class StatusThread extends Thread {
     public StatusThread() {
-      setDaemon(true);
+      // assume this thread is created by a non-daemon thread
       setName("WorkManager.StatusThread");
     }
 
