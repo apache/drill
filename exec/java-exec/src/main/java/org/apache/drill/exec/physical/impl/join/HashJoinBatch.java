@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -44,7 +45,7 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinComparator;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -78,6 +79,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
   // Join conditions
   private final List<JoinCondition> conditions;
+
+  private final List<Comparator> comparators;
 
   // Runtime generated class implementing HashJoinProbe interface
   private HashJoinProbe hashJoinProbe = null;
@@ -285,18 +288,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     final List<NamedExpression> rightExpr = new ArrayList<>(conditionsSize);
     List<NamedExpression> leftExpr = new ArrayList<>(conditionsSize);
 
-    JoinComparator comparator = JoinComparator.NONE;
     // Create named expressions from the conditions
     for (int i = 0; i < conditionsSize; i++) {
       rightExpr.add(new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i)));
       leftExpr.add(new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i)));
-
-      // Hash join only supports certain types of comparisons
-      comparator = JoinUtils.checkAndSetComparison(conditions.get(i), comparator);
     }
-
-    assert comparator != JoinComparator.NONE;
-    final boolean areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM) ? true : false;
 
     // Set the left named expression to be null if the probe batch is empty.
     if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
@@ -309,12 +305,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     final HashTableConfig htConfig =
         new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-            HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
+            HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators);
 
     // Create the chained hash table
     final ChainedHashTable ht =
-        new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null,
-            areNullsEqual);
+        new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
     hashTable = ht.createAndSetupHashTable(null);
   }
 
@@ -500,6 +495,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     this.right = right;
     joinType = popConfig.getJoinType();
     conditions = popConfig.getConditions();
+
+    comparators = Lists.newArrayListWithExpectedSize(conditions.size());
+    for (int i=0; i<conditions.size(); i++) {
+      JoinCondition cond = conditions.get(i);
+      comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(cond));
+    }
   }
 
   private void updateStats(HashTable htable) {

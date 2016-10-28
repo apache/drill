@@ -21,6 +21,7 @@ package org.apache.drill.exec.planner.physical;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
@@ -47,6 +48,7 @@ import com.google.common.collect.Lists;
  *
  */
 public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinPrel.class);
 
   protected JoinUtils.JoinCategory joincategory;
 
@@ -127,27 +129,18 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
     List<RexNode> conjuncts = RelOptUtil.conjunctions(this.getCondition());
     short i=0;
 
-    RexNode comp1 = null, comp2 = null;
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
-      if (comp1 == null) {
-        comp1 = conjuncts.get(i++);
-        if ( ! (comp1.getKind() == SqlKind.EQUALS || comp1.getKind() == SqlKind.IS_NOT_DISTINCT_FROM)) {
-          throw new IllegalArgumentException("This type of join only supports '=' and 'is not distinct from' comparators.");
-        }
-      } else {
-        comp2 = conjuncts.get(i++);
-        if (comp1.getKind() != comp2.getKind()) {
-          // it does not seem necessary at this time to support join conditions which have mixed comparators - e.g
-          // 'a1 = a2 AND b1 IS NOT DISTINCT FROM b2'
-          String msg = String.format("This type of join does not support mixed comparators: '%s' and '%s'.", comp1, comp2);
-          throw new IllegalArgumentException(msg);
-        }
-
+      final RexNode conditionExpr = conjuncts.get(i++);
+      final SqlKind kind  = conditionExpr.getKind();
+      if (kind != SqlKind.EQUALS && kind != SqlKind.IS_NOT_DISTINCT_FROM) {
+        throw UserException.unsupportedError()
+            .message("Unsupported comparator in join condition %s", conditionExpr)
+            .build(logger);
       }
-      conditions.add(new JoinCondition(comp1.getKind().toString(), FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
+
+      conditions.add(new JoinCondition(kind.toString(),
+          FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
           FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
-
   }
-
 }

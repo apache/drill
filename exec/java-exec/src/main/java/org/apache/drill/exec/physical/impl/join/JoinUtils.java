@@ -21,10 +21,12 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
@@ -46,40 +48,28 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 public class JoinUtils {
-  public static enum JoinComparator {
-    NONE, // No comparator
-    EQUALS, // Equality comparator
-    IS_NOT_DISTINCT_FROM // 'IS NOT DISTINCT FROM' comparator
-  }
 
-  public static enum JoinCategory {
+  public enum JoinCategory {
     EQUALITY,  // equality join
     INEQUALITY,  // inequality join: <>, <, >
     CARTESIAN   // no join condition
   }
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinUtils.class);
 
-  // Check the comparator for the join condition. Note that a similar check is also
+  // Check the comparator is supported in join condition. Note that a similar check is also
   // done in JoinPrel; however we have to repeat it here because a physical plan
   // may be submitted directly to Drill.
-  public static JoinComparator checkAndSetComparison(JoinCondition condition,
-      JoinComparator comparator) {
-    if (condition.getRelationship().equalsIgnoreCase("EQUALS") ||
-        condition.getRelationship().equals("==") /* older json plans still have '==' */) {
-      if (comparator == JoinComparator.NONE ||
-          comparator == JoinComparator.EQUALS) {
-        return JoinComparator.EQUALS;
-      } else {
-        throw new IllegalArgumentException("This type of join does not support mixed comparators.");
-      }
-    } else if (condition.getRelationship().equalsIgnoreCase("IS_NOT_DISTINCT_FROM")) {
-      if (comparator == JoinComparator.NONE ||
-          comparator == JoinComparator.IS_NOT_DISTINCT_FROM) {
-        return JoinComparator.IS_NOT_DISTINCT_FROM;
-      } else {
-        throw new IllegalArgumentException("This type of join does not support mixed comparators.");
-      }
+  public static Comparator checkAndReturnSupportedJoinComparator(JoinCondition condition) {
+    switch(condition.getRelationship().toUpperCase()) {
+      case "EQUALS":
+      case "==": /* older json plans still have '==' */
+        return Comparator.EQUALS;
+      case "IS_NOT_DISTINCT_FROM":
+        return Comparator.IS_NOT_DISTINCT_FROM;
     }
-    throw new IllegalArgumentException("Invalid comparator supplied to this join.");
+    throw UserException.unsupportedError()
+        .message("Invalid comparator supplied to this join: ", condition.getRelationship())
+        .build(logger);
   }
 
     /**
