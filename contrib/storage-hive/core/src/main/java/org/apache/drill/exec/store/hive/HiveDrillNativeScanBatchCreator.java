@@ -169,7 +169,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, columns, context, conf,
+      readers.add(new HiveDefaultReader(table, null, null, columns, context, conf,
         ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
