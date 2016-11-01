@@ -226,7 +226,8 @@ export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
 
 # Prepare log file prefix and the main Drillbit log file.
 
-export DRILL_LOG_PREFIX="$DRILL_LOG_DIR/drillbit"
+export DRILL_LOG_NAME=${DRILL_LOG_NAME:-"drillbit"}
+export DRILL_LOG_PREFIX="$DRILL_LOG_DIR/$DRILL_LOG_NAME"
 export DRILLBIT_LOG_PATH="${DRILL_LOG_PREFIX}.log"
 
 # Class path construction.

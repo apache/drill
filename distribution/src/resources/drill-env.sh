@@ -62,6 +62,10 @@
 
 #export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 
+# Base name for Drill log files. Files are named ${DRILL_LOG_NAME}.out, etc.
+
+# DRILL_LOG_NAME="drillbit"
+
 # Location to place Drill logs. Set to $DRILL_HOME/log by default.
 
 #export DRILL_LOG_DIR=${DRILL_LOG_DIR:-$DRILL_HOME/conf}
