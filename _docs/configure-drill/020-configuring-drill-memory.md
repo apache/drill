@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2016-02-06 00:18:12 UTC
+date: 2016-11-01 20:49:09 UTC
 parent: "Configure Drill"
 ---
 
@@ -23,9 +23,9 @@ The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configura
 
 ## Modifying Drillbit Memory
 
-You can modify memory for each Drillbit node in your cluster. To modify the
-memory for a Drillbit, edit the `XX:MaxDirectMemorySize` parameter in the
-Drillbit startup script, `drill-env.sh`, located in `<drill_installation_directory>/conf`.
+You can modify memory for each Drillbit node in your cluster. To modify the memory for a Drillbit, set the DRILL_MAX_DIRECT_MEMORY variable in the Drillbit startup script, `drill-env.sh`, located in `<drill_installation_directory>/conf`, as follows:
+
+    export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"<value>"}
 
 {% include startnote.html %}If XX:MaxDirectMemorySize is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
 
@@ -35,16 +35,17 @@ After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the 
 
 The `drill-env.sh` file contains the following options:
 
-    DRILL_MAX_DIRECT_MEMORY="8G"
-    DRILL_MAX_HEAP="4G"
+    #export DRILL_HEAP=${DRILL_HEAP:-"4G”}  
+    #export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 
-    export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea"
+To customize memory limits, uncomment the line needed and change the setting:  
 
-* DRILL_MAX_DIRECT_MEMORY is the Java direct memory limit per node. 
-* DRILL_MAX_HEAP is the maximum theoretical heap limit for the JVM per node. 
-* Xmx specifies the maximum memory allocation pool for a Java Virtual Machine (JVM). 
-* Xms specifies the initial memory allocation pool.
+    export DRILL_HEAP=${DRILL_HEAP:-"<limit>”}
+    export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-“<limit>"}  
 
-If performance is an issue, replace the -ea flag with -Dbounds=false, as shown in the following example:
+DRILL_MAX_HEAP is the maximum theoretical heap limit for the JVM per node.  
+DRILL_MAX_DIRECT_MEMORY is the Java direct memory limit per node.  
 
-    export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -Dbounds=false"
+If performance is an issue, add -Dbounds=false, as shown in the following example:
+
+    export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dbounds=false"

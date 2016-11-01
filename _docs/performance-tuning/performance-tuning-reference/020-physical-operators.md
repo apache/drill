@@ -1,6 +1,6 @@
 ---
 title: "Physical Operators"
-date: 2016-09-30 23:20:32 UTC
+date: 2016-11-01 20:49:10 UTC
 parent: "Performance Tuning Reference"
 --- 
 
@@ -51,14 +51,11 @@ Drill uses the following sort and limiter operators:
 
 ## Projection Operators  
 
-Drill uses the following projection operators: 
+Drill uses the following projection operators:  
 
-| Operator     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Project      | A Project operator projects columns and/or expressions involving columns and constants. This operator holds one incoming record batch plus any additional materialized projects for the same number of rows as the incoming record batch.                                                                                                                                                                                                                                  |
-| ExternalSort | The ExternalSort operator can potentially hold the entire dataset in memory.  This operator will also start spooling to the disk in the case that there is memory pressure.  In this case, the external sort will continue to try to use as much memory as available.  In all cases, external sort will hold at least one record batch in memory for each record spill.  Spills are currently sized based on the amount of memory available to the external sort operator. |
-| TopN         | A TopN operator is used to perform an ORDER BY with LIMIT.                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Limit        | A Limit operator is used to restrict the number of rows to a value specified by the LIMIT clause.                                                                                                                                                                                                                                                                                                                                                                          |  
+| Operator | Description                                                                                                                                                                                                                                       |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Project  | A   Project operator projects columns and/or expressions involving columns and   constants. This operator holds one incoming record batch plus any additional   materialized projects for the same number of rows as the incoming record   batch. |
 
 ## Filter and Related Operators  
 
