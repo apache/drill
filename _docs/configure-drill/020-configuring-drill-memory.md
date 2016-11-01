@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2016-11-01 20:49:09 UTC
+date: 2016-11-01 21:03:43 UTC
 parent: "Configure Drill"
 ---
 
@@ -27,7 +27,7 @@ You can modify memory for each Drillbit node in your cluster. To modify the memo
 
     export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"<value>"}
 
-{% include startnote.html %}If XX:MaxDirectMemorySize is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
+{% include startnote.html %}If DRILL_MAX_DIRECT_MEMORY is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
 
 After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the Drillbit]({{ site.baseurl }}/docs/starting-drill-in-distributed-mode) on the node.
 
