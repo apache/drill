@@ -773,7 +773,7 @@ public class TestParquetWriter extends BaseTestQuery {
     final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
     try {
       testBuilder()
-          .sqlQuery("select int96_ts from dfs_test.`%s/parquet/int96_dict_change`", TEST_RES_PATH)
+          .sqlQuery("select int96_ts from dfs_test.`%s/parquet/int96_dict_change` order by int96_ts", TEST_RES_PATH)
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .ordered()
