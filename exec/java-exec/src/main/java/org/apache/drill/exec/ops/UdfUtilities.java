@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import com.google.common.base.Function;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.store.PartitionExplorer;
 
@@ -88,10 +89,10 @@ public interface UdfUtilities {
   PartitionExplorer getPartitionExplorer();
 
   /**
-   * Works with value holders cache which holds constant value and its wrapper.
+   * Works with value holders cache which holds constant value and its wrapper by type.
    * If value is absent uses holderInitializer to create holder and adds it to cache.
    *
    * @return - a wrapper object for an constant value.
    */
-  ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer);
+  ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer);
 }

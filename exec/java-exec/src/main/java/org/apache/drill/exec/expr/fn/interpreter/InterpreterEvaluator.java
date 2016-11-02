@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -178,7 +179,7 @@ public class InterpreterEvaluator {
 
     @Override
     public ValueHolder visitDecimal28Constant(final ValueExpressions.Decimal28Expression decExpr,Integer value) throws RuntimeException {
-      return getConstantValueHolder(decExpr.getBigDecimal().toString(), new Function<DrillBuf, ValueHolder>() {
+      return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
         @Nullable
         @Override
         public ValueHolder apply(DrillBuf buffer) {
@@ -189,7 +190,7 @@ public class InterpreterEvaluator {
 
     @Override
     public ValueHolder visitDecimal38Constant(final ValueExpressions.Decimal38Expression decExpr,Integer value) throws RuntimeException {
-      return getConstantValueHolder(decExpr.getBigDecimal().toString(), new Function<DrillBuf, ValueHolder>() {
+      return getConstantValueHolder(decExpr.getBigDecimal().toString(), decExpr.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
         @Nullable
         @Override
         public ValueHolder apply(DrillBuf buffer) {
@@ -389,7 +390,7 @@ public class InterpreterEvaluator {
 
     @Override
     public ValueHolder visitQuotedStringConstant(final ValueExpressions.QuotedString e, Integer value) throws RuntimeException {
-      return getConstantValueHolder(e.value, new Function<DrillBuf, ValueHolder>() {
+      return getConstantValueHolder(e.value, e.getMajorType().getMinorType(), new Function<DrillBuf, ValueHolder>() {
         @Nullable
         @Override
         public ValueHolder apply(DrillBuf buffer) {
@@ -517,8 +518,8 @@ public class InterpreterEvaluator {
       }
     }
 
-    private ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer) {
-      return udfUtilities.getConstantValueHolder(value, holderInitializer);
+    private ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+      return udfUtilities.getConstantValueHolder(value, type, holderInitializer);
     }
 
   }

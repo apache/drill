@@ -29,6 +29,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -105,7 +106,8 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
   private final AccountingUserConnection accountingUserConnection;
-  private final Map<String, ValueHolder> constantValueHolderCache;
+  /** Stores constants and their holders by type */
+  private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
 
   /**
    * Create a FragmentContext instance for non-root fragment.
@@ -445,11 +447,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   @Override
-  public ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer) {
-    ValueHolder valueHolder = constantValueHolderCache.get(value);
+  public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+    if (!constantValueHolderCache.containsKey(value)) {
+      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+    }
+
+    Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);
+    ValueHolder valueHolder = holdersByType.get(type);
     if (valueHolder == null) {
       valueHolder = holderInitializer.apply(getManagedBuffer());
-      constantValueHolderCache.put(value, valueHolder);
+      holdersByType.put(type, valueHolder);
     }
     return valueHolder;
   }

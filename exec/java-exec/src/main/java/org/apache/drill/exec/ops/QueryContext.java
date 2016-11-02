@@ -29,6 +29,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
@@ -74,7 +75,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
-  private final Map<String, ValueHolder> constantValueHolderCache;
+  /** Stores constants and their holders by type */
+  private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -249,11 +251,16 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   @Override
-  public ValueHolder getConstantValueHolder(String value, Function<DrillBuf, ValueHolder> holderInitializer) {
-    ValueHolder valueHolder = constantValueHolderCache.get(value);
+  public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+    if (!constantValueHolderCache.containsKey(value)) {
+      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+    }
+
+    Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);
+    ValueHolder valueHolder = holdersByType.get(type);
     if (valueHolder == null) {
       valueHolder = holderInitializer.apply(getManagedBuffer());
-      constantValueHolderCache.put(value, valueHolder);
+      holdersByType.put(type, valueHolder);
     }
     return valueHolder;
   }
