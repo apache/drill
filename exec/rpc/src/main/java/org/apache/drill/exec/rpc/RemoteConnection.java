@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -173,6 +173,13 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
 
     // ensure outstanding requests are cleaned up.
     requestIdMap.channelClosed(ex);
+  }
+
+  /**
+   * Closes all resources connected with current session.
+   * By default has no implementation.
+   */
+  public void closeSession() {
   }
 
   /**

@@ -214,8 +214,8 @@ SqlNode SqlDropView() :
 }
 
 /**
- * Parses a CTAS statement.
- * CREATE TABLE tblname [ (field1, field2, ...) ] AS select_statement.
+ * Parses a CTAS or CTTAS statement.
+ * CREATE [TEMPORARY] TABLE tblname [ (field1, field2, ...) ] AS select_statement.
  */
 SqlNode SqlCreateTable() :
 {
@@ -224,12 +224,14 @@ SqlNode SqlCreateTable() :
     SqlNodeList fieldList;
     SqlNodeList partitionFieldList;
     SqlNode query;
+    boolean isTemporary = false;
 }
 {
     {
         partitionFieldList = SqlNodeList.EMPTY;
     }
     <CREATE> { pos = getPos(); }
+    ( <TEMPORARY> { isTemporary = true; } )?
     <TABLE>
     tblName = CompoundIdentifier()
     fieldList = ParseOptionalFieldList("Table")
@@ -239,7 +241,8 @@ SqlNode SqlCreateTable() :
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateTable(pos, tblName, fieldList, partitionFieldList, query);
+        return new SqlCreateTable(pos,tblName, fieldList, partitionFieldList, query,
+                                    SqlLiteral.createBoolean(isTemporary, getPos()));
     }
 }
 

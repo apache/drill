@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
@@ -27,9 +32,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -37,8 +46,14 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
-public class UserSession {
+public class UserSession implements Closeable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
 
   public static final String SCHEMA = "schema";
@@ -54,18 +69,43 @@ public class UserSession {
   private Map<String, String> properties;
   private OptionManager sessionOptions;
   private final AtomicInteger queryCount;
+  private final String sessionId;
+
+  /** Stores list of temporary tables, key is original table name converted to lower case to achieve case-insensitivity,
+   *  value is generated table name. **/
+  private final ConcurrentMap<String, String> temporaryTables;
+  /** Stores list of session temporary locations, key is path to location, value is file system associated with location. **/
+  private final ConcurrentMap<Path, FileSystem> temporaryLocations;
+
+  /** On session close deletes all session temporary locations recursively and clears temporary locations list. */
+  @Override
+  public void close() {
+    for (Map.Entry<Path, FileSystem> entry : temporaryLocations.entrySet()) {
+      Path path = entry.getKey();
+      FileSystem fs = entry.getValue();
+      try {
+        fs.delete(path, true);
+        logger.info("Deleted session temporary location [{}] from file system [{}]",
+            path.toUri().getPath(), fs.getUri());
+      } catch (Exception e) {
+        logger.warn("Error during session temporary location [{}] deletion from file system [{}]: [{}]",
+            path.toUri().getPath(), fs.getUri(), e.getMessage());
+      }
+    }
+    temporaryLocations.clear();
+  }
 
   /**
    * Implementations of this interface are allowed to increment queryCount.
    * {@link org.apache.drill.exec.work.user.UserWorker} should have a member that implements the interface.
    * No other core class should implement this interface. Test classes may implement (see ControlsInjectionUtil).
    */
-  public static interface QueryCountIncrementer {
-    public void increment(final UserSession session);
+  public interface QueryCountIncrementer {
+    void increment(final UserSession session);
   }
 
   public static class Builder {
-    UserSession userSession;
+    private UserSession userSession;
 
     public static Builder newBuilder() {
       return new Builder();
@@ -115,6 +155,9 @@ public class UserSession {
 
   private UserSession() {
     queryCount = new AtomicInteger(0);
+    sessionId = UUID.randomUUID().toString();
+    temporaryTables = Maps.newConcurrentMap();
+    temporaryLocations = Maps.newConcurrentMap();
   }
 
   public boolean isSupportComplexTypes() {
@@ -197,7 +240,7 @@ public class UserSession {
 
   /**
    * Get default schema from current default schema path and given schema tree.
-   * @param rootSchema
+   * @param rootSchema root schema
    * @return A {@link org.apache.calcite.schema.SchemaPlus} object.
    */
   public SchemaPlus getDefaultSchema(SchemaPlus rootSchema) {
@@ -207,18 +250,117 @@ public class UserSession {
       return null;
     }
 
-    final SchemaPlus defaultSchema = SchemaUtilites.findSchema(rootSchema, defaultSchemaPath);
-
-    if (defaultSchema == null) {
-      // If the current schema resolves to null, return root schema as the current default schema.
-      return defaultSchema;
-    }
-
-    return defaultSchema;
+    return SchemaUtilites.findSchema(rootSchema, defaultSchemaPath);
   }
 
   public boolean setSessionOption(String name, String value) {
     return true;
+  }
+
+  /**
+   * @return unique session identifier
+   */
+  public String getSessionId() { return sessionId; }
+
+  /**
+   * Creates and adds session temporary location if absent using schema configuration.
+   * Generates temporary table name and stores it's original name as key
+   * and generated name as value in  session temporary tables cache.
+   * Original temporary name is converted to lower case to achieve case-insensitivity.
+   * If original table name already exists, new name is not regenerated and is reused.
+   * This can happen if default temporary workspace was changed (file system or location) or
+   * orphan temporary table name has remained (name was registered but table creation did not succeed).
+   *
+   * @param schema table schema
+   * @param tableName original table name
+   * @return generated temporary table name
+   * @throws IOException if error during session temporary location creation
+   */
+  public String registerTemporaryTable(AbstractSchema schema, String tableName) throws IOException {
+      addTemporaryLocation((WorkspaceSchemaFactory.WorkspaceSchema) schema);
+      String temporaryTableName = Paths.get(sessionId, UUID.randomUUID().toString()).toString();
+      String oldTemporaryTableName = temporaryTables.putIfAbsent(tableName.toLowerCase(), temporaryTableName);
+      return oldTemporaryTableName == null ? temporaryTableName : oldTemporaryTableName;
+  }
+
+  /**
+   * Returns generated temporary table name from the list of session temporary tables, null otherwise.
+   * Original temporary name is converted to lower case to achieve case-insensitivity.
+   *
+   * @param tableName original table name
+   * @return generated temporary table name
+   */
+  public String resolveTemporaryTableName(String tableName) {
+    return temporaryTables.get(tableName.toLowerCase());
+  }
+
+  /**
+   * Checks if passed table is temporary, table name is case-insensitive.
+   * Before looking for table checks if passed schema is temporary and returns false if not
+   * since temporary tables are allowed to be created in temporary workspace only.
+   * If passed workspace is temporary, looks for temporary table.
+   * First checks if table name is among temporary tables, if not returns false.
+   * If temporary table named was resolved, checks that temporary table exists on disk,
+   * to ensure that temporary table actually exists and resolved table name is not orphan
+   * (for example, in result of unsuccessful temporary table creation).
+   *
+   * @param drillSchema table schema
+   * @param config drill config
+   * @param tableName original table name
+   * @return true if temporary table exists in schema, false otherwise
+   */
+  public boolean isTemporaryTable(AbstractSchema drillSchema, DrillConfig config, String tableName) {
+    if (!SchemaUtilites.isTemporaryWorkspace(drillSchema.getFullSchemaName(), config)) {
+      return false;
+    }
+    String temporaryTableName = resolveTemporaryTableName(tableName);
+    if (temporaryTableName != null) {
+      Table temporaryTable = SqlHandlerUtil.getTableFromSchema(drillSchema, temporaryTableName);
+      if (temporaryTable != null && temporaryTable.getJdbcTableType() == Schema.TableType.TABLE) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Removes temporary table name from the list of session temporary tables.
+   * Original temporary name is converted to lower case to achieve case-insensitivity.
+   *
+   * @param tableName original table name
+   */
+  public void removeTemporaryTable(AbstractSchema drillSchema, String tableName) {
+    String temporaryTable = resolveTemporaryTableName(tableName);
+    if (temporaryTable == null) {
+      return;
+    }
+    SqlHandlerUtil.dropTableFromSchema(drillSchema, temporaryTable);
+    temporaryTables.remove(tableName.toLowerCase());
+  }
+
+  /**
+   * Session temporary tables are stored under temporary workspace location in session folder
+   * defined by unique session id. These session temporary locations are deleted on session close.
+   * If default temporary workspace file system or location is changed at runtime,
+   * new session temporary location will be added with corresponding file system
+   * to the list of session temporary locations. If location does not exist it will be created and
+   * {@link StorageStrategy#TEMPORARY} storage rules will be applied to it.
+   *
+   * @param temporaryWorkspace temporary workspace
+   * @throws IOException in case of error during temporary location creation
+   */
+  private void addTemporaryLocation(WorkspaceSchemaFactory.WorkspaceSchema temporaryWorkspace) throws IOException {
+    DrillFileSystem fs = temporaryWorkspace.getFS();
+    Path temporaryLocation = new Path(Paths.get(fs.getUri().toString(),
+        temporaryWorkspace.getDefaultLocation(), sessionId).toString());
+
+    FileSystem fileSystem = temporaryLocations.putIfAbsent(temporaryLocation, fs);
+
+    if (fileSystem == null) {
+      StorageStrategy.TEMPORARY.createPathAndApply(fs, temporaryLocation);
+      Preconditions.checkArgument(fs.exists(temporaryLocation),
+          String.format("Temporary location should exist [%s]", temporaryLocation.toUri().getPath()));
+    }
   }
 
   private String getProp(String key) {

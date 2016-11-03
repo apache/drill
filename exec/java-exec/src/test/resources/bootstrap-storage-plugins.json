@@ -9,7 +9,7 @@
           writable: false
         },
         "tmp" : {
-          location: "/tmp/drilltest",
+          location: "/tmp",
           writable: true
         }
       },

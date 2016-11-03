@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -164,7 +164,11 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       }
 
       final ChannelClosedException ex = future.cause() != null ? new ChannelClosedException(msg, future.cause()) : new ChannelClosedException(msg);
-      clientConnection.channelClosed(ex);
+      try {
+        clientConnection.closeSession();
+      } finally {
+        clientConnection.channelClosed(ex);
+      }
     }
 
   }
