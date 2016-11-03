@@ -24,7 +24,6 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.FunctionNotFoundException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
@@ -113,7 +112,7 @@ public class DrillSqlWorker {
 
   /**
    * Returns query physical plan.
-   * In case of {@link FunctionNotFoundException} and dynamic udf support is enabled, attempts to load remote functions.
+   * In case of {@link FunctionNotFoundException} attempts to load remote functions.
    * If at least one function was loaded or local function function registry version has changed,
    * makes one more attempt to get query physical plan.
    */
@@ -122,13 +121,11 @@ public class DrillSqlWorker {
     try {
       return handler.getPlan(sqlNode);
     } catch (FunctionNotFoundException e) {
-      if (context.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
-        DrillOperatorTable drillOperatorTable = context.getDrillOperatorTable();
-        FunctionImplementationRegistry functionRegistry = context.getFunctionRegistry();
-        if (functionRegistry.loadRemoteFunctions(drillOperatorTable.getFunctionRegistryVersion())) {
-          drillOperatorTable.reloadOperators(functionRegistry);
-          return handler.getPlan(sqlNode);
-        }
+      DrillOperatorTable drillOperatorTable = context.getDrillOperatorTable();
+      FunctionImplementationRegistry functionRegistry = context.getFunctionRegistry();
+      if (functionRegistry.loadRemoteFunctions(drillOperatorTable.getFunctionRegistryVersion())) {
+        drillOperatorTable.reloadOperators(functionRegistry);
+        return handler.getPlan(sqlNode);
       }
       throw e;
     }
