@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,8 +22,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -116,6 +120,11 @@ public class SchemaUtilites {
     return SCHEMA_PATH_JOINER.join(getSchemaPathAsList(schema));
   }
 
+  /** Utility method to get the schema path for given list of schema path. */
+  public static String getSchemaPath(List<String> schemaPath) {
+    return SCHEMA_PATH_JOINER.join(schemaPath);
+  }
+
   /** Utility method to get the schema path as list for given schema instance. */
   public static List<String> getSchemaPathAsList(SchemaPlus schema) {
     if (isRootSchema(schema)) {
@@ -176,5 +185,36 @@ public class SchemaUtilites {
     }
 
     return drillSchema;
+  }
+
+  /**
+   * Looks in schema tree for default temporary workspace instance.
+   * Makes sure that temporary workspace is mutable and file-based
+   * (instance of {@link WorkspaceSchemaFactory.WorkspaceSchema}).
+   *
+   * @param defaultSchema default schema
+   * @param config drill config
+   * @return default temporary workspace
+   */
+  public static AbstractSchema getTemporaryWorkspace(SchemaPlus defaultSchema, DrillConfig config) {
+    List<String> temporarySchemaPath = Lists.newArrayList(config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
+    AbstractSchema temporarySchema = resolveToMutableDrillSchema(defaultSchema, temporarySchemaPath);
+    if (!(temporarySchema instanceof WorkspaceSchemaFactory.WorkspaceSchema)) {
+      DrillRuntimeException.format("Temporary workspace [%s] must be file-based, instance of " +
+          "WorkspaceSchemaFactory.WorkspaceSchema", temporarySchemaPath);
+    }
+    return temporarySchema;
+  }
+
+  /**
+   * Checks that passed schema path is the same as temporary workspace path.
+   * Check is case-sensitive.
+   *
+   * @param schemaPath schema path
+   * @param config drill config
+   * @return true is schema path corresponds to temporary workspace, false otherwise
+   */
+  public static boolean isTemporaryWorkspace(String schemaPath, DrillConfig config) {
+    return schemaPath.equals(config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
   }
 }

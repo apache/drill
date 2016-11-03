@@ -1,0 +1,194 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.store;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+
+import java.io.IOException;
+import java.util.List;
+
+/** Contains list of parameters that will be used to store path / files on file system. */
+public class StorageStrategy {
+
+  /**
+   * Primary is used for persistent tables.
+   * For directories: drwxrwxr-x (owner and group have full access, others can read and execute).
+   * For files: -rw-r--r-- (owner can read and write, group and others can read).
+   * Folders and files are not deleted on file system close.
+   */
+  public static final StorageStrategy PERSISTENT = new StorageStrategy("775", "644", false);
+
+  /**
+   * Primary is used for temporary tables.
+   * For directories: drwx------ (owner has full access, group and others have no access).
+   * For files: -rw------- (owner can read and write, group and others have no access).
+   * Folders and files are deleted on file system close.
+   */
+  public static final StorageStrategy TEMPORARY = new StorageStrategy("700", "600", true);
+
+  private final String folderPermission;
+  private final String filePermission;
+  private final boolean deleteOnExit;
+
+  @JsonCreator
+  public StorageStrategy(@JsonProperty("folderPermission") String folderPermission,
+                         @JsonProperty("filePermission") String filePermission,
+                         @JsonProperty("deleteOnExit") boolean deleteOnExit) {
+    this.folderPermission = folderPermission;
+    this.filePermission = filePermission;
+    this.deleteOnExit = deleteOnExit;
+  }
+
+  public String getFolderPermission() {
+    return folderPermission;
+  }
+
+  public String getFilePermission() { return filePermission; }
+
+  public boolean isDeleteOnExit() {
+    return deleteOnExit;
+  }
+
+  /**
+   * Creates passed path on appropriate file system.
+   * Before creation checks which parent directories do not exists.
+   * Applies storage strategy rules to all newly created directories.
+   * Will return first created path or null already existed.
+   *
+   * Case 1: /a/b -> already exists, attempt to create /a/b/c/d
+   * Will create path and return /a/b/c.
+   * Case 2: /a/b/c -> already exists, attempt to create /a/b/c/d
+   * Will create path and return /a/b/c/d.
+   * Case 3: /a/b/c/d -> already exists, will return null.
+   *
+   * @param fs file system where file should be located
+   * @param path location path
+   * @return first created parent path or file
+   * @throws IOException is thrown in case of problems while creating path, setting permission
+   *         or adding path to delete on exit list
+   */
+  public Path createPathAndApply(FileSystem fs, Path path) throws IOException {
+    List<Path> locations = getNonExistentLocations(fs, path);
+    if (locations.isEmpty()) {
+      return null;
+    }
+    fs.mkdirs(path);
+    for (Path location : locations) {
+      applyStrategy(fs, location, folderPermission, deleteOnExit);
+    }
+    return locations.get(locations.size() - 1);
+  }
+
+  /**
+   * Creates passed file on appropriate file system.
+   * Before creation checks which parent directories do not exists.
+   * Applies storage strategy rules to all newly created directories and file.
+   * Will return first created parent path or file if no new parent paths created.
+   *
+   * Case 1: /a/b -> already exists, attempt to create /a/b/c/some_file.txt
+   * Will create file and return /a/b/c.
+   * Case 2: /a/b/c -> already exists, attempt to create /a/b/c/some_file.txt
+   * Will create file and return /a/b/c/some_file.txt.
+   * Case 3: /a/b/c/some_file.txt -> already exists, will fail.
+   *
+   * @param fs file system where file should be located
+   * @param file file path
+   * @return first created parent path or file
+   * @throws IOException is thrown in case of problems while creating path, setting permission
+   *         or adding path to delete on exit list
+   */
+  public Path createFileAndApply(FileSystem fs, Path file) throws IOException {
+    List<Path> locations = getNonExistentLocations(fs, file.getParent());
+    if (!fs.createNewFile(file)) {
+      throw new IOException(String.format("File [%s] already exists on file system [%s].",
+          file.toUri().getPath(), fs.getUri()));
+    }
+    applyToFile(fs, file);
+
+    if (locations.isEmpty()) {
+      return file;
+    }
+
+    for (Path location : locations) {
+      applyStrategy(fs, location, folderPermission, deleteOnExit);
+    }
+    return locations.get(locations.size() - 1);
+  }
+
+  /**
+   * Applies storage strategy to file:
+   * sets permission and adds to file system delete on exit list if needed.
+   *
+   * @param fs file system
+   * @param file path to file
+   * @throws IOException is thrown in case of problems while setting permission
+   *         or adding file to delete on exit list
+   */
+  public void applyToFile(FileSystem fs, Path file) throws IOException {
+    applyStrategy(fs, file, filePermission, deleteOnExit);
+  }
+
+  /**
+   * Returns list of parent locations that do not exist, including initial location.
+   * First in the list will be initial location,
+   * last in the list will be last parent location that does not exist.
+   * If all locations exist, empty list will be returned.
+   *
+   * Case 1: if /a/b exists and passed location is /a/b/c/d,
+   * will return list with two elements: 0 -> /a/b/c/d, 1 -> /a/b/c
+   * Case 2: if /a/b exists and passed location is /a/b, will return empty list.
+   *
+   * @param fs file system where locations should be located
+   * @param path location path
+   * @return list of locations that do not exist
+   * @throws IOException in case of troubles accessing file system
+   */
+  private List<Path> getNonExistentLocations(FileSystem fs, Path path) throws IOException {
+    List<Path> locations = Lists.newArrayList();
+    Path starting = path;
+    while (starting != null && !fs.exists(starting)) {
+      locations.add(starting);
+      starting = starting.getParent();
+    }
+    return locations;
+  }
+
+  /**
+   * Applies storage strategy to passed path on passed file system.
+   * Sets appropriate permission
+   * and adds to file system delete on exit list if needed.
+   *
+   * @param fs file system where path is located
+   * @param path path location
+   * @param permission permission to be applied
+   * @param deleteOnExit if to delete path on exit
+   * @throws IOException is thrown in case of problems while setting permission
+   *         or adding path to delete on exit list
+   */
+  private void applyStrategy(FileSystem fs, Path path, String permission, boolean deleteOnExit) throws IOException {
+    fs.setPermission(path, new FsPermission(permission));
+    if (deleteOnExit) {
+      fs.deleteOnExit(path);
+    }
+  }
+}

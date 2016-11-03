@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
-import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
@@ -46,6 +46,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordWriter.class);
   private static final String LINE_FEED = String.format("%n");
 
+  private Path cleanUpLocation;
   private String location;
   private String prefix;
 
@@ -58,11 +59,13 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   private FSDataOutputStream stream = null;
 
   private final JsonFactory factory = new JsonFactory();
+  private final StorageStrategy storageStrategy;
 
   // Record write status
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
 
-  public JsonRecordWriter(){
+  public JsonRecordWriter(StorageStrategy storageStrategy){
+    this.storageStrategy = storageStrategy == null ? StorageStrategy.PERSISTENT : storageStrategy;
   }
 
   @Override
@@ -81,7 +84,17 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
 
     Path fileName = new Path(location, prefix + "_" + index + "." + extension);
     try {
+      // json writer does not support partitions, so only one file can be created
+      // and thus only one location should be deleted in case of abort
+      // to ensure that our writer was the first to create output file,
+      // we create empty output file first and fail if file exists
+      cleanUpLocation = storageStrategy.createFileAndApply(fs, fileName);
+
+      // since empty output file will be overwritten (some file systems may restrict append option)
+      // we need to re-apply file permission
       stream = fs.create(fileName);
+      storageStrategy.applyToFile(fs, fileName);
+
       JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter();
       if (uglify) {
         generator = generator.setPrettyPrinter(new MinimalPrettyPrinter(LINE_FEED));
@@ -238,6 +251,11 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
 
   @Override
   public void abort() throws IOException {
+    if (cleanUpLocation != null) {
+      fs.delete(cleanUpLocation, true);
+      logger.info("Aborting writer. Location [{}] on file system [{}] is deleted.",
+          cleanUpLocation.toUri().getPath(), fs.getUri());
+    }
   }
 
   @Override

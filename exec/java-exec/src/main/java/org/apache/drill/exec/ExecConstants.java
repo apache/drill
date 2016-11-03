@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -127,6 +127,11 @@ public interface ExecConstants {
    * Local temporary directory is used as base for temporary storage of Dynamic UDF jars.
    */
   String DRILL_TMP_DIR = "drill.tmp-dir";
+
+  /**
+   * Temporary tables can be created ONLY in default temporary workspace.
+   */
+  String DEFAULT_TEMPORARY_WORKSPACE = "drill.exec.default_temporary_workspace";
 
   String OUTPUT_FORMAT_OPTION = "store.format";
   OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
