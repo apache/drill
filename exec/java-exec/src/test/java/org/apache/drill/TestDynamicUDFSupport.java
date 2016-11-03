@@ -339,6 +339,31 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   @Test
+  public void testLazyInitWhenDynamicUdfSupportIsDisabled() throws Exception {
+    try {
+      test("select custom_lower('A') from (values(1))");
+    } catch (UserRemoteException e){
+      assertThat(e.getMessage(), containsString("No match found for function signature custom_lower(<CHARACTER>)"));
+    }
+
+    copyDefaultJarsToStagingArea();
+    test("create function using jar '%s'", default_binary_name);
+
+    try {
+      testBuilder()
+          .sqlQuery("select custom_lower('A') as res from (values(1))")
+          .optionSettingQueriesForTestQuery("alter system set `exec.udf.enable_dynamic_support` = false")
+          .unOrdered()
+          .baselineColumns("res")
+          .baselineValues("a")
+          .go();
+    } finally {
+      test("alter system reset `exec.udf.enable_dynamic_support`");
+    }
+  }
+
+
+  @Test
   public void testDropFunction() throws Exception {
     copyDefaultJarsToStagingArea();
     test("create function using jar '%s'", default_binary_name);

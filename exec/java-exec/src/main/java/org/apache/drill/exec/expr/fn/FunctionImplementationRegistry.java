@@ -140,9 +140,9 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
-   * Using the given <code>functionResolver</code> find Drill function implementation for given
-   * <code>functionCall</code>
-   * If function implementation was not found and in case if Dynamic UDF Support is enabled
+   * Using the given <code>functionResolver</code>
+   * finds Drill function implementation for given <code>functionCall</code>.
+   * If function implementation was not found,
    * loads all missing remote functions and tries to find Drill implementation one more time.
    */
   @Override
@@ -154,12 +154,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     AtomicLong version = new AtomicLong();
     DrillFuncHolder holder = functionResolver.getBestMatch(
         localFunctionRegistry.getMethods(functionReplacement(functionCall), version), functionCall);
-    if (holder == null && retry) {
-      if (optionManager != null && optionManager.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
-        if (loadRemoteFunctions(version.get())) {
-          return findDrillFunction(functionResolver, functionCall, false);
-        }
-      }
+    if (holder == null && retry && loadRemoteFunctions(version.get())) {
+      return findDrillFunction(functionResolver, functionCall, false);
     }
     return holder;
   }
@@ -183,7 +179,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
   /**
    * Find the Drill function implementation that matches the name, arg types and return type.
-   * If exact function implementation was not found and in case if Dynamic UDF Support is enabled
+   * If exact function implementation was not found,
    * loads all missing remote functions and tries to find Drill implementation one more time.
    */
   public DrillFuncHolder findExactMatchingDrillFunction(String name, List<MajorType> argTypes, MajorType returnType) {
@@ -197,11 +193,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
         return h;
       }
     }
-
-    if (retry && optionManager != null && optionManager.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
-      if (loadRemoteFunctions(version.get())) {
-        return findExactMatchingDrillFunction(name, argTypes, returnType, false);
-      }
+    if (retry && loadRemoteFunctions(version.get())) {
+      return findExactMatchingDrillFunction(name, argTypes, returnType, false);
     }
     return null;
   }
@@ -287,35 +280,39 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     if (!missingJars.isEmpty()) {
       synchronized (this) {
         missingJars = getMissingJars(remoteFunctionRegistry, localFunctionRegistry);
-        List<JarScan> jars = Lists.newArrayList();
-        for (String jarName : missingJars) {
-          Path binary = null;
-          Path source = null;
-          URLClassLoader classLoader = null;
-          try {
-            binary = copyJarToLocal(jarName, remoteFunctionRegistry);
-            source = copyJarToLocal(JarUtil.getSourceName(jarName), remoteFunctionRegistry);
-            URL[] urls = {binary.toUri().toURL(), source.toUri().toURL()};
-            classLoader = new URLClassLoader(urls);
-            ScanResult scanResult = scan(classLoader, binary, urls);
-            localFunctionRegistry.validate(jarName, scanResult);
-            jars.add(new JarScan(jarName, scanResult, classLoader));
-          } catch (Exception e) {
-            deleteQuietlyLocalJar(binary);
-            deleteQuietlyLocalJar(source);
-            if (classLoader != null) {
-              try {
-                classLoader.close();
-              } catch (Exception ex) {
-                logger.warn("Problem during closing class loader for {}", jarName, e);
+        if (!missingJars.isEmpty()) {
+          logger.info("Starting dynamic UDFs lazy-init process.\n" +
+              "The following jars are going to be downloaded and registered locally: " + missingJars);
+          List<JarScan> jars = Lists.newArrayList();
+          for (String jarName : missingJars) {
+            Path binary = null;
+            Path source = null;
+            URLClassLoader classLoader = null;
+            try {
+              binary = copyJarToLocal(jarName, remoteFunctionRegistry);
+              source = copyJarToLocal(JarUtil.getSourceName(jarName), remoteFunctionRegistry);
+              URL[] urls = {binary.toUri().toURL(), source.toUri().toURL()};
+              classLoader = new URLClassLoader(urls);
+              ScanResult scanResult = scan(classLoader, binary, urls);
+              localFunctionRegistry.validate(jarName, scanResult);
+              jars.add(new JarScan(jarName, scanResult, classLoader));
+            } catch (Exception e) {
+              deleteQuietlyLocalJar(binary);
+              deleteQuietlyLocalJar(source);
+              if (classLoader != null) {
+                try {
+                  classLoader.close();
+                } catch (Exception ex) {
+                  logger.warn("Problem during closing class loader for {}", jarName, e);
+                }
               }
+              logger.error("Problem during remote functions load from {}", jarName, e);
             }
-            logger.error("Problem during remote functions load from {}", jarName, e);
           }
-        }
-        if (!jars.isEmpty()) {
-          localFunctionRegistry.register(jars);
-          return true;
+          if (!jars.isEmpty()) {
+            localFunctionRegistry.register(jars);
+            return true;
+          }
         }
       }
     }
