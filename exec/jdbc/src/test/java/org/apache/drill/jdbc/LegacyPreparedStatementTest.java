@@ -57,9 +57,11 @@ public class LegacyPreparedStatementTest extends JdbcTestBase {
   public static void setUpConnection() throws SQLException {
     Driver.load();
     Properties properties = new Properties();
-    properties.setProperty("preparedstatement.server.disabled", "true");
+    properties.setProperty("server.preparedstatement.disabled", "true");
 
     connection = DriverManager.getConnection( "jdbc:drill:zk=local", properties);
+    assertTrue(((DrillConnection) connection).getConfig().isServerPreparedStatementDisabled());
+
   }
 
   @AfterClass

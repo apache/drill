@@ -27,8 +27,11 @@ import java.sql.SQLFeatureNotSupportedException;
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
 import org.apache.drill.common.Version;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
+
+import com.google.common.base.Throwables;
 
 
 /**
@@ -818,20 +821,35 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
                              String tableNamePattern,
                              String[] types) throws SQLException {
     throwIfClosed();
-    return super.getTables(catalog, schemaPattern,tableNamePattern, types);
+    try {
+      return super.getTables(catalog, schemaPattern,tableNamePattern, types);
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
 
   @Override
   public ResultSet getSchemas() throws SQLException {
     throwIfClosed();
-    return super.getSchemas();
+    try {
+      return super.getSchemas();
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override
   public ResultSet getCatalogs() throws SQLException {
     throwIfClosed();
-    return super.getCatalogs();
+    try {
+      return super.getCatalogs();
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override
@@ -844,7 +862,12 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getColumns(String catalog, String schema, String table,
                               String columnNamePattern) throws SQLException {
     throwIfClosed();
-    return super.getColumns(catalog, schema, table, columnNamePattern);
+    try {
+      return super.getColumns(catalog, schema, table, columnNamePattern);
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override

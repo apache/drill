@@ -67,7 +67,11 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
   }
 
   public boolean disableServerPreparedStatement() {
-    return Boolean.valueOf(props.getProperty("preparedstatement.server.disabled"));
+    return Boolean.valueOf(props.getProperty("server.preparedstatement.disabled"));
+  }
+
+  public boolean disableServerMetadata() {
+    return Boolean.valueOf(props.getProperty("server.metadata.disabled"));
   }
 
 }

@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Maps;
-import io.netty.buffer.DrillBuf;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +51,11 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import io.netty.buffer.DrillBuf;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
@@ -151,6 +151,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * @param userName User who owns the schema tree.
    * @return Root of the schema tree.
    */
+  @Override
   public SchemaPlus getRootSchema(final String userName) {
     return schemaTreeProvider.createRootSchema(userName, this);
   }
@@ -168,6 +169,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * Get the user name of the user who issued the query that is managed by this QueryContext.
    * @return
    */
+  @Override
   public String getQueryUserName() {
     return session.getCredentials().getUserName();
   }

@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
@@ -30,9 +33,6 @@ import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
 import com.google.common.collect.Lists;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Class which creates new schema trees. It keeps track of newly created schema trees and closes them safely as
@@ -68,6 +68,14 @@ public class SchemaTreeProvider implements AutoCloseable {
       @Override
       public OptionValue getOption(String optionKey) {
         return options.getOption(optionKey);
+      }
+
+      @Override public SchemaPlus getRootSchema(String userName) {
+        return createRootSchema(userName, this);
+      }
+
+      @Override public String getQueryUserName() {
+        return ImpersonationUtil.getProcessUserName();
       }
     };
 
