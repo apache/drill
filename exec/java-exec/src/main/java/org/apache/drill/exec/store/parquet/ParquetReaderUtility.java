@@ -196,7 +196,7 @@ public class ParquetReaderUtility {
     } else {
       // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
       // only applies if there is a date column selected
-      if (createdBy.equals("parquet-mr")) {
+      if (createdBy == null || createdBy.equals("parquet-mr")) {
         // loop through parquet column metadata to find date columns, check for corrupt values
         return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
       } else {
