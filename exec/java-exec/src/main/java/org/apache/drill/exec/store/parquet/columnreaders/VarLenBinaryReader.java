@@ -98,71 +98,6 @@ public class VarLenBinaryReader {
     return recordsReadInCurrentPass;
   }
 
-
-  public long determineSizesParallel(long recordsToReadInThisPass ) throws IOException {
-    boolean doneReading = false;
-    int lengthVarFieldsInCurrentRecord = 0;
-    boolean exitLengthDeterminingLoop = false;
-    long totalVariableLengthData = 0;
-    long recordsReadInCurrentPass = 0;
-
-    do {
-    doneReading = readPagesParallel();
-
-    if (!doneReading) {
-      lengthVarFieldsInCurrentRecord = 0;
-      for (VarLengthColumn<?> columnReader : columns) {
-        doneReading = columnReader.processPageData((int) recordsReadInCurrentPass);
-        if(doneReading) {
-          break;
-        }
-        lengthVarFieldsInCurrentRecord += columnReader.dataTypeLengthInBits;
-        doneReading = columnReader.checkVectorCapacityReached();
-        if(doneReading) {
-          break;
-        }
-      }
-    }
-
-    exitLengthDeterminingLoop = doneReading;
-
-      // check that the next record will fit in the batch
-      if (exitLengthDeterminingLoop ||
-          (recordsReadInCurrentPass + 1) * parentReader.getBitWidthAllFixedFields()
-              + totalVariableLengthData + lengthVarFieldsInCurrentRecord > parentReader.getBatchSize()) {
-        break;
-      }
-      for (VarLengthColumn<?> columnReader : columns) {
-        columnReader.updateReadyToReadPosition();
-        columnReader.currDefLevel = -1;
-      }
-      recordsReadInCurrentPass++;
-      totalVariableLengthData += lengthVarFieldsInCurrentRecord;
-    } while (recordsReadInCurrentPass < recordsToReadInThisPass);
-
-    return recordsReadInCurrentPass;
-  }
-
-  public boolean readPagesParallel() {
-
-    boolean isDone = false;
-    ArrayList<Future<Boolean>> futures = Lists.newArrayList();
-    for (VarLengthColumn<?> columnReader : columns) {
-      Future<Boolean> f = columnReader.readPageAsync();
-      futures.add(f);
-    }
-    for (Future<Boolean> f : futures) {
-      try {
-        isDone = isDone || f.get().booleanValue();
-      } catch (Exception e) {
-        f.cancel(true);
-        handleAndRaise(null, e);
-      }
-    }
-    return isDone;
-  }
-
-
   private void readRecordsSerial(long recordsReadInCurrentPass) {
     for (VarLengthColumn<?> columnReader : columns) {
       columnReader.readRecords(columnReader.pageReader.valuesReadyToRead);
@@ -178,12 +113,17 @@ public class VarLenBinaryReader {
       Future<Integer> f = columnReader.readRecordsAsync(columnReader.pageReader.valuesReadyToRead);
       futures.add(f);
     }
-    for (Future f : futures) {
-      try {
-        f.get();
-      } catch (Exception e) {
+    Exception exception = null;
+    for(Future f: futures){
+      if(exception != null) {
         f.cancel(true);
-        handleAndRaise(null, e);
+      } else {
+        try {
+          f.get();
+        } catch (Exception e) {
+          f.cancel(true);
+          exception = e;
+        }
       }
     }
     for (VarLengthColumn<?> columnReader : columns) {

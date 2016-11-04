@@ -298,12 +298,15 @@ public abstract class ColumnReader<V extends ValueVector> {
     @Override public Long call() throws IOException{
 
       String oldname = Thread.currentThread().getName();
-      Thread.currentThread().setName(oldname+"Decode-"+this.parent.columnChunkMetaData.toString());
+      try {
+        Thread.currentThread().setName(oldname + "Decode-" + this.parent.columnChunkMetaData.toString());
 
-      this.parent.processPages(recordsToReadInThisPass);
+        this.parent.processPages(recordsToReadInThisPass);
+        return recordsToReadInThisPass;
 
-      Thread.currentThread().setName(oldname);
-      return recordsToReadInThisPass;
+      } finally {
+        Thread.currentThread().setName(oldname);
+      }
     }
 
   }
@@ -320,12 +323,15 @@ public abstract class ColumnReader<V extends ValueVector> {
     @Override public Integer call() throws IOException{
 
       String oldname = Thread.currentThread().getName();
-      Thread.currentThread().setName("Decode-"+this.parent.columnChunkMetaData.toString());
+      try {
+        Thread.currentThread().setName("Decode-" + this.parent.columnChunkMetaData.toString());
 
-      this.parent.readRecords(recordsToRead);
+        this.parent.readRecords(recordsToRead);
+        return recordsToRead;
 
-      Thread.currentThread().setName(oldname);
-      return recordsToRead;
+      } finally {
+        Thread.currentThread().setName(oldname);
+      }
     }
 
   }
