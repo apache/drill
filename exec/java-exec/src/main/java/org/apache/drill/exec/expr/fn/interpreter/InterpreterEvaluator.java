@@ -85,6 +85,49 @@ public class InterpreterEvaluator {
 
   }
 
+  public static ValueHolder evaluateFunction(DrillSimpleFunc interpreter, ValueHolder[] args, String funcName) throws Exception {
+    Preconditions.checkArgument(interpreter != null, "interpreter could not be null when use interpreted model to evaluate function " + funcName);
+
+    // the current input index to assign into the next available parameter, found using the @Param notation
+    // the order parameters are declared in the java class for the DrillFunc is meaningful
+    int currParameterIndex = 0;
+    Field outField = null;
+    try {
+      Field[] fields = interpreter.getClass().getDeclaredFields();
+      for (Field f : fields) {
+        // if this is annotated as a parameter to the function
+        if ( f.getAnnotation(Param.class) != null ) {
+          f.setAccessible(true);
+          if (currParameterIndex < args.length) {
+            f.set(interpreter, args[currParameterIndex]);
+          }
+          currParameterIndex++;
+        } else if ( f.getAnnotation(Output.class) != null ) {
+          f.setAccessible(true);
+          outField = f;
+          // create an instance of the holder for the output to be stored in
+          f.set(interpreter, f.getType().newInstance());
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+    if (args.length != currParameterIndex ) {
+      throw new DrillRuntimeException(
+          String.format("Wrong number of parameters provided to interpreted expression evaluation " +
+                  "for function %s, expected %d parameters, but received %d.",
+              funcName, currParameterIndex, args.length));
+    }
+    if (outField == null) {
+      throw new DrillRuntimeException("Malformed DrillFunction without a return type: " + funcName);
+    }
+    interpreter.setup();
+    interpreter.eval();
+    ValueHolder out = (ValueHolder) outField.get(interpreter);
+
+    return out;
+  }
+
   private static class InitVisitor extends AbstractExprVisitor<LogicalExpression, VectorAccessible, RuntimeException> {
 
     private UdfUtilities udfUtilities;
@@ -270,44 +313,7 @@ public class InterpreterEvaluator {
       try {
         DrillSimpleFunc interpreter =  ((DrillFuncHolderExpr) holderExpr).getInterpreter();
 
-        Preconditions.checkArgument(interpreter != null, "interpreter could not be null when use interpreted model to evaluate function " + holder.getRegisteredNames()[0]);
-
-        // the current input index to assign into the next available parameter, found using the @Param notation
-        // the order parameters are declared in the java class for the DrillFunc is meaningful
-        int currParameterIndex = 0;
-        Field outField = null;
-        try {
-          Field[] fields = interpreter.getClass().getDeclaredFields();
-          for (Field f : fields) {
-            // if this is annotated as a parameter to the function
-            if ( f.getAnnotation(Param.class) != null ) {
-              f.setAccessible(true);
-              if (currParameterIndex < args.length) {
-                f.set(interpreter, args[currParameterIndex]);
-              }
-              currParameterIndex++;
-            } else if ( f.getAnnotation(Output.class) != null ) {
-              f.setAccessible(true);
-              outField = f;
-              // create an instance of the holder for the output to be stored in
-              f.set(interpreter, f.getType().newInstance());
-            }
-          }
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        if (args.length != currParameterIndex ) {
-          throw new DrillRuntimeException(
-              String.format("Wrong number of parameters provided to interpreted expression evaluation " +
-                  "for function %s, expected %d parameters, but received %d.",
-                  holderExpr.getName(), currParameterIndex, args.length));
-        }
-        if (outField == null) {
-          throw new DrillRuntimeException("Malformed DrillFunction without a return type: " + holderExpr.getName());
-        }
-        interpreter.setup();
-        interpreter.eval();
-        ValueHolder out = (ValueHolder) outField.get(interpreter);
+        ValueHolder out = evaluateFunction(interpreter, args, holderExpr.getName());
 
         if (TypeHelper.getValueHolderType(out).getMode() == TypeProtos.DataMode.OPTIONAL &&
             holderExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
@@ -324,6 +330,7 @@ public class InterpreterEvaluator {
       }
 
     }
+
 
     @Override
     public ValueHolder visitBooleanOperator(BooleanOperator op, Integer inIndex) {

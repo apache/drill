@@ -24,6 +24,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -78,6 +79,8 @@ import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.expr.stat.TypedFieldExpr;
+import org.apache.drill.exec.record.MaterializeVisitor;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -89,6 +92,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.store.parquet.stat.ColumnStatistics;
 import org.apache.drill.exec.util.DecimalUtility;
 
 public class ExpressionTreeMaterializer {
@@ -114,6 +118,12 @@ public class ExpressionTreeMaterializer {
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
                                               boolean allowComplexWriterExpr) {
     return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, false);
+  }
+
+  public static LogicalExpression materializeFilterExpr(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> fieldTypes, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
+    final FilterMaterializeVisitor filterMaterializeVisitor = new FilterMaterializeVisitor(fieldTypes, errorCollector);
+    LogicalExpression out =  expr.accept(filterMaterializeVisitor, functionLookupContext);
+    return out;
   }
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
@@ -214,12 +224,58 @@ public class ExpressionTreeMaterializer {
     errorCollector.addGeneralError(call.getPosition(), sb.toString());
   }
 
+  private static class MaterializeVisitor extends AbstractMaterializeVisitor {
+    private final VectorAccessible batch;
 
-  private static class MaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
+    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
+      super(errorCollector, allowComplexWriter, unionTypeEnabled);
+      this.batch = batch;
+    }
+
+    @Override
+    public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
+      //      logger.debug("Visiting schema path {}", path);
+      TypedFieldId tfId = batch.getValueVectorId(path);
+      if (tfId == null) {
+        logger.warn("Unable to find value vector of path {}, returning null instance.", path);
+        return NullExpression.INSTANCE;
+      } else {
+        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId);
+        return e;
+      }
+    }
+  }
+
+  private static class FilterMaterializeVisitor extends AbstractMaterializeVisitor {
+    private final Map<SchemaPath, ColumnStatistics> stats;
+
+    public FilterMaterializeVisitor(Map<SchemaPath, ColumnStatistics> stats, ErrorCollector errorCollector) {
+      super(errorCollector, false, false);
+      this.stats = stats;
+    }
+
+    @Override
+    public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
+      MajorType type = null;
+
+      if (stats.containsKey(path)) {
+        type = stats.get(path).getMajorType();
+      }
+
+      if (type != null) {
+        return new TypedFieldExpr(path, type);
+      } else {
+        logger.warn("Unable to find value vector of path {}, returning null-int instance.", path);
+        return new TypedFieldExpr(path, Types.OPTIONAL_INT);
+        // return NullExpression.INSTANCE;
+      }
+    }
+  }
+
+  private static abstract class AbstractMaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
     private ExpressionValidator validator = new ExpressionValidator();
     private ErrorCollector errorCollector;
     private Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
-    private final VectorAccessible batch;
     private final boolean allowComplexWriter;
     /**
      * If this is false, the materializer will not handle or create UnionTypes
@@ -231,8 +287,7 @@ public class ExpressionTreeMaterializer {
      */
     private Set<LogicalExpression> materializedExpressions = Sets.newIdentityHashSet();
 
-    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
-      this.batch = batch;
+    public AbstractMaterializeVisitor(ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
       this.errorCollector = errorCollector;
       this.allowComplexWriter = allowComplexWriter;
       this.unionTypeEnabled = unionTypeEnabled;
@@ -242,6 +297,8 @@ public class ExpressionTreeMaterializer {
       newExpr.accept(validator, errorCollector);
       return newExpr;
     }
+
+    abstract public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext);
 
     @Override
     public LogicalExpression visitUnknown(LogicalExpression e, FunctionLookupContext functionLookupContext)
@@ -631,19 +688,6 @@ public class ExpressionTreeMaterializer {
         return new TypedNullConstant(type);
       } else {
         return expr;
-      }
-    }
-
-    @Override
-    public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
-//      logger.debug("Visiting schema path {}", path);
-      TypedFieldId tfId = batch.getValueVectorId(path);
-      if (tfId == null) {
-        logger.warn("Unable to find value vector of path {}, returning null instance.", path);
-        return NullExpression.INSTANCE;
-      } else {
-        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId);
-        return e;
       }
     }
 

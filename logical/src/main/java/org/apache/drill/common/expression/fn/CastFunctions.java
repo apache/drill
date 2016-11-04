@@ -177,6 +177,15 @@ public class CastFunctions {
         CAST_FUNC_REPLACEMENT_NEEDED.contains(originalfunction);
   }
 
+  /**
+   * Check if a funcName is one of the cast function.
+   * @param funcName
+   * @return
+   */
+  public static boolean isCastFunction(String funcName) {
+    return TYPE2FUNC.values().contains(funcName);
+  }
+
   private static String getReplacingCastFunctionFromNonNullable(String originalCastFunction, MinorType inputType) {
     if(inputType == MinorType.VARCHAR && CAST_FUNC_REPLACEMENT_FROM_NONNULLABLE_VARCHAR.containsKey(originalCastFunction)) {
       return CAST_FUNC_REPLACEMENT_FROM_NONNULLABLE_VARCHAR.get(originalCastFunction);

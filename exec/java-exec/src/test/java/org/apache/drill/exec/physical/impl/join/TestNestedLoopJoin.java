@@ -149,7 +149,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
   public void testNlJoinEqualityNonScalar_2_planning() throws Exception {
     String query = String.format("select n.n_nationkey from cp.`tpch/nation.parquet` n, "
         + " dfs_test.`%s/multilevel/parquet` o "
-        + " where n.n_regionkey = o.o_orderkey and o.o_custkey < 5", TEST_RES_PATH);
+        + " where n.n_regionkey = o.o_orderkey and o.o_custkey > 5", TEST_RES_PATH);
     test("alter session set `planner.slice_target` = 1");
     test(DISABLE_HJ);
     test(DISABLE_MJ);

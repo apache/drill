@@ -35,6 +35,7 @@ public class Types {
   public static final MajorType LATE_BIND_TYPE = optional(MinorType.LATE);
   public static final MajorType REQUIRED_BIT = required(MinorType.BIT);
   public static final MajorType OPTIONAL_BIT = optional(MinorType.BIT);
+  public static final MajorType OPTIONAL_INT = optional(MinorType.INT);
 
   public static boolean isUnion(MajorType toType) {
     return toType.getMinorType() == MinorType.UNION;

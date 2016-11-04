@@ -44,6 +44,13 @@ public class FunctionGenerationHelper {
   public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";
   public static final String COMPARE_TO_NULLS_LOW = "compare_to_nulls_low";
 
+  public static final String EQ = "equal";
+  public static final String NE = "not_equal";
+  public static final String GT = "greater_than";
+  public static final String GE = "greater_than_or_equal_to";
+  public static final String LT = "less_than";
+  public static final String LE = "less_than_or_equal_to";
+
   /**
    * Finds ordering comparator ("compare_to...") FunctionHolderExpression with
    * a specified ordering for NULL (and considering NULLS <i>equal</i>).

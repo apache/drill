@@ -6,9 +6,7 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,268 +15,281 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.expression.BooleanOperator;
-import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.expression.fn.CastFunctions;
+import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.expr.fn.DrillSimpleFuncHolder;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.DateHolder;
+import org.apache.drill.exec.expr.holders.Float4Holder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.TimeHolder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
+import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.expr.stat.ParquetPredicates;
+import org.apache.drill.exec.expr.stat.TypedFieldExpr;
+import org.apache.drill.exec.ops.UdfUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.parquet.filter2.predicate.FilterApi;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public class ParquetFilterBuilder extends
-        AbstractExprVisitor<FilterPredicate, Void, RuntimeException> {
-    static final Logger logger = LoggerFactory
-            .getLogger(ParquetFilterBuilder.class);
-    private LogicalExpression le;
-    private boolean allExpressionsConverted = true;
-    private ParquetGroupScan groupScan;
+/**
+ * A visitor which visits a materialized logical expression, and build ParquetFilterPredicate
+ * If a visitXXX method returns null, that means the corresponding filter branch is not qualified for pushdown.
+ */
+public class ParquetFilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<LogicalExpression>, RuntimeException> {
+  static final Logger logger = LoggerFactory.getLogger(ParquetFilterBuilder.class);
 
-    public ParquetFilterBuilder(ParquetGroupScan groupScan, LogicalExpression conditionExp) {
-        this.le = conditionExp;
-        this.groupScan = groupScan;
+  private final UdfUtilities udfUtilities;
+
+  /**
+   * @param expr materialized filter expression
+   * @param constantBoundaries set of constant expressions
+   * @param udfUtilities
+   */
+  public static LogicalExpression buildParquetFilterPredicate(LogicalExpression expr, final Set<LogicalExpression> constantBoundaries, UdfUtilities udfUtilities) {
+    final LogicalExpression predicate = expr.accept(new ParquetFilterBuilder(udfUtilities), constantBoundaries);
+    return predicate;
+  }
+
+  private ParquetFilterBuilder(UdfUtilities udfUtilities) {
+    this.udfUtilities = udfUtilities;
+  }
+
+  @Override
+  public LogicalExpression visitUnknown(LogicalExpression e, Set<LogicalExpression> value) {
+    if (e instanceof TypedFieldExpr &&
+        ! containsArraySeg(((TypedFieldExpr) e).getPath()) &&
+        e.getMajorType().getMode() != TypeProtos.DataMode.REPEATED) {
+      // A filter is not qualified for push down, if
+      // 1. it contains an array segment : a.b[1], a.b[1].c.d
+      // 2. it's repeated type.
+      return e;
     }
 
-    public ParquetGroupScan parseTree() {
-        FilterPredicate predicate = le.accept(this, null);
-        try {
-            return this.groupScan.clone(predicate);
-        } catch (IOException e) {
-            logger.error("Failed to set Parquet filter", e);
-            return null;
+    return null;
+  }
+
+  @Override
+  public LogicalExpression visitIntConstant(ValueExpressions.IntExpression intExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    return intExpr;
+  }
+
+  @Override
+  public LogicalExpression visitDoubleConstant(ValueExpressions.DoubleExpression dExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    return dExpr;
+  }
+
+  @Override
+  public LogicalExpression visitFloatConstant(ValueExpressions.FloatExpression fExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    return fExpr;
+  }
+
+  @Override
+  public LogicalExpression visitLongConstant(ValueExpressions.LongExpression intExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    return intExpr;
+  }
+
+  @Override
+  public LogicalExpression visitDateConstant(ValueExpressions.DateExpression dateExpr, Set<LogicalExpression> value) throws RuntimeException {
+    return dateExpr;
+  }
+
+  @Override
+  public LogicalExpression visitTimeStampConstant(ValueExpressions.TimeStampExpression tsExpr, Set<LogicalExpression> value) throws RuntimeException {
+    return tsExpr;
+  }
+
+  @Override
+  public LogicalExpression visitTimeConstant(ValueExpressions.TimeExpression timeExpr, Set<LogicalExpression> value) throws RuntimeException {
+    return timeExpr;
+  }
+
+  @Override
+  public LogicalExpression visitBooleanOperator(BooleanOperator op, Set<LogicalExpression> value) {
+    List<LogicalExpression> childPredicates = new ArrayList<>();
+    String functionName = op.getName();
+
+    for (LogicalExpression arg : op.args) {
+      LogicalExpression childPredicate = arg.accept(this, value);
+      if (childPredicate == null) {
+        if (functionName.equals("booleanOr")) {
+          // we can't include any leg of the OR if any of the predicates cannot be converted
+          return null;
         }
+      } else {
+        childPredicates.add(childPredicate);
+      }
     }
 
-    public boolean areAllExpressionsConverted() {
-        return allExpressionsConverted;
+    if (childPredicates.size() == 0) {
+      return null; // none leg is qualified, return null.
+    } else if (childPredicates.size() == 1) {
+      return childPredicates.get(0); // only one leg is qualified, remove boolean op.
+    } else {
+      if (functionName.equals("booleanOr")) {
+        return new ParquetPredicates.OrPredicate(op.getName(), childPredicates, op.getPosition());
+      } else {
+        return new ParquetPredicates.AndPredicate(op.getName(), childPredicates, op.getPosition());
+      }
+    }
+  }
+
+  private boolean containsArraySeg(final SchemaPath schemaPath) {
+    PathSegment seg = schemaPath.getRootSegment();
+
+    while (seg != null) {
+      if (seg.isArray()) {
+        return true;
+      }
+      seg = seg.getChild();
+    }
+    return false;
+  }
+
+  private LogicalExpression getValueExpressionFromConst(ValueHolder holder, TypeProtos.MinorType type) {
+    switch (type) {
+    case INT:
+      return ValueExpressions.getInt(((IntHolder) holder).value);
+    case BIGINT:
+      return ValueExpressions.getBigInt(((BigIntHolder) holder).value);
+    case FLOAT4:
+      return ValueExpressions.getFloat4(((Float4Holder) holder).value);
+    case FLOAT8:
+      return ValueExpressions.getFloat8(((Float8Holder) holder).value);
+    case DATE:
+      return ValueExpressions.getDate(((DateHolder) holder).value);
+    case TIMESTAMP:
+      return ValueExpressions.getTimeStamp(((TimeStampHolder) holder).value);
+    case TIME:
+      return ValueExpressions.getTime(((TimeHolder) holder).value);
+    default:
+      return null;
+    }
+  }
+
+  @Override
+  public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression funcHolderExpr, Set<LogicalExpression> value)
+      throws RuntimeException {
+    FuncHolder holder = funcHolderExpr.getHolder();
+
+    if (! (holder instanceof DrillSimpleFuncHolder)) {
+      return null;
     }
 
-    @Override
-    public FilterPredicate visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
-        allExpressionsConverted = false;
+    if (value.contains(funcHolderExpr)) {
+      ValueHolder result ;
+      try {
+        result = InterpreterEvaluator.evaluateConstantExpr(udfUtilities, funcHolderExpr);
+      } catch (Exception e) {
+        logger.warn("Error in evaluating function of {}", funcHolderExpr.getName());
         return null;
+      }
+
+      logger.debug("Reduce a constant function expression into a value expression");
+      return getValueExpressionFromConst(result, funcHolderExpr.getMajorType().getMinorType());
     }
 
-    @Override
-    public FilterPredicate visitBooleanOperator(BooleanOperator op, Void value) {
-        List<LogicalExpression> args = op.args;
-        FilterPredicate nodePredicate = null;
-        String functionName = op.getName();
-        for (LogicalExpression arg : args) {
-            switch (functionName) {
-                case "booleanAnd":
-                case "booleanOr":
-                    if (nodePredicate == null) {
-                        nodePredicate = arg.accept(this, null);
-                    } else {
-                        FilterPredicate predicate = arg.accept(this, null);
-                        if (predicate != null) {
-                            nodePredicate = mergePredicates(functionName, nodePredicate, predicate);
-                        } else {
-                            // we can't include any part of the OR if any of the predicates cannot be converted
-                            if (functionName == "booleanOr") {
-                                nodePredicate = null;
-                            }
-                            allExpressionsConverted = false;
-                        }
-                    }
-                    break;
-            }
-        }
-        return nodePredicate;
+    final String funcName = ((DrillSimpleFuncHolder) holder).getRegisteredNames()[0];
+
+    if (isCompareFunction(funcName)) {
+      return handleCompareFunction(funcHolderExpr, value);
     }
 
-    private FilterPredicate mergePredicates(String functionName,
-                                            FilterPredicate leftPredicate, FilterPredicate rightPredicate) {
-        if (leftPredicate != null && rightPredicate != null) {
-            if (functionName == "booleanAnd") {
-                return FilterApi.and(leftPredicate, rightPredicate);
-            }
-            else {
-                return FilterApi.or(leftPredicate, rightPredicate);
-            }
-        } else {
-            allExpressionsConverted = false;
-            if ("booleanAnd".equals(functionName)) {
-                return leftPredicate == null ? rightPredicate : leftPredicate;
-            }
+    if (CastFunctions.isCastFunction(funcName)) {
+      List<LogicalExpression> newArgs = new ArrayList();
+      for (LogicalExpression arg : funcHolderExpr.args) {
+        final LogicalExpression newArg = arg.accept(this, value);
+        if (newArg == null) {
+          return null;
         }
+        newArgs.add(newArg);
+      }
 
+      return funcHolderExpr.copy(newArgs);
+    } else {
+      return null;
+    }
+  }
+
+  private LogicalExpression handleCompareFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
+    List<LogicalExpression> newArgs = new ArrayList();
+
+    for (LogicalExpression arg : functionHolderExpression.args) {
+      LogicalExpression newArg = arg.accept(this, value);
+      if (newArg == null) {
         return null;
+      }
+      newArgs.add(newArg);
     }
 
-    @Override
-    public FilterPredicate visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
-        FilterPredicate predicate = null;
-        String functionName = call.getName();
-        ImmutableList<LogicalExpression> args = call.args;
+    String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
 
-        if (ParquetCompareFunctionProcessor.isCompareFunction(functionName)) {
-            ParquetCompareFunctionProcessor processor = ParquetCompareFunctionProcessor
-                    .process(call);
-            if (processor.isSuccess()) {
-                try {
-                    predicate = createFilterPredicate(processor.getFunctionName(),
-                            processor.getPath(), processor.getValue());
-                } catch (Exception e) {
-                    logger.error("Failed to create Parquet filter", e);
-                }
-            }
-        } else {
-            switch (functionName) {
-                case "booleanAnd":
-                case "booleanOr":
-                    FilterPredicate leftPredicate = args.get(0).accept(this, null);
-                    FilterPredicate rightPredicate = args.get(1).accept(this, null);
-                    predicate = mergePredicates(functionName, leftPredicate, rightPredicate);
-                    break;
-            }
-        }
+    switch (funcName) {
+    case FunctionGenerationHelper.EQ :
+      return new ParquetPredicates.EqualPredicate(newArgs.get(0), newArgs.get(1));
+    case FunctionGenerationHelper.GT :
+      return new ParquetPredicates.GTPredicate(newArgs.get(0), newArgs.get(1));
+    case FunctionGenerationHelper.GE :
+      return new ParquetPredicates.GEPredicate(newArgs.get(0), newArgs.get(1));
+    case FunctionGenerationHelper.LT :
+      return new ParquetPredicates.LTPredicate(newArgs.get(0), newArgs.get(1));
+    case FunctionGenerationHelper.LE :
+      return new ParquetPredicates.LEPredicate(newArgs.get(0), newArgs.get(1));
+    case FunctionGenerationHelper.NE :
+      return new ParquetPredicates.NEPredicate(newArgs.get(0), newArgs.get(1));
+    default:
+      return null;
+    }
+  }
 
-        if (predicate == null) {
-            allExpressionsConverted = false;
-        }
-
-        return predicate;
+  private LogicalExpression handleCastFunction(FunctionHolderExpression functionHolderExpression, Set<LogicalExpression> value) {
+    for (LogicalExpression arg : functionHolderExpression.args) {
+      LogicalExpression newArg = arg.accept(this, value);
+      if (newArg == null) {
+        return null;
+      }
     }
 
-    private FilterPredicate createFilterPredicate(String functionName,
-                                                  SchemaPath field, Object fieldValue) {
-        FilterPredicate filter = null;
+    String funcName = ((DrillSimpleFuncHolder) functionHolderExpression.getHolder()).getRegisteredNames()[0];
 
-        // extract the field name
-        String fieldName = field.getAsUnescapedPath();
-        switch (functionName) {
-            case "equal":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.eq(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.eq(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.eq(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.eq(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                else if (fieldValue instanceof Boolean) {
-                    filter = FilterApi.eq(FilterApi.booleanColumn(fieldName), (Boolean) fieldValue);
-                }
-                break;
-            case "not_equal":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.notEq(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.notEq(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.notEq(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.notEq(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                else if (fieldValue instanceof Boolean) {
-                    filter = FilterApi.notEq(FilterApi.booleanColumn(fieldName), (Boolean) fieldValue);
-                }
-                break;
-            case "greater_than_or_equal_to":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.gtEq(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.gtEq(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.gtEq(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.gtEq(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                break;
-            case "greater_than":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.gt(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.gt(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.gt(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.gt(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                break;
-            case "less_than_or_equal_to":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.ltEq(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.ltEq(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.ltEq(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.ltEq(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                break;
-            case "less_than":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.lt(FilterApi.longColumn(fieldName), (Long) fieldValue);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.lt(FilterApi.intColumn(fieldName), (Integer) fieldValue);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.lt(FilterApi.floatColumn(fieldName), (Float) fieldValue);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.lt(FilterApi.doubleColumn(fieldName), (Double) fieldValue);
-                }
-                break;
-            case "isnull":
-            case "isNull":
-            case "is null":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.eq(FilterApi.longColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.eq(FilterApi.intColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.eq(FilterApi.floatColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.eq(FilterApi.doubleColumn(fieldName), null);
-                }
-                break;
-            case "isnotnull":
-            case "isNotNull":
-            case "is not null":
-                if (fieldValue instanceof Long) {
-                    filter = FilterApi.notEq(FilterApi.longColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Integer) {
-                    filter = FilterApi.notEq(FilterApi.intColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Float) {
-                    filter = FilterApi.notEq(FilterApi.floatColumn(fieldName), null);
-                }
-                else if (fieldValue instanceof Double) {
-                    filter = FilterApi.notEq(FilterApi.doubleColumn(fieldName), null);
-                }
-                break;
-        }
+    return null;
+  }
 
-        return filter;
-    }
+  private static boolean isCompareFunction(String funcName) {
+    return COMPARE_FUNCTIONS_SET.contains(funcName);
+  }
+
+  private static final ImmutableSet<String> COMPARE_FUNCTIONS_SET;
+
+  static {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    COMPARE_FUNCTIONS_SET = builder
+        .add(FunctionGenerationHelper.EQ)
+        .add(FunctionGenerationHelper.GT)
+        .add(FunctionGenerationHelper.GE)
+        .add(FunctionGenerationHelper.LT)
+        .add(FunctionGenerationHelper.LE)
+        .add(FunctionGenerationHelper.NE)
+        .build();
+  }
+
 }
