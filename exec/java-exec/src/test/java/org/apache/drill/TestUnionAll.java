@@ -1090,7 +1090,7 @@ public class TestUnionAll extends BaseTestQuery{
 
     final String query = String.format("SELECT o_custkey FROM \n" +
         " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
-        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey < 10", l, r, l);
+        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey > 10", l, r, l);
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};

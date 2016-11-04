@@ -486,6 +486,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
           .getHashJoinSwapMarginFactor()));
     }
 
+    /* Parquet row group filter pushdown in planning time */
+
+    if (context.getPlannerSettings().isParquetRowGroupFilterPushdownPlanningEnabled()) {
+      phyRelNode = (Prel) transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PHYSICAL_PARTITION_PRUNING, phyRelNode);
+    }
+
     /*
      * 1.2) Break up all expressions with complex outputs into their own project operations
      */

@@ -120,14 +120,6 @@ public class ExpressionTest extends ExecTest {
 
   // HELPER METHODS //
 
-  private LogicalExpression parseExpr(String expr) throws RecognitionException {
-    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    final CommonTokenStream tokens = new CommonTokenStream(lexer);
-    final ExprParser parser = new ExprParser(tokens);
-    parse_return ret = parser.parse();
-    return ret.e;
-  }
-
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
     final LogicalExpression expr = parseExpr(expression);
     final ErrorCollector error = new ErrorCollectorImpl();

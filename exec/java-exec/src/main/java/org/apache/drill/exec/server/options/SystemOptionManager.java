@@ -90,6 +90,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       PlannerSettings.TYPE_INFERENCE,
       PlannerSettings.IN_SUBQUERY_THRESHOLD,
       PlannerSettings.UNIONALL_DISTRIBUTE,
+      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING,
+      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
