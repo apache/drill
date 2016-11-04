@@ -17,24 +17,24 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.junit.Assert.assertTrue;
+import static java.sql.Connection.TRANSACTION_NONE;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.jdbc.Driver;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static java.sql.Connection.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Savepoint;
 import java.sql.SQLException;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Test for Drill's implementation of DatabaseMetaData's methods (other than
@@ -43,8 +43,8 @@ import java.sql.SQLException;
  */
 public class DatabaseMetaDataTest {
 
-  private static Connection connection;
-  private static DatabaseMetaData dbmd;
+  protected static Connection connection;
+  protected static DatabaseMetaData dbmd;
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {

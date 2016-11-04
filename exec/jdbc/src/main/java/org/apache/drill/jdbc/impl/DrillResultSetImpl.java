@@ -37,7 +37,9 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -47,6 +49,7 @@ import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.util.Cursor;
+import org.apache.calcite.avatica.util.Cursor.Accessor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
@@ -1874,12 +1877,23 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   protected DrillResultSetImpl execute() throws SQLException{
     connection.getDriver().handler.onStatementExecute(statement, null);
 
-    DrillCursor drillCursor = new DrillCursor(connection, statement, signature);
-    super.execute2(drillCursor, this.signature.columns);
+    if (signature.cursorFactory != null) {
+      // Avatica accessors have to be wrapped to match Drill behaviour regarding exception thrown
+      super.execute();
+      List<Accessor> wrappedAccessorList = new ArrayList<>(accessorList.size());
+      for(Accessor accessor: accessorList) {
+        wrappedAccessorList.add(new WrappedAccessor(accessor));
+      }
+      this.accessorList = wrappedAccessorList;
+    }
+    else {
+      DrillCursor drillCursor = new DrillCursor(connection, statement, signature);
+      super.execute2(drillCursor, this.signature.columns);
 
-    // Read first (schema-only) batch to initialize result-set metadata from
-    // (initial) schema before Statement.execute...(...) returns result set:
-    drillCursor.loadInitialSchema();
+      // Read first (schema-only) batch to initialize result-set metadata from
+      // (initial) schema before Statement.execute...(...) returns result set:
+      drillCursor.loadInitialSchema();
+    }
 
     return this;
   }
