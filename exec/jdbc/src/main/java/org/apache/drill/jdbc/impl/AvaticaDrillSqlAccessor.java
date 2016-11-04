@@ -64,11 +64,11 @@ class AvaticaDrillSqlAccessor implements Accessor {
     // so in that case row can be left at -1, so isBeforeFirst() returns true
     // even though we're not longer before the empty set of rows--and it's all
     // private, so we can't get to it to override any of several candidates.
-    if ( cursor.getResultSet().isAfterLast() ) {
+    if ( cursor.isAfterLast() ) {
       throw new InvalidCursorStateSqlException(
           "Result set cursor is already positioned past all rows." );
     }
-    else if ( cursor.getResultSet().isBeforeFirst() ) {
+    else if ( cursor.isBeforeFirst() ) {
       throw new InvalidCursorStateSqlException(
           "Result set cursor is positioned before all rows.  Call next() first." );
     }
