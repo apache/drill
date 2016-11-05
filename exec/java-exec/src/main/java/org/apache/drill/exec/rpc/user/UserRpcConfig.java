@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -29,8 +30,8 @@ import org.apache.drill.exec.proto.UserBitShared.SaslMessage;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
-import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
@@ -43,6 +44,9 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.RpcConfig;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class UserRpcConfig {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserRpcConfig.class);
@@ -75,4 +79,16 @@ public class UserRpcConfig {
   // prevent instantiation
   private UserRpcConfig() {
   }
+
+  /**
+   * Contains the list of methods supported by the server (from user to bit)
+   */
+  public static final Set<RpcType> SUPPORTED_SERVER_METHODS = Sets.immutableEnumSet(
+      ImmutableSet
+        .<RpcType> builder()
+        .add(RpcType.RUN_QUERY, RpcType.CANCEL_QUERY, RpcType.GET_QUERY_PLAN_FRAGMENTS, RpcType.RESUME_PAUSED_QUERY,
+          RpcType.GET_CATALOGS, RpcType.GET_SCHEMAS, RpcType.GET_TABLES, RpcType.GET_COLUMNS,
+          RpcType.CREATE_PREPARED_STATEMENT)
+        .build()
+        );
 }

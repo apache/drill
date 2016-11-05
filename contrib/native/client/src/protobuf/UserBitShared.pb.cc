@@ -339,7 +339,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryInfo));
   QueryProfile_descriptor_ = file->message_type(13);
-  static const int QueryProfile_offsets_[17] = {
+  static const int QueryProfile_offsets_[19] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, start_),
@@ -357,6 +357,8 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, error_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, error_node_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, options_json_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, planend_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, queuewaitend_),
   };
   QueryProfile_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -690,7 +692,7 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "rt\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.shared.Qu"
     "eryResult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n"
     "\007foreman\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024"
-    "\n\014options_json\030\006 \001(\t\"\320\003\n\014QueryProfile\022 \n"
+    "\n\014options_json\030\006 \001(\t\"\367\003\n\014QueryProfile\022 \n"
     "\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030"
     "\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003"
     " \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan"
@@ -702,63 +704,63 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "agmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030"
     "\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030"
     "\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_jso"
-    "n\030\021 \001(\t\"t\n\024MajorFragmentProfile\022\031\n\021major"
-    "_fragment_id\030\001 \001(\005\022A\n\026minor_fragment_pro"
-    "file\030\002 \003(\0132!.exec.shared.MinorFragmentPr"
-    "ofile\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030"
-    "\001 \001(\0162\032.exec.shared.FragmentState\022(\n\005err"
-    "or\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021m"
-    "inor_fragment_id\030\003 \001(\005\0226\n\020operator_profi"
-    "le\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022"
-    "\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013"
-    "memory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001"
-    "(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndp"
-    "oint\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progre"
-    "ss\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_pr"
-    "ofile\030\001 \003(\0132\032.exec.shared.StreamProfile\022"
-    "\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 "
-    "\001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nano"
-    "s\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007"
-    " \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metri"
-    "cValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProf"
-    "ile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n"
-    "\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_"
-    "id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_v"
-    "alue\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.ex"
-    "ec.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022fu"
-    "nction_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n"
-    "\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status"
-    "\030\003 \001(\0162\027.exec.shared.SaslStatus*5\n\nRpcCh"
-    "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004"
-    "USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020"
-    "\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPAR"
-    "ED_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SEND"
-    "ING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNIN"
-    "G\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAIL"
-    "ED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Cor"
-    "eOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROA"
-    "DCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGRE"
-    "GATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n"
-    "\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020M"
-    "ERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_S"
-    "ENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIV"
-    "ER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SE"
-    "LECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AG"
-    "GREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SO"
-    "RT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024"
-    "\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB"
-    "_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_S"
-    "UB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_"
-    "SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_"
-    "SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA"
-    "_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PROD"
-    "UCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006W"
-    "INDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SU"
-    "B_SCAN\020$*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000"
-    "\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020"
-    "\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org"
-    ".apache.drill.exec.protoB\rUserBitSharedH"
-    "\001", 4801);
+    "n\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd"
+    "\030\023 \001(\003\"t\n\024MajorFragmentProfile\022\031\n\021major_"
+    "fragment_id\030\001 \001(\005\022A\n\026minor_fragment_prof"
+    "ile\030\002 \003(\0132!.exec.shared.MinorFragmentPro"
+    "file\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001"
+    " \001(\0162\032.exec.shared.FragmentState\022(\n\005erro"
+    "r\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021mi"
+    "nor_fragment_id\030\003 \001(\005\0226\n\020operator_profil"
+    "e\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022\n"
+    "\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013m"
+    "emory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001("
+    "\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpo"
+    "int\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progres"
+    "s\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_pro"
+    "file\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023"
+    "\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001"
+    "(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos"
+    "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 "
+    "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric"
+    "Value\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfi"
+    "le\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007"
+    "schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_i"
+    "d\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_va"
+    "lue\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exe"
+    "c.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022fun"
+    "ction_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\t"
+    "mechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030"
+    "\003 \001(\0162\027.exec.shared.SaslStatus*5\n\nRpcCha"
+    "nnel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004U"
+    "SER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002"
+    "\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARE"
+    "D_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDI"
+    "NG\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING"
+    "\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILE"
+    "D\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Core"
+    "OperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROAD"
+    "CAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREG"
+    "ATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025"
+    "HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020ME"
+    "RGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SE"
+    "NDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVE"
+    "R\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SEL"
+    "ECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGG"
+    "REGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SOR"
+    "T\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022"
+    "\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_"
+    "SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SU"
+    "B_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_S"
+    "UB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_S"
+    "CAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_"
+    "SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODU"
+    "CER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WI"
+    "NDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB"
+    "_SCAN\020$*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022"
+    "\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n"
+    "\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org."
+    "apache.drill.exec.protoB\rUserBitSharedH\001", 4840);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -5423,6 +5425,8 @@ const int QueryProfile::kVerboseErrorFieldNumber;
 const int QueryProfile::kErrorIdFieldNumber;
 const int QueryProfile::kErrorNodeFieldNumber;
 const int QueryProfile::kOptionsJsonFieldNumber;
+const int QueryProfile::kPlanEndFieldNumber;
+const int QueryProfile::kQueueWaitEndFieldNumber;
 #endif  // !_MSC_VER
 
 QueryProfile::QueryProfile()
@@ -5459,6 +5463,8 @@ void QueryProfile::SharedCtor() {
   error_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   error_node_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  planend_ = GOOGLE_LONGLONG(0);
+  queuewaitend_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -5576,6 +5582,8 @@ void QueryProfile::Clear() {
         options_json_->clear();
       }
     }
+    planend_ = GOOGLE_LONGLONG(0);
+    queuewaitend_ = GOOGLE_LONGLONG(0);
   }
   fragment_profile_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -5868,6 +5876,38 @@ bool QueryProfile::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(144)) goto parse_planEnd;
+        break;
+      }
+
+      // optional int64 planEnd = 18;
+      case 18: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_planEnd:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &planend_)));
+          set_has_planend();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(152)) goto parse_queueWaitEnd;
+        break;
+      }
+
+      // optional int64 queueWaitEnd = 19;
+      case 19: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_queueWaitEnd:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &queuewaitend_)));
+          set_has_queuewaitend();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -6012,6 +6052,16 @@ void QueryProfile::SerializeWithCachedSizes(
       17, this->options_json(), output);
   }
 
+  // optional int64 planEnd = 18;
+  if (has_planend()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(18, this->planend(), output);
+  }
+
+  // optional int64 queueWaitEnd = 19;
+  if (has_queuewaitend()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(19, this->queuewaitend(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -6153,6 +6203,16 @@ void QueryProfile::SerializeWithCachedSizes(
         17, this->options_json(), target);
   }
 
+  // optional int64 planEnd = 18;
+  if (has_planend()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(18, this->planend(), target);
+  }
+
+  // optional int64 queueWaitEnd = 19;
+  if (has_queuewaitend()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(19, this->queuewaitend(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -6278,6 +6338,20 @@ int QueryProfile::ByteSize() const {
           this->options_json());
     }
 
+    // optional int64 planEnd = 18;
+    if (has_planend()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->planend());
+    }
+
+    // optional int64 queueWaitEnd = 19;
+    if (has_queuewaitend()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->queuewaitend());
+    }
+
   }
   // repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
   total_size += 1 * this->fragment_profile_size();
@@ -6366,6 +6440,12 @@ void QueryProfile::MergeFrom(const QueryProfile& from) {
     if (from.has_options_json()) {
       set_options_json(from.options_json());
     }
+    if (from.has_planend()) {
+      set_planend(from.planend());
+    }
+    if (from.has_queuewaitend()) {
+      set_queuewaitend(from.queuewaitend());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -6406,6 +6486,8 @@ void QueryProfile::Swap(QueryProfile* other) {
     std::swap(error_id_, other->error_id_);
     std::swap(error_node_, other->error_node_);
     std::swap(options_json_, other->options_json_);
+    std::swap(planend_, other->planend_);
+    std::swap(queuewaitend_, other->queuewaitend_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
