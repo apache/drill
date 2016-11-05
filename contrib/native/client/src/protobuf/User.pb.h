@@ -532,6 +532,25 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   inline ::std::string* release_application();
   inline void set_allocated_application(::std::string* application);
 
+  // optional uint32 buildNumber = 7;
+  inline bool has_buildnumber() const;
+  inline void clear_buildnumber();
+  static const int kBuildNumberFieldNumber = 7;
+  inline ::google::protobuf::uint32 buildnumber() const;
+  inline void set_buildnumber(::google::protobuf::uint32 value);
+
+  // optional string versionQualifier = 8;
+  inline bool has_versionqualifier() const;
+  inline void clear_versionqualifier();
+  static const int kVersionQualifierFieldNumber = 8;
+  inline const ::std::string& versionqualifier() const;
+  inline void set_versionqualifier(const ::std::string& value);
+  inline void set_versionqualifier(const char* value);
+  inline void set_versionqualifier(const char* value, size_t size);
+  inline ::std::string* mutable_versionqualifier();
+  inline ::std::string* release_versionqualifier();
+  inline void set_allocated_versionqualifier(::std::string* versionqualifier);
+
   // @@protoc_insertion_point(class_scope:exec.user.RpcEndpointInfos)
  private:
   inline void set_has_name();
@@ -546,6 +565,10 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   inline void clear_has_patchversion();
   inline void set_has_application();
   inline void clear_has_application();
+  inline void set_has_buildnumber();
+  inline void clear_has_buildnumber();
+  inline void set_has_versionqualifier();
+  inline void clear_has_versionqualifier();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -555,9 +578,11 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   ::google::protobuf::uint32 minorversion_;
   ::std::string* application_;
   ::google::protobuf::uint32 patchversion_;
+  ::google::protobuf::uint32 buildnumber_;
+  ::std::string* versionqualifier_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -1173,6 +1198,16 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& authenticationmechanisms() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_authenticationmechanisms();
 
+  // repeated .exec.user.RpcType supported_methods = 8;
+  inline int supported_methods_size() const;
+  inline void clear_supported_methods();
+  static const int kSupportedMethodsFieldNumber = 8;
+  inline ::exec::user::RpcType supported_methods(int index) const;
+  inline void set_supported_methods(int index, ::exec::user::RpcType value);
+  inline void add_supported_methods(::exec::user::RpcType value);
+  inline const ::google::protobuf::RepeatedField<int>& supported_methods() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_supported_methods();
+
   // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
  private:
   inline void set_has_rpc_version();
@@ -1194,9 +1229,10 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   ::std::string* errormessage_;
   ::exec::user::RpcEndpointInfos* server_infos_;
   ::google::protobuf::RepeatedPtrField< ::std::string> authenticationmechanisms_;
+  ::google::protobuf::RepeatedField<int> supported_methods_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -4095,6 +4131,98 @@ inline void RpcEndpointInfos::set_allocated_application(::std::string* applicati
   }
 }
 
+// optional uint32 buildNumber = 7;
+inline bool RpcEndpointInfos::has_buildnumber() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void RpcEndpointInfos::set_has_buildnumber() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void RpcEndpointInfos::clear_has_buildnumber() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void RpcEndpointInfos::clear_buildnumber() {
+  buildnumber_ = 0u;
+  clear_has_buildnumber();
+}
+inline ::google::protobuf::uint32 RpcEndpointInfos::buildnumber() const {
+  return buildnumber_;
+}
+inline void RpcEndpointInfos::set_buildnumber(::google::protobuf::uint32 value) {
+  set_has_buildnumber();
+  buildnumber_ = value;
+}
+
+// optional string versionQualifier = 8;
+inline bool RpcEndpointInfos::has_versionqualifier() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void RpcEndpointInfos::set_has_versionqualifier() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void RpcEndpointInfos::clear_has_versionqualifier() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void RpcEndpointInfos::clear_versionqualifier() {
+  if (versionqualifier_ != &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_->clear();
+  }
+  clear_has_versionqualifier();
+}
+inline const ::std::string& RpcEndpointInfos::versionqualifier() const {
+  return *versionqualifier_;
+}
+inline void RpcEndpointInfos::set_versionqualifier(const ::std::string& value) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(value);
+}
+inline void RpcEndpointInfos::set_versionqualifier(const char* value) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(value);
+}
+inline void RpcEndpointInfos::set_versionqualifier(const char* value, size_t size) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RpcEndpointInfos::mutable_versionqualifier() {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  return versionqualifier_;
+}
+inline ::std::string* RpcEndpointInfos::release_versionqualifier() {
+  clear_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = versionqualifier_;
+    versionqualifier_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RpcEndpointInfos::set_allocated_versionqualifier(::std::string* versionqualifier) {
+  if (versionqualifier_ != &::google::protobuf::internal::kEmptyString) {
+    delete versionqualifier_;
+  }
+  if (versionqualifier) {
+    set_has_versionqualifier();
+    versionqualifier_ = versionqualifier;
+  } else {
+    clear_has_versionqualifier();
+    versionqualifier_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
 // -------------------------------------------------------------------
 
 // UserToBitHandshake
@@ -4927,6 +5055,33 @@ BitToUserHandshake::authenticationmechanisms() const {
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
 BitToUserHandshake::mutable_authenticationmechanisms() {
   return &authenticationmechanisms_;
+}
+
+// repeated .exec.user.RpcType supported_methods = 8;
+inline int BitToUserHandshake::supported_methods_size() const {
+  return supported_methods_.size();
+}
+inline void BitToUserHandshake::clear_supported_methods() {
+  supported_methods_.Clear();
+}
+inline ::exec::user::RpcType BitToUserHandshake::supported_methods(int index) const {
+  return static_cast< ::exec::user::RpcType >(supported_methods_.Get(index));
+}
+inline void BitToUserHandshake::set_supported_methods(int index, ::exec::user::RpcType value) {
+  assert(::exec::user::RpcType_IsValid(value));
+  supported_methods_.Set(index, value);
+}
+inline void BitToUserHandshake::add_supported_methods(::exec::user::RpcType value) {
+  assert(::exec::user::RpcType_IsValid(value));
+  supported_methods_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+BitToUserHandshake::supported_methods() const {
+  return supported_methods_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+BitToUserHandshake::mutable_supported_methods() {
+  return &supported_methods_;
 }
 
 // -------------------------------------------------------------------

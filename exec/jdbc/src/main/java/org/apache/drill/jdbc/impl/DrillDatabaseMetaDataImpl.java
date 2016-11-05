@@ -26,7 +26,7 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
-import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
+import org.apache.drill.common.Version;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
 
@@ -55,9 +55,14 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     }
   }
 
-  private RpcEndpointInfos getServerInfos() throws SQLException {
+  private String getServerName() throws SQLException {
     DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
-    return connection.getClient().getServerInfos();
+    return connection.getClient().getServerName();
+  }
+
+  private Version getServerVersion() throws SQLException {
+    DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
+    return connection.getClient().getServerVersion();
   }
 
   // Note:  Dynamic proxies could be used to reduce the quantity (450?) of
@@ -130,21 +135,21 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public String getDatabaseProductName() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    String name = getServerName();
+    if (name == null) {
       return super.getDatabaseProductName();
     }
-    return infos.getName();
+    return name;
   }
 
   @Override
   public String getDatabaseProductVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseProductVersion();
     }
-    return infos.getVersion();
+    return version.getVersion();
   }
 
   @Override
@@ -1184,21 +1189,21 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getDatabaseMajorVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseMajorVersion();
     }
-    return infos.getMajorVersion();
+    return version.getMajorVersion();
   }
 
   @Override
   public int getDatabaseMinorVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseMinorVersion();
     }
-    return infos.getMinorVersion();
+    return version.getMinorVersion();
   }
 
   @Override

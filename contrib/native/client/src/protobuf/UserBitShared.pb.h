@@ -2096,6 +2096,20 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_options_json();
   inline void set_allocated_options_json(::std::string* options_json);
 
+  // optional int64 planEnd = 18;
+  inline bool has_planend() const;
+  inline void clear_planend();
+  static const int kPlanEndFieldNumber = 18;
+  inline ::google::protobuf::int64 planend() const;
+  inline void set_planend(::google::protobuf::int64 value);
+
+  // optional int64 queueWaitEnd = 19;
+  inline bool has_queuewaitend() const;
+  inline void clear_queuewaitend();
+  static const int kQueueWaitEndFieldNumber = 19;
+  inline ::google::protobuf::int64 queuewaitend() const;
+  inline void set_queuewaitend(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
  private:
   inline void set_has_id();
@@ -2130,6 +2144,10 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_error_node();
   inline void set_has_options_json();
   inline void clear_has_options_json();
+  inline void set_has_planend();
+  inline void clear_has_planend();
+  inline void set_has_queuewaitend();
+  inline void clear_has_queuewaitend();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2151,9 +2169,11 @@ class QueryProfile : public ::google::protobuf::Message {
   ::std::string* error_id_;
   ::std::string* error_node_;
   ::std::string* options_json_;
+  ::google::protobuf::int64 planend_;
+  ::google::protobuf::int64 queuewaitend_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(19 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -5772,6 +5792,50 @@ inline void QueryProfile::set_allocated_options_json(::std::string* options_json
     clear_has_options_json();
     options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
+}
+
+// optional int64 planEnd = 18;
+inline bool QueryProfile::has_planend() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void QueryProfile::set_has_planend() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void QueryProfile::clear_has_planend() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void QueryProfile::clear_planend() {
+  planend_ = GOOGLE_LONGLONG(0);
+  clear_has_planend();
+}
+inline ::google::protobuf::int64 QueryProfile::planend() const {
+  return planend_;
+}
+inline void QueryProfile::set_planend(::google::protobuf::int64 value) {
+  set_has_planend();
+  planend_ = value;
+}
+
+// optional int64 queueWaitEnd = 19;
+inline bool QueryProfile::has_queuewaitend() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void QueryProfile::set_has_queuewaitend() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void QueryProfile::clear_has_queuewaitend() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void QueryProfile::clear_queuewaitend() {
+  queuewaitend_ = GOOGLE_LONGLONG(0);
+  clear_has_queuewaitend();
+}
+inline ::google::protobuf::int64 QueryProfile::queuewaitend() const {
+  return queuewaitend_;
+}
+inline void QueryProfile::set_queuewaitend(::google::protobuf::int64 value) {
+  set_has_queuewaitend();
+  queuewaitend_ = value;
 }
 
 // -------------------------------------------------------------------

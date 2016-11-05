@@ -43,6 +43,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -527,10 +528,18 @@ class DrillCursor implements Cursor {
         : "currentBatchHolder.getRecordCount() not 0 (is "
           + currentBatchHolder.getRecordCount() + " in loadInitialSchema()";
 
+    final PreparedStatement preparedStatement;
     if (statement instanceof DrillPreparedStatementImpl) {
       DrillPreparedStatementImpl drillPreparedStatement = (DrillPreparedStatementImpl) statement;
-      connection.getClient().executePreparedStatement(drillPreparedStatement.getPreparedStatementHandle().getServerHandle(), resultsListener);
+      preparedStatement = drillPreparedStatement.getPreparedStatementHandle();
     } else {
+      preparedStatement = null;
+    }
+
+    if (preparedStatement != null) {
+      connection.getClient().executePreparedStatement(preparedStatement.getServerHandle(), resultsListener);
+    }
+    else {
       connection.getClient().runQuery(QueryType.SQL, signature.sql, resultsListener);
     }
 

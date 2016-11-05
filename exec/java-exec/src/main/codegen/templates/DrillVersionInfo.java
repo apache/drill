@@ -24,8 +24,7 @@
 
 package org.apache.drill.common.util;
 
-import java.text.MessageFormat;
-import java.text.ParseException;
+import org.apache.drill.common.Version;
 
 /*
  * This file is generated with Freemarker using the template src/main/codegen/templates/DrillVersionInfo.java
@@ -39,18 +38,24 @@ import java.text.ParseException;
  *
  */
 public class DrillVersionInfo {
-  private static final String VERSION = "${maven.project.version}";
-
-  private static final int MAJOR_VERSION = ${maven.project.artifact.selectedVersion.majorVersion};
-  private static final int MINOR_VERSION = ${maven.project.artifact.selectedVersion.minorVersion};
-  private static final int PATCH_VERSION = ${maven.project.artifact.selectedVersion.incrementalVersion};
+  /**
+   * The version extracted from Maven POM file at build time.
+   */
+  public static final Version VERSION = new Version(
+      "${maven.project.version}",
+      ${maven.project.artifact.selectedVersion.majorVersion},
+      ${maven.project.artifact.selectedVersion.minorVersion},
+      ${maven.project.artifact.selectedVersion.incrementalVersion},
+      ${maven.project.artifact.selectedVersion.buildNumber},
+      "${maven.project.artifact.selectedVersion.qualifier!}"
+  );
 
   /**
    * Get the Drill version from pom
    * @return the version number as x.y.z
    */
   public static String getVersion() {
-    return VERSION;
+    return VERSION.getVersion();
   }
 
   /**
@@ -58,7 +63,7 @@ public class DrillVersionInfo {
    *  @return x if assuming the version number is x.y.z
    */
   public static int getMajorVersion() {
-    return MAJOR_VERSION;
+    return VERSION.getMajorVersion();
   }
 
   /**
@@ -66,7 +71,7 @@ public class DrillVersionInfo {
    *  @return y if assuming the version number is x.y.z
    */
   public static int getMinorVersion() {
-    return MINOR_VERSION;
+    return VERSION.getMinorVersion();
   }
 
   /**
@@ -74,6 +79,23 @@ public class DrillVersionInfo {
    *  @return z if assuming the version number is x.y.z(-suffix)
    */
   public static int getPatchVersion() {
-    return PATCH_VERSION;
+    return VERSION.getPatchVersion();
+  }
+
+  /**
+   *  Get the Drill build number from pom
+   *  @return z if assuming the version number is x.y.z(.b)(-suffix)
+   */
+  public static int getBuildNumber() {
+    return VERSION.getPatchVersion();
+  }
+
+  /**
+   *  Get the Drill version qualifier from pom
+   *  @return suffix if assuming the version number is x.y.z(-suffix), or an empty string
+   */
+  public static String getQualifier() {
+    return VERSION.getQualifier();
   }
 }
+

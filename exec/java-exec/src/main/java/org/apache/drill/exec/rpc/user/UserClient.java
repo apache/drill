@@ -17,14 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.AbstractCheckedFuture;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import io.netty.buffer.ByteBuf;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +24,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-import io.netty.channel.socket.SocketChannel;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslException;
+
 import org.apache.drill.common.KerberosUtil;
-import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -60,29 +54,35 @@ import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.AbstractClientConnection;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicClient;
-import org.apache.drill.exec.rpc.NonTransientRpcException;
-import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-
-import com.google.protobuf.MessageLite;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.security.AuthStringUtil;
+import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
-import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.rpc.security.ClientAuthenticatorProvider;
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.hadoop.security.UserGroupInformation;
-
-import javax.security.sasl.SaslClient;
-import javax.security.sasl.SaslException;
-
-import io.netty.channel.EventLoopGroup;
 import org.slf4j.Logger;
+
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.AbstractCheckedFuture;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.MessageLite;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 
 public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnection,
     UserToBitHandshake, BitToUserHandshake> {
@@ -91,9 +91,10 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
   private final BufferAllocator allocator;
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
   private final String clientName;
+  private final boolean supportComplexTypes;
 
   private RpcEndpointInfos serverInfos = null;
-  private boolean supportComplexTypes = true;
+  private Set<RpcType> supportedMethods = null;
 
   // these are used for authentication
   private volatile List<String> serverAuthMechanisms = null;
@@ -115,6 +116,10 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
 
   public RpcEndpointInfos getServerInfos() {
     return serverInfos;
+  }
+
+  public Set<RpcType> getSupportedMethods() {
+    return supportedMethods;
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
@@ -346,6 +351,8 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
     if (inbound.hasServerInfos()) {
       serverInfos = inbound.getServerInfos();
     }
+    supportedMethods = Sets.immutableEnumSet(inbound.getSupportedMethodsList());
+
     switch (inbound.getStatus()) {
     case SUCCESS:
       break;

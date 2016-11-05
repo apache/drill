@@ -278,6 +278,10 @@ public final class SchemaUserProtos
                     output.writeUInt32(5, message.getPatchVersion(), false);
                 if(message.hasApplication())
                     output.writeString(6, message.getApplication(), false);
+                if(message.hasBuildNumber())
+                    output.writeUInt32(7, message.getBuildNumber(), false);
+                if(message.hasVersionQualifier())
+                    output.writeString(8, message.getVersionQualifier(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos message)
             {
@@ -335,6 +339,12 @@ public final class SchemaUserProtos
                         case 6:
                             builder.setApplication(input.readString());
                             break;
+                        case 7:
+                            builder.setBuildNumber(input.readUInt32());
+                            break;
+                        case 8:
+                            builder.setVersionQualifier(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -381,6 +391,8 @@ public final class SchemaUserProtos
                 case 4: return "minorVersion";
                 case 5: return "patchVersion";
                 case 6: return "application";
+                case 7: return "buildNumber";
+                case 8: return "versionQualifier";
                 default: return null;
             }
         }
@@ -398,6 +410,8 @@ public final class SchemaUserProtos
             fieldMap.put("minorVersion", 4);
             fieldMap.put("patchVersion", 5);
             fieldMap.put("application", 6);
+            fieldMap.put("buildNumber", 7);
+            fieldMap.put("versionQualifier", 8);
         }
     }
 
@@ -981,6 +995,8 @@ public final class SchemaUserProtos
 
                 for(String authenticationMechanisms : message.getAuthenticationMechanismsList())
                     output.writeString(7, authenticationMechanisms, true);
+                for(org.apache.drill.exec.proto.UserProtos.RpcType supportedMethods : message.getSupportedMethodsList())
+                    output.writeEnum(8, supportedMethods.getNumber(), true);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.BitToUserHandshake message)
             {
@@ -1039,6 +1055,9 @@ public final class SchemaUserProtos
                         case 7:
                             builder.addAuthenticationMechanisms(input.readString());
                             break;
+                        case 8:
+                            builder.addSupportedMethods(org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(input.readEnum()));
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1085,6 +1104,7 @@ public final class SchemaUserProtos
                 case 5: return "errorMessage";
                 case 6: return "serverInfos";
                 case 7: return "authenticationMechanisms";
+                case 8: return "supportedMethods";
                 default: return null;
             }
         }
@@ -1102,6 +1122,7 @@ public final class SchemaUserProtos
             fieldMap.put("errorMessage", 5);
             fieldMap.put("serverInfos", 6);
             fieldMap.put("authenticationMechanisms", 7);
+            fieldMap.put("supportedMethods", 8);
         }
     }
 

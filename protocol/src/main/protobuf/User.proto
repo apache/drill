@@ -57,12 +57,14 @@ message UserProperties {
 }
 
 message RpcEndpointInfos {
-    optional string name = 1;           // example: Apache Drill Server, Apache Drill C++ client
-    optional string version = 2;        // example: 1.9.0
-    optional uint32 majorVersion = 3;   // example: 1
-    optional uint32 minorVersion = 4;   // example: 9
-    optional uint32 patchVersion = 5;   // example: 0
-    optional string application = 6;    // example: Tableau 9.3
+    optional string name = 1;             // example: Apache Drill Server, Apache Drill C++ client
+    optional string version = 2;          // example: 1.9.0
+    optional uint32 majorVersion = 3;     // example: 1
+    optional uint32 minorVersion = 4;     // example: 9
+    optional uint32 patchVersion = 5;     // example: 0
+    optional string application = 6;      // example: Tableau 9.3
+    optional uint32 buildNumber = 7;      // example: 32
+    optional string versionQualifier = 8; // example: SNAPSHOT
 }
 
 enum SaslSupport {
@@ -121,6 +123,7 @@ message BitToUserHandshake {
   optional string errorMessage = 5;
   optional RpcEndpointInfos server_infos = 6;
   repeated string authenticationMechanisms = 7;
+  repeated RpcType supported_methods = 8;
 }
 
 /*

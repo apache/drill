@@ -275,7 +275,8 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
 
         BitToUserHandshake.Builder respBuilder = BitToUserHandshake.newBuilder()
             .setRpcVersion(UserRpcConfig.RPC_VERSION)
-            .setServerInfos(UserRpcUtils.getRpcEndpointInfos(SERVER_NAME));
+            .setServerInfos(UserRpcUtils.getRpcEndpointInfos(SERVER_NAME))
+            .addAllSupportedMethods(UserRpcConfig.SUPPORTED_SERVER_METHODS);
 
         try {
           if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {

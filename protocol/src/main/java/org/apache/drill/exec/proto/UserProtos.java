@@ -2597,6 +2597,51 @@ public final class UserProtos {
      */
     com.google.protobuf.ByteString
         getApplicationBytes();
+
+    // optional uint32 buildNumber = 7;
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    boolean hasBuildNumber();
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    int getBuildNumber();
+
+    // optional string versionQualifier = 8;
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    boolean hasVersionQualifier();
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    java.lang.String getVersionQualifier();
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getVersionQualifierBytes();
   }
   /**
    * Protobuf type {@code exec.user.RpcEndpointInfos}
@@ -2677,6 +2722,16 @@ public final class UserProtos {
             case 50: {
               bitField0_ |= 0x00000020;
               application_ = input.readBytes();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              buildNumber_ = input.readUInt32();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              versionQualifier_ = input.readBytes();
               break;
             }
           }
@@ -2956,6 +3011,85 @@ public final class UserProtos {
       }
     }
 
+    // optional uint32 buildNumber = 7;
+    public static final int BUILDNUMBER_FIELD_NUMBER = 7;
+    private int buildNumber_;
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    public boolean hasBuildNumber() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    public int getBuildNumber() {
+      return buildNumber_;
+    }
+
+    // optional string versionQualifier = 8;
+    public static final int VERSIONQUALIFIER_FIELD_NUMBER = 8;
+    private java.lang.Object versionQualifier_;
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public boolean hasVersionQualifier() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public java.lang.String getVersionQualifier() {
+      java.lang.Object ref = versionQualifier_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          versionQualifier_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getVersionQualifierBytes() {
+      java.lang.Object ref = versionQualifier_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        versionQualifier_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       name_ = "";
       version_ = "";
@@ -2963,6 +3097,8 @@ public final class UserProtos {
       minorVersion_ = 0;
       patchVersion_ = 0;
       application_ = "";
+      buildNumber_ = 0;
+      versionQualifier_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2993,6 +3129,12 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getApplicationBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt32(7, buildNumber_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getVersionQualifierBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -3026,6 +3168,14 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getApplicationBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, buildNumber_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getVersionQualifierBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3155,6 +3305,10 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         application_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        buildNumber_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        versionQualifier_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -3207,6 +3361,14 @@ public final class UserProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.application_ = application_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.buildNumber_ = buildNumber_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.versionQualifier_ = versionQualifier_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3245,6 +3407,14 @@ public final class UserProtos {
         if (other.hasApplication()) {
           bitField0_ |= 0x00000020;
           application_ = other.application_;
+          onChanged();
+        }
+        if (other.hasBuildNumber()) {
+          setBuildNumber(other.getBuildNumber());
+        }
+        if (other.hasVersionQualifier()) {
+          bitField0_ |= 0x00000080;
+          versionQualifier_ = other.versionQualifier_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -3711,6 +3881,153 @@ public final class UserProtos {
   }
   bitField0_ |= 0x00000020;
         application_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 buildNumber = 7;
+      private int buildNumber_ ;
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public boolean hasBuildNumber() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public int getBuildNumber() {
+        return buildNumber_;
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public Builder setBuildNumber(int value) {
+        bitField0_ |= 0x00000040;
+        buildNumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public Builder clearBuildNumber() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        buildNumber_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string versionQualifier = 8;
+      private java.lang.Object versionQualifier_ = "";
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public boolean hasVersionQualifier() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public java.lang.String getVersionQualifier() {
+        java.lang.Object ref = versionQualifier_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          versionQualifier_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getVersionQualifierBytes() {
+        java.lang.Object ref = versionQualifier_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          versionQualifier_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder setVersionQualifier(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        versionQualifier_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder clearVersionQualifier() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        versionQualifier_ = getDefaultInstance().getVersionQualifier();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder setVersionQualifierBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        versionQualifier_ = value;
         onChanged();
         return this;
       }
@@ -7616,6 +7933,20 @@ public final class UserProtos {
      */
     com.google.protobuf.ByteString
         getAuthenticationMechanismsBytes(int index);
+
+    // repeated .exec.user.RpcType supported_methods = 8;
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList();
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    int getSupportedMethodsCount();
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index);
   }
   /**
    * Protobuf type {@code exec.user.BitToUserHandshake}
@@ -7715,6 +8046,39 @@ public final class UserProtos {
               authenticationMechanisms_.add(input.readBytes());
               break;
             }
+            case 64: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RpcType value = org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(8, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                  supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>();
+                  mutable_bitField0_ |= 0x00000040;
+                }
+                supportedMethods_.add(value);
+              }
+              break;
+            }
+            case 66: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.RpcType value = org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(8, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                    supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>();
+                    mutable_bitField0_ |= 0x00000040;
+                  }
+                  supportedMethods_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -7725,6 +8089,9 @@ public final class UserProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(authenticationMechanisms_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -7928,6 +8295,28 @@ public final class UserProtos {
       return authenticationMechanisms_.getByteString(index);
     }
 
+    // repeated .exec.user.RpcType supported_methods = 8;
+    public static final int SUPPORTED_METHODS_FIELD_NUMBER = 8;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> supportedMethods_;
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
+      return supportedMethods_;
+    }
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public int getSupportedMethodsCount() {
+      return supportedMethods_.size();
+    }
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
+      return supportedMethods_.get(index);
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
       status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
@@ -7935,6 +8324,7 @@ public final class UserProtos {
       errorMessage_ = "";
       serverInfos_ = org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance();
       authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      supportedMethods_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7965,6 +8355,9 @@ public final class UserProtos {
       }
       for (int i = 0; i < authenticationMechanisms_.size(); i++) {
         output.writeBytes(7, authenticationMechanisms_.getByteString(i));
+      }
+      for (int i = 0; i < supportedMethods_.size(); i++) {
+        output.writeEnum(8, supportedMethods_.get(i).getNumber());
       }
       getUnknownFields().writeTo(output);
     }
@@ -8003,6 +8396,15 @@ public final class UserProtos {
         }
         size += dataSize;
         size += 1 * getAuthenticationMechanismsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < supportedMethods_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(supportedMethods_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * supportedMethods_.size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -8137,6 +8539,8 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000020);
+        supportedMethods_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -8195,6 +8599,11 @@ public final class UserProtos {
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.authenticationMechanisms_ = authenticationMechanisms_;
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.supportedMethods_ = supportedMethods_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8237,6 +8646,16 @@ public final class UserProtos {
           } else {
             ensureAuthenticationMechanismsIsMutable();
             authenticationMechanisms_.addAll(other.authenticationMechanisms_);
+          }
+          onChanged();
+        }
+        if (!other.supportedMethods_.isEmpty()) {
+          if (supportedMethods_.isEmpty()) {
+            supportedMethods_ = other.supportedMethods_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureSupportedMethodsIsMutable();
+            supportedMethods_.addAll(other.supportedMethods_);
           }
           onChanged();
         }
@@ -8690,6 +9109,78 @@ public final class UserProtos {
   }
   ensureAuthenticationMechanismsIsMutable();
         authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.RpcType supported_methods = 8;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> supportedMethods_ =
+        java.util.Collections.emptyList();
+      private void ensureSupportedMethodsIsMutable() {
+        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>(supportedMethods_);
+          bitField0_ |= 0x00000040;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
+        return java.util.Collections.unmodifiableList(supportedMethods_);
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public int getSupportedMethodsCount() {
+        return supportedMethods_.size();
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
+        return supportedMethods_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder setSupportedMethods(
+          int index, org.apache.drill.exec.proto.UserProtos.RpcType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSupportedMethodsIsMutable();
+        supportedMethods_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder addSupportedMethods(org.apache.drill.exec.proto.UserProtos.RpcType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSupportedMethodsIsMutable();
+        supportedMethods_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder addAllSupportedMethods(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.RpcType> values) {
+        ensureSupportedMethodsIsMutable();
+        super.addAll(values, supportedMethods_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder clearSupportedMethods() {
+        supportedMethods_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
         onChanged();
         return this;
       }
@@ -29578,136 +30069,138 @@ public final class UserProtos {
       "tControl.proto\032\025ExecutionProtos.proto\"&\n" +
       "\010Property\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"9\n" +
       "\016UserProperties\022\'\n\nproperties\030\001 \003(\0132\023.ex" +
-      "ec.user.Property\"\210\001\n\020RpcEndpointInfos\022\014\n" +
+      "ec.user.Property\"\267\001\n\020RpcEndpointInfos\022\014\n" +
       "\004name\030\001 \001(\t\022\017\n\007version\030\002 \001(\t\022\024\n\014majorVer" +
       "sion\030\003 \001(\r\022\024\n\014minorVersion\030\004 \001(\r\022\024\n\014patc" +
-      "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\375\002\n\022" +
-      "UserToBitHandshake\022.\n\007channel\030\001 \001(\0162\027.ex",
-      "ec.shared.RpcChannel:\004USER\022\031\n\021support_li" +
-      "stening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\0221\n\013cr" +
-      "edentials\030\004 \001(\0132\034.exec.shared.UserCreden" +
-      "tials\022-\n\nproperties\030\005 \001(\0132\031.exec.user.Us" +
-      "erProperties\022$\n\025support_complex_types\030\006 " +
-      "\001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010:\005fal" +
-      "se\0221\n\014client_infos\030\010 \001(\0132\033.exec.user.Rpc" +
-      "EndpointInfos\022,\n\014sasl_support\030\t \001(\0162\026.ex" +
-      "ec.user.SaslSupport\"S\n\016RequestResults\022&\n" +
-      "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n",
-      "\021maximum_responses\030\002 \001(\005\"g\n\025GetQueryPlan" +
-      "Fragments\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026" +
-      ".exec.shared.QueryType\022\031\n\nsplit_plan\030\003 \001" +
-      "(\010:\005false\"\316\001\n\022QueryPlanFragments\0223\n\006stat" +
-      "us\030\001 \002(\0162#.exec.shared.QueryResult.Query" +
-      "State\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Qu" +
-      "eryId\0221\n\tfragments\030\003 \003(\0132\036.exec.bit.cont" +
-      "rol.PlanFragment\022(\n\005error\030\004 \001(\0132\031.exec.s" +
-      "hared.DrillPBError\"\321\001\n\022BitToUserHandshak" +
-      "e\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032",
-      ".exec.user.HandshakeStatus\022\017\n\007errorId\030\004 " +
-      "\001(\t\022\024\n\014errorMessage\030\005 \001(\t\0221\n\014server_info" +
-      "s\030\006 \001(\0132\033.exec.user.RpcEndpointInfos\022 \n\030" +
-      "authenticationMechanisms\030\007 \003(\t\"-\n\nLikeFi" +
-      "lter\022\017\n\007pattern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n" +
-      "\016GetCatalogsReq\0222\n\023catalog_name_filter\030\001" +
-      " \001(\0132\025.exec.user.LikeFilter\"M\n\017CatalogMe" +
-      "tadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013descript" +
-      "ion\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalo" +
-      "gsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Reque",
-      "stStatus\022,\n\010catalogs\030\002 \003(\0132\032.exec.user.C" +
-      "atalogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sha" +
-      "red.DrillPBError\"v\n\rGetSchemasReq\0222\n\023cat" +
-      "alog_name_filter\030\001 \001(\0132\025.exec.user.LikeF" +
-      "ilter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec" +
-      ".user.LikeFilter\"i\n\016SchemaMetadata\022\024\n\014ca" +
-      "talog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n" +
-      "\005owner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 " +
-      "\001(\t\"\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(\0162\030" +
-      ".exec.user.RequestStatus\022*\n\007schemas\030\002 \003(",
-      "\0132\031.exec.user.SchemaMetadata\022(\n\005error\030\003 " +
-      "\001(\0132\031.exec.shared.DrillPBError\"\302\001\n\014GetTa" +
-      "blesReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.e" +
+      "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\022\023\n\013b" +
+      "uildNumber\030\007 \001(\r\022\030\n\020versionQualifier\030\010 \001",
+      "(\t\"\375\002\n\022UserToBitHandshake\022.\n\007channel\030\001 \001" +
+      "(\0162\027.exec.shared.RpcChannel:\004USER\022\031\n\021sup" +
+      "port_listening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(" +
+      "\005\0221\n\013credentials\030\004 \001(\0132\034.exec.shared.Use" +
+      "rCredentials\022-\n\nproperties\030\005 \001(\0132\031.exec." +
+      "user.UserProperties\022$\n\025support_complex_t" +
+      "ypes\030\006 \001(\010:\005false\022\036\n\017support_timeout\030\007 \001" +
+      "(\010:\005false\0221\n\014client_infos\030\010 \001(\0132\033.exec.u" +
+      "ser.RpcEndpointInfos\022,\n\014sasl_support\030\t \001" +
+      "(\0162\026.exec.user.SaslSupport\"S\n\016RequestRes",
+      "ults\022&\n\010query_id\030\001 \001(\0132\024.exec.shared.Que" +
+      "ryId\022\031\n\021maximum_responses\030\002 \001(\005\"g\n\025GetQu" +
+      "eryPlanFragments\022\r\n\005query\030\001 \002(\t\022$\n\004type\030" +
+      "\002 \001(\0162\026.exec.shared.QueryType\022\031\n\nsplit_p" +
+      "lan\030\003 \001(\010:\005false\"\316\001\n\022QueryPlanFragments\022" +
+      "3\n\006status\030\001 \002(\0162#.exec.shared.QueryResul" +
+      "t.QueryState\022&\n\010query_id\030\002 \001(\0132\024.exec.sh" +
+      "ared.QueryId\0221\n\tfragments\030\003 \003(\0132\036.exec.b" +
+      "it.control.PlanFragment\022(\n\005error\030\004 \001(\0132\031" +
+      ".exec.shared.DrillPBError\"\200\002\n\022BitToUserH",
+      "andshake\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006status\030" +
+      "\003 \001(\0162\032.exec.user.HandshakeStatus\022\017\n\007err" +
+      "orId\030\004 \001(\t\022\024\n\014errorMessage\030\005 \001(\t\0221\n\014serv" +
+      "er_infos\030\006 \001(\0132\033.exec.user.RpcEndpointIn" +
+      "fos\022 \n\030authenticationMechanisms\030\007 \003(\t\022-\n" +
+      "\021supported_methods\030\010 \003(\0162\022.exec.user.Rpc" +
+      "Type\"-\n\nLikeFilter\022\017\n\007pattern\030\001 \001(\t\022\016\n\006e" +
+      "scape\030\002 \001(\t\"D\n\016GetCatalogsReq\0222\n\023catalog" +
+      "_name_filter\030\001 \001(\0132\025.exec.user.LikeFilte" +
+      "r\"M\n\017CatalogMetadata\022\024\n\014catalog_name\030\001 \001",
+      "(\t\022\023\n\013description\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t" +
+      "\"\223\001\n\017GetCatalogsResp\022(\n\006status\030\001 \001(\0162\030.e" +
+      "xec.user.RequestStatus\022,\n\010catalogs\030\002 \003(\013" +
+      "2\032.exec.user.CatalogMetadata\022(\n\005error\030\003 " +
+      "\001(\0132\031.exec.shared.DrillPBError\"v\n\rGetSch" +
+      "emasReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.e" +
       "xec.user.LikeFilter\0221\n\022schema_name_filte" +
-      "r\030\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021table_" +
-      "name_filter\030\003 \001(\0132\025.exec.user.LikeFilter" +
-      "\022\031\n\021table_type_filter\030\004 \003(\t\"\\\n\rTableMeta" +
-      "data\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_nam" +
-      "e\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(" +
-      "\t\"\215\001\n\rGetTablesResp\022(\n\006status\030\001 \001(\0162\030.ex",
-      "ec.user.RequestStatus\022(\n\006tables\030\002 \003(\0132\030." +
-      "exec.user.TableMetadata\022(\n\005error\030\003 \001(\0132\031" +
-      ".exec.shared.DrillPBError\"\333\001\n\rGetColumns" +
-      "Req\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec." +
-      "user.LikeFilter\0221\n\022schema_name_filter\030\002 " +
-      "\001(\0132\025.exec.user.LikeFilter\0220\n\021table_name" +
-      "_filter\030\003 \001(\0132\025.exec.user.LikeFilter\0221\n\022" +
-      "column_name_filter\030\004 \001(\0132\025.exec.user.Lik" +
-      "eFilter\"\251\003\n\016ColumnMetadata\022\024\n\014catalog_na" +
-      "me\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_n",
-      "ame\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\030\n\020ordina" +
-      "l_position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022" +
-      "\023\n\013is_nullable\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022" +
-      "\027\n\017char_max_length\030\t \001(\005\022\031\n\021char_octet_l" +
-      "ength\030\n \001(\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037" +
-      "\n\027numeric_precision_radix\030\014 \001(\005\022\025\n\rnumer" +
-      "ic_scale\030\r \001(\005\022\033\n\023date_time_precision\030\016 " +
-      "\001(\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022interval_p" +
-      "recision\030\020 \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016" +
-      "GetColumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.us",
-      "er.RequestStatus\022*\n\007columns\030\002 \003(\0132\031.exec" +
-      ".user.ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.ex" +
-      "ec.shared.DrillPBError\"/\n\032CreatePrepared" +
-      "StatementReq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024Resu" +
-      "ltColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023" +
-      "\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022" +
-      "\023\n\013column_name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\td" +
-      "ata_type\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tp" +
-      "recision\030\010 \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030" +
-      "\n \001(\010\022\024\n\014display_size\030\013 \001(\005\022\022\n\nis_aliase",
-      "d\030\014 \001(\010\0225\n\rsearchability\030\r \001(\0162\036.exec.us" +
-      "er.ColumnSearchability\0223\n\014updatability\030\016" +
-      " \001(\0162\035.exec.user.ColumnUpdatability\022\026\n\016a" +
-      "uto_increment\030\017 \001(\010\022\030\n\020case_sensitivity\030" +
-      "\020 \001(\010\022\020\n\010sortable\030\021 \001(\010\022\022\n\nclass_name\030\022 " +
-      "\001(\t\022\023\n\013is_currency\030\024 \001(\010\".\n\027PreparedStat" +
-      "ementHandle\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021Pre" +
-      "paredStatement\0220\n\007columns\030\001 \003(\0132\037.exec.u" +
-      "ser.ResultColumnMetadata\0229\n\rserver_handl" +
-      "e\030\002 \001(\0132\".exec.user.PreparedStatementHan",
-      "dle\"\253\001\n\033CreatePreparedStatementResp\022(\n\006s" +
-      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\0228\n" +
-      "\022prepared_statement\030\002 \001(\0132\034.exec.user.Pr" +
-      "eparedStatement\022(\n\005error\030\003 \001(\0132\031.exec.sh" +
-      "ared.DrillPBError\"\353\001\n\010RunQuery\0221\n\014result" +
-      "s_mode\030\001 \001(\0162\033.exec.user.QueryResultsMod" +
-      "e\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022" +
-      "\014\n\004plan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec." +
-      "bit.control.PlanFragment\022E\n\031prepared_sta" +
-      "tement_handle\030\005 \001(\0132\".exec.user.Prepared",
-      "StatementHandle*\332\003\n\007RpcType\022\r\n\tHANDSHAKE" +
-      "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022" +
-      "\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027" +
-      "\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLA" +
-      "N_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_S" +
-      "CHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020" +
-      "\021\022\035\n\031CREATE_PREPARED_STATEMENT\020\026\022\016\n\nQUER" +
-      "Y_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN" +
-      "_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022" +
-      "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA",
-      "TEMENT\020\027\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP" +
-      "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SA" +
-      "SL_MESSAGE\020\030*6\n\013SaslSupport\022\030\n\024UNKNOWN_S" +
-      "ASL_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001*#\n\020QueryRes" +
-      "ultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017HandshakeSt" +
-      "atus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATC" +
-      "H\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020" +
-      "\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatus\022\022\n" +
-      "\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n" +
-      "\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n\025UNK",
-      "NOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002" +
-      "\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdatabil" +
-      "ity\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREAD_ON" +
-      "LY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org.apache.drill.e" +
-      "xec.protoB\nUserProtosH\001"
+      "r\030\002 \001(\0132\025.exec.user.LikeFilter\"i\n\016Schema" +
+      "Metadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema" +
+      "_name\030\002 \001(\t\022\r\n\005owner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t",
+      "\022\017\n\007mutable\030\005 \001(\t\"\220\001\n\016GetSchemasResp\022(\n\006" +
+      "status\030\001 \001(\0162\030.exec.user.RequestStatus\022*" +
+      "\n\007schemas\030\002 \003(\0132\031.exec.user.SchemaMetada" +
+      "ta\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPBE" +
+      "rror\"\302\001\n\014GetTablesReq\0222\n\023catalog_name_fi" +
+      "lter\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022sch" +
+      "ema_name_filter\030\002 \001(\0132\025.exec.user.LikeFi" +
+      "lter\0220\n\021table_name_filter\030\003 \001(\0132\025.exec.u" +
+      "ser.LikeFilter\022\031\n\021table_type_filter\030\004 \003(" +
+      "\t\"\\\n\rTableMetadata\022\024\n\014catalog_name\030\001 \001(\t",
+      "\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(" +
+      "\t\022\014\n\004type\030\004 \001(\t\"\215\001\n\rGetTablesResp\022(\n\006sta" +
+      "tus\030\001 \001(\0162\030.exec.user.RequestStatus\022(\n\006t" +
+      "ables\030\002 \003(\0132\030.exec.user.TableMetadata\022(\n" +
+      "\005error\030\003 \001(\0132\031.exec.shared.DrillPBError\"" +
+      "\333\001\n\rGetColumnsReq\0222\n\023catalog_name_filter" +
+      "\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022schema_" +
+      "name_filter\030\002 \001(\0132\025.exec.user.LikeFilter" +
+      "\0220\n\021table_name_filter\030\003 \001(\0132\025.exec.user." +
+      "LikeFilter\0221\n\022column_name_filter\030\004 \001(\0132\025",
+      ".exec.user.LikeFilter\"\251\003\n\016ColumnMetadata" +
+      "\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 " +
+      "\001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_name\030\004" +
+      " \001(\t\022\030\n\020ordinal_position\030\005 \001(\005\022\025\n\rdefaul" +
+      "t_value\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tda" +
+      "ta_type\030\010 \001(\t\022\027\n\017char_max_length\030\t \001(\005\022\031" +
+      "\n\021char_octet_length\030\n \001(\005\022\031\n\021numeric_pre" +
+      "cision\030\013 \001(\005\022\037\n\027numeric_precision_radix\030" +
+      "\014 \001(\005\022\025\n\rnumeric_scale\030\r \001(\005\022\033\n\023date_tim" +
+      "e_precision\030\016 \001(\005\022\025\n\rinterval_type\030\017 \001(\t",
+      "\022\032\n\022interval_precision\030\020 \001(\005\022\023\n\013column_s" +
+      "ize\030\021 \001(\005\"\220\001\n\016GetColumnsResp\022(\n\006status\030\001" +
+      " \001(\0162\030.exec.user.RequestStatus\022*\n\007column" +
+      "s\030\002 \003(\0132\031.exec.user.ColumnMetadata\022(\n\005er" +
+      "ror\030\003 \001(\0132\031.exec.shared.DrillPBError\"/\n\032" +
+      "CreatePreparedStatementReq\022\021\n\tsql_query\030" +
+      "\001 \001(\t\"\326\003\n\024ResultColumnMetadata\022\024\n\014catalo" +
+      "g_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntab" +
+      "le_name\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\r\n\005la" +
+      "bel\030\005 \001(\t\022\021\n\tdata_type\030\006 \001(\t\022\023\n\013is_nulla",
+      "ble\030\007 \001(\010\022\021\n\tprecision\030\010 \001(\005\022\r\n\005scale\030\t " +
+      "\001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014display_size\030\013 \001(" +
+      "\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n\rsearchability\030\r" +
+      " \001(\0162\036.exec.user.ColumnSearchability\0223\n\014" +
+      "updatability\030\016 \001(\0162\035.exec.user.ColumnUpd" +
+      "atability\022\026\n\016auto_increment\030\017 \001(\010\022\030\n\020cas" +
+      "e_sensitivity\030\020 \001(\010\022\020\n\010sortable\030\021 \001(\010\022\022\n" +
+      "\nclass_name\030\022 \001(\t\022\023\n\013is_currency\030\024 \001(\010\"." +
+      "\n\027PreparedStatementHandle\022\023\n\013server_info" +
+      "\030\001 \001(\014\"\200\001\n\021PreparedStatement\0220\n\007columns\030",
+      "\001 \003(\0132\037.exec.user.ResultColumnMetadata\0229" +
+      "\n\rserver_handle\030\002 \001(\0132\".exec.user.Prepar" +
+      "edStatementHandle\"\253\001\n\033CreatePreparedStat" +
+      "ementResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re" +
+      "questStatus\0228\n\022prepared_statement\030\002 \001(\0132" +
+      "\034.exec.user.PreparedStatement\022(\n\005error\030\003" +
+      " \001(\0132\031.exec.shared.DrillPBError\"\353\001\n\010RunQ" +
+      "uery\0221\n\014results_mode\030\001 \001(\0162\033.exec.user.Q" +
+      "ueryResultsMode\022$\n\004type\030\002 \001(\0162\026.exec.sha" +
+      "red.QueryType\022\014\n\004plan\030\003 \001(\t\0221\n\tfragments",
+      "\030\004 \003(\0132\036.exec.bit.control.PlanFragment\022E" +
+      "\n\031prepared_statement_handle\030\005 \001(\0132\".exec" +
+      ".user.PreparedStatementHandle*\332\003\n\007RpcTyp" +
+      "e\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r" +
+      "\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUE" +
+      "ST_RESULTS\020\005\022\027\n\023RESUME_PAUSED_QUERY\020\013\022\034\n" +
+      "\030GET_QUERY_PLAN_FRAGMENTS\020\014\022\020\n\014GET_CATAL" +
+      "OGS\020\016\022\017\n\013GET_SCHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017" +
+      "\n\013GET_COLUMNS\020\021\022\035\n\031CREATE_PREPARED_STATE" +
+      "MENT\020\026\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007",
+      "\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022" +
+      "\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026" +
+      "\n\022PREPARED_STATEMENT\020\027\022\026\n\022REQ_META_FUNCT" +
+      "IONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUERY_" +
+      "RESULT\020\n\022\020\n\014SASL_MESSAGE\020\030*6\n\013SaslSuppor" +
+      "t\022\030\n\024UNKNOWN_SASL_SUPPORT\020\000\022\r\n\tSASL_AUTH" +
+      "\020\001*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001*" +
+      "q\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_V" +
+      "ERSION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UN" +
+      "KNOWN_FAILURE\020\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRe",
+      "questStatus\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022" +
+      "\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearch" +
+      "ability\022\031\n\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NO" +
+      "NE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022C" +
+      "olumnUpdatability\022\030\n\024UNKNOWN_UPDATABILIT" +
+      "Y\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org." +
+      "apache.drill.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -29731,7 +30224,7 @@ public final class UserProtos {
           internal_static_exec_user_RpcEndpointInfos_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_RpcEndpointInfos_descriptor,
-              new java.lang.String[] { "Name", "Version", "MajorVersion", "MinorVersion", "PatchVersion", "Application", });
+              new java.lang.String[] { "Name", "Version", "MajorVersion", "MinorVersion", "PatchVersion", "Application", "BuildNumber", "VersionQualifier", });
           internal_static_exec_user_UserToBitHandshake_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
@@ -29761,7 +30254,7 @@ public final class UserProtos {
           internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", "AuthenticationMechanisms", });
+              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", "AuthenticationMechanisms", "SupportedMethods", });
           internal_static_exec_user_LikeFilter_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_exec_user_LikeFilter_fieldAccessorTable = new

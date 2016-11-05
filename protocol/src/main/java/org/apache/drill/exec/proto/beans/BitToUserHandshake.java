@@ -55,6 +55,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     private String errorMessage;
     private RpcEndpointInfos serverInfos;
     private List<String> authenticationMechanisms;
+    private List<RpcType> supportedMethods;
 
     public BitToUserHandshake()
     {
@@ -141,6 +142,19 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         return this;
     }
 
+    // supportedMethods
+
+    public List<RpcType> getSupportedMethodsList()
+    {
+        return supportedMethods;
+    }
+
+    public BitToUserHandshake setSupportedMethodsList(List<RpcType> supportedMethods)
+    {
+        this.supportedMethods = supportedMethods;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -216,6 +230,11 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                         message.authenticationMechanisms = new ArrayList<String>();
                     message.authenticationMechanisms.add(input.readString());
                     break;
+                case 8:
+                    if(message.supportedMethods == null)
+                        message.supportedMethods = new ArrayList<RpcType>();
+                    message.supportedMethods.add(RpcType.valueOf(input.readEnum()));
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -249,6 +268,15 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                     output.writeString(7, authenticationMechanisms, true);
             }
         }
+
+        if(message.supportedMethods != null)
+        {
+            for(RpcType supportedMethods : message.supportedMethods)
+            {
+                if(supportedMethods != null)
+                    output.writeEnum(8, supportedMethods.number, true);
+            }
+        }
     }
 
     public String getFieldName(int number)
@@ -261,6 +289,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
             case 5: return "errorMessage";
             case 6: return "serverInfos";
             case 7: return "authenticationMechanisms";
+            case 8: return "supportedMethods";
             default: return null;
         }
     }
@@ -280,6 +309,7 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         __fieldMap.put("errorMessage", 5);
         __fieldMap.put("serverInfos", 6);
         __fieldMap.put("authenticationMechanisms", 7);
+        __fieldMap.put("supportedMethods", 8);
     }
     
 }

@@ -23,15 +23,13 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 
-import com.google.common.base.Strings;
-import io.netty.channel.EventLoopGroup;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -39,8 +37,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.DrillAutoCloseables;
-import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.Version;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -78,19 +77,22 @@ import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.TransportCheck;
-import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.rpc.user.UserRpcUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.annotations.VisibleForTesting;
-
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
+
+import io.netty.channel.EventLoopGroup;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms
@@ -475,9 +477,45 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    *
    * @return the server informations, or null if not connected or if the server
    *         doesn't provide the information
+   * @deprecated use {@code DrillClient#getServerVersion()}
    */
+  @Deprecated
   public RpcEndpointInfos getServerInfos() {
     return client != null ? client.getServerInfos() : null;
+  }
+
+  /**
+   * Return the server name. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the name information.
+   *
+   * @return the server name, or null if not connected or if the server
+   *         doesn't provide the name
+   * @return
+   */
+  public String getServerName() {
+    return (client != null && client.getServerInfos() != null) ? client.getServerInfos().getName() : null;
+  }
+
+  /**
+   * Return the server version. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the version information.
+   *
+   * @return the server version, or null if not connected or if the server
+   *         doesn't provide the version
+   * @return
+   */
+  public Version getServerVersion() {
+    return (client != null && client.getServerInfos() != null) ? UserRpcUtils.getVersion(client.getServerInfos()) : null;
+  }
+  /**
+   * Returns the list of methods supported by the server based on its advertised information.
+   *
+   * @return a immutable set of capabilities
+   */
+  public Set<ServerMethod> getSupportedMethods() {
+    return client != null ? ServerMethod.getSupportedMethods(client.getSupportedMethods(), client.getServerInfos()) : null;
   }
 
   /**
