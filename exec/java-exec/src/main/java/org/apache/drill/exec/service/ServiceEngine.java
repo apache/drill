@@ -144,9 +144,9 @@ public class ServiceEngine implements AutoCloseable {
     int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
     String address = null;
     if (config.hasPath(ExecConstants.BIT_ADVERTISED_HOST)) {
-        address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
-    } else {
         address = config.getString(ExecConstants.BIT_ADVERTISED_HOST);
+    } else {
+        address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
     }
     checkLoopbackAddress(address);
 
