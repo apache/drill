@@ -49,7 +49,7 @@ public interface ExecConstants {
   String USER_RPC_TIMEOUT = "drill.exec.rpc.user.timeout";
   String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
   String USE_IP_ADDRESS = "drill.exec.rpc.use.ip";
-  String BIT_ADVERTISED_HOST = "drill.exec.rpc.bit.advertised.host";
+  String BIT_ADVERTISED_HOST = "drill.exec.rpc.bit.advertised-host";
   String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
