@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -64,10 +66,12 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
@@ -437,6 +441,11 @@ public class Metadata {
         length += col.getTotalSize();
       }
 
+      // DRILL-5009: Skip the RowGroup if it is empty
+      // Note we still read the schema even if there are no values in the RowGroup
+      if (rowGroup.getRowCount() == 0) {
+        continue;
+      }
       RowGroupMetadata_v3 rowGroupMeta =
           new RowGroupMetadata_v3(rowGroup.getStartingPos(), length, rowGroup.getRowCount(),
               getHostAffinity(file, rowGroup.getStartingPos(), length), columnMetadataList);
@@ -566,6 +575,19 @@ public class Metadata {
             (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
         newMetadata = true;
       }
+
+      // DRILL-5009: Remove the RowGroup if it is empty
+      List<? extends ParquetFileMetadata> files = parquetTableMetadata.getFiles();
+      for (ParquetFileMetadata file : files) {
+        List<? extends RowGroupMetadata> rowGroups = file.getRowGroups();
+        for (Iterator<? extends RowGroupMetadata> iter = rowGroups.iterator(); iter.hasNext(); ) {
+          RowGroupMetadata r = iter.next();
+          if (r.getRowCount() == 0) {
+            iter.remove();
+          }
+        }
+      }
+
     }
 
     if (newMetadata && metaContext != null) {
