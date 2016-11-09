@@ -143,11 +143,10 @@ public class ServiceEngine implements AutoCloseable {
   private String getHostName() throws UnknownHostException{
     // DRILL_HOST_NAME sets custom host name.  See drill-env.sh for details.
     String customHost = System.getenv("DRILL_HOST_NAME");
-    if (customHost == null) {
-      return useIP ? InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
-    } else {
+    if (customHost != null) {
       return customHost;
     }
+    return useIP ? InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
   }
 
   public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException{
