@@ -44,6 +44,7 @@ public interface ExecConstants {
   String BIT_TIMEOUT = "drill.exec.bit.timeout" ;
   String SERVICE_NAME = "drill.exec.cluster-id";
   String INITIAL_BIT_PORT = "drill.exec.rpc.bit.server.port";
+  String INITIAL_DATA_PORT = "drill.exec.rpc.bit.server.dataport";
   String BIT_RPC_TIMEOUT = "drill.exec.rpc.bit.timeout";
   String INITIAL_USER_PORT = "drill.exec.rpc.user.server.port";
   String USER_RPC_TIMEOUT = "drill.exec.rpc.user.timeout";
