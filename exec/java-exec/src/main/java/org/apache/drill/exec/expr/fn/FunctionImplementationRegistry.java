@@ -157,7 +157,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     if (holder == null && retry) {
       if (optionManager != null && optionManager.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
         if (loadRemoteFunctions(version.get())) {
-          findDrillFunction(functionResolver, functionCall, false);
+          return findDrillFunction(functionResolver, functionCall, false);
         }
       }
     }
@@ -200,7 +200,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
     if (retry && optionManager != null && optionManager.getOption(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED).bool_val) {
       if (loadRemoteFunctions(version.get())) {
-        findExactMatchingDrillFunction(name, argTypes, returnType, false);
+        return findExactMatchingDrillFunction(name, argTypes, returnType, false);
       }
     }
     return null;
