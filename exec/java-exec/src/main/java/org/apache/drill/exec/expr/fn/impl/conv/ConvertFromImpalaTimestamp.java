@@ -28,29 +28,6 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 public class ConvertFromImpalaTimestamp {
 
 
-  @FunctionTemplate(name = "convert_fromTIMESTAMP_IMPALA_LOCALTIMEZONE", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class ImpalaTimestampConvertFromWithLocalTimezone implements DrillSimpleFunc {
-
-    @Param VarBinaryHolder in;
-    @Output TimeStampHolder out;
-
-
-    @Override
-    public void setup() { }
-
-    @Override
-    public void eval() {
-      org.apache.drill.exec.util.ByteBufUtil.checkBufferLength(in.buffer, in.start, in.end, 12);
-
-      in.buffer.readerIndex(in.start);
-      long nanosOfDay = in.buffer.readLong();
-      int julianDay = in.buffer.readInt();
-      long dateTime = (julianDay - org.apache.drill.exec.store.parquet.ParquetReaderUtility.JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) *
-          org.joda.time.DateTimeConstants.MILLIS_PER_DAY + (nanosOfDay / org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.NANOS_PER_MILLISECOND);
-      out.value = new org.joda.time.DateTime(dateTime, org.joda.time.chrono.JulianChronology.getInstance()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
-    }
-  }
-
   @FunctionTemplate(name = "convert_fromTIMESTAMP_IMPALA", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ImpalaTimestampConvertFrom implements DrillSimpleFunc {
 
@@ -68,8 +45,16 @@ public class ConvertFromImpalaTimestamp {
       in.buffer.readerIndex(in.start);
       long nanosOfDay = in.buffer.readLong();
       int julianDay = in.buffer.readInt();
-      out.value = (julianDay - org.apache.drill.exec.store.parquet.ParquetReaderUtility.JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) *
-          org.joda.time.DateTimeConstants.MILLIS_PER_DAY + (nanosOfDay / org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.NANOS_PER_MILLISECOND);
+      /* We use the same implementation as org.joda.time.DateTimeUtils.fromJulianDay but avoid rounding errors
+         Note we need to subtract half of a day because julian days are recorded as starting at noon.
+         From Joda :
+              public static final long fromJulianDay(double julianDay) {
+                484            double epochDay = julianDay - 2440587.5d;
+                485            return (long) (epochDay * 86400000d);
+                486        }
+      */
+      long dateTime = (julianDay - 2440588)*86400000L + (nanosOfDay / 1000000);
+      out.value = new org.joda.time.DateTime((long) dateTime, org.joda.time.chrono.JulianChronology.getInstance()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
     }
   }
 }
