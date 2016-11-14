@@ -68,7 +68,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   public static final ConvertHiveParquetScanToDrillParquetScan INSTANCE = new ConvertHiveParquetScanToDrillParquetScan();
 
   private static final DrillSqlOperator INT96_TO_TIMESTAMP =
-      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA_LOCALTIMEZONE", 1, true, false);
+      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA", 1, true, false);
 
   private static final DrillSqlOperator RTRIM = new DrillSqlOperator("RTRIM", 1, true, false);
 

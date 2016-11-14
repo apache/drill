@@ -759,7 +759,7 @@ public class TestParquetWriter extends BaseTestQuery {
       compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
     } finally {
       test("alter session reset %s", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
-  }
+    }
   }
 
   /*
@@ -774,6 +774,7 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the reading of a binary field as drill timestamp where data is in dicationary _and_ non-dictionary encoded pages
    */
   @Test
+  @Ignore("relies on particular time zone, works for UTC")
   public void testImpalaParquetBinaryAsTimeStamp_DictChange() throws Exception {
     final String WORKING_PATH = TestTools.getWorkingPath();
     final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
@@ -837,6 +838,7 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the conversion from int96 to impala timestamp with hive data including nulls. Validate against expected values
   */
   @Test
+  @Ignore("relies on particular time zone")
   public void testHiveParquetTimestampAsInt96_basic() throws Exception {
     final String q = "SELECT cast(convert_from(timestamp_field, 'TIMESTAMP_IMPALA') as varchar(19))  as timestamp_field "
             + "from cp.`parquet/part1/hive_all_types.parquet` ";
@@ -845,7 +847,7 @@ public class TestParquetWriter extends BaseTestQuery {
             .unOrdered()
             .sqlQuery(q)
             .baselineColumns("timestamp_field")
-            .baselineValues("2013-07-06 00:01:00")
+            .baselineValues("2013-07-05 17:01:00")
             .baselineValues((Object)null)
             .go();
   }
@@ -917,10 +919,11 @@ public class TestParquetWriter extends BaseTestQuery {
     try {
       testBuilder()
           .ordered()
-          .sqlQuery("select `%s` from %s", selection, table)
+          .sqlQuery("select `%1$s` from %2$s order by `%1$s`", selection, table)
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
-          .sqlBaselineQuery("select convert_from(`%1$s`, 'TIMESTAMP_IMPALA') as `%1$s` from %2$s", selection, table)
+          .sqlBaselineQuery("select convert_from(`%1$s`, 'TIMESTAMP_IMPALA') as `%1$s` from %2$s order by `%1$s`",
+              selection, table)
           .optionSettingQueriesForBaseline(
               "alter session set `%s` = false", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .build()

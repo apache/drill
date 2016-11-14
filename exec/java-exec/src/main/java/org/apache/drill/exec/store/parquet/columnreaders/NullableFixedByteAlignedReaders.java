@@ -110,7 +110,7 @@ public class NullableFixedByteAlignedReaders {
 
   /**
    * Class for reading parquet fixed binary type INT96, which is used for storing hive,
-   * impala timestamp values with nanoseconds precision (12 bytes). So it reads such values as a drill timestamp (8 bytes).
+   * impala timestamp values with nanoseconds precision (12 bytes). It reads such values as a drill timestamp (8 bytes).
    */
   static class NullableFixedBinaryAsTimeStampReader extends NullableFixedByteAlignedReader<NullableTimeStampVector> {
     /**
@@ -129,12 +129,12 @@ public class NullableFixedByteAlignedReaders {
       if (usingDictionary) {
         for (int i = 0; i < recordsToReadInThisPass; i++){
           Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue));
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
       } else {
         for (int i = 0; i < recordsToReadInThisPass; i++) {
           Binary binaryTimeStampValue = pageReader.valueReader.readBytes();
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue));
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
       }
       // The nanos precision is cut to millis. Therefore the length of single timestamp value is 8 bytes(s)

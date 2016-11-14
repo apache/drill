@@ -323,18 +323,28 @@ public class ParquetReaderUtility {
    * @param binaryTimeStampValue
    *          hive, impala timestamp values with nanoseconds precision
    *          are stored in parquet Binary as INT96 (12 constant bytes)
-   *
+   * @param retainLocalTimezone
+   *          parquet files don't keep local timeZone according to the
+   *          <a href="https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md#timestamp">Parquet spec</a>,
+   *          but some tools (hive, for example) retain local timezone for parquet files by default
+   *          Note: Impala doesn't retain local timezone by default
    * @return  Unix Timestamp - the number of milliseconds since January 1, 1970, 00:00:00 GMT
    *          represented by @param binaryTimeStampValue .
    */
-    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue) {
+    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue, boolean retainLocalTimezone) {
       // This method represents binaryTimeStampValue as ByteBuffer, where timestamp is stored as sum of
       // julian day number (32-bit) and nanos of day (64-bit)
       NanoTime nt = NanoTime.fromBinary(binaryTimeStampValue);
       int julianDay = nt.getJulianDay();
       long nanosOfDay = nt.getTimeOfDayNanos();
-      return (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
+      long dateTime = (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
           + nanosOfDay / NANOS_PER_MILLISECOND;
+      if (retainLocalTimezone) {
+        return new org.joda.time.DateTime(dateTime, org.joda.time.chrono.JulianChronology.getInstance())
+            .withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      } else {
+        return dateTime;
+      }
     }
   }
 }
