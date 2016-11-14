@@ -646,7 +646,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addBinary(Binary value) {
-      holder.value = getDateTimeValueFromBinary(value);
+      holder.value = getDateTimeValueFromBinary(value, true);
       writer.write(holder);
     }
   }

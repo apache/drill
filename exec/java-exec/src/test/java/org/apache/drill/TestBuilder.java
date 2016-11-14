@@ -14,12 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,6 @@ import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
@@ -45,6 +45,7 @@ import org.apache.drill.exec.util.Text;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import org.joda.time.DateTimeZone;
 
 public class TestBuilder {
 
@@ -664,5 +665,15 @@ public class TestBuilder {
       map.put(String.class.cast(keyValueSequence[i]), value);
     }
     return map;
+  }
+
+  /**
+   * Helper method for the timestamp values that depend on the local timezone
+   * @param value expected timestamp value in UTC
+   * @return timestamp value for the local timezone
+   */
+  public static Timestamp convertToLocalTimestamp(String value) {
+    long UTCTimestamp = Timestamp.valueOf(value).getTime();
+    return new Timestamp(DateTimeZone.getDefault().convertUTCToLocal(UTCTimestamp));
   }
 }

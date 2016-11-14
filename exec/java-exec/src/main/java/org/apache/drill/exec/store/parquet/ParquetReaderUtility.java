@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -41,6 +42,7 @@ import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
+import org.joda.time.DateTimeZone;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -323,18 +325,29 @@ public class ParquetReaderUtility {
    * @param binaryTimeStampValue
    *          hive, impala timestamp values with nanoseconds precision
    *          are stored in parquet Binary as INT96 (12 constant bytes)
-   *
-   * @return  Unix Timestamp - the number of milliseconds since January 1, 1970, 00:00:00 GMT
-   *          represented by @param binaryTimeStampValue .
+   * @param retainLocalTimezone
+   *          parquet files don't keep local timeZone according to the
+   *          <a href="https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md#timestamp">Parquet spec</a>,
+   *          but some tools (hive, for example) retain local timezone for parquet files by default
+   *          Note: Impala doesn't retain local timezone by default
+   * @return  Timestamp in milliseconds - the number of milliseconds since January 1, 1970, 00:00:00 GMT
+   *          represented by @param binaryTimeStampValue.
+   *          The nanos precision is cut to millis. Therefore the length of single timestamp value is
+   *          {@value NullableTimeStampHolder#WIDTH} bytes instead of 12 bytes.
    */
-    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue) {
+    public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue, boolean retainLocalTimezone) {
       // This method represents binaryTimeStampValue as ByteBuffer, where timestamp is stored as sum of
-      // julian day number (32-bit) and nanos of day (64-bit)
+      // julian day number (4 bytes) and nanos of day (8 bytes)
       NanoTime nt = NanoTime.fromBinary(binaryTimeStampValue);
       int julianDay = nt.getJulianDay();
       long nanosOfDay = nt.getTimeOfDayNanos();
-      return (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
+      long dateTime = (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
           + nanosOfDay / NANOS_PER_MILLISECOND;
+      if (retainLocalTimezone) {
+        return DateTimeZone.getDefault().convertUTCToLocal(dateTime);
+      } else {
+        return dateTime;
+      }
     }
   }
 }
