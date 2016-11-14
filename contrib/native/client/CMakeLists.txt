@@ -88,19 +88,28 @@ if(MSVC)
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_MULTITHREADED ON)
     set(Boost_USE_STATIC_RUNTIME OFF)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    #    To build a production version, the macos build must use a shaded version
+    #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
+    #    See the instructions in the readme for the mac and rebuild boost. Then
+    #    uncomment the line below to build
+    #    set(Boost_NAMESPACE drill_boost)
 else()
     set(Boost_USE_STATIC_LIBS OFF)
     set(Boost_USE_MULTITHREADED ON)
-    set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
 find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
 include_directories(${Boost_INCLUDE_DIRS})
 
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_EXE_LINKER_FLAGS "-lrt -lpthread")
     set(CMAKE_CXX_FLAGS "-fPIC")
 endif()
+
 if(MSVC)
     set(CMAKE_CXX_FLAGS "/EHsc")
 endif()
