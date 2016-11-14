@@ -53,6 +53,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 
 import com.google.common.collect.Maps;
 
@@ -67,8 +68,8 @@ public class ScanBatch implements CloseableRecordBatch {
   private final VectorContainer container = new VectorContainer();
 
   /** Fields' value vectors indexed by fields' keys. */
-  private final Map<String, ValueVector> fieldVectorMap =
-      Maps.newHashMap();
+  private final CaseInsensitiveMap<ValueVector> fieldVectorMap =
+          CaseInsensitiveMap.newHashMap();
 
   private int recordCount;
   private final FragmentContext context;
