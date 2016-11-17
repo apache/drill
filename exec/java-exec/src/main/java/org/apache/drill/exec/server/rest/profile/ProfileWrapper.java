@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.OptionValue;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
@@ -150,7 +152,21 @@ public class ProfileWrapper {
     return sb.append("}").toString();
   }
 
-  public OptionList getOptionList() {
-    return options;
+  /**
+   * Generates sorted map with properties used to display on Web UI,
+   * where key is property name and value is property string value.
+   * When property value is null, it would be replaced with 'null',
+   * this is achieved using {@link String#valueOf(Object)} method.
+   * Options will be stored in ascending key order, sorted according
+   * to the natural order for the option name represented by {@link String}.
+   *
+   * @return map with properties names and string values
+   */
+  public Map<String, String> getOptions() {
+    final Map<String, String> map = Maps.newTreeMap();
+    for (OptionValue option : options) {
+      map.put(option.getName(), String.valueOf(option.getValue()));
+    }
+    return map;
   }
 }
