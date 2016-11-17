@@ -287,7 +287,8 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
               Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 new DateTime(((NullableTimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
                 new DateTime(((TimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null);
-              return rexBuilder.makeTimestampLiteral(value, 0);
+              return rexBuilder.makeLiteral(value,
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIMESTAMP, newCall.getType().isNullable()), false);
             }
             case INTERVALYEAR: {
               BigDecimal value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
