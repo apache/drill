@@ -1,6 +1,6 @@
 ---
 title: "Tutorial: Develop a Simple Function"
-date:  
+date: 2016-11-18 21:59:16 UTC
 parent: "Develop Custom Functions"
 ---
 
@@ -218,9 +218,11 @@ Maven generates two JAR files:
 * The default jar with the classes and resources (drill-simple-mask-1.0.jar)  
 * A second jar with the sources (drill-simple-mask-1.0-sources.jar)
 
-Copy the JAR files to the following location:
+Add the JAR files to Drill, by copying them to the following location:
 
-`<Drill installation directory>/jars/3rdparty` 
+`<Drill installation directory>/jars/3rdparty`  
+
+**Note:** This tutorial shows the manual method for adding JAR files to Drill, however as of Drill 1.9, the Dynamic UDF feature provides a new method for users.
 
 ## Test the New Function
 

@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2016-08-30 23:12:06 UTC
+date: 2016-11-18 21:59:17 UTC
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,15 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.  
+
+## What's New in Apache Drill 1.9  
+
+Drill 1.9 provides the following new features:  
+
+* Asynchronous Parquet reader
+* Parquet filter pushdown
+* Dynamic UDF support
+* HTTPD format plugin   
 
 ## What's New in Apache Drill 1.8  
 
