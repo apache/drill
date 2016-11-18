@@ -17,25 +17,19 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 
 public class TestExecutionExceptionsToClient extends JdbcTestBase {
 
@@ -51,136 +45,151 @@ public class TestExecutionExceptionsToClient extends JdbcTestBase {
     connection.close();
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteQueryThrowsRight1() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.executeQuery( "SELECT one case of syntax error" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.executeQuery("SELECT one case of syntax error");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteThrowsRight1() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.execute( "SELECT one case of syntax error" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.execute("SELECT one case of syntax error");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteUpdateThrowsRight1() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.executeUpdate( "SELECT one case of syntax error" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.executeUpdate("SELECT one case of syntax error");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteQueryThrowsRight2() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.executeQuery( "BAD QUERY 1" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.executeQuery("BAD QUERY 1");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteThrowsRight2() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.execute( "worse query 2" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.execute("worse query 2");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
-  @Test
+  @Test(expected = SQLException.class)
   public void testExecuteUpdateThrowsRight2() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.executeUpdate( "naughty, naughty query 3" );
-    }
-    catch ( SQLException e ) {
-      assertThat( "Null getCause(); missing expected wrapped exception",
-                  e.getCause(), notNullValue() );
+      statement.executeUpdate("naughty, naughty query 3");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
 
-      assertThat( "Unexpectedly wrapped another SQLException",
-                  e.getCause(), not( instanceOf( SQLException.class ) ) );
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
 
-      assertThat( "getCause() not UserRemoteException as expected",
-                  e.getCause(), instanceOf( UserRemoteException.class ) );
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat( "No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
-                  e.getMessage(), anyOf( startsWith( "SYSTEM ERROR" ),
-                                         startsWith( "PARSE ERROR" ) ) );
+      assertThat("No expected current \"SYSTEM ERROR\"/eventual \"PARSE ERROR\"",
+        e.getMessage(), anyOf(startsWith("SYSTEM ERROR"), startsWith("PARSE ERROR")));
+      throw e;
     }
   }
 
+  @Test(expected = SQLException.class)
+  public void testMaterializingError() throws Exception {
+    final Statement statement = connection.createStatement();
+    try {
+      statement.executeUpdate("select (res1 = 2016/09/22) res2 from (select (case when (false) then null else "
+        + "cast('2016/09/22' as date) end) res1 from (values(1)) foo) foobar");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
+
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
+
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
+
+      assertThat("No expected current \"PLAN ERROR\"",
+        e.getMessage(), startsWith("PLAN ERROR"));
+      throw e;
+    }
+  }
 }
