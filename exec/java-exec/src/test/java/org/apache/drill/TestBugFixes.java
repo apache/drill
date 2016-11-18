@@ -221,4 +221,14 @@ public class TestBugFixes extends BaseTestQuery {
             .baselineRecords(baseline)
             .go();
   }
+
+  @Test
+  public void testDRILL5051() throws Exception {
+    testBuilder()
+        .sqlQuery("select count(1) as cnt from (select l_orderkey from (select l_orderkey from cp.`tpch/lineitem.parquet` limit 2) limit 1 offset 1)")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(1L)
+        .go();
+  }
 }
