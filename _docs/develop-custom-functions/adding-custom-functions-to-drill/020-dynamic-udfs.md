@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 2016-11-11 23:35:34 UTC
+date: 
 parent: "Adding Custom Functions to Drill"
 ---
 

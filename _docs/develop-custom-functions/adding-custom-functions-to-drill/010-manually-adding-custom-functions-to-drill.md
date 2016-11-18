@@ -1,6 +1,6 @@
 ---
 title: "Manually Adding Custom Functions to Drill"
-date: 2016-10-04 23:35:34 UTC
+date: 
 parent: "Adding Custom Functions to Drill"
 ---
 
