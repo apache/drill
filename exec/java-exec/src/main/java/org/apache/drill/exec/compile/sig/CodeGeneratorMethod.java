@@ -82,7 +82,7 @@ public class CodeGeneratorMethod implements Iterable<CodeGeneratorArgument> {
 
   @Override
   public String toString() {
-    return "CodeGeneratorMethod [" + underlyingMethod.toGenericString() + "]";
+    return "CodeGeneratorMethod [" + ((underlyingMethod == null) ? "null" : underlyingMethod.toGenericString()) + "]";
   }
 
 }

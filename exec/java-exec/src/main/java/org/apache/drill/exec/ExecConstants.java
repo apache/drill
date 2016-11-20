@@ -310,7 +310,6 @@ public interface ExecConstants {
   OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY, true);
 
   String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
-  String MAX_LOADING_CACHE_SIZE_CONFIG = "drill.exec.compile.cache_max_size";
 
   String DRILL_SYS_FILE_SUFFIX = ".sys.drill";
 

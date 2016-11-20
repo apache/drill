@@ -89,33 +89,41 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     scanDecodeExecutor = context.getDrillbitContext().getScanDecodeExecutor();
   }
 
+  @Override
   public DrillBuf replace(DrillBuf old, int newSize) {
     return manager.replace(old, newSize);
   }
 
+  @Override
   public DrillBuf getManagedBuffer() {
     return manager.getManagedBuffer();
   }
 
+  @Override
   public DrillBuf getManagedBuffer(int size) {
     return manager.getManagedBuffer(size);
   }
 
   // Allow an operator to use the thread pool
+  @Override
   public ExecutorService getExecutor() {
     return executor;
   }
+  @Override
   public ExecutorService getScanExecutor() {
     return scanExecutor;
   }
+  @Override
   public ExecutorService getScanDecodeExecutor() {
     return scanDecodeExecutor;
   }
 
+  @Override
   public ExecutionControls getExecutionControls() {
     return executionControls;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     if (allocator == null) {
       throw new UnsupportedOperationException("Operator context does not have an allocator");
@@ -151,10 +159,12 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     closed = true;
   }
 
+  @Override
   public OperatorStats getStats() {
     return stats;
   }
 
+  @Override
   public <RESULT> ListenableFuture<RESULT> runCallableAs(final UserGroupInformation proxyUgi,
                                                          final Callable<RESULT> callable) {
     synchronized (this) {

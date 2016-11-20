@@ -20,6 +20,8 @@ package org.apache.drill.exec.compile.sig;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,6 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
     return new SignatureHolder(signature, innerClasses.toArray(new SignatureHolder[innerClasses.size()]));
   }
 
-
   private SignatureHolder(Class<?> signature, SignatureHolder[] childHolders) {
     this.childHolders = childHolders;
     this.signature = signature;
@@ -66,6 +67,16 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
       }
       methodHolders.add(new CodeGeneratorMethod(m));
     }
+
+    // Alphabetize methods to ensure generated code is comparable.
+    // Also eases debugging as the generated code contain different method
+    // order from run to run.
+
+    Collections.sort( methodHolders, new Comparator<CodeGeneratorMethod>( ) {
+      @Override
+      public int compare(CodeGeneratorMethod o1, CodeGeneratorMethod o2) {
+        return o1.getMethodName().compareTo( o2.getMethodName() );
+      } } );
 
     methods = new CodeGeneratorMethod[methodHolders.size()+1];
     for (int i =0; i < methodHolders.size(); i++) {
@@ -99,7 +110,6 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
     return methods.length;
   }
 
-
   public SignatureHolder[] getChildHolders() {
     return childHolders;
   }
@@ -114,9 +124,16 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
 
   @Override
   public String toString() {
+    StringBuilder buf = new StringBuilder( );
+    buf.append( "SignatureHolder [methods=" );
     final int maxLen = 10;
-    return "SignatureHolder [methods="
-        + (methods != null ? Arrays.asList(methods).subList(0, Math.min(methods.length, maxLen)) : null) + "]";
+    for ( int i = 0;  i < maxLen  &&  i < methods.length; i++ ) {
+      if ( i > 0 ) {
+        buf.append( ", \n" );
+      }
+      buf.append( methods[i] );
+    }
+    buf.append( "]" );
+    return buf.toString();
   }
-
 }
