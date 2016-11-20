@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BaseValueVector implements ValueVector {
-  private static final Logger logger = LoggerFactory.getLogger(BaseValueVector.class);
+//  private static final Logger logger = LoggerFactory.getLogger(BaseValueVector.class);
 
   public static final int MAX_ALLOCATION_SIZE = Integer.MAX_VALUE;
   public static final int INITIAL_VALUE_ALLOCATION = 4096;
@@ -101,6 +101,7 @@ public abstract class BaseValueVector implements ValueVector {
     public void generateTestData(int values) {}
 
     //TODO: consider making mutator stateless(if possible) on another issue.
+    @Override
     public void reset() {}
   }
 

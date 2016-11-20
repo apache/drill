@@ -299,14 +299,14 @@ public class PhysicalOpUnitTestBase extends ExecTest {
           result = new Delegate()
           {
             Object getImplementationClass(CodeGenerator gen) throws IOException, ClassTransformationException {
-              return compiler.getImplementationClass(gen);
+              return compiler.createInstance(gen);
             }
           };
           fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition, funcReg).getRoot()));
           result = new Delegate()
           {
             Object getImplementationClass(ClassGenerator gen) throws IOException, ClassTransformationException {
-              return compiler.getImplementationClass(gen.getCodeGenerator());
+              return compiler.createInstance(gen.getCodeGenerator());
             }
           };
         } catch (ClassTransformationException e) {

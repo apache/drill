@@ -60,6 +60,7 @@ public abstract class AbstractContainerVector implements ValueVector {
     }
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -102,6 +103,7 @@ public abstract class AbstractContainerVector implements ValueVector {
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected <T extends ValueVector> T typeify(ValueVector v, Class<T> clazz) {
     if (clazz.isAssignableFrom(v.getClass())) {
       return (T) v;

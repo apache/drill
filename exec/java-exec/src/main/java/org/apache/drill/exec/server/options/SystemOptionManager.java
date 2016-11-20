@@ -32,8 +32,8 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.compile.ClassCompilerSelector;
 import org.apache.drill.exec.compile.ClassTransformer;
-import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
@@ -145,9 +145,9 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
       ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
-      QueryClassLoader.JAVA_COMPILER_VALIDATOR,
-      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
-      QueryClassLoader.JAVA_COMPILER_DEBUG,
+      ClassCompilerSelector.JAVA_COMPILER_VALIDATOR,
+      ClassCompilerSelector.JAVA_COMPILER_JANINO_MAXSIZE,
+      ClassCompilerSelector.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,

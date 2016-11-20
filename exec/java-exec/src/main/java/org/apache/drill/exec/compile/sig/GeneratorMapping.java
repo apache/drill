@@ -21,6 +21,25 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * The code generator works with four conceptual methods which can
+ * have any actual names. This class identify which conceptual methods
+ * are in use and their actual names. Callers obtain the method
+ * names generically using the {@link BlockType} enum. There is,
+ * however, no way to check which methods are in use; the user of
+ * this method must already know this information from another
+ * source.
+ * <table>
+ * <tr><th>Conceptual Method</th>
+ *     <th>BlockType</th>
+ *     <th>Typical Drill Name</th></tr>
+ * <tr><td>setup</td><td>SETUP</td><td>doSetup</td></tr>
+ * <tr><td>eval</td><td>EVAL</td><td>doEval</td></tr>
+ * <tr><td>reset</td><td>RESET</td><td>?</td></tr>
+ * <tr><td>cleanup</td><td>CLEANUP</td><td>?</td></tr>
+ * </table>
+ */
+
 public class GeneratorMapping {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneratorMapping.class);
 

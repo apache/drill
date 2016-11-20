@@ -227,6 +227,7 @@ public class RepeatedListVector extends AbstractContainerVector
       this.delegate = delegate;
     }
 
+    @Override
     public void transfer() {
       delegate.transfer();
     }

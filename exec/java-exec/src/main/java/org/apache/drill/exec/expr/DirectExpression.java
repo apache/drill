@@ -20,17 +20,24 @@ package org.apache.drill.exec.expr;
 import com.sun.codemodel.JExpressionImpl;
 import com.sun.codemodel.JFormatter;
 
-public class DirectExpression extends JExpressionImpl{
+/**
+ * Encapsulates a Java expression, defined as anything that is
+ * valid in the following code:<br>
+ * <code>(<i>expr</i>)</code>
+ */
+
+public class DirectExpression extends JExpressionImpl {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectExpression.class);
 
-  final String source;
+  private final String source;
 
   private DirectExpression(final String source) {
     super();
     this.source = source;
   }
 
-  public void generate( JFormatter f ) {
+  @Override
+  public void generate(JFormatter f) {
     f.p('(').p(source).p(')');
   }
 
@@ -67,5 +74,4 @@ public class DirectExpression extends JExpressionImpl{
     }
     return true;
   }
-
 }

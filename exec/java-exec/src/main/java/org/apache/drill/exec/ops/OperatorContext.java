@@ -17,21 +17,21 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import io.netty.buffer.DrillBuf;
 
 public abstract class OperatorContext {
 

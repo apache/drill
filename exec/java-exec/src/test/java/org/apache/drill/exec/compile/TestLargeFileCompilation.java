@@ -107,7 +107,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   @Test
   public void testTEXT_WRITER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult("use dfs_test.tmp");
     testNoResult("alter session set `%s`='csv'", ExecConstants.OUTPUT_FORMAT_OPTION);
     testNoResult(LARGE_QUERY_WRITER, "wide_table_csv");
@@ -115,7 +115,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   @Test
   public void testPARQUET_WRITER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult("use dfs_test.tmp");
     testNoResult("alter session set `%s`='parquet'", ExecConstants.OUTPUT_FORMAT_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_WRITER, "wide_table_parquet");
@@ -123,31 +123,31 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   @Test
   public void testGROUP_BY() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_GROUP_BY);
   }
 
   @Test
   public void testEXTERNAL_SORT() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY);
   }
 
   @Test
   public void testTOP_N_SORT() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY_WITH_LIMIT);
   }
 
   @Test
   public void testFILTER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_FILTER);
   }
 
   @Test
   public void testProject() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION);
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_SELECT_LIST);
   }
 }

@@ -313,7 +313,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public <T> T getImplementationClass(final CodeGenerator<T> cg)
       throws ClassTransformationException, IOException {
-    return context.getCompiler().getImplementationClass(cg);
+    return context.getCompiler().createInstance(cg);
   }
 
   public <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
@@ -321,7 +321,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   }
 
   public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
-    return context.getCompiler().getImplementationClass(cg, instanceCount);
+    return context.getCompiler().createInstances(cg, instanceCount);
   }
 
   public AccountingUserConnection getUserDataTunnel() {

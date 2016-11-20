@@ -26,7 +26,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 
 public interface SingleBatchSorter {
   public void setup(FragmentContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException;
-  public void sort(SelectionVector2 vector2);
+  public void sort(SelectionVector2 vector2) throws SchemaChangeException;
 
   public static TemplateClassDefinition<SingleBatchSorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<SingleBatchSorter>(SingleBatchSorter.class, SingleBatchSorterTemplate.class);
 

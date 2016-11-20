@@ -21,12 +21,25 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 
+/**
+ * Defines a code generation "template" which consist of:
+ * <ul>
+ * <li>An interface that defines the generated class.</li>
+ * <li>A template class which implements the interface to provide
+ * "generic" methods that need not be generated.</li>
+ * <li>A signature that lists the methods and vector holders used
+ * by the template.</li>
+ * </ul>
+ *
+ * @param <T> The template interface
+ */
+
 public class TemplateClassDefinition<T>{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TemplateClassDefinition.class);
 
   private final Class<T> iface;
-  private final Class<?> template;
+  private final Class<? extends T> template;
   private final SignatureHolder signature;
   private static final AtomicLong classNumber = new AtomicLong(0);
 
@@ -41,7 +54,6 @@ public class TemplateClassDefinition<T>{
       logger.error("Failure while trying to build signature holder for signature. {}", template.getName(), ex);
     }
     this.signature = holder;
-
   }
 
   public long getNextClassNumber(){
@@ -52,6 +64,9 @@ public class TemplateClassDefinition<T>{
     return iface;
   }
 
+  public Class<? extends T> getTemplateClass() {
+    return template;
+  }
 
   public String getTemplateClassName() {
     return template.getName();
@@ -63,6 +78,14 @@ public class TemplateClassDefinition<T>{
 
   @Override
   public String toString() {
-    return "TemplateClassDefinition [template=" + template + ", signature=" + signature + "]";
+    StringBuilder buf = new StringBuilder();
+    buf.append("TemplateClassDefinition [interface=");
+    buf.append((iface == null) ? "null" : iface.getName());
+    buf.append(", template=");
+    buf.append((template == null) ? "null" : template.getName());
+    buf.append(", signature=\n");
+    buf.append(signature);
+    buf.append("]");
+    return buf.toString();
   }
 }
