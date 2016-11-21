@@ -99,7 +99,7 @@ Run query submitter from the command line
 
 2.5 Valgrind
 ------------
-  Valgrind is available only for MacOs 10.11 or earlier. Install valgrind using brew
+  Install valgrind using brew
   $> brew install valgrind
   $> valgrind --leak-check=yes querySubmitter query='select LINEITEM from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace
 

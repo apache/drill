@@ -19,7 +19,7 @@
 Building Boost for Drill on MacOs/Linux
 --------------------------------
 
-These instructions are using Boost version 1.60.0 which is recommended
+These instructions are using Boost version 1.60.0
 
 Assuming there is a BOOST_BUILD_DIR 
 
@@ -34,13 +34,16 @@ $ cd $BOOST_BUILD_DIR/drill_boost_1_60_0
 # the following builds a subset of boost without icu. You may need to add more modules to include icu. 
 # bcp documentation can be found here: http://www.boost.org/doc/libs/1_60_0/tools/bcp/doc/html/index.html
 
-$ $BOOST_BUILD_DIR/boost_1_60_0/dist/bin/bcp --namespace=drill_boost --namespace-alias --boost=$BOOST_BUILD_DIR/boost_1_60_0/ shared_ptr random context chrono date_time regex system timer thread asio smart_ptr bind config build regex config assign $BOOST_BUILD_DIR/drill_boost_1_60_0 
+$ $BOOST_BUILD_DIR/boost_1_60_0/dist/bin/bcp --namespace=drill_boost --namespace-alias --boost=$BOOST_BUILD_DIR/boost_1_60_0/ shared_ptr random context chrono date_time regex system timer thread asio smart_ptr bind config build regex config assign functional multiprecision $BOOST_BUILD_DIR/drill_boost_1_60_0 
 
 $ cd $BOOST_BUILD_DIR/drill_boost_1_60_0
 $ ./bootstrap.sh --prefix=$BOOST_BUILD_DIR/drill_boost_1_60_0/
 
 # change the variant to debug for a debug build
-$ ./b2 --build-dir=$BOOST_BUILD_DIR/drill_boost_1_60_0/build variant=release link=static threading=multi
+  # For linux 
+  $ ./b2 --build-dir=$BOOST_BUILD_DIR/drill_boost_1_60_0/build variant=release link=static threading=multi cxxflags="-fPIC"
+  # For MacOS
+  $ ./b2 --build-dir=$BOOST_BUILD_DIR/drill_boost_1_60_0/build variant=release link=static threading=multi 
 
 
 # To build the Drill client library , export the following to make sure boost is picked up correctly

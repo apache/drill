@@ -84,24 +84,14 @@ add_definitions("-DGIT_COMMIT_PROP=${GIT_COMMIT_PROP}")
 
 
 # Find Boost
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
 if(MSVC)
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_MULTITHREADED ON)
     set(Boost_USE_STATIC_RUNTIME OFF)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_MULTITHREADED ON)
-    #    To build a production version, the macos build must use a shaded version
-    #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
-    #    See the instructions in the readme for the mac and rebuild boost. Then
-    #    uncomment the line below to build
-    #    set(Boost_NAMESPACE drill_boost)
 else()
-    set(Boost_USE_STATIC_LIBS OFF)
-    set(Boost_USE_MULTITHREADED ON)
-    #    To build a production version, the macos build must use a shaded version
+    #    To build a production version, the linux/macos build must use a shaded version
     #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
-    #    See the instructions in the readme for  linux and rebuild boost. Then
+    #    See the instructions in the readme for linux/macos and rebuild boost. Then
     #    uncomment the line below to build
     #    set(Boost_NAMESPACE drill_boost)
 endif()
