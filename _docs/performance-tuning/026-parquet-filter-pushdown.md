@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2016-11-21 20:45:57 UTC
+date: 2016-11-21 21:25:59 UTC
 parent: "Performance Tuning"
 ---
 
