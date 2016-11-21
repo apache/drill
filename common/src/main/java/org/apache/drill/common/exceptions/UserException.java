@@ -38,6 +38,7 @@ import org.slf4j.Logger;
  * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType
  */
 public class UserException extends DrillRuntimeException {
+  private static final long serialVersionUID = -6720929331624621840L;
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserException.class);
 
   public static final String MEMORY_ERROR_MSG = "One or more nodes ran out of memory while executing the query.";
@@ -549,7 +550,15 @@ public class UserException extends DrillRuntimeException {
       if (isSystemError) {
         logger.error(newException.getMessage(), newException);
       } else {
-        logger.info("User Error Occurred", newException);
+        StringBuilder buf = new StringBuilder();
+        buf.append("User Error Occurred");
+        if (message != null) {
+          buf.append(": ").append(message);
+        }
+        if (cause != null) {
+          buf.append(" (").append(cause.getMessage()).append(")");
+        }
+        logger.info(buf.toString(), newException);
       }
 
       return newException;
