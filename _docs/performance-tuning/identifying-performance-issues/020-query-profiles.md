@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-date:  
+date: 2016-11-21 22:28:41 UTC
 parent: "Identifying Performance Issues"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Query Plans"
-date:  
+date: 2016-11-21 22:28:40 UTC
 parent: "Identifying Performance Issues"
 ---
 If you experience performance issues in Drill, you can typically identify the source of the issues in the query plans or profiles. This section describes the logical plan and physical plans.

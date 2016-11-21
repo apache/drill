@@ -1,6 +1,6 @@
 ---
 title: "Query Profile Column Descriptions"
-date:  
+date: 2016-11-21 22:28:41 UTC
 parent: "Performance Tuning Reference"
 --- 
 
