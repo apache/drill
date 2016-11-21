@@ -1,6 +1,6 @@
 ---
 title: "Develop Custom Functions Introduction"
-date: 2016-11-18 21:59:16 UTC
+date: 2016-11-21 19:18:04 UTC
 parent: "Develop Custom Functions"
 ---
 Drill provides a high performance Java API with interfaces that you can use to develop simple and aggregate custom functions. Custom functions are reusable SQL functions that you develop in Java to encapsulate code that processes column values during a query. 
@@ -27,4 +27,4 @@ separate aggregate value for each combination of values from the GROUP BY clause
 ## Development Process
 To develop custom functions for Drill, create a Java program that implements Drill’s [simple]({{site.baseurl}}/docs/developing-a-simple-function/) or [aggregate]({{site.baseurl}}/docs/developing-an-aggregate-function/) interface and then add your custom function(s) to Drill.  
   
-As of Drill 1.9, there are two methods for adding custom functions to Drill. Administrators can manually add custom functions to Drill, or users can issue the CREATE FUNCTION USING JAR command to register their customs functions. The CREATE FUNCTION USING JAR command is part of the Dynamic UDF feature which may require assistance from an administrator. 
+As of Drill 1.9, there are two methods for adding custom functions to Drill. Administrators can manually add custom functions to Drill, or users can issue the CREATE FUNCTION USING JAR command to register their custom functions. The CREATE FUNCTION USING JAR command is part of the [Dynamic UDF feature]({{site.baseurl}}/docs/dynamic-udfs/) which requires assistance from an administrator. 

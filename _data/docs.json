@@ -87,15 +87,100 @@
                     "url": "/docs/develop-custom-functions/"
                 }
             ], 
-            "children": [], 
-            "next_title": "Using Custom Functions in Queries", 
-            "next_url": "/docs/using-custom-functions-in-queries/", 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Adding Custom Functions to Drill", 
+                            "url": "/docs/adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Manually Adding Custom Functions to Drill", 
+                    "next_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                    "parent": "Adding Custom Functions to Drill", 
+                    "previous_title": "Adding Custom Functions to Drill", 
+                    "previous_url": "/docs/adding-custom-functions-to-drill/", 
+                    "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/009-adding-custom-functions-to-drill-introduction.md", 
+                    "title": "Adding Custom Functions to Drill Introduction", 
+                    "url": "/docs/adding-custom-functions-to-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Adding Custom Functions to Drill", 
+                            "url": "/docs/adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Dynamic UDFs", 
+                    "next_url": "/docs/dynamic-udfs/", 
+                    "parent": "Adding Custom Functions to Drill", 
+                    "previous_title": "Adding Custom Functions to Drill Introduction", 
+                    "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
+                    "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/010-manually-adding-custom-functions-to-drill.md", 
+                    "title": "Manually Adding Custom Functions to Drill", 
+                    "url": "/docs/manually-adding-custom-functions-to-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Adding Custom Functions to Drill", 
+                            "url": "/docs/adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Custom Functions in Queries", 
+                    "next_url": "/docs/using-custom-functions-in-queries/", 
+                    "parent": "Adding Custom Functions to Drill", 
+                    "previous_title": "Manually Adding Custom Functions to Drill", 
+                    "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                    "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
+                    "title": "Dynamic UDFs", 
+                    "url": "/docs/dynamic-udfs/"
+                }
+            ], 
+            "next_title": "Adding Custom Functions to Drill Introduction", 
+            "next_url": "/docs/adding-custom-functions-to-drill-introduction/", 
             "parent": "Develop Custom Functions", 
             "previous_title": "Developing an Aggregate Function", 
             "previous_url": "/docs/developing-an-aggregate-function/", 
             "relative_path": "_docs/develop-custom-functions/040-adding-custom-functions-to-drill.md", 
             "title": "Adding Custom Functions to Drill", 
             "url": "/docs/adding-custom-functions-to-drill/"
+        }, 
+        "Adding Custom Functions to Drill Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Adding Custom Functions to Drill", 
+                    "url": "/docs/adding-custom-functions-to-drill/"
+                }, 
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Manually Adding Custom Functions to Drill", 
+            "next_url": "/docs/manually-adding-custom-functions-to-drill/", 
+            "parent": "Adding Custom Functions to Drill", 
+            "previous_title": "Adding Custom Functions to Drill", 
+            "previous_url": "/docs/adding-custom-functions-to-drill/", 
+            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/009-adding-custom-functions-to-drill-introduction.md", 
+            "title": "Adding Custom Functions to Drill Introduction", 
+            "url": "/docs/adding-custom-functions-to-drill-introduction/"
         }, 
         "Aggregate Window Functions": {
             "breadcrumbs": [
@@ -456,11 +541,28 @@
             "next_title": "Apache Drill 1.7.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-7-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
+            "previous_title": "Apache Drill 1.9.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
             "relative_path": "_docs/rn/003-1.8.0-rn.md", 
             "title": "Apache Drill 1.8.0 Release Notes", 
             "url": "/docs/apache-drill-1-8-0-release-notes/"
+        }, 
+        "Apache Drill 1.9.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.8.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/002-1.9.0-rn.md", 
+            "title": "Apache Drill 1.9.0 Release Notes", 
+            "url": "/docs/apache-drill-1-9-0-release-notes/"
         }, 
         "Apache Drill Contribution Guidelines": {
             "breadcrumbs": [
@@ -618,6 +720,23 @@
             "relative_path": "_docs/architecture/010-architecture-introduction.md", 
             "title": "Architecture Introduction", 
             "url": "/docs/architecture-introduction/"
+        }, 
+        "Asynchronous Parquet Reader": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Optimizing Parquet Metadata Reading", 
+            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "How to Partition Data", 
+            "previous_url": "/docs/how-to-partition-data/", 
+            "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md", 
+            "title": "Asynchronous Parquet Reader", 
+            "url": "/docs/asynchronous-parquet-reader/"
         }, 
         "Browsing Data and Defining Views": {
             "breadcrumbs": [
@@ -2695,9 +2814,73 @@
                             "url": "/docs/develop-custom-functions/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Using Custom Functions in Queries", 
-                    "next_url": "/docs/using-custom-functions-in-queries/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Manually Adding Custom Functions to Drill", 
+                            "next_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Adding Custom Functions to Drill", 
+                            "previous_url": "/docs/adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/009-adding-custom-functions-to-drill-introduction.md", 
+                            "title": "Adding Custom Functions to Drill Introduction", 
+                            "url": "/docs/adding-custom-functions-to-drill-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Dynamic UDFs", 
+                            "next_url": "/docs/dynamic-udfs/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Adding Custom Functions to Drill Introduction", 
+                            "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/010-manually-adding-custom-functions-to-drill.md", 
+                            "title": "Manually Adding Custom Functions to Drill", 
+                            "url": "/docs/manually-adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Custom Functions in Queries", 
+                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Manually Adding Custom Functions to Drill", 
+                            "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
+                            "title": "Dynamic UDFs", 
+                            "url": "/docs/dynamic-udfs/"
+                        }
+                    ], 
+                    "next_title": "Adding Custom Functions to Drill Introduction", 
+                    "next_url": "/docs/adding-custom-functions-to-drill-introduction/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Developing an Aggregate Function", 
                     "previous_url": "/docs/developing-an-aggregate-function/", 
@@ -2716,8 +2899,8 @@
                     "next_title": "Custom Function Interfaces", 
                     "next_url": "/docs/custom-function-interfaces/", 
                     "parent": "Develop Custom Functions", 
-                    "previous_title": "Adding Custom Functions to Drill", 
-                    "previous_url": "/docs/adding-custom-functions-to-drill/", 
+                    "previous_title": "Dynamic UDFs", 
+                    "previous_url": "/docs/dynamic-udfs/", 
                     "relative_path": "_docs/develop-custom-functions/050-use-custom-functions-in-queries.md", 
                     "title": "Using Custom Functions in Queries", 
                     "url": "/docs/using-custom-functions-in-queries/"
@@ -3226,6 +3409,27 @@
             "title": "Drill in 10 Minutes", 
             "url": "/docs/drill-in-10-minutes/"
         }, 
+        "Dynamic UDFs": {
+            "breadcrumbs": [
+                {
+                    "title": "Adding Custom Functions to Drill", 
+                    "url": "/docs/adding-custom-functions-to-drill/"
+                }, 
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Custom Functions in Queries", 
+            "next_url": "/docs/using-custom-functions-in-queries/", 
+            "parent": "Adding Custom Functions to Drill", 
+            "previous_title": "Manually Adding Custom Functions to Drill", 
+            "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
+            "title": "Dynamic UDFs", 
+            "url": "/docs/dynamic-udfs/"
+        }, 
         "EXPLAIN": {
             "breadcrumbs": [
                 {
@@ -3583,9 +3787,9 @@
             "next_title": "Choosing a Storage Format", 
             "next_url": "/docs/choosing-a-storage-format/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Optimizing Parquet Metadata Reading", 
-            "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
-            "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+            "previous_title": "Parquet Filter Pushdown", 
+            "previous_url": "/docs/parquet-filter-pushdown/", 
+            "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md", 
             "title": "Hive Metadata Caching", 
             "url": "/docs/hive-metadata-caching/"
         }, 
@@ -3635,8 +3839,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Optimizing Parquet Metadata Reading", 
-            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "next_title": "Asynchronous Parquet Reader", 
+            "next_url": "/docs/asynchronous-parquet-reader/", 
             "parent": "Partition Pruning", 
             "previous_title": "Partition Pruning Introduction", 
             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -4920,6 +5124,27 @@
             "title": "Log and Debug Introduction", 
             "url": "/docs/log-and-debug-introduction/"
         }, 
+        "Manually Adding Custom Functions to Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Adding Custom Functions to Drill", 
+                    "url": "/docs/adding-custom-functions-to-drill/"
+                }, 
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Dynamic UDFs", 
+            "next_url": "/docs/dynamic-udfs/", 
+            "parent": "Adding Custom Functions to Drill", 
+            "previous_title": "Adding Custom Functions to Drill Introduction", 
+            "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
+            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/010-manually-adding-custom-functions-to-drill.md", 
+            "title": "Manually Adding Custom Functions to Drill", 
+            "url": "/docs/manually-adding-custom-functions-to-drill/"
+        }, 
         "MapR-DB Format": {
             "breadcrumbs": [
                 {
@@ -5894,11 +6119,11 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Hive Metadata Caching", 
-            "next_url": "/docs/hive-metadata-caching/", 
+            "next_title": "Parquet Filter Pushdown", 
+            "next_url": "/docs/parquet-filter-pushdown/", 
             "parent": "Performance Tuning", 
-            "previous_title": "How to Partition Data", 
-            "previous_url": "/docs/how-to-partition-data/", 
+            "previous_title": "Asynchronous Parquet Reader", 
+            "previous_url": "/docs/asynchronous-parquet-reader/", 
             "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
             "title": "Optimizing Parquet Metadata Reading", 
             "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -5923,6 +6148,23 @@
             "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
             "title": "PARTITION BY Clause", 
             "url": "/docs/partition-by-clause/"
+        }, 
+        "Parquet Filter Pushdown": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Hive Metadata Caching", 
+            "next_url": "/docs/hive-metadata-caching/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Optimizing Parquet Metadata Reading", 
+            "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md", 
+            "title": "Parquet Filter Pushdown", 
+            "url": "/docs/parquet-filter-pushdown/"
         }, 
         "Parquet Format": {
             "breadcrumbs": [
@@ -5982,8 +6224,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Optimizing Parquet Metadata Reading", 
-                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "next_title": "Asynchronous Parquet Reader", 
+                    "next_url": "/docs/asynchronous-parquet-reader/", 
                     "parent": "Partition Pruning", 
                     "previous_title": "Partition Pruning Introduction", 
                     "previous_url": "/docs/partition-pruning-introduction/", 
@@ -6100,8 +6342,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Optimizing Parquet Metadata Reading", 
-                            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                            "next_title": "Asynchronous Parquet Reader", 
+                            "next_url": "/docs/asynchronous-parquet-reader/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning Introduction", 
                             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -6127,11 +6369,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Hive Metadata Caching", 
-                    "next_url": "/docs/hive-metadata-caching/", 
+                    "next_title": "Optimizing Parquet Metadata Reading", 
+                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "How to Partition Data", 
                     "previous_url": "/docs/how-to-partition-data/", 
+                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md", 
+                    "title": "Asynchronous Parquet Reader", 
+                    "url": "/docs/asynchronous-parquet-reader/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Parquet Filter Pushdown", 
+                    "next_url": "/docs/parquet-filter-pushdown/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Asynchronous Parquet Reader", 
+                    "previous_url": "/docs/asynchronous-parquet-reader/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -6144,12 +6403,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Hive Metadata Caching", 
+                    "next_url": "/docs/hive-metadata-caching/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Optimizing Parquet Metadata Reading", 
                     "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
-                    "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+                    "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md", 
+                    "title": "Parquet Filter Pushdown", 
+                    "url": "/docs/parquet-filter-pushdown/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Parquet Filter Pushdown", 
+                    "previous_url": "/docs/parquet-filter-pushdown/", 
+                    "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md", 
                     "title": "Hive Metadata Caching", 
                     "url": "/docs/hive-metadata-caching/"
                 }, 
@@ -8112,11 +8388,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.7.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-7-0-release-notes/", 
+                    "next_title": "Apache Drill 1.8.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/002-1.9.0-rn.md", 
+                    "title": "Apache Drill 1.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.7.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-7-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
                     "relative_path": "_docs/rn/003-1.8.0-rn.md", 
                     "title": "Apache Drill 1.8.0 Release Notes", 
                     "url": "/docs/apache-drill-1-8-0-release-notes/"
@@ -8394,8 +8687,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.8.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+            "next_title": "Apache Drill 1.9.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -11727,8 +12020,8 @@
             "next_title": "Custom Function Interfaces", 
             "next_url": "/docs/custom-function-interfaces/", 
             "parent": "Develop Custom Functions", 
-            "previous_title": "Adding Custom Functions to Drill", 
-            "previous_url": "/docs/adding-custom-functions-to-drill/", 
+            "previous_title": "Dynamic UDFs", 
+            "previous_url": "/docs/dynamic-udfs/", 
             "relative_path": "_docs/develop-custom-functions/050-use-custom-functions-in-queries.md", 
             "title": "Using Custom Functions in Queries", 
             "url": "/docs/using-custom-functions-in-queries/"
@@ -14698,8 +14991,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Optimizing Parquet Metadata Reading", 
-                            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                            "next_title": "Asynchronous Parquet Reader", 
+                            "next_url": "/docs/asynchronous-parquet-reader/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning Introduction", 
                             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -14725,11 +15018,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Hive Metadata Caching", 
-                    "next_url": "/docs/hive-metadata-caching/", 
+                    "next_title": "Optimizing Parquet Metadata Reading", 
+                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "How to Partition Data", 
                     "previous_url": "/docs/how-to-partition-data/", 
+                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md", 
+                    "title": "Asynchronous Parquet Reader", 
+                    "url": "/docs/asynchronous-parquet-reader/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Parquet Filter Pushdown", 
+                    "next_url": "/docs/parquet-filter-pushdown/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Asynchronous Parquet Reader", 
+                    "previous_url": "/docs/asynchronous-parquet-reader/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -14742,12 +15052,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Hive Metadata Caching", 
+                    "next_url": "/docs/hive-metadata-caching/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Optimizing Parquet Metadata Reading", 
                     "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
-                    "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+                    "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md", 
+                    "title": "Parquet Filter Pushdown", 
+                    "url": "/docs/parquet-filter-pushdown/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Parquet Filter Pushdown", 
+                    "previous_url": "/docs/parquet-filter-pushdown/", 
+                    "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md", 
                     "title": "Hive Metadata Caching", 
                     "url": "/docs/hive-metadata-caching/"
                 }, 
@@ -16598,9 +16925,73 @@
                             "url": "/docs/develop-custom-functions/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Using Custom Functions in Queries", 
-                    "next_url": "/docs/using-custom-functions-in-queries/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Manually Adding Custom Functions to Drill", 
+                            "next_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Adding Custom Functions to Drill", 
+                            "previous_url": "/docs/adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/009-adding-custom-functions-to-drill-introduction.md", 
+                            "title": "Adding Custom Functions to Drill Introduction", 
+                            "url": "/docs/adding-custom-functions-to-drill-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Dynamic UDFs", 
+                            "next_url": "/docs/dynamic-udfs/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Adding Custom Functions to Drill Introduction", 
+                            "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/010-manually-adding-custom-functions-to-drill.md", 
+                            "title": "Manually Adding Custom Functions to Drill", 
+                            "url": "/docs/manually-adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Custom Functions in Queries", 
+                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Manually Adding Custom Functions to Drill", 
+                            "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
+                            "title": "Dynamic UDFs", 
+                            "url": "/docs/dynamic-udfs/"
+                        }
+                    ], 
+                    "next_title": "Adding Custom Functions to Drill Introduction", 
+                    "next_url": "/docs/adding-custom-functions-to-drill-introduction/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Developing an Aggregate Function", 
                     "previous_url": "/docs/developing-an-aggregate-function/", 
@@ -16619,8 +17010,8 @@
                     "next_title": "Custom Function Interfaces", 
                     "next_url": "/docs/custom-function-interfaces/", 
                     "parent": "Develop Custom Functions", 
-                    "previous_title": "Adding Custom Functions to Drill", 
-                    "previous_url": "/docs/adding-custom-functions-to-drill/", 
+                    "previous_title": "Dynamic UDFs", 
+                    "previous_url": "/docs/dynamic-udfs/", 
                     "relative_path": "_docs/develop-custom-functions/050-use-custom-functions-in-queries.md", 
                     "title": "Using Custom Functions in Queries", 
                     "url": "/docs/using-custom-functions-in-queries/"
@@ -16927,11 +17318,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.7.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-7-0-release-notes/", 
+                    "next_title": "Apache Drill 1.8.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/002-1.9.0-rn.md", 
+                    "title": "Apache Drill 1.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.7.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-7-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-9-0-release-notes/", 
                     "relative_path": "_docs/rn/003-1.8.0-rn.md", 
                     "title": "Apache Drill 1.8.0 Release Notes", 
                     "url": "/docs/apache-drill-1-8-0-release-notes/"
@@ -17209,8 +17617,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.8.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+            "next_title": "Apache Drill 1.9.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 

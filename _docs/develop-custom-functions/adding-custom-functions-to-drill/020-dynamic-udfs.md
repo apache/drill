@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 
+date: 2016-11-21 19:18:05 UTC
 parent: "Adding Custom Functions to Drill"
 ---
 
@@ -55,14 +55,20 @@ the Dynamic UDF feature. See Enabling and Disabling the Dynamic UDF Feature.
  
 Drill moves all JAR files from the staging directory to the other UDF directories as the user that started the drillbit, not as the user that submitted the JAR files. Drill behaves this way even if impersonation is enabled.  
 
-##Before Using the Dynamic UDF Feature 
-Before users can issue the CREATE FUNCTION USING JAR or DROP FUNCTION USING JAR commands to register or unregister UDFs, an administrator should verify that the option is enabled and that the staging directory is accessible to users.  
+##Before Using the Dynamic UDF Feature  
+Before users can successfully register and unregister their UDFs using the Dynamic UDF feature, administrators and users must complete certain prerequisites. The prerequisites for each role are listed below.  
 
-Users create a UDF using Drill’s simple or aggregate function interface. Add a `drill-module.conf` file to the root of the class JAR file. The `drill-module.conf` file should contain the packages to scan for the functions `drill.classpath.scanning.packages+= "com.mydomain.drill.fn"`. Separate package names with a comma, as shown in the following example:  
+###Administrators 
+Before users can issue the CREATE FUNCTION USING JAR or DROP FUNCTION USING JAR commands to register or unregister UDFs, verify that the `exec.udf.enable_dynamic_support` option is enabled and that the staging directory is accessible to users. See Enabling and Disabling the Dynamic UDF Feature.  
 
-       drill.classpath.scanning.package+= "com.mydomain.drill.fn"
+###Users
+Create a UDF using Drill’s [simple]({{site.baseurl}}/docs/developing-a-simple-function/) or [aggregate]({{site.baseurl}}/docs/developing-an-aggregate-function/) function interface. Add a `drill-module.conf` file to the root of the class JAR file. The `drill-module.conf` file should contain the packages to scan for the functions `drill.classpath.scanning.packages+= "com.mydomain.drill.fn"`, as shown in the following example:  
+
+       drill.classpath.scanning.package+= "com.mydomain.drill.fn"  
+
+Replace `com.mydomain.drill.fn` with the package name(s) of your UDF(s). If there are multiple packages, separate package names with a comma.
  
-Once the UDF is created, copy the source and binary JAR files to the staging directory. Now, you can register your UDF using the CREATE FUNCTION USING JAR command. See Registering a UDF.  
+Once the UDF is created, copy the source and binary JAR files to the staging directory. If you do not know the location of the staging directory, contact your administrator. Now, you can register your UDF using the CREATE FUNCTION USING JAR command. See Registering a UDF.  
 
 ##Enabling and Disabling the Dynamic UDF Feature
 An administrator can enable or disable the Dynamic UDF feature. The feature is enabled by default.  The `exec.udf.enable_dynamic_support` option turns the Dynamic UDF feature on and off. If security is a concern, the administrator can disable the feature to prevent users from registering and unregistering UDFs.
