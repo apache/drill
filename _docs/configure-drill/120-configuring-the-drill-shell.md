@@ -1,6 +1,6 @@
 ---
 title: "Configuring the Drill Shell"
-date:  
+date: 2016-11-21 22:14:41 UTC
 parent: "Configure Drill"
 ---
 After [starting the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), you can type queries on the shell command line. At the Drill shell command prompt, typing "help" lists the configuration and other options you can set to manage shell functionality. Apache Drill 1.0 and later formats the resultset output tables for readability if possible. In this release, columns having 70 characters or more cannot be formatted. This document formats all output for readability and example purposes.

@@ -1,6 +1,6 @@
 ---
 title: "Querying Plain Text Files"
-date:  
+date: 2016-11-21 22:14:45 UTC
 parent: "Querying a File System"
 ---
 You can use Drill to access structured file types and plain text files

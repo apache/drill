@@ -1,6 +1,6 @@
 ---
 title: "Querying Parquet Files"
-date:  
+date: 2016-11-21 22:14:44 UTC
 parent: "Querying a File System"
 ---
 
