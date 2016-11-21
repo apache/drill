@@ -1,12 +1,12 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2016-02-02 23:56:57 UTC
+date: 2016-11-21 20:45:57 UTC
 parent: "Performance Tuning"
 ---
 
 Drill 1.9 introduces the Parquet filter pushdown option. Parquet filter pushdown is a performance optimization that prunes extraneous data from a Parquet file to reduce the amount of data that Drill scans and reads when a query on a Parquet file contains a filter expression. Pruning data reduces the I/O, CPU, and network overhead to optimize Drill’s performance.
  
-Parquet filter pushdown is enabled by default. When a query contains a filter expression, you can run the EXPLAIN PLAN command to see if Drill applies Parquet filter pushdown to the query. You can enable and disable this feature using the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command with the `planner.store.parquet.rowgroup.filter.pushdown` option.  
+Parquet filter pushdown is enabled by default. When a query contains a filter expression, you can run the [EXPLAIN PLAN command]({{site.baseurl}}/docs/explain-commands/) to see if Drill applies Parquet filter pushdown to the query. You can enable and disable this feature using the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command with the `planner.store.parquet.rowgroup.filter.pushdown` option.  
 
 ##How Parquet Filter Pushdown Works
 Drill applies Parquet filter pushdown during the query planning phase. The query planner in Drill performs Parquet filter pushdown by evaluating the filter expressions in the query. If no filter expression exists, the underlying scan operator reads all of the data in a Parquet file and then sends the data to operators downstream. When filter expressions exist, the planner applies each filter and prunes the data, reducing the amount of data that the scanner and Parquet reader must read.
@@ -42,7 +42,7 @@ The following table lists the supported and unsupported clauses, operators, data
 |----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
 | Clauses              | WHERE,   HAVING (HAVING is supported if Drill can pass the filter through GROUP   BY.)                                                                                             |                                                                                                          |
 | Operators            | AND,   OR, IN (An IN list is converted to OR if the number in the IN list is within   a certain threshold, for example 20. If greater than the threshold, pruning   cannot occur.) | NOT,   ITEM (Drill does not push the filter past the ITEM operator, which is used   for complex fields.) |
-| Comparison Operators | <>,   <, >, <=, >=, = (Filters are of the form "column =   value".)                                                                                                                | IS [NOT] NULL                                                                                            |
+| Comparison Operators | <>,   <, >, <=, >=, =                                                                                                                 | IS [NOT] NULL                                                                                            |
 | Data Types           | INT,   BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, TIME                                                                                                                                | CHAR,   VARCHAR columns, Hive TIMESTAMP                                                                  |
 | Function             | CAST   is supported among these four numeric types only: int, bigint, float, double                                                                                                |                                                                                                          |
 | Other                | --                                                                                                                                                                                 | Joins,   Files with multiple row groups, Enabled Native Hive reader                                      | 

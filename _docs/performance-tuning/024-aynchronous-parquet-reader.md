@@ -1,6 +1,6 @@
 ---
 title: "Asynchronous Parquet Reader"
-date: 2016-02-08 21:57:13 UTC
+date: 2016-11-21 20:45:57 UTC
 parent: "Performance Tuning"
 ---
 
@@ -11,7 +11,7 @@ When the asynchronous parquet reader option is enabled, the speed at which the P
 Typically, the Drill default settings provide the best performance for a wide variety of use cases. However, specific cases that require a high level of performance can benefit from tuning the Parquet Scan operator.  
 
 ##Tuning the Parquet Scan Operator  
-The `store.parquet.reader.pagereader.async` option turns the asynchronous Parquet reader on or off. The option is turned off by default. You can use the [ALTER SESSION command]({{site.baseurl}}/docs/alter-session-command/) to enable the asynchronous Parquet reader option, as well as the options that control buffering and parallel decoding.  
+The `store.parquet.reader.pagereader.async` option turns the asynchronous Parquet reader on or off. The option is turned on by default. You can use the [ALTER SESSION SET command]({{site.baseurl}}/docs/alter-session-command/) to enable the asynchronous Parquet reader option, as well as the options that control buffering and parallel decoding.  
 
 When the asynchronous Page reader option is enabled, the Parquet Scan operator no longer reports operator wait time. Instead, it reports additional operator metrics that you can view in the query profile in the Drill Web Console.  
 
@@ -23,7 +23,7 @@ The following sections provide the configuration options and details:
 
 ###Asynchronous Parquet Reader Options  
 
-The following table lists and describes the asynchronous Parquet reader options that you can enable or disable using the ALTER SESSION SET command:  
+The following table lists and describes the asynchronous Parquet reader options that you can enable or disable using the [ALTER SESSION SET command]({{site.baseurl}}/docs/alter-session-command/):  
 
 |       Option                                 | Description                                                                                                                                                                                                                                                                                                                                                          | Type    | Default     |
 |----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|-------------|
