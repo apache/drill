@@ -23,16 +23,20 @@ Install Prerequisites
 ---------------------
 
 0.1) Install XCode 
-  Download an istall from here: https://developer.apple.com/xcode/downloads/
+  Download and install from here: https://developer.apple.com/xcode/downloads/
+  or from the App store https://itunes.apple.com/us/app/xcode/id497799835?mt=12
   In Terminal, install the command line tools 
     $> xcode-select --install
 
 0.2) Install brew following the instructions here: http://brew.sh/
 
-1) CMAKE 2.8 or above
+1) CMAKE 3.0 or above
   Download and install Cmake : https://cmake.org/download/
+  or use brew to install 
+  $> brew install cmake
 
-2.1) Install protobuf
+
+2.1) Install protobuf 2.5.0 (or higher)
   $> brew install protobuf
 
 2.2) Install zookeeper
@@ -43,7 +47,8 @@ Install Prerequisites
 
 2.3.1) For production builds, see the readme.boost file  
   
-  
+2.3.1.1 Build using XCODE
+=========================  
 (Optional) Refresh protobuf source files
 ----------------------------------------
 When changes have been introduced to the protocol module, you might need to refresh the protobuf C++ source files too.
@@ -67,13 +72,37 @@ XCode IDE
 ---------
   You can open the drillclient.xcodeproj file in the XCode ide and run/debug as with any other command line app
 
-Test
-----
+2.3.1.2 Build using MAKE
+========================
+(Optional) Refresh protobuf source files
+----------------------------------------
+When changes have been introduced to the protocol module, you might need to refresh the protobuf C++ source files too.
+    $> cd DRILL_DIR/contrib/native/client
+    $> mkdir build
+    $> cd build && cmake3 -G "Unix Makefiles" ..
+    $> make cpProtobufs
+
+Open a pull request with the changes to DRILL_DIR/contrib/native/client/src/protobuf
+
+Build drill client
+-------------------
+    $> cd DRILL_DIR/contrib/native/client
+    $> mkdir build
+    $> cd build && cmake3 -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ..
+    $> make
+
+
+2.4 Test
+--------
 Run query submitter from the command line
   $> querySubmitter query='select * from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace user=yourUserName password=yourPassWord
 
-Valgrind
---------
-  If you can get valgrind to build and run on macos, please update the instuctions here
+2.5 Valgrind
+------------
+  Valgrind is available only for MacOs 10.11 or earlier. Install valgrind using brew
+  $> brew install valgrind
+  $> valgrind --leak-check=yes querySubmitter query='select LINEITEM from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace
+
+
 
 

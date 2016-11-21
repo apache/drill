@@ -99,6 +99,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 else()
     set(Boost_USE_STATIC_LIBS OFF)
     set(Boost_USE_MULTITHREADED ON)
+    #    To build a production version, the macos build must use a shaded version
+    #    of boost. Arbirtarily, we choose the new namspace to be drill_boost.
+    #    See the instructions in the readme for  linux and rebuild boost. Then
+    #    uncomment the line below to build
+    #    set(Boost_NAMESPACE drill_boost)
 endif()
 
 find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
