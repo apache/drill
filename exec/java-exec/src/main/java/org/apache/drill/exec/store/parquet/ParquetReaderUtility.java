@@ -196,15 +196,20 @@ public class ParquetReaderUtility {
     String createdBy = footer.getFileMetaData().getCreatedBy();
     String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
     String stringWriterVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
-    // This flag can be present in parquet files which were generated with 1.9.0-SNAPSHOT drill version.
+    // This flag can be present in parquet files which were generated with 1.9.0-SNAPSHOT and 1.9.0 drill versions.
     // If this flag is present it means that the version of the drill parquet writer is 2
     final String isDateCorrectFlag = "is.date.correct";
     String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(isDateCorrectFlag);
     if (drillVersion != null) {
-      int writerVersion = (stringWriterVersion != null) ? Integer.parseInt(stringWriterVersion)
-          : (Boolean.valueOf(isDateCorrect)) ? DRILL_WRITER_VERSION_STD_DATE_FORMAT : 1;
-      return (writerVersion >= DRILL_WRITER_VERSION_STD_DATE_FORMAT) || Boolean.valueOf(isDateCorrect)
-          ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_SHOWS_CORRUPTION;
+      int writerVersion = 1;
+      if (stringWriterVersion != null) {
+        writerVersion = Integer.parseInt(stringWriterVersion);
+      }
+      else if (Boolean.valueOf(isDateCorrect)) {
+        writerVersion = DRILL_WRITER_VERSION_STD_DATE_FORMAT;
+      }
+      return writerVersion >= DRILL_WRITER_VERSION_STD_DATE_FORMAT ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
+          : DateCorruptionStatus.META_SHOWS_CORRUPTION;
     } else {
       // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
       // only applies if there is a date column selected
