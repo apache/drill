@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 2016-11-22 00:22:09 UTC
+date: 2016-11-22 00:38:20 UTC
 parent: "Adding Custom Functions to Drill"
 ---
 
@@ -83,7 +83,7 @@ Copy the UDF source and binary JAR files to the DFS staging directory and then i
 
 If you do not know the location of the staging directory or you need access to the directory, contact your administrator.
 
-When you issue the command, Drill uses the JAR file name to register the JAR name in the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/) and then copies the source and binary JAR files to the local UDF directory on each drillbit.  
+When you issue the command, Drill uses the JAR file name to register the JAR name in the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/)) and then copies the source and binary JAR files to the local UDF directory on each drillbit.  
 
 Upon successful registration, Drill returns a message with a list of registered UDFs:  
 
@@ -110,7 +110,7 @@ Drill returns a message with the list of unregistered UDFs:
 
 ##Migrating UDFs from Dynamic to Built-In  
  
-You can migrate UDFs registered using the Dynamic UDF feature to built-in UDFs to free up space in the UDF directories and the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/). You can migrate all of the UDFs or you can migrate a portion of the UDFs. If you migrate all of the UDFs, you cannot issue the DROP FUNCTION USING JAR command to unregister the UDFs that have been migrated from dynamic to built-in.  
+You can migrate UDFs registered using the Dynamic UDF feature to built-in UDFs to free up space in the UDF directories and the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/)). You can migrate all of the UDFs or you can migrate a portion of the UDFs. If you migrate all of the UDFs, you cannot issue the DROP FUNCTION USING JAR command to unregister the UDFs that have been migrated from dynamic to built-in.  
 
 ###Migrating All Registered UDFs to Built-In UDFs
 To migrate all registered UDFs to built-in UDFs, complete the following steps:  

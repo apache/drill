@@ -1,6 +1,6 @@
 ---
 title: "CREATE FUNCTION USING JAR"
-date: 2016-05-05 21:44:33 UTC
+date: 2016-11-22 00:38:20 UTC
 parent: "SQL Commands"
 ---
 The CREATE FUNCTION USING JAR command registers UDFs in Drill. See [Dynamic UDFs]({{site.baseurl}}/docs/dynamic-udfs/) for more information.   

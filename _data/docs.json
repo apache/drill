@@ -780,7 +780,7 @@
             "title": "CASE", 
             "url": "/docs/case/"
         }, 
-        "CREATE TABLE AS (CTAS)": {
+        "CREATE FUNCTION USING JAR": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -794,6 +794,27 @@
             "children": [], 
             "next_title": "PARTITION BY Clause", 
             "next_url": "/docs/partition-by-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "CREATE TABLE AS (CTAS)", 
+            "previous_url": "/docs/create-table-as-ctas/", 
+            "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
+            "title": "CREATE FUNCTION USING JAR", 
+            "url": "/docs/create-function-using-jar/"
+        }, 
+        "CREATE TABLE AS (CTAS)": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "CREATE FUNCTION USING JAR", 
+            "next_url": "/docs/create-function-using-jar/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM", 
             "previous_url": "/docs/alter-system/", 
@@ -2252,14 +2273,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "DROP TABLE", 
-            "next_url": "/docs/drop-table/", 
+            "next_title": "DROP FUNCTION USING JAR", 
+            "next_url": "/docs/drop-function-using-jar/", 
             "parent": "SQL Commands", 
             "previous_title": "CREATE VIEW", 
             "previous_url": "/docs/create-view/", 
             "relative_path": "_docs/sql-reference/sql-commands/053-describe.md", 
             "title": "DESCRIBE", 
             "url": "/docs/describe/"
+        }, 
+        "DROP FUNCTION USING JAR": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "DROP TABLE", 
+            "next_url": "/docs/drop-table/", 
+            "parent": "SQL Commands", 
+            "previous_title": "DESCRIBE", 
+            "previous_url": "/docs/describe/", 
+            "relative_path": "_docs/sql-reference/sql-commands/054-drop-function-using-jar.md", 
+            "title": "DROP FUNCTION USING JAR", 
+            "url": "/docs/drop-function-using-jar/"
         }, 
         "DROP TABLE": {
             "breadcrumbs": [
@@ -2276,8 +2318,8 @@
             "next_title": "DROP VIEW", 
             "next_url": "/docs/drop-view/", 
             "parent": "SQL Commands", 
-            "previous_title": "DESCRIBE", 
-            "previous_url": "/docs/describe/", 
+            "previous_title": "DROP FUNCTION USING JAR", 
+            "previous_url": "/docs/drop-function-using-jar/", 
             "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
             "title": "DROP TABLE", 
             "url": "/docs/drop-table/"
@@ -6143,8 +6185,8 @@
             "next_title": "CREATE VIEW", 
             "next_url": "/docs/create-view/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TABLE AS (CTAS)", 
-            "previous_url": "/docs/create-table-as-ctas/", 
+            "previous_title": "CREATE FUNCTION USING JAR", 
+            "previous_url": "/docs/create-function-using-jar/", 
             "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
             "title": "PARTITION BY Clause", 
             "url": "/docs/partition-by-clause/"
@@ -8977,8 +9019,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "PARTITION BY Clause", 
-                    "next_url": "/docs/partition-by-clause/", 
+                    "next_title": "CREATE FUNCTION USING JAR", 
+                    "next_url": "/docs/create-function-using-jar/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM", 
                     "previous_url": "/docs/alter-system/", 
@@ -8998,11 +9040,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE VIEW", 
-                    "next_url": "/docs/create-view/", 
+                    "next_title": "PARTITION BY Clause", 
+                    "next_url": "/docs/partition-by-clause/", 
                     "parent": "SQL Commands", 
                     "previous_title": "CREATE TABLE AS (CTAS)", 
                     "previous_url": "/docs/create-table-as-ctas/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
+                    "title": "CREATE FUNCTION USING JAR", 
+                    "url": "/docs/create-function-using-jar/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "CREATE VIEW", 
+                    "next_url": "/docs/create-view/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "CREATE FUNCTION USING JAR", 
+                    "previous_url": "/docs/create-function-using-jar/", 
                     "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
                     "title": "PARTITION BY Clause", 
                     "url": "/docs/partition-by-clause/"
@@ -9040,8 +9103,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DROP TABLE", 
-                    "next_url": "/docs/drop-table/", 
+                    "next_title": "DROP FUNCTION USING JAR", 
+                    "next_url": "/docs/drop-function-using-jar/", 
                     "parent": "SQL Commands", 
                     "previous_title": "CREATE VIEW", 
                     "previous_url": "/docs/create-view/", 
@@ -9061,11 +9124,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DROP VIEW", 
-                    "next_url": "/docs/drop-view/", 
+                    "next_title": "DROP TABLE", 
+                    "next_url": "/docs/drop-table/", 
                     "parent": "SQL Commands", 
                     "previous_title": "DESCRIBE", 
                     "previous_url": "/docs/describe/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/054-drop-function-using-jar.md", 
+                    "title": "DROP FUNCTION USING JAR", 
+                    "url": "/docs/drop-function-using-jar/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "DROP VIEW", 
+                    "next_url": "/docs/drop-view/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "DROP FUNCTION USING JAR", 
+                    "previous_url": "/docs/drop-function-using-jar/", 
                     "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
                     "title": "DROP TABLE", 
                     "url": "/docs/drop-table/"
@@ -10325,8 +10409,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "PARTITION BY Clause", 
-                            "next_url": "/docs/partition-by-clause/", 
+                            "next_title": "CREATE FUNCTION USING JAR", 
+                            "next_url": "/docs/create-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -10346,11 +10430,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW", 
-                            "next_url": "/docs/create-view/", 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
+                            "title": "CREATE FUNCTION USING JAR", 
+                            "url": "/docs/create-function-using-jar/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE FUNCTION USING JAR", 
+                            "previous_url": "/docs/create-function-using-jar/", 
                             "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
                             "title": "PARTITION BY Clause", 
                             "url": "/docs/partition-by-clause/"
@@ -10388,8 +10493,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP TABLE", 
-                            "next_url": "/docs/drop-table/", 
+                            "next_title": "DROP FUNCTION USING JAR", 
+                            "next_url": "/docs/drop-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW", 
                             "previous_url": "/docs/create-view/", 
@@ -10409,11 +10514,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "DROP TABLE", 
+                            "next_url": "/docs/drop-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "DESCRIBE", 
                             "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/054-drop-function-using-jar.md", 
+                            "title": "DROP FUNCTION USING JAR", 
+                            "url": "/docs/drop-function-using-jar/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "DROP FUNCTION USING JAR", 
+                            "previous_url": "/docs/drop-function-using-jar/", 
                             "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
                             "title": "DROP TABLE", 
                             "url": "/docs/drop-table/"
@@ -16172,8 +16298,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "PARTITION BY Clause", 
-                            "next_url": "/docs/partition-by-clause/", 
+                            "next_title": "CREATE FUNCTION USING JAR", 
+                            "next_url": "/docs/create-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -16193,11 +16319,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW", 
-                            "next_url": "/docs/create-view/", 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
+                            "title": "CREATE FUNCTION USING JAR", 
+                            "url": "/docs/create-function-using-jar/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE FUNCTION USING JAR", 
+                            "previous_url": "/docs/create-function-using-jar/", 
                             "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
                             "title": "PARTITION BY Clause", 
                             "url": "/docs/partition-by-clause/"
@@ -16235,8 +16382,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP TABLE", 
-                            "next_url": "/docs/drop-table/", 
+                            "next_title": "DROP FUNCTION USING JAR", 
+                            "next_url": "/docs/drop-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW", 
                             "previous_url": "/docs/create-view/", 
@@ -16256,11 +16403,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "DROP TABLE", 
+                            "next_url": "/docs/drop-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "DESCRIBE", 
                             "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/054-drop-function-using-jar.md", 
+                            "title": "DROP FUNCTION USING JAR", 
+                            "url": "/docs/drop-function-using-jar/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "DROP FUNCTION USING JAR", 
+                            "previous_url": "/docs/drop-function-using-jar/", 
                             "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
                             "title": "DROP TABLE", 
                             "url": "/docs/drop-table/"
