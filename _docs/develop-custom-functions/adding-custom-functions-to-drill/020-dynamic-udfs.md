@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 2016-11-21 21:25:57 UTC
+date: 2016-11-22 00:22:09 UTC
 parent: "Adding Custom Functions to Drill"
 ---
 
@@ -10,7 +10,7 @@ The Dynamic UDF feature eliminates the need to restart drillbits, which can disr
 
 The Dynamic UDF feature is enabled by default. An administrator can enable or disable the feature using the ALTER SYSTEM SET command with the `exec.udf.enable_dynamic_support option`. When the feature is enabled, users must upload their UDF (source and binary) JAR files to a staging directory in the distributed file system before issuing the CREATE FUNCTION USING JAR command to register a UDF.  
 
-If users do not have write access to the staging directory, the registration attempt fails. When a user issues the CREATE FUNCTION USING JAR command to register a UDF, Drill uses specific directories while validating and registering the UDFs. ZooKeeper stores the list of UDFs and associated JAR files. Drillbits refer to this list when registering and unregistering UDFs.  
+If users do not have write access to the staging directory, the registration attempt fails. When a user issues the CREATE FUNCTION USING JAR command to register a UDF, Drill uses specific directories while validating and registering the UDFs. The [persistent configuration store]({{site.baseurl}}/docs/persistent-configuration-storage/) stores the list of UDFs and associated JAR files. Drillbits refer to this list when registering and unregistering UDFs.  
 
 ##UDF Directories 
  
@@ -51,7 +51,7 @@ The following table lists optional directories that you can add:
 Currently, any user can register UDFs if they
 have access to the staging directory. Since Drill does not provide full
 authorization and authentication support, an administrator may want to disable
-the Dynamic UDF feature. See Enabling and Disabling the Dynamic UDF Feature.
+the Dynamic UDF feature. See [Enabling and Disabling the Dynamic UDF Feature]({{site.baseurl}}/docs/dynamic-udfs/#enabling-and-disabling-the-dynamic-udf-feature).
  
 Drill moves all JAR files from the staging directory to the other UDF directories as the user that started the drillbit, not as the user that submitted the JAR files. Drill behaves this way even if impersonation is enabled.  
 
@@ -59,7 +59,7 @@ Drill moves all JAR files from the staging directory to the other UDF directorie
 Before users can successfully register and unregister their UDFs using the Dynamic UDF feature, administrators and users must complete certain prerequisites. The prerequisites for each role are listed below.  
 
 ###Administrators 
-Before users can issue the CREATE FUNCTION USING JAR or DROP FUNCTION USING JAR commands to register or unregister UDFs, verify that the `exec.udf.enable_dynamic_support` option is enabled and that the staging directory is accessible to users. See Enabling and Disabling the Dynamic UDF Feature.  
+Before users can issue the CREATE FUNCTION USING JAR or DROP FUNCTION USING JAR commands to register or unregister UDFs, verify that the `exec.udf.enable_dynamic_support` option is enabled and the staging directory is accessible to users. See [Enabling and Disabling the Dynamic UDF Feature]({{site.baseurl}}/docs/dynamic-udfs/#enabling-and-disabling-the-dynamic-udf-feature).  
 
 ###Users
 Create a UDF using Drill’s [simple]({{site.baseurl}}/docs/developing-a-simple-function/) or [aggregate]({{site.baseurl}}/docs/developing-an-aggregate-function/) function interface. Add a `drill-module.conf` file to the root of the class JAR file. The `drill-module.conf` file should contain the packages to scan for the functions `drill.classpath.scanning.packages+= "com.mydomain.drill.fn"`, as shown in the following example:  
@@ -68,7 +68,7 @@ Create a UDF using Drill’s [simple]({{site.baseurl}}/docs/developing-a-simple-
 
 Replace `com.mydomain.drill.fn` with the package name(s) of your UDF(s). If there are multiple packages, separate package names with a comma.
  
-Once the UDF is created, copy the source and binary JAR files to the staging directory. If you do not know the location of the staging directory, contact your administrator. Now, you can register your UDF using the CREATE FUNCTION USING JAR command. See Registering a UDF.  
+Once the UDF is created, copy the source and binary JAR files to the staging directory. If you do not know the location of the staging directory, contact your administrator. Now, you can register your UDF using the CREATE FUNCTION USING JAR command. See [Registering a UDF]({{site.baseurl}}/docs/dynamic-udfs/#registering-a-udf).  
 
 ##Enabling and Disabling the Dynamic UDF Feature
 An administrator can enable or disable the Dynamic UDF feature. The feature is enabled by default.  The `exec.udf.enable_dynamic_support` option turns the Dynamic UDF feature on and off. If security is a concern, the administrator can disable the feature to prevent users from registering and unregistering UDFs.
@@ -83,7 +83,7 @@ Copy the UDF source and binary JAR files to the DFS staging directory and then i
 
 If you do not know the location of the staging directory or you need access to the directory, contact your administrator.
 
-When you issue the command, Drill uses the JAR file name to register the JAR name in the Dynamic UDF registry (UDF list stored in ZooKeeper) and then copies the source and binary JAR files to the local UDF directory on each drillbit.  
+When you issue the command, Drill uses the JAR file name to register the JAR name in the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/) and then copies the source and binary JAR files to the local UDF directory on each drillbit.  
 
 Upon successful registration, Drill returns a message with a list of registered UDFs:  
 
@@ -98,7 +98,7 @@ Issue the DROP FUNCTION USING JAR command to unregister a UDF, as follows:
 
        DROP FUNCTION USING JAR ‘<jar_name>.jar’  
 
-When you issue the command, Drill unregisters UDFs based on the JAR file name and removes the JAR files from the UDF directory. Drill deletes all UDFs associated with the JAR file from the UDF registry (UDF list stored in ZooKeeper), signaling drillbits to start the local unregistering process.  
+When you issue the command, Drill unregisters UDFs based on the JAR file name and removes the JAR files from the UDF directory. Drill deletes all UDFs associated with the JAR file from the UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/), signaling drillbits to start the local unregistering process.  
 
 Drill returns a message with the list of unregistered UDFs:  
 
@@ -110,7 +110,7 @@ Drill returns a message with the list of unregistered UDFs:
 
 ##Migrating UDFs from Dynamic to Built-In  
  
-You can migrate UDFs registered using the Dynamic UDF feature to built-in UDFs to free up space in the UDF directories and the Dynamic UDF registry (UDF list stored in ZooKeeper). You can migrate all of the UDFs or you can migrate a portion of the UDFs. If you migrate all of the UDFs, you cannot issue the DROP FUNCTION USING JAR command to unregister the UDFs that have been migrated from dynamic to built-in.  
+You can migrate UDFs registered using the Dynamic UDF feature to built-in UDFs to free up space in the UDF directories and the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/). You can migrate all of the UDFs or you can migrate a portion of the UDFs. If you migrate all of the UDFs, you cannot issue the DROP FUNCTION USING JAR command to unregister the UDFs that have been migrated from dynamic to built-in.  
 
 ###Migrating All Registered UDFs to Built-In UDFs
 To migrate all registered UDFs to built-in UDFs, complete the following steps:  
