@@ -1,6 +1,6 @@
 ---
 title: "DROP FUNCTION USING JAR"
-date: 2016-11-22 00:38:21 UTC
+date: 2016-11-22 00:41:29 UTC
 parent: "SQL Commands"
 ---
 
@@ -18,7 +18,7 @@ The DROP FUNCTION USING JAR command supports the following syntax:
 The name of the JAR file that contains the UDFs.
 
 ## Usage Notes
-When you issue the DROP FUNCTION USING JAR command, Drill unregisters the UDFs based on the JAR file name and removes the JAR file from the UDF directory. Drill deletes all UDFs associated with the JAR file from the UDF registry (UDF list stored in ZooKeeper). Drill returns a message with the list of unregistered UDFs. 
+When you issue the DROP FUNCTION USING JAR command, Drill unregisters the UDFs based on the JAR file name and removes the JAR file from the UDF directory. Drill deletes all UDFs associated with the JAR file from the Dynamic UDF registry ([persistent store]({{site.baseurl}}/docs/persistent-configuration-storage/)). Drill returns a message with the list of unregistered UDFs. 
 
 ## Example
 
