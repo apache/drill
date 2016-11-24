@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.aggregate;
+package org.apache.drill.exec.physical.impl.statistics;
 
-import java.util.List;
-
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.StatisticsAggregate;
+import org.apache.drill.exec.physical.config.StatisticsMerge;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
 
 @SuppressWarnings("unused")
-public class StatisticsAggBatchCreator implements BatchCreator<StatisticsAggregate>{
+public class StatisticsMergeBatchCreator implements BatchCreator<StatisticsMerge>{
 
   @Override
-  public CloseableRecordBatch getBatch(FragmentContext context, StatisticsAggregate config,
+  public CloseableRecordBatch getBatch(FragmentContext context, StatisticsMerge config,
                                        List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
-    return new StatisticsAggBatch(config, children.iterator().next(), context);
+    return new StatisticsMergeBatch(config, children.iterator().next(), context);
   }
 }

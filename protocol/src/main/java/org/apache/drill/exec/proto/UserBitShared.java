@@ -521,8 +521,12 @@ public final class UserBitShared {
      * <code>UNPIVOT_MAPS = 38;</code>
      */
     UNPIVOT_MAPS(38, 38),
-    ;
 
+    /**
+     * <code>STATISTICS_MERGE = 39;</code>
+     */
+    STATISTICS_MERGE(39, 39)
+    ;
     /**
      * <code>SINGLE_SENDER = 0;</code>
      */
@@ -679,7 +683,10 @@ public final class UserBitShared {
      * <code>UNPIVOT_MAPS = 38;</code>
      */
     public static final int UNPIVOT_MAPS_VALUE = 38;
-
+    /**
+     * <code>STATISTICS_MERGE = 39;</code>
+     */
+    public static final int STATISTICS_MERGE_VALUE = 39;
 
     public final int getNumber() { return value; }
 
@@ -724,6 +731,7 @@ public final class UserBitShared {
         case 36: return AVRO_SUB_SCAN;
         case 37: return STATISTICS_AGGREGATE;
         case 38: return UNPIVOT_MAPS;
+        case 39: return STATISTICS_MERGE;
         default: return null;
       }
     }

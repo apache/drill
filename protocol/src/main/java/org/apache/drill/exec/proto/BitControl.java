@@ -6952,6 +6952,11 @@ public final class BitControl {
               defaultSchemaName_ = input.readBytes();
               break;
             }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              hllMemoryLimit_ = input.readInt32();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {

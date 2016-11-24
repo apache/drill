@@ -176,6 +176,11 @@ public class JsonStatisticsRecordWriter extends JSONOutputRecordWriter implement
       if (statisticsVersion == 1) {
         if (fieldName.equalsIgnoreCase("SCHEMA")) {
           nextField = fieldName;
+        } else if (fieldName.equalsIgnoreCase("STATCOUNT")
+              || fieldName.equalsIgnoreCase("NONNULLSTATCOUNT")
+              || fieldName.equalsIgnoreCase("NDV")
+              || fieldName.equalsIgnoreCase("AVG_WIDTH")) {
+          nextField = fieldName;
         }
       }
     }
@@ -189,6 +194,14 @@ public class JsonStatisticsRecordWriter extends JSONOutputRecordWriter implement
         }
         if (nextField.equalsIgnoreCase("SCHEMA")) {
           ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setSchema(reader.readLong());
+        } else if (nextField.equalsIgnoreCase("STATCOUNT")) {
+          ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setCount(reader.readLong());
+        } else if (nextField.equalsIgnoreCase("NONNULLSTATCOUNT")) {
+          ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setNonNullCount(reader.readLong());
+        } else if (nextField.equalsIgnoreCase("NDV")) {
+          ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setNdv(reader.readLong());
+        } else if (nextField.equalsIgnoreCase("AVG_WIDTH")) {
+          ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setAvgWidth(reader.readLong());
         }
       }
     }
@@ -354,6 +367,8 @@ public class JsonStatisticsRecordWriter extends JSONOutputRecordWriter implement
         if (!skipNullFields || this.reader.isSet()) {
           if (fieldName.equalsIgnoreCase("HLL")) {
             nextField = fieldName;
+          } else if (fieldName.equalsIgnoreCase("HLL_MERGE")) {
+            nextField = fieldName;
           }
         }
       }
@@ -370,6 +385,8 @@ public class JsonStatisticsRecordWriter extends JSONOutputRecordWriter implement
           if (nextField.equalsIgnoreCase("HLL")) {
             //TODO: Write Hll output
             //((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setHLL(reader.readByteArray());
+          } else if (nextField.equalsIgnoreCase("HLL_MERGE")) {
+            ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setHLL(reader.readByteArray());
           }
         }
       }

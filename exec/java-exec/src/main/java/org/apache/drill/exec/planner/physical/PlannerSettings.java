@@ -105,6 +105,7 @@ public class PlannerSettings implements Context{
   public static final PositiveLongValidator PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD = new PositiveLongValidator(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,
       Long.MAX_VALUE, 10000);
 
+  public static final BooleanValidator PARALLEL_ANALYZE = new BooleanValidator("planner.statistics.parallel_analyze", true);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -260,6 +261,10 @@ public class PlannerSettings implements Context{
 
   public long getParquetRowGroupFilterPushDownThreshold() {
     return options.getOption(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD);
+  }
+
+  public boolean getIsParallelAnalyze() {
+    return options.getOption(PARALLEL_ANALYZE);
   }
 
   @Override

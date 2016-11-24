@@ -982,12 +982,14 @@ public final class SchemaBitControl
         {
             public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.QueryContextInformation message) throws java.io.IOException
             {
-                if(message.hasQueryStartTime())
+                if (message.hasQueryStartTime())
                     output.writeInt64(1, message.getQueryStartTime(), false);
-                if(message.hasTimeZone())
+                if (message.hasTimeZone())
                     output.writeInt32(2, message.getTimeZone(), false);
-                if(message.hasDefaultSchemaName())
+                if (message.hasDefaultSchemaName())
                     output.writeString(3, message.getDefaultSchemaName(), false);
+                if (message.hasHllMemoryLimit())
+                    output.writeInt32(4, message.getHllMemoryLimit(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.QueryContextInformation message)
             {
@@ -1036,6 +1038,8 @@ public final class SchemaBitControl
                         case 3:
                             builder.setDefaultSchemaName(input.readString());
                             break;
+                        case 4:
+                            builder.setHllMemoryLimit(input.readInt32());
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1079,6 +1083,7 @@ public final class SchemaBitControl
                 case 1: return "queryStartTime";
                 case 2: return "timeZone";
                 case 3: return "defaultSchemaName";
+                case 4: return "hllMemoryLimit";
                 default: return null;
             }
         }
@@ -1093,6 +1098,7 @@ public final class SchemaBitControl
             fieldMap.put("queryStartTime", 1);
             fieldMap.put("timeZone", 2);
             fieldMap.put("defaultSchemaName", 3);
+            fieldMap.put("hllMemoryLimit", 4);
         }
     }
 

@@ -390,7 +390,7 @@ public interface ExecConstants {
   /**
    * Option whose value is a long value representing the number of bits required for computing ndv (using HLL)
    */
-  LongValidator NDV_MEMORY_LIMIT = new PositiveLongValidator("exec.statistics.ndv_memory_limit", 30, 10);
+  LongValidator NDV_MEMORY_LIMIT = new PositiveLongValidator("exec.statistics.ndv_memory_limit", 30, 20);
 
   /**
    * Option whose value represents the current version of the statistics. Decreasing the value will generate

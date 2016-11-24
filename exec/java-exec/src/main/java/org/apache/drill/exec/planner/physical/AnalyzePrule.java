@@ -24,6 +24,9 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.tools.Planner;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.DrillAnalyzeRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -39,8 +42,35 @@ public class AnalyzePrule extends Prule {
       "nonnullstatcount", // total number of non-null entries in the table
       "ndv",              // total distinctive values in table
       "avg_width"         // Average column width
-      //TODO: hll         // Hyperloglog
   );
+
+ /* private static final List<String> PHASE_1_FUNCTIONS = ImmutableList.of(
+      "statcount",        // total number of entries in the table
+      "nonnullstatcount", // total number of non-null entries in the table
+      "hll",              // hyperloglog
+      "avg_width"         // Average column width
+  );
+
+  private static final List<String> PHASE_2_FUNCTIONS = ImmutableList.of(
+      "sum",              // total number of entries in the table
+      "sum",              // total number of non-null entries in the table
+      "ndv_hll",          // total distinctive values in table (computed using HLL)
+      "avg"               // Average column width
+      //TODO: hll         // Hyperloglog
+  );*/
+
+  private static final List<String> PHASE_1_FUNCTIONS = ImmutableList.of(
+      "statcount",        // total number of entries in the table
+      "nonnullstatcount", // total number of non-null entries in the table
+      "sum_width"//,
+      //"hll"
+    );
+  private static final List<String> PHASE_2_FUNCTIONS = ImmutableList.of(
+      "statcount",        // total number of entries in the table
+      "nonnullstatcount", // total number of non-null entries in the table
+      "avg_width"//,
+      //"hll_merge"
+    );
 
   public AnalyzePrule() {
     super(RelOptHelper.some(DrillAnalyzeRel.class, DrillRel.DRILL_LOGICAL,
@@ -51,18 +81,40 @@ public class AnalyzePrule extends Prule {
   public void onMatch(RelOptRuleCall call) {
     final DrillAnalyzeRel analyze = call.rel(0);
     final RelNode input = call.rel(1);
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    final SingleRel newAnalyze;
 
-    final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(
-        DrillDistributionTrait.SINGLETON);
-    final RelNode convertedInput = convert(input, traits);
-    final StatsAggPrel statsAggPrel = new StatsAggPrel(convertedInput, analyze.getCluster(),
-        FUNCTIONS);
+    if (settings.getIsParallelAnalyze()) {
+      // Generate parallel ANALYZE plan: Writer<-Unpivot<-StatsAgg(Phase2)<-Exchange<-StatsAgg(Phase1)<-Scan
+      final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
+      final RelNode convertedInput = convert(input, traits);
+      final List<String> mapFields1 = Lists.newArrayList(PHASE_1_FUNCTIONS);
+      final List<String> mapFields2 = Lists.newArrayList(PHASE_2_FUNCTIONS);
+      mapFields1.add(DrillStatsTable.COL_COLUMN);
+      mapFields2.add(DrillStatsTable.COL_COLUMN);
+      final RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
 
-    final List<String> mapFields = Lists.newArrayList(FUNCTIONS);
-    mapFields.add(DrillStatsTable.COL_COLUMN);
-    final SingleRel newAnalyze = new UnpivotMapsPrel(statsAggPrel, analyze.getCluster(),
-        mapFields);
+      final StatsAggPrel statsAggPrel = new StatsAggPrel(convertedInput, analyze.getCluster(),
+          PHASE_1_FUNCTIONS, StatsAggPrel.OperatorPhase.PHASE_1of2);
 
+      UnionExchangePrel exch = new UnionExchangePrel(statsAggPrel.getCluster(), singleDistTrait, statsAggPrel);
+
+      final StatsMergePrel statsMergePrel = new StatsMergePrel(exch, exch.getCluster(),
+          mapFields1, StatsMergePrel.OperatorPhase.PHASE_2of2);
+
+      newAnalyze = new UnpivotMapsPrel(statsMergePrel, statsMergePrel.getCluster(),
+          mapFields2);
+    } else {
+      // Generate serial ANALYZE plan: Writer<-Unpivot<-StatsAgg<-Exchange<-Scan
+      final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
+      final RelNode convertedInput = convert(input, traits);
+      final StatsAggPrel statsAggPrel = new StatsAggPrel(convertedInput, analyze.getCluster(),
+          FUNCTIONS, StatsAggPrel.OperatorPhase.PHASE_1of1);
+      final List<String> mapFields = Lists.newArrayList(FUNCTIONS);
+      mapFields.add(DrillStatsTable.COL_COLUMN);
+      newAnalyze = new UnpivotMapsPrel(statsAggPrel, analyze.getCluster(),
+          mapFields);
+    }
     call.transformTo(newAnalyze);
   }
 }

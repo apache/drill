@@ -50,6 +50,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
     private long queryStartTime;
     private int timeZone;
     private String defaultSchemaName;
+    private int hllMemoryLimit;
 
     public QueryContextInformation()
     {
@@ -94,6 +95,19 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
     public QueryContextInformation setDefaultSchemaName(String defaultSchemaName)
     {
         this.defaultSchemaName = defaultSchemaName;
+        return this;
+    }
+
+    // defaultSchemaName
+
+    public int getHllMemoryLimit()
+    {
+        return hllMemoryLimit;
+    }
+
+    public QueryContextInformation setDefaultSchemaName(int hllMemoryLimit)
+    {
+        this.hllMemoryLimit = hllMemoryLimit;
         return this;
     }
 
@@ -160,6 +174,8 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
                 case 3:
                     message.defaultSchemaName = input.readString();
                     break;
+                case 4:
+                    message.hllMemoryLimit = input.readInt32();
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -177,6 +193,9 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
 
         if(message.defaultSchemaName != null)
             output.writeString(3, message.defaultSchemaName, false);
+
+        if(message.hllMemoryLimit != 0)
+            output.writeInt32(3, message.hllMemoryLimit, false);
     }
 
     public String getFieldName(int number)
@@ -186,6 +205,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
             case 1: return "queryStartTime";
             case 2: return "timeZone";
             case 3: return "defaultSchemaName";
+            case 4: return "hllMemoryLimit";
             default: return null;
         }
     }
@@ -202,6 +222,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
         __fieldMap.put("queryStartTime", 1);
         __fieldMap.put("timeZone", 2);
         __fieldMap.put("defaultSchemaName", 3);
+        __fieldMap.put("hllMemoryLimit", 4);
     }
     
 }

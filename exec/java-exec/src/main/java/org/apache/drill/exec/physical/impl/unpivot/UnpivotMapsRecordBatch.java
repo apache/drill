@@ -120,6 +120,8 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
         try {
           if (!setupNewSchema()) {
             upStream = IterOutcome.OK;
+          } else {
+            return upStream;
           }
         } catch (SchemaChangeException ex) {
           kill(false);
@@ -155,7 +157,6 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
 
   private void doTransfer() {
     final int inputCount = incoming.getRecordCount();
-
     for (TransferPair tp : transferList) {
       tp.splitAndTransfer(0, inputCount);
     }

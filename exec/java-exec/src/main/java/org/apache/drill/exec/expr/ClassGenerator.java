@@ -249,7 +249,7 @@ public class ClassGenerator<T>{
     return addExpr(ex, BlkCreateMode.TRUE);
   }
 
-  public HoldingContainer addExpr(LogicalExpression ex, BlkCreateMode mode) {
+  public HoldingContainer  addExpr(LogicalExpression ex, BlkCreateMode mode) {
     if (mode == BlkCreateMode.TRUE || mode == BlkCreateMode.TRUE_IF_BOUND) {
       rotateBlock(mode);
     }

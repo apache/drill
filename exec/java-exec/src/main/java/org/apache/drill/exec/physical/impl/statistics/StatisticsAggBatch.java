@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.aggregate;
+package org.apache.drill.exec.physical.impl.statistics;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
@@ -35,6 +35,10 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StatisticsAggregate;
+import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
+import org.apache.drill.exec.physical.impl.aggregate.StreamingAggTemplate;
+import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator;
+import org.apache.drill.exec.planner.physical.StatsAggPrel.OperatorPhase;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -160,7 +164,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private StreamingAggregator codegenAggregator(List<LogicalExpression> keyExprs,
-      List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds)
+                                                List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds)
       throws SchemaChangeException, ClassTransformationException, IOException {
     ClassGenerator<StreamingAggregator> cg =
         CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry(),
@@ -203,16 +207,20 @@ public class StatisticsAggBatch extends StreamingAggBatch {
     GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
     calendar.setTimeInMillis(System.currentTimeMillis());
 
-    createKeyColumn("schema",
-        ValueExpressions.getBigInt(schema++),
-        keyExprs,
-        keyOutputIds
-    );
-    createKeyColumn("computed",
-        ValueExpressions.getDate(calendar),
-        keyExprs,
-        keyOutputIds
-    );
+    if (this.getPopConfig() instanceof StatisticsAggregate
+            && (((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_1of1
+                || ((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_2of2)) {
+      createKeyColumn("schema",
+          ValueExpressions.getBigInt(schema++),
+          keyExprs,
+          keyOutputIds
+      );
+      createKeyColumn("computed",
+          ValueExpressions.getDate(calendar),
+          keyExprs,
+          keyOutputIds
+      );
+    }
 
     MapVector cparent = new MapVector("column", oContext.getAllocator(), null);
     container.add(cparent);
