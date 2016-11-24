@@ -84,4 +84,18 @@ public class TestDrillParquetReader extends BaseTestQuery {
       .sqlBaselineQuery("SELECT columns[0] id, CAST(NULLIF(columns[1], '') AS DOUBLE) val FROM cp.`parquet2/4349.csv.gz` WHERE columns[0] = 'b'")
       .go();
   }
+
+  @Test
+  public void testUnsignedAndSignedIntTypes() throws Exception {
+    testBuilder()
+      .unOrdered()
+      .sqlQuery("select * from cp.`parquet/uint_types.parquet`")
+      .baselineColumns("uint8_field", "uint16_field", "uint32_field", "uint64_field", "int8_field", "int16_field",
+        "required_uint8_field", "required_uint16_field", "required_uint32_field", "required_uint64_field",
+        "required_int8_field", "required_int16_field")
+      .baselineValues(255, 65535, 2147483647, 9223372036854775807L, 255, 65535, -1, -1, -1, -1L, -2147483648, -2147483648)
+      .baselineValues(-1, -1, -1, -1L, -2147483648, -2147483648, 255, 65535, 2147483647, 9223372036854775807L, 255, 65535)
+      .baselineValues(null, null, null, null, null, null, 0, 0, 0, 0L, 0, 0)
+      .go();
+  }
 }
