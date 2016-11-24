@@ -26,6 +26,8 @@ import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.TimeVector;
+import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.UInt8Vector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -52,6 +54,41 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
         }
+      }
+    }
+  }
+
+  /**
+   * This class uses for reading unsigned integer fields.
+   */
+  static class DictionaryUInt4Reader extends FixedByteAlignedReader<UInt4Vector> {
+    DictionaryUInt4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                        ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, UInt4Vector v,
+                        SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+
+      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
+      if (usingDictionary) {
+        UInt4Vector.Mutator mutator = valueVec.getMutator();
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          mutator.setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
+        }
+        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
+        readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        int writerIndex = valueVec.getBuffer().writerIndex();
+        valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
+      } else {
+        super.readField(recordsToReadInThisPass);
       }
     }
   }
@@ -168,6 +205,41 @@ public class ParquetFixedWidthDictionaryReaders {
         readLength = (int) Math.ceil(readLengthInBits / 8.0);
         int writerIndex = valueVec.getBuffer().writerIndex();
         valueVec.getBuffer().setIndex(0, writerIndex + (int)readLength);
+      } else {
+        super.readField(recordsToReadInThisPass);
+      }
+    }
+  }
+
+  /**
+   * This class uses for reading unsigned BigInt fields.
+   */
+  static class DictionaryUInt8Reader extends FixedByteAlignedReader<UInt8Vector> {
+    DictionaryUInt8Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                           ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, UInt8Vector v,
+                           SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+
+      recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+
+      if (usingDictionary) {
+        UInt8Vector.Mutator mutator = valueVec.getMutator();
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          mutator.setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+        }
+        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
+        readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+        readLength = (int) Math.ceil(readLengthInBits / 8.0);
+        int writerIndex = valueVec.getBuffer().writerIndex();
+        valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
       } else {
         super.readField(recordsToReadInThisPass);
       }
