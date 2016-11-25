@@ -177,7 +177,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   @Test
-  public void testSuccessfulCreate() throws Exception {
+  public void testSuccessfulRegistration() throws Exception {
     copyDefaultJarsToStagingArea();
 
     String summary = "The following UDFs in jar %s have been registered:\n" +
@@ -272,6 +272,75 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   @Test
+  public void testSuccessfulRegistrationAfterSeveralRetryAttempts() throws Exception {
+    RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    copyDefaultJarsToStagingArea();
+
+    doThrow(new VersionMismatchException("Version mismatch detected", 1))
+            .doThrow(new VersionMismatchException("Version mismatch detected", 1))
+            .doCallRealMethod()
+            .when(remoteFunctionRegistry).updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    String summary = "The following UDFs in jar %s have been registered:\n" +
+            "[custom_lower(VARCHAR-REQUIRED)]";
+
+    testBuilder()
+            .sqlQuery("create function using jar '%s'", default_binary_name)
+            .unOrdered()
+            .baselineColumns("ok", "summary")
+            .baselineValues(true, String.format(summary, default_binary_name))
+            .go();
+
+    verify(remoteFunctionRegistry, times(3))
+            .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    FileSystem fs = remoteFunctionRegistry.getFs();
+
+    assertFalse("Staging area should be empty", fs.listFiles(remoteFunctionRegistry.getStagingArea(), false).hasNext());
+    assertFalse("Temporary area should be empty", fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
+
+    assertTrue("Binary should be present in registry area",
+            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+    assertTrue("Source should be present in registry area",
+            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+
+    Registry registry = remoteFunctionRegistry.getRegistry();
+    assertEquals("Registry should contain one jar", registry.getJarList().size(), 1);
+    assertEquals(registry.getJar(0).getName(), default_binary_name);
+  }
+
+  @Test
+  public void testSuccessfulUnregistrationAfterSeveralRetryAttempts() throws Exception {
+    RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
+    copyDefaultJarsToStagingArea();
+    test("create function using jar '%s'", default_binary_name);
+
+    reset(remoteFunctionRegistry);
+    doThrow(new VersionMismatchException("Version mismatch detected", 1))
+            .doThrow(new VersionMismatchException("Version mismatch detected", 1))
+            .doCallRealMethod()
+            .when(remoteFunctionRegistry).updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    String summary = "The following UDFs in jar %s have been unregistered:\n" +
+            "[custom_lower(VARCHAR-REQUIRED)]";
+
+    testBuilder()
+            .sqlQuery("drop function using jar '%s'", default_binary_name)
+            .unOrdered()
+            .baselineColumns("ok", "summary")
+            .baselineValues(true, String.format(summary, default_binary_name))
+            .go();
+
+    verify(remoteFunctionRegistry, times(3))
+            .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    FileSystem fs = remoteFunctionRegistry.getFs();
+
+    assertFalse("Registry area should be empty", fs.listFiles(remoteFunctionRegistry.getRegistryArea(), false).hasNext());
+    assertEquals("Registry should be empty", remoteFunctionRegistry.getRegistry().getJarList().size(), 0);
+  }
+
+  @Test
   public void testExceedRetryAttemptsDuringRegistration() throws Exception {
     RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
     copyDefaultJarsToStagingArea();
@@ -290,6 +359,18 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     verify(remoteFunctionRegistry, times(remoteFunctionRegistry.getRetryAttempts() + 1))
         .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    FileSystem fs = remoteFunctionRegistry.getFs();
+
+    assertTrue("Binary should be present in staging area",
+            fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_binary_name)));
+    assertTrue("Source should be present in staging area",
+            fs.exists(new Path(remoteFunctionRegistry.getStagingArea(), default_source_name)));
+
+    assertFalse("Registry area should be empty", fs.listFiles(remoteFunctionRegistry.getRegistryArea(), false).hasNext());
+    assertFalse("Temporary area should be empty", fs.listFiles(remoteFunctionRegistry.getTmpArea(), false).hasNext());
+
+    assertEquals("Registry should be empty", remoteFunctionRegistry.getRegistry().getJarList().size(), 0);
   }
 
   @Test
@@ -313,6 +394,17 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
     verify(remoteFunctionRegistry, times(remoteFunctionRegistry.getRetryAttempts() + 1))
         .updateRegistry(any(Registry.class), any(DataChangeVersion.class));
+
+    FileSystem fs = remoteFunctionRegistry.getFs();
+
+    assertTrue("Binary should be present in registry area",
+            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_binary_name)));
+    assertTrue("Source should be present in registry area",
+            fs.exists(new Path(remoteFunctionRegistry.getRegistryArea(), default_source_name)));
+
+    Registry registry = remoteFunctionRegistry.getRegistry();
+    assertEquals("Registry should contain one jar", registry.getJarList().size(), 1);
+    assertEquals(registry.getJar(0).getName(), default_binary_name);
   }
 
   @Test
@@ -445,7 +537,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   @Test
-  public void testRegistryAreaCleanUpOnFail() throws Exception {
+  public void testRegistrationFailDuringRegistryUpdate() throws Exception {
     final RemoteFunctionRegistry remoteFunctionRegistry = spyRemoteFunctionRegistry();
     final FileSystem fs = remoteFunctionRegistry.getFs();
     final String errorMessage = "Failure during remote registry update.";

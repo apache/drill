@@ -90,7 +90,7 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
 
       jarManager.initRemoteBackup();
       List<String> functions = validateAgainstLocalRegistry(jarManager, context.getFunctionRegistry());
-      initRemoteRegistration(functions, jarManager, remoteRegistry, remoteRegistry.getRetryAttempts());
+      initRemoteRegistration(functions, jarManager, remoteRegistry);
       jarManager.deleteQuietlyFromStagingArea();
 
       return DirectPlan.createDirectPlan(context, true,
@@ -154,43 +154,47 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
    * Instantiates remote registration. First gets remote function registry with version.
    * Version is used to ensure that we update the same registry we validated against.
    * Then validates against list of remote jars.
-   * If validation is successful, starts updating remote function registry.
+   * If validation is successful, first copies jars to registry area and starts updating remote function registry.
    * If during update {@link VersionMismatchException} was detected,
-   * calls itself recursively to instantiate new remote registration process.
-   * Since remote registry version has changed, we need to re-validate against remote function registry one more time.
-   * Each time recursive call occurs, decreases retry attempts counter by one.
+   * attempts to repeat remote registration process till retry attempts exceeds the limit.
    * If retry attempts number hits 0, throws exception that failed to update remote function registry.
+   * In case of any error, if jars have been already copied to registry area, they will be deleted.
    *
    * @param functions list of functions present in jar
    * @param jarManager helper class for copying jars to registry area
    * @param remoteRegistry remote function registry
-   * @param retryAttempts number of retry attempts
    * @throws IOException in case of problems with copying jars to registry area
    */
   private void initRemoteRegistration(List<String> functions,
-                                      JarManager jarManager,
-                                      RemoteFunctionRegistry remoteRegistry,
-                                      int retryAttempts) throws IOException {
-    DataChangeVersion version = new DataChangeVersion();
-    List<Jar> remoteJars = remoteRegistry.getRegistry(version).getJarList();
-    validateAgainstRemoteRegistry(remoteJars, jarManager.getBinaryName(), functions);
-    jarManager.copyToRegistryArea();
-    boolean cleanUp = true;
-    List<Jar> jars = Lists.newArrayList(remoteJars);
-    jars.add(Jar.newBuilder().setName(jarManager.getBinaryName()).addAllFunctionSignature(functions).build());
-    Registry updatedRegistry = Registry.newBuilder().addAllJar(jars).build();
+                  JarManager jarManager,
+                  RemoteFunctionRegistry remoteRegistry) throws IOException {
+    int retryAttempts = remoteRegistry.getRetryAttempts();
+    boolean copyJars = true;
     try {
-      remoteRegistry.updateRegistry(updatedRegistry, version);
-      cleanUp = false;
-    } catch (VersionMismatchException ex) {
-      if (retryAttempts-- == 0) {
-        throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry attempts limit.");
+      while (retryAttempts >= 0) {
+        DataChangeVersion version = new DataChangeVersion();
+        List<Jar> remoteJars = remoteRegistry.getRegistry(version).getJarList();
+        validateAgainstRemoteRegistry(remoteJars, jarManager.getBinaryName(), functions);
+        if (copyJars) {
+          jarManager.copyToRegistryArea();
+          copyJars = false;
+        }
+        List<Jar> jars = Lists.newArrayList(remoteJars);
+        jars.add(Jar.newBuilder().setName(jarManager.getBinaryName()).addAllFunctionSignature(functions).build());
+        Registry updatedRegistry = Registry.newBuilder().addAllJar(jars).build();
+        try {
+          remoteRegistry.updateRegistry(updatedRegistry, version);
+          return;
+        } catch (VersionMismatchException ex) {
+          retryAttempts--;
+        }
       }
-      initRemoteRegistration(functions, jarManager, remoteRegistry, retryAttempts);
-    } finally {
-      if (cleanUp) {
+      throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry attempts limit.");
+    } catch (Exception e) {
+      if (!copyJars) {
         jarManager.deleteQuietlyFromRegistryArea();
       }
+      throw e;
     }
   }
 

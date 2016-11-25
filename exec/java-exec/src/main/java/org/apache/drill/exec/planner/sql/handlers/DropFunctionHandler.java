@@ -84,7 +84,7 @@ public class DropFunctionHandler extends DefaultSqlHandler {
         return DirectPlan.createDirectPlan(context, false, String.format("Jar with %s name is used. Action: %s", jarName, action));
       }
 
-      Jar deletedJar = unregister(jarName, remoteFunctionRegistry, remoteFunctionRegistry.getRetryAttempts());
+      Jar deletedJar = unregister(jarName, remoteFunctionRegistry);
       if (deletedJar == null) {
         return DirectPlan.createDirectPlan(context, false, String.format("Jar %s is not registered in remote registry", jarName));
       }
@@ -108,45 +108,44 @@ public class DropFunctionHandler extends DefaultSqlHandler {
   }
 
   /**
-   * First gets remote function registry with version.
+   * Gets remote function registry with version.
    * Version is used to ensure that we update the same registry we removed jars from.
    * Looks for a jar to be deleted, if founds one,
-   * attempts to update remote registry with updated list of jars, that excludes jar to be deleted.
+   * attempts to update remote registry with list of jars, that excludes jar to be deleted.
    * If during update {@link VersionMismatchException} was detected,
-   * calls itself recursively to instantiate new remote unregistration process.
-   * Since remote registry version has changed we need to look for jar to be deleted one more time.
-   * Each time recursive call occurs, decreases retry attempts counter by one.
+   * attempts to repeat unregistration process till retry attempts exceeds the limit.
    * If retry attempts number hits 0, throws exception that failed to update remote function registry.
    *
    * @param jarName jar name
    * @param remoteFunctionRegistry remote function registry
-   * @param retryAttempts number of retry attempts
    * @return jar that was unregistered, null otherwise
    */
-  private Jar unregister(String jarName, RemoteFunctionRegistry remoteFunctionRegistry, int retryAttempts) {
-    DataChangeVersion version = new DataChangeVersion();
-    Registry registry = remoteFunctionRegistry.getRegistry(version);
-    Jar jarToBeDeleted = null;
-    List<Jar> jars = Lists.newArrayList();
-    for (Jar j : registry.getJarList()) {
-      if (j.getName().equals(jarName)) {
-        jarToBeDeleted = j;
-      } else {
-        jars.add(j);
+  private Jar unregister(String jarName, RemoteFunctionRegistry remoteFunctionRegistry) {
+    int retryAttempts = remoteFunctionRegistry.getRetryAttempts();
+    while (retryAttempts >= 0) {
+      DataChangeVersion version = new DataChangeVersion();
+      Registry registry = remoteFunctionRegistry.getRegistry(version);
+      Jar jarToBeDeleted = null;
+      List<Jar> jars = Lists.newArrayList();
+      for (Jar j : registry.getJarList()) {
+        if (j.getName().equals(jarName)) {
+          jarToBeDeleted = j;
+        } else {
+          jars.add(j);
+        }
       }
-    }
-    if (jarToBeDeleted != null) {
+      if (jarToBeDeleted == null) {
+        return null;
+      }
       Registry updatedRegistry = Registry.newBuilder().addAllJar(jars).build();
       try {
         remoteFunctionRegistry.updateRegistry(updatedRegistry, version);
+        return jarToBeDeleted;
       } catch (VersionMismatchException ex) {
-        if (retryAttempts-- == 0) {
-          throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry attempts limit.");
-        }
-        unregister(jarName, remoteFunctionRegistry, retryAttempts);
+        retryAttempts--;
       }
     }
-    return jarToBeDeleted;
+    throw new DrillRuntimeException("Failed to update remote function registry. Exceeded retry attempts limit.");
   }
 
   /**
