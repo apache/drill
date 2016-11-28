@@ -1,0 +1,68 @@
+# Expected output for org.apache.drill.exec.expr.ExpressionTest.testSpecial
+# Generated from: 1 + 1
+
+package org.apache.drill.exec.test.generated;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.IntVector;
+
+public class ProjectorGen {
+
+    IntHolder constant2;
+    IntVector vv3;
+
+    public void doEval(int inIndex, int outIndex)
+        throws SchemaChangeException
+    {
+        {
+            vv3 .getMutator().set((outIndex), constant2 .value);
+        }
+    }
+
+    public void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing)
+        throws SchemaChangeException
+    {
+        {
+            IntHolder out0 = new IntHolder();
+            out0 .value = 1;
+            /** start SETUP for function add **/
+            {
+                IntHolder in1 = out0;
+                IntHolder in2 = out0;
+                 {}
+            }
+            /** end SETUP for function add **/
+            //---- start of eval portion of add function. ----//
+            IntHolder out1 = new IntHolder();
+            {
+                final IntHolder out = new IntHolder();
+                IntHolder in1 = out0;
+                IntHolder in2 = out0;
+
+AddFunctions$IntIntAdd_eval: {
+    out.value = (int) (in1.value + in2.value);
+}
+
+                out1 = out;
+            }
+            //---- end of eval portion of add function. ----//
+            constant2 = out1;
+            int[] fieldIds4 = new int[ 1 ] ;
+            fieldIds4 [ 0 ] = -1;
+            Object tmp5 = (outgoing).getValueAccessorById(IntVector.class, fieldIds4).getValueVector();
+            if (tmp5 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv3 with id: TypedFieldId [fieldIds=[-1], remainder=null].");
+            }
+            vv3 = ((IntVector) tmp5);
+        }
+    }
+
+    public void __DRILL_INIT__()
+        throws SchemaChangeException
+    {
+    }
+
+}

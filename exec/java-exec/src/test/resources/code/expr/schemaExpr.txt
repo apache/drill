@@ -1,0 +1,111 @@
+# Expected output for org.apache.drill.exec.expr.ExpressionTest.testSchemaExpression
+# Generated from: 1 + alpha
+
+package org.apache.drill.exec.test.generated;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+
+public class ProjectorGen {
+
+    BigIntHolder constant2;
+    NullableBigIntVector vv3;
+    NullableBigIntVector vv8;
+
+    public void doEval(int inIndex, int outIndex)
+        throws SchemaChangeException
+    {
+        {
+            NullableBigIntHolder out6 = new NullableBigIntHolder();
+            {
+                out6 .isSet = vv3 .getAccessor().isSet((inIndex));
+                if (out6 .isSet == 1) {
+                    out6 .value = vv3 .getAccessor().get((inIndex));
+                }
+            }
+            //---- start of eval portion of add function. ----//
+            NullableBigIntHolder out7 = new NullableBigIntHolder();
+            {
+                if (out6 .isSet == 0) {
+                    out7 .isSet = 0;
+                } else {
+                    final NullableBigIntHolder out = new NullableBigIntHolder();
+                    BigIntHolder in1 = constant2;
+                    NullableBigIntHolder in2 = out6;
+                     
+AddFunctions$BigIntBigIntAdd_eval: {
+    out.value = (long) (in1.value + in2.value);
+}
+ 
+                    out.isSet = 1;
+                    out7 = out;
+                    out.isSet = 1;
+                }
+            }
+            //---- end of eval portion of add function. ----//
+            if (!(out7 .isSet == 0)) {
+                vv8 .getMutator().set((outIndex), out7 .isSet, out7 .value);
+            }
+        }
+    }
+
+    public void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing)
+        throws SchemaChangeException
+    {
+        {
+            IntHolder out0 = new IntHolder();
+            out0 .value = 1;
+            /** start SETUP for function castBIGINT **/ 
+            {
+                IntHolder in = out0;
+                 {}
+            }
+            /** end SETUP for function castBIGINT **/ 
+            //---- start of eval portion of castBIGINT function. ----//
+            BigIntHolder out1 = new BigIntHolder();
+            {
+                final BigIntHolder out = new BigIntHolder();
+                IntHolder in = out0;
+                 
+CastIntBigInt_eval: {
+    out.value = in.value;
+}
+ 
+                out1 = out;
+            }
+            //---- end of eval portion of castBIGINT function. ----//
+            constant2 = out1;
+            int[] fieldIds4 = new int[ 1 ] ;
+            fieldIds4 [ 0 ] = 0;
+            Object tmp5 = (incoming).getValueAccessorById(NullableBigIntVector.class, fieldIds4).getValueVector();
+            if (tmp5 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv3 with id: TypedFieldId [fieldIds=[0], remainder=null].");
+            }
+            vv3 = ((NullableBigIntVector) tmp5);
+            /** start SETUP for function add **/ 
+            {
+                BigIntHolder in1 = constant2;
+                 {}
+            }
+            /** end SETUP for function add **/ 
+            int[] fieldIds9 = new int[ 1 ] ;
+            fieldIds9 [ 0 ] = -1;
+            Object tmp10 = (outgoing).getValueAccessorById(NullableBigIntVector.class, fieldIds9).getValueVector();
+            if (tmp10 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv8 with id: TypedFieldId [fieldIds=[-1], remainder=null].");
+            }
+            vv8 = ((NullableBigIntVector) tmp10);
+        }
+    }
+
+    public void __DRILL_INIT__()
+        throws SchemaChangeException
+    {
+    }
+
+}

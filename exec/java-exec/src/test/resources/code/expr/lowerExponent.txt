@@ -1,0 +1,91 @@
+# Expected output for org.apache.drill.exec.expr.ExpressionTest.testExprParseLowerExponent
+# Generated from: multiply(`$f0`, 1.0e-4)
+
+package org.apache.drill.exec.test.generated;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.holders.Float8Holder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.NullableFloat8Vector;
+
+public class ProjectorGen {
+
+    NullableFloat8Vector vv0;
+    Float8Holder constant5;
+    NullableFloat8Vector vv7;
+
+    public void doEval(int inIndex, int outIndex)
+        throws SchemaChangeException
+    {
+        {
+            NullableFloat8Holder out3 = new NullableFloat8Holder();
+            {
+                out3 .isSet = vv0 .getAccessor().isSet((inIndex));
+                if (out3 .isSet == 1) {
+                    out3 .value = vv0 .getAccessor().get((inIndex));
+                }
+            }
+            //---- start of eval portion of multiply function. ----//
+            NullableFloat8Holder out6 = new NullableFloat8Holder();
+            {
+                if (out3 .isSet == 0) {
+                    out6 .isSet = 0;
+                } else {
+                    final NullableFloat8Holder out = new NullableFloat8Holder();
+                    NullableFloat8Holder in1 = out3;
+                    Float8Holder in2 = constant5;
+
+MultiplyFunctions$Float8Float8Multiply_eval: {
+    out.value = (double) (in1.value * in2.value);
+}
+
+                    out.isSet = 1;
+                    out6 = out;
+                    out.isSet = 1;
+                }
+            }
+            //---- end of eval portion of multiply function. ----//
+            if (!(out6 .isSet == 0)) {
+                vv7 .getMutator().set((outIndex), out6 .isSet, out6 .value);
+            }
+        }
+    }
+
+    public void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing)
+        throws SchemaChangeException
+    {
+        {
+            int[] fieldIds1 = new int[ 1 ] ;
+            fieldIds1 [ 0 ] = 0;
+            Object tmp2 = (incoming).getValueAccessorById(NullableFloat8Vector.class, fieldIds1).getValueVector();
+            if (tmp2 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv0 with id: TypedFieldId [fieldIds=[0], remainder=null].");
+            }
+            vv0 = ((NullableFloat8Vector) tmp2);
+            Float8Holder out4 = new Float8Holder();
+            out4 .value = 1.0E-4D;
+            constant5 = out4;
+            /** start SETUP for function multiply **/
+            {
+                Float8Holder in2 = constant5;
+                 {}
+            }
+            /** end SETUP for function multiply **/
+            int[] fieldIds8 = new int[ 1 ] ;
+            fieldIds8 [ 0 ] = -1;
+            Object tmp9 = (outgoing).getValueAccessorById(NullableFloat8Vector.class, fieldIds8).getValueVector();
+            if (tmp9 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv7 with id: TypedFieldId [fieldIds=[-1], remainder=null].");
+            }
+            vv7 = ((NullableFloat8Vector) tmp9);
+        }
+    }
+
+    public void __DRILL_INIT__()
+        throws SchemaChangeException
+    {
+    }
+
+}
