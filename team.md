@@ -31,4 +31,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Sudheesh Katkam | sudheesh |
 | Ellen Friedman | ellenf |
 | Kris Hahn | krishahn |
+| Neeraja Rentachintala | neerajar |
 
