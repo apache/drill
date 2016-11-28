@@ -31,6 +31,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   public boolean enablePushdown = true;
   public boolean ignoreSchemaChange = false;
   public boolean readAllNumbersAsDouble = false;
+  public boolean disableCountOptimization = false;
 
   @Override
   public int hashCode() {
@@ -48,6 +49,8 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
       return false;
     } else if (enablePushdown != other.enablePushdown) {
       return false;
+    } else if (disableCountOptimization != other.disableCountOptimization) {
+      return false;
     }
     return true;
   }
@@ -63,6 +66,15 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   @JsonProperty("allTextMode")
   public void setAllTextMode(boolean mode) {
     allTextMode = mode;
+  }
+
+  @JsonProperty("disableCountOptimization")
+  public void setDisableCountOptimization(boolean mode) {
+    disableCountOptimization = mode;
+  }
+
+  public boolean shouldDisableCountOptimization() {
+    return disableCountOptimization;
   }
 
   @JsonProperty("readAllNumbersAsDouble")
