@@ -44,6 +44,12 @@ import org.apache.drill.exec.planner.torel.ConversionContext;
  */
 public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
 
+  /**
+   * Cache the distinct row count which will be used by the planner if there is a GROUP BY happening
+   * downstream from the join.
+   */
+  protected double distinctCount = -1.0;
+
   /** Creates a DrillJoinRel.
    * We do not throw InvalidRelException in Logical planning phase. It's up to the post-logical planning check or physical planning
    * to detect the unsupported join type, and throw exception.
@@ -68,7 +74,9 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
 
   @Override
   public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
-    return new DrillJoinRel(getCluster(), traitSet, left, right, condition, joinType);
+    DrillJoinRel join = new DrillJoinRel(getCluster(), traitSet, left, right, condition, joinType);
+    join.setDistinctRowCount(this.distinctCount);
+    return join;
   }
 
   @Override
@@ -149,6 +157,23 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     DrillJoinRel joinRel = new DrillJoinRel(context.getCluster(), context.getLogicalTraits(), left, right, rexCondition, join.getJoinType());
 
     return joinRel;
+  }
+
+  /**
+   * set the distinct row count which will be used by the planner if there is a GROUP-BY happening
+   * downstream from the join
+   * @param d
+   */
+  public void setDistinctRowCount(double d) {
+    this.distinctCount = d;
+  }
+
+  /**
+   * Get the distinct row count for this join
+   * @return distinct row count
+   */
+  public double getDistinctRowCount() {
+    return distinctCount;
   }
 
 }

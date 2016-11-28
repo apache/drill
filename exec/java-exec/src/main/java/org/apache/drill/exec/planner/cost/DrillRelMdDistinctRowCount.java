@@ -18,15 +18,20 @@
 package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.physical.JoinPrel;
 
 public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRelMdDistinctRowCount.class);
+
   private static final DrillRelMdDistinctRowCount INSTANCE =
       new DrillRelMdDistinctRowCount();
 
@@ -41,6 +46,30 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     } else {
       return super.getDistinctRowCount(rel, groupKey, predicate);
     }
+  }
+
+  @Override
+  public Double getDistinctRowCount(Join rel, ImmutableBitSet groupKey, RexNode predicate) {
+    Double count = null;
+    if (rel != null) {
+      if (rel instanceof JoinPrel) {
+        // for Drill physical joins, don't recompute the distinct row count since it was already done
+        // during logical planning; retrieve the cached value.
+        count = ((JoinPrel)rel).getDistinctRowCount();
+        if (count.doubleValue() < 0) {
+          logger.warn("Invalid cached distinct row count for {}; recomputing..", rel.getDescription());
+          count = super.getDistinctRowCount(rel, groupKey, predicate);
+        }
+      } else {
+        count = super.getDistinctRowCount(rel, groupKey, predicate);
+        if (count != null && rel instanceof DrillJoinRel) {
+          // for Drill logical joins, cache the distinct row count such that it can be re-used during
+          // physical planning
+          ((DrillJoinRel)rel).setDistinctRowCount(count.doubleValue());
+        }
+      }
+    }
+    return count;
   }
 
   private Double getDistinctRowCount(DrillScanRel scan, ImmutableBitSet groupKey, RexNode predicate) {

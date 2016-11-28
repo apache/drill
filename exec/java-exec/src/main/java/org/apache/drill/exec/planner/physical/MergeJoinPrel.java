@@ -46,8 +46,8 @@ public class MergeJoinPrel  extends JoinPrel {
 
   /** Creates a MergeJoiPrel. */
   public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
-      JoinRelType joinType) throws InvalidRelException {
-    super(cluster, traits, left, right, condition, joinType);
+      JoinRelType joinType, double distinctCount) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType, distinctCount);
     joincategory = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
   }
 
@@ -55,7 +55,7 @@ public class MergeJoinPrel  extends JoinPrel {
   @Override
   public Join copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
-      return new MergeJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
+      return new MergeJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType, this.distinctCount);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
