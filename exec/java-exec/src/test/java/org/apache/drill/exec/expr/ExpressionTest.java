@@ -63,9 +63,13 @@ public class ExpressionTest extends ExecTest {
   }
 
   @Test
-  public void testExprParseUpperExponent(@Injectable RecordBatch batch) throws Exception {
-    getExpressionCode("multiply(`$f0`, 1.0E-4)", batch);
-  }
+  public void testExprParseUpperExponent(@Injectable final RecordBatch batch) throws Exception {
+    final TypeProtos.MajorType type = Types.optional(MinorType.FLOAT8);
+    final TypedFieldId tfid = new TypedFieldId(type, false, 0);
+
+    new NonStrictExpectations() {{
+      batch.getValueVectorId(new SchemaPath("$f0", ExpressionPosition.UNKNOWN)); result=tfid;
+    }};
 
   @Test
   public void testExprParseLowerExponent(@Injectable RecordBatch batch) throws Exception {
@@ -77,19 +81,11 @@ public class ExpressionTest extends ExecTest {
     final TypeProtos.MajorType type = Types.optional(MinorType.INT);
     final TypedFieldId tfid = new TypedFieldId(type, false, 0);
 
-    new NonStrictExpectations() {
-      @NonStrict VectorWrapper<?> wrapper;
-      {
-        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
-        result = tfid;
-        batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
-        result = wrapper;
-        wrapper.getValueVector();
-        result = new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(c));
-      }
+    new NonStrictExpectations() {{
+      batch.getValueVectorId(new SchemaPath("$f0", ExpressionPosition.UNKNOWN)); result=tfid;
+    }};
 
-    };
-    System.out.println(getExpressionCode("1 + 1", batch));
+    checkExpressionCode("multiply(`$f0`, 1.0e-4)", batch, "/code/expr/lowerExponent.txt");
   }
 
   @Test
@@ -133,5 +129,39 @@ public class ExpressionTest extends ExecTest {
     final ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, funcReg, null).getRoot();
     cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.getCodeGenerator().generateAndGet();
+  }
+
+  /**
+   * Generate code for an expression, then compare with saved "golden" value.
+   *
+   * @param expression the expression to test
+   * @param batch the record batch to use
+   * @param expected the name of the resource containing the expected result
+   * @throws Exception
+   */
+  private void checkExpressionCode(String expression, RecordBatch batch,
+      String expected) throws Exception {
+    String code = getExpressionCode(expression, batch);
+    try {
+      FileMatcher.Builder builder = new FileMatcher.Builder()
+          .actualString(code)
+
+          // Remove class serial number.
+
+          .withFilter(new FileMatcher.Filter() {
+            @Override
+            public String filter(String line) {
+              return line.replaceAll("ProjectorGen\\d+", "ProjectorGen");
+            }
+          });
+      if (expected == null) {
+        builder.capture();
+      } else {
+        builder.expectedResource(expected);
+      }
+      Assert.assertTrue(builder.matches());
+    } catch (IOException e) {
+      Assert.fail(e.getMessage());
+    }
   }
 }
