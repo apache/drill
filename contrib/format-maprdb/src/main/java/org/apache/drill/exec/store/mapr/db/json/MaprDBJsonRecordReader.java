@@ -94,7 +94,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private boolean disablePushdown;
   private final boolean allTextMode;
   private final boolean ignoreSchemaChange;
-  private final boolean readDocumentForCount;
+  private final boolean disableCountOptimization;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       MapRDBFormatPluginConfig formatPluginConfig,
@@ -112,7 +112,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(serializedFilter));
     }
 
-    readDocumentForCount = formatPluginConfig.shouldReadDocumentForCount();
+    disableCountOptimization = formatPluginConfig.shouldDisableCountOptimization();
     setColumns(projectedColumns);
     unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     readNumbersAsDouble = formatPluginConfig.isReadAllNumbersAsDouble();
@@ -135,7 +135,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       includeId = true;
       if (isSkipQuery()) {
     	// `SELECT COUNT(*)` query
-    	if (!readDocumentForCount) {
+    	if (!disableCountOptimization) {
           projectedFields = new FieldPath[1];
           projectedFields[0] = ID_FIELD;
         }
@@ -147,7 +147,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     for (SchemaPath column : columns) {
       if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
         includeId = true;
-        if (!readDocumentForCount) {
+        if (!disableCountOptimization) {
           projectedFieldsSet.add(ID_FIELD);
         }
       } else {
@@ -161,7 +161,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
     }
 
-    if (readDocumentForCount) {
+    if (disableCountOptimization) {
       idOnly = (projectedFields == null);
     }
 
