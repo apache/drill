@@ -404,7 +404,9 @@ public class Metadata {
     ALL_COLS.add(AbstractRecordReader.STAR_COLUMN);
     boolean autoCorrectCorruptDates = formatConfig.autoCorrectCorruptDates;
     ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
-    logger.info(containsCorruptDates.toString());
+    if (logger.isDebugEnabled()) {
+      logger.debug(containsCorruptDates.toString());
+    }
     for (BlockMetaData rowGroup : metadata.getBlocks()) {
       List<ColumnMetadata_v3> columnMetadataList = Lists.newArrayList();
       long length = 0;

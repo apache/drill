@@ -127,7 +127,9 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
           // in the first row group
           ParquetReaderUtility.DateCorruptionStatus containsCorruptDates =
               ParquetReaderUtility.detectCorruptDates(parquetMetadata, config.getColumns(), true);
-          logger.info(containsCorruptDates.toString());
+          if (logger.isDebugEnabled()) {
+            logger.debug(containsCorruptDates.toString());
+          }
           readers.add(new ParquetRecordReader(
                   context,
                   Path.getPathWithoutSchemeAndAuthority(finalPath).toString(),
