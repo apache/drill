@@ -137,23 +137,23 @@ public class ParquetMetaStatCollector implements  ColumnStatCollector{
       switch (type.getMinorType()) {
       case INT :
       case TIME:
-        ((IntStatistics) stat).setMinMax(((Integer) min).intValue(), ((Integer) max).intValue());
+        ((IntStatistics) stat).setMinMax(Integer.parseInt(min.toString()), Integer.parseInt(max.toString()));
         break;
       case BIGINT:
       case TIMESTAMP:
-        ((LongStatistics) stat).setMinMax(((Long) min).longValue(), ((Long) max).longValue());
+        ((LongStatistics) stat).setMinMax(Long.parseLong(min.toString()), Long.parseLong(max.toString()));
         break;
       case FLOAT4:
-        ((FloatStatistics) stat).setMinMax(((Float) min).floatValue(), ((Float) max).floatValue());
+        ((FloatStatistics) stat).setMinMax(Float.parseFloat(min.toString()), Float.parseFloat(max.toString()));
         break;
       case FLOAT8:
-        ((DoubleStatistics) stat).setMinMax(((Double) min).doubleValue(), ((Double) max).doubleValue());
+        ((DoubleStatistics) stat).setMinMax(Double.parseDouble(min.toString()), Double.parseDouble(max.toString()));
         break;
       case DATE:
         convertedStat = new LongStatistics();
         convertedStat.setNumNulls(stat.getNumNulls());
-        final long minMS = convertToDrillDateValue(((Integer) min).intValue());
-        final long maxMS = convertToDrillDateValue(((Integer) max).intValue());
+        final long minMS = convertToDrillDateValue(Integer.parseInt(min.toString()));
+        final long maxMS = convertToDrillDateValue(Integer.parseInt(max.toString()));
         ((LongStatistics) convertedStat ).setMinMax(minMS, maxMS);
         break;
       default:
