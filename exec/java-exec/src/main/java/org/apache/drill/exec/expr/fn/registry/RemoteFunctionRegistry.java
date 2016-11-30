@@ -81,8 +81,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
  */
 public class RemoteFunctionRegistry implements AutoCloseable {
 
-  public static final String REGISTRY = "registry";
-
+  private static final String registry_path = "registry";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
@@ -108,15 +107,15 @@ public class RemoteFunctionRegistry implements AutoCloseable {
   }
 
   public Registry getRegistry() {
-    return registry.get(REGISTRY, null);
+    return registry.get(registry_path, null);
   }
 
   public Registry getRegistry(DataChangeVersion version) {
-    return registry.get(REGISTRY, version);
+    return registry.get(registry_path, version);
   }
 
   public void updateRegistry(Registry registryContent, DataChangeVersion version) throws VersionMismatchException {
-    registry.put(REGISTRY, registryContent, version);
+    registry.put(registry_path, registryContent, version);
   }
 
   public void submitForUnregistration(String jar) {
@@ -168,7 +167,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
           .persist()
           .build();
       registry = storeProvider.getOrCreateStore(registrationConfig);
-      registry.putIfAbsent(REGISTRY, Registry.getDefaultInstance());
+      registry.putIfAbsent(registry_path, Registry.getDefaultInstance());
     } catch (StoreException e) {
       throw new DrillRuntimeException("Failure while loading remote registry.", e);
     }
@@ -189,6 +188,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
    * if not set, uses user home directory instead.
    */
   private void prepareAreas(DrillConfig config) {
+    logger.info("Preparing three remote udf areas: staging, registry and tmp.");
     Configuration conf = new Configuration();
     if (config.hasPath(ExecConstants.UDF_DIRECTORY_FS)) {
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getString(ExecConstants.UDF_DIRECTORY_FS));
@@ -245,6 +245,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     } catch (Exception e) {
       DrillRuntimeException.format(e, "Error during udf area creation [%s] on file system [%s]", fullPath, fs.getUri());
     }
+    logger.info("Created remote udf area [{}] on file system [{}]", fullPath, fs.getUri());
     return path;
   }
 

@@ -78,6 +78,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   public void setup() {
     Properties overrideProps = new Properties();
     overrideProps.setProperty("drill.exec.udf.directory.root", base.getRoot().getPath());
+    overrideProps.setProperty("drill.tmp-dir", base.getRoot().getPath());
     updateTestCluster(1, DrillConfig.create(overrideProps));
   }
 
