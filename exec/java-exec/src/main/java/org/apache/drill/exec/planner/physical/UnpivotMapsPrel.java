@@ -35,14 +35,14 @@ public class UnpivotMapsPrel extends SingleRel implements Prel, DrillRelNode {
 
   private List<String> mapFieldsNames;
 
-  public UnpivotMapsPrel(RelNode child, RelOptCluster cluster, List<String> mapFieldsNames) {
-    super(cluster, child.getTraitSet(), child);
+  public UnpivotMapsPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<String> mapFieldsNames) {
+    super(cluster, traits, child);
     this.mapFieldsNames = mapFieldsNames;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new UnpivotMapsPrel(sole(inputs), getCluster(), mapFieldsNames);
+    return new UnpivotMapsPrel(getCluster(), traitSet, sole(inputs), mapFieldsNames);
   }
 
   @Override

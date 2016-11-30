@@ -52,15 +52,15 @@ public class StatsAggPrel extends SingleRel implements DrillRelNode, Prel {
   private List<String> functions;
   protected List<AggregateCall> phase2functions = Lists.newArrayList();
 
-  public StatsAggPrel(RelNode child, RelOptCluster cluster, List<String> functions, OperatorPhase operPhase) {
-    super(cluster, child.getTraitSet(), child);
+  public StatsAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<String> functions, OperatorPhase operPhase) {
+    super(cluster, traits, child);
     this.functions = ImmutableList.copyOf(functions);
     this.phase = operPhase;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new StatsAggPrel(sole(inputs), getCluster(), ImmutableList.copyOf(functions), phase);
+    return new StatsAggPrel(getCluster(), traitSet, sole(inputs), ImmutableList.copyOf(functions), phase);
   }
 
   @Override

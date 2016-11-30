@@ -518,14 +518,13 @@ public final class UserBitShared {
      */
     STATISTICS_AGGREGATE(37, 37),
     /**
-     * <code>UNPIVOT_MAPS = 38;</code>
+     * <code>STATISTICS_MERGE = 38;</code>
      */
-    UNPIVOT_MAPS(38, 38),
-
+    STATISTICS_MERGE(38, 38),
     /**
-     * <code>STATISTICS_MERGE = 39;</code>
+     * <code>UNPIVOT_MAPS = 39;</code>
      */
-    STATISTICS_MERGE(39, 39)
+    UNPIVOT_MAPS(39, 39)
     ;
     /**
      * <code>SINGLE_SENDER = 0;</code>
@@ -680,13 +679,13 @@ public final class UserBitShared {
      */
     public static final int STATISTICS_AGGREGATE_VALUE = 37;
     /**
-     * <code>UNPIVOT_MAPS = 38;</code>
+     * <code>STATISTICS_MERGE = 38;</code>
      */
-    public static final int UNPIVOT_MAPS_VALUE = 38;
+    public static final int STATISTICS_MERGE_VALUE = 38;
     /**
-     * <code>STATISTICS_MERGE = 39;</code>
+     * <code>UNPIVOT_MAPS = 39;</code>
      */
-    public static final int STATISTICS_MERGE_VALUE = 39;
+    public static final int UNPIVOT_MAPS_VALUE = 39;
 
     public final int getNumber() { return value; }
 
@@ -730,8 +729,8 @@ public final class UserBitShared {
         case 35: return NESTED_LOOP_JOIN;
         case 36: return AVRO_SUB_SCAN;
         case 37: return STATISTICS_AGGREGATE;
-        case 38: return UNPIVOT_MAPS;
-        case 39: return STATISTICS_MERGE;
+        case 38: return STATISTICS_MERGE;
+        case 39: return UNPIVOT_MAPS;
         default: return null;
       }
     }
