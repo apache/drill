@@ -314,6 +314,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     final List<DrillbitEndpoint> endpoints = new ArrayList<>();
+
     if (isDirectConnection) {
       // Populate the endpoints list with all the drillbit information provided in the connection string
       endpoints.addAll(parseAndVerifyEndpoints(props.getProperty("drillbit"),
@@ -334,7 +335,6 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     // shuffle the collection then get the first endpoint
     Collections.shuffle(endpoints);
-    final DrillbitEndpoint endpoint = endpoints.get(0);
 
     if (props != null) {
       final UserProperties.Builder upBuilder = UserProperties.newBuilder();
@@ -357,10 +357,54 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         super.afterExecute(r, t);
       }
     };
-    client = new UserClient(clientName, config, supportComplexTypes, allocator, eventLoopGroup, executor);
-    logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
-    connect(endpoint);
-    connected = true;
+
+    // "tries" is max number of unique drillbit to try connecting until successfully connected to one of them
+    final String connectTriesConf = (props != null) ? props.getProperty("tries", "5") : "5";
+
+    int connectTriesVal;
+    try {
+      connectTriesVal = Math.min(endpoints.size(), Integer.parseInt(connectTriesConf));
+    } catch (NumberFormatException e) {
+      throw new InvalidConnectionInfoException("Invalid tries value: " + connectTriesConf + " specified in " +
+                                               "connection string");
+    }
+
+    // If the value provided in the connection string is <=0 then override with 1 since we want to try connecting
+    // at least once
+    connectTriesVal = Math.max(1, connectTriesVal);
+
+    int triedEndpointIndex = 0;
+    DrillbitEndpoint endpoint;
+
+    while (triedEndpointIndex < connectTriesVal) {
+      client = new UserClient(clientName, config, supportComplexTypes, allocator, eventLoopGroup, executor);
+      endpoint = endpoints.get(triedEndpointIndex);
+      logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
+
+      try {
+        connect(endpoint);
+        connected = true;
+        logger.info("Successfully connected to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
+        break;
+      } catch (InvalidConnectionInfoException ex) {
+        logger.error("Connection to {}:{} failed with error {}. Not retrying anymore", endpoint.getAddress(),
+                     endpoint.getUserPort(), ex.getMessage());
+        throw ex;
+      } catch (RpcException ex) {
+        ++triedEndpointIndex;
+        logger.error("Attempt {}: Failed to connect to server {}:{}", triedEndpointIndex, endpoint.getAddress(),
+                     endpoint.getUserPort());
+
+        // Throw exception when we have exhausted all the tries without having a successful connection
+        if (triedEndpointIndex == connectTriesVal) {
+          throw ex;
+        }
+
+        // Close the connection here to avoid calling close twice in case when all tries are exhausted.
+        // Since DrillClient.close is also calling client.close
+        client.close();
+      }
+    }
   }
 
   protected static EventLoopGroup createEventLoop(int size, String prefix) {

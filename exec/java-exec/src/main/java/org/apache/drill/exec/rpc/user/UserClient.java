@@ -50,6 +50,7 @@ import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
 
 import com.google.protobuf.MessageLite;
 
@@ -158,7 +159,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       final String errMsg = String.format("Status: %s, Error Id: %s, Error message: %s",
           inbound.getStatus(), inbound.getErrorId(), inbound.getErrorMessage());
       logger.error(errMsg);
-      throw new RpcException(errMsg);
+      throw new InvalidConnectionInfoException(errMsg);
     }
   }
 
