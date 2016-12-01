@@ -32,4 +32,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Ellen Friedman | ellenf |
 | Kris Hahn | krishahn |
 | Neeraja Rentachintala | neerajar |
+| Chris Westin | cwestin |
 
