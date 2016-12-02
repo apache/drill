@@ -115,10 +115,12 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         });
   }
 
+  @Override
   public PersistentStore<StoragePluginConfig> getStore() {
     return pluginSystemTable;
   }
 
+  @Override
   public void init() throws DrillbitStartupException {
     availablePlugins = findAvailablePlugins(classpathScan);
 
@@ -188,6 +190,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     plugins.put(name, plugin);
   }
 
+  @Override
   public void deletePlugin(String name) {
     StoragePlugin plugin = plugins.remove(name);
     closePlugin(plugin);
@@ -206,6 +209,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @Override
   public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist)
       throws ExecutionSetupException {
     for (;;) {
@@ -243,6 +247,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @Override
   public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
     StoragePlugin plugin = plugins.get(name);
     if (name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) {
@@ -267,6 +272,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   }
 
 
+  @Override
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {
     if (config instanceof NamedStoragePluginConfig) {
       return getPlugin(((NamedStoragePluginConfig) config).name);
@@ -293,6 +299,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @Override
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
       throws ExecutionSetupException {
     StoragePlugin p = getPlugin(storageConfig);
@@ -332,6 +339,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     return plugins.iterator();
   }
 
+  @Override
   public SchemaFactory getSchemaFactory() {
     return schemaFactory;
   }

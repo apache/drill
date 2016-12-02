@@ -114,7 +114,8 @@ public class JdbcTestBase extends ExecTest {
 
   protected static void changeSchema(Connection conn, String schema) {
     final String query = String.format("use %s", schema);
-    try ( Statement s = conn.createStatement() ) {
+    try (Statement s = conn.createStatement()) {
+      @SuppressWarnings("unused")
       ResultSet r = s.executeQuery(query);
       // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
       // race conditions are fixed (not just DRILL-2245 fixes).
@@ -147,10 +148,10 @@ public class JdbcTestBase extends ExecTest {
    * (Note:  Not a guaranteed test--depends on order in which test methods are
    * run.)
    */
-  @Ignore( "Usually disabled; enable temporarily to check tests" )
+  @Ignore("Usually disabled; enable temporarily to check tests")
   @Test
   public void testJdbcTestConnectionResettingCompatibility() {
-    fail( "Intentional failure--did other test methods still run?" );
+    fail("Intentional failure--did other test methods still run?");
   }
 
 }
