@@ -52,6 +52,8 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.GregorianCalendar;
@@ -164,6 +166,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   private void buildOutputContainer() throws SchemaChangeException {
     dataSrcVecMap = Maps.newHashMap();
     copySrcVecMap = Maps.newHashMap();
+    MajorType mt = null;
+
     ErrorCollector collector = new ErrorCollectorImpl();
     GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 
@@ -172,13 +176,14 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     createKeyColumn("computed", ValueExpressions.getDate(calendar), copySrcVecMap);
 
     for (VectorWrapper<?> vw : incoming) {
-      MaterializedField ds = vw.getField();
+      addVectorToOutgoingContainer(vw.getField().getLastName(), vw, collector);
+      /*MaterializedField ds = vw.getField();
       String field = vw.getField().getLastName();
       // Input map vector
       MapVector mapVector = (MapVector) vw.getValueVector();
       assert mapVector.getPrimitiveVectors().size() > 0;
       // Proceed to create output map vector with same name e.g. statcount etc.
-      MajorType mt = mapVector.getField().getType();
+      mt = mapVector.getField().getType();
       MaterializedField mf = MaterializedField.create(functions.get(field), mt);
       assert !dataSrcVecMap.containsKey(mf);
       ValueVector vector = TypeHelper.getNewVector(mf, oContext.getAllocator());
@@ -210,11 +215,68 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
           }
         }
       }
-      dataSrcVecMap.put(ds, outputMapVector);
+      dataSrcVecMap.put(ds, outputMapVector);*/
+    }
+    //Now create NDV in the outgoing container which was not avaliable in the incoming
+    for (VectorWrapper<?> vw : incoming) {
+      if (vw.getField().getLastName().equalsIgnoreCase("sum_width")) {//NullableFloat8 type
+        addVectorToOutgoingContainer("ndv", vw, collector);
+        break;
+      }
     }
     container.setRecordCount(0);
     recordCount = 0;
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
+  }
+
+  private void addVectorToOutgoingContainer(String field, VectorWrapper vw, ErrorCollector collector)
+     throws SchemaChangeException {
+    // Input map vector
+    MapVector mapVector = (MapVector) vw.getValueVector();
+    MaterializedField mf;
+    assert mapVector.getPrimitiveVectors().size() > 0;
+    // Proceed to create output map vector with same name e.g. statcount etc.
+    MajorType mt = mapVector.getField().getType();
+    if (functions.get(field) != null) {
+      mf = MaterializedField.create(functions.get(field), mt);
+    } else {
+      mf = MaterializedField.create(field, mt);
+    }
+    assert !dataSrcVecMap.containsKey(mf);
+    ValueVector vector = TypeHelper.getNewVector(mf, oContext.getAllocator());
+    container.add(vector);
+    MapVector outputMapVector = (MapVector) vector;
+
+    for (ValueVector vv : mapVector) {
+      String fieldName = vv.getField().getLastName();
+      if (!keyList.contains(fieldName)) {
+        throw new UnsupportedOperationException("Unpivot data vector " +
+                field + " contains key " + fieldName + " not contained in key source!");
+      }
+      if (vv.getField().getType().getMinorType() == TypeProtos.MinorType.MAP) {
+        throw new UnsupportedOperationException("Unpivot of nested map is not supported!");
+      }
+      if (field.equals("column")) {
+        outputMapVector.addOrGet(fieldName, vv.getField().getType(), vv.getClass());
+      } else {
+        List<LogicalExpression> args = Lists.newArrayList();
+        LogicalExpression call;
+        //TODO: Something else to access value of col such as emp_id?
+        args.add(SchemaPath.getSimplePath(vv.getField().getPath()));
+        //TODO: Put in the mapVector
+        if (functions.get(field) != null) {
+          call = FunctionCallFactory.createExpression(functions.get(field), args);
+        } else {
+          call = FunctionCallFactory.createExpression(field, args);
+        }
+        //TODO: Is this sufficient to add to new Map?
+        ValueVector vector1 = addMapVector(fieldName, outputMapVector, call);
+        if (collector.hasErrors()) {
+          throw new SchemaChangeException("Failure while materializing expression. "
+                  + collector.toErrorString());
+        }
+      }
+    }
   }
 
   @Override
@@ -261,7 +323,10 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
           }
           //TODO: assert size = 1
           //TODO: logger
-          sumHolder.value += (long)mapElt.getAccessor().getObject(0);
+          Object val = mapElt.getAccessor().getObject(0);
+          if (val != null) {
+            sumHolder.value += (long)val;
+          }
         } else if (vv.getField().getLastName().equalsIgnoreCase("sum_width")) {
           NullableFloat8Holder sumHolder;
           String colName = mapElt.getField().getLastName();
@@ -276,7 +341,11 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
           }
           //TODO: assert size = 1
           //TODO: logger
-          sumHolder.value += (double)mapElt.getAccessor().getObject(0);
+          Object val = mapElt.getAccessor().getObject(0);
+          if (val != null) {
+            sumHolder.value += (double) val;
+            sumHolder.isSet = 1;
+          }
         } else if (vv.getField().getLastName().equalsIgnoreCase("hll")) {
           ObjectHolder hllHolder;
           String colName = mapElt.getField().getLastName();
@@ -290,10 +359,12 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
             hllHolder.obj = new HyperLogLog(context.getContextInformation().getHllMemoryLimit());
             statMap.put(colName, hllHolder);
           }
-          byte[] buf = (byte[])mapElt.getAccessor().getObject(0);//.toString().getBytes();
+          NullableVarBinaryVector hllVector = (NullableVarBinaryVector) mapElt;
           try {
-            if (buf != null) {
-              HyperLogLog other = HyperLogLog.Builder.build(buf);
+            if (hllVector.getAccessor().isSet(0) == 1) {
+              ByteArrayInputStream bais = new ByteArrayInputStream(hllVector.getAccessor().getObject(0), 0,
+                  mapElt.getBufferSize());
+              HyperLogLog other = HyperLogLog.Builder.build(new DataInputStream(bais));
               ((HyperLogLog) hllHolder.obj).addAll(other);
             }
           } catch (Exception ex) {
@@ -302,6 +373,12 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
             return IterOutcome.STOP;
           }
         }
+      }
+      // Add NDV value vector map using HLL map (since the NDV map is directly generated from HLL and not produced by the underlying
+      // Statistics Agg)
+      Map<String, ValueHolder> hllMap = aggregationMap.get("hll");
+      if (hllMap != null) {
+        aggregationMap.put("ndv", hllMap);
       }
     }
     return IterOutcome.OK;
@@ -369,6 +446,10 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     int containerElts = 0;
     for (VectorWrapper<?> vw : container) {
       Map<String, ValueHolder> statMap = aggregationMap.get(vw.getField().getLastName());
+      if (statMap == null
+        && vw.getField().getLastName().equalsIgnoreCase("ndv")) {
+        statMap = aggregationMap.get("hll_merge");
+      }
       if (vw.getField().getLastName().equalsIgnoreCase("schema")) {
         BigIntVector vv = (BigIntVector) vw.getValueVector();
         vv.allocateNewSafe();
@@ -403,21 +484,30 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
             NullableFloat8Vector vv = (NullableFloat8Vector) map.getVectorById(index);
             vv.allocateNewSafe();
             //Set stat count(rowcount/nonnullrc/width) in ValueVector
-            vv.getMutator().setSafe(0, (double)(sumWidthHolder.value/sumNNRowsHolder.value));
-            ++containerElts;
+            if (sumWidthHolder.isSet == 1 && sumNNRowsHolder.value > 0) {
+              vv.getMutator().setSafe(0, (double) (sumWidthHolder.value / sumNNRowsHolder.value));
+              ++containerElts;
+            }
           } else if (vw.getField().getLastName().equalsIgnoreCase("hll_merge")) {
             ObjectHolder holder = (ObjectHolder) statMap.get(colName);
             NullableVarBinaryVector vv = (NullableVarBinaryVector) map.getVectorById(index);
             vv.allocateNewSafe();
             HyperLogLog hll = (HyperLogLog) holder.obj;
             try {
-              vv.getMutator().set(0, hll.getBytes());
+              vv.getMutator().setSafe(0, hll.getBytes(), 0, hll.getBytes().length);
             } catch (IOException ex) {
               kill(false);
               logger.error("Failure during query", ex);
               context.fail(ex);
               return IterOutcome.STOP;
             }
+            ++containerElts;
+          } else if (vw.getField().getLastName().equalsIgnoreCase("ndv")) {
+            ObjectHolder holder = (ObjectHolder) statMap.get(colName);
+            NullableBigIntVector vv = (NullableBigIntVector) map.getVectorById(index);
+            vv.allocateNewSafe();
+            HyperLogLog hll = (HyperLogLog) holder.obj;
+            vv.getMutator().setSafe(0, 1, hll.cardinality());
             ++containerElts;
           }
         }

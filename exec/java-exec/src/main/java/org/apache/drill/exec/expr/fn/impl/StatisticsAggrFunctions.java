@@ -68,17 +68,12 @@ import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.MapHolder;
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.ops.ContextInformation;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
 
 import javax.inject.Inject;
 
@@ -141,87 +136,6 @@ public class StatisticsAggrFunctions {
     @Override
     public void reset() {
       count.value = 0;
-    }
-  }
-
-  /**
-   * The log2m parameter defines the accuracy of the counter.  The larger the
-   * log2m the better the accuracy.
-   * accuracy = 1.04/sqrt(2^log2m)
-   * where
-   * log2m - the number of bits to use as the basis for the HLL instance
-   */
-  @FunctionTemplate(name = "hll", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
-  public static class HllFieldReader implements DrillAggFunc {
-    @Param FieldReader in;
-    @Workspace ObjectHolder work;
-    @Output NullableVarBinaryHolder out;
-    @Inject ContextInformation contextInfo;
-    @Inject DrillBuf buffer;
-
-    @Override
-    public void setup() {
-      work = new ObjectHolder();
-      work.obj = new com.clearspring.analytics.stream.cardinality.HyperLogLog(contextInfo.getHllMemoryLimit());
-    }
-
-    @Override
-    public void add() {
-      if (work.obj != null) {
-        com.clearspring.analytics.stream.cardinality.HyperLogLog hll =
-            (com.clearspring.analytics.stream.cardinality.HyperLogLog) work.obj;
-        int mode = in.getType().getMode().getNumber();
-        int type = in.getType().getMinorType().getNumber();
-
-        switch (mode) {
-          case org.apache.drill.common.types.TypeProtos.DataMode.OPTIONAL_VALUE:
-            if (!in.isSet()) {
-              hll.offer(null);
-              break;
-            }
-            // fall through //
-          case org.apache.drill.common.types.TypeProtos.DataMode.REQUIRED_VALUE:
-            switch (type) {
-              case org.apache.drill.common.types.TypeProtos.MinorType.VARCHAR_VALUE:
-                hll.offer(in.readText().toString());
-                break;
-              case org.apache.drill.common.types.TypeProtos.MinorType.BIGINT_VALUE:
-                hll.offer(in.readLong());
-                break;
-              default:
-                work.obj = null;
-            }
-            break;
-          default:
-            work.obj = null;
-        }
-      }
-    }
-
-    @Override
-    public void output() {
-      if (work.obj != null) {
-        com.clearspring.analytics.stream.cardinality.HyperLogLog hll =
-            (com.clearspring.analytics.stream.cardinality.HyperLogLog) work.obj;
-
-        try {
-          byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
-          out.start = 0;
-          out.end = ba.length;
-          out.buffer.setBytes(0, ba);
-          out.isSet = 1;
-        } catch (java.io.IOException e) {
-          throw new org.apache.drill.common.exceptions.DrillRuntimeException("Failed to get HyperLogLog output", e);
-        }
-      } else {
-        out.isSet = 0;
-      }
-    }
-
-    @Override
-    public void reset() {
-      work.obj = new com.clearspring.analytics.stream.cardinality.HyperLogLog(contextInfo.getHllMemoryLimit());
     }
   }
 
@@ -1709,6 +1623,12 @@ public class StatisticsAggrFunctions {
     }
   }
 
+  /**
+   * The log2m parameter defines the accuracy of the counter.  The larger the log2m the better the accuracy where:
+   * accuracy = 1.04/sqrt(2^log2m)
+   * log2m - the number of bits to use as the basis for the HLL instance
+   * The parameter accepts integers in the range [0, 30]
+   */
   @FunctionTemplate(name = "hll_decode", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class HllDecode implements DrillSimpleFunc {
 
@@ -1736,6 +1656,12 @@ public class StatisticsAggrFunctions {
     }
   }
 
+  /**
+   * The log2m parameter defines the accuracy of the counter.  The larger the log2m the better the accuracy where:
+   * accuracy = 1.04/sqrt(2^log2m)
+   * log2m - the number of bits to use as the basis for the HLL instance
+   * The parameter accepts integers in the range [0, 30]
+   */
   @FunctionTemplate(name = "hll_merge", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
   public static class HllMerge implements DrillAggFunc {
     @Param NullableVarBinaryHolder in;
@@ -1746,13 +1672,6 @@ public class StatisticsAggrFunctions {
 
     @Override
     public void setup() {
-      /**
-       * The log2m parameter defines the accuracy of the counter.  The larger the
-       * log2m the better the accuracy.
-       * accuracy = 1.04/sqrt(2^log2m)
-       * where
-       * log2m - the number of bits to use as the basis for the HLL instance
-       */
       work = new ObjectHolder();
       work.obj = new com.clearspring.analytics.stream.cardinality.HyperLogLog(contextInfo.getHllMemoryLimit());
     }
@@ -1816,7 +1735,13 @@ public class StatisticsAggrFunctions {
     }
   }
 
-  /*@FunctionTemplate(name = "hll", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+  /**
+   * The log2m parameter defines the accuracy of the counter.  The larger the log2m the better the accuracy where:
+   * accuracy = 1.04/sqrt(2^log2m)
+   * log2m - the number of bits to use as the basis for the HLL instance
+   * The parameter accepts integers in the range [0, 30]
+   */
+  @FunctionTemplate(name = "hll", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
   public static class BitHLLFunction implements DrillAggFunc {
     @Param
     BitHolder in;
@@ -3618,7 +3543,7 @@ public class StatisticsAggrFunctions {
     public void reset() {
       work.obj = new com.clearspring.analytics.stream.cardinality.HyperLogLog(contextInfo.getHllMemoryLimit());
     }
-  }*/
+  }
   /*@FunctionTemplate(name = "ndv", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
   public static class NdvVarBinary implements DrillAggFunc {
     @Param

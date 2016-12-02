@@ -91,6 +91,7 @@ public abstract class DrillAggregateRelBase extends Aggregate implements DrillRe
   }
 
   @Override public double getRows() {
+    // Get the number of distinct group-by key values present in the input
     return RelMetadataQuery.getRowCount(this);
   }
 }

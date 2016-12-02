@@ -26,8 +26,11 @@ import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+
+import java.io.IOException;
 
 public class DrillRelMdRowCount extends RelMdRowCount{
   private static final DrillRelMdRowCount INSTANCE = new DrillRelMdRowCount();
@@ -47,9 +50,7 @@ public class DrillRelMdRowCount extends RelMdRowCount{
 
   @Override
   public Double getRowCount(RelNode rel) {
-    if (rel instanceof DrillScanRel) {
-      return getRowCount((DrillScanRel)rel);
-    } else if (rel instanceof TableScan) {
+    if (rel instanceof TableScan) {
       return getRowCount((TableScan) rel);
     } else if (rel instanceof Filter) {
       return getRowCount(rel);
@@ -59,26 +60,28 @@ public class DrillRelMdRowCount extends RelMdRowCount{
 
   @Override
   public Double getRowCount(Filter rel) {
-    // Need capped selectivity estimates. See getRows()
+    // Need capped selectivity estimates. See the Filter getRows() method
     return Double.valueOf(rel.getRows());
   }
 
-  private Double getRowCount(DrillScanRel scanRel) {
-    final DrillTable table = scanRel.getDrillTable();
-    // Return rowcount from statistics, if available. Otherwise, delegate to parent.
-    if (table != null
-        && table.getStatsTable() != null) {
-      return table.getStatsTable().getRowCount();
-    }
-    return super.getRowCount(scanRel);
-  }
-
   private Double getRowCount(TableScan scanRel) {
-    final DrillTable table = scanRel.getTable().unwrap(DrillTable.class);
+    DrillTable table = scanRel.getTable().unwrap(DrillTable.class);
+    if (table == null) {
+      table = scanRel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+    }
     // Return rowcount from statistics, if available. Otherwise, delegate to parent.
-    if (table != null
-       && table.getStatsTable() != null) {
-      return table.getStatsTable().getRowCount();
+    try {
+      if (table != null
+          && table.getStatsTable() != null
+          /* For ParquetGroupScan rely on accurate count from the scan instead of statistics since
+           * partition pruning/filter pushdown might have occurred. The other way would be to iterate
+           * over the rowgroups present in the ParquetGroupScan to obtain the rowcount.
+           */
+          && !(table.getGroupScan() instanceof ParquetGroupScan)) {
+        return table.getStatsTable().getRowCount();
+      }
+    } catch (IOException ex) {
+      return super.getRowCount(scanRel);
     }
     return super.getRowCount(scanRel);
   }

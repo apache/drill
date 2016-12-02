@@ -131,10 +131,9 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
         return (lrc * rrc) / Math.max(ldrc, rdrc);
       }
     }
-
     return joinRowFactor * Math.max(
-        RelMetadataQuery.getRowCount(left),
-        RelMetadataQuery.getRowCount(right));
+        RelMetadataQuery.getRowCount(this.getLeft()),
+        RelMetadataQuery.getRowCount(this.getRight()));
   }
 
   /**

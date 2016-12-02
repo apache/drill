@@ -35,6 +35,7 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -174,6 +175,10 @@ public class DrillStatsTable {
           final DrillStatsTable statsTable = drillTable.getStatsTable();
           if (statsTable != null) {
             statsTable.materialize(context);
+          } else {
+            throw new DrillRuntimeException(
+                String.format("Failed to find the stats for table [%s] in schema [%s]",
+                    node.getTable().getQualifiedName(), node.getTable().getRelOptSchema()));
           }
         } catch (Exception e) {
           // Log a warning and proceed. We don't want to fail a query.
