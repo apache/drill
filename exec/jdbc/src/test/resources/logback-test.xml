@@ -24,25 +24,26 @@
     <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
 
- <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
-    <level value="warn" />
   </appender>
 
   <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-<!--     <appender-ref ref="STDOUT" /> -->
+    <!-- Log level set to error for test runs. Set this to debug when
+        running tests to track down a specific problem. -->
+   <level value="error" />
+   <appender-ref ref="STDOUT" />
+<!--     <appender-ref ref="SOCKET" /> -->
   </logger>
 
   <root>
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-<!--     <appender-ref ref="STDOUT" /> -->
+    <level value="error" />
+<!--         <appender-ref ref="SOCKET" /> -->
+    <appender-ref ref="STDOUT" />
   </root>
 
 </configuration>

@@ -16,22 +16,27 @@
  limitations under the License.
 -->
 <configuration>
-
-  <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+  <appender name="SOCKET"
+    class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
     <Compressing>true</Compressing>
     <ReconnectionDelay>10000</ReconnectionDelay>
     <IncludeCallerData>true</IncludeCallerData>
     <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
 
- <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
     </encoder>
-    <level value="warn" />
   </appender>
+
+  <logger name="org.apache.drill" additivity="false">
+   <!-- Log level set to error for test runs. Set this to debug when
+        running tests to track down a specific problem. -->
+   <level value="error" />
+   <appender-ref ref="STDOUT" />
+  </logger>
 
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
@@ -40,9 +45,8 @@
   </logger>
 
   <root>
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-<!--     <appender-ref ref="STDOUT" /> -->
+    <level value="error" />
+    <appender-ref ref="STDOUT" />
   </root>
 
 </configuration>

@@ -32,7 +32,9 @@
   </appender>
 
   <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
+   <!-- Log level set to error for test runs. Set this to debug when
+        running tests to track down a specific problem. -->
+   <level value="error" />
     <appender-ref ref="SOCKET" />
   </logger>
 
