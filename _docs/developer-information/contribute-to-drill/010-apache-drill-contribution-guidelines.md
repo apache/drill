@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2016-10-12 17:07:42 UTC
+date: 2016-12-08 20:59:28 UTC
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive
@@ -89,10 +89,10 @@ The following steps outline the code review and commit process required to contr
 
 4. The contributor asks a committer who has experience with the affected component for review.
 This information can be found in the [component owners](https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira.jira-projects-plugin:components-panel) section of JIRA, or by running `git blame` on the primary files changed in the pull request. For pull requests that affect multiple areas, send a message to the dev list to find a reviewer.
-5. The contributor assigns the JIRA to the reviewer and marks the status as REVIEWABLE.
+5. The contributor sets the Reviewer field to the assigned reviewer and marks the status as REVIEWABLE.
 6. The reviewer reviews the pull request in GitHub and adds comments or a +1 to the general discussion if the pull request is ready to commit.  
-       * If there are issues to address, the reviewer changes the JIRA status to "In Progress" and assigns the JIRA back to the contributing author.
-       * If the reviewer gives a +1, the contributor should continue to step 9 in this process.
+       * If there are issues to address, the reviewer changes the JIRA status to "In Progress."
+       * If the reviewer gives a +1, the reviewer adds a "ready-to-commit" label to the Labels field in the Jira. The contributor should continue to step 9 in this process.
 7. The contributor addresses review comments. This can be done with new commits on the branch or with work made on the branch locally, squashed into the commit(s) posted in the original pull request and force pushed to the branch the pull request is based on.
 8. Return to step 5.
 9. A Drill committer completes the following steps to commit the patch:
