@@ -38,7 +38,7 @@
     <calcite.version>1.4.0-drill-r19</calcite.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.1</jackson.version>
-    <mapr.release.version>5.2.0-mapr</mapr.release.version>
+    <mapr.release.version>5.2.0.40963-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
 
     <!--
