@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mapr.db.json;
 
 import static org.ojai.DocumentConstants.ID_KEY;
+import static org.ojai.DocumentConstants.ID_FIELD;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -87,7 +88,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private Iterator<DocumentReader> documentReaderIterators;
 
   private boolean includeId;
-  private boolean idOnly;
   private final boolean unionEnabled;
   private final boolean readNumbersAsDouble;
   private boolean disablePushdown;
@@ -102,7 +102,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
     documentReaderIterators = null;
     includeId = false;
-    idOnly    = false;
     byte[] serializedFilter = subScanSpec.getSerializedFilter();
     condition = null;
 
@@ -125,14 +124,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       Set<FieldPath> projectedFieldsSet = Sets.newTreeSet();
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
-          /*
-           * we do not include _id field in the set of projected fields
-           * because the DB currently can not return a document if only
-           * the _id field was projected. This should really be fixed in
-           * the DB client (Bug 21708) to avoid transferring the entire
-           * document when only _id is requested.
-           */
-          // projectedFieldsList.add(ID_FIELD);
+          projectedFieldsSet.add(ID_FIELD);
           includeId = true;
         } else {
           projectedFieldsSet.add(getFieldPathForProjection(column));
@@ -142,15 +134,15 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       if (projectedFieldsSet.size() > 0) {
         projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
       }
+    } else if (isStarQuery() && isSkipQuery()) {
+    	includeId = true;
+    	projectedFields = new FieldPath[1];
+    	projectedFields[0] = ID_FIELD;
     } else {
       transformed.add(AbstractRecordReader.STAR_COLUMN);
       includeId = true;
     }
 
-    /*
-     * (Bug 21708) if we are projecting only the id field, save that condition here.
-     */
-    idOnly = !isStarQuery() && (projectedFields == null);
     return transformed;
   }
 
@@ -190,14 +182,10 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
           vectorWriter.rootAsMap().bit("count").writeBit(1);
         } else {
           MapOrListWriterImpl writer = new MapOrListWriterImpl(vectorWriter.rootAsMap());
-          if (idOnly) {
-            writeId(writer, reader.getId());
-          } else {
-            if (reader.next() != EventType.START_MAP) {
-              throw dataReadError("The document did not start with START_MAP!");
-            }
-            writeToListOrMap(writer, reader);
+          if (reader.next() != EventType.START_MAP) {
+            throw dataReadError("The document did not start with START_MAP!");
           }
+          writeToListOrMap(writer, reader);
         }
         recordCount++;
       } catch (UserException e) {
