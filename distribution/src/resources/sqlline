@@ -59,7 +59,7 @@ done
 # This is not currently needed as the new SQLLine we are using doesn't isolate.
 # DRILL_SHELL_JAVA_OPTS="-Dsqlline.isolation=TRANSACTION_NONE $DRILL_SHELL_JAVA_OPTS"
 
-DRILL_SHELL_LOG_OPTS="-Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json"
+DRILL_SHELL_LOG_OPTS="-Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json -Dorg.apache.drill.exec.server.Drillbit.system_options=\"org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=off\""
 
 # Use either the SQLline options (for remote Drill) or full Drill options
 # (embedded Drill)
