@@ -84,7 +84,7 @@ public class AnalyzePrule extends Prule {
     final SingleRel newAnalyze;
     final RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
 
-    if (settings.getIsParallelAnalyze()) {
+    if (settings.isParallelAnalyze()) {
       // Generate parallel ANALYZE plan: Writer<-Unpivot<-StatsAgg(Phase2)<-Exchange<-StatsAgg(Phase1)<-Scan
       final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.DEFAULT);
       final RelNode convertedInput = convert(input, traits);

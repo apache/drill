@@ -21,9 +21,12 @@ import java.util.AbstractList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
@@ -36,6 +39,9 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 /**
@@ -168,5 +174,44 @@ public abstract class DrillRelOptUtil {
       }
     }
     return true;
+  }
+
+  /**
+   * Returns whether statistics-based estimates or guesses are used by the optimizer
+   * */
+  public static boolean guessRows(RelNode rel) {
+    final PlannerSettings settings =
+            rel.getCluster().getPlanner().getContext().unwrap(PlannerSettings.class);
+    if (!settings.useStatistics()) {
+      return true;
+    }
+    if (rel instanceof RelSubset) {
+      if (((RelSubset) rel).getBest() != null) {
+        return guessRows(((RelSubset) rel).getBest());
+      } else if (((RelSubset) rel).getOriginal() != null) {
+        return guessRows(((RelSubset) rel).getOriginal());
+      }
+    } else if (rel instanceof HepRelVertex) {
+      if (((HepRelVertex) rel).getCurrentRel() != null) {
+        return guessRows(((HepRelVertex) rel).getCurrentRel());
+      }
+    } else if (rel instanceof TableScan) {
+      DrillTable table = rel.getTable().unwrap(DrillTable.class);
+      if (table == null) {
+        table = rel.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      }
+      if (table != null && table.getStatsTable() != null) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      for (RelNode child : rel.getInputs()) {
+        if (guessRows(child)) { // at least one child is a guess
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

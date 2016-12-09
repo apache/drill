@@ -51,7 +51,7 @@ import java.util.List;
 
 public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel {
 
-  protected static enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2};
+  public static enum OperatorPhase {PHASE_1of1, PHASE_1of2, PHASE_2of2};
 
   protected OperatorPhase operPhase = OperatorPhase.PHASE_1of1 ; // default phase
   protected List<NamedExpression> keys = Lists.newArrayList();

@@ -60,10 +60,4 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
     return RelMetadataQuery.getRowCount(this);
   }
 
-  @Override public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    double dRows = getRows();
-    double dCpu = dRows + 1; // ensure non-zero cost
-    double dIo = 0;
-    return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
-  }
 }
