@@ -555,7 +555,6 @@ public class Foreman implements Runnable {
     final String queueName;
 
     try {
-      @SuppressWarnings("resource")
       final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
       final DistributedSemaphore distributedSemaphore;
 
@@ -828,9 +827,6 @@ public class Foreman implements Runnable {
         uex = null;
       }
 
-      // we store the final result here so we can capture any error/errorId in the profile for later debugging.
-      queryManager.writeFinalProfile(uex);
-
       /*
        * If sending the result fails, we don't really have any way to modify the result we tried to send;
        * it is possible it got sent but the result came from a later part of the code path. It is also
@@ -844,6 +840,19 @@ public class Foreman implements Runnable {
         addException(e);
         logger.warn("Exception sending result to client", resultException);
       }
+
+      // Store the final result here so we can capture any error/errorId in the
+      // profile for later debugging.
+      // Write the query profile AFTER sending results to the user. The observed
+      // user behavior is a possible time-lag between query return and appearance
+      // of the query profile in persistent storage. Also, the query might
+      // succeed, but the profile never appear if the profile write fails. This
+      // behavior is acceptable for an eventually-consistent distributed system.
+      // The key benefit is that the client does not wait for the persistent
+      // storage write; query completion occurs in parallel with profile
+      // persistence.
+
+      queryManager.writeFinalProfile(uex);
 
       // Remove the Foreman from the running query list.
       bee.retireForeman(Foreman.this);
@@ -1031,10 +1040,8 @@ public class Foreman implements Runnable {
    */
   private void setupRootFragment(final PlanFragment rootFragment, final FragmentRoot rootOperator)
       throws ExecutionSetupException {
-    @SuppressWarnings("resource")
     final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, queryContext,
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
-    @SuppressWarnings("resource")
     final IncomingBuffers buffers = new IncomingBuffers(rootFragment, rootContext);
     rootContext.setBuffers(buffers);
 
@@ -1161,7 +1168,6 @@ public class Foreman implements Runnable {
    */
   private void sendRemoteFragments(final DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
       final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
-    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
     for(final PlanFragment planFragment : fragments) {
@@ -1187,7 +1193,7 @@ public class Foreman implements Runnable {
       final DrillbitEndpoint drillbitEndpoint;
       final RpcException rpcException;
 
-      SubmissionException(@SuppressWarnings("unused") final DrillbitEndpoint drillbitEndpoint,
+      SubmissionException(final DrillbitEndpoint drillbitEndpoint,
           final RpcException rpcException) {
         this.drillbitEndpoint = drillbitEndpoint;
         this.rpcException = rpcException;
