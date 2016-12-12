@@ -150,9 +150,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
 
   public boolean isActive() {
-    return connection != null
-        && connection.getChannel() != null
-        && connection.getChannel().isActive();
+    return (connection != null) && connection.isActive();
   }
 
   protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;
@@ -302,14 +300,9 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
   public void close() {
     logger.debug("Closing client");
-    try {
-      connection.getChannel().close().get();
-    } catch (final InterruptedException | ExecutionException e) {
-      logger.warn("Failure while shutting {}", this.getClass().getName(), e);
 
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-      // interruption and respond to it if it wants to.
-      Thread.currentThread().interrupt();
+    if (connection != null) {
+      connection.close();
     }
   }
 
