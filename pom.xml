@@ -423,14 +423,8 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
           <configuration>
-            <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
-              -Ddrill.exec.sys.store.provider.local.write=false
-              -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
-              -Ddrill.test.query.printing.silent=true
-              -Ddrill.catastrophic_to_standard_out=true
+            <argLine>-Xms512m -Xmx3g
               -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=3072M
-              -Djava.net.preferIPv4Stack=true
-              -Djava.awt.headless=true
               -XX:+CMSClassUnloadingEnabled -ea</argLine>
             <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
@@ -438,6 +432,14 @@
               <additionalClasspathElement>./exec/jdbc/src/test/resources/storage-plugins.json</additionalClasspathElement>
             </additionalClasspathElements>
             <systemPropertyVariables>
+              <drill.exec.http.enabled>false</drill.exec.http.enabled>
+              <drill.exec.sys.store.provider.local.write>false</drill.exec.sys.store.provider.local.write>
+              <org.apache.drill.exec.server.Drillbit.system_options>"org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"</org.apache.drill.exec.server.Drillbit.system_options>
+              <drill.test.query.printing.silent>true</drill.test.query.printing.silent>
+              <drill.catastrophic_to_standard_out>true</drill.catastrophic_to_standard_out>
+              <drill.memory.debug.allocator>true</drill.memory.debug.allocator>
+              <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+              <java.awt.headless>true</java.awt.headless>
               <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
           </configuration>

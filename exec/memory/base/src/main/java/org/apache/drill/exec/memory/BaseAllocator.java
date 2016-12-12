@@ -40,12 +40,25 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static final String DEBUG_ALLOCATOR = "drill.memory.debug.allocator";
 
+  @SuppressWarnings("unused")
   private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
   private static final int CHUNK_SIZE = AllocationManager.INNER_ALLOCATOR.getChunkSize();
 
   public static final int DEBUG_LOG_LENGTH = 6;
+  /**
+   * Indicate if debug logging is enabled. This logging is quite expensive,
+   * adding 10x-20x to query cost. It is enabled only if two conditions are
+   * both true:
+   * <ul>
+   * <li>Assertions are enabled (-ea JVM option), and</li>
+   * <li>-Ddrill.memory.debug.allocator=true is also on the JVM
+   * command line.</li>
+   * </ul>
+   * Note: in earlier versions the condition was OR, resulting in
+   * very slow performance whenever assertions were enabled.
+   */
   public static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
-      || Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
+      && Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
   private final Object DEBUG_LOCK = DEBUG ? new Object() : null;
 
   private final BaseAllocator parentAllocator;
@@ -98,9 +111,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       historicalLog = null;
       childLedgers = null;
     }
-
   }
 
+  @Override
   public void assertOpen() {
     if (AssertionUtil.ASSERT_ENABLED) {
       if (isClosed) {
@@ -289,6 +302,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       }
     }
 
+    @Override
     public boolean add(final int nBytes) {
       assertOpen();
 
@@ -310,6 +324,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return true;
     }
 
+    @Override
     public DrillBuf allocateBuffer() {
       assertOpen();
 
@@ -321,14 +336,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return drillBuf;
     }
 
+    @Override
     public int getSize() {
       return nBytes;
     }
 
+    @Override
     public boolean isUsed() {
       return used;
     }
 
+    @Override
     public boolean isClosed() {
       return closed;
     }
@@ -366,6 +384,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       closed = true;
     }
 
+    @Override
     public boolean reserve(int nBytes) {
       assertOpen();
 
@@ -511,6 +530,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   }
 
+  @Override
   public String toString() {
     final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE
         : Verbosity.BASIC;
@@ -525,6 +545,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *
    * @return A Verbose string of current allocator state.
    */
+  @Override
   public String toVerboseString() {
     final StringBuilder sb = new StringBuilder();
     print(sb, 0, Verbosity.LOG_WITH_STACKTRACE);
