@@ -209,12 +209,12 @@ public class ParquetReaderUtility {
         writerVersion = DRILL_WRITER_VERSION_STD_DATE_FORMAT;
       }
       return writerVersion >= DRILL_WRITER_VERSION_STD_DATE_FORMAT ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
-          : DateCorruptionStatus.META_SHOWS_CORRUPTION;
+          // loop through parquet column metadata to find date columns, check for corrupt values
+          : checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
     } else {
       // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
       // only applies if there is a date column selected
       if (createdBy == null || createdBy.equals("parquet-mr")) {
-        // loop through parquet column metadata to find date columns, check for corrupt values
         return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
       } else {
         // check the created by to see if it is a migrated Drill file
@@ -226,7 +226,7 @@ public class ParquetReaderUtility {
             SemanticVersion semVer = parsedCreatedByVersion.getSemanticVersion();
             String pre = semVer.pre + "";
             if (semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
-              return DateCorruptionStatus.META_SHOWS_CORRUPTION;
+              return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
             }
           }
           // written by a tool that wasn't Drill, the dates are not corrupted
