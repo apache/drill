@@ -160,23 +160,28 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     }
   }
 
-    public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
-      final Accessor vAccessor = v.getAccessor();
-      final int count = vAccessor.getInnerValueCountAt(inIndex);
-      mutator.startNewValue(outIndex);
-      for (int i = 0; i < count; i++) {
-        mutator.add(outIndex, vAccessor.get(inIndex, i));
-      }
+  public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
+    final Accessor vAccessor = v.getAccessor();
+    final int count = vAccessor.getInnerValueCountAt(inIndex);
+    mutator.startNewValue(outIndex);
+    for (int i = 0; i < count; i++) {
+      mutator.add(outIndex, vAccessor.get(inIndex, i));
     }
+  }
 
-    public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
-      final Accessor vAccessor = v.getAccessor();
-      final int count = vAccessor.getInnerValueCountAt(inIndex);
-      mutator.startNewValue(outIndex);
-      for (int i = 0; i < count; i++) {
-        mutator.addSafe(outIndex, vAccessor.get(inIndex, i));
-      }
+  public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
+    final Accessor vAccessor = v.getAccessor();
+    final int count = vAccessor.getInnerValueCountAt(inIndex);
+    mutator.startNewValue(outIndex);
+    for (int i = 0; i < count; i++) {
+      mutator.addSafe(outIndex, vAccessor.get(inIndex, i));
     }
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (Repeated${minor.class}Vector) from);
+  }
 
   public boolean allocateNewSafe() {
     /* boolean to keep track if all the memory allocation were successful

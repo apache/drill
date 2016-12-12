@@ -95,6 +95,11 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (ListVector) from);
+  }
+
+  @Override
   public ValueVector getDataVector() {
     return vector;
   }

@@ -86,7 +86,7 @@ public interface ExecConstants {
 
   BooleanValidator EXTERNAL_SORT_DISABLE_MANAGED_OPTION = new BooleanValidator("exec.sort.disable_managed", false);
 
-
+  String REMOVER_ENABLE_GENERIC_COPIER = "drill.exec.sv_remover.enable_generic_copier";
   String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
   String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";

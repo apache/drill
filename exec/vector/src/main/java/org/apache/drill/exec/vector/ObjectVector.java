@@ -161,6 +161,11 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    throw new UnsupportedOperationException("ObjectVector does not support this");
+  }
+
+  @Override
   public int getValueCapacity() {
     return maxCount;
   }

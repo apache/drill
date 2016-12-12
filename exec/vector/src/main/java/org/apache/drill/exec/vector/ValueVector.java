@@ -175,6 +175,8 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   void load(SerializedField metadata, DrillBuf buffer);
 
+  void copyEntry(int toIndex, ValueVector from, int fromIndex);
+
   /**
    * Return the total memory consumed by all buffers within this vector.
    */
