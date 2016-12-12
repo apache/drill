@@ -195,26 +195,26 @@ public class ParquetReaderUtility {
 
     String createdBy = footer.getFileMetaData().getCreatedBy();
     String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
-    String stringWriterVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
+    String writerVersionValue = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
     // This flag can be present in parquet files which were generated with 1.9.0-SNAPSHOT and 1.9.0 drill versions.
     // If this flag is present it means that the version of the drill parquet writer is 2
     final String isDateCorrectFlag = "is.date.correct";
     String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(isDateCorrectFlag);
     if (drillVersion != null) {
       int writerVersion = 1;
-      if (stringWriterVersion != null) {
-        writerVersion = Integer.parseInt(stringWriterVersion);
+      if (writerVersionValue != null) {
+        writerVersion = Integer.parseInt(writerVersionValue);
       }
       else if (Boolean.valueOf(isDateCorrect)) {
         writerVersion = DRILL_WRITER_VERSION_STD_DATE_FORMAT;
       }
       return writerVersion >= DRILL_WRITER_VERSION_STD_DATE_FORMAT ? DateCorruptionStatus.META_SHOWS_NO_CORRUPTION
-          : DateCorruptionStatus.META_SHOWS_CORRUPTION;
+          // loop through parquet column metadata to find date columns, check for corrupt values
+          : checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
     } else {
       // Possibly an old, un-migrated Drill file, check the column statistics to see if min/max values look corrupt
       // only applies if there is a date column selected
       if (createdBy == null || createdBy.equals("parquet-mr")) {
-        // loop through parquet column metadata to find date columns, check for corrupt values
         return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
       } else {
         // check the created by to see if it is a migrated Drill file
@@ -226,7 +226,7 @@ public class ParquetReaderUtility {
             SemanticVersion semVer = parsedCreatedByVersion.getSemanticVersion();
             String pre = semVer.pre + "";
             if (semVer.major == 1 && semVer.minor == 8 && semVer.patch == 1 && pre.contains("drill")) {
-              return DateCorruptionStatus.META_SHOWS_CORRUPTION;
+              return checkForCorruptDateValuesInStatistics(footer, columns, autoCorrectCorruptDates);
             }
           }
           // written by a tool that wasn't Drill, the dates are not corrupted
@@ -244,9 +244,9 @@ public class ParquetReaderUtility {
    * Detect corrupt date values by looking at the min/max values in the metadata.
    *
    * This should only be used when a file does not have enough metadata to determine if
-   * the data was written with an older version of Drill, or an external tool. Drill
-   * versions 1.3 and beyond should have enough metadata to confirm that the data was written
-   * by Drill.
+   * the data was written with an external tool or an older version of Drill
+   * ({@link org.apache.drill.exec.store.parquet.ParquetRecordWriter#WRITER_VERSION_PROPERTY} <
+   * {@link org.apache.drill.exec.store.parquet.ParquetReaderUtility#DRILL_WRITER_VERSION_STD_DATE_FORMAT})
    *
    * This method only checks the first Row Group, because Drill has only ever written
    * a single Row Group per file.
