@@ -195,15 +195,15 @@ public class ParquetReaderUtility {
 
     String createdBy = footer.getFileMetaData().getCreatedBy();
     String drillVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.DRILL_VERSION_PROPERTY);
-    String stringWriterVersion = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
+    String writerVersionValue = footer.getFileMetaData().getKeyValueMetaData().get(ParquetRecordWriter.WRITER_VERSION_PROPERTY);
     // This flag can be present in parquet files which were generated with 1.9.0-SNAPSHOT and 1.9.0 drill versions.
     // If this flag is present it means that the version of the drill parquet writer is 2
     final String isDateCorrectFlag = "is.date.correct";
     String isDateCorrect = footer.getFileMetaData().getKeyValueMetaData().get(isDateCorrectFlag);
     if (drillVersion != null) {
       int writerVersion = 1;
-      if (stringWriterVersion != null) {
-        writerVersion = Integer.parseInt(stringWriterVersion);
+      if (writerVersionValue != null) {
+        writerVersion = Integer.parseInt(writerVersionValue);
       }
       else if (Boolean.valueOf(isDateCorrect)) {
         writerVersion = DRILL_WRITER_VERSION_STD_DATE_FORMAT;
@@ -244,9 +244,9 @@ public class ParquetReaderUtility {
    * Detect corrupt date values by looking at the min/max values in the metadata.
    *
    * This should only be used when a file does not have enough metadata to determine if
-   * the data was written with an older version of Drill, or an external tool. Drill
-   * versions 1.3 and beyond should have enough metadata to confirm that the data was written
-   * by Drill.
+   * the data was written with an external tool or an older version of Drill
+   * ({@link org.apache.drill.exec.store.parquet.ParquetRecordWriter#WRITER_VERSION_PROPERTY} <
+   * {@link org.apache.drill.exec.store.parquet.ParquetReaderUtility#DRILL_WRITER_VERSION_STD_DATE_FORMAT})
    *
    * This method only checks the first Row Group, because Drill has only ever written
    * a single Row Group per file.
