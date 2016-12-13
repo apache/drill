@@ -106,7 +106,7 @@ public class Drillbit implements AutoCloseable {
       storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
     } else {
       coord = new ZKClusterCoordinator(config);
-      storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
+      storeProvider = new PersistentStoreRegistry(this.coord, config).newPStoreProvider();
       isDistributedMode = true;
     }
 
