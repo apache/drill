@@ -64,6 +64,14 @@ import org.apache.drill.exec.vector.ValueVector;
 public class DrillTestWrapper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
+  public interface TestServices {
+    BufferAllocator allocator();
+
+    void test(String query) throws Exception;
+
+    List<QueryDataBatch> testRunAndReturn(QueryType type, Object query) throws Exception;
+  }
+
   // TODO - when in JSON, read baseline in all text mode to avoid precision loss for decimal values
 
   // This flag will enable all of the values that are validated to be logged. For large validations this is time consuming
@@ -91,7 +99,7 @@ public class DrillTestWrapper {
   private UserBitShared.QueryType baselineQueryType;
   // should ordering be enforced in the baseline check
   private boolean ordered;
-  private BufferAllocator allocator;
+  private TestServices services;
   // queries to run before the baseline or test queries, can be used to set options
   private String baselineOptionSettingQueries;
   private String testOptionSettingQueries;
@@ -108,12 +116,12 @@ public class DrillTestWrapper {
 
   private int expectedNumBatches;
 
-  public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, Object query, QueryType queryType,
+  public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
                           String baselineOptionSettingQueries, String testOptionSettingQueries,
                           QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
                           List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
-    this.allocator = allocator;
+    this.services = services;
     this.query = query;
     this.queryType = queryType;
     this.baselineQueryType = baselineQueryType;
@@ -138,7 +146,7 @@ public class DrillTestWrapper {
   }
 
   private BufferAllocator getAllocator() {
-    return allocator;
+    return services.allocator();
   }
 
   private void compareHyperVectors(Map<String, HyperVectorValueIterator> expectedRecords,
@@ -388,8 +396,8 @@ public class DrillTestWrapper {
     List<QueryDataBatch> actual;
     QueryDataBatch batch = null;
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
       batch = actual.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
 
@@ -438,8 +446,8 @@ public class DrillTestWrapper {
     List<Map<String, Object>> actualRecords = new ArrayList<>();
 
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
 
       checkNumBatches(actual);
 
@@ -449,8 +457,8 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        BaseTestQuery.test(baselineOptionSettingQueries);
-        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        test(baselineOptionSettingQueries);
+        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
         addToMaterializedResults(expectedRecords, expected, loader);
       } else {
         expectedRecords = baselineRecords;
@@ -481,7 +489,6 @@ public class DrillTestWrapper {
 
   public void compareMergedOnHeapVectors() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
 
     List<QueryDataBatch> actual = Collections.emptyList();
     List<QueryDataBatch> expected = Collections.emptyList();
@@ -489,8 +496,8 @@ public class DrillTestWrapper {
     Map<String, List<Object>> expectedSuperVectors;
 
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
 
       checkNumBatches(actual);
 
@@ -504,8 +511,8 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        BaseTestQuery.test(baselineOptionSettingQueries);
-        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        test(baselineOptionSettingQueries);
+        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
         BatchIterator exBatchIter = new BatchIterator(expected, loader);
         expectedSuperVectors = addToCombinedVectorResults(exBatchIter);
         exBatchIter.close();
@@ -539,8 +546,8 @@ public class DrillTestWrapper {
   public void compareResultsHyperVector() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
 
-    BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+    test(testOptionSettingQueries);
+    List<QueryDataBatch> results = testRunAndReturn(queryType, query);
 
     checkNumBatches(results);
 
@@ -549,8 +556,8 @@ public class DrillTestWrapper {
 
     Map<String, HyperVectorValueIterator> actualSuperVectors = addToHyperVectorMap(results, loader);
 
-    BaseTestQuery.test(baselineOptionSettingQueries);
-    List<QueryDataBatch> expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+    test(baselineOptionSettingQueries);
+    List<QueryDataBatch> expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
 
     Map<String, HyperVectorValueIterator> expectedSuperVectors = addToHyperVectorMap(expected, loader);
 
@@ -761,4 +768,11 @@ public class DrillTestWrapper {
     return ret + "\n";
   }
 
+  private void test(String query) throws Exception {
+    services.test(query);
+  }
+
+  private List<QueryDataBatch> testRunAndReturn(QueryType type, Object query) throws Exception {
+    return services.testRunAndReturn(type, query);
+  }
 }
