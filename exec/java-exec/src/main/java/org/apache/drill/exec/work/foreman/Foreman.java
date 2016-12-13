@@ -774,6 +774,7 @@ public class Foreman implements Runnable {
       }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void close() {
       Preconditions.checkState(!isClosed);
