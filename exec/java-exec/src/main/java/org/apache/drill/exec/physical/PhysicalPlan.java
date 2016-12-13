@@ -62,9 +62,7 @@ public class PhysicalPlan {
     }else{
       return list;
     }
-
   }
-
 
   @JsonProperty("head")
   public PlanProperties getProperties() {
@@ -89,5 +87,4 @@ public class PhysicalPlan {
       throw new RuntimeException(e);
     }
   }
-
 }

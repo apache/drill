@@ -775,6 +775,7 @@ public class Foreman implements Runnable {
       }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void close() {
       Preconditions.checkState(!isClosed);
@@ -1187,7 +1188,7 @@ public class Foreman implements Runnable {
       final DrillbitEndpoint drillbitEndpoint;
       final RpcException rpcException;
 
-      SubmissionException(@SuppressWarnings("unused") final DrillbitEndpoint drillbitEndpoint,
+      SubmissionException(final DrillbitEndpoint drillbitEndpoint,
           final RpcException rpcException) {
         this.drillbitEndpoint = drillbitEndpoint;
         this.rpcException = rpcException;

@@ -41,6 +41,13 @@ public class MemoryAllocationUtilities {
    * @param queryContext
    */
   public static void setupSortMemoryAllocations(final PhysicalPlan plan, final QueryContext queryContext) {
+
+    // Test plans may already have a pre-defined memory plan.
+    // Otherwise, determine memory allocation.
+
+    if (plan.getProperties().hasResourcePlan) {
+      return;
+    }
     // look for external sorts
     final List<ExternalSort> sortList = new LinkedList<>();
     for (final PhysicalOperator op : plan.getSortedOperators()) {
@@ -64,6 +71,6 @@ public class MemoryAllocationUtilities {
         externalSort.setMaxAllocation(maxSortAlloc);
       }
     }
+    plan.getProperties().hasResourcePlan = true;
   }
-
 }
