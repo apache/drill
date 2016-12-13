@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -94,9 +94,10 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   private final BufferManagerImpl bufManager = new BufferManagerImpl(allocator);
   private final ScanResult classpathScan = ClassPathScanner.fromPrescan(drillConf);
   private final FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(drillConf, classpathScan);
-  private final TemplateClassDefinition templateClassDefinition = new TemplateClassDefinition<>(Projector.class, ProjectorTemplate.class);
+  private final TemplateClassDefinition<Projector> templateClassDefinition = new TemplateClassDefinition<Projector>(Projector.class, ProjectorTemplate.class);
   private final OperatorCreatorRegistry opCreatorReg = new OperatorCreatorRegistry(classpathScan);
 
+  @Override
   protected LogicalExpression parseExpr(String expr) {
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -127,7 +128,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     return ret;
   }
 
-
+  @SuppressWarnings("resource")
   void runTest(OperatorTestBuilder testBuilder) {
     BatchCreator<PhysicalOperator> opCreator;
     RecordBatch testOperator;
@@ -260,9 +261,9 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
     public OperatorTestBuilder baselineValues(Object ... baselineValues) {
       if (baselineRecords == null) {
-        baselineRecords = new ArrayList();
+        baselineRecords = new ArrayList<>();
       }
-      Map<String, Object> ret = new HashMap();
+      Map<String, Object> ret = new HashMap<>();
       int i = 0;
       Preconditions.checkArgument(baselineValues.length == baselineColumns.length,
           "Must supply the same number of baseline values as columns.");
@@ -295,17 +296,22 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         fragContext.getConfig(); result = drillConf;
         fragContext.getHandle(); result = ExecProtos.FragmentHandle.getDefaultInstance();
         try {
-          fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition, funcReg)));
-          result = new Delegate()
+          CodeGenerator<?> cg = CodeGenerator.get(templateClassDefinition, funcReg);
+          cg.plainOldJavaCapable(true);
+//          cg.persistCode(true);
+          fragContext.getImplementationClass(withAny(cg));
+          result = new Delegate<Object>()
           {
-            Object getImplementationClass(CodeGenerator gen) throws IOException, ClassTransformationException {
+            @SuppressWarnings("unused")
+            Object getImplementationClass(CodeGenerator<Object> gen) throws IOException, ClassTransformationException {
               return compiler.createInstance(gen);
             }
           };
           fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition, funcReg).getRoot()));
-          result = new Delegate()
+          result = new Delegate<Object>()
           {
-            Object getImplementationClass(ClassGenerator gen) throws IOException, ClassTransformationException {
+            @SuppressWarnings("unused")
+            Object getImplementationClass(ClassGenerator<Object> gen) throws IOException, ClassTransformationException {
               return compiler.createInstance(gen.getCodeGenerator());
             }
           };
@@ -316,11 +322,13 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         }
         opContext.getStats();result = opStats;
         opContext.getAllocator(); result = allocator;
-        fragContext.newOperatorContext(withAny(popConf));result = opContext;
+        fragContext.newOperatorContext(withAny(popConf));
+        result = opContext;
       }
     };
   }
 
+  @SuppressWarnings("resource")
   private Iterator<RecordReader> getRecordReadersForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
     ObjectMapper mapper = new ObjectMapper();
     List<RecordReader> readers = new ArrayList<>();

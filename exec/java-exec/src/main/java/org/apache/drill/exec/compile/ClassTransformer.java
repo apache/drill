@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ import com.google.common.collect.Sets;
  * Compiles generated code, merges the resulting class with the
  * template class, and performs byte-code cleanup on the resulting
  * byte codes. The most important transform is scalar replacement
- * which replaces occurences of non-escaping objects with a
+ * which replaces occurrences of non-escaping objects with a
  * collection of member variables.
  */
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,6 +65,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecords)
         .createFiles(1, numCopies, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("uid", 1l,
             "lst_lst_0", listOf(1l, 2l, 3l, 4l, 5l),
@@ -99,6 +100,7 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void testFlattenReferenceImpl() throws Exception {
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("a",1,
               "b",2,
@@ -108,7 +110,8 @@ public class TestFlatten extends BaseTestQuery {
                   listOf(1000,999)
             )));
     List<JsonStringHashMap<String, Object>> result = flatten(flatten(flatten(data, "list_col"), "nested_list_col"), "nested_list_col");
-     List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
+     @SuppressWarnings("unchecked")
+    List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
         mapOf("nested_list_col", 100,  "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 99,   "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 1000, "list_col", 10,"a", 1, "b",2),
@@ -171,6 +174,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecord)
         .createFiles(1, numRecords, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("int_list", inputList)
     );

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,10 +56,14 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     this.limit = limit;
     this.context = context;
     this.allocator = allocator;
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     this.hasSv2 = hasSv2;
   }
+
+  @Override
+  public boolean validate() { return true; }
 
   @Override
   public void resetQueue(VectorContainer container, SelectionVector4 v4) throws SchemaChangeException {
@@ -75,6 +79,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     // Reset queue size (most likely to be set to limit).
@@ -87,6 +92,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     doSetup(context, hyperBatch, null);
   }
 
+  @SuppressWarnings("resource")
   @Override
   public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException{
     Stopwatch watch = Stopwatch.createStarted();
@@ -125,6 +131,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   @Override
   public void generate() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
+    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
     finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
@@ -161,7 +168,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
   }
 
-  private void siftUp() {
+  private void siftUp() throws SchemaChangeException {
     int p = queueSize - 1;
     while (p > 0) {
       if (compare(p, (p - 1) / 2) > 0) {
@@ -173,7 +180,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
   }
 
-  private void siftDown() {
+  private void siftDown() throws SchemaChangeException {
     int p = 0;
     int next;
     while (p * 2 + 1 < queueSize) {
@@ -199,7 +206,11 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     int value = heapSv4.get(0);
     swap(0, queueSize - 1);
     queueSize--;
-    siftDown();
+    try {
+      siftDown();
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     return value;
   }
 
@@ -209,13 +220,17 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     heapSv4.set(sv1, tmp);
   }
 
-  public int compare(int leftIndex, int rightIndex) {
+  public int compare(int leftIndex, int rightIndex) throws SchemaChangeException {
     int sv1 = heapSv4.get(leftIndex);
     int sv2 = heapSv4.get(rightIndex);
     return doEval(sv1, sv2);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
-
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") VectorContainer incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
 }

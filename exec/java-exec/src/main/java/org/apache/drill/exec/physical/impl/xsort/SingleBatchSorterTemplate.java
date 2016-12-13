@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -76,7 +76,11 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
-  public abstract int doEval(@Named("leftIndex") char leftIndex, @Named("rightIndex") char rightIndex) throws SchemaChangeException;
-
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") VectorAccessible incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") char leftIndex,
+                             @Named("rightIndex") char rightIndex)
+                      throws SchemaChangeException;
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -180,7 +180,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     final int sv1 = vector4.get(leftIndex);
     final int sv2 = vector4.get(rightIndex);
     compares++;
-    return doEval(sv1, sv2);
+    try {
+      return doEval(sv1, sv2);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
   }
 
   @Override
@@ -194,6 +198,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") VectorContainer incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
 }

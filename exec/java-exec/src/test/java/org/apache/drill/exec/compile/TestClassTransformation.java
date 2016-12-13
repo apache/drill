@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,9 @@ public class TestClassTransformation extends BaseTestQuery {
 
   @BeforeClass
   public static void beforeTestClassTransformation() throws Exception {
+    // Tests here require the byte-code merge technique and are meaningless
+    // if the plain-old Java technique is selected.
+    System.setProperty("drill.compile.prefer_plain_java", "false");
     final UserSession userSession = UserSession.Builder.newBuilder()
       .withOptionManager(getDrillbitContext().getOptionManager())
       .build();
@@ -54,24 +57,20 @@ public class TestClassTransformation extends BaseTestQuery {
   public void testJaninoClassCompiler() throws Exception {
     logger.debug("Testing JaninoClassCompiler");
     sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JANINO.name()));
-    @SuppressWarnings("resource")
-    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
     for (int i = 0; i < ITERATION_COUNT; i++) {
-      compilationInnerClass(loader);
+      compilationInnerClass(false); // Traditional byte-code manipulation
+      compilationInnerClass(true); // Plain-old Java
     }
-    loader.close();
   }
 
   @Test
   public void testJDKClassCompiler() throws Exception {
     logger.debug("Testing JDKClassCompiler");
     sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name()));
-    @SuppressWarnings("resource")
-    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
     for (int i = 0; i < ITERATION_COUNT; i++) {
-      compilationInnerClass(loader);
+      compilationInnerClass(false); // Traditional byte-code manipulation
+      compilationInnerClass(true); // Plain-old Java
     }
-    loader.close();
   }
 
   @Test
@@ -108,12 +107,13 @@ public class TestClassTransformation extends BaseTestQuery {
    * Do a test of a three level class to ensure that nested code generators works correctly.
    * @throws Exception
    */
-  private void compilationInnerClass(QueryClassLoader loader) throws Exception{
+  private void compilationInnerClass(boolean asPoj) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
+    cg.preferPlainOldJava(asPoj);
 
-    ClassTransformer ct = new ClassTransformer(config, sessionOptions);
+    CodeCompiler.CodeGenCompiler cc = new CodeCompiler.CodeGenCompiler(config, sessionOptions);
     @SuppressWarnings("unchecked")
-    Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) ct.getImplementationClass(loader, cg.getDefinition(), cg.generateAndGet(), cg.getMaterializedClassName());
+    Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) cc.generateAndCompile(cg);
     ExampleInner t = (ExampleInner) c.newInstance();
     t.doOutside();
     t.doInsideOutside();
@@ -122,6 +122,7 @@ public class TestClassTransformation extends BaseTestQuery {
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
     CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry(), getDrillbitContext().getOptionManager());
+    cg.plainOldJavaCapable(true);
 
     ClassGenerator<T> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));

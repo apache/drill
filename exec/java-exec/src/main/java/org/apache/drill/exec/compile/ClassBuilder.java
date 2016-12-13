@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,9 +44,7 @@ import org.codehaus.commons.compiler.CompileException;
  * Here is how to use the plain-old Java technique to debug
  * generated code:
  * <ul>
- * <li>Set the config option <var>drill.exec.compile.save_source</var>
- * to <var>true</var>.</li>
- * <li>Set the config option <var>drill.exec.compile.code_dir</var>
+ * <li>Set the config option <tt>drill.exec.compile.code_dir</tt>
  * to the location where you want to save the generated source
  * code.</li>
  * <li>Where you generate code (using a {@link CodeGenerator}),
@@ -54,7 +52,12 @@ import org.codehaus.commons.compiler.CompileException;
  * CodeGenerator&lt;Foo> cg = ...
  * cg.plainOldJavaCapable(true); // Class supports plain-old Java
  * cg.preferPlainOldJava(true); // Actually generate plain-old Java
- * ...</pre></li>
+ * cg.persistCode(true); // Save code for debugging
+ * ...</pre>
+ * Note that <tt>persistCode</tt> automatically sets the POJ
+ * option if the generator is capable. Call <tt>preferPlainOldJava</tt>
+ * only if you want to try POJ for this particular generated class
+ * without saving the generated code.</li>
  * <li>In your favorite IDE, add to the code lookup path the
  * code directory saved earlier. In Eclipse, for example, you do
  * this in the debug configuration you will use to debug Drill.</li>
@@ -64,14 +67,12 @@ import org.codehaus.commons.compiler.CompileException;
  * local variables. Have fun!</li>
  * </ul>
  * <p>
- * Note: not all generated code is ready to be compiled as plain-old
- * Java. Some classes omit from the template the proper <code>throws</code>
- * declarations. Other minor problems may also crop up. All are easy
- * to fix. Once you've done so, add the following to mark that you've
- * done the clean-up:<pre>
- * cg.plainOldJavaCapable(true); // Class supports plain-old Java</pre>
+ * Most generated classes have been upgraded to support Plain-old Java
+ * compilation. Once this work is complete, the calls to
+ * <tt>plainOldJavaCapable<tt> can be removed as all generated classes
+ * will be capable.
  * <p>
- * The setting to prefer plain-old Java is ignored for generated
+ * The setting to prefer plain-old Java is ignored for any remaining generated
  * classes not marked as plain-old Java capable.
  */
 
@@ -82,18 +83,18 @@ public class ClassBuilder {
 
   private final DrillConfig config;
   private final OptionManager options;
-  private final boolean saveCode;
   private final File codeDir;
 
   public ClassBuilder(DrillConfig config, OptionManager optionManager) {
     this.config = config;
     options = optionManager;
 
-    // The option to save code is a boot-time option because
-    // it is used selectively during debugging, but can cause
-    // excessive I/O in a running server if used to save all code.
+    // Code can be saved per-class to enable debugging.
+    // Just mark the code generator as to be persistented,
+    // point your debugger to the directory set below, and you
+    // can step into the code for debugging. Code is not saved
+    // be default because doing so is expensive and unnecessary.
 
-    saveCode = config.getBoolean(SAVE_CODE_OPTION);
     codeDir = new File(config.getString(CODE_DIR_OPTION));
   }
 
@@ -127,6 +128,7 @@ public class ClassBuilder {
    * @throws ClassTransformationException generic "something is wrong" error from
    * Drill class compilation code.
    */
+  @SuppressWarnings("resource")
   private Class<?> compileClass(CodeGenerator<?> cg) throws IOException, CompileException, ClassNotFoundException, ClassTransformationException {
 
     // Get the plain-old Java code.
@@ -141,7 +143,9 @@ public class ClassBuilder {
     // A key advantage of this method is that the code can be
     // saved and debugged, if needed.
 
-    saveCode(code, name);
+    if (cg.persistCode()) {
+      saveCode(code, name);
+    }
 
     // Compile the code and load it into a class loader.
 
@@ -172,10 +176,6 @@ public class ClassBuilder {
    */
 
   private void saveCode(String code, ClassNames name) {
-
-    // Skip if we don't want to save the code.
-
-    if (! saveCode) { return; }
 
     String pathName = name.slash + ".java";
     File codeFile = new File(codeDir, pathName);

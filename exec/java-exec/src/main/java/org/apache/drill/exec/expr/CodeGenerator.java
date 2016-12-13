@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,15 +19,16 @@ package org.apache.drill.exec.expr;
 
 import java.io.IOException;
 
+import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
-import org.apache.drill.exec.server.options.OptionManager;
 
 /**
  * A code generator is responsible for generating the Java source code required
@@ -78,7 +79,14 @@ public class CodeGenerator<T> {
    * capable of this technique.
    */
 
-  private boolean usePlainOldJava;
+  private boolean usePlainJava;
+
+  /**
+   * Whether to write code to disk to aid in debugging. Should only be set
+   * during development, never in production.
+   */
+
+  private boolean persistCode;
   private String generatedCode;
   private String generifiedCode;
 
@@ -96,9 +104,6 @@ public class CodeGenerator<T> {
     try {
       this.model = new JCodeModel();
       JDefinedClass clazz = model._package(PACKAGE_NAME)._class(className);
-      if ( isPlainOldJava( ) ) {
-        clazz._extends(definition.getTemplateClass( ) );
-      }
       rootGenerator = new ClassGenerator<>(this, mappingSet, definition.getSignature(), new EvaluationVisitor(
           funcRegistry), clazz, model, optionManager);
     } catch (JClassAlreadyExistsException e) {
@@ -132,12 +137,38 @@ public class CodeGenerator<T> {
    */
 
   public void preferPlainOldJava(boolean flag) {
-    usePlainOldJava = flag;
+    usePlainJava = flag;
+  }
+
+  public boolean supportsPlainJava() {
+    return plainOldJavaCapable;
   }
 
   public boolean isPlainOldJava() {
-    return plainOldJavaCapable && usePlainOldJava;
+    return plainOldJavaCapable && usePlainJava;
   }
+
+  /**
+   * Debug-time option to persis the code for the generated class to permit debugging.
+   * Has effect only when code is generated using the plain-old Java option. Code
+   * is written to the code directory specified in {@link ClassBuilder}.
+   * To debug code, set this option, then point your IDE to the code directory
+   * when the IDE prompts you for the source code location.
+   *
+   * @param persist true to write the code to disk, false (the default) to keep
+   * code only in memory.
+   */
+  public void persistCode(boolean persist) {
+    if (supportsPlainJava()) {
+      persistCode = persist;
+      usePlainJava = true;
+    }
+  }
+
+  public boolean persistCode() {
+     return persistCode;
+  }
+
 
   public ClassGenerator<T> getRoot() {
     return rootGenerator;
@@ -145,13 +176,13 @@ public class CodeGenerator<T> {
 
   public void generate() {
 
-    // If this generated class uses the "straight Java" technique
+    // If this generated class uses the "plain-old Java" technique
     // (no byte code manipulation), then the class must extend the
     // template so it plays by normal Java rules for finding the
     // template methods via inheritance rather than via code injection.
 
     if (isPlainOldJava()) {
-      rootGenerator.clazz._extends(definition.getTemplateClass( ));
+      rootGenerator.preparePlainJava( );
     }
 
     rootGenerator.flushCode();
@@ -165,8 +196,8 @@ public class CodeGenerator<T> {
       throw new IllegalStateException(e);
     }
 
-    this.generatedCode = w.getCode().toString();
-    this.generifiedCode = generatedCode.replaceAll(this.className, "GenericGenerated");
+    generatedCode = w.getCode().toString();
+    generifiedCode = generatedCode.replaceAll(className, "GenericGenerated");
   }
 
   public String generateAndGet() throws IOException {
@@ -249,5 +280,4 @@ public class CodeGenerator<T> {
     }
     return true;
   }
-
 }
