@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -125,6 +125,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     return this.container;
   }
 
+  @SuppressWarnings("resource")
   private void setFlattenVector() {
     final TypedFieldId typedFieldId = incoming.getValueVectorId(popConfig.getColumn());
     final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
@@ -266,6 +267,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
    * the end of one of the other vectors while we are copying the data of the other vectors alongside each new flattened
    * value coming out of the repeated field.)
    */
+  @SuppressWarnings("resource")
   private TransferPair getFlattenFieldTransferPair(FieldReference reference) {
     final TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
     final Class<?> vectorClass = incoming.getSchema().getColumn(fieldId.getFieldIds()[0]).getValueClass();
@@ -301,6 +303,9 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<Flattener> cg = CodeGenerator.getRoot(Flattener.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
     final IntHashSet transferFieldIds = new IntHashSet();
 
     final NamedExpression flattenExpr = new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
@@ -349,6 +354,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         cg.addExpr(expr);
       } else{
         // need to do evaluation.
+        @SuppressWarnings("resource")
         ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);

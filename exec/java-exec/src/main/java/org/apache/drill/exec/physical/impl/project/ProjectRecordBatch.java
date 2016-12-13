@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -322,6 +322,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     final IntHashSet transferFieldIds = new IntHashSet();
 
@@ -481,7 +484,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     try {
-      this.projector = context.getImplementationClass(cg.getCodeGenerator());
+      CodeGenerator<Projector> codeGen = cg.getCodeGenerator();
+      codeGen.plainJavaCapable(true);
+      // Uncomment out this line to debug the generated code.
+//      codeGen.saveCodeForDebugging(true);
+      this.projector = context.getImplementationClass(codeGen);
       projector.setup(context, incoming, this, transfers);
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);

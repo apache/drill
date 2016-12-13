@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -363,8 +363,12 @@ public class TestPartitionSender extends PlanTestBase {
       super(context, incoming, operator);
     }
 
-    public void close() throws Exception {
-      ((AutoCloseable) oContext).close();
+    @Override
+    public void close() {
+      // Don't close the context here; it is closed
+      // separately. Close only resources this sender
+      // controls.
+//      ((AutoCloseable) oContext).close();
     }
 
     public int getNumberPartitions() {

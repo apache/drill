@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.compile;
 
+import org.apache.drill.exec.exception.SchemaChangeException;
+
 public interface ExampleInner {
-  public abstract void doOutside();
-  public abstract void doInsideOutside();
+  public abstract void doOutside() throws SchemaChangeException;
+  public abstract void doInsideOutside() throws SchemaChangeException;
 }

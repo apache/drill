@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed
  * with this work for additional information regarding copyright
@@ -132,6 +132,11 @@ public class ChainedHashTable {
   public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
       IOException, SchemaChangeException {
     CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    top.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // This code is called from generated code, so to step into this code,
+    // persist the code generated in HashAggBatch also.
+//  top.saveCodeForDebugging(true);
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
@@ -188,6 +193,7 @@ public class ChainedHashTable {
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       i++;

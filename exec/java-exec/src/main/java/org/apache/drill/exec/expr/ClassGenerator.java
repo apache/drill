@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr;
 
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +43,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
@@ -53,6 +55,7 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JLabel;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -105,8 +108,19 @@ public class ClassGenerator<T>{
     rotateBlock();
 
     for (SignatureHolder child : signature.getChildHolders()) {
-      String innerClassName = child.getSignatureClass().getSimpleName();
-      JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
+      Class<?> innerClass = child.getSignatureClass();
+      String innerClassName = innerClass.getSimpleName();
+
+      // Create the inner class as private final. If the template (super) class
+      // is static, then make the subclass static as well. Note the conversion
+      // from the JDK Modifier values to the JCodeModel JMod values: the
+      // values are different.
+
+      int mods = JMod.PRIVATE + JMod.FINAL;
+      if ((innerClass.getModifiers() & Modifier.STATIC) != 0) {
+        mods += JMod.STATIC;
+      }
+      JDefinedClass innerClazz = clazz._class(mods, innerClassName);
       innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model, optionManager));
     }
   }
@@ -372,6 +386,128 @@ public class ClassGenerator<T>{
 
   public Map<WorkspaceReference, JVar> getWorkspaceVectors() {
     return this.workspaceVectors;
+  }
+
+  /**
+   * Prepare the generated class for use as a plain-old Java class
+   * (to be compiled by a compiler and directly loaded without a
+   * byte-code merge. Three additions are necessary:
+   * <ul>
+   * <li>The class must extend its template as we won't merge byte
+   * codes.</li>
+   * <li>A constructor is required to call the <tt>__DRILL_INIT__</tt>
+   * method. If this is a nested class, then the constructor must
+   * include parameters defined by the base class.</li>
+   * <li>For each nested class, create a method that creates an
+   * instance of that nested class using a well-defined name. This
+   * method overrides the base class method defined for this purpose.</li>
+   */
+
+  public void preparePlainJava() {
+
+    // If this generated class uses the "straight Java" technique
+    // (no byte code manipulation), then the class must extend the
+    // template so it plays by normal Java rules for finding the
+    // template methods via inheritance rather than via code injection.
+
+    Class<?> baseClass = sig.getSignatureClass();
+    clazz._extends(baseClass);
+
+    // Create a constuctor for the class: either a default one,
+    // or (for nested classes) one that passes along arguments to
+    // the super class constructor.
+
+    Constructor<?>[] ctors = baseClass.getConstructors();
+    for (Constructor<?> ctor : ctors) {
+      addCtor(ctor.getParameterTypes());
+    }
+
+    // Some classes have no declared constructor, but we need to generate one
+    // anyway.
+
+    if ( ctors.length == 0 ) {
+      addCtor( new Class<?>[] {} );
+    }
+
+    // Repeat for inner classes.
+
+    for(ClassGenerator<T> child : innerClasses.values()) {
+      child.preparePlainJava();
+
+      // If there are inner classes, then we need to generate a "shim" method
+      // to instantiate that class.
+      //
+      // protected TemplateClass.TemplateInnerClass newTemplateInnerClass( args... ) {
+      //    return new GeneratedClass.GeneratedInnerClass( args... );
+      // }
+      //
+      // The name is special, it is "new" + inner class name. The template must
+      // provide a method of this name that creates the inner class instance.
+
+      String innerClassName = child.clazz.name();
+      JMethod shim = clazz.method(JMod.PROTECTED, child.sig.getSignatureClass(), "new" + innerClassName);
+      JInvocation childNew = JExpr._new(child.clazz);
+      Constructor<?>[] childCtors = child.sig.getSignatureClass().getConstructors();
+      Class<?>[] params;
+      if (childCtors.length==0) {
+        params = new Class<?>[0];
+      } else {
+        params = childCtors[0].getParameterTypes();
+      }
+      for (int i = 1; i < params.length; i++) {
+        Class<?> p = params[i];
+        childNew.arg(shim.param(model._ref(p), "arg" + i));
+      }
+      shim.body()._return(childNew);
+    }
+  }
+
+  /**
+   * The code generator creates a method called __DRILL_INIT__ which takes the
+   * place of the constructor when the code goes though the byte code merge.
+   * For Plain-old Java, we call the method from a constructor created for
+   * that purpose. (Generated code, fortunately, never includes a constructor,
+   * so we can create one.) Since the init block throws an exception (which
+   * should never occur), the generated constructor converts the checked
+   * exception into an unchecked one so as to not require changes to the
+   * various places that create instances of the generated classes.
+   *
+   * Example:<code><pre>
+   * public StreamingAggregatorGen1() {
+   *       try {
+   *         __DRILL_INIT__();
+   *     } catch (SchemaChangeException e) {
+   *         throw new UnsupportedOperationException(e);
+   *     }
+   * }</pre></code>
+   *
+   * Note: in Java 8 we'd use the <tt>Parameter</tt> class defined in Java's
+   * introspection package. But, Drill prefers Java 7 which only provides
+   * parameter types.
+   */
+
+  private void addCtor(Class<?>[] parameters) {
+    JMethod ctor = clazz.constructor(JMod.PUBLIC);
+    JBlock body = ctor.body();
+
+    // If there are parameters, need to pass them to the super class.
+    if (parameters.length > 0) {
+      JInvocation superCall = JExpr.invoke("super");
+
+      // This case only occurs for nested classes, and all nested classes
+      // in Drill are inner classes. Don't pass along the (hidden)
+      // this$0 field.
+
+      for (int i = 1; i < parameters.length; i++) {
+        Class<?> p = parameters[i];
+        superCall.arg(ctor.param(model._ref(p), "arg" + i));
+      }
+      body.add(superCall);
+    }
+    JTryBlock tryBlock = body._try();
+    tryBlock.body().invoke(SignatureHolder.DRILL_INIT_METHOD);
+    JCatchBlock catchBlock = tryBlock._catch(model.ref(SchemaChangeException.class));
+    catchBlock.body()._throw(JExpr._new(model.ref(UnsupportedOperationException.class)).arg(catchBlock.param("e")));
   }
 
   private static class ValueVectorSetup {

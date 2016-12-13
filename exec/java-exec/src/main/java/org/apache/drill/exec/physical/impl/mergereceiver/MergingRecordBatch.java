@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -136,6 +136,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     this.outputCounts = new long[config.getNumSenders()];
   }
 
+  @SuppressWarnings("resource")
   private RawFragmentBatch getNext(final int providerIndex) throws IOException {
     stats.startWait();
     final RawFragmentBatchProvider provider = fragProviders[providerIndex];
@@ -194,7 +195,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       // set up each (non-empty) incoming record batch
       final List<RawFragmentBatch> rawBatches = Lists.newArrayList();
       int p = 0;
-      for (final RawFragmentBatchProvider provider : fragProviders) {
+      for (@SuppressWarnings("unused") final RawFragmentBatchProvider provider : fragProviders) {
         RawFragmentBatch rawBatch;
         // check if there is a batch in temp holder before calling getNext(), as it may have been used when building schema
         if (tempBatchHolder[p] != null) {
@@ -316,7 +317,11 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         public int compare(final Node node1, final Node node2) {
           final int leftIndex = (node1.batchId << 16) + node1.valueIndex;
           final int rightIndex = (node2.batchId << 16) + node2.valueIndex;
-          return merger.doEval(leftIndex, rightIndex);
+          try {
+            return merger.doEval(leftIndex, rightIndex);
+          } catch (SchemaChangeException e) {
+            throw new UnsupportedOperationException(e);
+          }
         }
       });
 
@@ -433,7 +438,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     }
 
     // set the value counts in the outgoing vectors
-    for (final VectorWrapper vw : outgoingContainer) {
+    for (final VectorWrapper<?> vw : outgoingContainer) {
       vw.getValueVector().getMutator().setValueCount(outgoingPosition);
     }
 
@@ -486,6 +491,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
         tempBatchHolder[i] = batch;
         for (final SerializedField field : batch.getHeader().getDef().getFieldList()) {
+          @SuppressWarnings("resource")
           final ValueVector v = outgoingContainer.addOrGet(MaterializedField.create(field));
           v.allocateNew();
         }
@@ -607,7 +613,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   private void allocateOutgoing() {
-    for (final VectorWrapper w : outgoingContainer) {
+    for (final VectorWrapper<?> w : outgoingContainer) {
+      @SuppressWarnings("resource")
       final ValueVector v = w.getValueVector();
       if (v instanceof FixedWidthVector) {
         AllocationHelper.allocate(v, OUTGOING_BATCH_SIZE, 1);
@@ -631,6 +638,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
     try {
       final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+      cg.plainJavaCapable(true);
+      // Uncomment out this line to debug the generated code.
+//      cg.saveCodeForDebugging(true);
       final ClassGenerator<MergingReceiverGeneratorBase> g = cg.getRoot();
 
       ExpandableHyperContainer batch = null;
@@ -707,7 +717,11 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     assert ++outputCounts[node.batchId] <= inputCounts[node.batchId]
         : String.format("Stream %d input count: %d output count %d", node.batchId, inputCounts[node.batchId], outputCounts[node.batchId]);
     final int inIndex = (node.batchId << 16) + node.valueIndex;
-    merger.doCopy(inIndex, outgoingPosition);
+    try {
+      merger.doCopy(inIndex, outgoingPosition);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     outgoingPosition++;
     if (outgoingPosition == OUTGOING_BATCH_SIZE) {
       return false;

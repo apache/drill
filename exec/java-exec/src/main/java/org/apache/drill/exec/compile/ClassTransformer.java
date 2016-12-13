@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ import com.google.common.collect.Sets;
  * Compiles generated code, merges the resulting class with the
  * template class, and performs byte-code cleanup on the resulting
  * byte codes. The most important transform is scalar replacement
- * which replaces occurences of non-escaping objects with a
+ * which replaces occurrences of non-escaping objects with a
  * collection of member variables.
  */
 
@@ -221,6 +221,7 @@ public class ClassTransformer {
     }
   }
 
+  @SuppressWarnings("resource")
   public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
     final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
     return getImplementationClass(loader, cg.getDefinition(),
@@ -310,7 +311,10 @@ public class ClassTransformer {
 
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
+             c.getSimpleName(),
+             DrillStringUtils.readable(totalBytecodeSize),
+             (System.nanoTime() - t1 + 500_000) / 1_000_000);
         return c;
       }
 

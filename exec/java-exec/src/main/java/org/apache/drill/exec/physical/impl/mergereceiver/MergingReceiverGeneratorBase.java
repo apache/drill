@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,9 +32,9 @@ public interface MergingReceiverGeneratorBase {
                                VectorAccessible outgoing) throws SchemaChangeException;
 
   public abstract int doEval(int leftIndex,
-                                int rightIndex);
+                                int rightIndex) throws SchemaChangeException;
 
-  public abstract void doCopy(int inIndex, int outIndex);
+  public abstract void doCopy(int inIndex, int outIndex) throws SchemaChangeException;
 
   public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);

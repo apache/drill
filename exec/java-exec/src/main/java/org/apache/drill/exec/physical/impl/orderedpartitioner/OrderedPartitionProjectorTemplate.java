@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,8 +29,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.IntVector;
 
 import com.google.common.collect.ImmutableList;
@@ -39,13 +37,13 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionProjectorTemplate.class);
 
   private ImmutableList<TransferPair> transfers;
-  private VectorContainer partitionVectors;
+//  private VectorContainer partitionVectors;
   private int partitions;
-  private SelectionVector2 vector2;
-  private SelectionVector4 vector4;
+//  private SelectionVector2 vector2;
+//  private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
   private RecordBatch outBatch;
-  private SchemaPath outputField;
+//  private SchemaPath outputField;
   private IntVector partitionValues;
 
   public OrderedPartitionProjectorTemplate() throws SchemaChangeException{
@@ -54,8 +52,12 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
   private int getPartition(int index) {
     //TODO replace this with binary search
     int partitionIndex = 0;
-    while (partitionIndex < partitions - 1 && doEval(index, partitionIndex) >= 0) {
-      partitionIndex++;
+    try {
+      while (partitionIndex < partitions - 1 && doEval(index, partitionIndex) >= 0) {
+        partitionIndex++;
+      }
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
     return partitionIndex;
   }
@@ -81,7 +83,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
 
     this.svMode = incoming.getSchema().getSelectionVectorMode();
     this.outBatch = outgoing;
-    this.outputField = outputField;
+//    this.outputField = outputField;
     partitionValues = (IntVector) outBatch.getValueAccessorById(IntVector.class, outBatch.getValueVectorId(outputField).getFieldIds()).getValueVector();
     switch(svMode){
     case FOUR_BYTE:
@@ -93,12 +95,12 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
     doSetup(context, incoming, outgoing, partitionVectors);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming,
-                               @Named("outgoing") RecordBatch outgoing, @Named("partitionVectors") VectorContainer partitionVectors);
-  public abstract int doEval(@Named("inIndex") int inIndex, @Named("partitionIndex") int partitionIndex);
-
-
-
-
-
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") VectorAccessible incoming,
+                               @Named("outgoing") RecordBatch outgoing,
+                               @Named("partitionVectors") VectorContainer partitionVectors)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("inIndex") int inIndex,
+                             @Named("partitionIndex") int partitionIndex)
+                      throws SchemaChangeException;
 }

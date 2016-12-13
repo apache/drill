@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -227,7 +227,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         if (mSorter != null) {
           mSorter.clear();
         }
-        for(Iterator iter = this.currSpillDirs.iterator(); iter.hasNext(); iter.remove()) {
+        for(Iterator<Path> iter = this.currSpillDirs.iterator(); iter.hasNext(); iter.remove()) {
             Path path = (Path)iter.next();
             try {
                 if (fs != null && path != null && fs.exists(path)) {
@@ -254,6 +254,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
+          @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v); // Can we remove this hack?
@@ -278,6 +279,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
   }
 
+  @SuppressWarnings("resource")
   @Override
   public IterOutcome innerNext() {
     if (schema != null) {
@@ -539,6 +541,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (batchGroups.size() == 0) {
         break;
       }
+      @SuppressWarnings("resource")
       BatchGroup batch = batchGroups.pollLast();
       assert batch != null : "Encountered a null batch during merge and spill operation";
       batchGroupList.add(batch);
@@ -610,9 +613,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   private SelectionVector2 newSV2() throws OutOfMemoryException, InterruptedException {
+    @SuppressWarnings("resource")
     SelectionVector2 sv2 = new SelectionVector2(oAllocator);
     if (!sv2.allocateNewSafe(incoming.getRecordCount())) {
       try {
+        @SuppressWarnings("resource")
         final BatchGroup merged = mergeAndSpill(batchGroups);
         if (merged != null) {
           spilledBatchGroups.add(merged);
@@ -711,19 +716,19 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
-    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
+    cg.plainJavaCapable(true); // This class can generate plain-old Java.
     // Uncomment out this line to debug the generated code.
-//  cg.preferPlainOldJava(true);
+//    cg.saveCodeForDebugging(true);
     return context.getImplementationClass(cg);
   }
 
   public SingleBatchSorter createNewSorter(FragmentContext context, VectorAccessible batch)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<SingleBatchSorter> cg = CodeGenerator.get(SingleBatchSorter.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
+    cg.plainJavaCapable(true); // This class can generate plain-old Java.
 
     // Uncomment out this line to debug the generated code.
-//    cg.preferPlainOldJava(true);
+//    cg.saveCodeForDebugging(true);
     generateComparisons(cg.getRoot(), batch);
     return context.getImplementationClass(cg);
   }
@@ -767,6 +772,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     try {
       if (copier == null) {
         CodeGenerator<PriorityQueueCopier> cg = CodeGenerator.get(PriorityQueueCopier.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+        cg.plainJavaCapable(true);
+        // Uncomment out this line to debug the generated code.
+//        cg.saveCodeForDebugging(true);
         ClassGenerator<PriorityQueueCopier> g = cg.getRoot();
 
         generateComparisons(g, batch);
@@ -779,8 +787,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         copier.close();
       }
 
+      @SuppressWarnings("resource")
       BufferAllocator allocator = spilling ? copierAllocator : oAllocator;
       for (VectorWrapper<?> i : batch) {
+        @SuppressWarnings("resource")
         ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
         outputContainer.add(v);
       }

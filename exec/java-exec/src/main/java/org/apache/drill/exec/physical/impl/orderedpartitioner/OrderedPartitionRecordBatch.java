@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -87,8 +87,8 @@ import com.sun.codemodel.JExpr;
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
 
-  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
-  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+//  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+//  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   public static final CacheConfig<String, CachedVectorContainer> SINGLE_CACHE_CONFIG = CacheConfig //
       .newBuilder(CachedVectorContainer.class) //
@@ -141,6 +141,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.completionFactor = pop.getCompletionFactor();
 
     DistributedCache cache = null;
+    // Clearly, this code is not used!
     this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
     this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
     Preconditions.checkNotNull(tableMap);
@@ -151,9 +152,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     SchemaPath outputPath = popConfig.getRef();
     MaterializedField outputField = MaterializedField.create(outputPath.getAsNamePart().getName(), Types.required(TypeProtos.MinorType.INT));
     this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
-
   }
-
 
   @Override
   public void close() {
@@ -163,6 +162,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
 
+  @SuppressWarnings("resource")
   private boolean saveSamples() throws SchemaChangeException, ClassTransformationException, IOException {
     recordsSampled = 0;
     IterOutcome upstream;
@@ -249,8 +249,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
     }
     return true;
-
-
   }
 
   /**
@@ -342,6 +340,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
+    @SuppressWarnings("resource")
     SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator());
     final VectorContainer allSamplesContainer = new VectorContainer();
     final VectorContainer candidatePartitionTable = new VectorContainer();
@@ -360,6 +359,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
 
       // sort the data incoming samples.
+      @SuppressWarnings("resource")
       SelectionVector4 newSv4 = containerBuilder.getSv4();
       Sorter sorter = SortBatch.createNewSorter(context, orderDefs, allSamplesContainer);
       sorter.setup(context, newSv4, allSamplesContainer);
@@ -388,6 +388,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         }
       }
       candidatePartitionTable.setRecordCount(copier.getOutputRecords());
+      @SuppressWarnings("resource")
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
       wrap = new CachedVectorContainer(batch, context.getDrillbitContext().getAllocator());
       tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
@@ -421,6 +422,11 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
         context.getFunctionRegistry(), context.getOptions());
+    // Note: disabled for now. This may require some debugging:
+    // no tests are available for this operator.
+//    cg.getCodeGenerator().plainOldJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     int i = 0;
     for (Ordering od : orderings) {
@@ -435,6 +441,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
+      @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       localAllocationVectors.add(vector);
       TypedFieldId fid = outgoing.add(vector);
@@ -587,6 +594,11 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     final ClassGenerator<OrderedPartitionProjector> cg = CodeGenerator.getRoot(
         OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    // Note: disabled for now. This may require some debugging:
+    // no tests are available for this operator.
+//    cg.getCodeGenerator().plainOldJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     for (VectorWrapper<?> vw : batch) {
       TransferPair tp = vw.getValueVector().getTransferPair(oContext.getAllocator());
