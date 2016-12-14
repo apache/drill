@@ -69,7 +69,7 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   }
 
   @JsonProperty("disableCountOptimization")
-  public void setReadDocumentForCount(boolean mode) {
+  public void setDisableCountOptimization(boolean mode) {
     disableCountOptimization = mode;
   }
 

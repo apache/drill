@@ -174,6 +174,15 @@ public class ImpersonationUtil {
   }
 
   /**
+   * Return the list of groups to which the process user belongs.
+   *
+   * @return Drillbit process user group names
+   */
+  public static String[] getProcessUserGroupNames() {
+    return getProcessUserUGI().getGroupNames();
+  }
+
+  /**
    * Return the {@link org.apache.hadoop.security.UserGroupInformation} of user who is running the Drillbit.
    *
    * @return Drillbit process user {@link org.apache.hadoop.security.UserGroupInformation}.

@@ -20,7 +20,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.9.0-SNAPSHOT</version>
+  <version>1.10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -38,7 +38,7 @@
     <calcite.version>1.4.0-drill-r19</calcite.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
     <jackson.version>2.7.1</jackson.version>
-    <mapr.release.version>5.2.0-mapr</mapr.release.version>
+    <mapr.release.version>5.2.0.40963-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
 
     <!--
@@ -176,6 +176,7 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
+        <version>0.12</version>
         <executions>
           <execution>
             <id>rat-checks</id>
@@ -383,7 +384,7 @@
 
         <configuration>
           <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
-          <verbose>true</verbose>
+          <verbose>false</verbose>
           <skipPoms>false</skipPoms>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
           <failOnNoGitDirectory>false</failOnNoGitDirectory>

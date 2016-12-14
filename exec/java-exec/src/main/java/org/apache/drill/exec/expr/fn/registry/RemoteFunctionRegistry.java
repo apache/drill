@@ -19,7 +19,7 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -36,13 +36,13 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,8 +81,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
  */
 public class RemoteFunctionRegistry implements AutoCloseable {
 
-  public static final String REGISTRY = "registry";
-
+  private static final String registry_path = "registry";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
@@ -108,15 +107,15 @@ public class RemoteFunctionRegistry implements AutoCloseable {
   }
 
   public Registry getRegistry() {
-    return registry.get(REGISTRY, null);
+    return registry.get(registry_path, null);
   }
 
   public Registry getRegistry(DataChangeVersion version) {
-    return registry.get(REGISTRY, version);
+    return registry.get(registry_path, version);
   }
 
   public void updateRegistry(Registry registryContent, DataChangeVersion version) throws VersionMismatchException {
-    registry.put(REGISTRY, registryContent, version);
+    registry.put(registry_path, registryContent, version);
   }
 
   public void submitForUnregistration(String jar) {
@@ -168,7 +167,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
           .persist()
           .build();
       registry = storeProvider.getOrCreateStore(registrationConfig);
-      registry.putIfAbsent(REGISTRY, Registry.getDefaultInstance());
+      registry.putIfAbsent(registry_path, Registry.getDefaultInstance());
     } catch (StoreException e) {
       throw new DrillRuntimeException("Failure while loading remote registry.", e);
     }
@@ -189,6 +188,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
    * if not set, uses user home directory instead.
    */
   private void prepareAreas(DrillConfig config) {
+    logger.info("Preparing three remote udf areas: staging, registry and tmp.");
     Configuration conf = new Configuration();
     if (config.hasPath(ExecConstants.UDF_DIRECTORY_FS)) {
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getString(ExecConstants.UDF_DIRECTORY_FS));
@@ -229,22 +229,28 @@ public class RemoteFunctionRegistry implements AutoCloseable {
       Preconditions.checkState(fs.exists(path), "Area [%s] must exist", fullPath);
       FileStatus fileStatus = fs.getFileStatus(path);
       Preconditions.checkState(fileStatus.isDirectory(), "Area [%s] must be a directory", fullPath);
-      UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
       FsPermission permission = fileStatus.getPermission();
-      // It is considered that current user has write rights on directory if:
-      // 1. current user is owner of the directory and has write rights
-      // 2. current user is in group that has write rights
+      // It is considered that process user has write rights on directory if:
+      // 1. process user is owner of the directory and has write rights
+      // 2. process user is in group that has write rights
       // 3. any user has write rights
       Preconditions.checkState(
-          (currentUser.getUserName().equals(fileStatus.getOwner())
+          (ImpersonationUtil.getProcessUserName()
+              .equals(fileStatus.getOwner())
               && permission.getUserAction().implies(FsAction.WRITE)) ||
-          (Lists.newArrayList(currentUser.getGroupNames()).contains(fileStatus.getGroup())
+          (Sets.newHashSet(ImpersonationUtil.getProcessUserGroupNames())
+              .contains(fileStatus.getGroup())
               && permission.getGroupAction().implies(FsAction.WRITE)) ||
           permission.getOtherAction().implies(FsAction.WRITE),
           "Area [%s] must be writable and executable for application user", fullPath);
     } catch (Exception e) {
+      if (e instanceof DrillRuntimeException) {
+        throw (DrillRuntimeException) e;
+      }
+      // throws
       DrillRuntimeException.format(e, "Error during udf area creation [%s] on file system [%s]", fullPath, fs.getUri());
     }
+    logger.info("Created remote udf area [{}] on file system [{}]", fullPath, fs.getUri());
     return path;
   }
 

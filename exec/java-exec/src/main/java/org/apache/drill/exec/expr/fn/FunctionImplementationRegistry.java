@@ -377,7 +377,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * Creates local udf directory, if it doesn't exist.
    * Checks if local udf directory is a directory and if current application has write rights on it.
    * Attempts to clean up local udf directory in case jars were left after previous drillbit run.
-   * Local udf directory path is concatenated from drill temporary directory and ${drill.exec.udf.directory.local}.
    *
    * @param config drill config
    * @return path to local udf directory
@@ -395,22 +394,24 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     } catch (IOException e) {
       throw new DrillRuntimeException("Error during local udf directory clean up", e);
     }
+    logger.info("Created and validated local udf directory [{}]", udfPath);
     return new Path(udfDir.toURI());
   }
 
   /**
-   * First tries to get drill temporary directory value from environmental variable $DRILL_TMP_DIR,
-   * then from config ${drill.tmp-dir}.
+   * First tries to get drill temporary directory value from from config ${drill.tmp-dir},
+   * then checks environmental variable $DRILL_TMP_DIR.
    * If value is still missing, generates directory using {@link Files#createTempDir()}.
    * If temporary directory was generated, sets {@link #deleteTmpDir} to true
    * to delete directory on drillbit exit.
    * @return drill temporary directory path
    */
   private File getTmpDir(DrillConfig config) {
-    String drillTempDir = System.getenv("DRILL_TMP_DIR");
-
-    if (drillTempDir == null && config.hasPath(ExecConstants.DRILL_TMP_DIR)) {
+    String drillTempDir;
+    if (config.hasPath(ExecConstants.DRILL_TMP_DIR)) {
       drillTempDir = config.getString(ExecConstants.DRILL_TMP_DIR);
+    } else {
+      drillTempDir = System.getenv("DRILL_TMP_DIR");
     }
 
     if (drillTempDir == null) {
@@ -477,7 +478,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * Will unregister all functions associated with the jar name
    * and delete binary and source associated with the jar from local udf directory
    */
-  public class UnregistrationListener implements TransientStoreListener {
+  private class UnregistrationListener implements TransientStoreListener {
 
     @Override
     public void onChange(TransientStoreEvent event) {

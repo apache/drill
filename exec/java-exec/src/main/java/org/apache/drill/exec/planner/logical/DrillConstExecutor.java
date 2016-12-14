@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -68,7 +68,6 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.util.NlsString;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.joda.time.DateTime;
@@ -129,8 +128,9 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
         String message = String.format(
             "Failure while materializing expression in constant expression evaluator [%s].  Errors: %s",
             newCall.toString(), errors.toString());
-        logger.error(message);
-        throw new DrillRuntimeException(message);
+        throw UserException.planError()
+          .message(message)
+          .build(logger);
       }
 
       if (NON_REDUCIBLE_TYPES.contains(materializedExpr.getMajorType().getMinorType())) {
@@ -149,8 +149,9 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
         if (sqlTypeName == null) {
           String message = String.format("Error reducing constant expression, unsupported type: %s.",
               materializedExpr.getMajorType().getMinorType());
-          logger.error(message);
-          throw new DrillRuntimeException(message);
+          throw UserException.unsupportedError()
+            .message(message)
+            .build(logger);
         }
         reducedValues.add(rexBuilder.makeNullLiteral(sqlTypeName));
         continue;
@@ -287,7 +288,8 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
               Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 new DateTime(((NullableTimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null) :
                 new DateTime(((TimeStampHolder) output).value, DateTimeZone.UTC).toCalendar(null);
-              return rexBuilder.makeTimestampLiteral(value, 0);
+              return rexBuilder.makeLiteral(value,
+                TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIMESTAMP, newCall.getType().isNullable()), false);
             }
             case INTERVALYEAR: {
               BigDecimal value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?

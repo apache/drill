@@ -29,7 +29,7 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
 public class CachingPersistentStoreProvider extends BasePersistentStoreProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachingPersistentStoreProvider.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachingPersistentStoreProvider.class);
 
   private final ConcurrentMap<PersistentStoreConfig<?>, PersistentStore<?>> storeCache = Maps.newConcurrentMap();
   private final PersistentStoreProvider provider;
@@ -38,6 +38,7 @@ public class CachingPersistentStoreProvider extends BasePersistentStoreProvider 
     this.provider = provider;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
     final PersistentStore<?> store = storeCache.get(config);

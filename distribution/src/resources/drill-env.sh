@@ -142,3 +142,8 @@
 # Drill is embedded in Sqlline or not.
 
 #export DRILL_SHELL_JAVA_OPTS="..."
+
+# Location Drill should use for temporary files, such as downloaded dynamic UDFs jars.
+# Set to "/tmp" by default.
+#
+# export DRILL_TMP_DIR="..."

@@ -64,7 +64,7 @@ public class Drillbit implements AutoCloseable {
     Environment.logEnv("Drillbit environment: ", logger);
   }
 
-  private final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
+  public final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
 
   private boolean isClosed = false;
 
@@ -101,7 +101,7 @@ public class Drillbit implements AutoCloseable {
       storeProvider = new CachingPersistentStoreProvider(new LocalPersistentStoreProvider(config));
     } else {
       coord = new ZKClusterCoordinator(config);
-      storeProvider = new PersistentStoreRegistry(this.coord, config).newPStoreProvider();
+      storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
       isDistributedMode = true;
     }
 

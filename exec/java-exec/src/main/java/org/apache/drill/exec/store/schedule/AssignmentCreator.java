@@ -50,7 +50,8 @@ public class AssignmentCreator<T extends CompleteWork> {
   private static Comparator<Entry<DrillbitEndpoint,Long>> comparator = new Comparator<Entry<DrillbitEndpoint,Long>>() {
     @Override
     public int compare(Entry<DrillbitEndpoint, Long> o1, Entry<DrillbitEndpoint,Long> o2) {
-      return (int) (o1.getValue() - o2.getValue());
+      long ret = o1.getValue() - o2.getValue();
+      return ret > 0? 1 : ((ret < 0)? -1: 0);
     }
   };
 

@@ -52,6 +52,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -154,6 +155,8 @@ class DrillConnectionImpl extends AvaticaConnection
       this.client.connect(connect, info);
     } catch (OutOfMemoryException e) {
       throw new SQLException("Failure creating root allocator", e);
+    } catch (InvalidConnectionInfoException e) {
+      throw new SQLException("Invalid parameter in connection string: " + e.getMessage(), e);
     } catch (RpcException e) {
       // (Include cause exception's text in wrapping exception's text so
       // it's more likely to get to user (e.g., via SQLLine), and use

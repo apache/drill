@@ -31,27 +31,25 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
-import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class LocalPersistentStore<V> extends BasePersistentStore<V> {
-  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
+//  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
 
   private final Path basePath;
   private final PersistentStoreConfig<V> config;
@@ -140,6 +138,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     return path;
   }
 
+  @Override
   public V get(String key) {
     try{
       Path path = makePath(key);
@@ -158,6 +157,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
+  @Override
   public void put(String key, V value) {
     try (OutputStream os = fs.create(makePath(key))) {
       IOUtils.write(config.getSerializer().serialize(value), os);
@@ -181,6 +181,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
+  @Override
   public void delete(String key) {
     try {
       fs.delete(makePath(key), false);
