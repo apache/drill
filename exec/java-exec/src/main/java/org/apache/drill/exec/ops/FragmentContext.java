@@ -273,7 +273,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return fragment.getHandle();
   }
 
-  private String getFragIdString() {
+  public String getFragIdString() {
     final FragmentHandle handle = getHandle();
     final String frag = handle != null ? handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId() : "0:0";
     return frag;

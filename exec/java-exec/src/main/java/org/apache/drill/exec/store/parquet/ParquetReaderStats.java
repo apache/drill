@@ -41,6 +41,9 @@ public class ParquetReaderStats {
 
   public AtomicLong timeDiskScanWait = new AtomicLong();
   public AtomicLong timeDiskScan = new AtomicLong();
+  public AtomicLong timeFixedColumnRead = new AtomicLong();
+  public AtomicLong timeVarColumnRead = new AtomicLong();
+  public AtomicLong timeProcess = new AtomicLong();
 
   public ParquetReaderStats() {
   }

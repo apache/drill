@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util.filereader;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.fs.ByteBufferReadable;
@@ -30,6 +31,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 public class DirectBufInputStream extends FilterInputStream {
 
@@ -46,13 +48,16 @@ public class DirectBufInputStream extends FilterInputStream {
    */
   protected final long totalByteSize;
 
+  // if true, the input stream willreturn EOF if we have read upto totalByteSize bytes
+  protected final boolean enforceTotalByteSize;
+
   /**
    * The offset in the underlying stream to start reading from
    */
   protected final long startOffset;
 
   public DirectBufInputStream(InputStream in, BufferAllocator allocator, String id, long startOffset,
-      long totalByteSize, boolean enableHints) {
+      long totalByteSize, boolean enforceTotalByteSize, boolean enableHints) {
     super(in);
     Preconditions.checkArgument(startOffset >= 0);
     Preconditions.checkArgument(totalByteSize >= 0);
@@ -60,6 +65,7 @@ public class DirectBufInputStream extends FilterInputStream {
     this.allocator = allocator;
     this.startOffset = startOffset;
     this.totalByteSize = totalByteSize;
+    this.enforceTotalByteSize = enforceTotalByteSize;
     this.enableHints = enableHints;
   }
 
@@ -81,7 +87,18 @@ public class DirectBufInputStream extends FilterInputStream {
     ByteBuffer directBuffer = buf.nioBuffer(0, len);
     int lengthLeftToRead = len;
     while (lengthLeftToRead > 0) {
-      lengthLeftToRead -= CompatibilityUtil.getBuf(getInputStream(), directBuffer, lengthLeftToRead);
+      if(logger.isTraceEnabled()) {
+        logger.trace("PERF: Disk read start. {}, StartOffset: {}, TotalByteSize: {}", this.streamId, this.startOffset, this.totalByteSize);
+      }
+      Stopwatch timer = Stopwatch.createStarted();
+      int bytesRead = CompatibilityUtil.getBuf(getInputStream(), directBuffer, lengthLeftToRead);
+      lengthLeftToRead -= bytesRead;
+      if(logger.isTraceEnabled()) {
+        logger.trace(
+            "PERF: Disk read complete. {}, StartOffset: {}, TotalByteSize: {}, BytesRead: {}, Time: {} ms",
+            this.streamId, this.startOffset, this.totalByteSize, bytesRead,
+            ((double) timer.elapsed(TimeUnit.MICROSECONDS)) / 1000);
+      }
     }
     buf.writerIndex(len);
     return len;
