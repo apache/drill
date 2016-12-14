@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -960,6 +961,24 @@ public class TestParquetWriter extends BaseTestQuery {
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
     } finally {
       test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+    }
+  }
+
+  @Test // DRILL-5097
+  public void testInt96TimeStampValueWidth() throws Exception {
+    try {
+      testBuilder()
+          .ordered()
+          .sqlQuery("select c, d from cp.`parquet/data.snappy.parquet` where d = '2015-07-18 13:52:51'")
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .baselineColumns("c", "d")
+          .baselineValues(new DateTime(Date.valueOf("2011-04-11").getTime()),
+              new DateTime(Timestamp.valueOf("2015-07-18 13:52:51").getTime()))
+          .build()
+          .run();
+    } finally {
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
