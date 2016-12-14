@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -90,8 +89,7 @@ public abstract class ColumnReader<V extends ValueVector> {
     this.isFixedLength = fixedLength;
     this.schemaElement = schemaElement;
     this.valueVec =  v;
-    boolean useAsyncPageReader  = parentReader.getFragmentContext().getOptions()
-        .getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+    boolean useAsyncPageReader = parentReader.useAsyncPageReader;
     if (useAsyncPageReader) {
       this.pageReader =
           new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
@@ -101,7 +99,6 @@ public abstract class ColumnReader<V extends ValueVector> {
           new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
               columnChunkMetaData);
     }
-
     if (columnDescriptor.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
       if (columnDescriptor.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
         dataTypeLengthInBits = columnDescriptor.getTypeLength() * 8;
