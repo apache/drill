@@ -103,6 +103,17 @@ public class TestBsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  public void testSpecialCharStringType() throws IOException {
+    BsonDocument bsonDoc = new BsonDocument();
+    bsonDoc.append("stringKey", new BsonString("§§§§§§§§§1"));
+    writer.reset();
+    bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
+    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    assertEquals("§§§§§§§§§1",
+        mapReader.reader("stringKey").readText().toString());
+  }
+
+  @Test
   public void testObjectIdType() throws IOException {
     BsonDocument bsonDoc = new BsonDocument();
     BsonObjectId value = new BsonObjectId(new ObjectId());
