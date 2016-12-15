@@ -37,10 +37,11 @@ public class FunctionAttributes {
   private final ValueReference returnValue;
   private final WorkspaceReference[] workspaceVars;
   private final FunctionCostCategory costCategory;
+  private final boolean isNiladic;
 
   public FunctionAttributes(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative,
       boolean isDeteministic, String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
-      WorkspaceReference[] workspaceVars, FunctionCostCategory costCategory) {
+      WorkspaceReference[] workspaceVars, FunctionCostCategory costCategory, boolean isNiladic) {
     super();
     this.scope = scope;
     this.nullHandling = nullHandling;
@@ -51,6 +52,7 @@ public class FunctionAttributes {
     this.returnValue = returnValue;
     this.workspaceVars = workspaceVars;
     this.costCategory = costCategory;
+    this.isNiladic = isNiladic;
   }
 
   public FunctionScope getScope() {
@@ -94,5 +96,7 @@ public class FunctionAttributes {
     return costCategory;
   }
 
-
+  public boolean isNiladic() {
+    return isNiladic;
+  }
 }

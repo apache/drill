@@ -93,7 +93,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
     table = new DrillOperatorTable(getFunctionRegistry(), drillbitContext.getOptionManager());
 
-    queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
+    queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName(), session.getSessionId());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
     allocator = drillbitContext.getAllocator().newChildAllocator(

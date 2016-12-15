@@ -243,6 +243,7 @@ public class LocalFunctionRegistry {
       final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
       final String name = function.getKey().toUpperCase();
       boolean isDeterministic = true;
+      boolean isNiladic = false;
       for (DrillFuncHolder func : function.getValue()) {
         final int paramCount = func.getParamCount();
         if(func.isAggregating()) {
@@ -260,6 +261,10 @@ public class LocalFunctionRegistry {
         if(!func.isDeterministic()) {
           isDeterministic = false;
         }
+
+        if(func.isNiladic()) {
+          isNiladic = true;
+        }
       }
       for (Entry<Pair<Integer, Integer>, Collection<DrillFuncHolder>> entry : functions.asMap().entrySet()) {
         final Pair<Integer, Integer> range = entry.getKey();
@@ -274,7 +279,8 @@ public class LocalFunctionRegistry {
         drillSqlOperatorBuilder
             .addFunctions(entry.getValue())
             .setArgumentCount(min, max)
-            .setDeterministic(isDeterministic);
+            .setDeterministic(isDeterministic)
+            .setNiladic(isNiladic);
       }
       for (Entry<Integer, Collection<DrillFuncHolder>> entry : aggregateFunctions.asMap().entrySet()) {
         if(!mapAgg.containsKey(name)) {
@@ -319,7 +325,7 @@ public class LocalFunctionRegistry {
             } else {
               isDeterministic = func.isDeterministic();
             }
-            op = new DrillSqlOperatorWithoutInference(name, func.getParamCount(), func.getReturnType(), isDeterministic);
+            op = new DrillSqlOperatorWithoutInference(name, func.getParamCount(), func.getReturnType(), isDeterministic, func.isNiladic());
           }
           operatorTable.addOperatorWithoutInference(function.getKey(), op);
         }

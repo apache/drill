@@ -59,6 +59,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   protected final FunctionTemplate.FunctionScope scope;
   protected final FunctionTemplate.NullHandling nullHandling;
   protected final FunctionTemplate.FunctionCostCategory costCategory;
+  protected final boolean isNiladic;
   protected final boolean isBinaryCommutative;
   protected final boolean isDeterministic;
   protected final String[] registeredNames;
@@ -75,6 +76,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     this.scope = attributes.getScope();
     this.nullHandling = attributes.getNullHandling();
     this.costCategory = attributes.getCostCategory();
+    this.isNiladic = attributes.isNiladic();
     this.isBinaryCommutative = attributes.isBinaryCommutative();
     this.isDeterministic = attributes.isDeterministic();
     this.registeredNames = attributes.getRegisteredNames();
@@ -130,6 +132,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   public boolean isDeterministic() {
     return attributes.isDeterministic();
+  }
+
+  public boolean isNiladic() {
+    return attributes.isNiladic();
   }
 
   /**

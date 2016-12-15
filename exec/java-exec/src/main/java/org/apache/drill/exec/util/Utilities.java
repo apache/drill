@@ -49,13 +49,14 @@ public class Utilities {
    * @param defaultSchemaName
    * @return
    */
-  public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName) {
+  public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName, final String sessionId) {
     final long queryStartTime = System.currentTimeMillis();
     final int timeZone = DateUtility.getIndex(System.getProperty("user.timezone"));
     return QueryContextInformation.newBuilder()
         .setDefaultSchemaName(defaultSchemaName)
         .setQueryStartTime(queryStartTime)
         .setTimeZone(timeZone)
+        .setSessionId(sessionId)
         .build();
   }
 
