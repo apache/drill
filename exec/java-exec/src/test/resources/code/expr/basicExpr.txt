@@ -1,0 +1,58 @@
+# Expected output for org.apache.drill.exec.expr.ExpressionTest.testBasicExpression
+# Generated from: if(true) then 1 else 0 end
+
+package org.apache.drill.exec.test.generated;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.IntVector;
+
+public class ProjectorGen {
+
+    IntHolder constant4;
+    IntVector vv5;
+
+    public void doEval(int inIndex, int outIndex)
+        throws SchemaChangeException
+    {
+        {
+            vv5 .getMutator().set((outIndex), constant4 .value);
+        }
+    }
+
+    public void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing)
+        throws SchemaChangeException
+    {
+        {
+            IntHolder out0 = new IntHolder();
+            BitHolder out1 = new BitHolder();
+            out1 .value = 1;
+            if (out1 .value == 1) {
+                IntHolder out2 = new IntHolder();
+                out2 .value = 1;
+                out0 = out2;
+            } else {
+                IntHolder out3 = new IntHolder();
+                out3 .value = 0;
+                out0 = out3;
+            }
+            constant4 = out0;
+            int[] fieldIds6 = new int[ 1 ] ;
+            fieldIds6 [ 0 ] = -1;
+            Object tmp7 = (outgoing).getValueAccessorById(IntVector.class, fieldIds6).getValueVector();
+            if (tmp7 == null) {
+                throw new SchemaChangeException("Failure while loading vector vv5 with id: TypedFieldId [fieldIds=[-1], remainder=null].");
+            }
+            vv5 = ((IntVector) tmp7);
+        }
+    }
+
+    public void __DRILL_INIT__()
+        throws SchemaChangeException
+    {
+    }
+
+}

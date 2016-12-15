@@ -20,6 +20,8 @@ package org.apache.drill.exec.compile.sig;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,14 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
       }
       methodHolders.add(new CodeGeneratorMethod(m));
     }
+
+    // Alphabetize methods to ensure generated code is comparable.
+
+    Collections.sort( methodHolders, new Comparator<CodeGeneratorMethod>( ) {
+      @Override
+      public int compare(CodeGeneratorMethod o1, CodeGeneratorMethod o2) {
+        return o1.getMethodName().compareTo( o2.getMethodName() );
+      } } );
 
     methods = new CodeGeneratorMethod[methodHolders.size()+1];
     for (int i =0; i < methodHolders.size(); i++) {
