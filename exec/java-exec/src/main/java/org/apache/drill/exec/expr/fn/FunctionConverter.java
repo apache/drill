@@ -186,7 +186,7 @@ public class FunctionConverter {
           template.scope(),
           template.nulls(),
           template.isBinaryCommutative(),
-          isDeteministic, registeredNames, ps, outputField, works, template.costCategory());
+          isDeteministic, registeredNames, ps, outputField, works, template.costCategory(), template.isNiladic());
       switch (template.scope()) {
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(functionAttributes, initializer);

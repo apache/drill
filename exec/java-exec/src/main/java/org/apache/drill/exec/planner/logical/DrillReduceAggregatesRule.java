@@ -94,7 +94,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               SqlTypeName.ANY,
               opBinding.getOperandType(0).isNullable());
       }
-  });
+  }, false);
 
   //~ Constructors -----------------------------------------------------------
 
@@ -387,7 +387,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               "divide",
               2,
               true,
-              oldCall.getType()),
+              oldCall.getType(), false),
           numeratorRef,
           denominatorRef);
     } else {
@@ -613,7 +613,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           "divide",
           2,
           true,
-          oldCall.getType());
+          oldCall.getType(), false);
     } else {
       divide = SqlStdOperatorTable.DIVIDE;
     }

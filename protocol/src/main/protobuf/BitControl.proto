@@ -88,6 +88,7 @@ message QueryContextInformation {
   optional int64 query_start_time = 1;      // start time of query in milliseconds
   optional int32 time_zone = 2;             // timezone of the Drillbit where user is connected
   optional string default_schema_name = 3;  // default schema in current session when the query is submitted
+  optional string session_id = 4;           // current session id
 }
 
 message WorkQueueStatus{

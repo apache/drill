@@ -124,7 +124,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
       }
     } else {
       // if no function is found, check in Drill UDFs
-      if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
+      if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
         List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(opName.getSimple().toLowerCase());
         if (drillOps != null && !drillOps.isEmpty()) {
           operatorList.addAll(drillOps);
@@ -136,7 +136,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
       SqlSyntax syntax, List<SqlOperator> operatorList) {
     inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
-    if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
+    if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(opName.getSimple().toLowerCase());
       if (drillOps != null) {
         operatorList.addAll(drillOps);

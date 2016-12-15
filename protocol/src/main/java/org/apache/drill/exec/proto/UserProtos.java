@@ -22321,7 +22321,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     boolean hasUpdatability();
@@ -22330,7 +22330,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability();
@@ -23201,7 +23201,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     public boolean hasUpdatability() {
@@ -23212,7 +23212,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
@@ -24962,7 +24962,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public boolean hasUpdatability() {
@@ -24973,7 +24973,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
@@ -24984,7 +24984,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public Builder setUpdatability(org.apache.drill.exec.proto.UserProtos.ColumnUpdatability value) {
@@ -25001,7 +25001,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public Builder clearUpdatability() {

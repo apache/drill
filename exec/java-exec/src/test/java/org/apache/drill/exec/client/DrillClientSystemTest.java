@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.client;
 
+import static org.junit.Assert.assertFalse;
 import java.util.List;
 
 import org.apache.drill.exec.DrillSystemTestBase;
@@ -72,5 +73,27 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
       result.release();
     }
     client.close();
+  }
+
+  @Test
+  public void testSessionIdUDFWithTwoConnections() throws Exception {
+    final String sessionIdQuery = "select session_id as sessionId from (values(1));";
+    startCluster(1);
+
+    DrillClient client1 = new DrillClient();
+    client1.connect();
+    List<QueryDataBatch> results1 = client1.runQuery(QueryType.SQL, sessionIdQuery);
+    String sessionId1 = results1.get(0).getData().toString();
+    results1.get(0).release();
+    client1.close();
+
+    DrillClient client2 = new DrillClient();
+    client2.connect();
+    List<QueryDataBatch> results2 = client1.runQuery(QueryType.SQL, sessionIdQuery);
+    String sessionId2 = results2.get(0).getData().toString();
+    results2.get(0).release();
+    client2.close();
+
+    assertFalse(sessionId1.equals(sessionId2));
   }
 }
