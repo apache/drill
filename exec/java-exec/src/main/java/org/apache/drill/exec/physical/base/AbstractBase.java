@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,8 +27,8 @@ public abstract class AbstractBase implements PhysicalOperator{
 
   private final String userName;
 
-  protected long initialAllocation = 1000000L;
-  protected long maxAllocation = 10000000000L;
+  protected long initialAllocation = 1_000_000L;
+  protected long maxAllocation = 10_000_000_000L;
   private int id;
   private double cost;
 
@@ -78,18 +78,32 @@ public abstract class AbstractBase implements PhysicalOperator{
     return SelectionVectorMode.NONE;
   }
 
+  // Not available. Presumably because Drill does not currently use
+  // this value, though it does appear in some test physical plans.
+//  public void setInitialAllocation(long alloc) {
+//    initialAllocation = alloc;
+//  }
+
   @Override
   public long getInitialAllocation() {
     return initialAllocation;
   }
 
+  @Override
   public double getCost() {
     return cost;
   }
 
+  @Override
   public void setCost(double cost) {
     this.cost = cost;
   }
+
+  // Not available. Presumably because Drill does not currently use
+  // this value, though it does appear in some test physical plans.
+//  public void setMaxAllocation(long alloc) {
+//    maxAllocation = alloc;
+//  }
 
   @Override
   public long getMaxAllocation() {

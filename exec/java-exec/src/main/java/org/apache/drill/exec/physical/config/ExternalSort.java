@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -32,26 +31,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class ExternalSort extends Sort {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSort.class);
 
-  private long initialAllocation = 20000000;
-
   @JsonCreator
   public ExternalSort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
     super(child, orderings, reverse);
-  }
-
-  @Override
-  public List<Ordering> getOrderings() {
-    return orderings;
-  }
-
-  @Override
-  public boolean getReverse() {
-    return reverse;
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
-    return physicalVisitor.visitSort(this, value);
+    initialAllocation = 20_000_000;
   }
 
   @Override
@@ -66,13 +49,12 @@ public class ExternalSort extends Sort {
     return CoreOperatorType.EXTERNAL_SORT_VALUE;
   }
 
+  // Set here, rather than the base class, because this is the only
+  // operator, at present, that makes use of the maximum allocation.
+  // Remove this, in favor of the base class version, when Drill
+  // sets the memory allocation for all operators.
+
   public void setMaxAllocation(long maxAllocation) {
-    this.maxAllocation = Math.max(initialAllocation, maxAllocation);
+    this.maxAllocation = maxAllocation;
   }
-
-  @Override
-  public long getInitialAllocation() {
-    return initialAllocation;
-  }
-
 }
