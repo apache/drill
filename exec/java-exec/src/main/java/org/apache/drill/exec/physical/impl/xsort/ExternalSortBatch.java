@@ -133,10 +133,22 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
   public static final String INTERRUPTION_WHILE_SPILLING = "spilling";
 
+  // Be careful here! This enum is used in TWO places! First, it is used
+  // in this code to build up metrics. Easy enough. But, it is also used
+  // in OperatorMetricRegistry to define the metrics for the
+  // operator ID defined in CoreOperatorType. As a result, the values
+  // defined here are shared between this legacy version AND the new
+  // managed version. (Though the new, managed version has its own
+  // copy of this enum.) The two enums MUST be identical.
+
   public enum Metric implements MetricDef {
     SPILL_COUNT,            // number of times operator spilled to disk
-    PEAK_SIZE_IN_MEMORY,    // peak value for totalSizeInMemory
-    PEAK_BATCHES_IN_MEMORY; // maximum number of batches kept in memory
+    RETIRED1,               // Was: peak value for totalSizeInMemory
+                            // But operator already provides this value
+    PEAK_BATCHES_IN_MEMORY, // maximum number of batches kept in memory
+    MERGE_COUNT,            // Used only by the managed version.
+    MIN_BUFFER,             // Used only by the managed version.
+    INPUT_BATCHES;          // Used only by the managed version.
 
     @Override
     public int metricId() {

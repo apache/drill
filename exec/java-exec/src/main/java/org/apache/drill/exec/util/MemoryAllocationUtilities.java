@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -68,7 +68,11 @@ public class MemoryAllocationUtilities {
       logger.debug("Max sort alloc: {}", maxSortAlloc);
 
       for(final ExternalSort externalSort : sortList) {
-        externalSort.setMaxAllocation(maxSortAlloc);
+        // Ensure that the sort receives the minimum memory needed to make progress.
+        // Without this, the math might work out to allocate too little memory.
+
+        long alloc = Math.max(maxSortAlloc, externalSort.getInitialAllocation());
+        externalSort.setMaxAllocation(alloc);
       }
     }
     plan.getProperties().hasResourcePlan = true;
