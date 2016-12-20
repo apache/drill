@@ -28,9 +28,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
-import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor.JsonExceptionProcessingState;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -57,6 +55,12 @@ public class JsonReader extends BaseJsonProcessor {
   private final ListVectorOutput listOutput;
   private final boolean extended = true;
   private final boolean readNumbersAsDouble;
+
+  /**
+   * Collection for tracking empty array writers during reading
+   * and storing them for initializing empty arrays
+   */
+  private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
 
   /**
    * Describes whether or not this reader can unwrap a single root array record
@@ -150,6 +154,17 @@ public class JsonReader extends BaseJsonProcessor {
           fieldWriter.varChar(fieldPath.getNameSegment().getPath());
         } else {
           fieldWriter.integer(fieldPath.getNameSegment().getPath());
+        }
+      }
+    }
+
+    for (ListWriter field : emptyArrayWriters) {
+      // checks that array has not been initialized
+      if (field.getValueCapacity() == 0) {
+        if (allTextMode) {
+          field.varChar();
+        } else {
+          field.integer();
         }
       }
     }
@@ -544,6 +559,7 @@ public class JsonReader extends BaseJsonProcessor {
           }
           break;
         case END_ARRAY:
+          addIfNotInitialized(list);
         case END_OBJECT:
           break outside;
 
@@ -591,6 +607,16 @@ public class JsonReader extends BaseJsonProcessor {
 
   }
 
+  /**
+   * Checks that list has not been initialized and adds it to the emptyArrayWriters collection.
+   * @param list ListWriter that should be checked
+   */
+  private void addIfNotInitialized(ListWriter list) {
+    if (list.getValueCapacity() == 0) {
+      emptyArrayWriters.add(list);
+    }
+  }
+
   private void writeDataAllText(ListWriter list) throws IOException {
     list.startList();
     outside: while (true) {
@@ -605,6 +631,7 @@ public class JsonReader extends BaseJsonProcessor {
         }
         break;
       case END_ARRAY:
+        addIfNotInitialized(list);
       case END_OBJECT:
         break outside;
 

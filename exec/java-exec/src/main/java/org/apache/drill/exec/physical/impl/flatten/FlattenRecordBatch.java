@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -310,12 +311,23 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
     final NamedExpression flattenExpr = new NamedExpression(popConfig.getColumn(), new FieldReference(popConfig.getColumn()));
     final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression)ExpressionTreeMaterializer.materialize(flattenExpr.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
-    final TransferPair tp = getFlattenFieldTransferPair(flattenExpr.getRef());
+    final FieldReference fieldReference = flattenExpr.getRef();
+    final TransferPair transferPair = getFlattenFieldTransferPair(fieldReference);
 
-    if (tp != null) {
-      transfers.add(tp);
-      container.add(tp.getTo());
-      transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
+    if (transferPair != null) {
+      final ValueVector flattenVector = transferPair.getTo();
+
+      // checks that list has only default ValueVector and replaces resulting ValueVector to INT typed ValueVector
+      if (exprs.size() == 0 && flattenVector.getField().getType().equals(Types.LATE_BIND_TYPE)) {
+        final MaterializedField outputField = MaterializedField.create(fieldReference.getAsNamePart().getName(), Types.OPTIONAL_INT);
+        final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+
+        container.add(vector);
+      } else {
+        transfers.add(transferPair);
+        container.add(flattenVector);
+        transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
+      }
     }
 
     logger.debug("Added transfer for project expression.");
