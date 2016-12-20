@@ -87,7 +87,9 @@ public class ClassGenerator<T>{
   }
 
   @SuppressWarnings("unchecked")
-  ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model, OptionManager optionManager) throws JClassAlreadyExistsException {
+  ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature,
+                 EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model,
+                 OptionManager optionManager) throws JClassAlreadyExistsException {
     this.codeGenerator = codeGenerator;
     this.clazz = clazz;
     this.mappings = mappingSet;
@@ -171,7 +173,7 @@ public class ClassGenerator<T>{
   }
 
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId) {
-    return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
+    return declareVectorValueSetupAndMember(DirectExpression.direct(batchName), fieldId);
   }
 
   public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId) {
@@ -202,26 +204,30 @@ public class ClassGenerator<T>{
 
     JInvocation invoke = batchName
         .invoke("getValueAccessorById") //
-        .arg( vvClass.dotclass())
+        .arg(vvClass.dotclass())
         .arg(fieldArr);
 
-    JVar obj = b.decl( //
-        objClass, //
-        getNextVar("tmp"), //
+    JVar obj = b.decl(
+        objClass,
+        getNextVar("tmp"),
         invoke.invoke(vectorAccess));
 
     b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
-    //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
-    b.assign(vv, JExpr.cast(retClass, obj ));
+    //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj)).invoke(vectorAccess)));
+    b.assign(vv, JExpr.cast(retClass, obj));
     vvDeclaration.put(setup, vv);
 
     return vv;
   }
 
   public enum BlkCreateMode {
-    TRUE,  // Create new block
-    FALSE, // Do not create block; put into existing block.
-    TRUE_IF_BOUND // Create new block only if # of expressions added hit upper-bound (ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE)
+    /** Create new block */
+    TRUE,
+    /** Do not create block; put into existing block. */
+    FALSE,
+    /** Create new block only if # of expressions added hit upper-bound
+     * ({@link ExecConstants#CODE_GEN_EXP_IN_METHOD_SIZE}). */
+    TRUE_IF_BOUND
   }
 
   public HoldingContainer addExpr(LogicalExpression ex) {
@@ -245,6 +251,13 @@ public class ClassGenerator<T>{
     // default behavior is always to create new block.
     rotateBlock(BlkCreateMode.TRUE);
   }
+
+  /**
+   * Create a new code block, closing the current block.
+   *
+   * @param mode the {@link BlkCreateMode block create mode}
+   * for the new block.
+   */
 
   private void rotateBlock(BlkCreateMode mode) {
     boolean blockRotated = false;
@@ -361,7 +374,7 @@ public class ClassGenerator<T>{
     return this.workspaceVectors;
   }
 
-  private static class ValueVectorSetup{
+  private static class ValueVectorSetup {
     final DirectExpression batch;
     final TypedFieldId fieldId;
 
@@ -411,7 +424,11 @@ public class ClassGenerator<T>{
 
   }
 
-  public static class HoldingContainer{
+  /**
+   * Represents a (Nullable)?(Type)Holder instance.
+   */
+
+  public static class HoldingContainer {
     private final JVar holder;
     private final JFieldRef value;
     private final JFieldRef isSet;
@@ -483,10 +500,33 @@ public class ClassGenerator<T>{
     public TypeProtos.MinorType getMinorType() {
       return type.getMinorType();
     }
+
+    /**
+     * Convert holder to a string for debugging use.
+     */
+
+    @Override
+    public String toString() {
+      DebugStringBuilder buf = new DebugStringBuilder(this);
+      if (isConstant()) {
+        buf.append("const ");
+      }
+      buf.append(holder.type().fullName())
+        .append(" ")
+        .append(holder.name())
+        .append(", ")
+        .append(type.getMode().name())
+        .append(" ")
+        .append(type.getMinorType().name())
+        .append(", ");
+      holder.generate(buf.formatter());
+      buf.append(", ");
+      value.generate(buf.formatter());
+      return buf.toString();
+    }
   }
 
   public JType getHolderType(MajorType t) {
     return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
   }
-
 }

@@ -39,10 +39,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -67,8 +64,8 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
 
   protected final DrillBuf managedBuffer;
 
-  protected Table table;
-  protected Partition partition;
+  protected HiveTableWithColumnCache table;
+  protected HivePartition partition;
   protected InputSplit inputSplit;
   protected List<String> selectedColumnNames;
   protected List<StructField> selectedStructFieldRefs = Lists.newArrayList();
@@ -106,9 +103,9 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
-  public HiveAbstractReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-                       FragmentContext context, final HiveConf hiveConf,
-                       UserGroupInformation proxyUgi) throws ExecutionSetupException {
+  public HiveAbstractReader(HiveTableWithColumnCache table, HivePartition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
+                            FragmentContext context, final HiveConf hiveConf,
+                            UserGroupInformation proxyUgi) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
@@ -130,7 +127,7 @@ public abstract class HiveAbstractReader extends AbstractRecordReader {
 
     Properties tableProperties;
     try {
-      tableProperties = MetaStoreUtils.getTableMetadata(table);
+      tableProperties = HiveUtilities.getTableMetadata(table);
       final Properties partitionProperties =
           (partition == null) ?  tableProperties :
               HiveUtilities.getPartitionMetadata(partition, table);

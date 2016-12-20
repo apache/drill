@@ -39,10 +39,10 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveDrillNativeParquetScan;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
-import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
+import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
+import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -97,23 +97,23 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
 
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
     final HiveConf hiveConf = hiveScan.getHiveConf();
-    final Table hiveTable = hiveScan.hiveReadEntry.getTable();
+    final HiveTableWithColumnCache hiveTable = hiveScan.hiveReadEntry.getTable();
 
     final Class<? extends InputFormat<?,?>> tableInputFormat =
-        getInputFormatFromSD(MetaStoreUtils.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
+        getInputFormatFromSD(HiveUtilities.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
             hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
       return false;
     }
 
-    final List<HivePartition> partitions = hiveScan.hiveReadEntry.getHivePartitionWrappers();
+    final List<HivePartitionWrapper> partitions = hiveScan.hiveReadEntry.getHivePartitionWrappers();
     if (partitions == null) {
       return true;
     }
 
     final List<FieldSchema> tableSchema = hiveTable.getSd().getCols();
     // Make sure all partitions have the same input format as the table input format
-    for (HivePartition partition : partitions) {
+    for (HivePartitionWrapper partition : partitions) {
       final StorageDescriptor partitionSD = partition.getPartition().getSd();
       Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(
           HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD,
@@ -179,7 +179,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
           getPartitionColMapping(hiveTable, partitionColumnLabel);
 
       final DrillScanRel nativeScanRel = createNativeScanRel(partitionColMapping, hiveScanRel);
-      if(hiveScanRel.getRowType().getFieldCount() == 0) {
+      if (hiveScanRel.getRowType().getFieldCount() == 0) {
         call.transformTo(nativeScanRel);
       } else {
         final DrillProjectRel projectRel = createProjectRel(hiveScanRel, partitionColMapping, nativeScanRel);

@@ -71,6 +71,7 @@ import org.joda.time.DateTimeZone;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -398,12 +399,14 @@ public class HiveUtilities {
    * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)} which also adds parameters from table
    * to properties returned by {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)}.
    *
-   * @param partition
-   * @param table
-   * @return
+   * @param partition the source of partition level parameters
+   * @param table     the source of table level parameters
+   * @return properties
    */
-  public static Properties getPartitionMetadata(final Partition partition, final Table table) {
-    final Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+  public static Properties getPartitionMetadata(final HivePartition partition, final HiveTableWithColumnCache table) {
+    final Properties properties;
+    restoreColumns(table, partition);
+    properties = MetaStoreUtils.getPartitionMetadata(partition, table);
 
     // SerDe expects properties from Table, but above call doesn't add Table properties.
     // Include Table properties in final list in order to not to break SerDes that depend on
@@ -415,6 +418,34 @@ public class HiveUtilities {
     }
 
     return properties;
+  }
+
+  /**
+   * Sets columns from table cache to table and partition.
+   *
+   * @param partition partition which will set column list
+   * @param table     the source of column lists cache
+   */
+  public static void restoreColumns(HiveTableWithColumnCache table, HivePartition partition) {
+    // exactly the same column lists for partitions or table
+    // stored only one time to reduce physical plan serialization
+    if (partition != null && partition.getSd().getCols() == null) {
+      partition.getSd().setCols(table.getColumnListsCache().getColumns(partition.getColumnListIndex()));
+    }
+    if (table.getSd().getCols() == null) {
+      table.getSd().setCols(table.getColumnListsCache().getColumns(0));
+    }
+  }
+
+  /**
+   * Wrapper around {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}
+   * which also sets columns from table cache to table and returns properties returned by
+   * {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}.
+   */
+  public static Properties getTableMetadata(HiveTableWithColumnCache table) {
+    restoreColumns(table, null);
+    return MetaStoreUtils.getSchema(table.getSd(), table.getSd(), table.getParameters(),
+      table.getDbName(), table.getTableName(), table.getPartitionKeys());
   }
 
   public static void throwUnsupportedHiveDataTypeError(String unsupportedType) {

@@ -37,6 +37,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
 
   private SelectionVector2 vector2;
 
+  @Override
   public void setup(FragmentContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
     Preconditions.checkNotNull(vector2);
     this.vector2 = vector2;
@@ -68,10 +69,14 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   public int compare(int leftIndex, int rightIndex) {
     char sv1 = vector2.getIndex(leftIndex);
     char sv2 = vector2.getIndex(rightIndex);
-    return doEval(sv1, sv2);
+    try {
+      return doEval(sv1, sv2);
+    } catch (SchemaChangeException e) {
+      throw new RuntimeException( e );
+    }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") char leftIndex, @Named("rightIndex") char rightIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") char leftIndex, @Named("rightIndex") char rightIndex) throws SchemaChangeException;
 
 }

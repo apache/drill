@@ -711,18 +711,20 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
+    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
+    // Uncomment out this line to debug the generated code.
+//  cg.preferPlainOldJava(true);
     return context.getImplementationClass(cg);
-
-
   }
 
   public SingleBatchSorter createNewSorter(FragmentContext context, VectorAccessible batch)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<SingleBatchSorter> cg = CodeGenerator.get(SingleBatchSorter.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    ClassGenerator<SingleBatchSorter> g = cg.getRoot();
+    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
 
-    generateComparisons(g, batch);
-
+    // Uncomment out this line to debug the generated code.
+//    cg.preferPlainOldJava(true);
+    generateComparisons(cg.getRoot(), batch);
     return context.getImplementationClass(cg);
   }
 
