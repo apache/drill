@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,19 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import org.apache.curator.CuratorZookeeperClient;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.api.ACLBackgroundPathAndBytesable;
-import org.apache.curator.framework.api.CreateBuilder;
-import org.apache.curator.framework.api.DeleteBuilder;
-import org.apache.curator.framework.api.SetDataBuilder;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.test.TestingServer;
-import org.apache.curator.utils.EnsurePath;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.VersionMismatchException;
@@ -47,7 +41,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestZookeeperClient {
   private final static String root = "/test";
@@ -129,6 +125,26 @@ public class TestZookeeperClient {
         .thenThrow(Exception.class);
 
     client.hasPath(path);
+  }
+
+  @Test
+  public void testHasPathTrueWithVersion() {
+    client.put(path, data);
+    DataChangeVersion version0 = new DataChangeVersion();
+    assertTrue(client.hasPath(path, true, version0));
+    assertEquals("Versions should match", 0, version0.getVersion());
+    client.put(path, data);
+    DataChangeVersion version1 = new DataChangeVersion();
+    assertTrue(client.hasPath(path, true, version1));
+    assertEquals("Versions should match", 1, version1.getVersion());
+  }
+
+  @Test
+  public void testHasPathFalseWithVersion() {
+    DataChangeVersion version0 = new DataChangeVersion();
+    version0.setVersion(-1);
+    assertFalse(client.hasPath("unknown_path", true, version0));
+    assertEquals("Versions should not have changed", -1, version0.getVersion());
   }
 
   @Test

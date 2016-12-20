@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
-import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -202,8 +201,8 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
 
     new MockUp<RemoteFunctionRegistry>() {
       @Mock
-      Registry getRegistry() {
-        return Registry.getDefaultInstance();
+      long getRegistryVersion() {
+        return 0L;
       }
     };
 

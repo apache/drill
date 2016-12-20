@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -186,6 +186,7 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
           remoteRegistry.updateRegistry(updatedRegistry, version);
           return;
         } catch (VersionMismatchException ex) {
+          logger.debug("Failed to update function registry during registration, version mismatch was detected.", ex);
           retryAttempts--;
         }
       }

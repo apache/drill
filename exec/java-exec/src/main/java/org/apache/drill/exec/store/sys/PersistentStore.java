@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,6 +32,24 @@ public interface PersistentStore<V> extends AutoCloseable {
    * Returns storage {@link PersistentStoreMode mode} of this store.
    */
   PersistentStoreMode getMode();
+
+  /**
+   * Checks if lookup key is present in store.
+   *
+   * @param key lookup key
+   * @return true if store contains lookup key, false otherwise
+   */
+  boolean contains(String key);
+
+  /**
+   * Checks if lookup key is present in store.
+   * Sets data change version number.
+   *
+   * @param key lookup key
+   * @param version version holder
+   * @return true if store contains lookup key, false otherwise
+   */
+  boolean contains(String key, DataChangeVersion version);
 
   /**
    * Returns the value for the given key if exists, null otherwise.

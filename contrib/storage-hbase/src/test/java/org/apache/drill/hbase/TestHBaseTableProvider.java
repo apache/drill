@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,8 @@
 package org.apache.drill.hbase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map.Entry;
 
@@ -56,6 +58,9 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
     assertEquals("v0", hbaseStore.get(""));
     assertEquals("testValue", hbaseStore.get(".test"));
+
+    assertTrue(hbaseStore.contains(""));
+    assertFalse(hbaseStore.contains("unknown_key"));
 
     int rowCount = 0;
     for (Entry<String, String> entry : Lists.newArrayList(hbaseStore.getAll())) {
