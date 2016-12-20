@@ -24,15 +24,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
-
-import com.google.common.base.Joiner;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
@@ -652,4 +652,73 @@ public class TestJsonReader extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testFlattenEmptyArrayWithAllTextMode() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array_all_text_mode.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array_all_text_mode.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = false")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithUnionType() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
 }
