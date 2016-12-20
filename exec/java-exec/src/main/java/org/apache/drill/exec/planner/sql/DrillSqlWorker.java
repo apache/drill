@@ -24,10 +24,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.exception.FunctionNotFoundException;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
@@ -50,12 +47,55 @@ public class DrillSqlWorker {
   private DrillSqlWorker() {
   }
 
+  /**
+   * Converts sql query string into query physical plan.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @return query physical plan
+   */
   public static PhysicalPlan getPlan(QueryContext context, String sql) throws SqlParseException, ValidationException,
       ForemanSetupException {
     return getPlan(context, sql, null);
   }
 
+  /**
+   * Converts sql query string into query physical plan.
+   * In case of any errors (that might occur due to missing function implementation),
+   * checks if local function registry should be synchronized with remote function registry.
+   * If sync took place, reloads drill operator table
+   * (since functions were added to / removed from local function registry)
+   * and attempts to converts sql query string into query physical plan one more time.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @param textPlan text plan
+   * @return query physical plan
+   */
   public static PhysicalPlan getPlan(QueryContext context, String sql, Pointer<String> textPlan)
+      throws ForemanSetupException {
+    Pointer<String> textPlanCopy = textPlan == null ? null : new Pointer<>(textPlan.value);
+    try {
+      return getQueryPlan(context, sql, textPlan);
+    } catch (Exception e) {
+      if (context.getFunctionRegistry().syncWithRemoteRegistry(
+          context.getDrillOperatorTable().getFunctionRegistryVersion())) {
+        context.reloadDrillOperatorTable();
+        return getQueryPlan(context, sql, textPlanCopy);
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Converts sql query string into query physical plan.
+   *
+   * @param context query context
+   * @param sql sql query
+   * @param textPlan text plan
+   * @return query physical plan
+   */
+  private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException {
 
     final SqlConverter parser = new SqlConverter(context);
@@ -88,7 +128,7 @@ public class DrillSqlWorker {
     }
 
     try {
-      return getPhysicalPlan(handler, sqlNode, context);
+      return handler.getPlan(sqlNode);
     } catch(ValidationException e) {
       String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
       throw UserException.validationError(e)
@@ -104,26 +144,4 @@ public class DrillSqlWorker {
       throw new QueryInputException("Failure handling SQL.", e);
     }
   }
-
-  /**
-   * Returns query physical plan.
-   * In case of {@link FunctionNotFoundException} attempts to load remote functions.
-   * If at least one function was loaded or local function function registry version has changed,
-   * makes one more attempt to get query physical plan.
-   */
-  private static PhysicalPlan getPhysicalPlan(AbstractSqlHandler handler, SqlNode sqlNode, QueryContext context)
-      throws RelConversionException, IOException, ForemanSetupException, ValidationException {
-    try {
-      return handler.getPlan(sqlNode);
-    } catch (FunctionNotFoundException e) {
-      DrillOperatorTable drillOperatorTable = context.getDrillOperatorTable();
-      FunctionImplementationRegistry functionRegistry = context.getFunctionRegistry();
-      if (functionRegistry.loadRemoteFunctions(drillOperatorTable.getFunctionRegistryVersion())) {
-        drillOperatorTable.reloadOperators(functionRegistry);
-        return handler.getPlan(sqlNode);
-      }
-      throw e;
-    }
-  }
-
 }

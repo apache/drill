@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,6 @@ package org.apache.drill.exec.testing.store;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -38,19 +36,34 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
   private final ConcurrentMap<String, V> store = Maps.newConcurrentMap();
-  private final AtomicInteger version = new AtomicInteger();
+  private int version = -1;
 
   @Override
   public void delete(final String key) {
     try (AutoCloseableLock lock = writeLock.open()) {
       store.remove(key);
-      version.incrementAndGet();
+      version++;
     }
   }
 
   @Override
   public PersistentStoreMode getMode() {
     return PersistentStoreMode.PERSISTENT;
+  }
+
+  @Override
+  public boolean contains(final String key) {
+    return contains(key, null);
+  }
+
+  @Override
+  public boolean contains(final String key, final DataChangeVersion dataChangeVersion) {
+    try (AutoCloseableLock lock = readLock.open()) {
+      if (dataChangeVersion != null) {
+        dataChangeVersion.setVersion(version);
+      }
+      return store.containsKey(key);
+    }
   }
 
   @Override
@@ -62,7 +75,7 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   public V get(final String key, final DataChangeVersion dataChangeVersion) {
     try (AutoCloseableLock lock = readLock.open()) {
       if (dataChangeVersion != null) {
-        dataChangeVersion.setVersion(version.get());
+        dataChangeVersion.setVersion(version);
       }
       return store.get(key);
     }
@@ -76,11 +89,11 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   @Override
   public void put(final String key, final V value, final DataChangeVersion dataChangeVersion) {
     try (AutoCloseableLock lock = writeLock.open()) {
-      if (dataChangeVersion != null && dataChangeVersion.getVersion() != version.get()) {
+      if (dataChangeVersion != null && dataChangeVersion.getVersion() != version) {
         throw new VersionMismatchException("Version mismatch detected", dataChangeVersion.getVersion());
       }
       store.put(key, value);
-      version.incrementAndGet();
+      version++;
     }
   }
 
@@ -89,7 +102,7 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
     try (AutoCloseableLock lock = writeLock.open()) {
       final V old = store.putIfAbsent(key, value);
       if (old == null) {
-        version.incrementAndGet();
+        version++;
         return true;
       }
       return false;
@@ -107,7 +120,7 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
   public void close() throws Exception {
     try (AutoCloseableLock lock = writeLock.open()) {
       store.clear();
-      version.set(0);
+      version = -1;
     }
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,8 +42,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * since we expect infrequent registry changes.
  * Holder is designed to allow concurrent reads and single writes to keep data consistent.
  * This is achieved by {@link ReadWriteLock} implementation usage.
- * Holder has number version which changes every time new jars are added or removed. Initial version number is 0.
- * Also version is used when user needs data from registry with version it is based on.
+ * Holder has number version which indicates remote function registry version number it is in sync with.
  *
  * Structure example:
  *
@@ -86,7 +85,8 @@ public class FunctionRegistryHolder {
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
-  private long version = 0;
+  // remote function registry number, it is in sync with
+  private long version;
 
   // jar name, Map<function name, Queue<function signature>
   private final Map<String, Map<String, Queue<String>>> jars;
@@ -114,13 +114,13 @@ public class FunctionRegistryHolder {
    * If jar with the same name already exists, it and its functions will be removed.
    * Then jar will be added to {@link #jars}
    * and each function will be added using {@link #addFunctions(Map, List)}.
-   * Function version registry will be incremented by 1 if at least one jar was added but not for each jar.
+   * Registry version is updated with passed version if all jars were added successfully.
    * This is write operation, so one user at a time can call perform such action,
    * others will wait till first user completes his action.
    *
    * @param newJars jars and list of their function holders, each contains function name, signature and holder
    */
-  public void addJars(Map<String, List<FunctionHolder>> newJars) {
+  public void addJars(Map<String, List<FunctionHolder>> newJars, long version) {
     try (AutoCloseableLock lock = writeLock.open()) {
       for (Map.Entry<String, List<FunctionHolder>> newJar : newJars.entrySet()) {
         String jarName = newJar.getKey();
@@ -129,15 +129,12 @@ public class FunctionRegistryHolder {
         jars.put(jarName, jar);
         addFunctions(jar, newJar.getValue());
       }
-      if (!newJars.isEmpty()) {
-        version++;
-      }
+      this.version = version;
     }
   }
 
   /**
    * Removes jar from {@link #jars} and all associated with jar functions from {@link #functions}
-   * If jar was removed, function registry version will be incremented by 1.
    * This is write operation, so one user at a time can call perform such action,
    * others will wait till first user completes his action.
    *
@@ -145,9 +142,7 @@ public class FunctionRegistryHolder {
    */
   public void removeJar(String jarName) {
     try (AutoCloseableLock lock = writeLock.open()) {
-      if (removeAllByJar(jarName)) {
-        version++;
-      }
+      removeAllByJar(jarName);
     }
   }
 
@@ -341,12 +336,11 @@ public class FunctionRegistryHolder {
    * All jar functions have the same class loader, so we need to close only one time.
    *
    * @param jarName jar name to be removed
-   * @return true if jar was removed, false otherwise
    */
-  private boolean removeAllByJar(String jarName) {
+  private void removeAllByJar(String jarName) {
     Map<String, Queue<String>> jar = jars.remove(jarName);
     if (jar == null) {
-      return false;
+      return;
     }
 
     for (Map.Entry<String, Queue<String>> functionEntry : jar.entrySet()) {
@@ -372,6 +366,5 @@ public class FunctionRegistryHolder {
         functions.remove(function);
       }
     }
-    return true;
   }
 }

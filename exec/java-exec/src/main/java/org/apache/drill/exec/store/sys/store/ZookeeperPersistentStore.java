@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,16 +62,26 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
+  public boolean contains(final String key) {
+    return contains(key, null);
+  }
+
+  @Override
+  public boolean contains(final String key, final DataChangeVersion version) {
+    return client.hasPath(key, true, version);
+  }
+
+  @Override
   public V get(final String key) {
     return get(key, false, null);
   }
 
   @Override
-  public V get(final String key, DataChangeVersion version) {
+  public V get(final String key, final DataChangeVersion version) {
     return get(key, true, version);
   }
 
-  public V get(final String key, boolean consistencyFlag, DataChangeVersion version) {
+  public V get(final String key, final boolean consistencyFlag, final DataChangeVersion version) {
     byte[] bytes = client.get(key, consistencyFlag, version);
 
     if (bytes == null) {
@@ -90,7 +100,7 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-  public void put(final String key, final V value, DataChangeVersion version) {
+  public void put(final String key, final V value, final DataChangeVersion version) {
     final InstanceSerializer<V> serializer = config.getSerializer();
     try {
       final byte[] bytes = serializer.serialize(value);

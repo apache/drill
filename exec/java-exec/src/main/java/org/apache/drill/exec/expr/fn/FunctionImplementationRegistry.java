@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,11 +58,13 @@ import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.UserBitShared.Jar;
 import org.apache.drill.exec.resolver.FunctionResolver;
+import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.server.options.OptionManager;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -128,7 +130,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
   /**
    * Register functions in given operator table.
-   * @param operatorTable
+   * @param operatorTable operator table
    */
   public void register(DrillOperatorTable operatorTable) {
     // Register Drill functions first and move to pluggable function registries.
@@ -140,27 +142,39 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
-   * Using the given <code>functionResolver</code>
-   * finds Drill function implementation for given <code>functionCall</code>.
-   * If function implementation was not found,
-   * loads all missing remote functions and tries to find Drill implementation one more time.
+   * First attempts to finds the Drill function implementation that matches the name, arg types and return type.
+   * If exact function implementation was not found,
+   * syncs local function registry with remote function registry if needed
+   * and tries to find function implementation one more time
+   * but this time using given <code>functionResolver</code>.
+   *
+   * @param functionResolver function resolver
+   * @param functionCall function call
+   * @return best matching function holder
    */
   @Override
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
-    return findDrillFunction(functionResolver, functionCall, true);
-  }
-
-  private DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall, boolean retry) {
     AtomicLong version = new AtomicLong();
-    DrillFuncHolder holder = functionResolver.getBestMatch(
-        localFunctionRegistry.getMethods(functionReplacement(functionCall), version), functionCall);
-    if (holder == null && retry && loadRemoteFunctions(version.get())) {
-      return findDrillFunction(functionResolver, functionCall, false);
+    String newFunctionName = functionReplacement(functionCall);
+    List<DrillFuncHolder> functions = localFunctionRegistry.getMethods(newFunctionName, version);
+    FunctionResolver exactResolver = FunctionResolverFactory.getExactResolver(functionCall);
+    DrillFuncHolder holder = exactResolver.getBestMatch(functions, functionCall);
+
+    if (holder == null) {
+      syncWithRemoteRegistry(version.get());
+      List<DrillFuncHolder> updatedFunctions = localFunctionRegistry.getMethods(newFunctionName, version);
+      holder = functionResolver.getBestMatch(updatedFunctions, functionCall);
     }
+
     return holder;
   }
 
-  // Check if this Function Replacement is needed; if yes, return a new name. otherwise, return the original name
+  /**
+   * Checks if this function replacement is needed.
+   *
+   * @param functionCall function call
+   * @return new function name is replacement took place, otherwise original function name
+   */
   private String functionReplacement(FunctionCall functionCall) {
     String funcName = functionCall.getName();
       if (functionCall.args.size() > 0) {
@@ -178,22 +192,41 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
-   * Find the Drill function implementation that matches the name, arg types and return type.
-   * If exact function implementation was not found,
-   * loads all missing remote functions and tries to find Drill implementation one more time.
+   * Finds the Drill function implementation that matches the name, arg types and return type.
+   *
+   * @param name function name
+   * @param argTypes input parameters types
+   * @param returnType function return type
+   * @return exactly matching function holder
    */
   public DrillFuncHolder findExactMatchingDrillFunction(String name, List<MajorType> argTypes, MajorType returnType) {
     return findExactMatchingDrillFunction(name, argTypes, returnType, true);
   }
 
-  private DrillFuncHolder findExactMatchingDrillFunction(String name, List<MajorType> argTypes, MajorType returnType, boolean retry) {
+  /**
+   * Finds the Drill function implementation that matches the name, arg types and return type.
+   * If exact function implementation was not found,
+   * checks if local function registry is in sync with remote function registry.
+   * If not syncs them and tries to find exact function implementation one more time
+   * but with retry flag set to false.
+   *
+   * @param name function name
+   * @param argTypes input parameters types
+   * @param returnType function return type
+   * @param retry retry on failure flag
+   * @return exactly matching function holder
+   */
+  private DrillFuncHolder findExactMatchingDrillFunction(String name,
+                                                         List<MajorType> argTypes,
+                                                         MajorType returnType,
+                                                         boolean retry) {
     AtomicLong version = new AtomicLong();
     for (DrillFuncHolder h : localFunctionRegistry.getMethods(name, version)) {
       if (h.matches(returnType, argTypes)) {
         return h;
       }
     }
-    if (retry && loadRemoteFunctions(version.get())) {
+    if (retry && syncWithRemoteRegistry(version.get())) {
       return findExactMatchingDrillFunction(name, argTypes, returnType, false);
     }
     return null;
@@ -206,8 +239,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * Note: Order of searching is same as order of {@link org.apache.drill.exec.expr.fn.PluggableFunctionRegistry}
    * implementations found on classpath.
    *
-   * @param functionCall
-   * @return
+   * @param functionCall function call
+   * @return drill function holder
    */
   @Override
   public AbstractFuncHolder findNonDrillFunction(FunctionCall functionCall) {
@@ -260,76 +293,101 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
-   * Attempts to load and register functions from remote function registry.
-   * First checks if there is no missing jars.
-   * If yes, enters synchronized block to prevent other loading the same jars.
-   * Again re-checks if there are no missing jars in case someone has already loaded them (double-check lock).
-   * If there are still missing jars, first copies jars to local udf area and prepares {@link JarScan} for each jar.
-   * Jar registration timestamp represented in milliseconds is used as suffix.
-   * Then registers all jars at the same time. Returns true when finished.
-   * In case if any errors during jars coping or registration, logs errors and proceeds.
+   * Purpose of this method is to synchronize remote and local function registries if needed
+   * and to inform if function registry was changed after given version.
    *
-   * If no missing jars are found, checks current local registry version.
-   * Returns false if versions match, true otherwise.
+   * To make synchronization as much light-weigh as possible, first only versions of both registries are checked
+   * without any locking. If synchronization is needed, enters synchronized block to prevent others loading the same jars.
+   * The need of synchronization is checked again (double-check lock) before comparing jars.
+   * If any missing jars are found, they are downloaded to local udf area, each is wrapped into {@link JarScan}.
+   * Once jar download is finished, all missing jars are registered in one batch.
+   * In case if any errors during jars download / registration, these errors are logged.
    *
-   * @param version local function registry version
-   * @return true if new jars were registered or local function registry version is different, false otherwise
+   * During registration local function registry is updated with remote function registry version it is synced with.
+   * When at least one jar of the missing jars failed to download / register,
+   * local function registry version are not updated but jars that where successfully downloaded / registered
+   * are added to local function registry.
+   *
+   * If synchronization between remote and local function registry was not needed,
+   * checks if given registry version matches latest sync version
+   * to inform if function registry was changed after given version.
+   *
+   * @param version remote function registry local function registry was based on
+   * @return true if remote and local function registries were synchronized after given version
    */
-  public boolean loadRemoteFunctions(long version) {
-    List<String> missingJars = getMissingJars(remoteFunctionRegistry, localFunctionRegistry);
-    if (!missingJars.isEmpty()) {
+  public boolean syncWithRemoteRegistry(long version) {
+    if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localFunctionRegistry.getVersion())) {
       synchronized (this) {
-        missingJars = getMissingJars(remoteFunctionRegistry, localFunctionRegistry);
-        if (!missingJars.isEmpty()) {
-          logger.info("Starting dynamic UDFs lazy-init process.\n" +
-              "The following jars are going to be downloaded and registered locally: " + missingJars);
+        long localRegistryVersion = localFunctionRegistry.getVersion();
+        if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localRegistryVersion))  {
+          DataChangeVersion remoteVersion = new DataChangeVersion();
+          List<String> missingJars = getMissingJars(this.remoteFunctionRegistry, localFunctionRegistry, remoteVersion);
           List<JarScan> jars = Lists.newArrayList();
-          for (String jarName : missingJars) {
-            Path binary = null;
-            Path source = null;
-            URLClassLoader classLoader = null;
-            try {
-              binary = copyJarToLocal(jarName, remoteFunctionRegistry);
-              source = copyJarToLocal(JarUtil.getSourceName(jarName), remoteFunctionRegistry);
-              URL[] urls = {binary.toUri().toURL(), source.toUri().toURL()};
-              classLoader = new URLClassLoader(urls);
-              ScanResult scanResult = scan(classLoader, binary, urls);
-              localFunctionRegistry.validate(jarName, scanResult);
-              jars.add(new JarScan(jarName, scanResult, classLoader));
-            } catch (Exception e) {
-              deleteQuietlyLocalJar(binary);
-              deleteQuietlyLocalJar(source);
-              if (classLoader != null) {
-                try {
-                  classLoader.close();
-                } catch (Exception ex) {
-                  logger.warn("Problem during closing class loader for {}", jarName, e);
+          if (!missingJars.isEmpty()) {
+            logger.info("Starting dynamic UDFs lazy-init process.\n" +
+                "The following jars are going to be downloaded and registered locally: " + missingJars);
+            for (String jarName : missingJars) {
+              Path binary = null;
+              Path source = null;
+              URLClassLoader classLoader = null;
+              try {
+                binary = copyJarToLocal(jarName, this.remoteFunctionRegistry);
+                source = copyJarToLocal(JarUtil.getSourceName(jarName), this.remoteFunctionRegistry);
+                URL[] urls = {binary.toUri().toURL(), source.toUri().toURL()};
+                classLoader = new URLClassLoader(urls);
+                ScanResult scanResult = scan(classLoader, binary, urls);
+                localFunctionRegistry.validate(jarName, scanResult);
+                jars.add(new JarScan(jarName, scanResult, classLoader));
+              } catch (Exception e) {
+                deleteQuietlyLocalJar(binary);
+                deleteQuietlyLocalJar(source);
+                if (classLoader != null) {
+                  try {
+                    classLoader.close();
+                  } catch (Exception ex) {
+                    logger.warn("Problem during closing class loader for {}", jarName, e);
+                  }
                 }
+                logger.error("Problem during remote functions load from {}", jarName, e);
               }
-              logger.error("Problem during remote functions load from {}", jarName, e);
             }
           }
-          if (!jars.isEmpty()) {
-            localFunctionRegistry.register(jars);
-            return true;
-          }
+          long latestRegistryVersion = jars.size() != missingJars.size() ?
+              localRegistryVersion : remoteVersion.getVersion();
+          localFunctionRegistry.register(jars, latestRegistryVersion);
+          return true;
         }
       }
     }
+
     return version != localFunctionRegistry.getVersion();
   }
 
   /**
-   * First finds path to marker file url, otherwise throws {@link JarValidationException}.
-   * Then scans jar classes according to list indicated in marker files.
-   * Additional logic is added to close {@link URL} after {@link ConfigFactory#parseURL(URL)}.
-   * This is extremely important for Windows users where system doesn't allow to delete file if it's being used.
+   * Checks if local function registry should be synchronized with remote function registry.
+   * If remote function registry version is -1, it means that remote function registry is unreachable
+   * or is not configured thus we skip synchronization and return false.
+   * In all other cases synchronization is needed if remote and local function registries versions do not match.
    *
-   * @param classLoader unique class loader for jar
-   * @param path local path to jar
-   * @param urls urls associated with the jar (ex: binary and source)
-   * @return scan result of packages, classes, annotations found in jar
+   * @param remoteVersion remote function registry version
+   * @param localVersion local function registry version
+   * @return true is local registry should be refreshed, false otherwise
    */
+  private boolean isRegistrySyncNeeded(long remoteVersion, long localVersion) {
+    return remoteVersion != -1 && remoteVersion != localVersion;
+  }
+
+  /**
+  * First finds path to marker file url, otherwise throws {@link JarValidationException}.
+  * Then scans jar classes according to list indicated in marker files.
+  * Additional logic is added to close {@link URL} after {@link ConfigFactory#parseURL(URL)}.
+  * This is extremely important for Windows users where system doesn't allow to delete file if it's being used.
+  *
+  * @param classLoader unique class loader for jar
+  * @param path local path to jar
+  * @param urls urls associated with the jar (ex: binary and source)
+  * @return scan result of packages, classes, annotations found in jar
+  */
   private ScanResult scan(ClassLoader classLoader, Path path, URL[] urls) throws IOException {
     Enumeration<URL> markerFileEnumeration = classLoader.getResources(
         CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
@@ -355,14 +413,17 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   /**
    * Return list of jars that are missing in local function registry
    * but present in remote function registry.
+   * Also updates version holder with remote function registry version.
    *
    * @param remoteFunctionRegistry remote function registry
    * @param localFunctionRegistry local function registry
+   * @param version holder for remote function registry version
    * @return list of missing jars
    */
   private List<String> getMissingJars(RemoteFunctionRegistry remoteFunctionRegistry,
-                                      LocalFunctionRegistry localFunctionRegistry) {
-    List<Jar> remoteJars = remoteFunctionRegistry.getRegistry().getJarList();
+                                      LocalFunctionRegistry localFunctionRegistry,
+                                      DataChangeVersion version) {
+    List<Jar> remoteJars = remoteFunctionRegistry.getRegistry(version).getJarList();
     List<String> localJars = localFunctionRegistry.getAllJarNames();
     List<String> missingJars = Lists.newArrayList();
     for (Jar jar : remoteJars) {
@@ -384,8 +445,10 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private Path getLocalUdfDir(DrillConfig config) {
     tmpDir = getTmpDir(config);
     File udfDir = new File(tmpDir, config.getString(ExecConstants.UDF_DIRECTORY_LOCAL));
-    udfDir.mkdirs();
     String udfPath = udfDir.getPath();
+    if (udfDir.mkdirs()) {
+      logger.debug("Local udf directory [{}] was created", udfPath);
+    }
     Preconditions.checkState(udfDir.exists(), "Local udf directory [%s] must exist", udfPath);
     Preconditions.checkState(udfDir.isDirectory(), "Local udf directory [%s] must be a directory", udfPath);
     Preconditions.checkState(udfDir.canWrite(), "Local udf directory [%s] must be writable for application user", udfPath);
@@ -404,6 +467,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * If value is still missing, generates directory using {@link Files#createTempDir()}.
    * If temporary directory was generated, sets {@link #deleteTmpDir} to true
    * to delete directory on drillbit exit.
+   *
+   * @param config drill config
    * @return drill temporary directory path
    */
   private File getTmpDir(DrillConfig config) {
