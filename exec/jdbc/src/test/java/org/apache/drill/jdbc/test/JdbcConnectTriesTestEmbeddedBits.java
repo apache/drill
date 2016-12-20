@@ -18,13 +18,15 @@
 
 package org.apache.drill.jdbc.test;
 
-import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
+import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.SQLException;
 import java.sql.Connection;
@@ -36,6 +38,7 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@Category(JdbcTest.class)
 public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
 
   public static Driver testDrillDriver;
@@ -50,7 +53,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;" + "tries=2",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -64,7 +67,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;tries=5",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -78,7 +81,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;tries=1",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -92,7 +95,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;tries=abc",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -105,7 +108,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;tries=0",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -119,7 +122,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
     Connection connection = null;
     try {
       connection = testDrillDriver.connect("jdbc:drill:drillbit=127.0.0.1:5000,127.0.0.1:5001;tries=-5",
-                                           JdbcAssert.getDefaultProperties());
+                                           getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);
@@ -130,21 +133,21 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
 
   @Test
   public void testZKSuccessfulConnectionZeroConnectTries() throws SQLException {
-    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=0", JdbcAssert.getDefaultProperties());
+    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=0", getDefaultProperties());
     assertNotNull(connection);
     connection.close();
   }
 
   @Test
   public void testZKSuccessfulConnectionNegativeConnectTries() throws SQLException {
-    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=-1", JdbcAssert.getDefaultProperties());
+    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=-1", getDefaultProperties());
     assertNotNull(connection);
     connection.close();
   }
 
   @Test
   public void testZKSuccessfulConnectionGreaterThanConnectTries() throws SQLException {
-    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=7", JdbcAssert.getDefaultProperties());
+    Connection connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=7", getDefaultProperties());
     assertNotNull(connection);
     connection.close();
   }
@@ -153,7 +156,7 @@ public class JdbcConnectTriesTestEmbeddedBits extends JdbcTestBase {
   public void testZKConnectionInvalidConnectTries() throws SQLException {
     Connection connection = null;
     try {
-      connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=abc", JdbcAssert.getDefaultProperties());
+      connection = testDrillDriver.connect("jdbc:drill:zk=local;tries=abc", getDefaultProperties());
       fail();
     } catch (SQLException ex) {
       assertNull(connection);

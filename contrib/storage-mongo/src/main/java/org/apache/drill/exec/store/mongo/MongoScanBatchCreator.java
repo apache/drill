@@ -60,7 +60,7 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
       }
     }
     logger.info("Number of record readers initialized : " + readers.size());
-    return new ScanBatch(subScan, context, readers.iterator());
+    return new ScanBatch(subScan, context, readers);
   }
 
 }

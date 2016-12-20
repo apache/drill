@@ -24,7 +24,7 @@
     <#if (model.getLines()?size > 0)>
     <pre>
         <#list model.getLines() as line>
-${line?html}
+${line}
         </#list>
      </pre>
     <#else>

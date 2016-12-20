@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class TestComparisonFunctions extends ExecTest {
   private FunctionImplementationRegistry registry;
 
   public void runTest(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserServer.UserClientConnection connection, String expression, int expectedResults) throws Throwable {
+                      @Injectable UserClientConnection connection, String expression, int expectedResults) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), Charsets.UTF_8).replaceAll("EXPRESSION", expression);
@@ -82,7 +82,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testInt(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                           @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "intColumn == intColumn", 100);
     runTest(bitContext, connection, "intColumn != intColumn", 0);
     runTest(bitContext, connection, "intColumn > intColumn", 0);
@@ -93,7 +93,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testBigInt(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                      @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "bigIntColumn == bigIntColumn", 100);
     runTest(bitContext, connection, "bigIntColumn != bigIntColumn", 0);
     runTest(bitContext, connection, "bigIntColumn > bigIntColumn", 0);
@@ -104,7 +104,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testFloat4(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                         @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "float4Column == float4Column", 100);
     runTest(bitContext, connection, "float4Column != float4Column", 0);
     runTest(bitContext, connection, "float4Column > float4Column", 0);
@@ -115,7 +115,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testFloat8(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                         @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "float8Column == float8Column", 100);
     runTest(bitContext, connection, "float8Column != float8Column", 0);
     runTest(bitContext, connection, "float8Column > float8Column", 0);
@@ -126,7 +126,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testIntNullable(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                      @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "intNullableColumn == intNullableColumn", 50);
     runTest(bitContext, connection, "intNullableColumn != intNullableColumn", 0);
     runTest(bitContext, connection, "intNullableColumn > intNullableColumn", 0);
@@ -137,7 +137,7 @@ public class TestComparisonFunctions extends ExecTest {
 
   @Test
   public void testBigIntNullable(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                         @Injectable UserClientConnection connection) throws Throwable {
     runTest(bitContext, connection, "bigIntNullableColumn == bigIntNullableColumn", 50);
     runTest(bitContext, connection, "bigIntNullableColumn != bigIntNullableColumn", 0);
     runTest(bitContext, connection, "bigIntNullableColumn > bigIntNullableColumn", 0);

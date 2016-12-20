@@ -17,35 +17,45 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import com.google.protobuf.MessageLite;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 
-import java.util.UUID;
-
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.AbstractServerConnection;
+import org.apache.drill.exec.rpc.ClientConnection;
+import org.apache.drill.exec.rpc.RequestHandler;
 import org.apache.drill.exec.rpc.RpcBus;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.SaslCodec;
 
-import com.google.protobuf.MessageLite;
+import org.slf4j.Logger;
 
-public class ControlConnection extends RemoteConnection {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnection.class);
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslException;
+import java.util.UUID;
+
+import static com.google.common.base.Preconditions.checkState;
+
+public class ControlConnection extends AbstractServerConnection<ControlConnection> implements ClientConnection {
+  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnection.class);
 
   private final RpcBus<RpcType, ControlConnection> bus;
-  private final BufferAllocator allocator;
-  private volatile DrillbitEndpoint endpoint;
-  private volatile boolean active = false;
   private final UUID id;
 
-  public ControlConnection(String name, SocketChannel channel, RpcBus<RpcType, ControlConnection> bus,
-      BufferAllocator allocator) {
-    super(channel, name);
+  private volatile DrillbitEndpoint endpoint;
+  private volatile boolean active = false;
+
+  private SaslClient saslClient;
+
+  ControlConnection(SocketChannel channel, String name, ControlConnectionConfig config,
+                    RequestHandler<ControlConnection> handler, RpcBus<RpcType, ControlConnection> bus) {
+    super(channel, name, config, handler);
     this.bus = bus;
     this.id = UUID.randomUUID();
-    this.allocator = allocator;
   }
 
   void setEndpoint(DrillbitEndpoint endpoint) {
@@ -54,22 +64,16 @@ public class ControlConnection extends RemoteConnection {
     active = true;
   }
 
-  protected DrillbitEndpoint getEndpoint() {
-    return endpoint;
-  }
-
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener,
-      RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType, SEND protobufBody,
+            Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     bus.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void sendUnsafe(RpcOutcomeListener<RECEIVE> outcomeListener,
-      RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void sendUnsafe(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType, SEND protobufBody,
+                  Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     bus.send(outcomeListener, this, rpcType, protobufBody, clazz, true, dataBodies);
-  }
-
-  public void disable() {
-    active = false;
   }
 
   @Override
@@ -108,8 +112,69 @@ public class ControlConnection extends RemoteConnection {
   }
 
   @Override
-  public BufferAllocator getAllocator() {
-    return allocator;
+  protected Logger getLogger() {
+    return logger;
   }
 
+  @Override
+  public void setSaslClient(final SaslClient saslClient) {
+    checkState(this.saslClient == null);
+    this.saslClient = saslClient;
+
+    // If encryption is enabled set the backend wrapper instance corresponding to this SaslClient in the connection
+    // object. This is later used to do wrap/unwrap in handlers.
+    if (isEncryptionEnabled()) {
+      saslCodec = new SaslCodec() {
+        @Override
+        public byte[] wrap(byte[] data, int offset, int len) throws SaslException {
+          assert saslClient != null;
+          return saslClient.wrap(data, offset, len);
+        }
+
+        @Override
+        public byte[] unwrap(byte[] data, int offset, int len) throws SaslException {
+          assert saslClient != null;
+          return saslClient.unwrap(data, offset, len);
+        }
+      };
+    }
+  }
+
+  @Override
+  public SaslClient getSaslClient() {
+    checkState(saslClient != null);
+    return saslClient;
+  }
+
+  @Override
+  public void disposeSaslClient() {
+    try {
+      if (saslClient != null) {
+        saslClient.dispose();
+        saslClient = null;
+      }
+    } catch (final SaslException e) {
+      getLogger().warn("Unclean disposal", e);
+    }
+  }
+
+  @Override
+  public void channelClosed(RpcException ex) {
+    // This will be triggered from Netty when a channel is closed. We should cleanup here
+    // as this will handle case for both client closing the connection or server closing the
+    // connection.
+    disposeSaslClient();
+
+    super.channelClosed(ex);
+  }
+
+  @Override
+  public void incConnectionCounter() {
+    ControlRpcMetrics.getInstance().addConnectionCount();
+  }
+
+  @Override
+  public void decConnectionCounter() {
+    ControlRpcMetrics.getInstance().decConnectionCount();
+  }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec;
 import static org.junit.Assert.*;
 import io.netty.buffer.DrillBuf;
 
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
@@ -53,32 +55,26 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.junit.experimental.categories.Category;
 
 /**
  * Class to test different planning use cases (separate form query execution)
  *
  */
+@Category({SlowTest.class, PlannerTest.class})
 public class DrillSeparatePlanningTest extends BaseTestQuery {
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "json"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "csv"));
+  }
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSeparatePlanningTest.class);
-
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
-  //final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
-  //final String query = "SELECT * FROM cp.`employee.json` where  employee_id > 1 and  employee_id < 1000";
-  //final String query = "SELECT o_orderkey, o_custkey FROM dfs.tmp.`multilevel` where dir0 = 1995 and o_orderkey > 100 and o_orderkey < 1000 limit 5";
-  //final String query = "SELECT sum(o_totalprice) FROM dfs.tmp.`multilevel` where dir0 = 1995 and o_orderkey > 100 and o_orderkey < 1000";
-  //final String query = "SELECT o_orderkey FROM dfs.tmp.`multilevel` order by o_orderkey";
-  //final String query = "SELECT dir1, sum(o_totalprice) FROM dfs.tmp.`multilevel` where dir0 = 1995 group by dir1 order by dir1";
-  //final String query = String.format("SELECT dir0, sum(o_totalprice) FROM dfs_test.`%s/multilevel/json` group by dir0 order by dir0", TEST_RES_PATH);
-
-
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testSingleFragmentQuery() throws Exception {
     final String query = "SELECT * FROM cp.`employee.json` where  employee_id > 1 and  employee_id < 1000";
 
@@ -92,9 +88,9 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     getResultsHelper(planFragments);
   }
 
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testMultiMinorFragmentSimpleQuery() throws Exception {
-    final String query = String.format("SELECT o_orderkey FROM dfs_test.`%s/multilevel/json`", TEST_RES_PATH);
+    final String query = "SELECT o_orderkey FROM dfs.`multilevel/json`";
 
     QueryPlanFragments planFragments = getFragmentsHelper(query);
 
@@ -109,9 +105,9 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     getResultsHelper(planFragments);
   }
 
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testMultiMinorFragmentComplexQuery() throws Exception {
-    final String query = String.format("SELECT dir0, sum(o_totalprice) FROM dfs_test.`%s/multilevel/json` group by dir0 order by dir0", TEST_RES_PATH);
+    final String query = "SELECT dir0, sum(o_totalprice) FROM dfs.`multilevel/json` group by dir0 order by dir0";
 
     QueryPlanFragments planFragments = getFragmentsHelper(query);
 
@@ -124,12 +120,11 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     }
 
     getResultsHelper(planFragments);
-
   }
 
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testPlanningNoSplit() throws Exception {
-    final String query = String.format("SELECT dir0, sum(o_totalprice) FROM dfs_test.`%s/multilevel/json` group by dir0 order by dir0", TEST_RES_PATH);
+    final String query = "SELECT dir0, sum(o_totalprice) FROM dfs.`multilevel/json` group by dir0 order by dir0";
 
     updateTestCluster(2, config);
 
@@ -150,12 +145,11 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     assertFalse(rootFragment.getLeafFragment());
 
     getCombinedResultsHelper(planFragments);
-
   }
 
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testPlanningNegative() throws Exception {
-    final String query = String.format("SELECT dir0, sum(o_totalprice) FROM dfs_test.`%s/multilevel/json` group by dir0 order by dir0", TEST_RES_PATH);
+    final String query = "SELECT dir0, sum(o_totalprice) FROM dfs.`multilevel/json` group by dir0 order by dir0";
 
     updateTestCluster(2, config);
     // LOGICAL is not supported
@@ -171,9 +165,9 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
 
   }
 
-  @Test(timeout=30000)
+  @Test(timeout=60000)
   public void testPlanning() throws Exception {
-    final String query = String.format("SELECT dir0, columns[3] FROM dfs_test.`%s/multilevel/csv` order by dir0", TEST_RES_PATH);
+    final String query = "SELECT dir0, columns[3] FROM dfs.`multilevel/csv` order by dir0";
 
     updateTestCluster(2, config);
 
@@ -183,9 +177,8 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     }
     AwaitableUserResultsListener listener =
         new AwaitableUserResultsListener(new PrintingResultsListener(client.getConfig(), Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH));
-    //AwaitableUserResultsListener listener =
-    //    new AwaitableUserResultsListener(new SilentListener());
     client.runQuery(QueryType.SQL, query, listener);
+    @SuppressWarnings("unused")
     int rows = listener.await();
   }
 
@@ -211,6 +204,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
   private void getResultsHelper(final QueryPlanFragments planFragments) throws Exception {
     for (PlanFragment fragment : planFragments.getFragmentsList()) {
       DrillbitEndpoint assignedNode = fragment.getAssignment();
+      @SuppressWarnings("resource")
       DrillClient fragmentClient = new DrillClient(true);
       Properties props = new Properties();
       props.setProperty("drillbit", assignedNode.getAddress() + ":" + assignedNode.getUserPort());
@@ -245,11 +239,10 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
 
       List<PlanFragment> fragmentList = Lists.newArrayList();
       fragmentList.add(fragment);
-      //AwaitableUserResultsListener listener =
-     //     new AwaitableUserResultsListener(new PrintingResultsListener(client.getConfig(), Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH));
       AwaitableUserResultsListener listener =
           new AwaitableUserResultsListener(new SilentListener());
       fragmentClient.runQuery(QueryType.EXECUTION, fragmentList, listener);
+      @SuppressWarnings("unused")
       int rows = listener.await();
       fragmentClient.close();
     }
@@ -257,14 +250,13 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
 
   private void getCombinedResultsHelper(final QueryPlanFragments planFragments) throws Exception {
       ShowResultsUserResultsListener myListener = new ShowResultsUserResultsListener(getAllocator());
+      @SuppressWarnings("unused")
       AwaitableUserResultsListener listenerBits =
           new AwaitableUserResultsListener(myListener);
-
-      //AwaitableUserResultsListener listener =
-     //     new AwaitableUserResultsListener(new PrintingResultsListener(client.getConfig(), Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH));
       AwaitableUserResultsListener listener =
           new AwaitableUserResultsListener(new SilentListener());
       client.runQuery(QueryType.EXECUTION, planFragments.getFragmentsList(), listener);
+      @SuppressWarnings("unused")
       int rows = listener.await();
   }
 
@@ -339,6 +331,5 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     @Override
     public void queryCompleted(QueryState state) {
     }
-
   }
 }

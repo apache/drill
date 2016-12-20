@@ -17,17 +17,18 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.nio.file.Paths;
 import java.sql.Date;
 
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.categories.JdbcTest;
 import org.joda.time.chrono.ISOChronology;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
+@Category(JdbcTest.class)
 public class TestAggregateFunctionsQuery extends JdbcTestQueryBase {
 
   // enable decimal data type
@@ -41,36 +42,31 @@ public class TestAggregateFunctionsQuery extends JdbcTestQueryBase {
     testQuery(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
-  public static final String WORKING_PATH;
   static{
     Driver.load();
-    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
   }
+
   @Test
   public void testDateAggFunction() throws Exception{
-    String query = new String("SELECT max(cast(HIRE_DATE as date)) as MAX_DATE, min(cast(HIRE_DATE as date)) as MIN_DATE" +
-        " FROM `employee.json`");
-
+    String query = "SELECT max(cast(HIRE_DATE as date)) as MAX_DATE, min(cast(HIRE_DATE as date)) as MIN_DATE" +
+        " FROM `employee.json`";
 
     String t  = new Date(ISOChronology.getInstance().getDateTimeMillis(1998, 1, 1, 0)).toString();
     String t1 = new Date(ISOChronology.getInstance().getDateTimeMillis(1993, 5, 1, 0)).toString();
-    //String t = new Date(1998, 1, 1).toString();
-    //String t1 = new Date(1993, 5, 1).toString();
 
-    String result = String.format("MAX_DATE="+ t + "; " + "MIN_DATE=" + t1 + "\n");
+    String result = "MAX_DATE="+ t + "; " + "MIN_DATE=" + t1 + "\n";
 
-    JdbcAssert.withFull("cp")
+    withFull("cp")
         .sql(query)
         .returns(result);
   }
 
   @Test
   public void testIntervalAggFunction() throws Exception{
-    String query = new String("select max(date_diff(date'2014-5-2', cast(HIRE_DATE as date))) as MAX_DAYS,  min(date_diff(date'2014-5-2', cast(HIRE_DATE as date))) MIN_DAYS" +
-        " FROM `employee.json`");
+    String query = "select max(date_diff(date'2014-5-2', cast(HIRE_DATE as date))) as MAX_DAYS, min(date_diff(date'2014-5-2', cast(HIRE_DATE as date))) MIN_DAYS" +
+        " FROM `employee.json`";
 
-    JdbcAssert.withFull("cp")
+    withFull("cp")
         .sql(query)
         .returns(
             "MAX_DAYS=P7671D; " +
@@ -80,14 +76,14 @@ public class TestAggregateFunctionsQuery extends JdbcTestQueryBase {
 
   @Test
   public void testDecimalAggFunction() throws Exception{
-    String query = new String("SELECT " +
+    String query = "SELECT " +
         "max(cast(EMPLOYEE_ID as decimal(9, 2))) as MAX_DEC9, min(cast(EMPLOYEE_ID as decimal(9, 2))) as MIN_DEC9," +
         "max(cast(EMPLOYEE_ID as decimal(18, 4))) as MAX_DEC18, min(cast(EMPLOYEE_ID as decimal(18, 4))) as MIN_DEC18," +
         "max(cast(EMPLOYEE_ID as decimal(28, 9))) as MAX_DEC28, min(cast(EMPLOYEE_ID as decimal(28, 9))) as MIN_DEC28," +
         "max(cast(EMPLOYEE_ID as decimal(38, 11))) as MAX_DEC38, min(cast(EMPLOYEE_ID as decimal(38, 11))) as MIN_DEC38" +
-        " FROM `employee.json`");
+        " FROM `employee.json`";
 
-    JdbcAssert.withFull("cp")
+    withFull("cp")
         .sql(query)
         .returns(
             "MAX_DEC9=1156.00; " +
@@ -101,13 +97,11 @@ public class TestAggregateFunctionsQuery extends JdbcTestQueryBase {
         );
   }
 
-
   @Test
   public void testVarCharAggFunction() throws Exception{
-    String query = new String("select max(full_name) as MAX_NAME,  min(full_name) as MIN_NAME" +
-        " FROM `employee.json`");
+    String query = "select max(full_name) as MAX_NAME, min(full_name) as MIN_NAME FROM `employee.json`";
 
-    JdbcAssert.withFull("cp")
+    withFull("cp")
         .sql(query)
         .returns(
             "MAX_NAME=Zach Lovell; " +

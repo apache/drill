@@ -47,7 +47,7 @@ std::size_t lengthDecode(const uint8_t* buf, uint32_t& length) {
 
     // read the frame to get the length of the message and then
 
-    CodedInputStream cis(buf, 5); // read 5 bytes at most
+    CodedInputStream cis(buf, LEN_PREFIX_BUFLEN); // read LEN_PREFIX_BUFLEN bytes at most
 
     int startPos(cis.CurrentPosition()); // for debugging
     if (!cis.ReadVarint32(&length)) {
@@ -152,6 +152,12 @@ bool decode(const uint8_t* buf, int length, InBoundRpcMessage& msg) {
 
         assert(dbody_length == size);
         assert(msg.m_dbody==buf+currPos);
+
+        // Enforce assertion due to unexpected crashes during network error.
+        if (!((dbody_length == size) && (msg.m_dbody == (buf + currPos)))) {
+            return false;
+        }
+
 		#ifdef CODER_DEBUG
 			cerr << "Read raw body of " << dbody_length << " bytes" << endl;
 		#endif
@@ -173,6 +179,12 @@ bool decode(const uint8_t* buf, int length, InBoundRpcMessage& msg) {
 
     int endPos = cis.CurrentPosition();
     assert((endPos-startPos) == length);
+
+    // Enforce assertion due to unexpected crashes during network error.
+    if ((endPos - startPos) != length) {
+        return false;
+        
+    }
     return true;
 }
 

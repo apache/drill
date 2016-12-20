@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -36,6 +36,10 @@ import com.google.common.base.Joiner;
 
 public class DrillTextRecordWriter extends StringOutputRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);
+
+  private final StorageStrategy storageStrategy;
+
+  private Path cleanUpLocation;
 
   private String location;
   private String prefix;
@@ -52,8 +56,9 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
   private StringBuilder currentRecord; // contains the current record separated by field delimiter
 
-  public DrillTextRecordWriter(BufferAllocator allocator) {
+  public DrillTextRecordWriter(BufferAllocator allocator, StorageStrategy storageStrategy) {
     super(allocator);
+    this.storageStrategy = storageStrategy == null ? StorageStrategy.DEFAULT : storageStrategy;
   }
 
   @Override
@@ -79,7 +84,17 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
     // open a new file for writing data with new schema
     Path fileName = new Path(location, prefix + "_" + index + "." + extension);
     try {
+      // drill text writer does not support partitions, so only one file can be created
+      // and thus only one location should be deleted in case of abort
+      // to ensure that our writer was the first to create output file,
+      // we create empty output file first and fail if file exists
+      cleanUpLocation = storageStrategy.createFileAndApply(fs, fileName);
+
+      // since empty output file will be overwritten (some file systems may restrict append option)
+      // we need to re-apply file permission
       DataOutputStream fos = fs.create(fileName);
+      storageStrategy.applyToFile(fs, fileName);
+
       stream = new PrintStream(fos);
       logger.debug("Created file: {}", fileName);
     } catch (IOException ex) {
@@ -160,12 +175,10 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   @Override
   public void abort() throws IOException {
-    cleanup();
-    try {
-      fs.delete(new Path(location), true);
-    } catch (IOException ex) {
-      logger.error("Abort failed. There could be leftover output files");
-      throw ex;
+    if (cleanUpLocation != null) {
+      fs.delete(cleanUpLocation, true);
+      logger.info("Aborting writer. Location [{}] on file system [{}] is deleted.",
+          cleanUpLocation.toUri().getPath(), fs.getUri());
     }
   }
 

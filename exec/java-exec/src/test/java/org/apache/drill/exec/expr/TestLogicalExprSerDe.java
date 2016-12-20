@@ -18,15 +18,18 @@ package org.apache.drill.exec.expr;
  * limitations under the License.
  */
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test LogicalExpressions are serialized and deserialized properly when query is planned into multiple fragments.
  */
+@Category(UnlikelyTest.class)
 public class TestLogicalExprSerDe extends BaseTestQuery {
 
   @BeforeClass

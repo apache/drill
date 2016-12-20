@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,9 +20,9 @@ package org.apache.drill.exec.store.mapr.db.json;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
+import org.apache.drill.exec.store.mapr.db.util.FieldPathHelper;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
 import org.ojai.store.QueryCondition.Op;
@@ -159,73 +159,73 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
   private JsonScanSpec createJsonScanSpec(FunctionCall call,
       CompareFunctionsProcessor processor) {
     String functionName = processor.getFunctionName();
-    SchemaPath field = processor.getPath();
+    String fieldPath = FieldPathHelper.schemaPathToFieldPath(processor.getPath()).asPathString();
     Value fieldValue = processor.getValue();
 
     QueryCondition cond = null;
     switch (functionName) {
     case "equal":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.EQUAL, fieldValue);
+      setIsCondition(cond, fieldPath, Op.EQUAL, fieldValue);
       cond.build();
       break;
 
     case "not_equal":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.NOT_EQUAL, fieldValue);
+      setIsCondition(cond, fieldPath, Op.NOT_EQUAL, fieldValue);
       cond.build();
       break;
 
     case "less_than":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.LESS, fieldValue);
+      setIsCondition(cond, fieldPath, Op.LESS, fieldValue);
       cond.build();
       break;
 
     case "less_than_or_equal_to":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.LESS_OR_EQUAL, fieldValue);
+      setIsCondition(cond, fieldPath, Op.LESS_OR_EQUAL, fieldValue);
       cond.build();
       break;
 
     case "greater_than":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.GREATER, fieldValue);
+      setIsCondition(cond, fieldPath, Op.GREATER, fieldValue);
       cond.build();
       break;
 
     case "greater_than_or_equal_to":
       cond = MapRDB.newCondition();
-      setIsCondition(cond, field.getAsUnescapedPath(), Op.GREATER_OR_EQUAL, fieldValue);
+      setIsCondition(cond, fieldPath, Op.GREATER_OR_EQUAL, fieldValue);
       cond.build();
       break;
 
     case "isnull":
-      cond = MapRDB.newCondition().notExists(field.getAsUnescapedPath()).build();
+      cond = MapRDB.newCondition().notExists(fieldPath).build();
       break;
 
     case "isnotnull":
-      cond = MapRDB.newCondition().exists(field.getAsUnescapedPath()).build();
+      cond = MapRDB.newCondition().exists(fieldPath).build();
       break;
 
     case "istrue":
-      cond = MapRDB.newCondition().is(field.getAsUnescapedPath(), Op.EQUAL, true).build();
+      cond = MapRDB.newCondition().is(fieldPath, Op.EQUAL, true).build();
       break;
 
     case "isnotfalse":
-      cond = MapRDB.newCondition().is(field.getAsUnescapedPath(), Op.NOT_EQUAL, false).build();
+      cond = MapRDB.newCondition().is(fieldPath, Op.NOT_EQUAL, false).build();
       break;
 
     case "isfalse":
-      cond = MapRDB.newCondition().is(field.getAsUnescapedPath(), Op.EQUAL, false).build();
+      cond = MapRDB.newCondition().is(fieldPath, Op.EQUAL, false).build();
       break;
 
     case "isnottrue":
-      cond = MapRDB.newCondition().is(field.getAsUnescapedPath(), Op.NOT_EQUAL, true).build();
+      cond = MapRDB.newCondition().is(fieldPath, Op.NOT_EQUAL, true).build();
       break;
 
     case "like":
-      cond = MapRDB.newCondition().like(field.getAsUnescapedPath(), fieldValue.getString()).build();
+      cond = MapRDB.newCondition().like(fieldPath, fieldValue.getString()).build();
       break;
 
     default:

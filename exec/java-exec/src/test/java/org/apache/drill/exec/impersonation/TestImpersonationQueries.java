@@ -18,16 +18,19 @@
 package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
@@ -40,6 +43,7 @@ import static org.junit.Assert.assertNull;
  * Test queries involving direct impersonation and multilevel impersonation including join queries where each side is
  * a nested view.
  */
+@Category({SlowTest.class, SecurityTest.class})
 public class TestImpersonationQueries extends BaseTestImpersonation {
   @BeforeClass
   public static void setup() throws Exception {
@@ -93,7 +97,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   private static void createTestTable(String user, String group, String tableName) throws Exception {
     updateClient(user);
     test("USE " + getWSSchema(user));
-    test(String.format("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`;", tableName, tableName));
+    test("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
 
     // Change the ownership and permissions manually. Currently there is no option to specify the default permissions
     // and ownership for new tables.
@@ -158,7 +162,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   private static void createRecordReadersData(String user, String group) throws Exception {
     // copy sequence file
     updateClient(user);
-    Path localFile = new Path(FileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString());
+    Path localFile = new Path(DrillFileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString());
     Path dfsFile = new Path(getUserHome(user), "simple.seq");
     fs.copyFromLocalFile(localFile, dfsFile);
     fs.setOwner(dfsFile, user, group);
@@ -176,7 +180,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user0_1". We
     // shouldn't expect any errors.
     updateClient(org1Users[0]);
-    test(String.format("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0])));
+    test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
   }
 
   @Test
@@ -184,7 +188,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user1_1". We
     // shouldn't expect any errors as "user1_1" is part of the "group0_1"
     updateClient(org1Users[1]);
-    test(String.format("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0])));
+    test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
   }
 
   @Test
@@ -194,7 +198,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
       // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Now try to read the table as "user2_1". We
       // should expect a permission denied error as "user2_1" is not part of the "group0_1"
       updateClient(org1Users[2]);
-      test(String.format("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0])));
+      test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
     } catch(UserRemoteException e) {
       ex = e;
     }
@@ -208,7 +212,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   @Test
   public void testMultiLevelImpersonationEqualToMaxUserHops() throws Exception {
     updateClient(org1Users[4]);
-    test(String.format("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4])));
+    test("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4]));
   }
 
   @Test
@@ -217,7 +221,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     try {
       updateClient(org1Users[5]);
-      test(String.format("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4])));
+      test("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4]));
     } catch (UserRemoteException e) {
       ex = e;
     }
@@ -231,8 +235,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   @Test
   public void testMultiLevelImpersonationJoinEachSideReachesMaxUserHops() throws Exception {
     updateClient(org1Users[4]);
-    test(String.format("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1;",
-      getWSSchema(org1Users[4]), getWSSchema(org2Users[3])));
+    test("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+      getWSSchema(org1Users[4]), getWSSchema(org2Users[3]));
   }
 
   @Test
@@ -241,8 +245,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     try {
       updateClient(org1Users[4]);
-      test(String.format("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1;",
-          getWSSchema(org1Users[4]), getWSSchema(org2Users[4])));
+      test("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+          getWSSchema(org1Users[4]), getWSSchema(org2Users[4]));
     } catch(UserRemoteException e) {
       ex = e;
     }

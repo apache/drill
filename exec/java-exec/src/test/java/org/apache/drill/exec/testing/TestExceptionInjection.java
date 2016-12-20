@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -216,79 +216,83 @@ public class TestExceptionInjection extends BaseTestQuery {
     final ZookeeperHelper zkHelper = new ZookeeperHelper();
     zkHelper.startZookeeper(1);
 
-    // Creating two drillbits
-    final Drillbit drillbit1, drillbit2;
-    final DrillConfig drillConfig = zkHelper.getConfig();
     try {
-      drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
-      drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
-    } catch (DrillbitStartupException e) {
-      throw new RuntimeException("Failed to start drillbits.", e);
-    }
+      // Creating two drillbits
+      final Drillbit drillbit1, drillbit2;
+      final DrillConfig drillConfig = zkHelper.getConfig();
+      try {
+        drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
+        drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
+      } catch (DrillbitStartupException e) {
+        throw new RuntimeException("Failed to start drillbits.", e);
+      }
 
-    final DrillbitContext drillbitContext1 = drillbit1.getContext();
-    final DrillbitContext drillbitContext2 = drillbit2.getContext();
+      final DrillbitContext drillbitContext1 = drillbit1.getContext();
+      final DrillbitContext drillbitContext2 = drillbit2.getContext();
 
-    final UserSession session = UserSession.Builder.newBuilder()
-        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
-        .withUserProperties(UserProperties.getDefaultInstance())
-        .withOptionManager(drillbitContext1.getOptionManager())
+      final UserSession session = UserSession.Builder.newBuilder()
+          .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
+          .withUserProperties(UserProperties.getDefaultInstance())
+          .withOptionManager(drillbitContext1.getOptionManager())
+          .build();
+
+      final String passthroughDesc = "<<injected from descPassthrough>>";
+      final int nSkip = 7;
+      final int nFire = 3;
+      final Class<? extends Throwable> exceptionClass = RuntimeException.class;
+      // only drillbit1's (address, port)
+      final String controls = Controls.newBuilder()
+      .addExceptionOnBit(DummyClass.class, passthroughDesc, exceptionClass, drillbitContext1.getEndpoint(), nSkip, nFire)
         .build();
 
-    final String passthroughDesc = "<<injected from descPassthrough>>";
-    final int nSkip = 7;
-    final int nFire = 3;
-    final Class<? extends Throwable> exceptionClass = RuntimeException.class;
-    // only drillbit1's (address, port)
-    final String controls = Controls.newBuilder()
-    .addExceptionOnBit(DummyClass.class, passthroughDesc, exceptionClass, drillbitContext1.getEndpoint(), nSkip, nFire)
-      .build();
+      ControlsInjectionUtil.setControls(session, controls);
 
-    ControlsInjectionUtil.setControls(session, controls);
+      {
+        final QueryContext queryContext1 = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
+        final DummyClass class1 = new DummyClass(queryContext1);
 
-    {
-      final QueryContext queryContext1 = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
-      final DummyClass class1 = new DummyClass(queryContext1);
+        // these shouldn't throw
+        for (int i = 0; i < nSkip; ++i) {
+          class1.descPassthroughMethod(passthroughDesc);
+        }
 
-      // these shouldn't throw
-      for (int i = 0; i < nSkip; ++i) {
+        // these should throw
+        for (int i = 0; i < nFire; ++i) {
+          assertPassthroughThrows(class1, exceptionClass.getName(), passthroughDesc);
+        }
+
+        // this shouldn't throw
         class1.descPassthroughMethod(passthroughDesc);
+        try {
+          queryContext1.close();
+        } catch (Exception e) {
+          fail();
+        }
       }
+      {
+        final QueryContext queryContext2 = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
+        final DummyClass class2 = new DummyClass(queryContext2);
 
-      // these should throw
-      for (int i = 0; i < nFire; ++i) {
-        assertPassthroughThrows(class1, exceptionClass.getName(), passthroughDesc);
-      }
+        // these shouldn't throw
+        for (int i = 0; i < nSkip; ++i) {
+          class2.descPassthroughMethod(passthroughDesc);
+        }
 
-      // this shouldn't throw
-      class1.descPassthroughMethod(passthroughDesc);
-      try {
-        queryContext1.close();
-      } catch (Exception e) {
-        fail();
-      }
-    }
-    {
-      final QueryContext queryContext2 = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
-      final DummyClass class2 = new DummyClass(queryContext2);
+        // these shouldn't throw
+        for (int i = 0; i < nFire; ++i) {
+          class2.descPassthroughMethod(passthroughDesc);
+        }
 
-      // these shouldn't throw
-      for (int i = 0; i < nSkip; ++i) {
+        // this shouldn't throw
         class2.descPassthroughMethod(passthroughDesc);
+        try {
+          queryContext2.close();
+        } catch (Exception e) {
+          fail();
+        }
       }
-
-      // these shouldn't throw
-      for (int i = 0; i < nFire; ++i) {
-        class2.descPassthroughMethod(passthroughDesc);
-      }
-
-      // this shouldn't throw
-      class2.descPassthroughMethod(passthroughDesc);
-      try {
-        queryContext2.close();
-      } catch (Exception e) {
-        fail();
-      }
+    } finally {
+      zkHelper.stopZookeeper();
     }
   }
 }

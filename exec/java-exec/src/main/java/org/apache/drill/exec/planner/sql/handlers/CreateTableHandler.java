@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,13 +31,17 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
@@ -67,45 +71,57 @@ public class CreateTableHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     SqlCreateTable sqlCreateTable = unwrap(sqlNode, SqlCreateTable.class);
-    final String newTblName = sqlCreateTable.getName();
+    String originalTableName = sqlCreateTable.getName();
 
     final ConvertedRelNode convertedRelNode = validateAndConvert(sqlCreateTable.getQuery());
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
-
     final RelNode newTblRelNode =
         SqlHandlerUtil.resolveNewTableRel(false, sqlCreateTable.getFieldNames(), validatedRowType, queryRelNode);
 
-    final AbstractSchema drillSchema =
-        SchemaUtilites.resolveToMutableDrillSchema(config.getConverter().getDefaultSchema(),
-            sqlCreateTable.getSchemaPath());
-    final String schemaPath = drillSchema.getFullSchemaName();
+    final DrillConfig drillConfig = context.getConfig();
+    final AbstractSchema drillSchema = resolveSchema(sqlCreateTable, config.getConverter().getDefaultSchema(), drillConfig);
 
-    if (SqlHandlerUtil.getTableFromSchema(drillSchema, newTblName) != null) {
-      throw UserException.validationError()
-          .message("A table or view with given name [%s] already exists in schema [%s]", newTblName, schemaPath)
-          .build(logger);
-    }
+    checkDuplicatedObjectExistence(drillSchema, originalTableName, drillConfig, context.getSession());
 
-    final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode, sqlCreateTable.getPartitionColumns());
+    final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode,
+        sqlCreateTable.getPartitionColumns());
 
     log("Calcite", newTblRelNodeWithPCol, logger, null);
-
     // Convert the query to Drill Logical plan and insert a writer operator on top.
-    DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTblName, sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType());
+    StorageStrategy storageStrategy = sqlCreateTable.isTemporary() ?
+        StorageStrategy.TEMPORARY :
+        new StorageStrategy(context.getOption(ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
+
+    // If we are creating temporary table, initial table name will be replaced with generated table name.
+    // Generated table name is unique, UUID.randomUUID() is used for its generation.
+    // Original table name is stored in temporary tables cache, so it can be substituted to generated one during querying.
+    String newTableName = sqlCreateTable.isTemporary() ?
+        context.getSession().registerTemporaryTable(drillSchema, originalTableName, drillConfig) : originalTableName;
+
+    DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTableName,
+        sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType(), storageStrategy);
     Prel prel = convertToPrel(drel, newTblRelNode.getRowType(), sqlCreateTable.getPartitionColumns());
     logAndSetTextPlan("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan, logger);
 
+    String message = String.format("Creating %s table [%s].",
+        sqlCreateTable.isTemporary()  ? "temporary" : "persistent", originalTableName);
+    logger.info(message);
     return plan;
   }
 
-  private DrillRel convertToDrel(RelNode relNode, AbstractSchema schema, String tableName, List<String> partitionColumns, RelDataType queryRowType)
+  private DrillRel convertToDrel(RelNode relNode,
+                                 AbstractSchema schema,
+                                 String tableName,
+                                 List<String> partitionColumns,
+                                 RelDataType queryRowType,
+                                 StorageStrategy storageStrategy)
       throws RelConversionException, SqlUnsupportedException {
-    final DrillRel convertedRelNode = convertToDrel(relNode);
+    final DrillRel convertedRelNode = convertToRawDrel(relNode);
 
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
     // Only insert project when the field count from the child is same as that of the queryRowType.
@@ -114,13 +130,13 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
     final RelTraitSet traits = convertedRelNode.getCluster().traitSet().plus(DrillRel.DRILL_LOGICAL);
     final DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(),
-        traits, topPreservedNameProj, schema.createNewTable(tableName, partitionColumns));
+        traits, topPreservedNameProj, schema.createNewTable(tableName, partitionColumns, storageStrategy));
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
 
   private Prel convertToPrel(RelNode drel, RelDataType inputRowType, List<String> partitionColumns)
       throws RelConversionException, SqlUnsupportedException {
-    Prel prel = convertToPrel(drel);
+    Prel prel = convertToPrel(drel, inputRowType);
 
     prel = prel.accept(new ProjectForWriterVisitor(inputRowType, partitionColumns), null);
 
@@ -172,7 +188,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
       final RelOptCluster cluster = prel.getCluster();
 
       final List<RexNode> exprs = Lists.newArrayListWithExpectedSize(queryRowType.getFieldCount() + 1);
-      final List<String> fieldnames = new ArrayList<String>(queryRowType.getFieldNames());
+      final List<String> fieldNames = new ArrayList<>(queryRowType.getFieldNames());
 
       for (final RelDataTypeField field : queryRowType.getFieldList()) {
         exprs.add(RexInputRef.of(field.getIndex(), queryRowType));
@@ -183,10 +199,10 @@ public class CreateTableHandler extends DefaultSqlHandler {
         final ProjectPrel projectUnderWriter = new ProjectAllowDupPrel(cluster,
             cluster.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL), child, exprs, queryRowType);
 
-        return (Prel) prel.copy(projectUnderWriter.getTraitSet(),
+        return prel.copy(projectUnderWriter.getTraitSet(),
             Collections.singletonList( (RelNode) projectUnderWriter));
       } else {
-        // find list of partiiton columns.
+        // find list of partition columns.
         final List<RexNode> partitionColumnExprs = Lists.newArrayListWithExpectedSize(partitionColumns.size());
         for (final String colName : partitionColumns) {
           final RelDataTypeField field = childRowType.getField(colName, false, false);
@@ -201,19 +217,19 @@ public class CreateTableHandler extends DefaultSqlHandler {
         }
 
         // Add partition column comparator to Project's field name list.
-        fieldnames.add(WriterPrel.PARTITION_COMPARATOR_FIELD);
+        fieldNames.add(WriterPrel.PARTITION_COMPARATOR_FIELD);
 
         // Add partition column comparator to Project's expression list.
         final RexNode partionColComp = createPartitionColComparator(prel.getCluster().getRexBuilder(), partitionColumnExprs);
         exprs.add(partionColComp);
 
 
-        final RelDataType rowTypeWithPCComp = RexUtil.createStructType(cluster.getTypeFactory(), exprs, fieldnames);
+        final RelDataType rowTypeWithPCComp = RexUtil.createStructType(cluster.getTypeFactory(), exprs, fieldNames, null);
 
         final ProjectPrel projectUnderWriter = new ProjectAllowDupPrel(cluster,
             cluster.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL), child, exprs, rowTypeWithPCComp);
 
-        return (Prel) prel.copy(projectUnderWriter.getTraitSet(),
+        return prel.copy(projectUnderWriter.getTraitSet(),
             Collections.singletonList( (RelNode) projectUnderWriter));
       }
     }
@@ -221,7 +237,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
   }
 
   private RexNode createPartitionColComparator(final RexBuilder rexBuilder, List<RexNode> inputs) {
-    final DrillSqlOperator op = new DrillSqlOperator(WriterPrel.PARTITION_COMPARATOR_FUNC, 1, true);
+    final DrillSqlOperator op = new DrillSqlOperator(WriterPrel.PARTITION_COMPARATOR_FUNC, 1, true, false);
 
     final List<RexNode> compFuncs = Lists.newArrayListWithExpectedSize(inputs.size());
 
@@ -234,7 +250,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   private RexNode composeDisjunction(final RexBuilder rexBuilder, List<RexNode> compFuncs) {
     final DrillSqlOperator booleanOrFunc
-             = new DrillSqlOperator("orNoShortCircuit", 2, true);
+             = new DrillSqlOperator("orNoShortCircuit", 2, true, false);
     RexNode node = compFuncs.remove(0);
     while (!compFuncs.isEmpty()) {
       node = rexBuilder.makeCall(booleanOrFunc, node, compFuncs.remove(0));
@@ -242,4 +258,59 @@ public class CreateTableHandler extends DefaultSqlHandler {
     return node;
   }
 
+  /**
+   * Resolves schema taking into account type of table being created.
+   * If schema path wasn't indicated in sql call and table type to be created is temporary
+   * returns temporary workspace.
+   *
+   * If schema path is indicated, resolves to mutable drill schema.
+   * Though if table to be created is temporary table, checks if resolved schema is valid default temporary workspace.
+   *
+   * @param sqlCreateTable create table call
+   * @param defaultSchema default schema
+   * @param config drill config
+   * @return resolved schema
+   * @throws UserException if attempted to create temporary table outside of temporary workspace
+   */
+  private AbstractSchema resolveSchema(SqlCreateTable sqlCreateTable, SchemaPlus defaultSchema, DrillConfig config) {
+    AbstractSchema resolvedSchema;
+    if (sqlCreateTable.isTemporary() && sqlCreateTable.getSchemaPath().size() == 0) {
+      resolvedSchema = SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+    } else {
+      resolvedSchema = SchemaUtilites.resolveToMutableDrillSchema(
+          defaultSchema, sqlCreateTable.getSchemaPath());
+    }
+
+    if (sqlCreateTable.isTemporary()) {
+      return SchemaUtilites.resolveToValidTemporaryWorkspace(resolvedSchema, config);
+    }
+
+    return resolvedSchema;
+  }
+
+  /**
+   * Checks if any object (persistent table / temporary table / view)
+   * with the same name as table to be created exists in indicated schema.
+   *
+   * @param drillSchema schema where table will be created
+   * @param tableName table name
+   * @param config drill config
+   * @param userSession current user session
+   * @throws UserException if duplicate is found
+   */
+  private void checkDuplicatedObjectExistence(AbstractSchema drillSchema,
+                                              String tableName,
+                                              DrillConfig config,
+                                              UserSession userSession) {
+    String schemaPath = drillSchema.getFullSchemaName();
+    boolean isTemporaryTable = userSession.isTemporaryTable(drillSchema, config, tableName);
+
+    if (isTemporaryTable || SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null) {
+      throw UserException
+          .validationError()
+          .message("A table or view with given name [%s] already exists in schema [%s]",
+              tableName, schemaPath)
+          .build(logger);
+    }
+  }
 }

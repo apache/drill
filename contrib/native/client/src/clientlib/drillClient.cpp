@@ -17,24 +17,18 @@
  */
 
 #include <stdlib.h>
-#include <boost/assign.hpp>
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "drill/fieldmeta.hpp"
 #include "drill/recordBatch.hpp"
+#include "drill/userProperties.hpp"
 #include "drillClientImpl.hpp"
+#include "env.h"
 #include "errmsgs.hpp"
 #include "logger.hpp"
 #include "Types.pb.h"
 
 namespace Drill{
-
-DrillClientError* DrillClientError::getErrorObject(const exec::shared::DrillPBError& e){
-    std::string s=Drill::getMessage(ERR_QRY_FAILURE, e.message().c_str());
-    DrillClientError* err=NULL;
-    err=new DrillClientError(QRY_FAILURE, QRY_ERROR_START+QRY_FAILURE, s);
-    return err;
-}
 
 DrillClientInitializer::DrillClientInitializer(){
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -43,114 +37,6 @@ DrillClientInitializer::DrillClientInitializer(){
 
 DrillClientInitializer::~DrillClientInitializer(){
     google::protobuf::ShutdownProtobufLibrary();
-}
-
-// Initialize static member of DrillClientConfig
-logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
-uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
-int32_t DrillClientConfig::s_socketTimeout=0;
-int32_t DrillClientConfig::s_handshakeTimeout=5;
-int32_t DrillClientConfig::s_queryTimeout=180;
-int32_t DrillClientConfig::s_heartbeatFrequency=15; // 15 seconds
-
-boost::mutex DrillClientConfig::s_mutex;
-
-DrillClientConfig::DrillClientConfig(){
-    // Do not initialize logging. The Logger object is static and may 
-    // not have been initialized yet
-    //initLogging(NULL);
-}
-
-DrillClientConfig::~DrillClientConfig(){
-}
-
-void DrillClientConfig::initLogging(const char* path){
-    getLogger().init(path);
-}
-
-void DrillClientConfig::setLogLevel(logLevel_t l){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    s_logLevel=l;
-    getLogger().m_level=l;
-    //boost::log::core::get()->set_filter(boost::log::trivial::severity >= s_logLevel);
-}
-
-void DrillClientConfig::setBufferLimit(uint64_t l){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    s_bufferLimit=l;
-}
-
-uint64_t DrillClientConfig::getBufferLimit(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return s_bufferLimit;
-}
-
-void DrillClientConfig::setSocketTimeout(int32_t t){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    s_socketTimeout=t;
-}
-
-void DrillClientConfig::setHandshakeTimeout(int32_t t){
-    if (t > 0) {
-        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-        s_handshakeTimeout = t;
-    }
-}
-
-void DrillClientConfig::setQueryTimeout(int32_t t){
-    if (t>0){
-        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-        s_queryTimeout=t;
-    }
-}
-
-void DrillClientConfig::setHeartbeatFrequency(int32_t t){
-    if (t>0){
-        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-        s_heartbeatFrequency=t;
-    }
-}
-
-int32_t DrillClientConfig::getSocketTimeout(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return s_socketTimeout;
-}
-
-int32_t DrillClientConfig::getHandshakeTimeout(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return  s_handshakeTimeout;
-}
-
-int32_t DrillClientConfig::getQueryTimeout(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return s_queryTimeout;
-}
-
-int32_t DrillClientConfig::getHeartbeatFrequency(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return s_heartbeatFrequency;
-}
-
-logLevel_t DrillClientConfig::getLogLevel(){
-    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
-    return s_logLevel;
-}
-
-//Using boost assign to initialize maps. 
-const std::map<std::string, uint32_t>  DrillUserProperties::USER_PROPERTIES=boost::assign::map_list_of
-    ( USERPROP_USERNAME,    USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_USERNAME|USERPROP_FLAGS_STRING )
-    ( USERPROP_PASSWORD,    USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_PASSWORD)
-    ( USERPROP_SCHEMA,      USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING)
-    ( USERPROP_IMPERSONATION_TARGET,   USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING)
-    ( USERPROP_USESSL,      USERPROP_FLAGS_BOOLEAN|USERPROP_FLAGS_SSLPROP)
-    ( USERPROP_FILEPATH,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILEPATH)
-    ( USERPROP_FILENAME,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILENAME)
-;
-
-bool DrillUserProperties::validate(std::string& err){
-    bool ret=true;
-    //We can add additional validation for any params here
-    return ret;
 }
 
 RecordIterator::~RecordIterator(){
@@ -343,13 +229,9 @@ connectionStatus_t DrillClient::connect(const char* connectStr, const char* defa
 
 connectionStatus_t DrillClient::connect(const char* connectStr, DrillUserProperties* properties){
     connectionStatus_t ret=CONN_SUCCESS;
-    ret=this->m_pImpl->connect(connectStr);
+    ret=this->m_pImpl->connect(connectStr, properties);
     if(ret==CONN_SUCCESS){
-        if(properties!=NULL){
-            ret=this->m_pImpl->validateHandshake(properties);
-        }else{
-            ret=this->m_pImpl->validateHandshake(NULL);
-        }
+        ret=this->m_pImpl->validateHandshake(properties);
     }
     return ret;
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,18 +17,20 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
@@ -44,7 +46,7 @@ import com.google.common.collect.Sets;
  * Compiles generated code, merges the resulting class with the
  * template class, and performs byte-code cleanup on the resulting
  * byte codes. The most important transform is scalar replacement
- * which replaces occurences of non-escaping objects with a
+ * which replaces occurrences of non-escaping objects with a
  * collection of member variables.
  */
 
@@ -55,7 +57,7 @@ public class ClassTransformer {
 
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
   private final DrillConfig config;
-  private final OptionManager optionManager;
+  private final OptionSet optionManager;
 
   public final static String SCALAR_REPLACEMENT_OPTION =
       "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
@@ -89,7 +91,7 @@ public class ClassTransformer {
     }
   }
 
-  public ClassTransformer(final DrillConfig config, final OptionManager optionManager) {
+  public ClassTransformer(final DrillConfig config, final OptionSet optionManager) {
     this.config = config;
     this.optionManager = optionManager;
   }
@@ -170,8 +172,8 @@ public class ClassTransformer {
 
     public ClassNames(String className) {
       dot = className;
-      slash = className.replace('.', FileUtils.separatorChar);
-      clazz = FileUtils.separatorChar + slash + ".class";
+      slash = className.replace('.', DrillFileUtils.SEPARATOR_CHAR);
+      clazz = DrillFileUtils.SEPARATOR_CHAR + slash + ".class";
     }
 
     @Override
@@ -221,6 +223,7 @@ public class ClassTransformer {
     }
   }
 
+  @SuppressWarnings("resource")
   public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
     final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
     return getImplementationClass(loader, cg.getDefinition(),
@@ -241,14 +244,14 @@ public class ClassTransformer {
       final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
 
       long totalBytecodeSize = 0;
-      Map<String, ClassNode> classesToMerge = Maps.newHashMap();
+      Map<String, Pair<byte[], ClassNode>> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
         final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
         if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }
-        classesToMerge.put(node.name, node);
+        classesToMerge.put(node.name, Pair.of(clazz, node));
       }
 
       final LinkedList<ClassSet> names = Lists.newLinkedList();
@@ -263,7 +266,14 @@ public class ClassTransformer {
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         final ClassNames nextGenerated = nextSet.generated;
-        final ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
+        // keeps only classes that have not be merged
+        Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
+        final ClassNode generatedNode;
+        if (classNodePair != null) {
+          generatedNode = classNodePair.getValue();
+        } else {
+          generatedNode = null;
+        }
 
         /*
          * TODO
@@ -301,16 +311,23 @@ public class ClassTransformer {
         }
 
         for (String s : result.innerClasses) {
-          s = s.replace(FileUtils.separatorChar, '.');
+          s = s.replace(DrillFileUtils.SEPARATOR_CHAR, '.');
           names.add(nextSet.getChild(s));
         }
         classLoader.injectByteCode(nextGenerated.dot, result.bytes);
         namesCompleted.add(nextSet);
       }
 
+      // adds byte code of the classes that have not been merged to make them accessible for outer class
+      for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
+        classLoader.injectByteCode(clazz.getKey().replace(DrillFileUtils.SEPARATOR_CHAR, '.'), clazz.getValue().getKey());
+      }
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
+             c.getSimpleName(),
+             DrillStringUtils.readable(totalBytecodeSize),
+             (System.nanoTime() - t1 + 500_000) / 1_000_000);
         return c;
       }
 

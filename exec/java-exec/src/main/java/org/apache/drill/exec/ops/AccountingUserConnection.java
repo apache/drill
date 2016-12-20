@@ -20,10 +20,10 @@ package org.apache.drill.exec.ops;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 
 /**
- * Wrapper around a {@link org.apache.drill.exec.rpc.user.UserServer.UserClientConnection} that tracks the status of batches
+ * Wrapper around a {@link UserClientConnection} that tracks the status of batches
  * sent to User.
  */
 public class AccountingUserConnection {

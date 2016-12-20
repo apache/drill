@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,28 +17,29 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
   public static class PositiveLongValidator extends LongValidator {
-    private final long max;
+    protected final long max;
 
-    public PositiveLongValidator(String name, long max, long def) {
-      super(name, def);
+    public PositiveLongValidator(String name, long max) {
+      super(name);
       this.max = max;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.num_val > max || v.num_val < 1) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %d and %d.", getOptionName(), 1, max))
@@ -49,13 +50,13 @@ public class TypeValidators {
 
   public static class PowerOfTwoLongValidator extends PositiveLongValidator {
 
-    public PowerOfTwoLongValidator(String name, long max, long def) {
-      super(name, max, def);
+    public PowerOfTwoLongValidator(String name, long max) {
+      super(name, max);
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (!isPowerOfTwo(v.num_val)) {
         throw UserException.validationError()
             .message(String.format("Option %s must be a power of two.", getOptionName()))
@@ -69,18 +70,18 @@ public class TypeValidators {
   }
 
   public static class RangeDoubleValidator extends DoubleValidator {
-    private final double min;
-    private final double max;
+    protected final double min;
+    protected final double max;
 
-    public RangeDoubleValidator(String name, double min, double max, double def) {
-      super(name, def);
+    public RangeDoubleValidator(String name, double min, double max) {
+      super(name);
       this.min = min;
       this.max = max;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.float_val > max || v.float_val < min) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %f and %f.", getOptionName(), min, max))
@@ -90,20 +91,16 @@ public class TypeValidators {
   }
 
   public static class MinRangeDoubleValidator extends RangeDoubleValidator {
-    private final double min;
-    private final double max;
     private final String maxValidatorName;
 
-    public MinRangeDoubleValidator(String name, double min, double max, double def, String maxValidatorName) {
-      super(name, min, max, def);
-      this.min = min;
-      this.max = max;
+    public MinRangeDoubleValidator(String name, double min, double max, String maxValidatorName) {
+      super(name, min, max);
       this.maxValidatorName = maxValidatorName;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       OptionValue maxValue = manager.getOption(maxValidatorName);
       if (v.float_val > maxValue.float_val) {
         throw UserException.validationError()
@@ -115,20 +112,16 @@ public class TypeValidators {
   }
 
   public static class MaxRangeDoubleValidator extends RangeDoubleValidator {
-    private final double min;
-    private final double max;
     private final String minValidatorName;
 
-    public MaxRangeDoubleValidator(String name, double min, double max, double def, String minValidatorName) {
-      super(name, min, max, def);
-      this.min = min;
-      this.max = max;
+    public MaxRangeDoubleValidator(String name, double min, double max, String minValidatorName) {
+      super(name, min, max);
       this.minValidatorName = minValidatorName;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       OptionValue minValue = manager.getOption(minValidatorName);
       if (v.float_val < minValue.float_val) {
         throw UserException.validationError()
@@ -140,42 +133,26 @@ public class TypeValidators {
   }
 
   public static class BooleanValidator extends TypeValidator {
-    public BooleanValidator(String name, boolean def) {
-      this(name, def, false);
-    }
-
-    public BooleanValidator(String name, boolean def, boolean isAdminOption) {
-      super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def), isAdminOption);
+    public BooleanValidator(String name) {
+      super(name, Kind.BOOLEAN);
     }
   }
 
   public static class StringValidator extends TypeValidator {
-    public StringValidator(String name, String def) {
-      this(name, def, false);
-    }
-
-    public StringValidator(String name, String def, boolean isAdminOption) {
-      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def), isAdminOption);
+    public StringValidator(String name) {
+      super(name, Kind.STRING);
     }
   }
 
   public static class LongValidator extends TypeValidator {
-    public LongValidator(String name, long def) {
-      this(name, def, false);
-    }
-
-    public LongValidator(String name, long def, boolean isAdminOption) {
-      super(name, Kind.LONG, OptionValue.createLong(OptionType.SYSTEM, name, def), isAdminOption);
+    public LongValidator(String name) {
+      super(name, Kind.LONG);
     }
   }
 
   public static class DoubleValidator extends TypeValidator {
-    public DoubleValidator(String name, double def) {
-      this(name, def, false);
-    }
-
-    public DoubleValidator(String name, double def, boolean isAdminOption) {
-      super(name, Kind.DOUBLE, OptionValue.createDouble(OptionType.SYSTEM, name, def), isAdminOption);
+    public DoubleValidator(String name) {
+      super(name, Kind.DOUBLE);
     }
   }
 
@@ -183,15 +160,15 @@ public class TypeValidators {
     private final long min;
     private final long max;
 
-    public RangeLongValidator(String name, long min, long max, long def) {
-      super(name, def);
+    public RangeLongValidator(String name, long min, long max) {
+      super(name);
       this.min = min;
       this.max = max;
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (v.num_val > max || v.num_val < min) {
         throw UserException.validationError()
             .message(String.format("Option %s must be between %d and %d.", getOptionName(), min, max))
@@ -204,18 +181,18 @@ public class TypeValidators {
    * Validator that checks if the given value is included in a list of acceptable values. Case insensitive.
    */
   public static class EnumeratedStringValidator extends StringValidator {
-    private final Set<String> valuesSet = new HashSet<>();
+    private final Set<String> valuesSet = Sets.newLinkedHashSet();
 
-    public EnumeratedStringValidator(String name, String def, String... values) {
-      super(name, def);
+    public EnumeratedStringValidator(String name, String... values) {
+      super(name);
       for (String value : values) {
         valuesSet.add(value.toLowerCase());
       }
     }
 
     @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
-      super.validate(v, manager);
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
+      super.validate(v, metaData, manager);
       if (!valuesSet.contains(v.string_val.toLowerCase())) {
         throw UserException.validationError()
             .message(String.format("Option %s must be one of: %s.", getOptionName(), valuesSet))
@@ -224,39 +201,103 @@ public class TypeValidators {
     }
   }
 
+  /**
+   * Unless explicitly changed by the user previously, the admin user
+   * can only be determined at runtime
+   */
+  public static class AdminUsersValidator extends StringValidator {
+
+    public final String DEFAULT_ADMIN_USERS = "%drill_process_user%";
+
+    public AdminUsersValidator(String name) {
+      super(name);
+    }
+
+    public String getAdminUsers(OptionManager optionManager) {
+      String adminUsers = optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
+      // if this option has not been changed by the user then return the
+      // process user
+      if (adminUsers.equals(DEFAULT_ADMIN_USERS)) {
+        adminUsers = ImpersonationUtil.getProcessUserName();
+      }
+      adminUsers = DrillStringUtils.sanitizeCSV(adminUsers);
+      return adminUsers;
+    }
+  }
+
+  /**
+   * Unless explicitly changed by the user previously, the admin user
+   * groups can only be determined at runtime
+   */
+  public static class AdminUserGroupsValidator extends StringValidator {
+
+    public final String DEFAULT_ADMIN_USER_GROUPS = "%drill_process_user_groups%";
+
+    public AdminUserGroupsValidator(String name) {
+      super(name);
+    }
+
+    public String getAdminUserGroups(OptionManager optionManager) {
+      String adminUserGroups = optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR);
+      // if this option has not been changed by the user then return the
+      // process user groups
+      if (adminUserGroups.equals(DEFAULT_ADMIN_USER_GROUPS)) {
+        adminUserGroups = Joiner.on(",").join(ImpersonationUtil.getProcessUserGroupNames());
+      }
+      adminUserGroups = DrillStringUtils.sanitizeCSV(adminUserGroups);
+      return adminUserGroups;
+    }
+  }
+
+  /** Max width is a special validator which computes and validates
+   *  the maxwidth. If the maxwidth is already set in system/session
+   * the value is returned or else it is computed dynamically based on
+   * the available number of processors and cpu load average
+   */
+  public static class MaxWidthValidator extends LongValidator{
+    public MaxWidthValidator(String name) {
+      super(name);
+    }
+
+    public int computeMaxWidth(double cpuLoadAverage, long maxWidth) {
+      // if maxwidth is already set return it
+      if (maxWidth != 0) {
+        return (int) maxWidth;
+      }
+      // else compute the value and return
+      else {
+        int availProc = Runtime.getRuntime().availableProcessors();
+        long maxWidthPerNode = Math.max(1, Math.min(availProc, Math.round(availProc * cpuLoadAverage)));
+        return (int) maxWidthPerNode;
+      }
+    }
+  }
+
   public static abstract class TypeValidator extends OptionValidator {
     private final Kind kind;
-    private final OptionValue defaultValue;
 
-    public TypeValidator(final String name, final Kind kind, final OptionValue defValue) {
-      this(name, kind, defValue, false);
-    }
-
-    public TypeValidator(final String name, final Kind kind, final OptionValue defValue, final boolean isAdminOption) {
-      super(name, isAdminOption);
-      checkArgument(defValue.type == OptionType.SYSTEM, "Default value must be SYSTEM type.");
+    public TypeValidator(final String name, final Kind kind) {
+      super(name);
       this.kind = kind;
-      this.defaultValue = defValue;
     }
 
     @Override
-    public OptionValue getDefault() {
-      return defaultValue;
-    }
-
-    @Override
-    public void validate(final OptionValue v, final OptionManager manager) {
+    public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       if (v.kind != kind) {
         throw UserException.validationError()
             .message(String.format("Option %s must be of type %s but you tried to set to %s.", getOptionName(),
               kind.name(), v.kind.name()))
             .build(logger);
       }
-      if (isAdminOption() && v.type != OptionType.SYSTEM) {
-        throw UserException.validationError()
-            .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
-            .build(logger);
-      }
+    }
+
+    @Override
+    public Kind getKind() {
+      return kind;
+    }
+
+    public String getConfigProperty() {
+      return ExecConstants.bootDefaultFor(getOptionName());
     }
   }
 }

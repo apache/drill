@@ -23,11 +23,12 @@ import java.util.List;
 
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
@@ -45,11 +47,13 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the OrderedPartitionExchange Operator
  */
 @Ignore("Disabled until alternative to distributed cache provided.")
+@Category(OperatorTest.class)
 public class TestOrderedPartitionExchange extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrderedPartitionExchange.class);
 
@@ -73,7 +77,7 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
       bit2.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
+          Files.toString(DrillFileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
               Charsets.UTF_8));
       int count = 0;
       List<Integer> partitionRecordCounts = Lists.newArrayList();
@@ -82,7 +86,7 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
           int rows = b.getHeader().getRowCount();
           count += rows;
           DrillConfig config = DrillConfig.create();
-          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(config, ClassPathScanner.fromPrescan(config)).getAllocator());
+          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(config, SystemOptionManager.createDefaultOptionDefinitions(), ClassPathScanner.fromPrescan(config)).getAllocator());
           loader.load(b.getHeader().getDef(), b.getData());
           BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(
                   new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();

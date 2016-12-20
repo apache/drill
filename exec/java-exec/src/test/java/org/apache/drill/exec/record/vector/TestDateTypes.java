@@ -23,7 +23,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.categories.VectorTest;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -32,15 +33,18 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
 /* This class tests the existing date types. Simply using date types
  * by casting from VarChar, performing basic functions and converting
  * back to VarChar.
  */
+@Category({SlowTest.class, VectorTest.class})
 public class TestDateTypes extends PopUnitTestBase {
 //    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateTypes.class);
 
@@ -54,7 +58,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_date.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_date.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -88,7 +92,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_sort_date.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_sort_date.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -122,7 +126,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_timestamp.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_timestamp.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -156,7 +160,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_interval.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_interval.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_interval.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -214,7 +218,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_all_date_literals.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_all_date_literals.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -253,7 +257,7 @@ public class TestDateTypes extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/record/vector/test_date_add.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/record/vector/test_date_add.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/test_simple_date.json"));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

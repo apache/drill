@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -106,9 +106,35 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     this.retryAttempts = config.getInt(ExecConstants.UDF_RETRY_ATTEMPTS);
   }
 
-  public Registry getRegistry() {
-    return registry.get(registry_path, null);
+  /**
+   * Returns current remote function registry version.
+   * If remote function registry is not found or unreachable, logs error and returns -1.
+   *
+   * @return remote function registry version if any, -1 otherwise
+   */
+  public long getRegistryVersion() {
+    DataChangeVersion version = new DataChangeVersion();
+    boolean contains = false;
+    try {
+      contains = registry.contains(registry_path, version);
+    } catch (Exception e) {
+      logger.error("Problem during trying to access remote function registry [{}]", registry_path, e);
+    }
+    if (contains) {
+      return version.getVersion();
+    } else {
+      logger.error("Remote function registry [{}] is unreachable", registry_path);
+      return -1;
+    }
   }
+
+  /**
+   * Report whether a remote registry exists. During some unit tests,
+   * no remote registry exists, so the other methods should not be called.
+   * @return true if a remote registry exists, false if this a local-only
+   * instance and no such registry exists
+   */
+  public boolean hasRegistry() { return registry != null; }
 
   public Registry getRegistry(DataChangeVersion version) {
     return registry.get(registry_path, version);

@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBufUtil;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.filereader.BufferedDirectBufInputStream;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
@@ -47,6 +46,7 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.PrimitiveType;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.parquet.column.Encoding.valueOf;
-import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 
 // class to keep track of the read position of variable length columns
 class PageReader {
@@ -111,6 +110,9 @@ class PageReader {
   private final boolean useBufferedReader;
   private final int scanBufferSize;
   private final boolean useFadvise;
+  private final boolean enforceTotalSize;
+
+  protected final String debugName;
 
   PageReader(org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData)
     throws ExecutionSetupException {
@@ -119,28 +121,29 @@ class PageReader {
     codecFactory = parentColumnReader.parentReader.getCodecFactory();
     this.stats = parentColumnReader.parentReader.parquetReaderStats;
     this.fileName = path.toString();
+    debugName = new StringBuilder()
+       .append(this.parentColumnReader.parentReader.getFragmentContext().getFragIdString())
+       .append(":")
+       .append(this.parentColumnReader.parentReader.getOperatorContext().getStats().getId() )
+       .append(this.parentColumnReader.columnChunkMetaData.toString() )
+       .toString();
     try {
       inputStream  = fs.open(path);
       BufferAllocator allocator =  parentColumnReader.parentReader.getOperatorContext().getAllocator();
       columnChunkMetaData.getTotalUncompressedSize();
-      useBufferedReader  = parentColumnReader.parentReader.getFragmentContext().getOptions()
-          .getOption(ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ).bool_val;
-      scanBufferSize = parentColumnReader.parentReader.getFragmentContext().getOptions()
-          .getOption(ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE).num_val.intValue();
-      useFadvise = parentColumnReader.parentReader.getFragmentContext().getOptions()
-          .getOption(ExecConstants.PARQUET_PAGEREADER_USE_FADVISE).bool_val;
+      useBufferedReader  = parentColumnReader.parentReader.useBufferedReader;
+      scanBufferSize = parentColumnReader.parentReader.bufferedReadSize;
+      useFadvise = parentColumnReader.parentReader.useFadvise;
+      enforceTotalSize = parentColumnReader.parentReader.enforceTotalSize;
       if (useBufferedReader) {
         this.dataReader = new BufferedDirectBufInputStream(inputStream, allocator, path.getName(),
             columnChunkMetaData.getStartingPos(), columnChunkMetaData.getTotalSize(), scanBufferSize,
-            useFadvise);
+            enforceTotalSize, useFadvise);
       } else {
         this.dataReader = new DirectBufInputStream(inputStream, allocator, path.getName(),
-            columnChunkMetaData.getStartingPos(), columnChunkMetaData.getTotalSize(), useFadvise);
+            columnChunkMetaData.getStartingPos(), columnChunkMetaData.getTotalSize(), enforceTotalSize,
+            useFadvise);
       }
-      dataReader.init();
-
-      loadDictionaryIfExists(parentStatus, columnChunkMetaData, dataReader);
-
     } catch (IOException e) {
       throw new ExecutionSetupException("Error opening or reading metadata for parquet file at location: "
           + path.getName(), e);
@@ -148,11 +151,33 @@ class PageReader {
 
   }
 
+  protected void init() throws IOException{
+    dataReader.init();
+    loadDictionaryIfExists(parentColumnReader, parentColumnReader.columnChunkMetaData, dataReader);
+  }
+
   protected void loadDictionaryIfExists(final org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus,
       final ColumnChunkMetaData columnChunkMetaData, final DirectBufInputStream f) throws IOException {
     Stopwatch timer = Stopwatch.createUnstarted();
     if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
-      dataReader.skip(columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos());
+      long bytesToSkip = columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos();
+      while (bytesToSkip > 0) {
+        long skipped = dataReader.skip(bytesToSkip);
+        if (skipped > 0) {
+          bytesToSkip -= skipped;
+        } else {
+          // no good way to handle this. Guava uses InputStream.available to check
+          // if EOF is reached and because available is not reliable,
+          // tries to read the rest of the data.
+          DrillBuf skipBuf = dataReader.getNext((int) bytesToSkip);
+          if (skipBuf != null) {
+            skipBuf.release();
+          } else {
+            throw new EOFException("End of File reachecd.");
+          }
+        }
+      }
+
       long start=dataReader.getPos();
       timer.start();
       final PageHeader pageHeader = Util.readPageHeader(f);
@@ -201,21 +226,22 @@ class PageReader {
       pageDataBuf=allocateTemporaryBuffer(uncompressedSize);
 
       try {
-      timer.start();
-      compressedData = dataReader.getNext(compressedSize);
-      timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-      timer.reset();
-      this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, compressedSize);
-      start=dataReader.getPos();
-      timer.start();
-      codecFactory.getDecompressor(parentColumnReader.columnChunkMetaData
-          .getCodec()).decompress(compressedData.nioBuffer(0, compressedSize), compressedSize,
-          pageDataBuf.nioBuffer(0, uncompressedSize), uncompressedSize);
+        timer.start();
+        compressedData = dataReader.getNext(compressedSize);
+        timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+
+        timer.reset();
+        this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, compressedSize);
+        start = dataReader.getPos();
+        timer.start();
+        codecFactory.getDecompressor(parentColumnReader.columnChunkMetaData.getCodec())
+            .decompress(compressedData.nioBuffer(0, compressedSize), compressedSize,
+                pageDataBuf.nioBuffer(0, uncompressedSize), uncompressedSize);
         pageDataBuf.writerIndex(uncompressedSize);
         timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
         this.updateStats(pageHeader, "Decompress", start, timeToRead, compressedSize, uncompressedSize);
       } finally {
-        if(compressedData != null) {
+        if (compressedData != null) {
           compressedData.release();
         }
       }
@@ -272,12 +298,17 @@ class PageReader {
 
     // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
     // and submit a bug report
-    if(parentColumnReader.totalValuesRead == parentColumnReader.columnChunkMetaData.getValueCount()) {
+    long totalValueCount = parentColumnReader.columnChunkMetaData.getValueCount();
+    if(parentColumnReader.totalValuesRead >= totalValueCount) {
       return false;
     }
     clearBuffers();
 
     nextInternal();
+    if(pageData == null || pageHeader == null){
+      //TODO: Is this an error condition or a normal condition??
+      return false;
+    }
 
     timer.start();
     currentPageCount = pageHeader.data_page_header.num_values;
@@ -354,7 +385,7 @@ class PageReader {
     if (pageHeader.type == PageType.DICTIONARY_PAGE) {
       pageType = "Dictionary Page";
     }
-    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType.toString(),
+    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType,
         this.parentColumnReader.parentReader.hadoopPath,
         this.parentColumnReader.columnDescriptor.toString(), start, bytesin, bytesout, time);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,13 +36,16 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@Category(JdbcTest.class)
 public class DrillColumnMetaDataListTest {
 
   private DrillColumnMetaDataList emptyList;
@@ -68,13 +71,13 @@ public class DrillColumnMetaDataListTest {
     // Create mock columns
     final MaterializedField exampleIntField = mock(MaterializedField.class);
     MajorType exampleIntType = MajorType.newBuilder().setMinorType(MinorType.INT).build();
-    when(exampleIntField.getPath()).thenReturn("/path/to/testInt");
+    when(exampleIntField.getName()).thenReturn("/path/to/testInt");
     when(exampleIntField.getType()).thenReturn(exampleIntType);
     when(exampleIntField.getDataMode()).thenReturn(DataMode.OPTIONAL);
 
     final MaterializedField exampleStringField = mock(MaterializedField.class);
     MajorType exampleStringType = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).build();
-    when(exampleStringField.getPath()).thenReturn("/path/to/testString");
+    when(exampleStringField.getName()).thenReturn("/path/to/testString");
     when(exampleStringField.getType()).thenReturn(exampleStringType);
     when(exampleStringField.getDataMode()).thenReturn(DataMode.REQUIRED);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,10 +25,16 @@ import java.util.Objects;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
+/**
+ * Meta-data description of a column characterized by a name and a type
+ * (including both data type and cardinality AKA mode). For map types,
+ * the description includes the nested columns.)
+ */
 
 public class MaterializedField {
   private final String name;
@@ -42,9 +48,9 @@ public class MaterializedField {
     this.children = children;
   }
 
-  public static MaterializedField create(SerializedField serField){
+  public static MaterializedField create(SerializedField serField) {
     LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
-    for (SerializedField sf:serField.getChildList()) {
+    for (SerializedField sf : serField.getChildList()) {
       children.add(MaterializedField.create(sf));
     }
     return new MaterializedField(serField.getNamePart().getName(), serField.getMajorType(), children);
@@ -61,8 +67,7 @@ public class MaterializedField {
     return serializedFieldBuilder.build();
   }
 
-
-  public SerializedField.Builder getAsBuilder(){
+  public SerializedField.Builder getAsBuilder() {
     return SerializedField.newBuilder()
         .setMajorType(type)
         .setNamePart(NamePart.newBuilder().setName(name).build());
@@ -78,10 +83,11 @@ public class MaterializedField {
     return newField;
   }
 
-  public void addChild(MaterializedField field){
+  public void addChild(MaterializedField field) {
     children.add(field);
   }
 
+  @Override
   public MaterializedField clone() {
     return withPathAndType(name, getType());
   }
@@ -102,83 +108,27 @@ public class MaterializedField {
     return new MaterializedField(name, type, newChildren);
   }
 
-//  public String getLastName(){
-//    PathSegment seg = key.path.getRootSegment();
-//    while (seg.getChild() != null) {
-//      seg = seg.getChild();
-//    }
-//    return seg.getNameSegment().getPath();
-//  }
-
-
   // TODO: rewrite without as direct match rather than conversion then match.
-  public boolean matches(SerializedField field){
+  public boolean matches(SerializedField field) {
     MaterializedField f = create(field);
     return f.equals(this);
   }
 
-  public static MaterializedField create(String name, MajorType type){
+  public static MaterializedField create(String name, MajorType type) {
     return new MaterializedField(name, type, new LinkedHashSet<MaterializedField>());
   }
 
-//  public String getName(){
-//    StringBuilder sb = new StringBuilder();
-//    boolean first = true;
-//    for(NamePart np : def.getNameList()){
-//      if(np.getType() == Type.ARRAY){
-//        sb.append("[]");
-//      }else{
-//        if(first){
-//          first = false;
-//        }else{
-//          sb.append(".");
-//        }
-//        sb.append('`');
-//        sb.append(np.getName());
-//        sb.append('`');
-//
-//      }
-//    }
-//    return sb.toString();
-//  }
+  public String getName() { return name; }
+  public int getWidth() { return type.getWidth(); }
+  public MajorType getType() { return type; }
+  public int getScale() { return type.getScale(); }
+  public int getPrecision() { return type.getPrecision(); }
+  public boolean isNullable() { return type.getMode() == DataMode.OPTIONAL; }
+  public DataMode getDataMode() { return type.getMode(); }
 
-  public String getPath() {
-    return getName();
-  }
-
-  public String getLastName() {
-    return getName();
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getWidth() {
-    return type.getWidth();
-  }
-
-  public MajorType getType() {
-    return type;
-  }
-
-  public int getScale() {
-      return type.getScale();
-  }
-  public int getPrecision() {
-      return type.getPrecision();
-  }
-  public boolean isNullable() {
-    return type.getMode() == DataMode.OPTIONAL;
-  }
-
-  public DataMode getDataMode() {
-    return type.getMode();
-  }
-
-  public MaterializedField getOtherNullableVersion(){
+  public MaterializedField getOtherNullableVersion() {
     MajorType mt = type;
-    DataMode newDataMode = null;
+    DataMode newDataMode;
     switch (mt.getMode()){
     case OPTIONAL:
       newDataMode = DataMode.REQUIRED;
@@ -220,18 +170,109 @@ public class MaterializedField {
             Objects.equals(this.type, other.type);
   }
 
+  public boolean isEquivalent(MaterializedField other) {
+    if (! name.equalsIgnoreCase(other.name)) {
+      return false;
+    }
 
+    // Requires full type equality, including fields such as precision and scale.
+    // But, unset fields are equivalent to 0. Can't use the protobuf-provided
+    // isEquals(), that treats set and unset fields as different.
+
+    if (type.getMinorType() != other.type.getMinorType()) {
+      return false;
+    }
+    if (type.getMode() != other.type.getMode()) {
+      return false;
+    }
+    if (type.getScale() != other.type.getScale()) {
+      return false;
+    }
+    if (type.getPrecision() != other.type.getPrecision()) {
+      return false;
+    }
+
+    // Compare children -- but only for maps, not the internal children
+    // for Varchar, repeated or nullable types.
+
+    if (type.getMinorType() != MinorType.MAP) {
+      return true;
+    }
+
+    if (children == null  ||  other.children == null) {
+      return children == other.children;
+    }
+    if (children.size() != other.children.size()) {
+      return false;
+    }
+
+    // Maps are name-based, not position. But, for our
+    // purposes, we insist on identical ordering.
+
+    Iterator<MaterializedField> thisIter = children.iterator();
+    Iterator<MaterializedField> otherIter = other.children.iterator();
+    while (thisIter.hasNext()) {
+      MaterializedField thisChild = thisIter.next();
+      MaterializedField otherChild = otherIter.next();
+      if (! thisChild.isEquivalent(otherChild)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * <p>Creates materialized field string representation.
+   * Includes field name, its type with precision and scale if any and data mode.
+   * Nested fields if any are included. Number of nested fields to include is limited to 10.</p>
+   *
+   * <b>FIELD_NAME(TYPE(PRECISION,SCALE):DATA_MODE)[NESTED_FIELD_1, NESTED_FIELD_2]</b>
+   * <p>Example: ok(BIT:REQUIRED), col(VARCHAR(3):OPTIONAL), emp_id(DECIMAL28SPARSE(6,0):REQUIRED)</p>
+   *
+   * @return materialized field string representation
+   */
   @Override
   public String toString() {
     final int maxLen = 10;
-    String childStr = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
-    return name + "(" + type.getMinorType().name() + ":" + type.getMode().name() + ")" + childStr;
-  }
+    String childString = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
+    StringBuilder builder = new StringBuilder();
+    builder
+        .append(name)
+        .append("(")
+        .append(type.getMinorType().name());
 
+    if (type.hasPrecision()) {
+      builder.append("(");
+      builder.append(type.getPrecision());
+      if (type.hasScale()) {
+        builder.append(",");
+        builder.append(type.getScale());
+      }
+      builder.append(")");
+    }
+
+    builder
+        .append(":")
+        .append(type.getMode().name())
+        .append(")")
+        .append(childString);
+
+    return builder.toString();
+}
+
+  /**
+   * Return true if two fields have identical MinorType and Mode.
+   * @param that
+   * @return
+   */
+  public boolean hasSameTypeAndMode(MaterializedField that) {
+    return (getType().getMinorType() == that.getType().getMinorType())
+        && (getType().getMode() == that.getType().getMode());
+  }
 
   private String toString(Collection<?> collection, int maxLen) {
     StringBuilder builder = new StringBuilder();
-    builder.append("[");
+    builder.append(" [");
     int i = 0;
     for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
       if (i > 0){

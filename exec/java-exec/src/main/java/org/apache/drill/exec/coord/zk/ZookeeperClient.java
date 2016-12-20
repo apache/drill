@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,32 +85,53 @@ public class ZookeeperClient implements AutoCloseable {
 
   /**
    * Returns true if path exists in the cache, false otherwise.
-   *
    * Note that calls to this method are eventually consistent.
    *
-   * @param path  path to check
+   * @param path path to check
+   * @return true if path exists, false otherwise
    */
   public boolean hasPath(final String path) {
-    return hasPath(path, false);
+    return hasPath(path, false, null);
+  }
+
+  /**
+   * Returns true if path exists, false otherwise.
+   * If consistent flag is set to true, check is done directly is made against Zookeeper directly,
+   * else check is done against local cache.
+   *
+   * @param path path to check
+   * @param consistent whether the check should be consistent
+   * @return true if path exists, false otherwise
+   */
+  public boolean hasPath(final String path, final boolean consistent) {
+    return hasPath(path, consistent, null);
   }
 
   /**
    * Checks if the given path exists.
+   * If the flag consistent is set, the check is consistent as it is made against Zookeeper directly.
+   * Otherwise, the check is eventually consistent.
    *
-   * If the flag consistent is set, the check is consistent as it is made against Zookeeper directly. Otherwise,
-   * the check is eventually consistent.
+   * If consistency flag is set to true and version holder is not null, passes version holder to get data change version.
+   * Data change version is retrieved from {@link Stat} object, it increases each time znode data change is performed.
+   * Link to Zookeeper documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
    *
-   * @param path  path to check
-   * @param consistent  whether the check should be consistent
-   * @return
+   * @param path path to check
+   * @param consistent whether the check should be consistent
+   * @param version version holder
+   * @return true if path exists, false otherwise
    */
-  public boolean hasPath(final String path, final boolean consistent) {
+  public boolean hasPath(final String path, final boolean consistent, final DataChangeVersion version) {
     Preconditions.checkNotNull(path, "path is required");
 
     final String target = PathUtils.join(root, path);
     try {
       if (consistent) {
-        return curator.checkExists().forPath(target) != null;
+        Stat stat = curator.checkExists().forPath(target);
+        if (version != null && stat != null) {
+          version.setVersion(stat.getVersion());
+        }
+        return stat != null;
       } else {
         return getCache().getCurrentData(target) != null;
       }
@@ -153,7 +174,7 @@ public class ZookeeperClient implements AutoCloseable {
    * @param path  target path
    * @param version version holder
    */
-  public byte[] get(final String path, DataChangeVersion version) {
+  public byte[] get(final String path, final DataChangeVersion version) {
     return get(path, true, version);
   }
 

@@ -17,9 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.filter;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestLargeInClause extends BaseTestQuery {
 
   private static String getInIntList(int size){
@@ -60,6 +64,7 @@ public class TestLargeInClause extends BaseTestQuery {
   }
 
   @Test // DRILL-3062
+  @Category(UnlikelyTest.class)
   public void testStringLiterals() throws Exception {
     String query = "select count(*) as cnt from (select n_name from cp.`tpch/nation.parquet` "
         + " where n_name in ('ALGERIA', 'ARGENTINA', 'BRAZIL', 'CANADA', 'EGYPT', 'ETHIOPIA', 'FRANCE', "
@@ -76,6 +81,7 @@ public class TestLargeInClause extends BaseTestQuery {
   }
 
   @Test // DRILL-3019
+  @Category(UnlikelyTest.class)
   public void testExprsInInList() throws Exception{
     String query = "select r_regionkey \n" +
         "from cp.`tpch/region.parquet` \n" +
@@ -87,7 +93,7 @@ public class TestLargeInClause extends BaseTestQuery {
 
     testBuilder()
         .sqlQuery(query)
-        .ordered()
+        .unOrdered()
         .baselineColumns("r_regionkey")
         .baselineValues(1)
         .baselineValues(2)

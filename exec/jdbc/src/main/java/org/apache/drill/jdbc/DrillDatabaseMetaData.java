@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF); under one or more
  * contributor license agreements.  See the NOTICE file distributed with this
  * work for additional information regarding copyright ownership.  The ASF
@@ -19,6 +19,7 @@ package org.apache.drill.jdbc;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.apache.calcite.avatica.util.Quoting;
 
 
 /**
@@ -80,13 +81,16 @@ public interface DrillDatabaseMetaData extends DatabaseMetaData {
   //  storesLowerCaseQuotedIdentifiers()
   //  storesMixedCaseQuotedIdentifiers()
 
-
-  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
   /**
    * <strong>Drill</strong>:
-   * Reports that the SQL identifier quoting character is the back-quote
-   * character ("{@code `}"; Unicode U+0060; "GRAVE ACCENT").
-   * @return "{@code `}"
+   * Reports current SQL identifier quoting character.
+   *  <li>{@link Quoting#BACK_TICK} - default back-quote character ("{@code `}"; Unicode U+0060; "GRAVE ACCENT") </li>
+   *  <li>{@link Quoting#DOUBLE_QUOTE} - double quote character ("{@code "}"; Unicode U+0022; 'QUOTATION MARK')</li>
+   *  <li>{@link Quoting#BRACKET} - brackets characters ("{@code [}"; Unicode U+005B; 'LEFT SQUARE BRACKET' and
+   *  "{@code ]}"; Unicode U+005D; 'RIGHT SQUARE BRACKET')</li>
+   *
+   * @return current SQL identifier quoting character. Note: 'LEFT SQUARE BRACKET' is returned,
+   *         when {@link Quoting#BRACKET} is set.
    */
   @Override
   String getIdentifierQuoteString() throws SQLException;

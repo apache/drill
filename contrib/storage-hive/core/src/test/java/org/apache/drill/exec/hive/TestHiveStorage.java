@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,31 +17,44 @@
  */
 package org.apache.drill.exec.hive;
 
+import mockit.integration.junit4.JMockit;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.proto.UserProtos;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+@RunWith(JMockit.class)
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStorage extends HiveTestBase {
   @BeforeClass
   public static void setupOptions() throws Exception {
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
-
 
   @Test // DRILL-4083
   public void testNativeScanWhenNoColumnIsRead() throws Exception {
@@ -55,12 +68,11 @@ public class TestHiveStorage extends HiveTestBase {
           .sqlQuery(query)
           .unOrdered()
           .baselineColumns("col")
-          .baselineValues(200l)
+          .baselineValues(200L)
           .go();
     } finally {
-      test(String.format("alter session set `%s` = %s",
-          ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS,
-              ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR.getDefault().bool_val ? "true" : "false"));
+      test("alter session reset `%s`",
+          ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS);
     }
   }
 
@@ -508,6 +520,46 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineColumns("cnt")
         .baselineValues(5000L)
         .go();
+  }
+
+  @Test
+  public void testStringColumnsMetadata() throws Exception {
+    String query = "select varchar_field, char_field, string_field from hive.readtest";
+
+    Map<String, Integer> expectedResult = Maps.newHashMap();
+    expectedResult.put("varchar_field", 50);
+    expectedResult.put("char_field", 10);
+    expectedResult.put("string_field", HiveVarchar.MAX_VARCHAR_LENGTH);
+
+    verifyColumnsMetadata(client.createPreparedStatement(query).get()
+        .getPreparedStatement().getColumnsList(), expectedResult);
+
+    try {
+      test("alter session set `%s` = true", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+      verifyColumnsMetadata(client.createPreparedStatement(String.format("select * from (%s) t limit 0", query)).get()
+              .getPreparedStatement().getColumnsList(), expectedResult);
+    } finally {
+      test("alter session reset `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+    }
+  }
+
+  @Test // DRILL-3250
+  public void testNonAsciiStringLiterals() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from hive.empty_table where b = 'Абвгде谢谢'")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {
+    for (UserProtos.ResultColumnMetadata columnMetadata : columnsList) {
+      assertTrue("Column should be present in result set", expectedResult.containsKey(columnMetadata.getColumnName()));
+      Integer expectedSize = expectedResult.get(columnMetadata.getColumnName());
+      assertNotNull("Expected size should not be null", expectedSize);
+      assertEquals("Display size should match", expectedSize.intValue(), columnMetadata.getDisplaySize());
+      assertEquals("Precision should match", expectedSize.intValue(), columnMetadata.getPrecision());
+      assertTrue("Column should be nullable", columnMetadata.getIsNullable());
+    }
   }
 
   @AfterClass

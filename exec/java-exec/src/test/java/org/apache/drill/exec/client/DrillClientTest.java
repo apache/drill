@@ -21,7 +21,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.DrillSystemTestBase;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
 import org.junit.Test;
 import java.util.List;
 import static org.junit.Assert.assertEquals;

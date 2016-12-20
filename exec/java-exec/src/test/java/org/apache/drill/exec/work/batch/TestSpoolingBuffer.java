@@ -21,10 +21,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecTest;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -48,7 +47,7 @@ public class TestSpoolingBuffer extends BaseTestQuery {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(FileUtils.getResourceAsFile("/work/batch/multiple_exchange.json"),
+              Files.toString(DrillFileUtils.getResourceAsFile("/work/batch/multiple_exchange.json"),
                       Charsets.UTF_8));
       int count = 0;
       for(QueryDataBatch b : results) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,7 +64,7 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
     BatchSchema schema = batch.getSchema();
     List<String> columnNames = Lists.newArrayList();
     for (int i=0; i < schema.getFieldCount(); i++) {
-      columnNames.add(schema.getColumn(i).getLastName());
+      columnNames.add(schema.getColumn(i).getName());
     }
 
     startNewSchema(columnNames);

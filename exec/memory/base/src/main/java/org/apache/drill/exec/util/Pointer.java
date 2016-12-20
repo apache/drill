@@ -18,7 +18,7 @@
 package org.apache.drill.exec.util;
 
 public class Pointer<T> {
-  public T value;
+  public volatile T value;
 
   public Pointer(){}
 

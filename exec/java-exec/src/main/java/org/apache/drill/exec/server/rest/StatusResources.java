@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,10 +35,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
@@ -50,79 +56,136 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class StatusResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
+  public static final String REST_API_SUFFIX = ".json";
+  public static final String PATH_STATUS_JSON = "/status" + REST_API_SUFFIX;
+  public static final String PATH_STATUS = "/status";
+  public static final String PATH_OPTIONS_JSON = "/options" + REST_API_SUFFIX;
+  public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
+  public static final String PATH_OPTIONS = "/options";
+  public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
+
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject SecurityContext sc;
 
   @GET
-  @Path("/status.json")
+  @Path(StatusResources.PATH_STATUS_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Pair<String, String> getStatusJSON() {
     return new ImmutablePair<>("status", "Running!");
   }
 
   @GET
-  @Path("/status")
+  @Path(StatusResources.PATH_STATUS)
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
   }
 
-  @GET
-  @Path("/options.json")
-  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
-  @Produces(MediaType.APPLICATION_JSON)
-  public List<OptionWrapper> getSystemOptionsJSON() {
+  @SuppressWarnings("resource")
+  private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
+  {
     List<OptionWrapper> options = new LinkedList<>();
-    for (OptionValue option : work.getContext().getOptionManager()) {
-      options.add(new OptionWrapper(option.name, option.getValue(), option.type, option.kind));
+    OptionManager optionManager = work.getContext().getOptionManager();
+    OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
+
+    for (OptionValue option : optionList) {
+      options.add(new OptionWrapper(option.name, option.getValue(), option.accessibleScopes, option.kind, option.scope));
     }
+
+    Collections.sort(options, new Comparator<OptionWrapper>() {
+      @Override
+      public int compare(OptionWrapper o1, OptionWrapper o2) {
+         return o1.name.compareTo(o2.name);
+      }
+    });
     return options;
   }
 
   @GET
-  @Path("/options")
+  @Path(StatusResources.PATH_OPTIONS_JSON)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemOptions() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/options.ftl", sc, getSystemOptionsJSON());
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<OptionWrapper> getSystemPublicOptionsJSON() {
+    return getSystemOptionsJSONHelper(false);
   }
 
+  @GET
+  @Path(StatusResources.PATH_INTERNAL_OPTIONS_JSON)
+  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<OptionWrapper> getSystemInternalOptionsJSON() {
+    return getSystemOptionsJSONHelper(true);
+  }
+
+  private Viewable getSystemOptionsHelper(boolean internal) {
+    return ViewableWithPermissions.create(authEnabled.get(),
+      "/rest/options.ftl",
+      sc,
+      getSystemOptionsJSONHelper(internal));
+  }
+
+  @GET
+  @Path(StatusResources.PATH_OPTIONS)
+  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getSystemPublicOptions() {
+    return getSystemOptionsHelper(false);
+  }
+
+  @GET
+  @Path(StatusResources.PATH_INTERNAL_OPTIONS)
+  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getSystemInternalOptions() {
+    return getSystemOptionsHelper(true);
+  }
+
+  @SuppressWarnings("resource")
   @POST
-  @Path("/option/{optionName}")
+  @Path("option/{optionName}")
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable updateSystemOption(@FormParam("name") String name, @FormParam("value") String value,
+  public Viewable updateSystemOption(@FormParam("name") String name,
+                                   @FormParam("value") String value,
                                    @FormParam("kind") String kind) {
+    SystemOptionManager optionManager = work.getContext()
+      .getOptionManager();
+
     try {
-      work.getContext()
-        .getOptionManager()
-        .setOption(OptionValue.createOption(
-          OptionValue.Kind.valueOf(kind),
-          OptionValue.OptionType.SYSTEM,
-          name,
-          value));
+      optionManager.setLocalOption(OptionValue.Kind.valueOf(kind), name, value);
     } catch (Exception e) {
       logger.debug("Could not update.", e);
     }
-    return getSystemOptions();
+
+    if (optionManager.getOptionDefinition(name).getMetaData().isInternal()) {
+      return getSystemInternalOptions();
+    } else {
+      return getSystemPublicOptions();
+    }
   }
 
   @XmlRootElement
-  public class OptionWrapper {
+  public static class OptionWrapper {
 
     private String name;
     private Object value;
-    private OptionValue.OptionType type;
+    private OptionValue.AccessibleScopes accessibleScopes;
     private String kind;
+    private String optionScope;
 
     @JsonCreator
-    public OptionWrapper(String name, Object value, OptionValue.OptionType type, Kind kind) {
+    public OptionWrapper(@JsonProperty("name") String name,
+                         @JsonProperty("value") Object value,
+                         @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
+                         @JsonProperty("kind") Kind kind,
+                         @JsonProperty("optionScope") OptionValue.OptionScope scope) {
       this.name = name;
       this.value = value;
-      this.type = type;
+      this.accessibleScopes = type;
       this.kind = kind.name();
+      this.optionScope = scope.name();
     }
 
     public String getName() {
@@ -138,13 +201,21 @@ public class StatusResources {
       return value;
     }
 
-    public OptionValue.OptionType getType() {
-      return type;
+    public OptionValue.AccessibleScopes getAccessibleScopes() {
+      return accessibleScopes;
     }
 
     public String getKind() {
       return kind;
     }
-  }
 
+    public String getOptionScope() {
+      return optionScope;
+    }
+
+    @Override
+    public String toString() {
+      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
+    }
+  }
 }

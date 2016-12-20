@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -94,6 +94,11 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   /** High-level IterOutcome sequence state. */
   private ValidationState validationState = ValidationState.INITIAL_NO_SCHEMA;
 
+  /**
+   * Enable/disable per-batch vector validation. Enable only to debug vector
+   * corruption issues.
+   */
+  private boolean validateBatches;
 
   public IteratorValidatorBatchIterator(RecordBatch incoming) {
     this.incoming = incoming;
@@ -101,6 +106,11 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
     // (Log construction and close() at same level to bracket instance's activity.)
     logger.trace( "[#{}; on {}]: Being constructed.", instNum, batchTypeName);
+  }
+
+
+  public void enableBatchValidation(boolean option) {
+    validateBatches = option;
   }
 
   @Override
@@ -224,6 +234,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
           // above).
           // OK_NEW_SCHEMA moves to have-seen-schema state.
           validationState = ValidationState.HAVE_SCHEMA;
+          validateBatch();
           break;
         case OK:
           // OK is allowed as long as OK_NEW_SCHEMA was seen, except if terminated
@@ -234,17 +245,12 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                     "next() returned %s without first returning %s [#%d, %s]",
                     batchState, OK_NEW_SCHEMA, instNum, batchTypeName));
           }
+          validateBatch();
           // OK doesn't change high-level state.
           break;
         case NONE:
-          // NONE is allowed as long as OK_NEW_SCHEMA was seen, except if
-          // already terminated (checked above).
-          if (validationState != ValidationState.HAVE_SCHEMA) {
-            throw new IllegalStateException(
-                String.format(
-                    "next() returned %s without first returning %s [#%d, %s]",
-                    batchState, OK_NEW_SCHEMA, instNum, batchTypeName));
-          }
+          // NONE is allowed even without seeing a OK_NEW_SCHEMA. Such NONE is called
+          // FAST NONE.
           // NONE moves to terminal high-level state.
           validationState = ValidationState.TERMINAL;
           break;
@@ -269,7 +275,6 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
       // Validate schema when available.
       if (batchState == OK || batchState == OK_NEW_SCHEMA) {
-        final BatchSchema prevLastSchema = lastSchema;
         final BatchSchema prevLastNewSchema = lastNewSchema;
 
         lastSchema = incoming.getSchema();
@@ -295,12 +300,8 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                   "Incoming batch [#%d, %s] has a null schema. This is not allowed.",
                   instNum, batchTypeName));
         }
-        if (lastSchema.getFieldCount() == 0) {
-          throw new IllegalStateException(
-              String.format(
-                  "Incoming batch [#%d, %s] has an empty schema. This is not allowed.",
-                  instNum, batchTypeName));
-        }
+        // It's legal for a batch to have zero field. For instance, a relational table could have
+        // zero columns. Querying such table requires execution operator to process batch with 0 field.
         if (incoming.getRecordCount() > MAX_BATCH_SIZE) {
           throw new IllegalStateException(
               String.format(
@@ -326,6 +327,12 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     }
   }
 
+  private void validateBatch() {
+    if (validateBatches) {
+      new BatchValidator(incoming).validate();
+    }
+  }
+
   @Override
   public WritableBatch getWritableBatch() {
     validateReadState("getWritableBatch()");
@@ -346,5 +353,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
         String.format("You should not call getOutgoingContainer() for class %s",
                       this.getClass().getCanonicalName()));
   }
+
+  public RecordBatch getIncoming() { return incoming; }
 
 }

@@ -40,7 +40,7 @@ import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.jdbc.JdbcTestBase;
-import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -51,11 +51,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
+import org.junit.experimental.categories.Category;
 
 /** Unit tests for Drill's JDBC driver. */
 
-
 @Ignore // ignore for now.
+@Category(JdbcTest.class)
 public class JdbcDataTest extends JdbcTestBase {
   private static String MODEL;
   private static String EXPECTED;
@@ -110,7 +111,7 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Load driver, make a connection, prepare a statement. */
   @Test
   public void testPrepare() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").withConnection(new Function<Connection, Void>() {
+    withModel(MODEL, "DONUTS").withConnection(new Function<Connection, Void>() {
       @Override
       public Void apply(Connection connection) {
         try {
@@ -127,14 +128,13 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Simple query against JSON. */
   @Test
   public void testSelectJson() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select * from donuts").returns(EXPECTED);
+    withModel(MODEL, "DONUTS").sql("select * from donuts").returns(EXPECTED);
   }
 
   /** Simple query against EMP table in HR database. */
   @Test
   public void testSelectEmployees() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from employees")
         .returns(
             "_MAP={deptId=31, lastName=Rafferty}\n" + "_MAP={deptId=33, lastName=Jones}\n"
@@ -145,8 +145,7 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Simple query against EMP table in HR database. */
   @Test
   public void testSelectEmpView() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from emp")
         .returns(
             "DEPTID=31; LASTNAME=Rafferty\n" + "DEPTID=33; LASTNAME=Jones\n" + "DEPTID=33; LASTNAME=Steinberg\n"
@@ -156,8 +155,7 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Simple query against EMP table in HR database. */
   @Test
   public void testSelectDept() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from departments")
         .returns(
             "_MAP={deptId=31, name=Sales}\n" + "_MAP={deptId=33, name=Engineering}\n"
@@ -167,29 +165,28 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Query with project list. No field references yet. */
   @Test
   public void testProjectConstant() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select 1 + 3 as c from donuts")
+    withModel(MODEL, "DONUTS").sql("select 1 + 3 as c from donuts")
         .returns("C=4\n" + "C=4\n" + "C=4\n" + "C=4\n" + "C=4\n");
   }
 
   /** Query that projects an element from the map. */
   @Test
   public void testProject() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select _MAP['ppu'] as ppu from donuts")
+    withModel(MODEL, "DONUTS").sql("select _MAP['ppu'] as ppu from donuts")
         .returns("PPU=0.55\n" + "PPU=0.69\n" + "PPU=0.55\n" + "PPU=0.69\n" + "PPU=1.0\n");
   }
 
   /** Same logic as {@link #testProject()}, but using a subquery. */
   @Test
   public void testProjectOnSubquery() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select d['ppu'] as ppu from (\n" + " select _MAP as d from donuts)")
+    withModel(MODEL, "DONUTS").sql("select d['ppu'] as ppu from (\n" + " select _MAP as d from donuts)")
         .returns("PPU=0.55\n" + "PPU=0.69\n" + "PPU=0.55\n" + "PPU=0.69\n" + "PPU=1.0\n");
   }
 
   /** Checks the logical plan. */
   @Test
   public void testProjectPlan() throws Exception {
-    LogicalPlan plan = JdbcAssert
-        .withModel(MODEL, "DONUTS")
+    LogicalPlan plan = withModel(MODEL, "DONUTS")
         .sql("select _MAP['ppu'] as ppu from donuts")
         .logicalPlan();
 
@@ -219,8 +216,7 @@ public class JdbcDataTest extends JdbcTestBase {
    */
   @Test
   public void testProjectFilterSubquery() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "DONUTS")
+    withModel(MODEL, "DONUTS")
         .sql(
             "select d['name'] as name, d['xx'] as xx from (\n" + " select _MAP as d from donuts)\n"
                 + "where cast(d['ppu'] as double) > 0.6")
@@ -242,8 +238,7 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testProjectFilterSubqueryPlan() throws Exception {
-    LogicalPlan plan = JdbcAssert
-        .withModel(MODEL, "DONUTS")
+    LogicalPlan plan = withModel(MODEL, "DONUTS")
         .sql(
             "select d['name'] as name, d['xx'] as xx from (\n" + " select _MAP['donuts'] as d from donuts)\n"
                 + "where cast(d['ppu'] as double) > 0.6")
@@ -277,74 +272,34 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Query that projects one field. (Disabled; uses sugared syntax.) */
   @Test @Ignore
   public void testProjectNestedFieldSugared() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select donuts.ppu from donuts")
+    withModel(MODEL, "DONUTS").sql("select donuts.ppu from donuts")
         .returns("C=4\n" + "C=4\n" + "C=4\n" + "C=4\n" + "C=4\n");
   }
 
   /** Query with filter. No field references yet. */
   @Test
   public void testFilterConstantFalse() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select * from donuts where 3 > 4").returns("");
+    withModel(MODEL, "DONUTS").sql("select * from donuts where 3 > 4").returns("");
   }
 
   @Test
   public void testFilterConstant() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("select * from donuts where 3 < 4").returns(EXPECTED);
+    withModel(MODEL, "DONUTS").sql("select * from donuts where 3 < 4").returns(EXPECTED);
   }
 
 
   @Ignore
   @Test
   public void testValues() throws Exception {
-    JdbcAssert.withModel(MODEL, "DONUTS").sql("values (1)").returns("EXPR$0=1\n");
+    withModel(MODEL, "DONUTS").sql("values (1)").returns("EXPR$0=1\n");
 
     // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
     // .planContains("store");
   }
 
-//  @Test
-//  public void testDistinct() throws Exception {
-//    JdbcAssert.withModel(MODEL, "HR").sql("select distinct deptId from emp")
-//        .returnsUnordered("DEPTID=null", "DEPTID=31", "DEPTID=34", "DEPTID=33")
-//        .planContains(CollapsingAggregate.class);
-//  }
-//
-//  @Test
-//  public void testCountNoGroupBy() throws Exception {
-//    // 5 out of 6 employees have a not-null deptId
-//    JdbcAssert.withModel(MODEL, "HR").sql("select count(deptId) as cd, count(*) as c from emp").returns("CD=5; C=6\n")
-//        .planContains(CollapsingAggregate.class);
-//  }
-//
-//  @Test
-//  public void testDistinctCountNoGroupBy() throws Exception {
-//    JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp").returns("C=3\n")
-//        .planContains(CollapsingAggregate.class);
-//  }
-//
-//  @Test
-//  public void testDistinctCountGroupByEmpty() throws Exception {
-//    JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp group by ()").returns("C=3\n")
-//        .planContains(CollapsingAggregate.class);
-//  }
-//
-//  @Test
-//  public void testCountNull() throws Exception {
-//    JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp group by ()").returns("C=3\n")
-//        .planContains(CollapsingAggregate.class);
-//  }
-//
-//  @Test
-//  public void testCount() throws Exception {
-//    JdbcAssert.withModel(MODEL, "HR").sql("select deptId, count(*) as c from emp group by deptId")
-//        .returnsUnordered("DEPTID=31; C=1", "DEPTID=33; C=2", "DEPTID=34; C=2", "DEPTID=null; C=1")
-//        .planContains(CollapsingAggregate.class); // make sure using drill
-//  }
-
   @Test
   public void testJoin() throws Exception {
-    Join join = JdbcAssert
-        .withModel(MODEL, "HR")
+    Join join = withModel(MODEL, "HR")
         .sql("select * from emp join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
             "DEPTID=33; LASTNAME=Jones; DEPTID0=33; NAME=Engineering",
@@ -356,8 +311,7 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testLeftJoin() throws Exception {
-    Join join = JdbcAssert
-        .withModel(MODEL, "HR")
+    Join join = withModel(MODEL, "HR")
         .sql("select * from emp left join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
             "DEPTID=33; LASTNAME=Jones; DEPTID0=33; NAME=Engineering",
@@ -373,15 +327,14 @@ public class JdbcDataTest extends JdbcTestBase {
    */
   @Test @Ignore
   public void testRightJoin() throws Exception {
-    Join join = JdbcAssert.withModel(MODEL, "HR").sql("select * from emp right join dept on emp.deptId = dept.deptId")
+    Join join = withModel(MODEL, "HR").sql("select * from emp right join dept on emp.deptId = dept.deptId")
         .returnsUnordered("xx").planContains(Join.class);
     Assert.assertEquals(JoinRelType.LEFT, join.getJoinType());
   }
 
   @Test
   public void testFullJoin() throws Exception {
-    Join join = JdbcAssert
-        .withModel(MODEL, "HR")
+    Join join = withModel(MODEL, "HR")
         .sql("select * from emp full join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
             "DEPTID=33; LASTNAME=Jones; DEPTID0=33; NAME=Engineering",
@@ -399,8 +352,7 @@ public class JdbcDataTest extends JdbcTestBase {
    */
   @Test
   public void testJoinOnSubquery() throws Exception {
-    Join join = JdbcAssert
-        .withModel(MODEL, "HR")
+    Join join = withModel(MODEL, "HR")
         .sql(
             "select * from (\n" + "select deptId, lastname, 'x' as name from emp) as e\n"
                 + " join dept on e.deptId = dept.deptId")
@@ -415,8 +367,7 @@ public class JdbcDataTest extends JdbcTestBase {
   /** Tests that one of the FoodMart tables is present. */
   @Test @Ignore
   public void testFoodMart() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "FOODMART")
+    withModel(MODEL, "FOODMART")
         .sql("select * from product_class where cast(_map['product_class_id'] as integer) < 3")
         .returnsUnordered(
             "_MAP={product_category=Seafood, product_class_id=2, product_department=Seafood, product_family=Food, product_subcategory=Shellfish}",
@@ -425,25 +376,26 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testUnionAll() throws Exception {
-    Union union = JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union all\n" + "select deptId from emp")
-        .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
-        .planContains(Union.class);
+    Union union = withModel(MODEL, "HR")
+      .sql("select deptId from dept\n" + "union all\n" + "select deptId from emp")
+      .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
+      .planContains(Union.class);
     Assert.assertFalse(union.isDistinct());
   }
 
   @Test
   public void testUnion() throws Exception {
-    Union union = JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union\n" + "select deptId from emp")
-        .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
-        .planContains(Union.class);
+    Union union = withModel(MODEL, "HR")
+      .sql("select deptId from dept\n" + "union\n" + "select deptId from emp")
+      .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
+      .planContains(Union.class);
     Assert.assertTrue(union.isDistinct());
   }
 
   @Test
   public void testOrderByDescNullsFirst() throws Exception {
     // desc nulls last
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from emp order by deptId desc nulls first")
         .returns(
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
@@ -454,8 +406,7 @@ public class JdbcDataTest extends JdbcTestBase {
   @Test
   public void testOrderByDescNullsLast() throws Exception {
     // desc nulls first
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from emp order by deptId desc nulls last")
         .returns(
             "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n" + "DEPTID=33; LASTNAME=Jones\n"
@@ -467,8 +418,7 @@ public class JdbcDataTest extends JdbcTestBase {
   public void testOrderByDesc() throws Exception {
     // desc is implicitly "nulls first" (i.e. null sorted as +inf)
     // Current behavior is to sort nulls last. This is wrong.
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from emp order by deptId desc")
         .returns(
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
@@ -479,8 +429,7 @@ public class JdbcDataTest extends JdbcTestBase {
   @Test
   public void testOrderBy() throws Exception {
     // no sort order specified is implicitly "asc", and asc is "nulls last"
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select * from emp order by deptId")
         .returns(
             "DEPTID=31; LASTNAME=Rafferty\n"
@@ -494,8 +443,7 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testLimit() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select LASTNAME from emp limit 2")
         .returns("LASTNAME=Rafferty\n" +
             "LASTNAME=Jones")
@@ -505,8 +453,7 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testLimitOrderBy() throws Exception {
-    TestDataConnection tdc = JdbcAssert
-        .withModel(MODEL, "HR")
+    TestDataConnection tdc = withModel(MODEL, "HR")
         .sql("select LASTNAME from emp order by LASTNAME limit 2")
         .returns("LASTNAME=John\n" +
             "LASTNAME=Jones");
@@ -517,8 +464,7 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testOrderByWithOffset() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select LASTNAME from emp order by LASTNAME asc offset 3")
         .returns("LASTNAME=Robinson\n" +
             "LASTNAME=Smith\n" +
@@ -529,13 +475,10 @@ public class JdbcDataTest extends JdbcTestBase {
 
   @Test
   public void testOrderByWithOffsetAndFetch() throws Exception {
-    JdbcAssert
-        .withModel(MODEL, "HR")
+    withModel(MODEL, "HR")
         .sql("select LASTNAME from emp order by LASTNAME asc offset 3 fetch next 2 rows only")
         .returns("LASTNAME=Robinson\n" +
             "LASTNAME=Smith")
         .planContains(Limit.class);
   }
 }
-
-// End JdbcTest.java

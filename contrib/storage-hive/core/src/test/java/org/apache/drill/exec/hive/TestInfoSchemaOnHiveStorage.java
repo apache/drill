@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,14 @@
 package org.apache.drill.exec.hive;
 
 import com.google.common.base.Strings;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.test.TestBuilder;
+import org.apache.drill.categories.SlowTest;
+import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   private static final String[] baselineCols = new String[] {"COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE"};
   private static final Object[] expVal1 = new Object[] {"key", "INTEGER", "YES"};
@@ -81,9 +86,6 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("dfs.root")
         .baselineValues("dfs.tmp")
         .baselineValues("sys")
-        .baselineValues("dfs_test.home")
-        .baselineValues("dfs_test.default")
-        .baselineValues("dfs_test.tmp")
         .baselineValues("cp.default")
         .baselineValues("INFORMATION_SCHEMA")
         .go();
@@ -195,7 +197,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
                          "NUMERIC_SCALE")
         .baselineValues("inttype",     "INTEGER",            null,    2,   32,    0)
         .baselineValues("decimaltype", "DECIMAL",            null,   10,   38,    2)
-        .baselineValues("stringtype",  "CHARACTER VARYING", 65535, null, null, null)
+        .baselineValues("stringtype",  "CHARACTER VARYING", HiveVarchar.MAX_VARCHAR_LENGTH, null, null, null)
         .baselineValues("varchartype", "CHARACTER VARYING",    20, null, null, null)
         .baselineValues("chartype", "CHARACTER", 10, null, null, null)
         .go();

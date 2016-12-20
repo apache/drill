@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +26,9 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
 import com.google.common.base.Preconditions;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 
 /**
  * Manages the creation of rpc futures for a particular socket <--> socket
@@ -47,17 +47,19 @@ class RequestIdMap {
   private final IntObjectHashMap<RpcOutcome<?>> map;
 
   public RequestIdMap() {
-    map = new IntObjectHashMap<RpcOutcome<?>>();
+    map = new IntObjectHashMap<>();
   }
 
   void channelClosed(Throwable ex) {
     isOpen.set(false);
     if (ex != null) {
       final RpcException e = RpcException.mapException(ex);
+      IntObjectHashMap<RpcOutcome<?>> clonedMap;
       synchronized (map) {
-        map.forEach(new SetExceptionProcedure(e));
+        clonedMap = map.clone();
         map.clear();
       }
+      clonedMap.forEach(new SetExceptionProcedure(e));
     }
   }
 
@@ -82,7 +84,7 @@ class RequestIdMap {
   public <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz,
       RemoteConnection connection) {
     final int i = lastCoordinationId.incrementAndGet();
-    final RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
+    final RpcListener<V> future = new RpcListener<>(handler, clazz, i, connection);
     final Object old;
     synchronized (map) {
       Preconditions.checkArgument(isOpen.get(),
@@ -111,13 +113,16 @@ class RequestIdMap {
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-
       if (!future.isSuccess()) {
-        removeFromMap(coordinationId);
-        if (future.channel().isActive()) {
-          throw new RpcException("Future failed");
-        } else {
-          setException(new ChannelClosedException());
+        try {
+          removeFromMap(coordinationId);
+        } finally {
+          final Throwable cause = future.cause();
+          if (future.channel().isActive()) {
+            setException(cause == null ? new RpcException("Unknown ChannelFuture operation failure") : cause);
+          } else {
+            setException(cause == null ? new ChannelClosedException() : new ChannelClosedException(cause));
+          }
         }
       }
     }

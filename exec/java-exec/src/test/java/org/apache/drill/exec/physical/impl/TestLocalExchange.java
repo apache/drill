@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.config.UnorderedDeMuxExchange;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
@@ -54,6 +54,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static org.apache.drill.exec.planner.physical.HashPrelUtil.HASH_EXPR_NAME;
@@ -71,16 +72,15 @@ import static org.junit.Assert.assertTrue;
  *   at most one partition sender per Drillbit.
  */
 public class TestLocalExchange extends PlanTestBase {
-
-  public static TemporaryFolder testTempFolder = new TemporaryFolder();
-
-  private final static int CLUSTER_SIZE = 3;
-  private final static String MUX_EXCHANGE = "\"unordered-mux-exchange\"";
-  private final static String DEMUX_EXCHANGE = "\"unordered-demux-exchange\"";
-  private final static String MUX_EXCHANGE_CONST = "unordered-mux-exchange";
-  private final static String DEMUX_EXCHANGE_CONST = "unordered-demux-exchange";
+  private static final int CLUSTER_SIZE = 3;
+  private static final String MUX_EXCHANGE = "\"unordered-mux-exchange\"";
+  private static final String DEMUX_EXCHANGE = "\"unordered-demux-exchange\"";
+  private static final String MUX_EXCHANGE_CONST = "unordered-mux-exchange";
+  private static final String DEMUX_EXCHANGE_CONST = "unordered-demux-exchange";
   private static final String HASH_EXCHANGE = "hash-to-random-exchange";
-  private final static UserSession USER_SESSION = UserSession.Builder.newBuilder()
+  private static final String EMPT_TABLE = "empTable";
+  private static final String DEPT_TABLE = "deptTable";
+  private static final UserSession USER_SESSION = UserSession.Builder.newBuilder()
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .build();
 
@@ -94,9 +94,6 @@ public class TestLocalExchange extends PlanTestBase {
   private final static int NUM_EMPLOYEES = 1000;
   private final static int NUM_MNGRS = 1;
   private final static int NUM_IDS = 1;
-
-  private static String empTableLocation;
-  private static String deptTableLocation;
 
   private static String groupByQuery;
   private static String joinQuery;
@@ -112,23 +109,18 @@ public class TestLocalExchange extends PlanTestBase {
     updateTestCluster(CLUSTER_SIZE, null);
   }
 
-  @BeforeClass
-  public static void setupTempFolder() throws IOException {
-    testTempFolder.create();
-  }
-
   /**
    * Generate data for two tables. Each table consists of several JSON files.
    */
   @BeforeClass
   public static void generateTestDataAndQueries() throws Exception {
     // Table 1 consists of two columns "emp_id", "emp_name" and "dept_id"
-    empTableLocation = testTempFolder.newFolder().getAbsolutePath();
+    final File empTableLocation = dirTestWatcher.makeRootSubDir(Paths.get(EMPT_TABLE));
 
     // Write 100 records for each new file
     final int empNumRecsPerFile = 100;
     for(int fileIndex=0; fileIndex<NUM_EMPLOYEES/empNumRecsPerFile; fileIndex++) {
-      File file = new File(empTableLocation + File.separator + fileIndex + ".json");
+      File file = new File(empTableLocation, fileIndex + ".json");
       PrintWriter printWriter = new PrintWriter(file);
       for (int recordIndex = fileIndex*empNumRecsPerFile; recordIndex < (fileIndex+1)*empNumRecsPerFile; recordIndex++) {
         String record = String.format("{ \"emp_id\" : %d, \"emp_name\" : \"Employee %d\", \"dept_id\" : %d, \"mng_id\" : %d, \"some_id\" : %d }",
@@ -139,12 +131,12 @@ public class TestLocalExchange extends PlanTestBase {
     }
 
     // Table 2 consists of two columns "dept_id" and "dept_name"
-    deptTableLocation = testTempFolder.newFolder().getAbsolutePath();
+    final File deptTableLocation = dirTestWatcher.makeRootSubDir(Paths.get(DEPT_TABLE));
 
     // Write 4 records for each new file
     final int deptNumRecsPerFile = 4;
     for(int fileIndex=0; fileIndex<NUM_DEPTS/deptNumRecsPerFile; fileIndex++) {
-      File file = new File(deptTableLocation + File.separator + fileIndex + ".json");
+      File file = new File(deptTableLocation, fileIndex + ".json");
       PrintWriter printWriter = new PrintWriter(file);
       for (int recordIndex = fileIndex*deptNumRecsPerFile; recordIndex < (fileIndex+1)*deptNumRecsPerFile; recordIndex++) {
         String record = String.format("{ \"dept_id\" : %d, \"dept_name\" : \"Department %d\" }",
@@ -155,9 +147,9 @@ public class TestLocalExchange extends PlanTestBase {
     }
 
     // Initialize test queries
-    groupByQuery = String.format("SELECT dept_id, count(*) as numEmployees FROM dfs.`%s` GROUP BY dept_id", empTableLocation);
+    groupByQuery = String.format("SELECT dept_id, count(*) as numEmployees FROM dfs.`%s` GROUP BY dept_id", EMPT_TABLE);
     joinQuery = String.format("SELECT e.emp_name, d.dept_name FROM dfs.`%s` e JOIN dfs.`%s` d ON e.dept_id = d.dept_id",
-        empTableLocation, deptTableLocation);
+        EMPT_TABLE, DEPT_TABLE);
 
     // Generate and store output data for test queries. Used when verifying the output of queries ran using different
     // configurations.
@@ -200,7 +192,7 @@ public class TestLocalExchange extends PlanTestBase {
     test("ALTER SESSION SET `planner.enable_mux_exchange`=" + true);
     test("ALTER SESSION SET `planner.enable_demux_exchange`=" + false);
 
-    final String groupByMultipleQuery = String.format("SELECT dept_id, mng_id, some_id, count(*) as numEmployees FROM dfs.`%s` e GROUP BY dept_id, mng_id, some_id", empTableLocation);
+    final String groupByMultipleQuery = String.format("SELECT dept_id, mng_id, some_id, count(*) as numEmployees FROM dfs.`%s` e GROUP BY dept_id, mng_id, some_id", EMPT_TABLE);
     final String[] groupByMultipleQueryBaselineColumns = new String[] { "dept_id", "mng_id", "some_id", "numEmployees" };
 
     final int numOccurrances = NUM_EMPLOYEES/NUM_DEPTS;
@@ -407,10 +399,11 @@ public class TestLocalExchange extends PlanTestBase {
 
     findFragmentsWithPartitionSender(rootFragment, planningSet, deMuxFragments, htrFragments);
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     QueryWorkUnit qwu = PARALLELIZER.getFragments(new OptionList(), drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);
+        drillbitContext.getBits(), rootFragment, USER_SESSION, queryContextInfo);
+    qwu.applyPlan(planReader);
 
     // Make sure the number of minor fragments with HashPartitioner within a major fragment is not more than the
     // number of Drillbits in cluster
@@ -476,10 +469,5 @@ public class TestLocalExchange extends PlanTestBase {
       // Make sure there are no duplicates in assigned endpoints (i.e at most one partition sender per endpoint)
       assertTrue("Some endpoints have more than one fragment that has ParitionSender", ImmutableSet.copyOf(assignments).size() == assignments.size());
     }
-  }
-
-  @AfterClass
-  public static void cleanupTempFolder() throws IOException {
-    testTempFolder.delete();
   }
 }

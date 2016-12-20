@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,14 +58,14 @@ public class ExplainHandler extends DefaultSqlHandler {
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
     log("Calcite", queryRelNode, logger, null);
-    DrillRel drel = convertToDrel(queryRelNode, validatedRowType);
+    DrillRel drel = convertToDrel(queryRelNode);
 
     if (mode == ResultMode.LOGICAL) {
       LogicalExplain logicalResult = new LogicalExplain(drel, level, context);
       return DirectPlan.createDirectPlan(context, logicalResult);
     }
 
-    Prel prel = convertToPrel(drel);
+    Prel prel = convertToPrel(drel, validatedRowType);
     logAndSetTextPlan("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);

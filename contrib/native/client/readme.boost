@@ -34,7 +34,7 @@ $ cd $BOOST_BUILD_DIR/drill_boost_1_60_0
 # the following builds a subset of boost without icu. You may need to add more modules to include icu. 
 # bcp documentation can be found here: http://www.boost.org/doc/libs/1_60_0/tools/bcp/doc/html/index.html
 
-$ $BOOST_BUILD_DIR/boost_1_60_0/dist/bin/bcp --namespace=drill_boost --namespace-alias --boost=$BOOST_BUILD_DIR/boost_1_60_0/ shared_ptr random context chrono date_time regex system timer thread asio smart_ptr bind config build regex config assign functional multiprecision $BOOST_BUILD_DIR/drill_boost_1_60_0 
+$ $BOOST_BUILD_DIR/boost_1_60_0/dist/bin/bcp --namespace=drill_boost --namespace-alias --boost=$BOOST_BUILD_DIR/boost_1_60_0/ shared_ptr random context chrono date_time regex system timer thread asio smart_ptr bind config build regex config assign functional multiprecision algorithm $BOOST_BUILD_DIR/drill_boost_1_60_0 
 
 $ cd $BOOST_BUILD_DIR/drill_boost_1_60_0
 $ ./bootstrap.sh --prefix=$BOOST_BUILD_DIR/drill_boost_1_60_0/

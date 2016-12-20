@@ -83,6 +83,21 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
    */
   public long getMaxAllocation();
 
+  /**
+   *
+   * @param maxAllocation The max memory allocation to be set
+   */
+  public void setMaxAllocation(long maxAllocation);
+
+  /**
+   *
+   * @return True iff this operator manages its memory (including disk spilling)
+   */
+  @JsonIgnore
+  public boolean isBufferedOperator();
+
+  // public void setBufferedOperator(boolean bo);
+
   @JsonProperty("@id")
   public int getOperatorId();
 

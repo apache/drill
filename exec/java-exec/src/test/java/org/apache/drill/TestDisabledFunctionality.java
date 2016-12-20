@@ -16,16 +16,19 @@
  * limitations under the License.
  */
 package org.apache.drill;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestDisabledFunctionality extends BaseTestQuery{
+@Category(UnlikelyTest.class)
+public class TestDisabledFunctionality extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test(expected = UserException.class)  // see DRILL-2054
@@ -260,12 +263,8 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
   public void testFlattenWithinGroupBy() throws Exception {
     try {
-      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
-      String query = String.format("select flatten(j.topping) tt " +
-          "from dfs_test.`%s` j " +
-          "group by flatten(j.topping)", root);
-
-      test(query);
+      test("select flatten(j.topping) tt " +
+        "from cp.`store/text/sample.json` j group by flatten(j.topping)");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -275,12 +274,9 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
   public void testFlattenWithinOrderBy() throws Exception {
     try {
-      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
-      String query = String.format("select flatten(j.topping) tt " +
-          "from dfs_test.`%s` j " +
-          "order by flatten(j.topping)", root);
-
-      test(query);
+      test("select flatten(j.topping) tt " +
+        "from cp.`store/text/sample.json` j " +
+        "order by flatten(j.topping)");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -290,11 +286,8 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
   public void testFlattenWithinAggFunction() throws Exception {
     try {
-      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
-      String query = String.format("select count(flatten(j.topping)) tt " +
-          "from dfs_test.`%s` j", root);
-
-      test(query);
+      test("select count(flatten(j.topping)) tt " +
+        "from cp.`store/text/sample.json` j");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -304,11 +297,8 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test(expected = UnsupportedFunctionException.class) // see DRILL-2181
   public void testFlattenWithinDistinct() throws Exception {
     try {
-      String root = FileUtils.getResourceAsFile("/store/text/sample.json").toURI().toString();
-      String query = String.format("select Distinct (flatten(j.topping)) tt " +
-          "from dfs_test.`%s` j", root);
-
-      test(query);
+      test("select Distinct (flatten(j.topping)) tt " +
+        "from cp.`store/text/sample.json` j");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -330,8 +320,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableRollup() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by rollup(n_regionkey, n_name)";
-      test(query);
+      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by rollup(n_regionkey, n_name)");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -341,8 +330,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableCube() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by cube(n_regionkey, n_name)";
-      test(query);
+      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by cube(n_regionkey, n_name)");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -352,8 +340,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableGroupingSets() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by grouping sets(n_regionkey, n_name)";
-      test(query);
+      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by grouping sets(n_regionkey, n_name)");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -363,8 +350,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableGrouping() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*), GROUPING(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;";
-      test(query);
+      test("select n_regionkey, count(*), GROUPING(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -374,8 +360,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableGrouping_ID() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*), GROUPING_ID(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;";
-      test(query);
+      test("select n_regionkey, count(*), GROUPING_ID(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -385,8 +370,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableGroup_ID() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*), GROUP_ID() from cp.`tpch/nation.parquet` group by n_regionkey;";
-      test(query);
+      test("select n_regionkey, count(*), GROUP_ID() from cp.`tpch/nation.parquet` group by n_regionkey;");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -396,8 +380,7 @@ public class TestDisabledFunctionality extends BaseTestQuery{
   @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
   public void testDisableGroupingInFilter() throws Exception{
     try {
-      final String query = "select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey HAVING GROUPING(n_regionkey) = 1";
-      test(query);
+      test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey HAVING GROUPING(n_regionkey) = 1");
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;

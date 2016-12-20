@@ -21,7 +21,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.AccessibleScopes;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 
 import com.typesafe.config.ConfigValue;
 
@@ -57,21 +58,24 @@ public class DrillConfigIterator implements Iterable<OptionValue> {
       OptionValue optionValue = null;
       switch(cv.valueType()) {
       case BOOLEAN:
-        optionValue = OptionValue.createBoolean(OptionType.BOOT, name, (Boolean) cv.unwrapped());
+        optionValue = OptionValue.create(AccessibleScopes.BOOT, name, (Boolean) cv.unwrapped(), OptionScope.BOOT);
         break;
 
       case LIST:
       case OBJECT:
       case STRING:
-        optionValue = OptionValue.createString(OptionType.BOOT, name, cv.render());
+        optionValue = OptionValue.create(AccessibleScopes.BOOT, name, cv.render(),OptionScope.BOOT);
         break;
 
       case NUMBER:
-        optionValue = OptionValue.createLong(OptionType.BOOT, name, ((Number) cv.unwrapped()).longValue());
+        optionValue = OptionValue.create(OptionValue.AccessibleScopes.BOOT, name, ((Number) cv.unwrapped()).longValue(),OptionScope.BOOT);
         break;
 
       case NULL:
         throw new IllegalStateException("Config value \"" + name + "\" has NULL type");
+
+      default:
+        throw new IllegalStateException("Unknown type: " + cv.valueType());
       }
 
       return optionValue;

@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -33,11 +33,14 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category(SlowTest.class)
 public class TestDecimal extends PopUnitTestBase{
     DrillConfig c = DrillConfig.create();
 
@@ -55,7 +58,7 @@ public class TestDecimal extends PopUnitTestBase{
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -100,7 +103,7 @@ public class TestDecimal extends PopUnitTestBase{
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -145,7 +148,7 @@ public class TestDecimal extends PopUnitTestBase{
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
 
@@ -196,7 +199,7 @@ public class TestDecimal extends PopUnitTestBase{
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_complex_decimal.json")
             );
 
@@ -239,7 +242,7 @@ public class TestDecimal extends PopUnitTestBase{
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), Charsets.UTF_8)
+                    Files.toString(DrillFileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_sort_complex_decimal.json")
             );
 
@@ -288,7 +291,7 @@ public class TestDecimal extends PopUnitTestBase{
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), Charsets.UTF_8)
+          Files.toString(DrillFileUtils.getResourceAsFile("/decimal/simple_decimal_math.json"), Charsets.UTF_8)
               .replace("#{TEST_FILE}", "/input_simple_decimal.json")
       );
 

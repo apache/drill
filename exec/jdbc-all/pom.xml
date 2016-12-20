@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -68,6 +68,10 @@
           <artifactId>bcpkix-jdk15on</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.bouncycastle</groupId>
           <artifactId>bcpkix-jdk15on</artifactId>
         </exclusion>
@@ -78,10 +82,6 @@
         <exclusion>
           <artifactId>jetty-server</artifactId>
           <groupId>org.eclipse.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-common</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -144,8 +144,24 @@
           <groupId>com.hazelcast</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>commons-compiler-jdk</artifactId>
-          <groupId>org.codehaus.janino</groupId>
+          <groupId>nl.basjes.parse.httpdlog</groupId>
+          <artifactId>httpdlog-parser</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jackson</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.kohsuke</groupId>
+          <artifactId>libpam4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-net</groupId>
+          <artifactId>commons-net</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-validator</groupId>
+          <artifactId>commons-validator</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -163,13 +179,6 @@
           <groupId>net.hydromatic</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.6.1</version>
-      <scope>test</scope>
     </dependency>
 
     <!-- Test Dependencies -->
@@ -191,6 +200,14 @@
   </dependencies>
 
   <build>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+
     <plugins>
 
       <plugin>
@@ -272,12 +289,12 @@
           <!--dependencyReducedPomLocation>${project.build.directory}/generated/shade/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
           <minimizeJar>false</minimizeJar>
 
+	  <!-- Exclude dependencies at artifact level. Format is "groupId:artifactId[[:type]:classifier]" -->
           <artifactSet>
             <includes>
               <include>*:*</include>
             </includes>
             <excludes>
-              <exclude>org.slf4j:jcl-over-slf4j</exclude>
               <exclude>com.dyuproject.protostuff:*</exclude>
               <exclude>org.apache.calcite:calcite-core</exclude>
               <exclude>org.apache.calcite:calcite-linq4j</exclude>
@@ -290,7 +307,6 @@
               <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>dom4j:*</exclude>
               <exclude>org.hibernate:*</exclude>
-              <exclude>javax.validation:*</exclude>
               <exclude>antlr:*</exclude>
               <exclude>org.ow2.asm:*</exclude>
               <exclude>com.univocity:*</exclude>
@@ -306,7 +322,6 @@
               <exclude>org.tukaani:*</exclude>
               <exclude>org.apache.velocity:*</exclude>
               <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.codehaus.janino:*</exclude>
               <exclude>org.mortbay.jetty:*</exclude>
               <exclude>org.slf4j:jul-to-slf4j</exclude>
               <exclude>org.slf4j:log4j-over-slf4j</exclude>
@@ -314,6 +329,14 @@
               <exclude>org.mockito:mockito-core</exclude>
               <exclude>org.objenesis:objenesis</exclude>
               <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>javax.xml.bind:jaxb-api</exclude>
+              <exclude>javax.xml.stream:stax-api</exclude>
+              <exclude>javax.activation:activation</exclude>
+              <exclude>commons-cli:commons-cli</exclude>
+              <exclude>commons-io:commons-io</exclude>
+              <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
+              <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -375,12 +398,15 @@
             <relocation><pattern>org.apache.xmlcommons.</pattern><shadedPattern>oadd.org.apache.xmlcommons.</shadedPattern></relocation>
             <relocation><pattern>org.apache.xpath.</pattern><shadedPattern>oadd.org.apache.xpath.</shadedPattern></relocation>
             <relocation><pattern>org.apache.zookeeper.</pattern><shadedPattern>oadd.org.apache.zookeeper.</shadedPattern></relocation>
+            <relocation><pattern>org.apache.hadoop.</pattern><shadedPattern>oadd.org.apache.hadoop.</shadedPattern></relocation>
           </relocations>
           <transformers>
             <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
               <resource>drill-module.conf</resource>
             </transformer>
           </transformers>
+
+         <!-- Remove the particular directory or class level dependency from final jar -->
          <filters>
            <filter>
              <artifact>*:*</artifact>
@@ -402,7 +428,13 @@
                <exclude>**/*.SF</exclude>
                <exclude>**/*.RSA</exclude>
                <exclude>**/*.DSA</exclude>
-               <exclude>javax/**</exclude>
+               <exclude>javax/*</exclude>
+               <exclude>javax/activation/**</exclude>
+               <exclude>javax/annotation-api/**</exclude>
+               <exclude>javax/inject/**</exclude>
+               <exclude>javax/servlet-api/**</exclude>
+               <exclude>javax/json/**</exclude>
+               <exclude>javax/ws/**</exclude>
                <exclude>rest/**</exclude>
                <exclude>*.tokens</exclude>
                <exclude>codegen/**</exclude>
@@ -426,12 +458,34 @@
                <exclude>org/apache/drill/exec/server/rest/**</exclude>
                <exclude>org/apache/drill/exec/rpc/data/**</exclude>
                <exclude>org/apache/drill/exec/rpc/control/**</exclude>
+               <exclude>org/apache/drill/exec/work/**</exclude>
+               <exclude>org/apache/hadoop/crypto/**</exclude>
+               <exclude>org/apache/hadoop/ha/**</exclude>
+               <exclude>org/apache/hadoop/http/**</exclude>
+               <exclude>org/apache/hadoop/ipc/**</exclude>
+               <exclude>org/apache/hadoop/jmx/**</exclude>
+               <exclude>org/apache/hadoop/log/**</exclude>
+               <exclude>org/apache/hadoop/metrics/**</exclude>
+               <exclude>org/apache/hadoop/net/**</exclude>
+               <exclude>org/apache/hadoop/record/**</exclude>
+               <exclude>org/apache/hadoop/service/**</exclude>
+               <exclude>org/apache/hadoop/tracing/**</exclude>
+               <exclude>org/apache/hadoop/tools/**</exclude>
+               <exclude>org/apache/hadoop/yarn/**</exclude>
+               <exclude>org/apache/commons/pool2/**</exclude>
+               <exclude>org/apache/http/**</exclude>
+               <exclude>org/apache/directory/**</exclude>
+               <exclude>com/jcraft/**</exclude>
+               <exclude>**/mapr/**</exclude>
+               <exclude>org/yaml/**</exclude>
+               <exclude>hello/**</exclude>
+               <exclude>webapps/**</exclude>
              </excludes>
            </filter>
          </filters>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -446,13 +500,13 @@
               <rules>
                 <requireFilesSize>
                   <message>
-                  
-                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range. 
-                  
+
+                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range.
+
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
-                  
+
                   </message>
-                  <maxsize>21000000</maxsize>
+                  <maxsize>30000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -484,6 +538,269 @@
   </pluginRepositories>
 
   <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <package.namespace.prefix>oadd.</package.namespace.prefix>
+      </properties>
+    </profile>
+      <profile>
+        <id>mapr</id>
+        <properties>
+          <package.namespace.prefix></package.namespace.prefix>
+        </properties>
+
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-enforcer-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>enforce-jdbc-jar-compactness</id>
+                  <goals>
+                    <goal>enforce</goal>
+                  </goals>
+                  <phase>verify</phase>
+                  <configuration>
+                    <rules>
+                      <requireFilesSize>
+                        <message>
+
+                          The file drill-jdbc-all-${project.version}.jar is outside the expected size range.
+
+                          This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
+
+                        </message>
+                        <maxsize>29000000</maxsize>
+                        <minsize>15000000</minsize>
+                        <files>
+                          <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
+                        </files>
+                      </requireFilesSize>
+                    </rules>
+                    <fail>true</fail>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-shade-plugin</artifactId>
+              <version>2.4.1</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>shade</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <shadedArtifactAttached>false</shadedArtifactAttached>
+                <createDependencyReducedPom>true</createDependencyReducedPom>
+                <!-- TODO DRILL-4336: try to move the dependencyReducedPom out of the default location (the module root).
+                     Putting it here caused the target directory to be run as a submodule (oddly
+                     only when trying to run the maven release goal) -->
+                <!--dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
+                <!-- TODO DRILL-4336: an attempt to fix the issue by moving the file elsewhere, had issues executing
+                     but may be able to be modified to to fix the issue-->
+                <!--dependencyReducedPomLocation>${project.build.directory}/generated/shade/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
+                <minimizeJar>false</minimizeJar>
+
+                <!-- Exclude dependencies at artifact level. Format is "groupId:artifactId[[:type]:classifier]" -->
+                <artifactSet>
+                  <includes>
+                    <include>*:*</include>
+                  </includes>
+                  <excludes>
+                    <exclude>org.slf4j:jcl-over-slf4j</exclude>
+                    <exclude>com.dyuproject.protostuff:*</exclude>
+                    <exclude>org.apache.calcite:calcite-core</exclude>
+                    <exclude>org.apache.calcite:calcite-linq4j</exclude>
+                    <exclude>org.pentaho:*</exclude>
+                    <exclude>org.msgpack:*</exclude>
+                    <exclude>xerces:*</exclude>
+                    <exclude>xalan:*</exclude>
+                    <exclude>org.apache.avro:*</exclude>
+                    <exclude>org.mongodb:*</exclude>
+                    <exclude>com.googlecode.json-simple:*</exclude>
+                    <exclude>dom4j:*</exclude>
+                    <exclude>org.hibernate:*</exclude>
+                    <exclude>antlr:*</exclude>
+                    <exclude>org.ow2.asm:*</exclude>
+                    <exclude>com.univocity:*</exclude>
+                    <exclude>net.sf.jpam:*</exclude>
+                    <exclude>com.twitter:*</exclude>
+                    <exclude>org.apache.parquet:*</exclude>
+                    <exclude>javax.inject:*</exclude>
+                    <exclude>com.beust:*</exclude>
+                    <exclude>jline:*</exclude>
+                    <exclude>io.netty:netty:jar:3.7.0.Final</exclude>
+                    <exclude>org.xerial.snappy:*</exclude>
+                    <exclude>org.apache.avro:*</exclude>
+                    <exclude>org.tukaani:*</exclude>
+                    <exclude>org.apache.velocity:*</exclude>
+                    <exclude>net.hydromatic:linq4j</exclude>
+                    <exclude>org.codehaus.janino:*</exclude>
+                    <exclude>org.mortbay.jetty:*</exclude>
+                    <exclude>org.slf4j:jul-to-slf4j</exclude>
+                    <exclude>org.slf4j:log4j-over-slf4j</exclude>
+                    <exclude>org.hamcrest:hamcrest-core</exclude>
+                    <exclude>org.mockito:mockito-core</exclude>
+                    <exclude>org.objenesis:objenesis</exclude>
+                    <exclude>org.eclipse.jetty:*</exclude>
+                    <exclude>org.apache.hadoop:*</exclude>
+                    <exclude>javax.xml.bind:jaxb-api</exclude>
+                    <exclude>javax.xml.stream:stax-api</exclude>
+                    <exclude>javax.activation:activation</exclude>
+                    <exclude>commons-cli:commons-cli</exclude>
+                    <exclude>commons-io:commons-io</exclude>
+                    <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
+                    <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+                  </excludes>
+                </artifactSet>
+                <relocations>
+                  <!-- Relocate Drill classes to minimize classloader hell. -->
+                  <relocation><pattern>org.apache.drill.exec.</pattern><shadedPattern>oadd.org.apache.drill.exec.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.drill.common.</pattern><shadedPattern>oadd.org.apache.drill.common.</shadedPattern></relocation>
+
+                  <!-- Move dependencies out of path -->
+                  <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>
+                  <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>
+                  <relocation><pattern>io.</pattern><shadedPattern>oadd.io.</shadedPattern></relocation>
+                  <relocation><pattern>javacc.</pattern><shadedPattern>oadd.javacc.</shadedPattern></relocation>
+                  <relocation><pattern>java_cup.</pattern><shadedPattern>oadd.java_cup.</shadedPattern></relocation>
+                  <relocation><pattern>javassist.</pattern><shadedPattern>oadd.javassist.</shadedPattern></relocation>
+                  <relocation><pattern>jline.</pattern><shadedPattern>oadd.jline.</shadedPattern></relocation>
+                  <relocation><pattern>license.</pattern><shadedPattern>oadd.license.</shadedPattern></relocation>
+                  <relocation><pattern>net.</pattern><shadedPattern>oadd.net.</shadedPattern></relocation>
+                  <relocation><pattern>parquet.</pattern><shadedPattern>oadd.parquet.</shadedPattern></relocation>
+                  <relocation><pattern>test.</pattern><shadedPattern>oadd.test.</shadedPattern></relocation>
+                  <relocation><pattern>trax.</pattern><shadedPattern>oadd.trax.</shadedPattern></relocation>
+                  <relocation><pattern>org.antlr.</pattern><shadedPattern>oadd.org.antlr.</shadedPattern></relocation>
+                  <relocation><pattern>org.codehaus.</pattern><shadedPattern>oadd.org.codehaus.</shadedPattern></relocation>
+                  <relocation><pattern>org.eigenbase.</pattern><shadedPattern>oadd.org.eigenbase.</shadedPattern></relocation>
+                  <relocation><pattern>org.hamcrest.</pattern><shadedPattern>oadd.org.hamcrest.</shadedPattern></relocation>
+                  <relocation><pattern>org.jboss.</pattern><shadedPattern>oadd.org.jboss.</shadedPattern></relocation>
+                  <relocation><pattern>org.joda.</pattern><shadedPattern>oadd.org.joda.</shadedPattern></relocation>
+                  <relocation><pattern>org.json.</pattern><shadedPattern>oadd.org.json.</shadedPattern></relocation>
+                  <relocation><pattern>org.mockito.</pattern><shadedPattern>oadd.org.mockito.</shadedPattern></relocation>
+                  <relocation><pattern>org.msgpack.</pattern><shadedPattern>oadd.org.msgpack.</shadedPattern></relocation>
+                  <relocation><pattern>org.objectweb.</pattern><shadedPattern>oadd.org.objectweb.</shadedPattern></relocation>
+                  <relocation><pattern>org.objensis.</pattern><shadedPattern>oadd.org.objensis.</shadedPattern></relocation>
+                  <relocation><pattern>org.pentaho.</pattern><shadedPattern>oadd.org.pentaho.</shadedPattern></relocation>
+                  <relocation><pattern>org.reflections.</pattern><shadedPattern>oadd.org.reflections.</shadedPattern></relocation>
+                  <relocation><pattern>org.tukaani.</pattern><shadedPattern>oadd.org.tukaani.</shadedPattern></relocation>
+                  <relocation><pattern>org.xerial.</pattern><shadedPattern>oadd.org.xerial.</shadedPattern></relocation>
+                  <relocation><pattern>com.beust.</pattern><shadedPattern>oadd.com.beust.</shadedPattern></relocation>
+                  <relocation><pattern>com.carrotsearch.</pattern><shadedPattern>oadd.com.carrotsearch.</shadedPattern></relocation>
+                  <relocation><pattern>com.codahale.</pattern><shadedPattern>oadd.com.codahale.</shadedPattern></relocation>
+                  <relocation><pattern>com.dyuproject.</pattern><shadedPattern>oadd.com.dyuproject.</shadedPattern></relocation>
+                  <relocation><pattern>com.fasterxml.</pattern><shadedPattern>oadd.com.fasterxml.</shadedPattern></relocation>
+                  <relocation><pattern>com.google.</pattern><shadedPattern>oadd.com.google.</shadedPattern></relocation>
+                  <relocation><pattern>com.thoughtworks.</pattern><shadedPattern>oadd.com.thoughtworks.</shadedPattern></relocation>
+                  <relocation><pattern>com.typesafe.</pattern><shadedPattern>oadd.com.typesafe.</shadedPattern></relocation>
+                  <relocation><pattern>com.univocity.</pattern><shadedPattern>oadd.com.univocity.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.avro.</pattern><shadedPattern>oadd.org.apache.avro.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.bcel.</pattern><shadedPattern>oadd.org.apache.bcel.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.calcite.</pattern><shadedPattern>oadd.org.apache.calcite.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.commons.</pattern><shadedPattern>oadd.org.apache.commons.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.curator.</pattern><shadedPattern>oadd.org.apache.curator.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.html.</pattern><shadedPattern>oadd.org.apache.html.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.jute.</pattern><shadedPattern>oadd.org.apache.jute.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.log4j.</pattern><shadedPattern>oadd.org.apache.log4j.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.regexp.</pattern><shadedPattern>oadd.org.apache.regexp.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.velocity.</pattern><shadedPattern>oadd.org.apache.velocity.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.wml.</pattern><shadedPattern>oadd.org.apache.wml.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.xalan.</pattern><shadedPattern>oadd.org.apache.xalan.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.xerces.</pattern><shadedPattern>oadd.org.apache.xerces.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.xml.</pattern><shadedPattern>oadd.org.apache.xml.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.xmlcommons.</pattern><shadedPattern>oadd.org.apache.xmlcommons.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.xpath.</pattern><shadedPattern>oadd.org.apache.xpath.</shadedPattern></relocation>
+                  <relocation><pattern>org.apache.zookeeper.</pattern><shadedPattern>oadd.org.apache.zookeeper.</shadedPattern></relocation>
+                </relocations>
+                <transformers>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <resource>drill-module.conf</resource>
+                  </transformer>
+                </transformers>
+
+                <!-- Remove the particular directory or class level dependency from final jar -->
+                <filters>
+                  <filter>
+                    <artifact>*:*</artifact>
+                    <excludes>
+                      <exclude>**/logback.xml</exclude>
+                      <exclude>**/LICENSE.txt</exclude>
+                      <exclude>**/*.java</exclude>
+                      <exclude>META-INF/ASL2.0</exclude>
+                      <exclude>META-INF/NOTICE.txt</exclude>
+                      <exclude>META-INF/drill-module-scan/**</exclude>
+                      <exclude>META-INF/jboss-beans.xml</exclude>
+                      <exclude>META-INF/license/**</exclude>
+                      <exclude>META-INF/maven/**</exclude>
+                      <exclude>META-INF/native/**</exclude>
+                      <exclude>META-INF/services/com.fasterxml.*</exclude>
+                      <exclude>META-INF/services/javax.ws.*</exclude>
+                      <exclude>META-INF/**/*.properties</exclude>
+                      <exclude>**/org.codehaus.commons.compiler.properties</exclude>
+                      <exclude>**/*.SF</exclude>
+                      <exclude>**/*.RSA</exclude>
+                      <exclude>**/*.DSA</exclude>
+                      <exclude>javax/*</exclude>
+                      <exclude>javax/activation/**</exclude>
+                      <exclude>javax/annotation-api/**</exclude>
+                      <exclude>javax/inject/**</exclude>
+                      <exclude>javax/servlet-api/**</exclude>
+                      <exclude>javax/json/**</exclude>
+                      <exclude>javax/ws/**</exclude>
+                      <exclude>rest/**</exclude>
+                      <exclude>*.tokens</exclude>
+                      <exclude>codegen/**</exclude>
+                      <exclude>bootstrap-storage-plugins.json</exclude>
+                      <exclude>org/apache/parquet</exclude>
+                      <exclude>com/google/common/math</exclude>
+                      <exclude>com/google/common/net</exclude>
+                      <exclude>com/google/common/primitives</exclude>
+                      <exclude>com/google/common/reflect</exclude>
+                      <exclude>com/google/common/util</exclude>
+                      <exclude>com/google/common/cache</exclude>
+                      <exclude>com/google/common/collect/Tree*</exclude>
+                      <exclude>com/google/common/collect/Standard*</exclude>
+                      <exclude>org/apache/drill/exec/expr/annotations/**</exclude>
+                      <exclude>org/apache/drill/exec/expr/fn/**</exclude>
+                      <exclude>org/apache/drill/exec/proto/beans/**</exclude>
+                      <exclude>org/apache/drill/exec/compile/**</exclude>
+                      <exclude>org/apache/drill/exec/planner/**</exclude>
+                      <exclude>org/apache/drill/exec/physical/**</exclude>
+                      <exclude>org/apache/drill/exec/store/**</exclude>
+                      <exclude>org/apache/drill/exec/server/rest/**</exclude>
+                      <exclude>org/apache/drill/exec/rpc/data/**</exclude>
+                      <exclude>org/apache/drill/exec/rpc/control/**</exclude>
+                      <exclude>org/apache/drill/exec/work/**</exclude>
+                      <exclude>org/apache/hadoop/**</exclude>
+                      <exclude>org/apache/commons/pool2/**</exclude>
+                      <exclude>org/apache/http/**</exclude>
+                      <exclude>org/apache/directory/**</exclude>
+                      <exclude>com/jcraft/**</exclude>
+                      <exclude>**/mapr/**</exclude>
+                      <exclude>org/yaml/**</exclude>
+                      <exclude>hello/**</exclude>
+                      <exclude>webapps/**</exclude>
+                    </excludes>
+                  </filter>
+                </filters>
+              </configuration>
+            </plugin>
+          </plugins>
+
+        </build>
+      </profile>
     <profile>
       <id>apache-release</id>
       <build>

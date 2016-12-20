@@ -22,7 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -36,7 +37,9 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestNewAggregateFunctions extends PopUnitTestBase {
 
   public void runTest(String physicalPlan, String inputDataFile,
@@ -52,7 +55,7 @@ public class TestNewAggregateFunctions extends PopUnitTestBase {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(
           QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile(physicalPlan),
+          Files.toString(DrillFileUtils.getResourceAsFile(physicalPlan),
               Charsets.UTF_8).replace("#{TEST_FILE}",
               inputDataFile));
 

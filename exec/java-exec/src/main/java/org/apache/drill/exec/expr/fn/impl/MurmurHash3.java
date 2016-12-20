@@ -259,21 +259,20 @@ public final class MurmurHash3 extends DrillHash{
     return (int)lh1;
   }
 
-  public static long hash64(double val, long seed){
-    return murmur3_64(Double.doubleToLongBits(val), (int)seed);
+  public static long hash64(double val, long seed) {
+    return murmur3_64(Double.doubleToLongBits(val), (int) seed);
   }
 
-  public static long hash64(long start, long end, DrillBuf buffer, long seed){
-    return murmur3_64(start, end, buffer, (int)seed);
+  public static long hash64(long start, long end, DrillBuf buffer, long seed) {
+    return murmur3_64(start, end, buffer, (int) seed);
   }
 
   public static int hash32(double val, long seed) {
-    //return com.google.common.hash.Hashing.murmur3_128().hashLong(Double.doubleToLongBits(val)).asInt();
-    return (int)murmur3_64(Double.doubleToLongBits(val), (int)seed);
+    return murmur3_32(Double.doubleToLongBits(val), (int) seed);
   }
 
-  public static int hash32(int start, int end, DrillBuf buffer, int seed){
-    return (int)murmur3_64(start, end, buffer, seed);
+  public static int hash32(int start, int end, DrillBuf buffer, int seed) {
+    return murmur3_32(start, end, buffer, seed);
   }
 
 }

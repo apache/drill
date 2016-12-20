@@ -26,6 +26,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "SchemaDef.pb.h"
+#include "Types.pb.h"
 #include "UserBitShared.pb.h"
 #include "BitData.pb.h"
 #include "BitControl.pb.h"
@@ -66,6 +67,10 @@ class ResultColumnMetadata;
 class PreparedStatementHandle;
 class PreparedStatement;
 class CreatePreparedStatementResp;
+class GetServerMetaReq;
+class ConvertSupport;
+class GetServerMetaResp;
+class ServerMeta;
 class RunQuery;
 
 enum RpcType {
@@ -82,6 +87,7 @@ enum RpcType {
   GET_TABLES = 16,
   GET_COLUMNS = 17,
   CREATE_PREPARED_STATEMENT = 22,
+  GET_SERVER_META = 8,
   QUERY_DATA = 6,
   QUERY_HANDLE = 7,
   QUERY_PLAN_FRAGMENTS = 13,
@@ -90,13 +96,13 @@ enum RpcType {
   TABLES = 20,
   COLUMNS = 21,
   PREPARED_STATEMENT = 23,
-  REQ_META_FUNCTIONS = 8,
-  RESP_FUNCTION_LIST = 9,
-  QUERY_RESULT = 10
+  SERVER_META = 9,
+  QUERY_RESULT = 10,
+  SASL_MESSAGE = 24
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = PREPARED_STATEMENT;
+const RpcType RpcType_MAX = SASL_MESSAGE;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -108,6 +114,26 @@ inline bool RpcType_Parse(
     const ::std::string& name, RpcType* value) {
   return ::google::protobuf::internal::ParseNamedEnum<RpcType>(
     RpcType_descriptor(), name, value);
+}
+enum SaslSupport {
+  UNKNOWN_SASL_SUPPORT = 0,
+  SASL_AUTH = 1,
+  SASL_PRIVACY = 2
+};
+bool SaslSupport_IsValid(int value);
+const SaslSupport SaslSupport_MIN = UNKNOWN_SASL_SUPPORT;
+const SaslSupport SaslSupport_MAX = SASL_PRIVACY;
+const int SaslSupport_ARRAYSIZE = SaslSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SaslSupport_descriptor();
+inline const ::std::string& SaslSupport_Name(SaslSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SaslSupport_descriptor(), value);
+}
+inline bool SaslSupport_Parse(
+    const ::std::string& name, SaslSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SaslSupport>(
+    SaslSupport_descriptor(), name, value);
 }
 enum QueryResultsMode {
   STREAM_FULL = 1
@@ -131,11 +157,12 @@ enum HandshakeStatus {
   SUCCESS = 1,
   RPC_VERSION_MISMATCH = 2,
   AUTH_FAILED = 3,
-  UNKNOWN_FAILURE = 4
+  UNKNOWN_FAILURE = 4,
+  AUTH_REQUIRED = 5
 };
 bool HandshakeStatus_IsValid(int value);
 const HandshakeStatus HandshakeStatus_MIN = SUCCESS;
-const HandshakeStatus HandshakeStatus_MAX = UNKNOWN_FAILURE;
+const HandshakeStatus HandshakeStatus_MAX = AUTH_REQUIRED;
 const int HandshakeStatus_ARRAYSIZE = HandshakeStatus_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* HandshakeStatus_descriptor();
@@ -210,6 +237,232 @@ inline bool ColumnUpdatability_Parse(
     const ::std::string& name, ColumnUpdatability* value) {
   return ::google::protobuf::internal::ParseNamedEnum<ColumnUpdatability>(
     ColumnUpdatability_descriptor(), name, value);
+}
+enum CollateSupport {
+  CS_UNKNOWN = 0,
+  CS_GROUP_BY = 1
+};
+bool CollateSupport_IsValid(int value);
+const CollateSupport CollateSupport_MIN = CS_UNKNOWN;
+const CollateSupport CollateSupport_MAX = CS_GROUP_BY;
+const int CollateSupport_ARRAYSIZE = CollateSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CollateSupport_descriptor();
+inline const ::std::string& CollateSupport_Name(CollateSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CollateSupport_descriptor(), value);
+}
+inline bool CollateSupport_Parse(
+    const ::std::string& name, CollateSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CollateSupport>(
+    CollateSupport_descriptor(), name, value);
+}
+enum CorrelationNamesSupport {
+  CN_NONE = 1,
+  CN_DIFFERENT_NAMES = 2,
+  CN_ANY = 3
+};
+bool CorrelationNamesSupport_IsValid(int value);
+const CorrelationNamesSupport CorrelationNamesSupport_MIN = CN_NONE;
+const CorrelationNamesSupport CorrelationNamesSupport_MAX = CN_ANY;
+const int CorrelationNamesSupport_ARRAYSIZE = CorrelationNamesSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CorrelationNamesSupport_descriptor();
+inline const ::std::string& CorrelationNamesSupport_Name(CorrelationNamesSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CorrelationNamesSupport_descriptor(), value);
+}
+inline bool CorrelationNamesSupport_Parse(
+    const ::std::string& name, CorrelationNamesSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CorrelationNamesSupport>(
+    CorrelationNamesSupport_descriptor(), name, value);
+}
+enum DateTimeLiteralsSupport {
+  DL_UNKNOWN = 0,
+  DL_DATE = 1,
+  DL_TIME = 2,
+  DL_TIMESTAMP = 3,
+  DL_INTERVAL_YEAR = 4,
+  DL_INTERVAL_MONTH = 5,
+  DL_INTERVAL_DAY = 6,
+  DL_INTERVAL_HOUR = 7,
+  DL_INTERVAL_MINUTE = 8,
+  DL_INTERVAL_SECOND = 9,
+  DL_INTERVAL_YEAR_TO_MONTH = 10,
+  DL_INTERVAL_DAY_TO_HOUR = 11,
+  DL_INTERVAL_DAY_TO_MINUTE = 12,
+  DL_INTERVAL_DAY_TO_SECOND = 13,
+  DL_INTERVAL_HOUR_TO_MINUTE = 14,
+  DL_INTERVAL_HOUR_TO_SECOND = 15,
+  DL_INTERVAL_MINUTE_TO_SECOND = 16
+};
+bool DateTimeLiteralsSupport_IsValid(int value);
+const DateTimeLiteralsSupport DateTimeLiteralsSupport_MIN = DL_UNKNOWN;
+const DateTimeLiteralsSupport DateTimeLiteralsSupport_MAX = DL_INTERVAL_MINUTE_TO_SECOND;
+const int DateTimeLiteralsSupport_ARRAYSIZE = DateTimeLiteralsSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* DateTimeLiteralsSupport_descriptor();
+inline const ::std::string& DateTimeLiteralsSupport_Name(DateTimeLiteralsSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    DateTimeLiteralsSupport_descriptor(), value);
+}
+inline bool DateTimeLiteralsSupport_Parse(
+    const ::std::string& name, DateTimeLiteralsSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<DateTimeLiteralsSupport>(
+    DateTimeLiteralsSupport_descriptor(), name, value);
+}
+enum GroupBySupport {
+  GB_NONE = 1,
+  GB_SELECT_ONLY = 2,
+  GB_BEYOND_SELECT = 3,
+  GB_UNRELATED = 4
+};
+bool GroupBySupport_IsValid(int value);
+const GroupBySupport GroupBySupport_MIN = GB_NONE;
+const GroupBySupport GroupBySupport_MAX = GB_UNRELATED;
+const int GroupBySupport_ARRAYSIZE = GroupBySupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* GroupBySupport_descriptor();
+inline const ::std::string& GroupBySupport_Name(GroupBySupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    GroupBySupport_descriptor(), value);
+}
+inline bool GroupBySupport_Parse(
+    const ::std::string& name, GroupBySupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<GroupBySupport>(
+    GroupBySupport_descriptor(), name, value);
+}
+enum IdentifierCasing {
+  IC_UNKNOWN = 0,
+  IC_STORES_LOWER = 1,
+  IC_STORES_MIXED = 2,
+  IC_STORES_UPPER = 3,
+  IC_SUPPORTS_MIXED = 4
+};
+bool IdentifierCasing_IsValid(int value);
+const IdentifierCasing IdentifierCasing_MIN = IC_UNKNOWN;
+const IdentifierCasing IdentifierCasing_MAX = IC_SUPPORTS_MIXED;
+const int IdentifierCasing_ARRAYSIZE = IdentifierCasing_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* IdentifierCasing_descriptor();
+inline const ::std::string& IdentifierCasing_Name(IdentifierCasing value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    IdentifierCasing_descriptor(), value);
+}
+inline bool IdentifierCasing_Parse(
+    const ::std::string& name, IdentifierCasing* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<IdentifierCasing>(
+    IdentifierCasing_descriptor(), name, value);
+}
+enum NullCollation {
+  NC_UNKNOWN = 0,
+  NC_AT_START = 1,
+  NC_AT_END = 2,
+  NC_HIGH = 3,
+  NC_LOW = 4
+};
+bool NullCollation_IsValid(int value);
+const NullCollation NullCollation_MIN = NC_UNKNOWN;
+const NullCollation NullCollation_MAX = NC_LOW;
+const int NullCollation_ARRAYSIZE = NullCollation_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* NullCollation_descriptor();
+inline const ::std::string& NullCollation_Name(NullCollation value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    NullCollation_descriptor(), value);
+}
+inline bool NullCollation_Parse(
+    const ::std::string& name, NullCollation* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<NullCollation>(
+    NullCollation_descriptor(), name, value);
+}
+enum OrderBySupport {
+  OB_UNKNOWN = 0,
+  OB_UNRELATED = 1,
+  OB_EXPRESSION = 2
+};
+bool OrderBySupport_IsValid(int value);
+const OrderBySupport OrderBySupport_MIN = OB_UNKNOWN;
+const OrderBySupport OrderBySupport_MAX = OB_EXPRESSION;
+const int OrderBySupport_ARRAYSIZE = OrderBySupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* OrderBySupport_descriptor();
+inline const ::std::string& OrderBySupport_Name(OrderBySupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    OrderBySupport_descriptor(), value);
+}
+inline bool OrderBySupport_Parse(
+    const ::std::string& name, OrderBySupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<OrderBySupport>(
+    OrderBySupport_descriptor(), name, value);
+}
+enum OuterJoinSupport {
+  OJ_UNKNOWN = 0,
+  OJ_LEFT = 1,
+  OJ_RIGHT = 2,
+  OJ_FULL = 3,
+  OJ_NESTED = 4,
+  OJ_NOT_ORDERED = 5,
+  OJ_INNER = 6,
+  OJ_ALL_COMPARISON_OPS = 7
+};
+bool OuterJoinSupport_IsValid(int value);
+const OuterJoinSupport OuterJoinSupport_MIN = OJ_UNKNOWN;
+const OuterJoinSupport OuterJoinSupport_MAX = OJ_ALL_COMPARISON_OPS;
+const int OuterJoinSupport_ARRAYSIZE = OuterJoinSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* OuterJoinSupport_descriptor();
+inline const ::std::string& OuterJoinSupport_Name(OuterJoinSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    OuterJoinSupport_descriptor(), value);
+}
+inline bool OuterJoinSupport_Parse(
+    const ::std::string& name, OuterJoinSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<OuterJoinSupport>(
+    OuterJoinSupport_descriptor(), name, value);
+}
+enum SubQuerySupport {
+  SQ_UNKNOWN = 0,
+  SQ_CORRELATED = 1,
+  SQ_IN_COMPARISON = 2,
+  SQ_IN_EXISTS = 3,
+  SQ_IN_INSERT = 4,
+  SQ_IN_QUANTIFIED = 5
+};
+bool SubQuerySupport_IsValid(int value);
+const SubQuerySupport SubQuerySupport_MIN = SQ_UNKNOWN;
+const SubQuerySupport SubQuerySupport_MAX = SQ_IN_QUANTIFIED;
+const int SubQuerySupport_ARRAYSIZE = SubQuerySupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SubQuerySupport_descriptor();
+inline const ::std::string& SubQuerySupport_Name(SubQuerySupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SubQuerySupport_descriptor(), value);
+}
+inline bool SubQuerySupport_Parse(
+    const ::std::string& name, SubQuerySupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SubQuerySupport>(
+    SubQuerySupport_descriptor(), name, value);
+}
+enum UnionSupport {
+  U_UNKNOWN = 0,
+  U_UNION = 1,
+  U_UNION_ALL = 2
+};
+bool UnionSupport_IsValid(int value);
+const UnionSupport UnionSupport_MIN = U_UNKNOWN;
+const UnionSupport UnionSupport_MAX = U_UNION_ALL;
+const int UnionSupport_ARRAYSIZE = UnionSupport_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* UnionSupport_descriptor();
+inline const ::std::string& UnionSupport_Name(UnionSupport value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    UnionSupport_descriptor(), value);
+}
+inline bool UnionSupport_Parse(
+    const ::std::string& name, UnionSupport* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<UnionSupport>(
+    UnionSupport_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -511,6 +764,25 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   inline ::std::string* release_application();
   inline void set_allocated_application(::std::string* application);
 
+  // optional uint32 buildNumber = 7;
+  inline bool has_buildnumber() const;
+  inline void clear_buildnumber();
+  static const int kBuildNumberFieldNumber = 7;
+  inline ::google::protobuf::uint32 buildnumber() const;
+  inline void set_buildnumber(::google::protobuf::uint32 value);
+
+  // optional string versionQualifier = 8;
+  inline bool has_versionqualifier() const;
+  inline void clear_versionqualifier();
+  static const int kVersionQualifierFieldNumber = 8;
+  inline const ::std::string& versionqualifier() const;
+  inline void set_versionqualifier(const ::std::string& value);
+  inline void set_versionqualifier(const char* value);
+  inline void set_versionqualifier(const char* value, size_t size);
+  inline ::std::string* mutable_versionqualifier();
+  inline ::std::string* release_versionqualifier();
+  inline void set_allocated_versionqualifier(::std::string* versionqualifier);
+
   // @@protoc_insertion_point(class_scope:exec.user.RpcEndpointInfos)
  private:
   inline void set_has_name();
@@ -525,6 +797,10 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   inline void clear_has_patchversion();
   inline void set_has_application();
   inline void clear_has_application();
+  inline void set_has_buildnumber();
+  inline void clear_has_buildnumber();
+  inline void set_has_versionqualifier();
+  inline void clear_has_versionqualifier();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -534,9 +810,11 @@ class RpcEndpointInfos : public ::google::protobuf::Message {
   ::google::protobuf::uint32 minorversion_;
   ::std::string* application_;
   ::google::protobuf::uint32 patchversion_;
+  ::google::protobuf::uint32 buildnumber_;
+  ::std::string* versionqualifier_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -663,6 +941,13 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline ::exec::user::RpcEndpointInfos* release_client_infos();
   inline void set_allocated_client_infos(::exec::user::RpcEndpointInfos* client_infos);
 
+  // optional .exec.user.SaslSupport sasl_support = 9;
+  inline bool has_sasl_support() const;
+  inline void clear_sasl_support();
+  static const int kSaslSupportFieldNumber = 9;
+  inline ::exec::user::SaslSupport sasl_support() const;
+  inline void set_sasl_support(::exec::user::SaslSupport value);
+
   // @@protoc_insertion_point(class_scope:exec.user.UserToBitHandshake)
  private:
   inline void set_has_channel();
@@ -681,6 +966,8 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline void clear_has_support_timeout();
   inline void set_has_client_infos();
   inline void clear_has_client_infos();
+  inline void set_has_sasl_support();
+  inline void clear_has_sasl_support();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -688,13 +975,14 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   ::google::protobuf::int32 rpc_version_;
   ::exec::shared::UserCredentials* credentials_;
   ::exec::user::UserProperties* properties_;
-  ::exec::user::RpcEndpointInfos* client_infos_;
   bool support_listening_;
   bool support_complex_types_;
   bool support_timeout_;
+  int sasl_support_;
+  ::exec::user::RpcEndpointInfos* client_infos_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -1126,6 +1414,46 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline ::exec::user::RpcEndpointInfos* release_server_infos();
   inline void set_allocated_server_infos(::exec::user::RpcEndpointInfos* server_infos);
 
+  // repeated string authenticationMechanisms = 7;
+  inline int authenticationmechanisms_size() const;
+  inline void clear_authenticationmechanisms();
+  static const int kAuthenticationMechanismsFieldNumber = 7;
+  inline const ::std::string& authenticationmechanisms(int index) const;
+  inline ::std::string* mutable_authenticationmechanisms(int index);
+  inline void set_authenticationmechanisms(int index, const ::std::string& value);
+  inline void set_authenticationmechanisms(int index, const char* value);
+  inline void set_authenticationmechanisms(int index, const char* value, size_t size);
+  inline ::std::string* add_authenticationmechanisms();
+  inline void add_authenticationmechanisms(const ::std::string& value);
+  inline void add_authenticationmechanisms(const char* value);
+  inline void add_authenticationmechanisms(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& authenticationmechanisms() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_authenticationmechanisms();
+
+  // repeated .exec.user.RpcType supported_methods = 8;
+  inline int supported_methods_size() const;
+  inline void clear_supported_methods();
+  static const int kSupportedMethodsFieldNumber = 8;
+  inline ::exec::user::RpcType supported_methods(int index) const;
+  inline void set_supported_methods(int index, ::exec::user::RpcType value);
+  inline void add_supported_methods(::exec::user::RpcType value);
+  inline const ::google::protobuf::RepeatedField<int>& supported_methods() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_supported_methods();
+
+  // optional bool encrypted = 9;
+  inline bool has_encrypted() const;
+  inline void clear_encrypted();
+  static const int kEncryptedFieldNumber = 9;
+  inline bool encrypted() const;
+  inline void set_encrypted(bool value);
+
+  // optional int32 maxWrappedSize = 10;
+  inline bool has_maxwrappedsize() const;
+  inline void clear_maxwrappedsize();
+  static const int kMaxWrappedSizeFieldNumber = 10;
+  inline ::google::protobuf::int32 maxwrappedsize() const;
+  inline void set_maxwrappedsize(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
  private:
   inline void set_has_rpc_version();
@@ -1138,6 +1466,10 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline void clear_has_errormessage();
   inline void set_has_server_infos();
   inline void clear_has_server_infos();
+  inline void set_has_encrypted();
+  inline void clear_has_encrypted();
+  inline void set_has_maxwrappedsize();
+  inline void clear_has_maxwrappedsize();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1146,9 +1478,13 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   ::std::string* errorid_;
   ::std::string* errormessage_;
   ::exec::user::RpcEndpointInfos* server_infos_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> authenticationmechanisms_;
+  ::google::protobuf::RepeatedField<int> supported_methods_;
+  bool encrypted_;
+  ::google::protobuf::int32 maxwrappedsize_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -3461,6 +3797,917 @@ class CreatePreparedStatementResp : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class GetServerMetaReq : public ::google::protobuf::Message {
+ public:
+  GetServerMetaReq();
+  virtual ~GetServerMetaReq();
+
+  GetServerMetaReq(const GetServerMetaReq& from);
+
+  inline GetServerMetaReq& operator=(const GetServerMetaReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetServerMetaReq& default_instance();
+
+  void Swap(GetServerMetaReq* other);
+
+  // implements Message ----------------------------------------------
+
+  GetServerMetaReq* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetServerMetaReq& from);
+  void MergeFrom(const GetServerMetaReq& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetServerMetaReq)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetServerMetaReq* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ConvertSupport : public ::google::protobuf::Message {
+ public:
+  ConvertSupport();
+  virtual ~ConvertSupport();
+
+  ConvertSupport(const ConvertSupport& from);
+
+  inline ConvertSupport& operator=(const ConvertSupport& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ConvertSupport& default_instance();
+
+  void Swap(ConvertSupport* other);
+
+  // implements Message ----------------------------------------------
+
+  ConvertSupport* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ConvertSupport& from);
+  void MergeFrom(const ConvertSupport& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required .common.MinorType from = 1;
+  inline bool has_from() const;
+  inline void clear_from();
+  static const int kFromFieldNumber = 1;
+  inline ::common::MinorType from() const;
+  inline void set_from(::common::MinorType value);
+
+  // required .common.MinorType to = 2;
+  inline bool has_to() const;
+  inline void clear_to();
+  static const int kToFieldNumber = 2;
+  inline ::common::MinorType to() const;
+  inline void set_to(::common::MinorType value);
+
+  // @@protoc_insertion_point(class_scope:exec.user.ConvertSupport)
+ private:
+  inline void set_has_from();
+  inline void clear_has_from();
+  inline void set_has_to();
+  inline void clear_has_to();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int from_;
+  int to_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static ConvertSupport* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class GetServerMetaResp : public ::google::protobuf::Message {
+ public:
+  GetServerMetaResp();
+  virtual ~GetServerMetaResp();
+
+  GetServerMetaResp(const GetServerMetaResp& from);
+
+  inline GetServerMetaResp& operator=(const GetServerMetaResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GetServerMetaResp& default_instance();
+
+  void Swap(GetServerMetaResp* other);
+
+  // implements Message ----------------------------------------------
+
+  GetServerMetaResp* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const GetServerMetaResp& from);
+  void MergeFrom(const GetServerMetaResp& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.user.RequestStatus status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::exec::user::RequestStatus status() const;
+  inline void set_status(::exec::user::RequestStatus value);
+
+  // optional .exec.user.ServerMeta server_meta = 2;
+  inline bool has_server_meta() const;
+  inline void clear_server_meta();
+  static const int kServerMetaFieldNumber = 2;
+  inline const ::exec::user::ServerMeta& server_meta() const;
+  inline ::exec::user::ServerMeta* mutable_server_meta();
+  inline ::exec::user::ServerMeta* release_server_meta();
+  inline void set_allocated_server_meta(::exec::user::ServerMeta* server_meta);
+
+  // optional .exec.shared.DrillPBError error = 3;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 3;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // @@protoc_insertion_point(class_scope:exec.user.GetServerMetaResp)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_server_meta();
+  inline void clear_has_server_meta();
+  inline void set_has_error();
+  inline void clear_has_error();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::user::ServerMeta* server_meta_;
+  ::exec::shared::DrillPBError* error_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static GetServerMetaResp* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ServerMeta : public ::google::protobuf::Message {
+ public:
+  ServerMeta();
+  virtual ~ServerMeta();
+
+  ServerMeta(const ServerMeta& from);
+
+  inline ServerMeta& operator=(const ServerMeta& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ServerMeta& default_instance();
+
+  void Swap(ServerMeta* other);
+
+  // implements Message ----------------------------------------------
+
+  ServerMeta* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ServerMeta& from);
+  void MergeFrom(const ServerMeta& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bool all_tables_selectable = 1;
+  inline bool has_all_tables_selectable() const;
+  inline void clear_all_tables_selectable();
+  static const int kAllTablesSelectableFieldNumber = 1;
+  inline bool all_tables_selectable() const;
+  inline void set_all_tables_selectable(bool value);
+
+  // optional bool blob_included_in_max_row_size = 2;
+  inline bool has_blob_included_in_max_row_size() const;
+  inline void clear_blob_included_in_max_row_size();
+  static const int kBlobIncludedInMaxRowSizeFieldNumber = 2;
+  inline bool blob_included_in_max_row_size() const;
+  inline void set_blob_included_in_max_row_size(bool value);
+
+  // optional bool catalog_at_start = 3;
+  inline bool has_catalog_at_start() const;
+  inline void clear_catalog_at_start();
+  static const int kCatalogAtStartFieldNumber = 3;
+  inline bool catalog_at_start() const;
+  inline void set_catalog_at_start(bool value);
+
+  // optional string catalog_separator = 4;
+  inline bool has_catalog_separator() const;
+  inline void clear_catalog_separator();
+  static const int kCatalogSeparatorFieldNumber = 4;
+  inline const ::std::string& catalog_separator() const;
+  inline void set_catalog_separator(const ::std::string& value);
+  inline void set_catalog_separator(const char* value);
+  inline void set_catalog_separator(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_separator();
+  inline ::std::string* release_catalog_separator();
+  inline void set_allocated_catalog_separator(::std::string* catalog_separator);
+
+  // optional string catalog_term = 5;
+  inline bool has_catalog_term() const;
+  inline void clear_catalog_term();
+  static const int kCatalogTermFieldNumber = 5;
+  inline const ::std::string& catalog_term() const;
+  inline void set_catalog_term(const ::std::string& value);
+  inline void set_catalog_term(const char* value);
+  inline void set_catalog_term(const char* value, size_t size);
+  inline ::std::string* mutable_catalog_term();
+  inline ::std::string* release_catalog_term();
+  inline void set_allocated_catalog_term(::std::string* catalog_term);
+
+  // repeated .exec.user.CollateSupport collate_support = 6;
+  inline int collate_support_size() const;
+  inline void clear_collate_support();
+  static const int kCollateSupportFieldNumber = 6;
+  inline ::exec::user::CollateSupport collate_support(int index) const;
+  inline void set_collate_support(int index, ::exec::user::CollateSupport value);
+  inline void add_collate_support(::exec::user::CollateSupport value);
+  inline const ::google::protobuf::RepeatedField<int>& collate_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_collate_support();
+
+  // optional bool column_aliasing_supported = 7;
+  inline bool has_column_aliasing_supported() const;
+  inline void clear_column_aliasing_supported();
+  static const int kColumnAliasingSupportedFieldNumber = 7;
+  inline bool column_aliasing_supported() const;
+  inline void set_column_aliasing_supported(bool value);
+
+  // repeated .exec.user.ConvertSupport convert_support = 8;
+  inline int convert_support_size() const;
+  inline void clear_convert_support();
+  static const int kConvertSupportFieldNumber = 8;
+  inline const ::exec::user::ConvertSupport& convert_support(int index) const;
+  inline ::exec::user::ConvertSupport* mutable_convert_support(int index);
+  inline ::exec::user::ConvertSupport* add_convert_support();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ConvertSupport >&
+      convert_support() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::user::ConvertSupport >*
+      mutable_convert_support();
+
+  // optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;
+  inline bool has_correlation_names_support() const;
+  inline void clear_correlation_names_support();
+  static const int kCorrelationNamesSupportFieldNumber = 9;
+  inline ::exec::user::CorrelationNamesSupport correlation_names_support() const;
+  inline void set_correlation_names_support(::exec::user::CorrelationNamesSupport value);
+
+  // repeated string date_time_functions = 10;
+  inline int date_time_functions_size() const;
+  inline void clear_date_time_functions();
+  static const int kDateTimeFunctionsFieldNumber = 10;
+  inline const ::std::string& date_time_functions(int index) const;
+  inline ::std::string* mutable_date_time_functions(int index);
+  inline void set_date_time_functions(int index, const ::std::string& value);
+  inline void set_date_time_functions(int index, const char* value);
+  inline void set_date_time_functions(int index, const char* value, size_t size);
+  inline ::std::string* add_date_time_functions();
+  inline void add_date_time_functions(const ::std::string& value);
+  inline void add_date_time_functions(const char* value);
+  inline void add_date_time_functions(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& date_time_functions() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_date_time_functions();
+
+  // repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;
+  inline int date_time_literals_support_size() const;
+  inline void clear_date_time_literals_support();
+  static const int kDateTimeLiteralsSupportFieldNumber = 11;
+  inline ::exec::user::DateTimeLiteralsSupport date_time_literals_support(int index) const;
+  inline void set_date_time_literals_support(int index, ::exec::user::DateTimeLiteralsSupport value);
+  inline void add_date_time_literals_support(::exec::user::DateTimeLiteralsSupport value);
+  inline const ::google::protobuf::RepeatedField<int>& date_time_literals_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_date_time_literals_support();
+
+  // optional .exec.user.GroupBySupport group_by_support = 12;
+  inline bool has_group_by_support() const;
+  inline void clear_group_by_support();
+  static const int kGroupBySupportFieldNumber = 12;
+  inline ::exec::user::GroupBySupport group_by_support() const;
+  inline void set_group_by_support(::exec::user::GroupBySupport value);
+
+  // optional .exec.user.IdentifierCasing identifier_casing = 13;
+  inline bool has_identifier_casing() const;
+  inline void clear_identifier_casing();
+  static const int kIdentifierCasingFieldNumber = 13;
+  inline ::exec::user::IdentifierCasing identifier_casing() const;
+  inline void set_identifier_casing(::exec::user::IdentifierCasing value);
+
+  // optional string identifier_quote_string = 14;
+  inline bool has_identifier_quote_string() const;
+  inline void clear_identifier_quote_string();
+  static const int kIdentifierQuoteStringFieldNumber = 14;
+  inline const ::std::string& identifier_quote_string() const;
+  inline void set_identifier_quote_string(const ::std::string& value);
+  inline void set_identifier_quote_string(const char* value);
+  inline void set_identifier_quote_string(const char* value, size_t size);
+  inline ::std::string* mutable_identifier_quote_string();
+  inline ::std::string* release_identifier_quote_string();
+  inline void set_allocated_identifier_quote_string(::std::string* identifier_quote_string);
+
+  // optional bool like_escape_clause_supported = 15;
+  inline bool has_like_escape_clause_supported() const;
+  inline void clear_like_escape_clause_supported();
+  static const int kLikeEscapeClauseSupportedFieldNumber = 15;
+  inline bool like_escape_clause_supported() const;
+  inline void set_like_escape_clause_supported(bool value);
+
+  // optional uint32 max_binary_literal_length = 16;
+  inline bool has_max_binary_literal_length() const;
+  inline void clear_max_binary_literal_length();
+  static const int kMaxBinaryLiteralLengthFieldNumber = 16;
+  inline ::google::protobuf::uint32 max_binary_literal_length() const;
+  inline void set_max_binary_literal_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_catalog_name_length = 17;
+  inline bool has_max_catalog_name_length() const;
+  inline void clear_max_catalog_name_length();
+  static const int kMaxCatalogNameLengthFieldNumber = 17;
+  inline ::google::protobuf::uint32 max_catalog_name_length() const;
+  inline void set_max_catalog_name_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_char_literal_length = 18;
+  inline bool has_max_char_literal_length() const;
+  inline void clear_max_char_literal_length();
+  static const int kMaxCharLiteralLengthFieldNumber = 18;
+  inline ::google::protobuf::uint32 max_char_literal_length() const;
+  inline void set_max_char_literal_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_column_name_length = 19;
+  inline bool has_max_column_name_length() const;
+  inline void clear_max_column_name_length();
+  static const int kMaxColumnNameLengthFieldNumber = 19;
+  inline ::google::protobuf::uint32 max_column_name_length() const;
+  inline void set_max_column_name_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_columns_in_group_by = 20;
+  inline bool has_max_columns_in_group_by() const;
+  inline void clear_max_columns_in_group_by();
+  static const int kMaxColumnsInGroupByFieldNumber = 20;
+  inline ::google::protobuf::uint32 max_columns_in_group_by() const;
+  inline void set_max_columns_in_group_by(::google::protobuf::uint32 value);
+
+  // optional uint32 max_columns_in_order_by = 21;
+  inline bool has_max_columns_in_order_by() const;
+  inline void clear_max_columns_in_order_by();
+  static const int kMaxColumnsInOrderByFieldNumber = 21;
+  inline ::google::protobuf::uint32 max_columns_in_order_by() const;
+  inline void set_max_columns_in_order_by(::google::protobuf::uint32 value);
+
+  // optional uint32 max_columns_in_select = 22;
+  inline bool has_max_columns_in_select() const;
+  inline void clear_max_columns_in_select();
+  static const int kMaxColumnsInSelectFieldNumber = 22;
+  inline ::google::protobuf::uint32 max_columns_in_select() const;
+  inline void set_max_columns_in_select(::google::protobuf::uint32 value);
+
+  // optional uint32 max_cursor_name_length = 23;
+  inline bool has_max_cursor_name_length() const;
+  inline void clear_max_cursor_name_length();
+  static const int kMaxCursorNameLengthFieldNumber = 23;
+  inline ::google::protobuf::uint32 max_cursor_name_length() const;
+  inline void set_max_cursor_name_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_logical_lob_size = 24;
+  inline bool has_max_logical_lob_size() const;
+  inline void clear_max_logical_lob_size();
+  static const int kMaxLogicalLobSizeFieldNumber = 24;
+  inline ::google::protobuf::uint32 max_logical_lob_size() const;
+  inline void set_max_logical_lob_size(::google::protobuf::uint32 value);
+
+  // optional uint32 max_row_size = 25;
+  inline bool has_max_row_size() const;
+  inline void clear_max_row_size();
+  static const int kMaxRowSizeFieldNumber = 25;
+  inline ::google::protobuf::uint32 max_row_size() const;
+  inline void set_max_row_size(::google::protobuf::uint32 value);
+
+  // optional uint32 max_schema_name_length = 26;
+  inline bool has_max_schema_name_length() const;
+  inline void clear_max_schema_name_length();
+  static const int kMaxSchemaNameLengthFieldNumber = 26;
+  inline ::google::protobuf::uint32 max_schema_name_length() const;
+  inline void set_max_schema_name_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_statement_length = 27;
+  inline bool has_max_statement_length() const;
+  inline void clear_max_statement_length();
+  static const int kMaxStatementLengthFieldNumber = 27;
+  inline ::google::protobuf::uint32 max_statement_length() const;
+  inline void set_max_statement_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_statements = 28;
+  inline bool has_max_statements() const;
+  inline void clear_max_statements();
+  static const int kMaxStatementsFieldNumber = 28;
+  inline ::google::protobuf::uint32 max_statements() const;
+  inline void set_max_statements(::google::protobuf::uint32 value);
+
+  // optional uint32 max_table_name_length = 29;
+  inline bool has_max_table_name_length() const;
+  inline void clear_max_table_name_length();
+  static const int kMaxTableNameLengthFieldNumber = 29;
+  inline ::google::protobuf::uint32 max_table_name_length() const;
+  inline void set_max_table_name_length(::google::protobuf::uint32 value);
+
+  // optional uint32 max_tables_in_select = 30;
+  inline bool has_max_tables_in_select() const;
+  inline void clear_max_tables_in_select();
+  static const int kMaxTablesInSelectFieldNumber = 30;
+  inline ::google::protobuf::uint32 max_tables_in_select() const;
+  inline void set_max_tables_in_select(::google::protobuf::uint32 value);
+
+  // optional uint32 max_user_name_length = 31;
+  inline bool has_max_user_name_length() const;
+  inline void clear_max_user_name_length();
+  static const int kMaxUserNameLengthFieldNumber = 31;
+  inline ::google::protobuf::uint32 max_user_name_length() const;
+  inline void set_max_user_name_length(::google::protobuf::uint32 value);
+
+  // optional .exec.user.NullCollation null_collation = 32;
+  inline bool has_null_collation() const;
+  inline void clear_null_collation();
+  static const int kNullCollationFieldNumber = 32;
+  inline ::exec::user::NullCollation null_collation() const;
+  inline void set_null_collation(::exec::user::NullCollation value);
+
+  // optional bool null_plus_non_null_equals_null = 33;
+  inline bool has_null_plus_non_null_equals_null() const;
+  inline void clear_null_plus_non_null_equals_null();
+  static const int kNullPlusNonNullEqualsNullFieldNumber = 33;
+  inline bool null_plus_non_null_equals_null() const;
+  inline void set_null_plus_non_null_equals_null(bool value);
+
+  // repeated string numeric_functions = 34;
+  inline int numeric_functions_size() const;
+  inline void clear_numeric_functions();
+  static const int kNumericFunctionsFieldNumber = 34;
+  inline const ::std::string& numeric_functions(int index) const;
+  inline ::std::string* mutable_numeric_functions(int index);
+  inline void set_numeric_functions(int index, const ::std::string& value);
+  inline void set_numeric_functions(int index, const char* value);
+  inline void set_numeric_functions(int index, const char* value, size_t size);
+  inline ::std::string* add_numeric_functions();
+  inline void add_numeric_functions(const ::std::string& value);
+  inline void add_numeric_functions(const char* value);
+  inline void add_numeric_functions(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& numeric_functions() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_numeric_functions();
+
+  // repeated .exec.user.OrderBySupport order_by_support = 35;
+  inline int order_by_support_size() const;
+  inline void clear_order_by_support();
+  static const int kOrderBySupportFieldNumber = 35;
+  inline ::exec::user::OrderBySupport order_by_support(int index) const;
+  inline void set_order_by_support(int index, ::exec::user::OrderBySupport value);
+  inline void add_order_by_support(::exec::user::OrderBySupport value);
+  inline const ::google::protobuf::RepeatedField<int>& order_by_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_order_by_support();
+
+  // repeated .exec.user.OuterJoinSupport outer_join_support = 36;
+  inline int outer_join_support_size() const;
+  inline void clear_outer_join_support();
+  static const int kOuterJoinSupportFieldNumber = 36;
+  inline ::exec::user::OuterJoinSupport outer_join_support(int index) const;
+  inline void set_outer_join_support(int index, ::exec::user::OuterJoinSupport value);
+  inline void add_outer_join_support(::exec::user::OuterJoinSupport value);
+  inline const ::google::protobuf::RepeatedField<int>& outer_join_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_outer_join_support();
+
+  // optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;
+  inline bool has_quoted_identifier_casing() const;
+  inline void clear_quoted_identifier_casing();
+  static const int kQuotedIdentifierCasingFieldNumber = 37;
+  inline ::exec::user::IdentifierCasing quoted_identifier_casing() const;
+  inline void set_quoted_identifier_casing(::exec::user::IdentifierCasing value);
+
+  // optional bool read_only = 38;
+  inline bool has_read_only() const;
+  inline void clear_read_only();
+  static const int kReadOnlyFieldNumber = 38;
+  inline bool read_only() const;
+  inline void set_read_only(bool value);
+
+  // optional string schema_term = 39;
+  inline bool has_schema_term() const;
+  inline void clear_schema_term();
+  static const int kSchemaTermFieldNumber = 39;
+  inline const ::std::string& schema_term() const;
+  inline void set_schema_term(const ::std::string& value);
+  inline void set_schema_term(const char* value);
+  inline void set_schema_term(const char* value, size_t size);
+  inline ::std::string* mutable_schema_term();
+  inline ::std::string* release_schema_term();
+  inline void set_allocated_schema_term(::std::string* schema_term);
+
+  // optional string search_escape_string = 40;
+  inline bool has_search_escape_string() const;
+  inline void clear_search_escape_string();
+  static const int kSearchEscapeStringFieldNumber = 40;
+  inline const ::std::string& search_escape_string() const;
+  inline void set_search_escape_string(const ::std::string& value);
+  inline void set_search_escape_string(const char* value);
+  inline void set_search_escape_string(const char* value, size_t size);
+  inline ::std::string* mutable_search_escape_string();
+  inline ::std::string* release_search_escape_string();
+  inline void set_allocated_search_escape_string(::std::string* search_escape_string);
+
+  // optional bool select_for_update_supported = 41;
+  inline bool has_select_for_update_supported() const;
+  inline void clear_select_for_update_supported();
+  static const int kSelectForUpdateSupportedFieldNumber = 41;
+  inline bool select_for_update_supported() const;
+  inline void set_select_for_update_supported(bool value);
+
+  // optional string special_characters = 42;
+  inline bool has_special_characters() const;
+  inline void clear_special_characters();
+  static const int kSpecialCharactersFieldNumber = 42;
+  inline const ::std::string& special_characters() const;
+  inline void set_special_characters(const ::std::string& value);
+  inline void set_special_characters(const char* value);
+  inline void set_special_characters(const char* value, size_t size);
+  inline ::std::string* mutable_special_characters();
+  inline ::std::string* release_special_characters();
+  inline void set_allocated_special_characters(::std::string* special_characters);
+
+  // repeated string sql_keywords = 43;
+  inline int sql_keywords_size() const;
+  inline void clear_sql_keywords();
+  static const int kSqlKeywordsFieldNumber = 43;
+  inline const ::std::string& sql_keywords(int index) const;
+  inline ::std::string* mutable_sql_keywords(int index);
+  inline void set_sql_keywords(int index, const ::std::string& value);
+  inline void set_sql_keywords(int index, const char* value);
+  inline void set_sql_keywords(int index, const char* value, size_t size);
+  inline ::std::string* add_sql_keywords();
+  inline void add_sql_keywords(const ::std::string& value);
+  inline void add_sql_keywords(const char* value);
+  inline void add_sql_keywords(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& sql_keywords() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_sql_keywords();
+
+  // repeated string string_functions = 44;
+  inline int string_functions_size() const;
+  inline void clear_string_functions();
+  static const int kStringFunctionsFieldNumber = 44;
+  inline const ::std::string& string_functions(int index) const;
+  inline ::std::string* mutable_string_functions(int index);
+  inline void set_string_functions(int index, const ::std::string& value);
+  inline void set_string_functions(int index, const char* value);
+  inline void set_string_functions(int index, const char* value, size_t size);
+  inline ::std::string* add_string_functions();
+  inline void add_string_functions(const ::std::string& value);
+  inline void add_string_functions(const char* value);
+  inline void add_string_functions(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& string_functions() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_string_functions();
+
+  // repeated .exec.user.SubQuerySupport subquery_support = 45;
+  inline int subquery_support_size() const;
+  inline void clear_subquery_support();
+  static const int kSubquerySupportFieldNumber = 45;
+  inline ::exec::user::SubQuerySupport subquery_support(int index) const;
+  inline void set_subquery_support(int index, ::exec::user::SubQuerySupport value);
+  inline void add_subquery_support(::exec::user::SubQuerySupport value);
+  inline const ::google::protobuf::RepeatedField<int>& subquery_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_subquery_support();
+
+  // repeated string system_functions = 46;
+  inline int system_functions_size() const;
+  inline void clear_system_functions();
+  static const int kSystemFunctionsFieldNumber = 46;
+  inline const ::std::string& system_functions(int index) const;
+  inline ::std::string* mutable_system_functions(int index);
+  inline void set_system_functions(int index, const ::std::string& value);
+  inline void set_system_functions(int index, const char* value);
+  inline void set_system_functions(int index, const char* value, size_t size);
+  inline ::std::string* add_system_functions();
+  inline void add_system_functions(const ::std::string& value);
+  inline void add_system_functions(const char* value);
+  inline void add_system_functions(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& system_functions() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_system_functions();
+
+  // optional string table_term = 47;
+  inline bool has_table_term() const;
+  inline void clear_table_term();
+  static const int kTableTermFieldNumber = 47;
+  inline const ::std::string& table_term() const;
+  inline void set_table_term(const ::std::string& value);
+  inline void set_table_term(const char* value);
+  inline void set_table_term(const char* value, size_t size);
+  inline ::std::string* mutable_table_term();
+  inline ::std::string* release_table_term();
+  inline void set_allocated_table_term(::std::string* table_term);
+
+  // optional bool transaction_supported = 48;
+  inline bool has_transaction_supported() const;
+  inline void clear_transaction_supported();
+  static const int kTransactionSupportedFieldNumber = 48;
+  inline bool transaction_supported() const;
+  inline void set_transaction_supported(bool value);
+
+  // repeated .exec.user.UnionSupport union_support = 49;
+  inline int union_support_size() const;
+  inline void clear_union_support();
+  static const int kUnionSupportFieldNumber = 49;
+  inline ::exec::user::UnionSupport union_support(int index) const;
+  inline void set_union_support(int index, ::exec::user::UnionSupport value);
+  inline void add_union_support(::exec::user::UnionSupport value);
+  inline const ::google::protobuf::RepeatedField<int>& union_support() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_union_support();
+
+  // @@protoc_insertion_point(class_scope:exec.user.ServerMeta)
+ private:
+  inline void set_has_all_tables_selectable();
+  inline void clear_has_all_tables_selectable();
+  inline void set_has_blob_included_in_max_row_size();
+  inline void clear_has_blob_included_in_max_row_size();
+  inline void set_has_catalog_at_start();
+  inline void clear_has_catalog_at_start();
+  inline void set_has_catalog_separator();
+  inline void clear_has_catalog_separator();
+  inline void set_has_catalog_term();
+  inline void clear_has_catalog_term();
+  inline void set_has_column_aliasing_supported();
+  inline void clear_has_column_aliasing_supported();
+  inline void set_has_correlation_names_support();
+  inline void clear_has_correlation_names_support();
+  inline void set_has_group_by_support();
+  inline void clear_has_group_by_support();
+  inline void set_has_identifier_casing();
+  inline void clear_has_identifier_casing();
+  inline void set_has_identifier_quote_string();
+  inline void clear_has_identifier_quote_string();
+  inline void set_has_like_escape_clause_supported();
+  inline void clear_has_like_escape_clause_supported();
+  inline void set_has_max_binary_literal_length();
+  inline void clear_has_max_binary_literal_length();
+  inline void set_has_max_catalog_name_length();
+  inline void clear_has_max_catalog_name_length();
+  inline void set_has_max_char_literal_length();
+  inline void clear_has_max_char_literal_length();
+  inline void set_has_max_column_name_length();
+  inline void clear_has_max_column_name_length();
+  inline void set_has_max_columns_in_group_by();
+  inline void clear_has_max_columns_in_group_by();
+  inline void set_has_max_columns_in_order_by();
+  inline void clear_has_max_columns_in_order_by();
+  inline void set_has_max_columns_in_select();
+  inline void clear_has_max_columns_in_select();
+  inline void set_has_max_cursor_name_length();
+  inline void clear_has_max_cursor_name_length();
+  inline void set_has_max_logical_lob_size();
+  inline void clear_has_max_logical_lob_size();
+  inline void set_has_max_row_size();
+  inline void clear_has_max_row_size();
+  inline void set_has_max_schema_name_length();
+  inline void clear_has_max_schema_name_length();
+  inline void set_has_max_statement_length();
+  inline void clear_has_max_statement_length();
+  inline void set_has_max_statements();
+  inline void clear_has_max_statements();
+  inline void set_has_max_table_name_length();
+  inline void clear_has_max_table_name_length();
+  inline void set_has_max_tables_in_select();
+  inline void clear_has_max_tables_in_select();
+  inline void set_has_max_user_name_length();
+  inline void clear_has_max_user_name_length();
+  inline void set_has_null_collation();
+  inline void clear_has_null_collation();
+  inline void set_has_null_plus_non_null_equals_null();
+  inline void clear_has_null_plus_non_null_equals_null();
+  inline void set_has_quoted_identifier_casing();
+  inline void clear_has_quoted_identifier_casing();
+  inline void set_has_read_only();
+  inline void clear_has_read_only();
+  inline void set_has_schema_term();
+  inline void clear_has_schema_term();
+  inline void set_has_search_escape_string();
+  inline void clear_has_search_escape_string();
+  inline void set_has_select_for_update_supported();
+  inline void clear_has_select_for_update_supported();
+  inline void set_has_special_characters();
+  inline void clear_has_special_characters();
+  inline void set_has_table_term();
+  inline void clear_has_table_term();
+  inline void set_has_transaction_supported();
+  inline void clear_has_transaction_supported();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* catalog_separator_;
+  bool all_tables_selectable_;
+  bool blob_included_in_max_row_size_;
+  bool catalog_at_start_;
+  bool column_aliasing_supported_;
+  int correlation_names_support_;
+  ::std::string* catalog_term_;
+  ::google::protobuf::RepeatedField<int> collate_support_;
+  ::google::protobuf::RepeatedPtrField< ::exec::user::ConvertSupport > convert_support_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> date_time_functions_;
+  ::google::protobuf::RepeatedField<int> date_time_literals_support_;
+  int group_by_support_;
+  int identifier_casing_;
+  ::std::string* identifier_quote_string_;
+  ::google::protobuf::uint32 max_binary_literal_length_;
+  ::google::protobuf::uint32 max_catalog_name_length_;
+  ::google::protobuf::uint32 max_char_literal_length_;
+  ::google::protobuf::uint32 max_column_name_length_;
+  ::google::protobuf::uint32 max_columns_in_group_by_;
+  ::google::protobuf::uint32 max_columns_in_order_by_;
+  ::google::protobuf::uint32 max_columns_in_select_;
+  ::google::protobuf::uint32 max_cursor_name_length_;
+  ::google::protobuf::uint32 max_logical_lob_size_;
+  ::google::protobuf::uint32 max_row_size_;
+  ::google::protobuf::uint32 max_schema_name_length_;
+  ::google::protobuf::uint32 max_statement_length_;
+  ::google::protobuf::uint32 max_statements_;
+  ::google::protobuf::uint32 max_table_name_length_;
+  ::google::protobuf::uint32 max_tables_in_select_;
+  ::google::protobuf::uint32 max_user_name_length_;
+  bool like_escape_clause_supported_;
+  bool null_plus_non_null_equals_null_;
+  bool read_only_;
+  bool select_for_update_supported_;
+  int null_collation_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> numeric_functions_;
+  ::google::protobuf::RepeatedField<int> order_by_support_;
+  ::google::protobuf::RepeatedField<int> outer_join_support_;
+  ::std::string* schema_term_;
+  ::std::string* search_escape_string_;
+  ::std::string* special_characters_;
+  int quoted_identifier_casing_;
+  bool transaction_supported_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> sql_keywords_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> string_functions_;
+  ::google::protobuf::RepeatedField<int> subquery_support_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> system_functions_;
+  ::std::string* table_term_;
+  ::google::protobuf::RepeatedField<int> union_support_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(49 + 31) / 32];
+
+  friend void  protobuf_AddDesc_User_2eproto();
+  friend void protobuf_AssignDesc_User_2eproto();
+  friend void protobuf_ShutdownFile_User_2eproto();
+
+  void InitAsDefaultInstance();
+  static ServerMeta* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class RunQuery : public ::google::protobuf::Message {
  public:
   RunQuery();
@@ -4047,6 +5294,98 @@ inline void RpcEndpointInfos::set_allocated_application(::std::string* applicati
   }
 }
 
+// optional uint32 buildNumber = 7;
+inline bool RpcEndpointInfos::has_buildnumber() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void RpcEndpointInfos::set_has_buildnumber() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void RpcEndpointInfos::clear_has_buildnumber() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void RpcEndpointInfos::clear_buildnumber() {
+  buildnumber_ = 0u;
+  clear_has_buildnumber();
+}
+inline ::google::protobuf::uint32 RpcEndpointInfos::buildnumber() const {
+  return buildnumber_;
+}
+inline void RpcEndpointInfos::set_buildnumber(::google::protobuf::uint32 value) {
+  set_has_buildnumber();
+  buildnumber_ = value;
+}
+
+// optional string versionQualifier = 8;
+inline bool RpcEndpointInfos::has_versionqualifier() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void RpcEndpointInfos::set_has_versionqualifier() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void RpcEndpointInfos::clear_has_versionqualifier() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void RpcEndpointInfos::clear_versionqualifier() {
+  if (versionqualifier_ != &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_->clear();
+  }
+  clear_has_versionqualifier();
+}
+inline const ::std::string& RpcEndpointInfos::versionqualifier() const {
+  return *versionqualifier_;
+}
+inline void RpcEndpointInfos::set_versionqualifier(const ::std::string& value) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(value);
+}
+inline void RpcEndpointInfos::set_versionqualifier(const char* value) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(value);
+}
+inline void RpcEndpointInfos::set_versionqualifier(const char* value, size_t size) {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  versionqualifier_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RpcEndpointInfos::mutable_versionqualifier() {
+  set_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    versionqualifier_ = new ::std::string;
+  }
+  return versionqualifier_;
+}
+inline ::std::string* RpcEndpointInfos::release_versionqualifier() {
+  clear_has_versionqualifier();
+  if (versionqualifier_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = versionqualifier_;
+    versionqualifier_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RpcEndpointInfos::set_allocated_versionqualifier(::std::string* versionqualifier) {
+  if (versionqualifier_ != &::google::protobuf::internal::kEmptyString) {
+    delete versionqualifier_;
+  }
+  if (versionqualifier) {
+    set_has_versionqualifier();
+    versionqualifier_ = versionqualifier;
+  } else {
+    clear_has_versionqualifier();
+    versionqualifier_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
 // -------------------------------------------------------------------
 
 // UserToBitHandshake
@@ -4274,6 +5613,29 @@ inline void UserToBitHandshake::set_allocated_client_infos(::exec::user::RpcEndp
   } else {
     clear_has_client_infos();
   }
+}
+
+// optional .exec.user.SaslSupport sasl_support = 9;
+inline bool UserToBitHandshake::has_sasl_support() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void UserToBitHandshake::set_has_sasl_support() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void UserToBitHandshake::clear_has_sasl_support() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void UserToBitHandshake::clear_sasl_support() {
+  sasl_support_ = 0;
+  clear_has_sasl_support();
+}
+inline ::exec::user::SaslSupport UserToBitHandshake::sasl_support() const {
+  return static_cast< ::exec::user::SaslSupport >(sasl_support_);
+}
+inline void UserToBitHandshake::set_sasl_support(::exec::user::SaslSupport value) {
+  assert(::exec::user::SaslSupport_IsValid(value));
+  set_has_sasl_support();
+  sasl_support_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -4812,6 +6174,121 @@ inline void BitToUserHandshake::set_allocated_server_infos(::exec::user::RpcEndp
   } else {
     clear_has_server_infos();
   }
+}
+
+// repeated string authenticationMechanisms = 7;
+inline int BitToUserHandshake::authenticationmechanisms_size() const {
+  return authenticationmechanisms_.size();
+}
+inline void BitToUserHandshake::clear_authenticationmechanisms() {
+  authenticationmechanisms_.Clear();
+}
+inline const ::std::string& BitToUserHandshake::authenticationmechanisms(int index) const {
+  return authenticationmechanisms_.Get(index);
+}
+inline ::std::string* BitToUserHandshake::mutable_authenticationmechanisms(int index) {
+  return authenticationmechanisms_.Mutable(index);
+}
+inline void BitToUserHandshake::set_authenticationmechanisms(int index, const ::std::string& value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitToUserHandshake::set_authenticationmechanisms(int index, const char* value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitToUserHandshake::set_authenticationmechanisms(int index, const char* value, size_t size) {
+  authenticationmechanisms_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* BitToUserHandshake::add_authenticationmechanisms() {
+  return authenticationmechanisms_.Add();
+}
+inline void BitToUserHandshake::add_authenticationmechanisms(const ::std::string& value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitToUserHandshake::add_authenticationmechanisms(const char* value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitToUserHandshake::add_authenticationmechanisms(const char* value, size_t size) {
+  authenticationmechanisms_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+BitToUserHandshake::authenticationmechanisms() const {
+  return authenticationmechanisms_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+BitToUserHandshake::mutable_authenticationmechanisms() {
+  return &authenticationmechanisms_;
+}
+
+// repeated .exec.user.RpcType supported_methods = 8;
+inline int BitToUserHandshake::supported_methods_size() const {
+  return supported_methods_.size();
+}
+inline void BitToUserHandshake::clear_supported_methods() {
+  supported_methods_.Clear();
+}
+inline ::exec::user::RpcType BitToUserHandshake::supported_methods(int index) const {
+  return static_cast< ::exec::user::RpcType >(supported_methods_.Get(index));
+}
+inline void BitToUserHandshake::set_supported_methods(int index, ::exec::user::RpcType value) {
+  assert(::exec::user::RpcType_IsValid(value));
+  supported_methods_.Set(index, value);
+}
+inline void BitToUserHandshake::add_supported_methods(::exec::user::RpcType value) {
+  assert(::exec::user::RpcType_IsValid(value));
+  supported_methods_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+BitToUserHandshake::supported_methods() const {
+  return supported_methods_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+BitToUserHandshake::mutable_supported_methods() {
+  return &supported_methods_;
+}
+
+// optional bool encrypted = 9;
+inline bool BitToUserHandshake::has_encrypted() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void BitToUserHandshake::set_has_encrypted() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void BitToUserHandshake::clear_has_encrypted() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void BitToUserHandshake::clear_encrypted() {
+  encrypted_ = false;
+  clear_has_encrypted();
+}
+inline bool BitToUserHandshake::encrypted() const {
+  return encrypted_;
+}
+inline void BitToUserHandshake::set_encrypted(bool value) {
+  set_has_encrypted();
+  encrypted_ = value;
+}
+
+// optional int32 maxWrappedSize = 10;
+inline bool BitToUserHandshake::has_maxwrappedsize() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void BitToUserHandshake::set_has_maxwrappedsize() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void BitToUserHandshake::clear_has_maxwrappedsize() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void BitToUserHandshake::clear_maxwrappedsize() {
+  maxwrappedsize_ = 0;
+  clear_has_maxwrappedsize();
+}
+inline ::google::protobuf::int32 BitToUserHandshake::maxwrappedsize() const {
+  return maxwrappedsize_;
+}
+inline void BitToUserHandshake::set_maxwrappedsize(::google::protobuf::int32 value) {
+  set_has_maxwrappedsize();
+  maxwrappedsize_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -8404,6 +9881,1729 @@ inline void CreatePreparedStatementResp::set_allocated_error(::exec::shared::Dri
 
 // -------------------------------------------------------------------
 
+// GetServerMetaReq
+
+// -------------------------------------------------------------------
+
+// ConvertSupport
+
+// required .common.MinorType from = 1;
+inline bool ConvertSupport::has_from() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ConvertSupport::set_has_from() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ConvertSupport::clear_has_from() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ConvertSupport::clear_from() {
+  from_ = 0;
+  clear_has_from();
+}
+inline ::common::MinorType ConvertSupport::from() const {
+  return static_cast< ::common::MinorType >(from_);
+}
+inline void ConvertSupport::set_from(::common::MinorType value) {
+  assert(::common::MinorType_IsValid(value));
+  set_has_from();
+  from_ = value;
+}
+
+// required .common.MinorType to = 2;
+inline bool ConvertSupport::has_to() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ConvertSupport::set_has_to() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ConvertSupport::clear_has_to() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ConvertSupport::clear_to() {
+  to_ = 0;
+  clear_has_to();
+}
+inline ::common::MinorType ConvertSupport::to() const {
+  return static_cast< ::common::MinorType >(to_);
+}
+inline void ConvertSupport::set_to(::common::MinorType value) {
+  assert(::common::MinorType_IsValid(value));
+  set_has_to();
+  to_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// GetServerMetaResp
+
+// optional .exec.user.RequestStatus status = 1;
+inline bool GetServerMetaResp::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void GetServerMetaResp::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void GetServerMetaResp::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void GetServerMetaResp::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::user::RequestStatus GetServerMetaResp::status() const {
+  return static_cast< ::exec::user::RequestStatus >(status_);
+}
+inline void GetServerMetaResp::set_status(::exec::user::RequestStatus value) {
+  assert(::exec::user::RequestStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
+// optional .exec.user.ServerMeta server_meta = 2;
+inline bool GetServerMetaResp::has_server_meta() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void GetServerMetaResp::set_has_server_meta() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void GetServerMetaResp::clear_has_server_meta() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void GetServerMetaResp::clear_server_meta() {
+  if (server_meta_ != NULL) server_meta_->::exec::user::ServerMeta::Clear();
+  clear_has_server_meta();
+}
+inline const ::exec::user::ServerMeta& GetServerMetaResp::server_meta() const {
+  return server_meta_ != NULL ? *server_meta_ : *default_instance_->server_meta_;
+}
+inline ::exec::user::ServerMeta* GetServerMetaResp::mutable_server_meta() {
+  set_has_server_meta();
+  if (server_meta_ == NULL) server_meta_ = new ::exec::user::ServerMeta;
+  return server_meta_;
+}
+inline ::exec::user::ServerMeta* GetServerMetaResp::release_server_meta() {
+  clear_has_server_meta();
+  ::exec::user::ServerMeta* temp = server_meta_;
+  server_meta_ = NULL;
+  return temp;
+}
+inline void GetServerMetaResp::set_allocated_server_meta(::exec::user::ServerMeta* server_meta) {
+  delete server_meta_;
+  server_meta_ = server_meta;
+  if (server_meta) {
+    set_has_server_meta();
+  } else {
+    clear_has_server_meta();
+  }
+}
+
+// optional .exec.shared.DrillPBError error = 3;
+inline bool GetServerMetaResp::has_error() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void GetServerMetaResp::set_has_error() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void GetServerMetaResp::clear_has_error() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void GetServerMetaResp::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& GetServerMetaResp::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* GetServerMetaResp::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* GetServerMetaResp::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void GetServerMetaResp::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// ServerMeta
+
+// optional bool all_tables_selectable = 1;
+inline bool ServerMeta::has_all_tables_selectable() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ServerMeta::set_has_all_tables_selectable() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ServerMeta::clear_has_all_tables_selectable() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ServerMeta::clear_all_tables_selectable() {
+  all_tables_selectable_ = false;
+  clear_has_all_tables_selectable();
+}
+inline bool ServerMeta::all_tables_selectable() const {
+  return all_tables_selectable_;
+}
+inline void ServerMeta::set_all_tables_selectable(bool value) {
+  set_has_all_tables_selectable();
+  all_tables_selectable_ = value;
+}
+
+// optional bool blob_included_in_max_row_size = 2;
+inline bool ServerMeta::has_blob_included_in_max_row_size() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ServerMeta::set_has_blob_included_in_max_row_size() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ServerMeta::clear_has_blob_included_in_max_row_size() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ServerMeta::clear_blob_included_in_max_row_size() {
+  blob_included_in_max_row_size_ = false;
+  clear_has_blob_included_in_max_row_size();
+}
+inline bool ServerMeta::blob_included_in_max_row_size() const {
+  return blob_included_in_max_row_size_;
+}
+inline void ServerMeta::set_blob_included_in_max_row_size(bool value) {
+  set_has_blob_included_in_max_row_size();
+  blob_included_in_max_row_size_ = value;
+}
+
+// optional bool catalog_at_start = 3;
+inline bool ServerMeta::has_catalog_at_start() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ServerMeta::set_has_catalog_at_start() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ServerMeta::clear_has_catalog_at_start() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ServerMeta::clear_catalog_at_start() {
+  catalog_at_start_ = false;
+  clear_has_catalog_at_start();
+}
+inline bool ServerMeta::catalog_at_start() const {
+  return catalog_at_start_;
+}
+inline void ServerMeta::set_catalog_at_start(bool value) {
+  set_has_catalog_at_start();
+  catalog_at_start_ = value;
+}
+
+// optional string catalog_separator = 4;
+inline bool ServerMeta::has_catalog_separator() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ServerMeta::set_has_catalog_separator() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ServerMeta::clear_has_catalog_separator() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ServerMeta::clear_catalog_separator() {
+  if (catalog_separator_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_separator_->clear();
+  }
+  clear_has_catalog_separator();
+}
+inline const ::std::string& ServerMeta::catalog_separator() const {
+  return *catalog_separator_;
+}
+inline void ServerMeta::set_catalog_separator(const ::std::string& value) {
+  set_has_catalog_separator();
+  if (catalog_separator_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_separator_ = new ::std::string;
+  }
+  catalog_separator_->assign(value);
+}
+inline void ServerMeta::set_catalog_separator(const char* value) {
+  set_has_catalog_separator();
+  if (catalog_separator_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_separator_ = new ::std::string;
+  }
+  catalog_separator_->assign(value);
+}
+inline void ServerMeta::set_catalog_separator(const char* value, size_t size) {
+  set_has_catalog_separator();
+  if (catalog_separator_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_separator_ = new ::std::string;
+  }
+  catalog_separator_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_catalog_separator() {
+  set_has_catalog_separator();
+  if (catalog_separator_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_separator_ = new ::std::string;
+  }
+  return catalog_separator_;
+}
+inline ::std::string* ServerMeta::release_catalog_separator() {
+  clear_has_catalog_separator();
+  if (catalog_separator_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_separator_;
+    catalog_separator_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_catalog_separator(::std::string* catalog_separator) {
+  if (catalog_separator_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_separator_;
+  }
+  if (catalog_separator) {
+    set_has_catalog_separator();
+    catalog_separator_ = catalog_separator;
+  } else {
+    clear_has_catalog_separator();
+    catalog_separator_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string catalog_term = 5;
+inline bool ServerMeta::has_catalog_term() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ServerMeta::set_has_catalog_term() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ServerMeta::clear_has_catalog_term() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ServerMeta::clear_catalog_term() {
+  if (catalog_term_ != &::google::protobuf::internal::kEmptyString) {
+    catalog_term_->clear();
+  }
+  clear_has_catalog_term();
+}
+inline const ::std::string& ServerMeta::catalog_term() const {
+  return *catalog_term_;
+}
+inline void ServerMeta::set_catalog_term(const ::std::string& value) {
+  set_has_catalog_term();
+  if (catalog_term_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_term_ = new ::std::string;
+  }
+  catalog_term_->assign(value);
+}
+inline void ServerMeta::set_catalog_term(const char* value) {
+  set_has_catalog_term();
+  if (catalog_term_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_term_ = new ::std::string;
+  }
+  catalog_term_->assign(value);
+}
+inline void ServerMeta::set_catalog_term(const char* value, size_t size) {
+  set_has_catalog_term();
+  if (catalog_term_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_term_ = new ::std::string;
+  }
+  catalog_term_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_catalog_term() {
+  set_has_catalog_term();
+  if (catalog_term_ == &::google::protobuf::internal::kEmptyString) {
+    catalog_term_ = new ::std::string;
+  }
+  return catalog_term_;
+}
+inline ::std::string* ServerMeta::release_catalog_term() {
+  clear_has_catalog_term();
+  if (catalog_term_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = catalog_term_;
+    catalog_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_catalog_term(::std::string* catalog_term) {
+  if (catalog_term_ != &::google::protobuf::internal::kEmptyString) {
+    delete catalog_term_;
+  }
+  if (catalog_term) {
+    set_has_catalog_term();
+    catalog_term_ = catalog_term;
+  } else {
+    clear_has_catalog_term();
+    catalog_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated .exec.user.CollateSupport collate_support = 6;
+inline int ServerMeta::collate_support_size() const {
+  return collate_support_.size();
+}
+inline void ServerMeta::clear_collate_support() {
+  collate_support_.Clear();
+}
+inline ::exec::user::CollateSupport ServerMeta::collate_support(int index) const {
+  return static_cast< ::exec::user::CollateSupport >(collate_support_.Get(index));
+}
+inline void ServerMeta::set_collate_support(int index, ::exec::user::CollateSupport value) {
+  assert(::exec::user::CollateSupport_IsValid(value));
+  collate_support_.Set(index, value);
+}
+inline void ServerMeta::add_collate_support(::exec::user::CollateSupport value) {
+  assert(::exec::user::CollateSupport_IsValid(value));
+  collate_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::collate_support() const {
+  return collate_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_collate_support() {
+  return &collate_support_;
+}
+
+// optional bool column_aliasing_supported = 7;
+inline bool ServerMeta::has_column_aliasing_supported() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ServerMeta::set_has_column_aliasing_supported() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ServerMeta::clear_has_column_aliasing_supported() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ServerMeta::clear_column_aliasing_supported() {
+  column_aliasing_supported_ = false;
+  clear_has_column_aliasing_supported();
+}
+inline bool ServerMeta::column_aliasing_supported() const {
+  return column_aliasing_supported_;
+}
+inline void ServerMeta::set_column_aliasing_supported(bool value) {
+  set_has_column_aliasing_supported();
+  column_aliasing_supported_ = value;
+}
+
+// repeated .exec.user.ConvertSupport convert_support = 8;
+inline int ServerMeta::convert_support_size() const {
+  return convert_support_.size();
+}
+inline void ServerMeta::clear_convert_support() {
+  convert_support_.Clear();
+}
+inline const ::exec::user::ConvertSupport& ServerMeta::convert_support(int index) const {
+  return convert_support_.Get(index);
+}
+inline ::exec::user::ConvertSupport* ServerMeta::mutable_convert_support(int index) {
+  return convert_support_.Mutable(index);
+}
+inline ::exec::user::ConvertSupport* ServerMeta::add_convert_support() {
+  return convert_support_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::user::ConvertSupport >&
+ServerMeta::convert_support() const {
+  return convert_support_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::user::ConvertSupport >*
+ServerMeta::mutable_convert_support() {
+  return &convert_support_;
+}
+
+// optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;
+inline bool ServerMeta::has_correlation_names_support() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void ServerMeta::set_has_correlation_names_support() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void ServerMeta::clear_has_correlation_names_support() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void ServerMeta::clear_correlation_names_support() {
+  correlation_names_support_ = 1;
+  clear_has_correlation_names_support();
+}
+inline ::exec::user::CorrelationNamesSupport ServerMeta::correlation_names_support() const {
+  return static_cast< ::exec::user::CorrelationNamesSupport >(correlation_names_support_);
+}
+inline void ServerMeta::set_correlation_names_support(::exec::user::CorrelationNamesSupport value) {
+  assert(::exec::user::CorrelationNamesSupport_IsValid(value));
+  set_has_correlation_names_support();
+  correlation_names_support_ = value;
+}
+
+// repeated string date_time_functions = 10;
+inline int ServerMeta::date_time_functions_size() const {
+  return date_time_functions_.size();
+}
+inline void ServerMeta::clear_date_time_functions() {
+  date_time_functions_.Clear();
+}
+inline const ::std::string& ServerMeta::date_time_functions(int index) const {
+  return date_time_functions_.Get(index);
+}
+inline ::std::string* ServerMeta::mutable_date_time_functions(int index) {
+  return date_time_functions_.Mutable(index);
+}
+inline void ServerMeta::set_date_time_functions(int index, const ::std::string& value) {
+  date_time_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_date_time_functions(int index, const char* value) {
+  date_time_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_date_time_functions(int index, const char* value, size_t size) {
+  date_time_functions_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::add_date_time_functions() {
+  return date_time_functions_.Add();
+}
+inline void ServerMeta::add_date_time_functions(const ::std::string& value) {
+  date_time_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_date_time_functions(const char* value) {
+  date_time_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_date_time_functions(const char* value, size_t size) {
+  date_time_functions_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ServerMeta::date_time_functions() const {
+  return date_time_functions_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ServerMeta::mutable_date_time_functions() {
+  return &date_time_functions_;
+}
+
+// repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;
+inline int ServerMeta::date_time_literals_support_size() const {
+  return date_time_literals_support_.size();
+}
+inline void ServerMeta::clear_date_time_literals_support() {
+  date_time_literals_support_.Clear();
+}
+inline ::exec::user::DateTimeLiteralsSupport ServerMeta::date_time_literals_support(int index) const {
+  return static_cast< ::exec::user::DateTimeLiteralsSupport >(date_time_literals_support_.Get(index));
+}
+inline void ServerMeta::set_date_time_literals_support(int index, ::exec::user::DateTimeLiteralsSupport value) {
+  assert(::exec::user::DateTimeLiteralsSupport_IsValid(value));
+  date_time_literals_support_.Set(index, value);
+}
+inline void ServerMeta::add_date_time_literals_support(::exec::user::DateTimeLiteralsSupport value) {
+  assert(::exec::user::DateTimeLiteralsSupport_IsValid(value));
+  date_time_literals_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::date_time_literals_support() const {
+  return date_time_literals_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_date_time_literals_support() {
+  return &date_time_literals_support_;
+}
+
+// optional .exec.user.GroupBySupport group_by_support = 12;
+inline bool ServerMeta::has_group_by_support() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void ServerMeta::set_has_group_by_support() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void ServerMeta::clear_has_group_by_support() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void ServerMeta::clear_group_by_support() {
+  group_by_support_ = 1;
+  clear_has_group_by_support();
+}
+inline ::exec::user::GroupBySupport ServerMeta::group_by_support() const {
+  return static_cast< ::exec::user::GroupBySupport >(group_by_support_);
+}
+inline void ServerMeta::set_group_by_support(::exec::user::GroupBySupport value) {
+  assert(::exec::user::GroupBySupport_IsValid(value));
+  set_has_group_by_support();
+  group_by_support_ = value;
+}
+
+// optional .exec.user.IdentifierCasing identifier_casing = 13;
+inline bool ServerMeta::has_identifier_casing() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void ServerMeta::set_has_identifier_casing() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void ServerMeta::clear_has_identifier_casing() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void ServerMeta::clear_identifier_casing() {
+  identifier_casing_ = 0;
+  clear_has_identifier_casing();
+}
+inline ::exec::user::IdentifierCasing ServerMeta::identifier_casing() const {
+  return static_cast< ::exec::user::IdentifierCasing >(identifier_casing_);
+}
+inline void ServerMeta::set_identifier_casing(::exec::user::IdentifierCasing value) {
+  assert(::exec::user::IdentifierCasing_IsValid(value));
+  set_has_identifier_casing();
+  identifier_casing_ = value;
+}
+
+// optional string identifier_quote_string = 14;
+inline bool ServerMeta::has_identifier_quote_string() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void ServerMeta::set_has_identifier_quote_string() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void ServerMeta::clear_has_identifier_quote_string() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void ServerMeta::clear_identifier_quote_string() {
+  if (identifier_quote_string_ != &::google::protobuf::internal::kEmptyString) {
+    identifier_quote_string_->clear();
+  }
+  clear_has_identifier_quote_string();
+}
+inline const ::std::string& ServerMeta::identifier_quote_string() const {
+  return *identifier_quote_string_;
+}
+inline void ServerMeta::set_identifier_quote_string(const ::std::string& value) {
+  set_has_identifier_quote_string();
+  if (identifier_quote_string_ == &::google::protobuf::internal::kEmptyString) {
+    identifier_quote_string_ = new ::std::string;
+  }
+  identifier_quote_string_->assign(value);
+}
+inline void ServerMeta::set_identifier_quote_string(const char* value) {
+  set_has_identifier_quote_string();
+  if (identifier_quote_string_ == &::google::protobuf::internal::kEmptyString) {
+    identifier_quote_string_ = new ::std::string;
+  }
+  identifier_quote_string_->assign(value);
+}
+inline void ServerMeta::set_identifier_quote_string(const char* value, size_t size) {
+  set_has_identifier_quote_string();
+  if (identifier_quote_string_ == &::google::protobuf::internal::kEmptyString) {
+    identifier_quote_string_ = new ::std::string;
+  }
+  identifier_quote_string_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_identifier_quote_string() {
+  set_has_identifier_quote_string();
+  if (identifier_quote_string_ == &::google::protobuf::internal::kEmptyString) {
+    identifier_quote_string_ = new ::std::string;
+  }
+  return identifier_quote_string_;
+}
+inline ::std::string* ServerMeta::release_identifier_quote_string() {
+  clear_has_identifier_quote_string();
+  if (identifier_quote_string_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = identifier_quote_string_;
+    identifier_quote_string_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_identifier_quote_string(::std::string* identifier_quote_string) {
+  if (identifier_quote_string_ != &::google::protobuf::internal::kEmptyString) {
+    delete identifier_quote_string_;
+  }
+  if (identifier_quote_string) {
+    set_has_identifier_quote_string();
+    identifier_quote_string_ = identifier_quote_string;
+  } else {
+    clear_has_identifier_quote_string();
+    identifier_quote_string_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool like_escape_clause_supported = 15;
+inline bool ServerMeta::has_like_escape_clause_supported() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void ServerMeta::set_has_like_escape_clause_supported() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void ServerMeta::clear_has_like_escape_clause_supported() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void ServerMeta::clear_like_escape_clause_supported() {
+  like_escape_clause_supported_ = false;
+  clear_has_like_escape_clause_supported();
+}
+inline bool ServerMeta::like_escape_clause_supported() const {
+  return like_escape_clause_supported_;
+}
+inline void ServerMeta::set_like_escape_clause_supported(bool value) {
+  set_has_like_escape_clause_supported();
+  like_escape_clause_supported_ = value;
+}
+
+// optional uint32 max_binary_literal_length = 16;
+inline bool ServerMeta::has_max_binary_literal_length() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void ServerMeta::set_has_max_binary_literal_length() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void ServerMeta::clear_has_max_binary_literal_length() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void ServerMeta::clear_max_binary_literal_length() {
+  max_binary_literal_length_ = 0u;
+  clear_has_max_binary_literal_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_binary_literal_length() const {
+  return max_binary_literal_length_;
+}
+inline void ServerMeta::set_max_binary_literal_length(::google::protobuf::uint32 value) {
+  set_has_max_binary_literal_length();
+  max_binary_literal_length_ = value;
+}
+
+// optional uint32 max_catalog_name_length = 17;
+inline bool ServerMeta::has_max_catalog_name_length() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void ServerMeta::set_has_max_catalog_name_length() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void ServerMeta::clear_has_max_catalog_name_length() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void ServerMeta::clear_max_catalog_name_length() {
+  max_catalog_name_length_ = 0u;
+  clear_has_max_catalog_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_catalog_name_length() const {
+  return max_catalog_name_length_;
+}
+inline void ServerMeta::set_max_catalog_name_length(::google::protobuf::uint32 value) {
+  set_has_max_catalog_name_length();
+  max_catalog_name_length_ = value;
+}
+
+// optional uint32 max_char_literal_length = 18;
+inline bool ServerMeta::has_max_char_literal_length() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void ServerMeta::set_has_max_char_literal_length() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void ServerMeta::clear_has_max_char_literal_length() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void ServerMeta::clear_max_char_literal_length() {
+  max_char_literal_length_ = 0u;
+  clear_has_max_char_literal_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_char_literal_length() const {
+  return max_char_literal_length_;
+}
+inline void ServerMeta::set_max_char_literal_length(::google::protobuf::uint32 value) {
+  set_has_max_char_literal_length();
+  max_char_literal_length_ = value;
+}
+
+// optional uint32 max_column_name_length = 19;
+inline bool ServerMeta::has_max_column_name_length() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void ServerMeta::set_has_max_column_name_length() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void ServerMeta::clear_has_max_column_name_length() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void ServerMeta::clear_max_column_name_length() {
+  max_column_name_length_ = 0u;
+  clear_has_max_column_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_column_name_length() const {
+  return max_column_name_length_;
+}
+inline void ServerMeta::set_max_column_name_length(::google::protobuf::uint32 value) {
+  set_has_max_column_name_length();
+  max_column_name_length_ = value;
+}
+
+// optional uint32 max_columns_in_group_by = 20;
+inline bool ServerMeta::has_max_columns_in_group_by() const {
+  return (_has_bits_[0] & 0x00080000u) != 0;
+}
+inline void ServerMeta::set_has_max_columns_in_group_by() {
+  _has_bits_[0] |= 0x00080000u;
+}
+inline void ServerMeta::clear_has_max_columns_in_group_by() {
+  _has_bits_[0] &= ~0x00080000u;
+}
+inline void ServerMeta::clear_max_columns_in_group_by() {
+  max_columns_in_group_by_ = 0u;
+  clear_has_max_columns_in_group_by();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_columns_in_group_by() const {
+  return max_columns_in_group_by_;
+}
+inline void ServerMeta::set_max_columns_in_group_by(::google::protobuf::uint32 value) {
+  set_has_max_columns_in_group_by();
+  max_columns_in_group_by_ = value;
+}
+
+// optional uint32 max_columns_in_order_by = 21;
+inline bool ServerMeta::has_max_columns_in_order_by() const {
+  return (_has_bits_[0] & 0x00100000u) != 0;
+}
+inline void ServerMeta::set_has_max_columns_in_order_by() {
+  _has_bits_[0] |= 0x00100000u;
+}
+inline void ServerMeta::clear_has_max_columns_in_order_by() {
+  _has_bits_[0] &= ~0x00100000u;
+}
+inline void ServerMeta::clear_max_columns_in_order_by() {
+  max_columns_in_order_by_ = 0u;
+  clear_has_max_columns_in_order_by();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_columns_in_order_by() const {
+  return max_columns_in_order_by_;
+}
+inline void ServerMeta::set_max_columns_in_order_by(::google::protobuf::uint32 value) {
+  set_has_max_columns_in_order_by();
+  max_columns_in_order_by_ = value;
+}
+
+// optional uint32 max_columns_in_select = 22;
+inline bool ServerMeta::has_max_columns_in_select() const {
+  return (_has_bits_[0] & 0x00200000u) != 0;
+}
+inline void ServerMeta::set_has_max_columns_in_select() {
+  _has_bits_[0] |= 0x00200000u;
+}
+inline void ServerMeta::clear_has_max_columns_in_select() {
+  _has_bits_[0] &= ~0x00200000u;
+}
+inline void ServerMeta::clear_max_columns_in_select() {
+  max_columns_in_select_ = 0u;
+  clear_has_max_columns_in_select();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_columns_in_select() const {
+  return max_columns_in_select_;
+}
+inline void ServerMeta::set_max_columns_in_select(::google::protobuf::uint32 value) {
+  set_has_max_columns_in_select();
+  max_columns_in_select_ = value;
+}
+
+// optional uint32 max_cursor_name_length = 23;
+inline bool ServerMeta::has_max_cursor_name_length() const {
+  return (_has_bits_[0] & 0x00400000u) != 0;
+}
+inline void ServerMeta::set_has_max_cursor_name_length() {
+  _has_bits_[0] |= 0x00400000u;
+}
+inline void ServerMeta::clear_has_max_cursor_name_length() {
+  _has_bits_[0] &= ~0x00400000u;
+}
+inline void ServerMeta::clear_max_cursor_name_length() {
+  max_cursor_name_length_ = 0u;
+  clear_has_max_cursor_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_cursor_name_length() const {
+  return max_cursor_name_length_;
+}
+inline void ServerMeta::set_max_cursor_name_length(::google::protobuf::uint32 value) {
+  set_has_max_cursor_name_length();
+  max_cursor_name_length_ = value;
+}
+
+// optional uint32 max_logical_lob_size = 24;
+inline bool ServerMeta::has_max_logical_lob_size() const {
+  return (_has_bits_[0] & 0x00800000u) != 0;
+}
+inline void ServerMeta::set_has_max_logical_lob_size() {
+  _has_bits_[0] |= 0x00800000u;
+}
+inline void ServerMeta::clear_has_max_logical_lob_size() {
+  _has_bits_[0] &= ~0x00800000u;
+}
+inline void ServerMeta::clear_max_logical_lob_size() {
+  max_logical_lob_size_ = 0u;
+  clear_has_max_logical_lob_size();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_logical_lob_size() const {
+  return max_logical_lob_size_;
+}
+inline void ServerMeta::set_max_logical_lob_size(::google::protobuf::uint32 value) {
+  set_has_max_logical_lob_size();
+  max_logical_lob_size_ = value;
+}
+
+// optional uint32 max_row_size = 25;
+inline bool ServerMeta::has_max_row_size() const {
+  return (_has_bits_[0] & 0x01000000u) != 0;
+}
+inline void ServerMeta::set_has_max_row_size() {
+  _has_bits_[0] |= 0x01000000u;
+}
+inline void ServerMeta::clear_has_max_row_size() {
+  _has_bits_[0] &= ~0x01000000u;
+}
+inline void ServerMeta::clear_max_row_size() {
+  max_row_size_ = 0u;
+  clear_has_max_row_size();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_row_size() const {
+  return max_row_size_;
+}
+inline void ServerMeta::set_max_row_size(::google::protobuf::uint32 value) {
+  set_has_max_row_size();
+  max_row_size_ = value;
+}
+
+// optional uint32 max_schema_name_length = 26;
+inline bool ServerMeta::has_max_schema_name_length() const {
+  return (_has_bits_[0] & 0x02000000u) != 0;
+}
+inline void ServerMeta::set_has_max_schema_name_length() {
+  _has_bits_[0] |= 0x02000000u;
+}
+inline void ServerMeta::clear_has_max_schema_name_length() {
+  _has_bits_[0] &= ~0x02000000u;
+}
+inline void ServerMeta::clear_max_schema_name_length() {
+  max_schema_name_length_ = 0u;
+  clear_has_max_schema_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_schema_name_length() const {
+  return max_schema_name_length_;
+}
+inline void ServerMeta::set_max_schema_name_length(::google::protobuf::uint32 value) {
+  set_has_max_schema_name_length();
+  max_schema_name_length_ = value;
+}
+
+// optional uint32 max_statement_length = 27;
+inline bool ServerMeta::has_max_statement_length() const {
+  return (_has_bits_[0] & 0x04000000u) != 0;
+}
+inline void ServerMeta::set_has_max_statement_length() {
+  _has_bits_[0] |= 0x04000000u;
+}
+inline void ServerMeta::clear_has_max_statement_length() {
+  _has_bits_[0] &= ~0x04000000u;
+}
+inline void ServerMeta::clear_max_statement_length() {
+  max_statement_length_ = 0u;
+  clear_has_max_statement_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_statement_length() const {
+  return max_statement_length_;
+}
+inline void ServerMeta::set_max_statement_length(::google::protobuf::uint32 value) {
+  set_has_max_statement_length();
+  max_statement_length_ = value;
+}
+
+// optional uint32 max_statements = 28;
+inline bool ServerMeta::has_max_statements() const {
+  return (_has_bits_[0] & 0x08000000u) != 0;
+}
+inline void ServerMeta::set_has_max_statements() {
+  _has_bits_[0] |= 0x08000000u;
+}
+inline void ServerMeta::clear_has_max_statements() {
+  _has_bits_[0] &= ~0x08000000u;
+}
+inline void ServerMeta::clear_max_statements() {
+  max_statements_ = 0u;
+  clear_has_max_statements();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_statements() const {
+  return max_statements_;
+}
+inline void ServerMeta::set_max_statements(::google::protobuf::uint32 value) {
+  set_has_max_statements();
+  max_statements_ = value;
+}
+
+// optional uint32 max_table_name_length = 29;
+inline bool ServerMeta::has_max_table_name_length() const {
+  return (_has_bits_[0] & 0x10000000u) != 0;
+}
+inline void ServerMeta::set_has_max_table_name_length() {
+  _has_bits_[0] |= 0x10000000u;
+}
+inline void ServerMeta::clear_has_max_table_name_length() {
+  _has_bits_[0] &= ~0x10000000u;
+}
+inline void ServerMeta::clear_max_table_name_length() {
+  max_table_name_length_ = 0u;
+  clear_has_max_table_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_table_name_length() const {
+  return max_table_name_length_;
+}
+inline void ServerMeta::set_max_table_name_length(::google::protobuf::uint32 value) {
+  set_has_max_table_name_length();
+  max_table_name_length_ = value;
+}
+
+// optional uint32 max_tables_in_select = 30;
+inline bool ServerMeta::has_max_tables_in_select() const {
+  return (_has_bits_[0] & 0x20000000u) != 0;
+}
+inline void ServerMeta::set_has_max_tables_in_select() {
+  _has_bits_[0] |= 0x20000000u;
+}
+inline void ServerMeta::clear_has_max_tables_in_select() {
+  _has_bits_[0] &= ~0x20000000u;
+}
+inline void ServerMeta::clear_max_tables_in_select() {
+  max_tables_in_select_ = 0u;
+  clear_has_max_tables_in_select();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_tables_in_select() const {
+  return max_tables_in_select_;
+}
+inline void ServerMeta::set_max_tables_in_select(::google::protobuf::uint32 value) {
+  set_has_max_tables_in_select();
+  max_tables_in_select_ = value;
+}
+
+// optional uint32 max_user_name_length = 31;
+inline bool ServerMeta::has_max_user_name_length() const {
+  return (_has_bits_[0] & 0x40000000u) != 0;
+}
+inline void ServerMeta::set_has_max_user_name_length() {
+  _has_bits_[0] |= 0x40000000u;
+}
+inline void ServerMeta::clear_has_max_user_name_length() {
+  _has_bits_[0] &= ~0x40000000u;
+}
+inline void ServerMeta::clear_max_user_name_length() {
+  max_user_name_length_ = 0u;
+  clear_has_max_user_name_length();
+}
+inline ::google::protobuf::uint32 ServerMeta::max_user_name_length() const {
+  return max_user_name_length_;
+}
+inline void ServerMeta::set_max_user_name_length(::google::protobuf::uint32 value) {
+  set_has_max_user_name_length();
+  max_user_name_length_ = value;
+}
+
+// optional .exec.user.NullCollation null_collation = 32;
+inline bool ServerMeta::has_null_collation() const {
+  return (_has_bits_[0] & 0x80000000u) != 0;
+}
+inline void ServerMeta::set_has_null_collation() {
+  _has_bits_[0] |= 0x80000000u;
+}
+inline void ServerMeta::clear_has_null_collation() {
+  _has_bits_[0] &= ~0x80000000u;
+}
+inline void ServerMeta::clear_null_collation() {
+  null_collation_ = 0;
+  clear_has_null_collation();
+}
+inline ::exec::user::NullCollation ServerMeta::null_collation() const {
+  return static_cast< ::exec::user::NullCollation >(null_collation_);
+}
+inline void ServerMeta::set_null_collation(::exec::user::NullCollation value) {
+  assert(::exec::user::NullCollation_IsValid(value));
+  set_has_null_collation();
+  null_collation_ = value;
+}
+
+// optional bool null_plus_non_null_equals_null = 33;
+inline bool ServerMeta::has_null_plus_non_null_equals_null() const {
+  return (_has_bits_[1] & 0x00000001u) != 0;
+}
+inline void ServerMeta::set_has_null_plus_non_null_equals_null() {
+  _has_bits_[1] |= 0x00000001u;
+}
+inline void ServerMeta::clear_has_null_plus_non_null_equals_null() {
+  _has_bits_[1] &= ~0x00000001u;
+}
+inline void ServerMeta::clear_null_plus_non_null_equals_null() {
+  null_plus_non_null_equals_null_ = false;
+  clear_has_null_plus_non_null_equals_null();
+}
+inline bool ServerMeta::null_plus_non_null_equals_null() const {
+  return null_plus_non_null_equals_null_;
+}
+inline void ServerMeta::set_null_plus_non_null_equals_null(bool value) {
+  set_has_null_plus_non_null_equals_null();
+  null_plus_non_null_equals_null_ = value;
+}
+
+// repeated string numeric_functions = 34;
+inline int ServerMeta::numeric_functions_size() const {
+  return numeric_functions_.size();
+}
+inline void ServerMeta::clear_numeric_functions() {
+  numeric_functions_.Clear();
+}
+inline const ::std::string& ServerMeta::numeric_functions(int index) const {
+  return numeric_functions_.Get(index);
+}
+inline ::std::string* ServerMeta::mutable_numeric_functions(int index) {
+  return numeric_functions_.Mutable(index);
+}
+inline void ServerMeta::set_numeric_functions(int index, const ::std::string& value) {
+  numeric_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_numeric_functions(int index, const char* value) {
+  numeric_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_numeric_functions(int index, const char* value, size_t size) {
+  numeric_functions_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::add_numeric_functions() {
+  return numeric_functions_.Add();
+}
+inline void ServerMeta::add_numeric_functions(const ::std::string& value) {
+  numeric_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_numeric_functions(const char* value) {
+  numeric_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_numeric_functions(const char* value, size_t size) {
+  numeric_functions_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ServerMeta::numeric_functions() const {
+  return numeric_functions_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ServerMeta::mutable_numeric_functions() {
+  return &numeric_functions_;
+}
+
+// repeated .exec.user.OrderBySupport order_by_support = 35;
+inline int ServerMeta::order_by_support_size() const {
+  return order_by_support_.size();
+}
+inline void ServerMeta::clear_order_by_support() {
+  order_by_support_.Clear();
+}
+inline ::exec::user::OrderBySupport ServerMeta::order_by_support(int index) const {
+  return static_cast< ::exec::user::OrderBySupport >(order_by_support_.Get(index));
+}
+inline void ServerMeta::set_order_by_support(int index, ::exec::user::OrderBySupport value) {
+  assert(::exec::user::OrderBySupport_IsValid(value));
+  order_by_support_.Set(index, value);
+}
+inline void ServerMeta::add_order_by_support(::exec::user::OrderBySupport value) {
+  assert(::exec::user::OrderBySupport_IsValid(value));
+  order_by_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::order_by_support() const {
+  return order_by_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_order_by_support() {
+  return &order_by_support_;
+}
+
+// repeated .exec.user.OuterJoinSupport outer_join_support = 36;
+inline int ServerMeta::outer_join_support_size() const {
+  return outer_join_support_.size();
+}
+inline void ServerMeta::clear_outer_join_support() {
+  outer_join_support_.Clear();
+}
+inline ::exec::user::OuterJoinSupport ServerMeta::outer_join_support(int index) const {
+  return static_cast< ::exec::user::OuterJoinSupport >(outer_join_support_.Get(index));
+}
+inline void ServerMeta::set_outer_join_support(int index, ::exec::user::OuterJoinSupport value) {
+  assert(::exec::user::OuterJoinSupport_IsValid(value));
+  outer_join_support_.Set(index, value);
+}
+inline void ServerMeta::add_outer_join_support(::exec::user::OuterJoinSupport value) {
+  assert(::exec::user::OuterJoinSupport_IsValid(value));
+  outer_join_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::outer_join_support() const {
+  return outer_join_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_outer_join_support() {
+  return &outer_join_support_;
+}
+
+// optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;
+inline bool ServerMeta::has_quoted_identifier_casing() const {
+  return (_has_bits_[1] & 0x00000010u) != 0;
+}
+inline void ServerMeta::set_has_quoted_identifier_casing() {
+  _has_bits_[1] |= 0x00000010u;
+}
+inline void ServerMeta::clear_has_quoted_identifier_casing() {
+  _has_bits_[1] &= ~0x00000010u;
+}
+inline void ServerMeta::clear_quoted_identifier_casing() {
+  quoted_identifier_casing_ = 0;
+  clear_has_quoted_identifier_casing();
+}
+inline ::exec::user::IdentifierCasing ServerMeta::quoted_identifier_casing() const {
+  return static_cast< ::exec::user::IdentifierCasing >(quoted_identifier_casing_);
+}
+inline void ServerMeta::set_quoted_identifier_casing(::exec::user::IdentifierCasing value) {
+  assert(::exec::user::IdentifierCasing_IsValid(value));
+  set_has_quoted_identifier_casing();
+  quoted_identifier_casing_ = value;
+}
+
+// optional bool read_only = 38;
+inline bool ServerMeta::has_read_only() const {
+  return (_has_bits_[1] & 0x00000020u) != 0;
+}
+inline void ServerMeta::set_has_read_only() {
+  _has_bits_[1] |= 0x00000020u;
+}
+inline void ServerMeta::clear_has_read_only() {
+  _has_bits_[1] &= ~0x00000020u;
+}
+inline void ServerMeta::clear_read_only() {
+  read_only_ = false;
+  clear_has_read_only();
+}
+inline bool ServerMeta::read_only() const {
+  return read_only_;
+}
+inline void ServerMeta::set_read_only(bool value) {
+  set_has_read_only();
+  read_only_ = value;
+}
+
+// optional string schema_term = 39;
+inline bool ServerMeta::has_schema_term() const {
+  return (_has_bits_[1] & 0x00000040u) != 0;
+}
+inline void ServerMeta::set_has_schema_term() {
+  _has_bits_[1] |= 0x00000040u;
+}
+inline void ServerMeta::clear_has_schema_term() {
+  _has_bits_[1] &= ~0x00000040u;
+}
+inline void ServerMeta::clear_schema_term() {
+  if (schema_term_ != &::google::protobuf::internal::kEmptyString) {
+    schema_term_->clear();
+  }
+  clear_has_schema_term();
+}
+inline const ::std::string& ServerMeta::schema_term() const {
+  return *schema_term_;
+}
+inline void ServerMeta::set_schema_term(const ::std::string& value) {
+  set_has_schema_term();
+  if (schema_term_ == &::google::protobuf::internal::kEmptyString) {
+    schema_term_ = new ::std::string;
+  }
+  schema_term_->assign(value);
+}
+inline void ServerMeta::set_schema_term(const char* value) {
+  set_has_schema_term();
+  if (schema_term_ == &::google::protobuf::internal::kEmptyString) {
+    schema_term_ = new ::std::string;
+  }
+  schema_term_->assign(value);
+}
+inline void ServerMeta::set_schema_term(const char* value, size_t size) {
+  set_has_schema_term();
+  if (schema_term_ == &::google::protobuf::internal::kEmptyString) {
+    schema_term_ = new ::std::string;
+  }
+  schema_term_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_schema_term() {
+  set_has_schema_term();
+  if (schema_term_ == &::google::protobuf::internal::kEmptyString) {
+    schema_term_ = new ::std::string;
+  }
+  return schema_term_;
+}
+inline ::std::string* ServerMeta::release_schema_term() {
+  clear_has_schema_term();
+  if (schema_term_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = schema_term_;
+    schema_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_schema_term(::std::string* schema_term) {
+  if (schema_term_ != &::google::protobuf::internal::kEmptyString) {
+    delete schema_term_;
+  }
+  if (schema_term) {
+    set_has_schema_term();
+    schema_term_ = schema_term;
+  } else {
+    clear_has_schema_term();
+    schema_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string search_escape_string = 40;
+inline bool ServerMeta::has_search_escape_string() const {
+  return (_has_bits_[1] & 0x00000080u) != 0;
+}
+inline void ServerMeta::set_has_search_escape_string() {
+  _has_bits_[1] |= 0x00000080u;
+}
+inline void ServerMeta::clear_has_search_escape_string() {
+  _has_bits_[1] &= ~0x00000080u;
+}
+inline void ServerMeta::clear_search_escape_string() {
+  if (search_escape_string_ != &::google::protobuf::internal::kEmptyString) {
+    search_escape_string_->clear();
+  }
+  clear_has_search_escape_string();
+}
+inline const ::std::string& ServerMeta::search_escape_string() const {
+  return *search_escape_string_;
+}
+inline void ServerMeta::set_search_escape_string(const ::std::string& value) {
+  set_has_search_escape_string();
+  if (search_escape_string_ == &::google::protobuf::internal::kEmptyString) {
+    search_escape_string_ = new ::std::string;
+  }
+  search_escape_string_->assign(value);
+}
+inline void ServerMeta::set_search_escape_string(const char* value) {
+  set_has_search_escape_string();
+  if (search_escape_string_ == &::google::protobuf::internal::kEmptyString) {
+    search_escape_string_ = new ::std::string;
+  }
+  search_escape_string_->assign(value);
+}
+inline void ServerMeta::set_search_escape_string(const char* value, size_t size) {
+  set_has_search_escape_string();
+  if (search_escape_string_ == &::google::protobuf::internal::kEmptyString) {
+    search_escape_string_ = new ::std::string;
+  }
+  search_escape_string_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_search_escape_string() {
+  set_has_search_escape_string();
+  if (search_escape_string_ == &::google::protobuf::internal::kEmptyString) {
+    search_escape_string_ = new ::std::string;
+  }
+  return search_escape_string_;
+}
+inline ::std::string* ServerMeta::release_search_escape_string() {
+  clear_has_search_escape_string();
+  if (search_escape_string_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = search_escape_string_;
+    search_escape_string_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_search_escape_string(::std::string* search_escape_string) {
+  if (search_escape_string_ != &::google::protobuf::internal::kEmptyString) {
+    delete search_escape_string_;
+  }
+  if (search_escape_string) {
+    set_has_search_escape_string();
+    search_escape_string_ = search_escape_string;
+  } else {
+    clear_has_search_escape_string();
+    search_escape_string_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool select_for_update_supported = 41;
+inline bool ServerMeta::has_select_for_update_supported() const {
+  return (_has_bits_[1] & 0x00000100u) != 0;
+}
+inline void ServerMeta::set_has_select_for_update_supported() {
+  _has_bits_[1] |= 0x00000100u;
+}
+inline void ServerMeta::clear_has_select_for_update_supported() {
+  _has_bits_[1] &= ~0x00000100u;
+}
+inline void ServerMeta::clear_select_for_update_supported() {
+  select_for_update_supported_ = false;
+  clear_has_select_for_update_supported();
+}
+inline bool ServerMeta::select_for_update_supported() const {
+  return select_for_update_supported_;
+}
+inline void ServerMeta::set_select_for_update_supported(bool value) {
+  set_has_select_for_update_supported();
+  select_for_update_supported_ = value;
+}
+
+// optional string special_characters = 42;
+inline bool ServerMeta::has_special_characters() const {
+  return (_has_bits_[1] & 0x00000200u) != 0;
+}
+inline void ServerMeta::set_has_special_characters() {
+  _has_bits_[1] |= 0x00000200u;
+}
+inline void ServerMeta::clear_has_special_characters() {
+  _has_bits_[1] &= ~0x00000200u;
+}
+inline void ServerMeta::clear_special_characters() {
+  if (special_characters_ != &::google::protobuf::internal::kEmptyString) {
+    special_characters_->clear();
+  }
+  clear_has_special_characters();
+}
+inline const ::std::string& ServerMeta::special_characters() const {
+  return *special_characters_;
+}
+inline void ServerMeta::set_special_characters(const ::std::string& value) {
+  set_has_special_characters();
+  if (special_characters_ == &::google::protobuf::internal::kEmptyString) {
+    special_characters_ = new ::std::string;
+  }
+  special_characters_->assign(value);
+}
+inline void ServerMeta::set_special_characters(const char* value) {
+  set_has_special_characters();
+  if (special_characters_ == &::google::protobuf::internal::kEmptyString) {
+    special_characters_ = new ::std::string;
+  }
+  special_characters_->assign(value);
+}
+inline void ServerMeta::set_special_characters(const char* value, size_t size) {
+  set_has_special_characters();
+  if (special_characters_ == &::google::protobuf::internal::kEmptyString) {
+    special_characters_ = new ::std::string;
+  }
+  special_characters_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_special_characters() {
+  set_has_special_characters();
+  if (special_characters_ == &::google::protobuf::internal::kEmptyString) {
+    special_characters_ = new ::std::string;
+  }
+  return special_characters_;
+}
+inline ::std::string* ServerMeta::release_special_characters() {
+  clear_has_special_characters();
+  if (special_characters_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = special_characters_;
+    special_characters_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_special_characters(::std::string* special_characters) {
+  if (special_characters_ != &::google::protobuf::internal::kEmptyString) {
+    delete special_characters_;
+  }
+  if (special_characters) {
+    set_has_special_characters();
+    special_characters_ = special_characters;
+  } else {
+    clear_has_special_characters();
+    special_characters_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated string sql_keywords = 43;
+inline int ServerMeta::sql_keywords_size() const {
+  return sql_keywords_.size();
+}
+inline void ServerMeta::clear_sql_keywords() {
+  sql_keywords_.Clear();
+}
+inline const ::std::string& ServerMeta::sql_keywords(int index) const {
+  return sql_keywords_.Get(index);
+}
+inline ::std::string* ServerMeta::mutable_sql_keywords(int index) {
+  return sql_keywords_.Mutable(index);
+}
+inline void ServerMeta::set_sql_keywords(int index, const ::std::string& value) {
+  sql_keywords_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_sql_keywords(int index, const char* value) {
+  sql_keywords_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_sql_keywords(int index, const char* value, size_t size) {
+  sql_keywords_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::add_sql_keywords() {
+  return sql_keywords_.Add();
+}
+inline void ServerMeta::add_sql_keywords(const ::std::string& value) {
+  sql_keywords_.Add()->assign(value);
+}
+inline void ServerMeta::add_sql_keywords(const char* value) {
+  sql_keywords_.Add()->assign(value);
+}
+inline void ServerMeta::add_sql_keywords(const char* value, size_t size) {
+  sql_keywords_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ServerMeta::sql_keywords() const {
+  return sql_keywords_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ServerMeta::mutable_sql_keywords() {
+  return &sql_keywords_;
+}
+
+// repeated string string_functions = 44;
+inline int ServerMeta::string_functions_size() const {
+  return string_functions_.size();
+}
+inline void ServerMeta::clear_string_functions() {
+  string_functions_.Clear();
+}
+inline const ::std::string& ServerMeta::string_functions(int index) const {
+  return string_functions_.Get(index);
+}
+inline ::std::string* ServerMeta::mutable_string_functions(int index) {
+  return string_functions_.Mutable(index);
+}
+inline void ServerMeta::set_string_functions(int index, const ::std::string& value) {
+  string_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_string_functions(int index, const char* value) {
+  string_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_string_functions(int index, const char* value, size_t size) {
+  string_functions_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::add_string_functions() {
+  return string_functions_.Add();
+}
+inline void ServerMeta::add_string_functions(const ::std::string& value) {
+  string_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_string_functions(const char* value) {
+  string_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_string_functions(const char* value, size_t size) {
+  string_functions_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ServerMeta::string_functions() const {
+  return string_functions_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ServerMeta::mutable_string_functions() {
+  return &string_functions_;
+}
+
+// repeated .exec.user.SubQuerySupport subquery_support = 45;
+inline int ServerMeta::subquery_support_size() const {
+  return subquery_support_.size();
+}
+inline void ServerMeta::clear_subquery_support() {
+  subquery_support_.Clear();
+}
+inline ::exec::user::SubQuerySupport ServerMeta::subquery_support(int index) const {
+  return static_cast< ::exec::user::SubQuerySupport >(subquery_support_.Get(index));
+}
+inline void ServerMeta::set_subquery_support(int index, ::exec::user::SubQuerySupport value) {
+  assert(::exec::user::SubQuerySupport_IsValid(value));
+  subquery_support_.Set(index, value);
+}
+inline void ServerMeta::add_subquery_support(::exec::user::SubQuerySupport value) {
+  assert(::exec::user::SubQuerySupport_IsValid(value));
+  subquery_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::subquery_support() const {
+  return subquery_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_subquery_support() {
+  return &subquery_support_;
+}
+
+// repeated string system_functions = 46;
+inline int ServerMeta::system_functions_size() const {
+  return system_functions_.size();
+}
+inline void ServerMeta::clear_system_functions() {
+  system_functions_.Clear();
+}
+inline const ::std::string& ServerMeta::system_functions(int index) const {
+  return system_functions_.Get(index);
+}
+inline ::std::string* ServerMeta::mutable_system_functions(int index) {
+  return system_functions_.Mutable(index);
+}
+inline void ServerMeta::set_system_functions(int index, const ::std::string& value) {
+  system_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_system_functions(int index, const char* value) {
+  system_functions_.Mutable(index)->assign(value);
+}
+inline void ServerMeta::set_system_functions(int index, const char* value, size_t size) {
+  system_functions_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::add_system_functions() {
+  return system_functions_.Add();
+}
+inline void ServerMeta::add_system_functions(const ::std::string& value) {
+  system_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_system_functions(const char* value) {
+  system_functions_.Add()->assign(value);
+}
+inline void ServerMeta::add_system_functions(const char* value, size_t size) {
+  system_functions_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ServerMeta::system_functions() const {
+  return system_functions_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ServerMeta::mutable_system_functions() {
+  return &system_functions_;
+}
+
+// optional string table_term = 47;
+inline bool ServerMeta::has_table_term() const {
+  return (_has_bits_[1] & 0x00004000u) != 0;
+}
+inline void ServerMeta::set_has_table_term() {
+  _has_bits_[1] |= 0x00004000u;
+}
+inline void ServerMeta::clear_has_table_term() {
+  _has_bits_[1] &= ~0x00004000u;
+}
+inline void ServerMeta::clear_table_term() {
+  if (table_term_ != &::google::protobuf::internal::kEmptyString) {
+    table_term_->clear();
+  }
+  clear_has_table_term();
+}
+inline const ::std::string& ServerMeta::table_term() const {
+  return *table_term_;
+}
+inline void ServerMeta::set_table_term(const ::std::string& value) {
+  set_has_table_term();
+  if (table_term_ == &::google::protobuf::internal::kEmptyString) {
+    table_term_ = new ::std::string;
+  }
+  table_term_->assign(value);
+}
+inline void ServerMeta::set_table_term(const char* value) {
+  set_has_table_term();
+  if (table_term_ == &::google::protobuf::internal::kEmptyString) {
+    table_term_ = new ::std::string;
+  }
+  table_term_->assign(value);
+}
+inline void ServerMeta::set_table_term(const char* value, size_t size) {
+  set_has_table_term();
+  if (table_term_ == &::google::protobuf::internal::kEmptyString) {
+    table_term_ = new ::std::string;
+  }
+  table_term_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ServerMeta::mutable_table_term() {
+  set_has_table_term();
+  if (table_term_ == &::google::protobuf::internal::kEmptyString) {
+    table_term_ = new ::std::string;
+  }
+  return table_term_;
+}
+inline ::std::string* ServerMeta::release_table_term() {
+  clear_has_table_term();
+  if (table_term_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = table_term_;
+    table_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ServerMeta::set_allocated_table_term(::std::string* table_term) {
+  if (table_term_ != &::google::protobuf::internal::kEmptyString) {
+    delete table_term_;
+  }
+  if (table_term) {
+    set_has_table_term();
+    table_term_ = table_term;
+  } else {
+    clear_has_table_term();
+    table_term_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool transaction_supported = 48;
+inline bool ServerMeta::has_transaction_supported() const {
+  return (_has_bits_[1] & 0x00008000u) != 0;
+}
+inline void ServerMeta::set_has_transaction_supported() {
+  _has_bits_[1] |= 0x00008000u;
+}
+inline void ServerMeta::clear_has_transaction_supported() {
+  _has_bits_[1] &= ~0x00008000u;
+}
+inline void ServerMeta::clear_transaction_supported() {
+  transaction_supported_ = false;
+  clear_has_transaction_supported();
+}
+inline bool ServerMeta::transaction_supported() const {
+  return transaction_supported_;
+}
+inline void ServerMeta::set_transaction_supported(bool value) {
+  set_has_transaction_supported();
+  transaction_supported_ = value;
+}
+
+// repeated .exec.user.UnionSupport union_support = 49;
+inline int ServerMeta::union_support_size() const {
+  return union_support_.size();
+}
+inline void ServerMeta::clear_union_support() {
+  union_support_.Clear();
+}
+inline ::exec::user::UnionSupport ServerMeta::union_support(int index) const {
+  return static_cast< ::exec::user::UnionSupport >(union_support_.Get(index));
+}
+inline void ServerMeta::set_union_support(int index, ::exec::user::UnionSupport value) {
+  assert(::exec::user::UnionSupport_IsValid(value));
+  union_support_.Set(index, value);
+}
+inline void ServerMeta::add_union_support(::exec::user::UnionSupport value) {
+  assert(::exec::user::UnionSupport_IsValid(value));
+  union_support_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+ServerMeta::union_support() const {
+  return union_support_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+ServerMeta::mutable_union_support() {
+  return &union_support_;
+}
+
+// -------------------------------------------------------------------
+
 // RunQuery
 
 // optional .exec.user.QueryResultsMode results_mode = 1;
@@ -8600,6 +11800,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::RpcType>() {
   return ::exec::user::RpcType_descriptor();
 }
 template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::SaslSupport>() {
+  return ::exec::user::SaslSupport_descriptor();
+}
+template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResultsMode>() {
   return ::exec::user::QueryResultsMode_descriptor();
 }
@@ -8618,6 +11822,46 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::ColumnSearchabilit
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::ColumnUpdatability>() {
   return ::exec::user::ColumnUpdatability_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::CollateSupport>() {
+  return ::exec::user::CollateSupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::CorrelationNamesSupport>() {
+  return ::exec::user::CorrelationNamesSupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::DateTimeLiteralsSupport>() {
+  return ::exec::user::DateTimeLiteralsSupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::GroupBySupport>() {
+  return ::exec::user::GroupBySupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::IdentifierCasing>() {
+  return ::exec::user::IdentifierCasing_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::NullCollation>() {
+  return ::exec::user::NullCollation_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::OrderBySupport>() {
+  return ::exec::user::OrderBySupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::OuterJoinSupport>() {
+  return ::exec::user::OuterJoinSupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::SubQuerySupport>() {
+  return ::exec::user::SubQuerySupport_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::UnionSupport>() {
+  return ::exec::user::UnionSupport_descriptor();
 }
 
 }  // namespace google

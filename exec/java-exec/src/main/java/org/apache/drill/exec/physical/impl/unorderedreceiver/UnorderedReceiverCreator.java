@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,8 +28,8 @@ import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.batch.RawBatchBuffer;
 
 public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverCreator.class);
 
+  @SuppressWarnings("resource")
   @Override
   public UnorderedReceiverBatch getBatch(FragmentContext context, UnorderedReceiver receiver, List<RecordBatch> children)
       throws ExecutionSetupException {
@@ -42,6 +42,4 @@ public class UnorderedReceiverCreator implements BatchCreator<UnorderedReceiver>
     RawBatchBuffer buffer = buffers[0];
     return new UnorderedReceiverBatch(context, buffer, receiver);
   }
-
-
 }

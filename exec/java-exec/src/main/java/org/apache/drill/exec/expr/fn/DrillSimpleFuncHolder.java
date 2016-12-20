@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.codemodel.JOp;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -73,32 +74,34 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   }
 
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.
-    for (int i =0; i < inputVariables.length; i++) {
-      if (parameters[i].isConstant && !inputVariables[i].isConstant()) {
-        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", parameters[i].name, this.getRegisteredNames()[0]));
+    for (int i = 0; i < inputVariables.length; i++) {
+      if (getParameters()[i].isConstant() && !inputVariables[i].isConstant()) {
+        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", getParameters()[i].getName(), this.getRegisteredNames()[0]));
       }
     }
-    generateBody(g, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
-    HoldingContainer c = generateEvalBody(g, inputVariables, evalBody(), workspaceJVars);
-    generateBody(g, BlockType.RESET, resetBody(), null, workspaceJVars, false);
-    generateBody(g, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
+    generateBody(classGenerator, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
+    HoldingContainer c = generateEvalBody(classGenerator, inputVariables, evalBody(), workspaceJVars, fieldReference);
+    generateBody(classGenerator, BlockType.RESET, resetBody(), null, workspaceJVars, false);
+    generateBody(classGenerator, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
     return c;
   }
 
-  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
+  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body,
+                                              JVar[] workspaceJVars, FieldReference ref) {
 
-    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", registeredNames[0]));
+    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);
     JBlock topSub = sub;
     HoldingContainer out = null;
-    MajorType returnValueType = returnValue.type;
+    MajorType returnValueType = getReturnType();
 
     // add outside null handling if it is defined.
-    if (nullHandling == NullHandling.NULL_IF_NULL) {
+    if (getNullHandling() == NullHandling.NULL_IF_NULL) {
       JExpression e = null;
       for (HoldingContainer v : inputVariables) {
         if (v.isOptional()) {
@@ -118,7 +121,7 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
       if (e != null) {
         // if at least one expression must be checked, set up the conditional.
-        returnValueType = returnValue.type.toBuilder().setMode(DataMode.OPTIONAL).build();
+        returnValueType = getReturnType().toBuilder().setMode(DataMode.OPTIONAL).build();
         out = g.declare(returnValueType);
         e = e.eq(JExpr.lit(0));
         JConditional jc = sub._if(e);
@@ -135,7 +138,7 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     g.getEvalBlock().add(topSub);
 
 
-    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), returnValue.name, JExpr._new(g.getHolderType(returnValueType)));
+    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), getReturnValue().getName(), JExpr._new(g.getHolderType(returnValueType)));
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
     if (sub != topSub) {
       sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
@@ -145,7 +148,7 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
       sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
     }
 
-    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", registeredNames[0]));
+    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     return out;
   }

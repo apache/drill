@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
@@ -92,8 +93,9 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    * @return
    */
   public static long memoryNeeded(final int recordCount) {
-    // We need 4 bytes (SV4) for each record.
-    return recordCount * 4;
+    // We need 4 bytes (SV4) for each record, power of 2 rounded.
+
+    return BaseAllocator.nextPowerOfTwo(recordCount * 4);
   }
 
   private int merge(final int leftStart, final int rightStart, final int rightEnd, final int outStart) {
@@ -180,7 +182,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     final int sv1 = vector4.get(leftIndex);
     final int sv2 = vector4.get(rightIndex);
     compares++;
-    return doEval(sv1, sv2);
+    try {
+      return doEval(sv1, sv2);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
   }
 
   @Override
@@ -194,6 +200,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") VectorContainer incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,38 +18,39 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Values;
+import org.apache.drill.exec.planner.common.DrillValuesRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
-import com.google.common.collect.Iterators;
+/**
+ * Physical Values implementation in Drill.
+ */
+public class ValuesPrel extends DrillValuesRelBase implements Prel {
 
-public class ValuesPrel extends AbstractRelNode implements Prel {
+  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
+    super(cluster, rowType, tuples, traits);
+  }
 
-  @SuppressWarnings("unused")
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValuesPrel.class);
-
-  private JSONOptions content;
-
-  public ValuesPrel(RelOptCluster cluster, RelTraitSet traitSet, RelDataType rowType, JSONOptions content) {
-    super(cluster, traitSet);
-    this.rowType = rowType;
-    this.content = content;
+  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits, JSONOptions content) {
+    super(cluster, rowType, tuples, traits, content);
   }
 
   @Override
   public Iterator<Prel> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @Override
@@ -59,7 +60,7 @@ public class ValuesPrel extends AbstractRelNode implements Prel {
 
   @Override
   public Prel copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ValuesPrel(getCluster(), traitSet, rowType, content);
+    return new ValuesPrel(getCluster(), rowType, tuples, traitSet, content);
   }
 
   @Override
@@ -86,6 +87,5 @@ public class ValuesPrel extends AbstractRelNode implements Prel {
   public boolean needsFinalColumnReordering() {
     return false;
   }
-
 
 }

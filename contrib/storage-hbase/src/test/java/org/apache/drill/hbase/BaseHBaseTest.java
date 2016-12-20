@@ -20,8 +20,8 @@ package org.apache.drill.hbase;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
-  private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
+  public static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
 
@@ -71,7 +71,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected String getPlanText(String planFile, String tableName) throws IOException {
-    return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
+    return Files.toString(DrillFileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
         .replace("[TABLE_NAME]", tableName);
   }

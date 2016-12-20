@@ -59,6 +59,7 @@ class StreamProfile;
 class MetricValue;
 class Registry;
 class Jar;
+class SaslMessage;
 
 enum DrillPBError_ErrorType {
   DrillPBError_ErrorType_CONNECTION = 0,
@@ -234,11 +235,12 @@ enum CoreOperatorType {
   HBASE_SUB_SCAN = 33,
   WINDOW = 34,
   NESTED_LOOP_JOIN = 35,
-  AVRO_SUB_SCAN = 36
+  AVRO_SUB_SCAN = 36,
+  PCAP_SUB_SCAN = 37
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = AVRO_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = PCAP_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
@@ -250,6 +252,28 @@ inline bool CoreOperatorType_Parse(
     const ::std::string& name, CoreOperatorType* value) {
   return ::google::protobuf::internal::ParseNamedEnum<CoreOperatorType>(
     CoreOperatorType_descriptor(), name, value);
+}
+enum SaslStatus {
+  SASL_UNKNOWN = 0,
+  SASL_START = 1,
+  SASL_IN_PROGRESS = 2,
+  SASL_SUCCESS = 3,
+  SASL_FAILED = 4
+};
+bool SaslStatus_IsValid(int value);
+const SaslStatus SaslStatus_MIN = SASL_UNKNOWN;
+const SaslStatus SaslStatus_MAX = SASL_FAILED;
+const int SaslStatus_ARRAYSIZE = SaslStatus_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SaslStatus_descriptor();
+inline const ::std::string& SaslStatus_Name(SaslStatus value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SaslStatus_descriptor(), value);
+}
+inline bool SaslStatus_Parse(
+    const ::std::string& name, SaslStatus* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SaslStatus>(
+    SaslStatus_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -1802,6 +1826,37 @@ class QueryInfo : public ::google::protobuf::Message {
   inline ::exec::DrillbitEndpoint* release_foreman();
   inline void set_allocated_foreman(::exec::DrillbitEndpoint* foreman);
 
+  // optional string options_json = 6;
+  inline bool has_options_json() const;
+  inline void clear_options_json();
+  static const int kOptionsJsonFieldNumber = 6;
+  inline const ::std::string& options_json() const;
+  inline void set_options_json(const ::std::string& value);
+  inline void set_options_json(const char* value);
+  inline void set_options_json(const char* value, size_t size);
+  inline ::std::string* mutable_options_json();
+  inline ::std::string* release_options_json();
+  inline void set_allocated_options_json(::std::string* options_json);
+
+  // optional double total_cost = 7;
+  inline bool has_total_cost() const;
+  inline void clear_total_cost();
+  static const int kTotalCostFieldNumber = 7;
+  inline double total_cost() const;
+  inline void set_total_cost(double value);
+
+  // optional string queue_name = 8 [default = "-"];
+  inline bool has_queue_name() const;
+  inline void clear_queue_name();
+  static const int kQueueNameFieldNumber = 8;
+  inline const ::std::string& queue_name() const;
+  inline void set_queue_name(const ::std::string& value);
+  inline void set_queue_name(const char* value);
+  inline void set_queue_name(const char* value, size_t size);
+  inline ::std::string* mutable_queue_name();
+  inline ::std::string* release_queue_name();
+  inline void set_allocated_queue_name(::std::string* queue_name);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryInfo)
  private:
   inline void set_has_query();
@@ -1814,6 +1869,12 @@ class QueryInfo : public ::google::protobuf::Message {
   inline void clear_has_user();
   inline void set_has_foreman();
   inline void clear_has_foreman();
+  inline void set_has_options_json();
+  inline void clear_has_options_json();
+  inline void set_has_total_cost();
+  inline void clear_has_total_cost();
+  inline void set_has_queue_name();
+  inline void clear_has_queue_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1822,10 +1883,14 @@ class QueryInfo : public ::google::protobuf::Message {
   ::std::string* user_;
   static ::std::string* _default_user_;
   ::exec::DrillbitEndpoint* foreman_;
+  ::std::string* options_json_;
+  double total_cost_;
+  ::std::string* queue_name_;
+  static ::std::string* _default_queue_name_;
   int state_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -2046,6 +2111,51 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_error_node();
   inline void set_allocated_error_node(::std::string* error_node);
 
+  // optional string options_json = 17;
+  inline bool has_options_json() const;
+  inline void clear_options_json();
+  static const int kOptionsJsonFieldNumber = 17;
+  inline const ::std::string& options_json() const;
+  inline void set_options_json(const ::std::string& value);
+  inline void set_options_json(const char* value);
+  inline void set_options_json(const char* value, size_t size);
+  inline ::std::string* mutable_options_json();
+  inline ::std::string* release_options_json();
+  inline void set_allocated_options_json(::std::string* options_json);
+
+  // optional int64 planEnd = 18;
+  inline bool has_planend() const;
+  inline void clear_planend();
+  static const int kPlanEndFieldNumber = 18;
+  inline ::google::protobuf::int64 planend() const;
+  inline void set_planend(::google::protobuf::int64 value);
+
+  // optional int64 queueWaitEnd = 19;
+  inline bool has_queuewaitend() const;
+  inline void clear_queuewaitend();
+  static const int kQueueWaitEndFieldNumber = 19;
+  inline ::google::protobuf::int64 queuewaitend() const;
+  inline void set_queuewaitend(::google::protobuf::int64 value);
+
+  // optional double total_cost = 20;
+  inline bool has_total_cost() const;
+  inline void clear_total_cost();
+  static const int kTotalCostFieldNumber = 20;
+  inline double total_cost() const;
+  inline void set_total_cost(double value);
+
+  // optional string queue_name = 21 [default = "-"];
+  inline bool has_queue_name() const;
+  inline void clear_queue_name();
+  static const int kQueueNameFieldNumber = 21;
+  inline const ::std::string& queue_name() const;
+  inline void set_queue_name(const ::std::string& value);
+  inline void set_queue_name(const char* value);
+  inline void set_queue_name(const char* value, size_t size);
+  inline ::std::string* mutable_queue_name();
+  inline ::std::string* release_queue_name();
+  inline void set_allocated_queue_name(::std::string* queue_name);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
  private:
   inline void set_has_id();
@@ -2078,6 +2188,16 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_error_id();
   inline void set_has_error_node();
   inline void clear_has_error_node();
+  inline void set_has_options_json();
+  inline void clear_has_options_json();
+  inline void set_has_planend();
+  inline void clear_has_planend();
+  inline void set_has_queuewaitend();
+  inline void clear_has_queuewaitend();
+  inline void set_has_total_cost();
+  inline void clear_has_total_cost();
+  inline void set_has_queue_name();
+  inline void clear_has_queue_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2098,9 +2218,15 @@ class QueryProfile : public ::google::protobuf::Message {
   ::std::string* verboseerror_;
   ::std::string* error_id_;
   ::std::string* error_node_;
+  ::std::string* options_json_;
+  ::google::protobuf::int64 planend_;
+  ::google::protobuf::int64 queuewaitend_;
+  double total_cost_;
+  ::std::string* queue_name_;
+  static ::std::string* _default_queue_name_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(21 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -2943,6 +3069,118 @@ class Jar : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Jar* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SaslMessage : public ::google::protobuf::Message {
+ public:
+  SaslMessage();
+  virtual ~SaslMessage();
+
+  SaslMessage(const SaslMessage& from);
+
+  inline SaslMessage& operator=(const SaslMessage& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SaslMessage& default_instance();
+
+  void Swap(SaslMessage* other);
+
+  // implements Message ----------------------------------------------
+
+  SaslMessage* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SaslMessage& from);
+  void MergeFrom(const SaslMessage& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string mechanism = 1;
+  inline bool has_mechanism() const;
+  inline void clear_mechanism();
+  static const int kMechanismFieldNumber = 1;
+  inline const ::std::string& mechanism() const;
+  inline void set_mechanism(const ::std::string& value);
+  inline void set_mechanism(const char* value);
+  inline void set_mechanism(const char* value, size_t size);
+  inline ::std::string* mutable_mechanism();
+  inline ::std::string* release_mechanism();
+  inline void set_allocated_mechanism(::std::string* mechanism);
+
+  // optional bytes data = 2;
+  inline bool has_data() const;
+  inline void clear_data();
+  static const int kDataFieldNumber = 2;
+  inline const ::std::string& data() const;
+  inline void set_data(const ::std::string& value);
+  inline void set_data(const char* value);
+  inline void set_data(const void* value, size_t size);
+  inline ::std::string* mutable_data();
+  inline ::std::string* release_data();
+  inline void set_allocated_data(::std::string* data);
+
+  // optional .exec.shared.SaslStatus status = 3;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 3;
+  inline ::exec::shared::SaslStatus status() const;
+  inline void set_status(::exec::shared::SaslStatus value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.SaslMessage)
+ private:
+  inline void set_has_mechanism();
+  inline void clear_has_mechanism();
+  inline void set_has_data();
+  inline void clear_has_data();
+  inline void set_has_status();
+  inline void clear_has_status();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* mechanism_;
+  ::std::string* data_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static SaslMessage* default_instance_;
 };
 // ===================================================================
 
@@ -4740,6 +4978,168 @@ inline void QueryInfo::set_allocated_foreman(::exec::DrillbitEndpoint* foreman) 
   }
 }
 
+// optional string options_json = 6;
+inline bool QueryInfo::has_options_json() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void QueryInfo::set_has_options_json() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void QueryInfo::clear_has_options_json() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void QueryInfo::clear_options_json() {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    options_json_->clear();
+  }
+  clear_has_options_json();
+}
+inline const ::std::string& QueryInfo::options_json() const {
+  return *options_json_;
+}
+inline void QueryInfo::set_options_json(const ::std::string& value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryInfo::set_options_json(const char* value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryInfo::set_options_json(const char* value, size_t size) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryInfo::mutable_options_json() {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  return options_json_;
+}
+inline ::std::string* QueryInfo::release_options_json() {
+  clear_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = options_json_;
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryInfo::set_allocated_options_json(::std::string* options_json) {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    delete options_json_;
+  }
+  if (options_json) {
+    set_has_options_json();
+    options_json_ = options_json;
+  } else {
+    clear_has_options_json();
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional double total_cost = 7;
+inline bool QueryInfo::has_total_cost() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void QueryInfo::set_has_total_cost() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void QueryInfo::clear_has_total_cost() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void QueryInfo::clear_total_cost() {
+  total_cost_ = 0;
+  clear_has_total_cost();
+}
+inline double QueryInfo::total_cost() const {
+  return total_cost_;
+}
+inline void QueryInfo::set_total_cost(double value) {
+  set_has_total_cost();
+  total_cost_ = value;
+}
+
+// optional string queue_name = 8 [default = "-"];
+inline bool QueryInfo::has_queue_name() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void QueryInfo::set_has_queue_name() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void QueryInfo::clear_has_queue_name() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void QueryInfo::clear_queue_name() {
+  if (queue_name_ != _default_queue_name_) {
+    queue_name_->assign(*_default_queue_name_);
+  }
+  clear_has_queue_name();
+}
+inline const ::std::string& QueryInfo::queue_name() const {
+  return *queue_name_;
+}
+inline void QueryInfo::set_queue_name(const ::std::string& value) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(value);
+}
+inline void QueryInfo::set_queue_name(const char* value) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(value);
+}
+inline void QueryInfo::set_queue_name(const char* value, size_t size) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryInfo::mutable_queue_name() {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string(*_default_queue_name_);
+  }
+  return queue_name_;
+}
+inline ::std::string* QueryInfo::release_queue_name() {
+  clear_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    return NULL;
+  } else {
+    ::std::string* temp = queue_name_;
+    queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
+    return temp;
+  }
+}
+inline void QueryInfo::set_allocated_queue_name(::std::string* queue_name) {
+  if (queue_name_ != _default_queue_name_) {
+    delete queue_name_;
+  }
+  if (queue_name) {
+    set_has_queue_name();
+    queue_name_ = queue_name;
+  } else {
+    clear_has_queue_name();
+    queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
+  }
+}
+
 // -------------------------------------------------------------------
 
 // QueryProfile
@@ -5466,6 +5866,212 @@ inline void QueryProfile::set_allocated_error_node(::std::string* error_node) {
   } else {
     clear_has_error_node();
     error_node_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string options_json = 17;
+inline bool QueryProfile::has_options_json() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void QueryProfile::set_has_options_json() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void QueryProfile::clear_has_options_json() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void QueryProfile::clear_options_json() {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    options_json_->clear();
+  }
+  clear_has_options_json();
+}
+inline const ::std::string& QueryProfile::options_json() const {
+  return *options_json_;
+}
+inline void QueryProfile::set_options_json(const ::std::string& value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryProfile::set_options_json(const char* value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryProfile::set_options_json(const char* value, size_t size) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_options_json() {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  return options_json_;
+}
+inline ::std::string* QueryProfile::release_options_json() {
+  clear_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = options_json_;
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_options_json(::std::string* options_json) {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    delete options_json_;
+  }
+  if (options_json) {
+    set_has_options_json();
+    options_json_ = options_json;
+  } else {
+    clear_has_options_json();
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int64 planEnd = 18;
+inline bool QueryProfile::has_planend() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void QueryProfile::set_has_planend() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void QueryProfile::clear_has_planend() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void QueryProfile::clear_planend() {
+  planend_ = GOOGLE_LONGLONG(0);
+  clear_has_planend();
+}
+inline ::google::protobuf::int64 QueryProfile::planend() const {
+  return planend_;
+}
+inline void QueryProfile::set_planend(::google::protobuf::int64 value) {
+  set_has_planend();
+  planend_ = value;
+}
+
+// optional int64 queueWaitEnd = 19;
+inline bool QueryProfile::has_queuewaitend() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void QueryProfile::set_has_queuewaitend() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void QueryProfile::clear_has_queuewaitend() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void QueryProfile::clear_queuewaitend() {
+  queuewaitend_ = GOOGLE_LONGLONG(0);
+  clear_has_queuewaitend();
+}
+inline ::google::protobuf::int64 QueryProfile::queuewaitend() const {
+  return queuewaitend_;
+}
+inline void QueryProfile::set_queuewaitend(::google::protobuf::int64 value) {
+  set_has_queuewaitend();
+  queuewaitend_ = value;
+}
+
+// optional double total_cost = 20;
+inline bool QueryProfile::has_total_cost() const {
+  return (_has_bits_[0] & 0x00080000u) != 0;
+}
+inline void QueryProfile::set_has_total_cost() {
+  _has_bits_[0] |= 0x00080000u;
+}
+inline void QueryProfile::clear_has_total_cost() {
+  _has_bits_[0] &= ~0x00080000u;
+}
+inline void QueryProfile::clear_total_cost() {
+  total_cost_ = 0;
+  clear_has_total_cost();
+}
+inline double QueryProfile::total_cost() const {
+  return total_cost_;
+}
+inline void QueryProfile::set_total_cost(double value) {
+  set_has_total_cost();
+  total_cost_ = value;
+}
+
+// optional string queue_name = 21 [default = "-"];
+inline bool QueryProfile::has_queue_name() const {
+  return (_has_bits_[0] & 0x00100000u) != 0;
+}
+inline void QueryProfile::set_has_queue_name() {
+  _has_bits_[0] |= 0x00100000u;
+}
+inline void QueryProfile::clear_has_queue_name() {
+  _has_bits_[0] &= ~0x00100000u;
+}
+inline void QueryProfile::clear_queue_name() {
+  if (queue_name_ != _default_queue_name_) {
+    queue_name_->assign(*_default_queue_name_);
+  }
+  clear_has_queue_name();
+}
+inline const ::std::string& QueryProfile::queue_name() const {
+  return *queue_name_;
+}
+inline void QueryProfile::set_queue_name(const ::std::string& value) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(value);
+}
+inline void QueryProfile::set_queue_name(const char* value) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(value);
+}
+inline void QueryProfile::set_queue_name(const char* value, size_t size) {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string;
+  }
+  queue_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_queue_name() {
+  set_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    queue_name_ = new ::std::string(*_default_queue_name_);
+  }
+  return queue_name_;
+}
+inline ::std::string* QueryProfile::release_queue_name() {
+  clear_has_queue_name();
+  if (queue_name_ == _default_queue_name_) {
+    return NULL;
+  } else {
+    ::std::string* temp = queue_name_;
+    queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_queue_name(::std::string* queue_name) {
+  if (queue_name_ != _default_queue_name_) {
+    delete queue_name_;
+  }
+  if (queue_name) {
+    set_has_queue_name();
+    queue_name_ = queue_name;
+  } else {
+    clear_has_queue_name();
+    queue_name_ = const_cast< ::std::string*>(_default_queue_name_);
   }
 }
 
@@ -6275,6 +6881,173 @@ Jar::mutable_function_signature() {
   return &function_signature_;
 }
 
+// -------------------------------------------------------------------
+
+// SaslMessage
+
+// optional string mechanism = 1;
+inline bool SaslMessage::has_mechanism() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SaslMessage::set_has_mechanism() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SaslMessage::clear_has_mechanism() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SaslMessage::clear_mechanism() {
+  if (mechanism_ != &::google::protobuf::internal::kEmptyString) {
+    mechanism_->clear();
+  }
+  clear_has_mechanism();
+}
+inline const ::std::string& SaslMessage::mechanism() const {
+  return *mechanism_;
+}
+inline void SaslMessage::set_mechanism(const ::std::string& value) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(value);
+}
+inline void SaslMessage::set_mechanism(const char* value) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(value);
+}
+inline void SaslMessage::set_mechanism(const char* value, size_t size) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SaslMessage::mutable_mechanism() {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  return mechanism_;
+}
+inline ::std::string* SaslMessage::release_mechanism() {
+  clear_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = mechanism_;
+    mechanism_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SaslMessage::set_allocated_mechanism(::std::string* mechanism) {
+  if (mechanism_ != &::google::protobuf::internal::kEmptyString) {
+    delete mechanism_;
+  }
+  if (mechanism) {
+    set_has_mechanism();
+    mechanism_ = mechanism;
+  } else {
+    clear_has_mechanism();
+    mechanism_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes data = 2;
+inline bool SaslMessage::has_data() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SaslMessage::set_has_data() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SaslMessage::clear_has_data() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SaslMessage::clear_data() {
+  if (data_ != &::google::protobuf::internal::kEmptyString) {
+    data_->clear();
+  }
+  clear_has_data();
+}
+inline const ::std::string& SaslMessage::data() const {
+  return *data_;
+}
+inline void SaslMessage::set_data(const ::std::string& value) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(value);
+}
+inline void SaslMessage::set_data(const char* value) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(value);
+}
+inline void SaslMessage::set_data(const void* value, size_t size) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SaslMessage::mutable_data() {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  return data_;
+}
+inline ::std::string* SaslMessage::release_data() {
+  clear_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = data_;
+    data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SaslMessage::set_allocated_data(::std::string* data) {
+  if (data_ != &::google::protobuf::internal::kEmptyString) {
+    delete data_;
+  }
+  if (data) {
+    set_has_data();
+    data_ = data;
+  } else {
+    clear_has_data();
+    data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional .exec.shared.SaslStatus status = 3;
+inline bool SaslMessage::has_status() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SaslMessage::set_has_status() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SaslMessage::clear_has_status() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SaslMessage::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::shared::SaslStatus SaslMessage::status() const {
+  return static_cast< ::exec::shared::SaslStatus >(status_);
+}
+inline void SaslMessage::set_status(::exec::shared::SaslStatus value) {
+  assert(::exec::shared::SaslStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -6312,6 +7085,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::FragmentState>()
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::CoreOperatorType>() {
   return ::exec::shared::CoreOperatorType_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::SaslStatus>() {
+  return ::exec::shared::SaslStatus_descriptor();
 }
 
 }  // namespace google

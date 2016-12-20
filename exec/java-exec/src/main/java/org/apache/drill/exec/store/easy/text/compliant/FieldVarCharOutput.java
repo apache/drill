@@ -17,20 +17,22 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.VarCharVector;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Class is responsible for generating record batches for text file inputs. We generate
@@ -61,8 +63,9 @@ class FieldVarCharOutput extends TextOutput {
   private boolean rowHasData= false;
   private static final int MAX_FIELD_LENGTH = 1024 * 64;
   private int recordCount = 0;
-  private int batchIndex = 0;
   private int maxField = 0;
+  private int[] nullCols;
+  private byte nullValue[] = new byte[0];
 
   /**
    * We initialize and add the varchar vector for each incoming field in this
@@ -77,6 +80,7 @@ class FieldVarCharOutput extends TextOutput {
 
     int totalFields = fieldNames.length;
     List<String> outputColumns = new ArrayList<>(Arrays.asList(fieldNames));
+    List<Integer> nullColumns = new ArrayList<>();
 
     if (isStarQuery) {
       maxField = totalFields - 1;
@@ -84,11 +88,14 @@ class FieldVarCharOutput extends TextOutput {
       Arrays.fill(selectedFields, true);
     } else {
       List<Integer> columnIds = new ArrayList<Integer>();
-      String pathStr;
-      int index;
+      Map<String, Integer> headers = CaseInsensitiveMap.newHashMap();
+      for (int i = 0; i < fieldNames.length; i++) {
+        headers.put(fieldNames[i], i);
+      }
 
       for (SchemaPath path : columns) {
-        pathStr = path.getRootSegment().getPath();
+        int index;
+        String pathStr = path.getRootSegment().getPath();
         if (pathStr.equals(COL_NAME) && path.getRootSegment().getChild() != null) {
           //TODO: support both field names and columns index along with predicate pushdown
           throw UserException
@@ -98,12 +105,15 @@ class FieldVarCharOutput extends TextOutput {
               .addContext("column index", path.getRootSegment().getChild())
               .build(logger);
         } else {
-          index = outputColumns.indexOf(pathStr);
-          if (index < 0) {
+          Integer value = headers.get(pathStr);
+          if (value == null) {
             // found col that is not a part of fieldNames, add it
             // this col might be part of some another scanner
             index = totalFields++;
             outputColumns.add(pathStr);
+            nullColumns.add(index);
+          } else {
+            index = value;
           }
         }
         columnIds.add(index);
@@ -128,6 +138,12 @@ class FieldVarCharOutput extends TextOutput {
 
     this.fieldBytes = new byte[MAX_FIELD_LENGTH];
 
+    // Keep track of the null columns to be filled in.
+
+    nullCols = new int[nullColumns.size()];
+    for (int i = 0; i < nullCols.length; i++) {
+      nullCols[i] = nullColumns.get(i);
+    }
   }
 
   /**
@@ -135,11 +151,10 @@ class FieldVarCharOutput extends TextOutput {
    */
   @Override
   public void startBatch() {
-    this.recordCount = 0;
-    this.batchIndex = 0;
-    this.currentFieldIndex= -1;
-    this.collect = true;
-    this.fieldOpen = false;
+    recordCount = 0;
+    currentFieldIndex= -1;
+    collect = true;
+    fieldOpen = false;
   }
 
   @Override
@@ -173,7 +188,7 @@ class FieldVarCharOutput extends TextOutput {
   public boolean endField() {
     fieldOpen = false;
 
-    if(collect) {
+    if (collect) {
       assert currentVector != null;
       currentVector.getMutator().setSafe(recordCount, fieldBytes, 0, currentDataPointer);
     }
@@ -192,25 +207,20 @@ class FieldVarCharOutput extends TextOutput {
 
  @Override
   public void finishRecord() {
-    if(fieldOpen){
+    if (fieldOpen){
       endField();
     }
 
+    // Fill in null (really empty) values.
+
+    for (int i = 0; i < nullCols.length; i++) {
+      vectors[nullCols[i]].getMutator().setSafe(recordCount, nullValue, 0, 0);
+    }
     recordCount++;
   }
 
-  // Sets the record count in this batch within the value vector
   @Override
-  public void finishBatch() {
-    batchIndex++;
-
-    for (int i = 0; i <= maxField; i++) {
-      if (this.vectors[i] != null) {
-        this.vectors[i].getMutator().setValueCount(batchIndex);
-      }
-    }
-
-  }
+  public void finishBatch() { }
 
   @Override
   public long getRecordCount() {
@@ -221,5 +231,4 @@ class FieldVarCharOutput extends TextOutput {
   public boolean rowHasData() {
     return this.rowHasData;
   }
-
- }
+}

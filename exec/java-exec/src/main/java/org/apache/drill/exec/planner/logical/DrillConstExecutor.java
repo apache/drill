@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,12 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+*/
 package org.apache.drill.exec.planner.logical;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
+import org.apache.calcite.rel.RelNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
@@ -120,7 +121,7 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
   @Override
   public void reduce(final RexBuilder rexBuilder, List<RexNode> constExps, final List<RexNode> reducedValues) {
     for (final RexNode newCall : constExps) {
-      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), null /* input rel */, newCall);
+      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), (RelNode) null /* input rel */, newCall);
 
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);

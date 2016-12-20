@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,14 @@
  */
 package org.apache.drill.test;
 
+import java.io.PrintStream;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.List;
 
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,8 +40,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest {
-//  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
-
   protected static final ObjectMapper objectMapper;
   static {
     System.setProperty("line.separator", "\n");
@@ -55,19 +54,39 @@ public class DrillTest {
   static MemWatcher memWatcher;
   static String className;
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
+
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
 
   /**
    * Rule for tests that verify {@link org.apache.drill.common.exceptions.UserException} type and message. See
-   * {@link UserExceptionMatcher} and e.g. {@link org.apache.drill.exec.server.TestOptions#checkValidationException}.
+   * {@link UserExceptionMatcher} and e.g. apache.drill.exec.server.TestOptions#checkValidationException.
    * Tests that do not use this rule are not affected.
    */
   @Rule public final ExpectedException thrownException = ExpectedException.none();
 
   @Rule public TestName TEST_NAME = new TestName();
+
+  /**
+   * Option to cause tests to produce verbose output. Many tests provide
+   * detailed information to stdout when enabled. To enable:
+   * <p>
+   * <tt>java ... -Dtest.verbose=true ...</tt>
+   */
+  public static final String VERBOSE_OUTPUT = "test.verbose";
+
+  protected static final boolean verbose = Boolean.parseBoolean(System.getProperty(VERBOSE_OUTPUT));
+
+  /**
+   * Output destination for verbose test output. Rather than using
+   * <tt>System.out</tt>, use <tt>DrillTest.out</tt>. Output will
+   * automagically be routed to the bit bucket unless the
+   * {@link #VERBOSE_OUTPUT} flag is set.
+   */
+
+  public static final PrintStream out = verbose ? System.out : new PrintStream(new NullOutputStream());
 
   @Before
   public void printID() throws Exception {
@@ -82,7 +101,8 @@ public class DrillTest {
   @AfterClass
   public static void finiDrillTest() throws InterruptedException{
     testReporter.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
-    LOG_OUTCOME.sleepIfFailure();
+    // Clear interrupts for next test
+    Thread.interrupted();
   }
 
   protected static class MemWatcher {
@@ -113,13 +133,10 @@ public class DrillTest {
           DrillStringUtils.readable(endNonHeap - startNonHeap), DrillStringUtils.readable(endNonHeap) //
        );
     }
-
   }
 
   private static class TestLogReporter extends TestWatcher {
-
     private MemWatcher memWatcher;
-    private int failureCount = 0;
 
     @Override
     protected void starting(Description description) {
@@ -131,24 +148,12 @@ public class DrillTest {
     @Override
     protected void failed(Throwable e, Description description) {
       testReporter.error(String.format("Test Failed (%s): %s", memWatcher.getMemString(), description.getDisplayName()), e);
-      failureCount++;
     }
 
     @Override
     public void succeeded(Description description) {
       testReporter.info(String.format("Test Succeeded (%s): %s", memWatcher.getMemString(), description.getDisplayName()));
     }
-
-    public void sleepIfFailure() throws InterruptedException {
-      if(failureCount > 0){
-        Thread.sleep(2000);
-        failureCount = 0;
-      } else {
-        // pause to get logger to catch up.
-        Thread.sleep(250);
-      }
-    }
-
   }
 
   public static String escapeJsonString(String original) {
@@ -188,7 +193,17 @@ public class DrillTest {
     public long getMemNonHeap() {
       return memoryBean.getNonHeapMemoryUsage().getUsed();
     }
-
   }
 
+  /**
+   * Reports whether verbose output has been selected for this test run.
+   *
+   * @return <tt>true</tt> if verbose output is wanted (test is likely running
+   * in a debugger), <tt>false</tt> if verbose output is to be suppressed
+   * (test is likely running in a batch Maven build).
+   */
+
+  public static boolean verbose( ) {
+    return verbose;
+  }
 }

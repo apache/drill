@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,6 @@ import java.util.Iterator;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.parser.ExprLexer;
@@ -58,7 +57,6 @@ public class SchemaPath extends LogicalExpressionBase {
     return new SchemaPath(s);
   }
 
-  @SuppressWarnings("unused")
   public PathSegment getLastSegment() {
     PathSegment s= rootSegment;
     while (s.getChild() != null) {
@@ -71,9 +69,6 @@ public class SchemaPath extends LogicalExpressionBase {
   public SchemaPath(String simpleName, ExpressionPosition pos) {
     super(pos);
     this.rootSegment = new NameSegment(simpleName);
-    if (simpleName.contains(".")) {
-      throw new IllegalStateException("This is deprecated and only supports simpe paths.");
-    }
   }
 
 
@@ -117,6 +112,37 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   /**
+   * Parses input string using the same rules which are used for the field in the query.
+   * If a string contains dot outside back-ticks, or there are no backticks in the string,
+   * will be created {@link SchemaPath} with the {@link NameSegment}
+   * which contains one else {@link NameSegment}, etc.
+   * If a string contains [] then {@link ArraySegment} will be created.
+   *
+   * @param expr input string to be parsed
+   * @return {@link SchemaPath} instance
+   */
+  public static SchemaPath parseFromString(String expr) {
+    if (expr == null || expr.isEmpty()) {
+      return null;
+    }
+    try {
+      ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+      CommonTokenStream tokens = new CommonTokenStream(lexer);
+      ExprParser parser = new ExprParser(tokens);
+
+      parse_return ret = parser.parse();
+
+      if (ret.e instanceof SchemaPath) {
+        return (SchemaPath) ret.e;
+      } else {
+        throw new IllegalStateException("Schema path is not a valid format.");
+      }
+    } catch (RecognitionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * A simple is a path where there are no repeated elements outside the lowest level of the path.
    * @return Whether this path is a simple path.
    */
@@ -157,7 +183,6 @@ public class SchemaPath extends LogicalExpressionBase {
     return new SchemaPath(newRoot);
   }
 
-  @SuppressWarnings("unused")
   public SchemaPath getUnindexedArrayChild() {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(null));
     return new SchemaPath(newRoot);
@@ -230,25 +255,13 @@ public class SchemaPath extends LogicalExpressionBase {
     return ExpressionStringBuilder.toString(this);
   }
 
-  public String getAsUnescapedPath() {
-    StringBuilder sb = new StringBuilder();
-    PathSegment seg = getRootSegment();
-    if (seg.isArray()) {
-      throw new IllegalStateException("Drill doesn't currently support top level arrays");
-    }
-    sb.append(seg.getNameSegment().getPath());
-
-    while ( (seg = seg.getChild()) != null) {
-      if (seg.isNamed()) {
-        sb.append('.');
-        sb.append(seg.getNameSegment().getPath());
-      } else {
-        sb.append('[');
-        sb.append(seg.getArraySegment().getIndex());
-        sb.append(']');
-      }
-    }
-    return sb.toString();
+  /**
+   * Returns path string of {@code rootSegment}
+   *
+   * @return path string of {@code rootSegment}
+   */
+  public String getRootSegmentPath() {
+    return rootSegment.getPath();
   }
 
   public static class De extends StdDeserializer<SchemaPath> {
@@ -259,32 +272,7 @@ public class SchemaPath extends LogicalExpressionBase {
 
     @Override
     public SchemaPath deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-      String expr = jp.getText();
-
-      if (expr == null || expr.isEmpty()) {
-        return null;
-      }
-      try {
-        // logger.debug("Parsing expression string '{}'", expr);
-        ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ExprParser parser = new ExprParser(tokens);
-
-        //TODO: move functionregistry and error collector to injectables.
-        //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
-        parse_return ret = parser.parse();
-
-        // ret.e.resolveAndValidate(expr, errorCollector);
-        if (ret.e instanceof SchemaPath) {
-          return (SchemaPath) ret.e;
-        } else {
-          throw new IllegalStateException("Schema path is not a valid format.");
-        }
-      } catch (RecognitionException e) {
-        throw new RuntimeException(e);
-      }
+      return parseFromString(jp.getText());
     }
-
   }
-
 }

@@ -52,6 +52,8 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.bson.Document;
+import org.bson.codecs.BsonTypeClassMap;
+import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
@@ -503,7 +505,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
       long numDocs = collection.count();
       float approxDiskCost = 0;
       if (numDocs != 0) {
-        String json = collection.find().first().toJson();
+        //toJson should use client's codec, otherwise toJson could fail on
+        // some types not known to DocumentCodec, e.g. DBRef.
+        final DocumentCodec codec =
+            new DocumentCodec(client.getMongoClientOptions().getCodecRegistry(), new BsonTypeClassMap());
+        String json = collection.find().first().toJson(codec);
         approxDiskCost = json.getBytes().length * numDocs;
       }
       return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);

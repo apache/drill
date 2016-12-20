@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,16 +19,12 @@ package org.apache.drill.exec.expr.fn;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -39,7 +35,6 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -56,31 +51,12 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolder.class);
 
   private final FunctionAttributes attributes;
-  protected final FunctionTemplate.FunctionScope scope;
-  protected final FunctionTemplate.NullHandling nullHandling;
-  protected final FunctionTemplate.FunctionCostCategory costCategory;
-  protected final boolean isBinaryCommutative;
-  protected final boolean isDeterministic;
-  protected final String[] registeredNames;
-  protected final WorkspaceReference[] workspaceVars;
-  protected final ValueReference[] parameters;
-  protected final ValueReference returnValue;
   private final FunctionInitializer initializer;
 
   public DrillFuncHolder(
       FunctionAttributes attributes,
       FunctionInitializer initializer) {
-    super();
     this.attributes = attributes;
-    this.scope = attributes.getScope();
-    this.nullHandling = attributes.getNullHandling();
-    this.costCategory = attributes.getCostCategory();
-    this.isBinaryCommutative = attributes.isBinaryCommutative();
-    this.isDeterministic = attributes.isDeterministic();
-    this.registeredNames = attributes.getRegisteredNames();
-    this.workspaceVars = attributes.getWorkspaceVars();
-    this.parameters = attributes.getParameters();
-    this.returnValue = attributes.getReturnValue();
     this.initializer = initializer;
   }
 
@@ -106,18 +82,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   @Override
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
     return declareWorkspaceVariables(g);
-  };
-
-  @Override
-  public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[] workspaceJVars) {
-  };
-
-  @Override
-  public abstract HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables,
-      JVar[] workspaceJVars);
-
-  @Override
-  public abstract boolean isNested();
+  }
 
   @Override
   public FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos) {
@@ -132,6 +97,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return attributes.isDeterministic();
   }
 
+  public boolean isNiladic() {
+    return attributes.isNiladic();
+  }
+
   /**
    * Generates string representation of function input parameters:
    * PARAMETER_TYPE_1-PARAMETER_MODE_1,PARAMETER_TYPE_2-PARAMETER_MODE_2
@@ -143,7 +112,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   public String getInputParameters() {
     StringBuilder builder = new StringBuilder();
     builder.append("");
-    for (ValueReference ref : parameters) {
+    for (ValueReference ref : attributes.getParameters()) {
       final MajorType type = ref.getType();
       builder.append(",");
       builder.append(type.getMinorType().toString());
@@ -161,12 +130,12 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
-    JVar[] workspaceJVars = new JVar[workspaceVars.length];
-    for (int i = 0; i < workspaceVars.length; i++) {
-      WorkspaceReference ref = workspaceVars[i];
-      JType jtype = g.getModel()._ref(ref.type);
+    JVar[] workspaceJVars = new JVar[attributes.getWorkspaceVars().length];
+    for (int i = 0; i < attributes.getWorkspaceVars().length; i++) {
+      WorkspaceReference ref = attributes.getWorkspaceVars()[i];
+      JType jtype = g.getModel()._ref(ref.getType());
 
-      if (ScalarReplacementTypes.CLASSES.contains(ref.type)) {
+      if (ScalarReplacementTypes.CLASSES.contains(ref.getType())) {
         workspaceJVars[i] = g.declareClassField("work", jtype);
         JBlock b = g.getBlock(SignatureHolder.DRILL_INIT_METHOD);
         b.assign(workspaceJVars[i], JExpr._new(jtype));
@@ -201,9 +170,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       } else {
         addProtectedBlock(g, sub, body, null, workspaceJVars, false);
       }
-      g.getBlock(bt).directStatement(String.format("/** start %s for function %s **/ ", bt.name(), registeredNames[0]));
+      g.getBlock(bt).directStatement(String.format("/** start %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
       g.getBlock(bt).add(sub);
-      g.getBlock(bt).directStatement(String.format("/** end %s for function %s **/ ", bt.name(), registeredNames[0]));
+      g.getBlock(bt).directStatement(String.format("/** end %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
     }
   }
 
@@ -215,15 +184,15 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
           continue;
         }
 
-        ValueReference parameter = parameters[i];
+        ValueReference parameter = attributes.getParameters()[i];
         HoldingContainer inputVariable = inputVariables[i];
-        if (parameter.isFieldReader && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
+        if (parameter.isFieldReader() && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
           JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
               inputVariable.getMajorType().getMode()));
           JType fieldReadClass = g.getModel()._ref(FieldReader.class);
-          sub.decl(fieldReadClass, parameter.name, JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
+          sub.decl(fieldReadClass, parameter.getName(), JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
         } else {
-          sub.decl(inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());
+          sub.decl(inputVariable.getHolder().type(), parameter.getName(), inputVariable.getHolder());
         }
       }
     }
@@ -231,9 +200,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for (int i = 0; i < workspaceJVars.length; i++) {
       if (decConstInputOnly) {
-        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+        internalVars[i] = sub.decl(g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()), attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
       } else {
-        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+        internalVars[i] = sub.decl(g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()), attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
       }
 
     }
@@ -249,20 +218,20 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   public boolean matches(MajorType returnType, List<MajorType> argTypes) {
 
-    if (!softCompare(returnType, returnValue.type)) {
+    if (!softCompare(returnType, attributes.getReturnValue().getType())) {
       // logger.debug(String.format("Call [%s] didn't match as return type [%s] was different than expected [%s]. ",
       // call.getDefinition().getName(), returnValue.type, call.getMajorType()));
       return false;
     }
 
-    if (argTypes.size() != parameters.length) {
+    if (argTypes.size() != attributes.getParameters().length) {
       // logger.debug(String.format("Call [%s] didn't match as the number of arguments provided [%d] were different than expected [%d]. ",
       // call.getDefinition().getName(), parameters.length, call.args.size()));
       return false;
     }
 
-    for (int i = 0; i < parameters.length; i++) {
-      if (!softCompare(parameters[i].type, argTypes.get(i))) {
+    for (int i = 0; i < attributes.getParameters().length; i++) {
+      if (!softCompare(attributes.getParameters()[i].getType(), argTypes.get(i))) {
         // logger.debug(String.format("Call [%s] didn't match as the argument [%s] didn't match the expected type [%s]. ",
         // call.getDefinition().getName(), arg.getMajorType(), param.type));
         return false;
@@ -274,48 +243,24 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   @Override
   public MajorType getParmMajorType(int i) {
-    return this.parameters[i].type;
+    return attributes.getParameters()[i].getType();
   }
 
   @Override
   public int getParamCount() {
-    return this.parameters.length;
+    return attributes.getParameters().length;
   }
 
   public boolean isConstant(int i) {
-    return this.parameters[i].isConstant;
+    return attributes.getParameters()[i].isConstant();
   }
 
   public boolean isFieldReader(int i) {
-    return this.parameters[i].isFieldReader;
+    return attributes.getParameters()[i].isFieldReader();
   }
 
   public MajorType getReturnType(final List<LogicalExpression> logicalExpressions) {
-    if (returnValue.type.getMinorType() == MinorType.UNION) {
-      final Set<MinorType> subTypes = Sets.newHashSet();
-      for(final ValueReference ref : parameters) {
-        subTypes.add(ref.getType().getMinorType());
-      }
-
-      final MajorType.Builder builder = MajorType.newBuilder()
-          .setMinorType(MinorType.UNION)
-          .setMode(DataMode.OPTIONAL);
-
-      for(final MinorType subType : subTypes) {
-        builder.addSubType(subType);
-      }
-      return builder.build();
-    }
-
-    if(nullHandling == NullHandling.NULL_IF_NULL) {
-      // if any one of the input types is nullable, then return nullable return type
-      for(final LogicalExpression logicalExpression : logicalExpressions) {
-        if(logicalExpression.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
-          return Types.optional(returnValue.type.getMinorType());
-        }
-      }
-    }
-    return returnValue.type;
+    return attributes.getReturnType().getType(logicalExpressions, attributes);
   }
 
   public NullHandling getNullHandling() {
@@ -334,118 +279,36 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return attributes.getCostCategory().getValue();
   }
 
+  public ValueReference[] getParameters() {
+    return attributes.getParameters();
+  }
+
+  public boolean checkPrecisionRange() {
+    return attributes.checkPrecisionRange();
+  }
+
+  public MajorType getReturnType() {
+    return attributes.getReturnValue().getType();
+  }
+
+  public ValueReference getReturnValue() {
+    return attributes.getReturnValue();
+  }
+
+  public WorkspaceReference[] getWorkspaceVars() {
+    return attributes.getWorkspaceVars();
+  }
+
   @Override
   public String toString() {
     final int maxLen = 10;
     return this.getClass().getSimpleName()
-        + " [functionNames=" + Arrays.toString(registeredNames)
-        + ", returnType=" + Types.toString(returnValue.type)
-        + ", nullHandling=" + nullHandling
-        + ", parameters=" + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
+        + " [functionNames=" + Arrays.toString(attributes.getRegisteredNames())
+        + ", returnType=" + Types.toString(attributes.getReturnValue().getType())
+        + ", nullHandling=" + attributes.getNullHandling()
+        + ", parameters=" + (attributes.getParameters() != null ?
+        Arrays.asList(attributes.getParameters()).subList(0, Math.min(attributes.getParameters().length, maxLen)) : null) + "]";
   }
 
-  public WorkspaceReference[] getWorkspaceVars() {
-    return this.workspaceVars;
-  }
 
-  public ValueReference[] getParameters() {
-    return this.parameters;
-  }
-
-  public static class ValueReference {
-    MajorType type;
-    String name;
-    boolean isConstant = false;
-    boolean isFieldReader = false;
-    boolean isComplexWriter = false;
-
-    public ValueReference(MajorType type, String name) {
-      super();
-      Preconditions.checkNotNull(type);
-      Preconditions.checkNotNull(name);
-      this.type = type;
-      this.name = name;
-    }
-
-    public MajorType getType() {
-      return type;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setConstant(boolean isConstant) {
-      this.isConstant = isConstant;
-    }
-
-    @Override
-    public String toString() {
-      return "ValueReference [type=" + Types.toString(type) + ", name=" + name + "]";
-    }
-
-    public static ValueReference createFieldReaderRef(String name) {
-      MajorType type = Types.required(MinorType.LATE);
-      ValueReference ref = new ValueReference(type, name);
-      ref.isFieldReader = true;
-
-      return ref;
-    }
-
-    public static ValueReference createComplexWriterRef(String name) {
-      MajorType type = Types.required(MinorType.LATE);
-      ValueReference ref = new ValueReference(type, name);
-      ref.isComplexWriter = true;
-      return ref;
-    }
-
-    public boolean isComplexWriter() {
-      return isComplexWriter;
-    }
-
-  }
-
-  public static class WorkspaceReference {
-    Class<?> type;
-    String name;
-    MajorType majorType;
-    boolean inject;
-
-    public WorkspaceReference(Class<?> type, String name, boolean inject) {
-      super();
-      Preconditions.checkNotNull(type);
-      Preconditions.checkNotNull(name);
-      this.type = type;
-      this.name = name;
-      this.inject = inject;
-    }
-
-    void setMajorType(MajorType majorType) {
-      this.majorType = majorType;
-    }
-
-    public boolean isInject() {
-      return inject;
-    }
-
-    public Class<?> getType() {
-      return type;
-    }
-
-    public String getName() {
-      return name;
-    }
-  }
-
-  public boolean checkPrecisionRange() {
-    return false;
-  }
-
-  public MajorType getReturnType() {
-    return returnValue.type;
-  }
-
-  public ValueReference getReturnValue() {
-    return returnValue;
-  }
 }

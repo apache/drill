@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,12 @@ public abstract class BasePersistentStore<V> implements PersistentStore<V> {
   @Override
   public Iterator<Map.Entry<String, V>> getAll() {
     return getRange(0, Integer.MAX_VALUE);
+  }
+
+  /** By default contains with version will behave the same way as without version.
+   * Override this method to add version support. */
+  public boolean contains(String key, DataChangeVersion version) {
+    return contains(key);
   }
 
   /** By default get with version will behave the same way as without version.

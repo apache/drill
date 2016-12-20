@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,6 +36,8 @@ import org.apache.calcite.sql.SqlExplain.Depth;
 import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 
 public class PlanTestBase extends BaseTestQuery {
 
@@ -86,7 +88,7 @@ public class PlanTestBase extends BaseTestQuery {
       for (final String s : expectedPatterns) {
         final Pattern p = Pattern.compile(s);
         final Matcher m = p.matcher(plan);
-        assertTrue(EXPECTED_NOT_FOUND + s, m.find());
+        assertTrue(EXPECTED_NOT_FOUND + s +"\n" + plan, m.find());
       }
     }
 
@@ -95,7 +97,7 @@ public class PlanTestBase extends BaseTestQuery {
       for (final String s : excludedPatterns) {
         final Pattern p = Pattern.compile(s);
         final Matcher m = p.matcher(plan);
-        assertFalse(UNEXPECTED_FOUND + s, m.find());
+        assertFalse(UNEXPECTED_FOUND + s +"\n" + plan, m.find());
       }
     }
   }
@@ -349,7 +351,7 @@ public class PlanTestBase extends BaseTestQuery {
       }
 
       if (!silent) {
-        System.out.println(vw.getValueVector().getField().getPath());
+        System.out.println(vw.getValueVector().getField().getName());
       }
       final ValueVector vv = vw.getValueVector();
       for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {

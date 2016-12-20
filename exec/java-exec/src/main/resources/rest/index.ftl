@@ -10,7 +10,22 @@
   language governing permissions and limitations under the License. -->
 
 <#include "*/generic.ftl">
+
+<#-- Format comma-delimited string-->
+<#macro format_string str>
+  <#if str?has_content>
+    ${(str?split(","))?join(", ")}
+  <#else>
+    ${"<empty>"}
+  </#if>
+</#macro>
+
 <#macro page_head>
+<style>
+.list-value {
+    text-align: right !important;
+}
+</style>
 </#macro>
 
 <#macro page_body>
@@ -68,6 +83,100 @@
             </#list>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-md-12">
+        <h3>Encryption</h3>
+        <div class="table-responsive">
+          <table class="table table-hover" style="width: auto;">
+            <tbody>
+                <tr>
+                  <td>Client to Bit Encryption</td>
+                  <td class="list-value">${model.isUserEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                </tr>
+                <tr>
+                  <td>Bit to Bit Encryption</td>
+                  <td class="list-value">${model.isBitEncryptionEnabled()?string("Enabled", "Disabled")}</td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  </div>
+
+   <#if model.shouldShowUserInfo()>
+       <div class="row">
+            <div class="col-md-12">
+              <h3>User Info </h3>
+              <div class="table-responsive">
+                <table class="table table-hover" style="width: auto;">
+                  <tbody>
+                      <tr>
+                        <td>Admin Users</td>
+                        <td class="list-value"><@format_string str=model.getAdminUsers()/></td>
+                      </tr>
+                      <tr>
+                        <td>Admin User Groups</td>
+                        <td class="list-value"><@format_string str=model.getAdminUserGroups()/></td>
+                      </tr>
+                      <tr>
+                        <td>Process User</td>
+                        <td class="list-value">${model.getProcessUser()}</td>
+                      </tr>
+                      <tr>
+                        <td>Process User Groups</td>
+                        <td class="list-value">${model.getProcessUserGroups()}</td>
+                      </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+   </#if>
+
+  <#assign queueInfo = model.queueInfo() />
+  <div class="row">
+      <div class="col-md-12">
+        <h3>Query Throttling</h3>
+        <div class="table-responsive">
+          <table class="table table-hover" style="width: auto;">
+            <tbody>
+               <tr>
+                  <td>Queue Status</td>
+                  <td class="list-value">${queueInfo.isEnabled()?string("Enabled", "Disabled")}</td>
+                </tr>
+  <#if queueInfo.isEnabled() >
+                <tr>
+                  <td>Maximum Concurrent "Small" Queries</td>
+                  <td class="list-value">${queueInfo.smallQueueSize()}</td>
+                 </tr>
+                 <tr>
+                  <td>Maximum Concurrent "Large" Queries</td>
+                  <td class="list-value">${queueInfo.largeQueueSize()}</td>
+                </tr>
+                  <tr>
+                  <td>Cost Threshhold for Large vs. Small Queries</td>
+                  <td class="list-value">${queueInfo.threshold()}</td>
+                </tr>
+                <tr>
+                  <td>Total Memory</td>
+                  <td class="list-value">${queueInfo.totalMemory()}</td>
+                </tr>
+                <tr>
+                  <td>Memory per Small Query</td>
+                  <td class="list-value">${queueInfo.smallQueueMemory()}</td>
+                </tr>
+                <tr>
+                  <td>Memory per Large Query</td>
+                  <td class="list-value">${queueInfo.largeQueueMemory()}</td>
+                </tr>
+  </#if>
+            </tbody>
+          </table>
+        </div>
       </div>
   </div>
 </#macro>

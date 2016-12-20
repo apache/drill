@@ -11,14 +11,11 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
-  <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-  <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.css">
-
-  <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
-
-  <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/colvis/1.1.0/css/dataTables.colVis.css">
-  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/colvis/1.1.0/js/dataTables.colVis.min.js"></script>
+    <script type="text/javascript" language="javascript"  src="../static/js/jquery.dataTables-1.10.0.min.js"> </script>
+    <script type="text/javascript" language="javascript" src="../static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
+    <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
+    <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
@@ -34,7 +31,7 @@
       <thead>
         <tr>
           <#list model.getColumns() as value>
-          <th>${value?html}</th>
+          <th>${value}</th>
           </#list>
         </tr>
       </thead>
@@ -42,7 +39,7 @@
       <#list model.getRows() as record>
         <tr>
           <#list record as value>
-          <td>${value!"null"?html}</td>
+          <td>${value!"null"}</td>
           </#list>
         </tr>
       </#list>

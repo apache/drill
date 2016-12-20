@@ -17,10 +17,13 @@
  */
 package org.apache.drill.common.util;
 
+import com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
 
 public class DrillStringUtils {
 
@@ -198,6 +201,29 @@ public class DrillStringUtils {
 
   private static boolean isHexDigit(byte c) {
     return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
+  }
+
+  /**
+   * Removes extra spaces and empty values in a CSV String
+   * @param csv The CSV string to be sanitized
+   * @return The sanitized CSV string
+   */
+  public static String sanitizeCSV(String csv) {
+    // tokenize
+    String[] tokens = csv.split(",");
+    ArrayList<String> sanitizedTokens = new ArrayList<String>(tokens.length);
+    // check for empties
+    for (String s : tokens) {
+      String trimmedToken = s.trim();
+      if (trimmedToken.length() != 0) {
+        sanitizedTokens.add(trimmedToken);
+      }
+    }
+    String result = "";
+    if (sanitizedTokens.size() != 0) {
+      result = Joiner.on(",").join(sanitizedTokens);
+    }
+    return result;
   }
 
 }

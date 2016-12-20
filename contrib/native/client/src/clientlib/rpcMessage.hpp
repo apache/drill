@@ -54,7 +54,6 @@ std::size_t lengthDecode(const uint8_t* buf, uint32_t& length);
 bool decode(const uint8_t* buf, int length, InBoundRpcMessage& msg);
 
 bool encode(DataBuf& buf, const OutBoundRpcMessage& msg);
-
 } // namespace rpc
 } // namespace Drill
 

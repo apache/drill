@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -71,35 +71,44 @@ public class PrintingResultsListener implements UserResultsListener {
   }
 
   @Override
+  @SuppressWarnings("resource")
   public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
     final QueryData header = result.getHeader();
     final DrillBuf data = result.getData();
 
-    if (data != null) {
-      count.addAndGet(header.getRowCount());
-      try {
-        loader.load(header.getDef(), data);
-        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-        // SchemaChangeException, so check/clean catch clause below.
-      } catch (SchemaChangeException e) {
-        submissionFailed(UserException.systemError(e).build(logger));
-      }
+    try {
+      if (data != null) {
+        count.addAndGet(header.getRowCount());
+        try {
+          loader.load(header.getDef(), data);
+          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+          // SchemaChangeException, so check/clean catch clause below.
+        } catch (SchemaChangeException e) {
+          submissionFailed(UserException.systemError(e).build(logger));
+        }
 
-      switch(format) {
-        case TABLE:
-          VectorUtil.showVectorAccessibleContent(loader, columnWidth);
-          break;
-        case TSV:
-          VectorUtil.showVectorAccessibleContent(loader, "\t");
-          break;
-        case CSV:
-          VectorUtil.showVectorAccessibleContent(loader, ",");
-          break;
+        try {
+          switch(format) {
+            case TABLE:
+              VectorUtil.showVectorAccessibleContent(loader, columnWidth);
+              break;
+            case TSV:
+              VectorUtil.showVectorAccessibleContent(loader, "\t");
+              break;
+            case CSV:
+              VectorUtil.showVectorAccessibleContent(loader, ",");
+              break;
+            default:
+              throw new IllegalStateException(format.toString());
+          }
+        } finally {
+          loader.clear();
+        }
       }
-      loader.clear();
     }
-
-    result.release();
+    finally {
+      result.release();
+    }
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,9 +28,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.cost.DrillRelOptCost;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
@@ -63,13 +61,13 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     JoinCategory category = JoinUtils.getJoinCategory(left, right, condition, leftKeys, rightKeys, filterNulls);
     if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
       if (PrelUtil.getPlannerSettings(planner).isNestedLoopJoinEnabled()) {
         if (PrelUtil.getPlannerSettings(planner).isNlJoinForScalarOnly()) {
-          if (hasScalarSubqueryInput()) {
-            return computeLogicalJoinCost(planner);
+          if (JoinUtils.hasScalarSubqueryInput(left, right)) {
+            return computeLogicalJoinCost(planner, mq);
           } else {
             /*
              *  Why do we return non-infinite cost for CartsianJoin with non-scalar subquery, when LOPT planner is enabled?
@@ -80,27 +78,27 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
              *   - Return non-infinite cost will give LOPT planner a chance to try to push the filters.
              */
             if (PrelUtil.getPlannerSettings(planner).isHepOptEnabled()) {
-             return computeCartesianJoinCost(planner);
+             return computeCartesianJoinCost(planner, mq);
             } else {
-              return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+              return planner.getCostFactory().makeInfiniteCost();
             }
           }
         } else {
-          return computeLogicalJoinCost(planner);
+          return computeLogicalJoinCost(planner, mq);
         }
       }
-      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+      return planner.getCostFactory().makeInfiniteCost();
     }
 
-    return computeLogicalJoinCost(planner);
+    return computeLogicalJoinCost(planner, mq);
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     if (this.condition.isAlwaysTrue()) {
-      return joinRowFactor * this.getLeft().getRows() * this.getRight().getRows();
+      return joinRowFactor * this.getLeft().estimateRowCount(mq) * this.getRight().estimateRowCount(mq);
     } else {
-      return joinRowFactor * Math.max(this.getLeft().getRows(), this.getRight().getRows());
+      return joinRowFactor * Math.max(this.getLeft().estimateRowCount(mq), this.getRight().estimateRowCount(mq));
     }
   }
 
@@ -127,9 +125,9 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     return this.rightKeys;
   }
 
-  protected  RelOptCost computeCartesianJoinCost(RelOptPlanner planner) {
-    final double probeRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    final double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
+  protected  RelOptCost computeCartesianJoinCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    final double probeRowCount = mq.getRowCount(this.getLeft());
+    final double buildRowCount = mq.getRowCount(this.getRight());
 
     final DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
 
@@ -138,7 +136,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
                                     // than Non-Cartesian Join.
 
     final int keySize = 1 ;  // assume having 1 join key, when estimate join cost.
-    final DrillCostBase cost = (DrillCostBase) computeHashJoinCostWithKeySize(planner, keySize).multiplyBy(mulFactor);
+    final DrillCostBase cost = (DrillCostBase) computeHashJoinCostWithKeySize(planner, keySize, mq).multiplyBy(mulFactor);
 
     // Cartesian join row count will be product of two inputs. The other factors come from the above estimated DrillCost.
     return costFactory.makeCost(
@@ -150,7 +148,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
   }
 
-  protected RelOptCost computeLogicalJoinCost(RelOptPlanner planner) {
+  protected RelOptCost computeLogicalJoinCost(RelOptPlanner planner, RelMetadataQuery mq) {
     // During Logical Planning, although we don't care much about the actual physical join that will
     // be chosen, we do care about which table - bigger or smaller - is chosen as the right input
     // of the join since that is important at least for hash join and we don't currently have
@@ -158,11 +156,11 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     // is the same whether the bigger table is used as left input or right. In order to overcome that,
     // we will use the Hash Join cost as the logical cost such that cardinality of left and right inputs
     // is considered appropriately.
-    return computeHashJoinCost(planner);
+    return computeHashJoinCost(planner, mq);
   }
 
-  protected RelOptCost computeHashJoinCost(RelOptPlanner planner) {
-      return computeHashJoinCostWithKeySize(planner, this.getLeftKeys().size());
+  protected RelOptCost computeHashJoinCost(RelOptPlanner planner, RelMetadataQuery mq) {
+      return computeHashJoinCostWithKeySize(planner, this.getLeftKeys().size(), mq);
   }
 
   /**
@@ -171,9 +169,9 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
    * @param keySize  : the # of join keys in join condition. Left key size should be equal to right key size.
    * @return         : RelOptCost
    */
-  private RelOptCost computeHashJoinCostWithKeySize(RelOptPlanner planner, int keySize) {
-    double probeRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
+  private RelOptCost computeHashJoinCostWithKeySize(RelOptPlanner planner, int keySize, RelMetadataQuery mq) {
+    double probeRowCount = mq.getRowCount(this.getLeft());
+    double buildRowCount = mq.getRowCount(this.getRight());
 
     // cpu cost of hashing the join keys for the build side
     double cpuCostBuild = DrillCostBase.HASH_CPU_COST * keySize * buildRowCount;
@@ -202,15 +200,6 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
 
     return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0, memCost);
-  }
-
-  private boolean hasScalarSubqueryInput() {
-    if (JoinUtils.isScalarSubquery(this.getLeft())
-        || JoinUtils.isScalarSubquery(this.getRight())) {
-      return true;
-    }
-
-    return false;
   }
 
 }

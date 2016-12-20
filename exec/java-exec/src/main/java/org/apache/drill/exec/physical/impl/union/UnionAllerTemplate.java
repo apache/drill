@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,15 +32,14 @@ public abstract class UnionAllerTemplate implements UnionAller {
 
   private ImmutableList<TransferPair> transfers;
 
-  public UnionAllerTemplate() throws SchemaChangeException {
-
-  }
-
   @Override
   public final int unionRecords(int startIndex, final int recordCount, int firstOutputIndex) {
-    int i;
-    for (i = startIndex; i < startIndex + recordCount; i++, firstOutputIndex++) {
-      doEval(i, firstOutputIndex);
+    try {
+      for (int i = startIndex; i < startIndex + recordCount; i++, firstOutputIndex++) {
+        doEval(i, firstOutputIndex);
+      }
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
 
     for (TransferPair t : transfers) {
@@ -50,11 +49,16 @@ public abstract class UnionAllerTemplate implements UnionAller {
   }
 
   @Override
-  public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException{
+  public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers) throws SchemaChangeException{
     this.transfers = ImmutableList.copyOf(transfers);
     doSetup(context, incoming, outgoing);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") RecordBatch incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract void doEval(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
 }

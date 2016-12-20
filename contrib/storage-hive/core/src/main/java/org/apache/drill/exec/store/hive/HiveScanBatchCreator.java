@@ -92,6 +92,6 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
     } catch(Exception e) {
       logger.error("No constructor for {}, thrown {}", readerClass.getName(), e);
     }
-    return new ScanBatch(config, context, readers.iterator());
+    return new ScanBatch(config, context, readers);
   }
 }

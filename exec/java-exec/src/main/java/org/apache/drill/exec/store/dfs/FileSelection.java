@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,20 +20,15 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -166,23 +161,16 @@ public class FileSelection {
       return this;
     }
     Stopwatch timer = Stopwatch.createStarted();
-    final List<FileStatus> statuses = getStatuses(fs);
-    final int total = statuses.size();
-    final Path[] paths = new Path[total];
-    for (int i=0; i<total; i++) {
-      paths[i] = statuses.get(i).getPath();
+    List<FileStatus> statuses = getStatuses(fs);
+
+    List<FileStatus> nonDirectories = Lists.newArrayList();
+    for (FileStatus status : statuses) {
+      nonDirectories.addAll(DrillFileSystemUtil.listFiles(fs, status.getPath(), true));
     }
-    final List<FileStatus> allStats = fs.list(true, paths);
-    final List<FileStatus> nonDirectories = Lists.newArrayList(Iterables.filter(allStats, new Predicate<FileStatus>() {
-      @Override
-      public boolean apply(@Nullable FileStatus status) {
-        return !status.isDirectory();
-      }
-    }));
 
     final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
     logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}",
-        timer.elapsed(TimeUnit.MILLISECONDS), total);
+        timer.elapsed(TimeUnit.MILLISECONDS), statuses.size());
 
     // fileSel will be null if we query an empty folder
     if (fileSel != null) {
@@ -218,18 +206,6 @@ public class FileSelection {
 
   public boolean wasAllPartitionsPruned() {
     return this.wasAllPartitionsPruned;
-  }
-
-  private static String commonPath(final List<FileStatus> statuses) {
-    if (statuses == null || statuses.isEmpty()) {
-      return "";
-    }
-
-    final List<String> files = Lists.newArrayList();
-    for (final FileStatus status : statuses) {
-      files.add(status.getPath().toString());
-    }
-    return commonPathForFiles(files);
   }
 
   /**
@@ -286,8 +262,11 @@ public class FileSelection {
     if (statuses == null) {
       return null;
     }
-    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
+    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().getPath());
     logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    if (fileSel == null) {
+      return null;
+    }
     fileSel.setHadWildcard(hasWildcard);
     return fileSel;
 
@@ -371,6 +350,10 @@ public class FileSelection {
       int idx = root.indexOf(WILD_CARD); // first wild card in the path
       idx = root.lastIndexOf('/', idx); // file separator right before the first wild card
       final String newRoot = root.substring(0, idx);
+      if (newRoot.length() == 0) {
+          // Ensure that we always return a valid root.
+          return new Path("/");
+      }
       return new Path(newRoot);
     } else {
       return new Path(root);
@@ -422,7 +405,7 @@ public class FileSelection {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder();
-    sb.append("root=" + this.selectionRoot);
+    sb.append("root=").append(this.selectionRoot);
 
     sb.append("files=[");
     boolean isFirst = true;

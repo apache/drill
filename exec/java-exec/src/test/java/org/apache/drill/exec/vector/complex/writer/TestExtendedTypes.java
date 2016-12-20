@@ -17,69 +17,63 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
+import mockit.integration.junit4.JMockit;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JMockit.class)
 public class TestExtendedTypes extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExtendedTypes.class);
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("vector", "complex"));
+  }
 
   @Test
   public void checkReadWriteExtended() throws Exception {
+    mockUtcDateTimeZone();
 
-    final String originalFile = "${WORKING_PATH}/src/test/resources/vector/complex/extended.json".replaceAll(
-        Pattern.quote("${WORKING_PATH}"),
-        Matcher.quoteReplacement(TestTools.getWorkingPath()));
-
+    final String originalFile = "vector/complex/extended.json";
     final String newTable = "TestExtendedTypes/newjson";
+
     try {
       testNoResult(String.format("ALTER SESSION SET `%s` = 'json'", ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()));
       testNoResult(String.format("ALTER SESSION SET `%s` = true", ExecConstants.JSON_EXTENDED_TYPES.getOptionName()));
 
       // create table
-      test("create table dfs_test.tmp.`%s` as select * from dfs.`%s`", newTable, originalFile);
-
+      test("create table dfs.tmp.`%s` as select * from cp.`%s`", newTable, originalFile);
       // check query of table.
-      test("select * from dfs_test.tmp.`%s`", newTable);
+      test("select * from dfs.tmp.`%s`", newTable);
 
       // check that original file and new file match.
-      final byte[] originalData = Files.readAllBytes(Paths.get(originalFile));
-      final byte[] newData = Files.readAllBytes(Paths.get(BaseTestQuery.getDfsTestTmpSchemaLocation() + '/' + newTable
-          + "/0_0_0.json"));
+      final byte[] originalData = Files.readAllBytes(dirTestWatcher.getRootDir().toPath().resolve(originalFile));
+      final byte[] newData = Files.readAllBytes(dirTestWatcher.getDfsTestTmpDir().toPath().resolve(Paths.get(newTable, "0_0_0.json")));
       assertEquals(new String(originalData), new String(newData));
     } finally {
-      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
-      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
-          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName());
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES.getOptionName());
     }
   }
 
   @Test
   public void testMongoExtendedTypes() throws Exception {
-
-    final String originalFile = "${WORKING_PATH}/src/test/resources/vector/complex/mongo_extended.json".replaceAll(
-        Pattern.quote("${WORKING_PATH}"),
-        Matcher.quoteReplacement(TestTools.getWorkingPath()));
+    final String originalFile = "vector/complex/mongo_extended.json";
 
     try {
       testNoResult(String.format("ALTER SESSION SET `%s` = 'json'", ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()));
       testNoResult(String.format("ALTER SESSION SET `%s` = true", ExecConstants.JSON_EXTENDED_TYPES.getOptionName()));
 
-      int actualRecordCount = testSql(String.format("select * from dfs.`%s`", originalFile));
+      int actualRecordCount = testSql(String.format("select * from cp.`%s`", originalFile));
       assertEquals(
           String.format(
               "Received unexpected number of rows in output: expected=%d, received=%s",
@@ -89,12 +83,8 @@ public class TestExtendedTypes extends BaseTestQuery {
       String expected = "drill_timestamp_millies,bin,bin1\n2015-07-07T03:59:43.488,drill,drill\n";
       Assert.assertEquals(expected, actual);
     } finally {
-      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
-          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
-      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
-          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
-          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName());
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES.getOptionName());
     }
   }
 }

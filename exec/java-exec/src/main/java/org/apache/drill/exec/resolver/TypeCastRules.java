@@ -24,16 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.util.DecimalUtility;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class TypeCastRules {
 
@@ -47,12 +48,12 @@ public class TypeCastRules {
   }
 
   private static void initTypeRules() {
-    rules = new HashMap<MinorType, Set<MinorType>>();
+    rules = new HashMap<>();
 
     Set<MinorType> rule;
 
     /** TINYINT cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -80,7 +81,7 @@ public class TypeCastRules {
     rules.put(MinorType.TINYINT, rule);
 
     /** SMALLINT cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -108,7 +109,7 @@ public class TypeCastRules {
     rules.put(MinorType.SMALLINT, rule);
 
     /** INT cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -136,7 +137,7 @@ public class TypeCastRules {
     rules.put(MinorType.INT, rule);
 
     /** BIGINT cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -164,7 +165,7 @@ public class TypeCastRules {
     rules.put(MinorType.BIGINT, rule);
 
     /** UINT8 cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -192,7 +193,7 @@ public class TypeCastRules {
     rules.put(MinorType.UINT8, rule);
 
     /** DECIMAL9 cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -220,7 +221,7 @@ public class TypeCastRules {
     rules.put(MinorType.DECIMAL9, rule);
 
     /** DECIMAL18 cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -248,7 +249,7 @@ public class TypeCastRules {
     rules.put(MinorType.DECIMAL18, rule);
 
     /** DECIMAL28Dense cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -276,7 +277,7 @@ public class TypeCastRules {
     rules.put(MinorType.DECIMAL28DENSE, rule);
 
     /** DECIMAL28Sparse cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -304,7 +305,7 @@ public class TypeCastRules {
     rules.put(MinorType.DECIMAL28SPARSE, rule);
 
     /** DECIMAL38Dense cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -333,7 +334,7 @@ public class TypeCastRules {
 
 
     /** DECIMAL38Sparse cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -361,7 +362,7 @@ public class TypeCastRules {
     rules.put(MinorType.DECIMAL38SPARSE, rule);
 
     /** MONEY cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -389,7 +390,7 @@ public class TypeCastRules {
     rules.put(MinorType.MONEY, rule);
 
     /** DATE cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIMESTAMP);
     rule.add(MinorType.TIMESTAMPTZ);
@@ -402,7 +403,7 @@ public class TypeCastRules {
     rules.put(MinorType.DATE, rule);
 
     /** TIME cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TIME);
     rule.add(MinorType.TIMESTAMP);
     rule.add(MinorType.TIMESTAMPTZ);
@@ -415,7 +416,7 @@ public class TypeCastRules {
     rules.put(MinorType.TIME, rule);
 
     /** TIMESTAMP cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.VAR16CHAR);
     rule.add(MinorType.VARCHAR);
     rule.add(MinorType.VARBINARY);
@@ -433,7 +434,7 @@ public class TypeCastRules {
     rules.put(MinorType.TIMESTAMP, rule);
 
     /** TIMESTAMPTZ cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIMESTAMP);
@@ -447,7 +448,7 @@ public class TypeCastRules {
     rules.put(MinorType.TIMESTAMPTZ, rule);
 
     /** Interval cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.INTERVAL);
     rule.add(MinorType.INTERVALDAY);
     rule.add(MinorType.INTERVALYEAR);
@@ -463,7 +464,7 @@ public class TypeCastRules {
     rules.put(MinorType.INTERVAL, rule);
 
     /** INTERVAL YEAR cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.INTERVALYEAR);
     rule.add(MinorType.INTERVAL);
     rule.add(MinorType.INTERVALDAY);
@@ -479,7 +480,7 @@ public class TypeCastRules {
     rules.put(MinorType.INTERVALYEAR, rule);
 
     /** INTERVAL DAY cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.INTERVALDAY);
     rule.add(MinorType.INTERVALYEAR);
     rule.add(MinorType.INTERVAL);
@@ -495,7 +496,7 @@ public class TypeCastRules {
     rules.put(MinorType.INTERVALDAY, rule);
 
     /** FLOAT4 cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -520,7 +521,7 @@ public class TypeCastRules {
     rules.put(MinorType.FLOAT4, rule);
 
     /** FLOAT8 cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -546,7 +547,7 @@ public class TypeCastRules {
     rules.put(MinorType.FLOAT8, rule);
 
     /** BIT cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.BIT);
     rule.add(MinorType.FIXEDCHAR);
@@ -557,7 +558,7 @@ public class TypeCastRules {
     rules.put(MinorType.BIT, rule);
 
     /** FIXEDCHAR cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -594,7 +595,7 @@ public class TypeCastRules {
     rules.put(MinorType.FIXEDCHAR, rule);
 
     /** FIXED16CHAR cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -630,7 +631,7 @@ public class TypeCastRules {
     rules.put(MinorType.FIXED16CHAR, rule);
 
     /** FIXEDBINARY cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -657,7 +658,7 @@ public class TypeCastRules {
     rules.put(MinorType.FIXEDBINARY, rule);
 
     /** VARCHAR cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -693,7 +694,7 @@ public class TypeCastRules {
     rules.put(MinorType.VARCHAR, rule);
 
     /** VAR16CHAR cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -728,7 +729,7 @@ public class TypeCastRules {
     rules.put(MinorType.VAR16CHAR, rule);
 
     /** VARBINARY cast able from **/
-    rule = new HashSet<MinorType>();
+    rule = new HashSet<>();
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -769,7 +770,7 @@ public class TypeCastRules {
     return isCastable(from.getMinorType(), to.getMinorType());
   }
 
-  private static boolean isCastable(MinorType from, MinorType to) {
+  public static boolean isCastable(MinorType from, MinorType to) {
     return from.equals(MinorType.NULL) ||      //null could be casted to any other type.
         (rules.get(to) == null ? false : rules.get(to).contains(from));
   }

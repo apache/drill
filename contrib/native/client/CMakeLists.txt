@@ -17,6 +17,7 @@
 #
 cmake_minimum_required(VERSION 2.6)
 
+project(drillclient)
 cmake_policy(SET CMP0043 NEW)
 cmake_policy(SET CMP0048 NEW)
 enable_testing()
@@ -116,15 +117,29 @@ if(MSVC)
     add_definitions(-DUSE_STATIC_LIB)
 else()
     add_definitions(-DBOOST_ALL_DYN_LINK)
+    #suppress boost warnings (clang, gcc)
+    add_definitions ("-Wno-unused-local-typedefs")
 endif()
+
 
 # Find Protobufs
 find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
+if (MSVC)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
+#Find SSL
+find_package(OpenSSL REQUIRED )
+if(OPENSSL_FOUND)
+    add_definitions("-DIS_SSL_ENABLED=1")
+endif()
+
 #Find Zookeeper
 find_package(Zookeeper REQUIRED )
 
+# Find Cyrus SASL
+find_package(SASL REQUIRED)
 
 # Generated sources
 configure_file(
@@ -152,6 +167,8 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib/y2038")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib")
 include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS})
 
+include_directories(${SASL_INCLUDE_DIRS})
+
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/test")
 
 # add a DEBUG preprocessor macro
@@ -162,6 +179,12 @@ set_property(
 
 # Link directory
 link_directories(/usr/local/lib)
+
+#test programs
+add_subdirectory("${CMAKE_SOURCE_DIR}/test")
+message("Open SSL Include = ${OPENSSL_INCLUDE_DIR}")
+message("Open SSL Libraries = ${OPENSSL_LIBRARIES}")
+message("Open SSL = ${OPENSSL_ROOT_DIR}")
 
 add_executable(querySubmitter example/querySubmitter.cpp )
 

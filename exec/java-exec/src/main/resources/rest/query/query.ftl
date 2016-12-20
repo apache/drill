@@ -11,6 +11,9 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+    <#if model?? && model>
+      <script src="/static/js/jquery.form.js"></script>
+    </#if>
 </#macro>
 
 <#macro page_body>
@@ -21,8 +24,16 @@
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
   </div>
-  <form role="form" action="/query" method="POST">
-    <div class="form-group">
+
+  <#if model?? && model>
+     <div class="form-group">
+       <label for="userName">User Name</label>
+       <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
+     </div>
+  </#if>
+
+  <form role="form" id="queryForm" action="/query" method="POST">
+      <div class="form-group">
       <label for="queryType">Query Type</label>
       <div class="radio">
         <label>
@@ -47,8 +58,39 @@
       <label for="query">Query</label>
       <textarea class="form-control" id="query" rows="5" name="query" style="font-family: Courier;"></textarea>
     </div>
-    <button type="submit" class="btn btn-default">Submit</button>
+
+    <button class="btn btn-default" type=<#if model?? && model>"button" onclick="doSubmit()"<#else>"submit"</#if>>
+      Submit
+    </button>
   </form>
+
+    <#if model?? && model>
+      <script>
+        function doSubmit() {
+          var userName = document.getElementById("userName").value;
+          if (!userName.trim()) {
+              alert("Please fill in User Name field");
+              return;
+          }
+          $.ajax({
+            type: "POST",
+            beforeSend: function (request) {
+              request.setRequestHeader("User-Name", userName);
+            },
+            url: "/query",
+            data: $("#queryForm").serializeArray(),
+            success: function (response) {
+              var newDoc = document.open("text/html", "replace");
+              newDoc.write(response);
+              newDoc.close();
+            },
+            error: function (request, textStatus, errorThrown) {
+              alert(errorThrown);
+            }
+          });
+        }
+      </script>
+    </#if>
 </#macro>
 
 <@page_html/>

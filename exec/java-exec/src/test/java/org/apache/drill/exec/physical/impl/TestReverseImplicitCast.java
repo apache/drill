@@ -25,13 +25,13 @@ import java.util.List;
 
 import mockit.Injectable;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -45,7 +45,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
 
   @Test
   public void twoWayCast(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                         @Injectable UserClientConnection connection) throws Throwable {
 
     // Function checks for casting from Float, Double to Decimal data types
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -56,7 +56,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8));
+          Files.toString(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

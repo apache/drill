@@ -20,11 +20,13 @@ package org.apache.drill.exec.memory;
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
+import org.apache.drill.categories.MemoryTest;
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-
+@Category(MemoryTest.class)
 public class TestEndianess {
 
   @Test

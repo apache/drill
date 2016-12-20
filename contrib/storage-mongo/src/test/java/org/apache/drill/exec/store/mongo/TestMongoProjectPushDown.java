@@ -17,14 +17,18 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import static org.apache.drill.TestBuilder.listOf;
-import static org.apache.drill.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
 
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Ignore("DRILL-3775")
+@Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoProjectPushDown extends MongoTestBase {
 
   /**

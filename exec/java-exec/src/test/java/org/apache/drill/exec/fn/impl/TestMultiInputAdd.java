@@ -24,14 +24,15 @@ import java.util.List;
 
 import mockit.Injectable;
 
+import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -40,7 +41,9 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
+@Category(OperatorTest.class)
 public class TestMultiInputAdd extends PopUnitTestBase {
 
 //    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMathFunctions.class);
@@ -49,7 +52,7 @@ public class TestMultiInputAdd extends PopUnitTestBase {
 
 
     @Test
-    public void testMultiInputAdd(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable
+    public void testMultiInputAdd(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
     {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
@@ -59,7 +62,7 @@ public class TestMultiInputAdd extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/functions/multi_input_add_test.json"), Charsets.UTF_8));
+                    Files.toString(DrillFileUtils.getResourceAsFile("/functions/multi_input_add_test.json"), Charsets.UTF_8));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

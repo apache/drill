@@ -20,13 +20,20 @@ package io.netty.buffer;
 
 import io.netty.util.internal.PlatformDependent;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteOrder;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.netty.util.internal.PlatformDependent;
+
 /**
- * The underlying class we use for little-endian access to memory. Is used underneath DrillBufs to abstract away the
- * Netty classes and underlying Netty memory management.
+ * The underlying class we use for little-endian access to memory. Is used
+ * underneath DrillBufs to abstract away the Netty classes and underlying Netty
+ * memory management.
  */
+
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
   private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
@@ -49,7 +56,6 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
   UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf, AtomicLong bufferCount, AtomicLong bufferSize) {
     this(buf, true, bufferCount, bufferSize);
-
   }
 
   private UnsafeDirectLittleEndian(AbstractByteBuf buf, boolean fake, AtomicLong bufferCount, AtomicLong bufferSize) {
@@ -67,19 +73,19 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     this.wrapped = buf;
     this.memoryAddress = buf.memoryAddress();
   }
-    private long addr(int index) {
-        return memoryAddress + index;
-    }
 
-    @Override
-    public long getLong(int index) {
-//        wrapped.checkIndex(index, 8);
-        long v = PlatformDependent.getLong(addr(index));
-        return v;
-    }
+  private long addr(int index) {
+      return memoryAddress + index;
+  }
 
-    @Override
-    public float getFloat(int index) {
+  @Override
+  public long getLong(int index) {
+    //wrapped.checkIndex(index, 8);
+    return PlatformDependent.getLong(addr(index));
+  }
+
+  @Override
+  public float getFloat(int index) {
         return Float.intBitsToFloat(getInt(index));
     }
 
@@ -91,11 +97,6 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   @Override
   public ByteBuf slice(int index, int length) {
     return new SlicedByteBuf(this, index, length);
-  }
-
-  @Override
-  public ByteOrder order() {
-    return ByteOrder.LITTLE_ENDIAN;
   }
 
   @Override
@@ -172,6 +173,43 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   public ByteBuf setDouble(int index, double value) {
     setLong(index, Double.doubleToRawLongBits(value));
     return this;
+  }
+
+  // Clone of the super class checkIndex, but this version returns a boolean rather
+  // than throwing an exception.
+
+  protected boolean hasCapacity(int index, int fieldLength) {
+    assert fieldLength >= 0;
+    return (! (index < 0 || index > capacity() - fieldLength));
+  }
+
+  /**
+   * Write bytes into the buffer at the given index, if space is available.
+   * @param index location to write
+   * @param src bytes to write
+   * @param srcIndex start of data in the source array
+   * @param length length of the data to write
+   * @return true if the value was written, false if the value was not
+   * written because the value would overflow the buffer
+   */
+
+  public boolean setBytesBounded(int index, byte[] src, int srcIndex, int length) {
+    if (! hasCapacity(index, length)) {
+      return false;
+    }
+    PlatformDependent.copyMemory(src, srcIndex, addr(index), length);
+    return true;
+  }
+
+  // Version of the super class setBytes(), but with bounds checking done as a boolean,
+  // not assertion. This version requires a direct source buffer.
+
+  public boolean setBytesBounded(int index, UnsafeDirectLittleEndian src, int srcIndex, int length) {
+    if (! hasCapacity(index, length)) {
+      return false;
+    }
+    PlatformDependent.copyMemory(src.memoryAddress() + srcIndex, addr(index), length);
+    return true;
   }
 
   @Override
@@ -255,6 +293,28 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   }
 
   @Override
+  public int setBytes(int index, InputStream in, int length) throws IOException {
+    wrapped.checkIndex(index, length);
+    byte[] tmp = new byte[length];
+    int readBytes = in.read(tmp);
+    if (readBytes > 0) {
+      PlatformDependent.copyMemory(tmp, 0, addr(index), readBytes);
+    }
+    return readBytes;
+  }
+
+  @Override
+  public ByteBuf getBytes(int index, OutputStream out, int length) throws IOException {
+    wrapped.checkIndex(index, length);
+    if (length != 0) {
+      byte[] tmp = new byte[length];
+      PlatformDependent.copyMemory(addr(index), tmp, 0, length);
+      out.write(tmp);
+    }
+    return this;
+  }
+
+  @Override
   public int hashCode() {
     return System.identityHashCode(this);
   }
@@ -266,5 +326,4 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     assert isAssertEnabled = true;
     ASSERT_ENABLED = isAssertEnabled;
   }
-
 }

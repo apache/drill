@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.record;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,14 +29,13 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Utility class for dealing with changing schemas
@@ -54,7 +53,7 @@ public class SchemaUtil {
 
     for (BatchSchema s : schemas) {
       for (MaterializedField field : s) {
-        SchemaPath path = SchemaPath.getSimplePath(field.getPath());
+        SchemaPath path = SchemaPath.getSimplePath(field.getName());
         Set<MinorType> currentTypes = typeSetMap.get(path);
         if (currentTypes == null) {
           currentTypes = Sets.newHashSet();
@@ -65,9 +64,7 @@ public class SchemaUtil {
           throw new RuntimeException("Schema change not currently supported for schemas with complex types");
         }
         if (newType == MinorType.UNION) {
-          for (MinorType subType : field.getType().getSubTypeList()) {
-            currentTypes.add(subType);
-          }
+          currentTypes.addAll(field.getType().getSubTypeList());
         } else {
           currentTypes.add(newType);
         }
@@ -83,10 +80,11 @@ public class SchemaUtil {
         for (MinorType t : types) {
           builder.addSubType(t);
         }
-        MaterializedField field = MaterializedField.create(path.getAsUnescapedPath(), builder.build());
+        MaterializedField field = MaterializedField.create(path.getLastSegment().getNameSegment().getPath(), builder.build());
         fields.add(field);
       } else {
-        MaterializedField field = MaterializedField.create(path.getAsUnescapedPath(), Types.optional(types.iterator().next()));
+        MaterializedField field = MaterializedField.create(path.getLastSegment().getNameSegment().getPath(),
+                                                            Types.optional(types.iterator().next()));
         fields.add(field);
       }
     }
@@ -96,11 +94,12 @@ public class SchemaUtil {
     return s;
   }
 
+  @SuppressWarnings("resource")
   private static  ValueVector coerceVector(ValueVector v, VectorContainer c, MaterializedField field,
-                                           int recordCount, OperatorContext context) {
+                                           int recordCount, BufferAllocator allocator) {
     if (v != null) {
       int valueCount = v.getAccessor().getValueCount();
-      TransferPair tp = v.getTransferPair(context.getAllocator());
+      TransferPair tp = v.getTransferPair(allocator);
       tp.transfer();
       if (v.getField().getType().getMinorType().equals(field.getType().getMinorType())) {
         if (field.getType().getMinorType() == MinorType.UNION) {
@@ -114,7 +113,7 @@ public class SchemaUtil {
         }
         return tp.getTo();
       } else {
-        ValueVector newVector = TypeHelper.getNewVector(field, context.getAllocator());
+        ValueVector newVector = TypeHelper.getNewVector(field, allocator);
         Preconditions.checkState(field.getType().getMinorType() == MinorType.UNION, "Can only convert vector to Union vector");
         UnionVector u = (UnionVector) newVector;
         final ValueVector vv = u.addVector(tp.getTo());
@@ -136,7 +135,7 @@ public class SchemaUtil {
         return u;
       }
     } else {
-      v = TypeHelper.getNewVector(field, context.getAllocator());
+      v = TypeHelper.getNewVector(field, allocator);
       v.allocateNew();
       v.getMutator().setValueCount(recordCount);
       return v;
@@ -151,40 +150,46 @@ public class SchemaUtil {
    * @return
    */
   public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, OperatorContext context) {
+    return coerceContainer(in, toSchema, context.getAllocator());
+  }
+
+  public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, BufferAllocator allocator) {
     int recordCount = in.getRecordCount();
     boolean isHyper = false;
     Map<String, Object> vectorMap = Maps.newHashMap();
-    for (VectorWrapper w : in) {
+    for (VectorWrapper<?> w : in) {
       if (w.isHyper()) {
         isHyper = true;
         final ValueVector[] vvs = w.getValueVectors();
-        vectorMap.put(vvs[0].getField().getPath(), vvs);
+        vectorMap.put(vvs[0].getField().getName(), vvs);
       } else {
         assert !isHyper;
+        @SuppressWarnings("resource")
         final ValueVector v = w.getValueVector();
-        vectorMap.put(v.getField().getPath(), v);
+        vectorMap.put(v.getField().getName(), v);
       }
     }
 
-    VectorContainer c = new VectorContainer(context);
+    VectorContainer c = new VectorContainer(allocator);
 
     for (MaterializedField field : toSchema) {
       if (isHyper) {
-        final ValueVector[] vvs = (ValueVector[]) vectorMap.remove(field.getPath());
+        final ValueVector[] vvs = (ValueVector[]) vectorMap.remove(field.getName());
         final ValueVector[] vvsOut;
         if (vvs == null) {
           vvsOut = new ValueVector[1];
-          vvsOut[0] = coerceVector(null, c, field, recordCount, context);
+          vvsOut[0] = coerceVector(null, c, field, recordCount, allocator);
         } else {
           vvsOut = new ValueVector[vvs.length];
           for (int i = 0; i < vvs.length; ++i) {
-            vvsOut[i] = coerceVector(vvs[i], c, field, recordCount, context);
+            vvsOut[i] = coerceVector(vvs[i], c, field, recordCount, allocator);
           }
         }
         c.add(vvsOut);
       } else {
-        final ValueVector v = (ValueVector) vectorMap.remove(field.getPath());
-        c.add(coerceVector(v, c, field, recordCount, context));
+        @SuppressWarnings("resource")
+        final ValueVector v = (ValueVector) vectorMap.remove(field.getName());
+        c.add(coerceVector(v, c, field, recordCount, allocator));
       }
     }
     c.buildSchema(in.getSchema().getSelectionVectorMode());

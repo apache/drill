@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,4 +24,30 @@ public class RpcConstants {
 
   public static final boolean SOME_DEBUGGING = false;
   public static final boolean EXTRA_DEBUGGING = false;
+
+  // RPC Handler names
+  public static final String TIMEOUT_HANDLER = "timeout-handler";
+  public static final String PROTOCOL_DECODER = "protocol-decoder";
+  public static final String PROTOCOL_ENCODER = "protocol-encoder";
+  public static final String MESSAGE_DECODER = "message-decoder";
+  public static final String HANDSHAKE_HANDLER = "handshake-handler";
+  public static final String MESSAGE_HANDLER = "message-handler";
+  public static final String EXCEPTION_HANDLER = "exception-handler";
+  public static final String IDLE_STATE_HANDLER = "idle-state-handler";
+  public static final String SASL_DECRYPTION_HANDLER = "sasl-decryption-handler";
+  public static final String SASL_ENCRYPTION_HANDLER = "sasl-encryption-handler";
+  public static final String LENGTH_DECODER_HANDLER = "length-decoder";
+  public static final String CHUNK_CREATION_HANDLER = "chunk-creation-handler";
+  public static final String SSL_HANDLER = "ssl-handler";
+
+
+
+  // GSSAPI RFC 2222 allows only 3 octets to specify the length of maximum encoded buffer each side can receive.
+  // Hence the recommended maximum buffer size is kept as 16Mb i.e. 0XFFFFFF bytes.
+  public static final int MAX_RECOMMENDED_WRAPPED_SIZE = 0XFFFFFF;
+
+  public static final int LENGTH_FIELD_OFFSET = 0;
+  public static final int LENGTH_FIELD_LENGTH = 4;
+  public static final int LENGTH_ADJUSTMENT = 0;
+  public static final int INITIAL_BYTES_TO_STRIP = 0;
 }

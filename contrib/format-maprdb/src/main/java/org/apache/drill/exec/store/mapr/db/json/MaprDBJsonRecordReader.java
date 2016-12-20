@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -38,12 +39,13 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
@@ -95,6 +97,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private final boolean allTextMode;
   private final boolean ignoreSchemaChange;
   private final boolean disableCountOptimization;
+  private final boolean nonExistentColumnsProjection;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       MapRDBFormatPluginConfig formatPluginConfig,
@@ -112,26 +115,27 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(serializedFilter));
     }
 
-    disableCountOptimization = formatPluginConfig.shouldDisableCountOptimization();
+    disableCountOptimization = formatPluginConfig.disableCountOptimization();
     setColumns(projectedColumns);
     unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     readNumbersAsDouble = formatPluginConfig.isReadAllNumbersAsDouble();
     allTextMode = formatPluginConfig.isAllTextMode();
     ignoreSchemaChange = formatPluginConfig.isIgnoreSchemaChange();
     disablePushdown = !formatPluginConfig.isEnablePushdown();
+    nonExistentColumnsProjection = formatPluginConfig.isNonExistentFieldSupport();
   }
 
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (disablePushdown) {
-      transformed.add(AbstractRecordReader.STAR_COLUMN);
+      transformed.add(Utilities.STAR_COLUMN);
       includeId = true;
       return transformed;
     }
 
     if (isStarQuery()) {
-      transformed.add(AbstractRecordReader.STAR_COLUMN);
+      transformed.add(Utilities.STAR_COLUMN);
       includeId = true;
       if (isSkipQuery()) {
     	// `SELECT COUNT(*)` query
@@ -230,6 +234,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       }
     }
 
+    if (nonExistentColumnsProjection && recordCount > 0) {
+      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.EMPTY_LIST);
+    }
     vectorWriter.setValueCount(recordCount);
     logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), recordCount);
     return recordCount;

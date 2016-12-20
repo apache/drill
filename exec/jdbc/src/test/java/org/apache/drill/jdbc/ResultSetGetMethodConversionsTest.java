@@ -21,10 +21,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -58,6 +60,7 @@ import java.sql.Statement;
  *   {@link org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor}).
  * </p>
  */
+@Category(JdbcTest.class)
 public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   private static Connection connection;

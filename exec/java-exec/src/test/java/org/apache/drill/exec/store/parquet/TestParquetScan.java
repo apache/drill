@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,45 +18,29 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.google.common.io.Resources;
-import org.apache.drill.BaseTestQuery;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.junit.BeforeClass;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.file.Path;
+
 public class TestParquetScan extends BaseTestQuery {
-
-  static FileSystem fs;
-
-  @BeforeClass
-  public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set("fs.default.name", "local");
-
-    fs = FileSystem.get(conf);
-  }
-
   @Test
   public void testSuccessFile() throws Exception {
-    Path p = new Path("/tmp/nation_test_parquet_scan");
-    if (fs.exists(p)) {
-      fs.delete(p, true);
-    }
+    final byte[] bytes = Resources.toByteArray(Resources.getResource("tpch/nation.parquet"));
 
-    fs.mkdirs(p);
+    final Path rootPath = dirTestWatcher.getRootDir().toPath();
+    final File scanFile = rootPath.resolve("nation_test_parquet_scan").toFile();
+    final File successFile = rootPath.resolve("_SUCCESS").toFile();
+    final File logsFile = rootPath.resolve("_logs").toFile();
 
-    byte[] bytes = Resources.toByteArray(Resources.getResource("tpch/nation.parquet"));
-
-    FSDataOutputStream os = fs.create(new Path(p, "nation.parquet"));
-    os.write(bytes);
-    os.close();
-    fs.create(new Path(p, "_SUCCESS")).close();
-    fs.create(new Path(p, "_logs")).close();
+    FileUtils.writeByteArrayToFile(scanFile, bytes);
+    successFile.createNewFile();
+    logsFile.createNewFile();
 
     testBuilder()
-        .sqlQuery("select count(*) c from dfs.tmp.nation_test_parquet_scan where 1 = 1")
+        .sqlQuery("select count(*) c from dfs.nation_test_parquet_scan where 1 = 1")
         .unOrdered()
         .baselineColumns("c")
         .baselineValues(25L)

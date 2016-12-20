@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +18,17 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
+
+import java.util.Set;
+
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.record.MaterializedField;
 
 
 public abstract class BaseDataValueVector extends BaseValueVector {
 
-  protected final static byte[] emptyByteArray = new byte[]{}; // Nullable vectors use this
+  protected final static byte[] emptyByteArray = new byte[0]; // Nullable vectors use this
 
   protected DrillBuf data;
 
@@ -78,13 +82,29 @@ public abstract class BaseDataValueVector extends BaseValueVector {
     return data.writerIndex();
   }
 
-  public DrillBuf getBuffer() {
-    return data;
-  }
+  public DrillBuf getBuffer() { return data; }
 
   /**
    * This method has a similar effect of allocateNew() without actually clearing and reallocating
    * the value vector. The purpose is to move the value vector to a "mutate" state
    */
   public void reset() {}
+
+  @Override
+  public void exchange(ValueVector other) {
+    BaseDataValueVector target = (BaseDataValueVector) other;
+    DrillBuf temp = data;
+    data = target.data;
+    target.data = temp;
+    getReader().reset();
+    getMutator().exchange(target.getMutator());
+    // No state in an Accessor to reset
+  }
+
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    BufferLedger ledger = data.getLedger();
+    if (ledger != null) {
+      ledgers.add(ledger);
+    }
+  }
 }

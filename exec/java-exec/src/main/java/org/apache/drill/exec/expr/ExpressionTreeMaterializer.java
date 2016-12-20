@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,13 +22,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
@@ -64,7 +64,6 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -80,7 +79,6 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.expr.stat.TypedFieldExpr;
-import org.apache.drill.exec.record.MaterializeVisitor;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -100,7 +98,7 @@ public class ExpressionTreeMaterializer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
 
   private ExpressionTreeMaterializer() {
-  };
+  }
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
     return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, functionLookupContext, false, false);
@@ -126,9 +124,51 @@ public class ExpressionTreeMaterializer {
     return out;
   }
 
-  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
-      boolean allowComplexWriterExpr, boolean unionTypeEnabled) {
-    LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr, unionTypeEnabled), functionLookupContext);
+  /**
+   * Materializes logical expression taking into account passed parameters.
+   * Is used to materialize logical expression that contains reference to one batch.
+   *
+   * @param expr logical expression to be materialized
+   * @param batch batch instance
+   * @param errorCollector error collector
+   * @param functionLookupContext context to find drill function holder
+   * @param allowComplexWriterExpr true if complex expressions are allowed
+   * @param unionTypeEnabled true if union type is enabled
+   * @return materialized logical expression
+   */
+  public static LogicalExpression materialize(LogicalExpression expr,
+                                              VectorAccessible batch,
+                                              ErrorCollector errorCollector,
+                                              FunctionLookupContext functionLookupContext,
+                                              boolean allowComplexWriterExpr,
+                                              boolean unionTypeEnabled) {
+    Map<VectorAccessible, BatchReference> batches = Maps.newHashMap();
+    batches.put(batch, null);
+    return materialize(expr, batches, errorCollector, functionLookupContext, allowComplexWriterExpr, unionTypeEnabled);
+  }
+
+  /**
+   * Materializes logical expression taking into account passed parameters.
+   * Is used to materialize logical expression that can contain several batches with or without custom batch reference.
+   *
+   * @param expr logical expression to be materialized
+   * @param batches one or more batch instances used in expression
+   * @param errorCollector error collector
+   * @param functionLookupContext context to find drill function holder
+   * @param allowComplexWriterExpr true if complex expressions are allowed
+   * @param unionTypeEnabled true if union type is enabled
+   * @return materialized logical expression
+   */
+  public static LogicalExpression materialize(LogicalExpression expr,
+                                              Map<VectorAccessible, BatchReference> batches,
+                                              ErrorCollector errorCollector,
+                                              FunctionLookupContext functionLookupContext,
+                                              boolean allowComplexWriterExpr,
+                                              boolean unionTypeEnabled) {
+
+    LogicalExpression out = expr.accept(
+        new MaterializeVisitor(batches, errorCollector, allowComplexWriterExpr, unionTypeEnabled),
+        functionLookupContext);
 
     if (!errorCollector.hasErrors()) {
       out = out.accept(ConditionalExprOptimizer.INSTANCE, null);
@@ -176,7 +216,7 @@ public class ExpressionTreeMaterializer {
        * using an arbitrary value. We trim down the size of the stored bytes
        * to the actual size so this size doesn't really matter.
        */
-      castArgs.add(new ValueExpressions.LongExpression(TypeHelper.VARCHAR_DEFAULT_CAST_LEN, null));
+      castArgs.add(new ValueExpressions.LongExpression(Types.MAX_VARCHAR_LENGTH, null));
     }
     else if (CoreDecimalUtility.isDecimalType(toType)) {
       // Add the scale and precision to the arguments of the implicit cast
@@ -224,24 +264,40 @@ public class ExpressionTreeMaterializer {
     errorCollector.addGeneralError(call.getPosition(), sb.toString());
   }
 
+  /**
+   * Visitor that wraps schema path into value vector read expression
+   * if schema path is present in one of the batches,
+   * otherwise instance of null expression.
+   */
   private static class MaterializeVisitor extends AbstractMaterializeVisitor {
-    private final VectorAccessible batch;
 
-    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
+    private final Map<VectorAccessible, BatchReference> batches;
+
+    public MaterializeVisitor(Map<VectorAccessible, BatchReference> batches,
+                              ErrorCollector errorCollector,
+                              boolean allowComplexWriter,
+                              boolean unionTypeEnabled) {
       super(errorCollector, allowComplexWriter, unionTypeEnabled);
-      this.batch = batch;
+      this.batches = batches;
     }
 
     @Override
-    public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
-      //      logger.debug("Visiting schema path {}", path);
-      TypedFieldId tfId = batch.getValueVectorId(path);
+    public LogicalExpression visitSchemaPath(final SchemaPath path, FunctionLookupContext functionLookupContext) {
+      TypedFieldId tfId = null;
+      BatchReference batchRef = null;
+      for (Map.Entry<VectorAccessible, BatchReference> entry : batches.entrySet()) {
+        tfId = entry.getKey().getValueVectorId(path);
+        if (tfId != null) {
+          batchRef = entry.getValue();
+          break;
+        }
+      }
+
       if (tfId == null) {
         logger.warn("Unable to find value vector of path {}, returning null instance.", path);
         return NullExpression.INSTANCE;
       } else {
-        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId);
-        return e;
+        return new ValueVectorReadExpression(tfId, batchRef);
       }
     }
   }
@@ -367,10 +423,11 @@ public class ExpressionTreeMaterializer {
           TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
 
           //Case 1: If  1) the argument is NullExpression
-          //            2) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangable).
+          //            2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
+          //            3) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangeable).
           //        then replace NullExpression with a TypedNullConstant
-          if (currentArg.equals(NullExpression.INSTANCE) &&
-            ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
+          if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
+              (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
           } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
@@ -517,7 +574,7 @@ public class ExpressionTreeMaterializer {
      * @return
      */
     private LogicalExpression getExceptionFunction(String message) {
-      QuotedString msg = new QuotedString(message, ExpressionPosition.UNKNOWN);
+      QuotedString msg = new QuotedString(message, message.length(), ExpressionPosition.UNKNOWN);
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(msg);
       FunctionCall call = new FunctionCall(ExceptionFunction.EXCEPTION_FUNCTION_NAME, args, ExpressionPosition.UNKNOWN);
@@ -799,8 +856,9 @@ public class ExpressionTreeMaterializer {
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
       } else if (newMinor == MinorType.NULL) {
-        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly.
-        return new TypedNullConstant(Types.optional(e.getMajorType().getMinorType()));
+        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly
+        // preserve original precision and scale if present
+        return new TypedNullConstant(e.getMajorType().toBuilder().setMode(DataMode.OPTIONAL).build());
       } else {
         // if the type is fully bound, convert to functioncall and materialze the function.
         MajorType type = e.getMajorType();
@@ -813,11 +871,12 @@ public class ExpressionTreeMaterializer {
 
         //VarLen type
         if (!Types.isFixedWidthType(type)) {
-          newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+          newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
         }  if (CoreDecimalUtility.isDecimalType(type)) {
             newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
             newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }
+
         FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
         return fc.accept(this, functionLookupContext);
       }
@@ -874,11 +933,7 @@ public class ExpressionTreeMaterializer {
         // 2) or "to" length is unknown (0 means unknown length?).
         // Case 1 and case 2 mean that cast will do nothing.
         // In other cases, cast is required to trim the "from" according to "to" length.
-        if ( (to.getWidth() >= from.getWidth() && from.getWidth() > 0) || to.getWidth() == 0) {
-          return true;
-        } else {
-          return false;
-        }
+        return (to.getPrecision() >= from.getPrecision() && from.getPrecision() > 0) || to.getPrecision() == 0;
 
       default:
         errorCollector.addGeneralError(pos, String.format("Casting rules are unknown for type %s.", from));

@@ -18,15 +18,19 @@
 package org.apache.drill.exec.physical.impl.flatten;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, PlannerTest.class})
 public class TestFlattenPlanning extends PlanTestBase {
 
   @Test
   public void testFlattenPlanningAvoidUnnecessaryProject() throws Exception {
     // Because of Java7 vs Java8 map ordering differences, we check for both cases
     // See DRILL-4331 for details
-    testPlanMatchingPatterns("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`",
+    testPlanMatchingPatterns("select flatten(complex), rownum from cp.`store/json/test_flatten_mappify2.json`",
         new String[]{"\\QProject(EXPR$0=[$1], rownum=[$0])\\E|\\QProject(EXPR$0=[$0], rownum=[$1])\\E"},
         new String[]{"\\QProject(EXPR$0=[$0], EXPR$1=[$1], EXPR$3=[$1])\\E|\\QProject(EXPR$0=[$1], EXPR$1=[$0], EXPR$3=[$0])\\E"});
   }
@@ -36,7 +40,7 @@ public class TestFlattenPlanning extends PlanTestBase {
     final String query =
         " select comp, rownum " +
         " from (select flatten(complex) comp, rownum " +
-        "      from cp.`/store/json/test_flatten_mappify2.json`) " +
+        "      from cp.`store/json/test_flatten_mappify2.json`) " +
         " where comp > 1 " +   // should not be pushed down
         "   and rownum = 100"; // should be pushed down.
 
@@ -50,7 +54,7 @@ public class TestFlattenPlanning extends PlanTestBase {
     final String query =
         " select comp, rownum " +
             " from (select flatten(complex) comp, rownum " +
-            "      from cp.`/store/json/test_flatten_mappify2.json`) " +
+            "      from cp.`store/json/test_flatten_mappify2.json`) " +
             " where comp > 1 " +   // should NOT be pushed down
             "   OR rownum = 100";  // should NOT be pushed down.
 

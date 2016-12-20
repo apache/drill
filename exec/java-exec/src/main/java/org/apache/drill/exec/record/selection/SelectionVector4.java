@@ -116,6 +116,14 @@ public class SelectionVector4 implements AutoCloseable {
     }
   }
 
+  public static int getBatchIndex(int sv4Index) {
+    return (sv4Index >> 16) & 0xFFFF;
+  }
+
+  public static int getRecordIndex(int sv4Index) {
+    return (sv4Index) & 0xFFFF;
+  }
+
   @Override
   public void close() {
     clear();

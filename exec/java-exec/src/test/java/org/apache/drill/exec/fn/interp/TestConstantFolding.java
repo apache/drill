@@ -17,38 +17,34 @@
  ******************************************************************************/
 package org.apache.drill.exec.fn.interp;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.List;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import mockit.integration.junit4.JMockit;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.List;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
+@RunWith(JMockit.class)
+@Category(SqlTest.class)
 public class TestConstantFolding extends PlanTestBase {
-
-  @Rule
-  public TemporaryFolder folder = new TemporaryFolder();
-
-  // This should run as a @BeforeClass, but these methods must be defined static.
-  // Unfortunately, the temporary folder with an @Rule annotation cannot be static, this issue
-  // has been fixed in a newer version of JUnit
-  // http://stackoverflow.com/questions/2722358/junit-rule-temporaryfolder
 
   public static class SmallFileCreator {
 
-    private final TemporaryFolder folder;
+    private final File folder;
     private static final List<String> values = Lists.newArrayList("1","2","3");
     private static final String jsonRecord =  "{\"col1\" : 1,\"col2\" : 2, \"col3\" : 3}";
     private String record;
 
-    public SmallFileCreator(TemporaryFolder folder) {
+    public SmallFileCreator(File folder) {
       this.folder = folder;
       this.record = null;
     }
@@ -72,7 +68,8 @@ public class TestConstantFolding extends PlanTestBase {
       }
       PrintWriter out;
       for (String fileAndFolderName : new String[]{"bigfile", "BIGFILE_2"}) {
-        File bigFolder = folder.newFolder(fileAndFolderName);
+        File bigFolder = new File(folder, fileAndFolderName);
+        bigFolder.mkdirs();
         File bigFile = new File (bigFolder, fileAndFolderName + "." + extension);
         out = new PrintWriter(bigFile);
         for (int i = 0; i < bigFileLines; i++ ) {
@@ -82,7 +79,8 @@ public class TestConstantFolding extends PlanTestBase {
       }
 
       for (String fileAndFolderName : new String[]{"smallfile", "SMALLFILE_2"}) {
-        File smallFolder = folder.newFolder(fileAndFolderName);
+        File smallFolder = new File(folder, fileAndFolderName);
+        smallFolder.mkdirs();
         File smallFile = new File (smallFolder, fileAndFolderName + "." + extension);
         out = new PrintWriter(smallFile);
         for (int i = 0; i < smallFileLines; i++ ) {
@@ -114,12 +112,14 @@ public class TestConstantFolding extends PlanTestBase {
 
   @Test
   public void testConstantFolding_allTypes() throws Exception {
+    mockUsDateFormatSymbols();
+
     try {
       test("alter session set `store.json.all_text_mode` = true;");
       test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
 
       String query2 = "SELECT *  " +
-          "FROM   cp.`/parquet/alltypes.json`  " +
+          "FROM   cp.`parquet/alltypes.json`  " +
           "WHERE  12 = extract(day from (to_timestamp('2014-02-12 03:18:31:07 AM', 'YYYY-MM-dd HH:mm:ss:SS a'))) " +
           "AND    cast( `int_col` AS             int) = castint('1')  " +
           "AND    cast( `bigint_col` AS          bigint) = castbigint('100000000000')  " +
@@ -138,10 +138,7 @@ public class TestConstantFolding extends PlanTestBase {
           "AND    cast( `intervalday_col` AS interval day) = castintervalday('P1D')" +
           "AND    cast( `bit_col` AS       boolean) = castbit('false')  " +
           "AND    `varchar_col` = concat('qwe','rty')  " +
-
-          "AND    cast( `time_col` AS            time) = casttime('01:00:00')  " +
-
-          "";
+          "AND    cast( `time_col` AS            time) = casttime('01:00:00')";
 
 
       testBuilder()
@@ -158,8 +155,7 @@ public class TestConstantFolding extends PlanTestBase {
           .baselineValues(
               "1", "1", "1", "1", "01:00:00", "1.0", "100000000000", "1", "1", "1995-01-01", "1995-01-01 01:00:10.000",
               "123456789.000000000", "P1Y", "P1D", "P1Y1M1DT1H1M", "123456789.000000000",
-              "123456789.000000000", "qwerty", "qwerty","qwerty", "false"
-          )
+              "123456789.000000000", "qwerty", "qwerty","qwerty", "false")
           .go();
     } finally {
       test("alter session set `store.json.all_text_mode` = false;");
@@ -170,20 +166,18 @@ public class TestConstantFolding extends PlanTestBase {
   @Ignore("DRILL-2553")
   @Test
   public void testConstExprFolding_withPartitionPrune_verySmallFiles() throws Exception {
-    new SmallFileCreator(folder).createFiles(1, 8);
-    String path = folder.getRoot().toPath().toString();
+    new SmallFileCreator(dirTestWatcher.getRootDir()).createFiles(1, 8);
     testPlanOneExpectedPatternOneExcluded(
-        "select * from dfs.`" + path + "/*/*.csv` where dir0 = concat('small','file')",
+        "select * from dfs.`*/*.csv` where dir0 = concat('small','file')",
         "smallfile",
         "bigfile");
   }
 
   @Test
   public void testConstExprFolding_withPartitionPrune() throws Exception {
-    new SmallFileCreator(folder).createFiles(1, 1000);
-    String path = folder.getRoot().toPath().toString();
+    new SmallFileCreator(dirTestWatcher.getRootDir()).createFiles(1, 1000);
     testPlanOneExpectedPatternOneExcluded(
-        "select * from dfs.`" + path + "/*/*.csv` where dir0 = concat('small','file')",
+        "select * from dfs.`*/*.csv` where dir0 = concat('small','file')",
         "smallfile",
         "bigfile");
   }

@@ -231,7 +231,7 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(name = "current_date", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "current_date", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isNiladic = true)
     public static class CurrentDate implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Output DateHolder out;
@@ -270,16 +270,25 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(names = {"localtimestamp", "current_timestamp", "now", "statement_timestamp", "transaction_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-    public static class LocalTimeStamp implements DrillSimpleFunc {
+    /*
+     * Return query start time in milliseconds
+     */
+    public static long getQueryStartDate(ContextInformation contextInfo) {
+        org.joda.time.DateTime now = (new org.joda.time.DateTime(contextInfo.getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
+        return now.getMillis();
+    }
+
+    /*
+     * Niladic version of LocalTimeStamp
+     */
+    @FunctionTemplate(names = {"localtimestamp", "current_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isNiladic = true)
+    public static class LocalTimeStampNiladic implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Output TimeStampHolder out;
         @Inject ContextInformation contextInfo;
 
         public void setup() {
-
-            org.joda.time.DateTime now = (new org.joda.time.DateTime(contextInfo.getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
-            queryStartDate = now.getMillis();
+            queryStartDate = org.apache.drill.exec.expr.fn.impl.DateTypeFunctions.getQueryStartDate(contextInfo);
         }
 
         public void eval() {
@@ -287,7 +296,25 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(names = {"current_time", "localtime"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    /*
+     * Non-Niladic version of LocalTimeStamp
+     */
+    @FunctionTemplate(names = {"now", "statement_timestamp", "transaction_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class LocalTimeStampNonNiladic implements DrillSimpleFunc {
+        @Workspace long queryStartDate;
+        @Output TimeStampHolder out;
+        @Inject ContextInformation contextInfo;
+
+        public void setup() {
+            queryStartDate = org.apache.drill.exec.expr.fn.impl.DateTypeFunctions.getQueryStartDate(contextInfo);
+        }
+
+        public void eval() {
+            out.value = queryStartDate;
+        }
+    }
+
+    @FunctionTemplate(names = {"current_time", "localtime"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isNiladic = true)
     public static class CurrentTime implements DrillSimpleFunc {
         @Workspace int queryStartTime;
         @Output TimeHolder out;

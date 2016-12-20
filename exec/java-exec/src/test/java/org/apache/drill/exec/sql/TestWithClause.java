@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlTest.class)
 public class TestWithClause extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestWithClause.class);
 
   @Test
   public void withClause() throws Exception {
-    test("with alpha as (select * from sys.options where type = 'SYSTEM') \n" +
+    test("with alpha as (select * from sys.options where optionScope = 'SYSTEM') \n" +
         "\n" +
         "select * from alpha");
   }
@@ -34,7 +37,7 @@ public class TestWithClause extends BaseTestQuery {
   @Test
   @Ignore
   public void withClauseWithAliases() throws Exception {
-    test("with alpha (x,y) as (select name, kind from sys.options where type = 'SYSTEM') \n" +
+    test("with alpha (x,y) as (select name, kind from sys.options where optionScope = 'SYSTEM') \n" +
         "\n" +
         "select x, y from alpha");
   }

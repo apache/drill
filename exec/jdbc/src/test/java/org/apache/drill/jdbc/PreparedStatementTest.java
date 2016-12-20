@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,20 +45,24 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
+import org.apache.drill.categories.JdbcTest;
 import org.hamcrest.Matcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-
+import org.junit.experimental.categories.Category;
 
 /**
  * Test for Drill's implementation of PreparedStatement's methods.
  */
+@Category(JdbcTest.class)
 public class PreparedStatementTest extends JdbcTestBase {
 
   /** Fuzzy matcher for parameters-not-supported message assertions.  (Based on
@@ -74,7 +78,10 @@ public class PreparedStatementTest extends JdbcTestBase {
   @BeforeClass
   public static void setUpConnection() throws SQLException {
     Driver.load();
-    connection = DriverManager.getConnection( "jdbc:drill:zk=local" );
+    Properties properties = new Properties();
+    // Increased prepared statement creation timeout so test doesn't timeout on my laptop
+    properties.setProperty(ExecConstants.bootDefaultFor(ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS), "30000");
+    connection = DriverManager.getConnection( "jdbc:drill:zk=local", properties);
     try(Statement stmt = connection.createStatement()) {
       stmt.execute(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
     }
@@ -114,7 +121,7 @@ public class PreparedStatementTest extends JdbcTestBase {
         "SELECT " +
             "cast(1 as INTEGER ) as int_field, " +
             "cast(12384729 as BIGINT ) as bigint_field, " +
-            "'varchar_value' as varchar_field, " +
+            "cast('varchar_value' as varchar(50)) as varchar_field, " +
             "timestamp '2008-2-23 10:00:20.123' as ts_field, " +
             "date '2008-2-23' as date_field, " +
             "cast('99999912399.4567' as decimal(18, 5)) as decimal_field" +
@@ -123,7 +130,7 @@ public class PreparedStatementTest extends JdbcTestBase {
       List<ExpectedColumnResult> exp = ImmutableList.of(
           new ExpectedColumnResult("int_field", INTEGER, columnNoNulls, 11, 0, 0, true, Integer.class.getName()),
           new ExpectedColumnResult("bigint_field", BIGINT, columnNoNulls, 20, 0, 0, true, Long.class.getName()),
-          new ExpectedColumnResult("varchar_field", VARCHAR, columnNoNulls, 65536, 65536, 0, false, String.class.getName()),
+          new ExpectedColumnResult("varchar_field", VARCHAR, columnNoNulls, 50, 50, 0, false, String.class.getName()),
           new ExpectedColumnResult("ts_field", TIMESTAMP, columnNoNulls, 19, 0, 0, false, Timestamp.class.getName()),
           new ExpectedColumnResult("date_field", DATE, columnNoNulls, 10, 0, 0, false, Date.class.getName()),
           new ExpectedColumnResult("decimal_field", DECIMAL, columnNoNulls, 20, 18, 5, true, BigDecimal.class.getName())

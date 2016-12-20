@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -47,8 +47,8 @@ public class TextRecordReaderTest extends PopUnitTestBase {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(
-                      FileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8)
-                      .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
+                      DrillFileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8)
+                      .replace("#{DATA_FILE}", DrillFileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
       int count = 0;
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
       for(QueryDataBatch b : results) {

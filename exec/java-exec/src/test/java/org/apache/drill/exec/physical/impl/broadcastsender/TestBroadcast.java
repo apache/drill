@@ -17,31 +17,39 @@
  */
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
+
+@Category(OperatorTest.class)
 public class TestBroadcast extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBroadcast.class);
+  public static final String BROAD_CAST_QUERY = "select * from "
+    + "dfs.`broadcast/sales` s "
+    + "INNER JOIN "
+    + "dfs.`broadcast/customer` c "
+    + "ON s.id = c.id";
 
-  String broadcastQuery = "select * from "
-      + "dfs.`${WORKING_PATH}/src/test/resources/broadcast/sales` s "
-      + "INNER JOIN "
-      + "dfs.`${WORKING_PATH}/src/test/resources/broadcast/customer` c "
-      + "ON s.id = c.id";
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("broadcast"));
+  }
 
   @Test
   public void plansWithBroadcast() throws Exception {
     //TODO: actually verify that this plan has a broadcast exchange in it once plan tools are enabled.
     setup();
-    test("explain plan for " + broadcastQuery);
+    test("explain plan for %s", BROAD_CAST_QUERY);
   }
 
   @Test
   public void broadcastExecuteWorks() throws Exception {
     setup();
-    test(broadcastQuery);
+    test(BROAD_CAST_QUERY);
   }
-
 
   private void setup() throws Exception{
     testNoResult("alter session set `planner.slice_target` = 1");

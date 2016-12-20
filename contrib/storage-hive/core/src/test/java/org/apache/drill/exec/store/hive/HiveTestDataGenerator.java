@@ -19,15 +19,20 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,21 +44,26 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.hive.serde.serdeConstants;
 
-import static org.apache.drill.BaseTestQuery.getTempDir;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 
 public class HiveTestDataGenerator {
   private static final String HIVE_TEST_PLUGIN_NAME = "hive";
   private static HiveTestDataGenerator instance;
+  private static File baseDir;
 
   private final String dbDir;
   private final String whDir;
   private final Map<String, String> config;
 
-  public static synchronized HiveTestDataGenerator getInstance() throws Exception {
-    if (instance == null) {
-      final String dbDir = getTempDir("metastore_db");
-      final String whDir = getTempDir("warehouse");
+  public static synchronized HiveTestDataGenerator getInstance(File baseDir) throws Exception {
+    if (instance == null || !HiveTestDataGenerator.baseDir.equals(baseDir)) {
+      HiveTestDataGenerator.baseDir = baseDir;
+
+      File dbDirFile = new File(baseDir, "metastore_db");
+      File whDirFile = new File(baseDir, "warehouse");
+
+      final String dbDir = dbDirFile.getAbsolutePath();
+      final String whDir = whDirFile.getAbsolutePath();
 
       instance = new HiveTestDataGenerator(dbDir, whDir);
       instance.generateTestData();
@@ -70,7 +80,7 @@ public class HiveTestDataGenerator {
     config.put("hive.metastore.uris", "");
     config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
     config.put("hive.metastore.warehouse.dir", whDir);
-    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    config.put(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
   }
 
   /**
@@ -111,15 +121,33 @@ public class HiveTestDataGenerator {
     pluginRegistry.deletePlugin(HIVE_TEST_PLUGIN_NAME);
   }
 
+  public static File createFileWithPermissions(File baseDir, String name) {
+    Set<PosixFilePermission> perms = Sets.newHashSet(PosixFilePermission.values());
+    File dir = new File(baseDir, name);
+    dir.mkdirs();
+
+    try {
+      Files.setPosixFilePermissions(dir.toPath(), perms);
+    } catch (IOException e) {
+      new RuntimeException(e);
+    }
+
+    return dir;
+  }
+
   private void generateTestData() throws Exception {
     HiveConf conf = new HiveConf(SessionState.class);
 
+    File scratchDir = createFileWithPermissions(baseDir, "scratch_dir");
+    File localScratchDir = createFileWithPermissions(baseDir, "local_scratch_dir");
+    File part1Dir = createFileWithPermissions(baseDir, "part1");
+
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     conf.set("hive.metastore.warehouse.dir", whDir);
     conf.set("mapred.job.tracker", "local");
-    conf.set(ConfVars.SCRATCHDIR.varname,  getTempDir("scratch_dir"));
-    conf.set(ConfVars.LOCALSCRATCHDIR.varname, getTempDir("local_scratch_dir"));
+    conf.set(ConfVars.SCRATCHDIR.varname,  scratchDir.getAbsolutePath());
+    conf.set(ConfVars.LOCALSCRATCHDIR.varname, localScratchDir.getAbsolutePath());
     conf.set(ConfVars.DYNAMICPARTITIONINGMODE.varname, "nonstrict");
 
     SessionState ss = new SessionState(conf);
@@ -450,7 +478,7 @@ public class HiveTestDataGenerator {
     // Add a partition with custom location
     executeQuery(hiveDriver,
         String.format("ALTER TABLE partition_pruning_test ADD PARTITION (c=99, d=98, e=97) LOCATION '%s'",
-            getTempDir("part1")));
+          part1Dir.getAbsolutePath()));
     executeQuery(hiveDriver,
         String.format("INSERT INTO TABLE partition_pruning_test PARTITION(c=99, d=98, e=97) " +
                 "SELECT '%s', '%s' FROM kv LIMIT 1",

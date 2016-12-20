@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
@@ -150,66 +150,69 @@ public class TestPauseInjection extends BaseTestQuery {
     final ZookeeperHelper zkHelper = new ZookeeperHelper();
     zkHelper.startZookeeper(1);
 
-    // Creating two drillbits
-    final Drillbit drillbit1, drillbit2;
-    final DrillConfig drillConfig = zkHelper.getConfig();
     try {
-      drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
-      drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
-    } catch (final DrillbitStartupException e) {
-      throw new RuntimeException("Failed to start two drillbits.", e);
-    }
-
-    final DrillbitContext drillbitContext1 = drillbit1.getContext();
-    final DrillbitContext drillbitContext2 = drillbit2.getContext();
-
-    final UserSession session = UserSession.Builder.newBuilder()
-      .withCredentials(UserCredentials.newBuilder()
-        .setUserName("foo")
-        .build())
-      .withUserProperties(UserProperties.getDefaultInstance())
-      .withOptionManager(drillbitContext1.getOptionManager())
-      .build();
-
-    final DrillbitEndpoint drillbitEndpoint1 = drillbitContext1.getEndpoint();
-    final String controls = Controls.newBuilder()
-      .addPauseOnBit(DummyClass.class, DummyClass.PAUSES, drillbitEndpoint1)
-      .build();
-
-    ControlsInjectionUtil.setControls(session, controls);
-
-    {
-      final long expectedDuration = 1000L;
-      final ExtendedLatch trigger = new ExtendedLatch(1);
-      final Pointer<Exception> ex = new Pointer<>();
-      final QueryContext queryContext = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
-      (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
-
-      // test that the pause happens
-      final DummyClass dummyClass = new DummyClass(queryContext, trigger);
-      final long actualDuration = dummyClass.pauses();
-      assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
-        expectedDuration <= actualDuration);
-      assertTrue("No exception should be thrown.", ex.value == null);
+      // Creating two drillbits
+      final Drillbit drillbit1, drillbit2;
+      final DrillConfig drillConfig = zkHelper.getConfig();
       try {
-        queryContext.close();
-      } catch (final Exception e) {
-        fail("Failed to close query context: " + e);
+        drillbit1 = Drillbit.start(drillConfig, remoteServiceSet);
+        drillbit2 = Drillbit.start(drillConfig, remoteServiceSet);
+      } catch (final DrillbitStartupException e) {
+        throw new RuntimeException("Failed to start two drillbits.", e);
       }
-    }
 
-    {
-      final ExtendedLatch trigger = new ExtendedLatch(1);
-      final QueryContext queryContext = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
+      final DrillbitContext drillbitContext1 = drillbit1.getContext();
+      final DrillbitContext drillbitContext2 = drillbit2.getContext();
 
-      // if the resume did not happen, the test would hang
-      final DummyClass dummyClass = new DummyClass(queryContext, trigger);
-      dummyClass.pauses();
-      try {
-        queryContext.close();
-      } catch (final Exception e) {
-        fail("Failed to close query context: " + e);
+      final UserSession session = UserSession.Builder.newBuilder()
+        .withCredentials(UserCredentials.newBuilder()
+          .setUserName("foo")
+          .build())
+        .withUserProperties(UserProperties.getDefaultInstance())
+        .withOptionManager(drillbitContext1.getOptionManager())
+        .build();
+
+      final DrillbitEndpoint drillbitEndpoint1 = drillbitContext1.getEndpoint();
+      final String controls = Controls.newBuilder()
+        .addPauseOnBit(DummyClass.class, DummyClass.PAUSES, drillbitEndpoint1)
+        .build();
+
+      ControlsInjectionUtil.setControls(session, controls);
+
+      {
+        final long expectedDuration = 1000L;
+        final ExtendedLatch trigger = new ExtendedLatch(1);
+        final Pointer<Exception> ex = new Pointer<>();
+        final QueryContext queryContext = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
+        (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
+
+        // test that the pause happens
+        final DummyClass dummyClass = new DummyClass(queryContext, trigger);
+        final long actualDuration = dummyClass.pauses();
+        assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration), expectedDuration <= actualDuration);
+        assertTrue("No exception should be thrown.", ex.value == null);
+        try {
+          queryContext.close();
+        } catch (final Exception e) {
+          fail("Failed to close query context: " + e);
+        }
       }
+
+      {
+        final ExtendedLatch trigger = new ExtendedLatch(1);
+        final QueryContext queryContext = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
+
+        // if the resume did not happen, the test would hang
+        final DummyClass dummyClass = new DummyClass(queryContext, trigger);
+        dummyClass.pauses();
+        try {
+          queryContext.close();
+        } catch (final Exception e) {
+          fail("Failed to close query context: " + e);
+        }
+      }
+    } finally {
+      zkHelper.stopZookeeper();
     }
   }
 }

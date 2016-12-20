@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,6 +25,7 @@ import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -45,12 +46,13 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
-import org.apache.drill.exec.proto.UserBitShared.Registry;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
+import org.junit.experimental.categories.Category;
 
+@Category(VectorTest.class)
 public class ExpressionTreeMaterializerTest extends ExecTest {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializerTest.class);
@@ -202,8 +204,8 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
 
     new MockUp<RemoteFunctionRegistry>() {
       @Mock
-      Registry getRegistry() {
-        return Registry.getDefaultInstance();
+      long getRegistryVersion() {
+        return 0L;
       }
     };
 

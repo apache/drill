@@ -17,23 +17,23 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
+@Category(JdbcTest.class)
 public class Drill2439GetBooleanFailsSayingWrongTypeBugTest extends JdbcTestBase {
 
   private static Connection connection;
@@ -41,7 +41,7 @@ public class Drill2439GetBooleanFailsSayingWrongTypeBugTest extends JdbcTestBase
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
-    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    connection = connect();
     statement = connection.createStatement();
   }
 

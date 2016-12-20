@@ -18,6 +18,7 @@
 package org.apache.drill.exec.exception;
 
 import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.exec.record.BatchSchema;
 
 public class SchemaChangeException extends DrillException{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaChangeException.class);
@@ -48,5 +49,18 @@ public class SchemaChangeException extends DrillException{
 
   public SchemaChangeException(String message, Throwable cause, Object...objects){
     super(String.format(message, objects), cause);
+  }
+
+  public static SchemaChangeException schemaChanged(String message, BatchSchema priorSchema, BatchSchema newSchema) {
+    final String errorMsg = new StringBuilder()
+        .append(message)
+        .append("\n")
+        .append("Prior schema : \n")
+        .append(priorSchema.toString())
+        .append("\n")
+        .append("New schema : \n")
+        .append(newSchema.toString())
+        .toString();
+    return new SchemaChangeException(errorMsg);
   }
 }

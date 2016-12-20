@@ -27,7 +27,7 @@ import io.netty.util.internal.ThreadLocalRandom;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.UserRpcException;

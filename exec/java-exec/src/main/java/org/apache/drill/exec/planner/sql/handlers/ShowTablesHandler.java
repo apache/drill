@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
@@ -35,6 +34,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
@@ -83,10 +83,11 @@ public class ShowTablesHandler extends DefaultSqlHandler {
       tableSchema = drillSchema.getFullSchemaName();
     }
 
+    final String charset = Util.getDefaultCharset().name();
     where = DrillParserUtil.createCondition(
         new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
         SqlStdOperatorTable.EQUALS,
-        SqlLiteral.createCharString(tableSchema, CHARSET, SqlParserPos.ZERO));
+        SqlLiteral.createCharString(tableSchema, charset, SqlParserPos.ZERO));
 
     SqlNode filter = null;
     final SqlNode likePattern = node.getLikePattern();

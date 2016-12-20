@@ -24,13 +24,14 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import mockit.Injectable;
 
+import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OperatorUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -41,28 +42,30 @@ import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category(VectorTest.class)
 public class TestRecordIterator extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRecordIterator.class);
   DrillConfig c = DrillConfig.create();
 
   @Test
   public void testSimpleIterator(@Injectable final DrillbitContext bitContext,
-                                  @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                                  @Injectable UserClientConnection connection) throws Throwable{
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
 
-    final String planStr = Files.toString(FileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
+    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -73,7 +76,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-      OperatorContext.getChildCount(dummyPop));
+      OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, false);
     int totalRecords = 0;
@@ -114,12 +117,12 @@ public class TestRecordIterator extends PopUnitTestBase {
 
   @Test
   public void testMarkResetIterator(@Injectable final DrillbitContext bitContext,
-                                 @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                                 @Injectable UserClientConnection connection) throws Throwable{
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
 
-    final String planStr = Files.toString(FileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
+    final String planStr = Files.toString(DrillFileUtils.getResourceAsFile("/record/test_recorditerator.json"), Charsets.UTF_8);
 
     final PhysicalPlan plan = reader.readPhysicalPlan(planStr);
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -130,7 +133,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-      OperatorContext.getChildCount(dummyPop));
+        OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0);
     List<ValueVector> vectors = null;

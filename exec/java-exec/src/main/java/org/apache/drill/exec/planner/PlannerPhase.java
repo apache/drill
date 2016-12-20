@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
+import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
 import org.apache.calcite.rel.core.RelFactories;
@@ -126,11 +127,14 @@ public enum PlannerPhase {
 
   JOIN_PLANNING("LOPT Join Planning") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      List<RelOptRule> rules = Lists.newArrayList();
+      if (context.getPlannerSettings().isJoinOptimizationEnabled()) {
+        rules.add(DRILL_JOIN_TO_MULTIJOIN_RULE);
+        rules.add(DRILL_LOPT_OPTIMIZE_JOIN_RULE);
+      }
+      rules.add(ProjectRemoveRule.INSTANCE);
       return PlannerPhase.mergedRuleSets(
-          RuleSets.ofList(
-              DRILL_JOIN_TO_MULTIJOIN_RULE,
-              DRILL_LOPT_OPTIMIZE_JOIN_RULE,
-              ProjectRemoveRule.INSTANCE),
+          RuleSets.ofList(rules),
           getStorageRules(context, plugins, this)
           );
     }

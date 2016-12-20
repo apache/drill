@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,12 +23,36 @@ import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
-import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
-import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
+import org.apache.calcite.avatica.util.Quoting;
+import org.apache.drill.common.Version;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.client.ServerMethod;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.exec.proto.UserProtos.ConvertSupport;
+import org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
+import org.apache.drill.exec.proto.UserProtos.GroupBySupport;
+import org.apache.drill.exec.proto.UserProtos.IdentifierCasing;
+import org.apache.drill.exec.proto.UserProtos.NullCollation;
+import org.apache.drill.exec.proto.UserProtos.OrderBySupport;
+import org.apache.drill.exec.proto.UserProtos.OuterJoinSupport;
+import org.apache.drill.exec.proto.UserProtos.RequestStatus;
+import org.apache.drill.exec.proto.UserProtos.ServerMeta;
+import org.apache.drill.exec.proto.UserProtos.SubQuerySupport;
+import org.apache.drill.exec.proto.UserProtos.UnionSupport;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -37,8 +61,64 @@ import org.apache.drill.jdbc.DrillDatabaseMetaData;
 class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
                                 implements DrillDatabaseMetaData {
 
-  protected DrillDatabaseMetaDataImpl( AvaticaConnection connection ) {
+
+  /**
+   * Holds allowed conversion between SQL types
+   *
+   */
+  private static final class SQLConvertSupport {
+    public final int from;
+    public final int to;
+
+    public SQLConvertSupport(int from, int to) {
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(from, to);
+    }
+
+    @Override public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+
+      if (!(obj instanceof SQLConvertSupport)) {
+        return false;
+      }
+
+      SQLConvertSupport other = (SQLConvertSupport) obj;
+      return from == other.from && to == other.to;
+    }
+
+    public static final Set<SQLConvertSupport> toSQLConvertSupport(Iterable<ConvertSupport> convertSupportIterable) {
+      ImmutableSet.Builder<SQLConvertSupport> sqlConvertSupportSet = ImmutableSet.builder();
+      for(ConvertSupport convertSupport: convertSupportIterable) {
+        try {
+          sqlConvertSupportSet.add(new SQLConvertSupport(
+              toSQLType(convertSupport.getFrom()),
+              toSQLType(convertSupport.getTo())));
+        } catch(IllegalArgumentException e) {
+          // Ignore unknown types...
+        }
+      }
+      return sqlConvertSupportSet.build();
+    }
+
+    private static int toSQLType(MinorType minorType) {
+      String sqlTypeName = Types.getSqlTypeName(Types.optional(minorType));
+      return Types.getJdbcTypeCode(sqlTypeName);
+    }
+  }
+
+  private volatile ServerMeta serverMeta;
+  private volatile Set<SQLConvertSupport> convertSupport;
+
+  protected DrillDatabaseMetaDataImpl( DrillConnectionImpl connection ) {
     super( connection );
+
   }
 
   /**
@@ -55,9 +135,54 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     }
   }
 
-  private RpcEndpointInfos getServerInfos() throws SQLException {
+  private boolean getServerMetaSupported() throws SQLException {
     DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
-    return connection.getClient().getServerInfos();
+    return
+        !connection.getConfig().isServerMetadataDisabled()
+        && connection.getClient().getSupportedMethods().contains(ServerMethod.GET_SERVER_META);
+  }
+
+  private String getServerName() throws SQLException {
+    DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
+    return connection.getClient().getServerName();
+  }
+
+  private Version getServerVersion() throws SQLException {
+    DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
+    return connection.getClient().getServerVersion();
+  }
+
+  private ServerMeta getServerMeta() throws SQLException {
+    assert getServerMetaSupported();
+
+    if (serverMeta == null) {
+      synchronized(this) {
+        if (serverMeta == null) {
+          DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
+
+          try {
+            GetServerMetaResp resp = connection.getClient().getServerMeta().get();
+            if (resp.getStatus() != RequestStatus.OK) {
+              DrillPBError drillError = resp.getError();
+              throw new SQLException("Error when getting server meta: " + drillError.getMessage());
+            }
+            serverMeta = resp.getServerMeta();
+            convertSupport = SQLConvertSupport.toSQLConvertSupport(serverMeta.getConvertSupportList());
+          } catch (InterruptedException e) {
+            throw new SQLException("Interrupted when getting server meta", e);
+          } catch (ExecutionException e) {
+            Throwable cause =  e.getCause();
+            if (cause == null) {
+              throw new AssertionError("Something unknown happened", e);
+            }
+            Throwables.propagateIfPossible(cause);
+            throw new SQLException("Error when getting server meta", cause);
+          }
+        }
+      }
+    }
+
+    return serverMeta;
   }
 
   // Note:  Dynamic proxies could be used to reduce the quantity (450?) of
@@ -79,7 +204,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean allTablesAreSelectable() throws SQLException {
     throwIfClosed();
-    return super.allTablesAreSelectable();
+    if (!getServerMetaSupported()) {
+      return super.allTablesAreSelectable();
+    }
+    return getServerMeta().getAllTablesSelectable();
   }
 
   @Override
@@ -97,7 +225,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean isReadOnly() throws SQLException {
     throwIfClosed();
-    return super.isReadOnly();
+    if (!getServerMetaSupported()) {
+      return super.isReadOnly();
+    }
+    return getServerMeta().getReadOnly();
   }
 
 
@@ -106,45 +237,57 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean nullsAreSortedHigh() throws SQLException {
     throwIfClosed();
-    return true;
+    if (!getServerMetaSupported()) {
+      return true;
+    }
+    return getServerMeta().getNullCollation() == NullCollation.NC_HIGH;
   }
 
   @Override
   public boolean nullsAreSortedLow() throws SQLException {
     throwIfClosed();
-    return false;
+    if (!getServerMetaSupported()) {
+      return false;
+    }
+    return getServerMeta().getNullCollation() == NullCollation.NC_LOW;
   }
 
   @Override
   public boolean nullsAreSortedAtStart() throws SQLException {
     throwIfClosed();
-    return false;
+    if (!getServerMetaSupported()) {
+      return false;
+    }
+    return getServerMeta().getNullCollation() == NullCollation.NC_AT_START;
   }
 
   @Override
   public boolean nullsAreSortedAtEnd() throws SQLException {
     throwIfClosed();
-    return false;
+    if (!getServerMetaSupported()) {
+      return false;
+    }
+    return getServerMeta().getNullCollation() == NullCollation.NC_AT_END;
   }
 
   @Override
   public String getDatabaseProductName() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    String name = getServerName();
+    if (name == null) {
       return super.getDatabaseProductName();
     }
-    return infos.getName();
+    return name;
   }
 
   @Override
   public String getDatabaseProductVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseProductVersion();
     }
-    return infos.getVersion();
+    return version.getVersion();
   }
 
   @Override
@@ -186,98 +329,145 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsMixedCaseIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.supportsMixedCaseIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.supportsMixedCaseIdentifiers();
+    }
+    return getServerMeta().getIdentifierCasing() == IdentifierCasing.IC_SUPPORTS_MIXED;
   }
 
   @Override
   public boolean storesUpperCaseIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesUpperCaseIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesUpperCaseIdentifiers();
+    }
+    return getServerMeta().getIdentifierCasing() == IdentifierCasing.IC_STORES_UPPER;
   }
 
   @Override
   public boolean storesLowerCaseIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesLowerCaseIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesLowerCaseIdentifiers();
+    }
+    return getServerMeta().getIdentifierCasing() == IdentifierCasing.IC_STORES_LOWER;
   }
 
   @Override
   public boolean storesMixedCaseIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesMixedCaseIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesMixedCaseIdentifiers();
+    }
+    return getServerMeta().getIdentifierCasing() == IdentifierCasing.IC_STORES_MIXED;
   }
 
   @Override
   public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.supportsMixedCaseQuotedIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.supportsMixedCaseQuotedIdentifiers();
+    }
+    return getServerMeta().getQuotedIdentifierCasing() == IdentifierCasing.IC_SUPPORTS_MIXED;
   }
 
   @Override
   public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesUpperCaseQuotedIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesUpperCaseQuotedIdentifiers();
+    }
+    return getServerMeta().getQuotedIdentifierCasing() == IdentifierCasing.IC_STORES_UPPER;
   }
 
   @Override
   public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesLowerCaseQuotedIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesLowerCaseQuotedIdentifiers();
+    }
+    return getServerMeta().getQuotedIdentifierCasing() == IdentifierCasing.IC_STORES_LOWER;
   }
 
   @Override
   public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
     throwIfClosed();
-    return super.storesMixedCaseQuotedIdentifiers();
+    if (!getServerMetaSupported()) {
+      return super.storesMixedCaseQuotedIdentifiers();
+    }
+    return getServerMeta().getQuotedIdentifierCasing() == IdentifierCasing.IC_STORES_MIXED;
   }
 
-  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
   @Override
   public String getIdentifierQuoteString() throws SQLException {
     throwIfClosed();
-    return "`";
+    if (!getServerMetaSupported()) {
+      return Quoting.BACK_TICK.string;
+    }
+    return getServerMeta().getIdentifierQuoteString();
   }
 
   @Override
   public String getSQLKeywords() throws SQLException {
     throwIfClosed();
-    return super.getSQLKeywords();
+    if (!getServerMetaSupported()) {
+      return super.getSQLKeywords();
+    }
+    return Joiner.on(",").join(getServerMeta().getSqlKeywordsList());
   }
 
   @Override
   public String getNumericFunctions() throws SQLException {
     throwIfClosed();
-    return super.getNumericFunctions();
+    if (!getServerMetaSupported()) {
+      return super.getNumericFunctions();
+    }
+    return Joiner.on(",").join(getServerMeta().getNumericFunctionsList());
   }
 
   @Override
   public String getStringFunctions() throws SQLException {
     throwIfClosed();
-    return super.getStringFunctions();
+    if (!getServerMetaSupported()) {
+      return super.getStringFunctions();
+    }
+    return Joiner.on(",").join(getServerMeta().getStringFunctionsList());
   }
 
   @Override
   public String getSystemFunctions() throws SQLException {
     throwIfClosed();
-    return super.getSystemFunctions();
+    if (!getServerMetaSupported()) {
+      return super.getSystemFunctions();
+    }
+    return Joiner.on(",").join(getServerMeta().getSystemFunctionsList());
   }
 
   @Override
   public String getTimeDateFunctions() throws SQLException {
     throwIfClosed();
-    return super.getTimeDateFunctions();
+    if (!getServerMetaSupported()) {
+      return super.getTimeDateFunctions();
+    }
+    return Joiner.on(",").join(getServerMeta().getDateTimeFunctionsList());
   }
 
   @Override
   public String getSearchStringEscape() throws SQLException {
     throwIfClosed();
-    return super.getSearchStringEscape();
+    if (!getServerMetaSupported()) {
+      return super.getSearchStringEscape();
+    }
+    return getServerMeta().getSearchEscapeString();
   }
 
   @Override
   public String getExtraNameCharacters() throws SQLException {
     throwIfClosed();
-    return super.getExtraNameCharacters();
+    if (!getServerMetaSupported()) {
+      return super.getExtraNameCharacters();
+    }
+    return getServerMeta().getSpecialCharacters();
   }
 
   @Override
@@ -295,73 +485,114 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsColumnAliasing() throws SQLException {
     throwIfClosed();
-    return super.supportsColumnAliasing();
+    if (!getServerMetaSupported()) {
+      return super.supportsColumnAliasing();
+    }
+    return getServerMeta().getColumnAliasingSupported();
   }
 
   @Override
   public boolean nullPlusNonNullIsNull() throws SQLException {
     throwIfClosed();
-    return super.nullPlusNonNullIsNull();
+    if (!getServerMetaSupported()) {
+      return super.nullPlusNonNullIsNull();
+    }
+    return getServerMeta().getNullPlusNonNullEqualsNull();
   }
 
   @Override
   public boolean supportsConvert() throws SQLException {
     throwIfClosed();
-    return super.supportsConvert();
+    if (!getServerMetaSupported()) {
+      return super.supportsConvert();
+    }
+    // Make sure the convert table is loaded
+    getServerMeta();
+    return !convertSupport.isEmpty();
   }
 
   @Override
   public boolean supportsConvert(int fromType, int toType) throws SQLException {
     throwIfClosed();
-    return super.supportsConvert(fromType, toType);
+    if (!getServerMetaSupported()) {
+      return super.supportsConvert(fromType, toType);
+    }
+    // Make sure the convert table is loaded
+    getServerMeta();
+    return convertSupport.contains(new SQLConvertSupport(fromType, toType));
   }
 
   @Override
   public boolean supportsTableCorrelationNames() throws SQLException {
     throwIfClosed();
-    return super.supportsTableCorrelationNames();
+    if (!getServerMetaSupported()) {
+      return super.supportsTableCorrelationNames();
+    }
+    return getServerMeta().getCorrelationNamesSupport() == CorrelationNamesSupport.CN_ANY
+        || getServerMeta().getCorrelationNamesSupport() == CorrelationNamesSupport.CN_DIFFERENT_NAMES;
   }
 
   @Override
   public boolean supportsDifferentTableCorrelationNames() throws SQLException {
     throwIfClosed();
-    return super.supportsDifferentTableCorrelationNames();
+    if (!getServerMetaSupported()) {
+      return super.supportsDifferentTableCorrelationNames();
+    }
+    return getServerMeta().getCorrelationNamesSupport() == CorrelationNamesSupport.CN_DIFFERENT_NAMES;
   }
 
   @Override
   public boolean supportsExpressionsInOrderBy() throws SQLException {
     throwIfClosed();
-    return super.supportsExpressionsInOrderBy();
+    if (!getServerMetaSupported()) {
+      return super.supportsExpressionsInOrderBy();
+    }
+    return getServerMeta().getOrderBySupportList().contains(OrderBySupport.OB_EXPRESSION);
   }
 
   @Override
   public boolean supportsOrderByUnrelated() throws SQLException {
     throwIfClosed();
-    return super.supportsOrderByUnrelated();
+    if (!getServerMetaSupported()) {
+      return super.supportsOrderByUnrelated();
+    }
+    return getServerMeta().getOrderBySupportList().contains(OrderBySupport.OB_UNRELATED);
   }
 
   @Override
   public boolean supportsGroupBy() throws SQLException {
     throwIfClosed();
-    return super.supportsGroupBy();
+    if (!getServerMetaSupported()) {
+      return super.supportsGroupBy();
+    }
+    return getServerMeta().getGroupBySupport() != GroupBySupport.GB_NONE;
   }
 
   @Override
   public boolean supportsGroupByUnrelated() throws SQLException {
     throwIfClosed();
-    return super.supportsGroupByUnrelated();
+    if (!getServerMetaSupported()) {
+      return super.supportsGroupByUnrelated();
+    }
+    return getServerMeta().getGroupBySupport() == GroupBySupport.GB_UNRELATED;
   }
 
   @Override
   public boolean supportsGroupByBeyondSelect() throws SQLException {
     throwIfClosed();
-    return super.supportsGroupByBeyondSelect();
+    if (!getServerMetaSupported()) {
+      return super.supportsGroupByBeyondSelect();
+    }
+    return getServerMeta().getGroupBySupport() == GroupBySupport.GB_BEYOND_SELECT;
   }
 
   @Override
   public boolean supportsLikeEscapeClause() throws SQLException {
     throwIfClosed();
-    return super.supportsLikeEscapeClause();
+    if (!getServerMetaSupported()) {
+      return super.supportsLikeEscapeClause();
+    }
+    return getServerMeta().getLikeEscapeClauseSupported();
   }
 
   @Override
@@ -427,25 +658,38 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsOuterJoins() throws SQLException {
     throwIfClosed();
-    return super.supportsOuterJoins();
+    if (!getServerMetaSupported()) {
+      return super.supportsOuterJoins();
+    }
+    return getServerMeta().getOuterJoinSupportCount() > 0;
   }
 
   @Override
   public boolean supportsFullOuterJoins() throws SQLException {
     throwIfClosed();
-    return super.supportsFullOuterJoins();
+    if (!getServerMetaSupported()) {
+      return super.supportsFullOuterJoins();
+    }
+    return getServerMeta().getOuterJoinSupportList().contains(OuterJoinSupport.OJ_FULL);
   }
 
   @Override
   public boolean supportsLimitedOuterJoins() throws SQLException {
     throwIfClosed();
-    return super.supportsLimitedOuterJoins();
+    if (!getServerMetaSupported()) {
+      return super.supportsFullOuterJoins();
+    }
+    return getServerMeta().getOuterJoinSupportCount() > 0
+        && !(getServerMeta().getOuterJoinSupportList().contains(OuterJoinSupport.OJ_FULL));
   }
 
   @Override
   public String getSchemaTerm() throws SQLException {
     throwIfClosed();
-    return super.getSchemaTerm();
+    if (!getServerMetaSupported()) {
+      return super.getSchemaTerm();
+    }
+    return getServerMeta().getSchemaTerm();
   }
 
   @Override
@@ -457,19 +701,28 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public String getCatalogTerm() throws SQLException {
     throwIfClosed();
-    return super.getCatalogTerm();
+    if (!getServerMetaSupported()) {
+      return super.getCatalogTerm();
+    }
+    return getServerMeta().getCatalogTerm();
   }
 
   @Override
   public boolean isCatalogAtStart() throws SQLException {
     throwIfClosed();
-    return super.isCatalogAtStart();
+    if (!getServerMetaSupported()) {
+      return super.isCatalogAtStart();
+    }
+    return getServerMeta().getCatalogAtStart();
   }
 
   @Override
   public String getCatalogSeparator() throws SQLException {
     throwIfClosed();
-    return super.getCatalogSeparator();
+    if (!getServerMetaSupported()) {
+      return super.getCatalogSeparator();
+    }
+    return getServerMeta().getCatalogSeparator();
   }
 
   @Override
@@ -547,7 +800,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsSelectForUpdate() throws SQLException {
     throwIfClosed();
-    return super.supportsSelectForUpdate();
+    if (!getServerMetaSupported()) {
+      return super.supportsSelectForUpdate();
+    }
+    return getServerMeta().getSelectForUpdateSupported();
   }
 
   @Override
@@ -559,43 +815,64 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsSubqueriesInComparisons() throws SQLException {
     throwIfClosed();
-    return super.supportsSubqueriesInComparisons();
+    if (!getServerMetaSupported()) {
+      return super.supportsSubqueriesInComparisons();
+    }
+    return getServerMeta().getSubquerySupportList().contains(SubQuerySupport.SQ_IN_COMPARISON);
   }
 
   @Override
   public boolean supportsSubqueriesInExists() throws SQLException {
     throwIfClosed();
-    return super.supportsSubqueriesInExists();
+    if (!getServerMetaSupported()) {
+      return super.supportsSubqueriesInExists();
+    }
+    return getServerMeta().getSubquerySupportList().contains(SubQuerySupport.SQ_IN_EXISTS);
   }
 
   @Override
   public boolean supportsSubqueriesInIns() throws SQLException {
     throwIfClosed();
-    return super.supportsSubqueriesInIns();
+    if (!getServerMetaSupported()) {
+      return super.supportsSubqueriesInIns();
+    }
+    return getServerMeta().getSubquerySupportList().contains(SubQuerySupport.SQ_IN_INSERT);
   }
 
   @Override
   public boolean supportsSubqueriesInQuantifieds() throws SQLException {
     throwIfClosed();
-    return super.supportsSubqueriesInQuantifieds();
+    if (!getServerMetaSupported()) {
+      return super.supportsSubqueriesInQuantifieds();
+    }
+    return getServerMeta().getSubquerySupportList().contains(SubQuerySupport.SQ_IN_QUANTIFIED);
   }
 
   @Override
   public boolean supportsCorrelatedSubqueries() throws SQLException {
     throwIfClosed();
-    return super.supportsCorrelatedSubqueries();
+    if (!getServerMetaSupported()) {
+      return super.supportsCorrelatedSubqueries();
+    }
+    return getServerMeta().getSubquerySupportList().contains(SubQuerySupport.SQ_CORRELATED);
   }
 
   @Override
   public boolean supportsUnion() throws SQLException {
     throwIfClosed();
-    return super.supportsUnion();
+    if (!getServerMetaSupported()) {
+      return super.supportsUnion();
+    }
+    return getServerMeta().getUnionSupportList().contains(UnionSupport.U_UNION);
   }
 
   @Override
   public boolean supportsUnionAll() throws SQLException {
     throwIfClosed();
-    return super.supportsUnionAll();
+    if (!getServerMetaSupported()) {
+      return super.supportsUnionAll();
+    }
+    return getServerMeta().getUnionSupportList().contains(UnionSupport.U_UNION_ALL);
   }
 
   @Override
@@ -625,25 +902,37 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getMaxBinaryLiteralLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxBinaryLiteralLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxBinaryLiteralLength();
+    }
+    return getServerMeta().getMaxBinaryLiteralLength();
   }
 
   @Override
   public int getMaxCharLiteralLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxCharLiteralLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxCharLiteralLength();
+    }
+    return getServerMeta().getMaxCharLiteralLength();
   }
 
   @Override
   public int getMaxColumnNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxColumnNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxColumnNameLength();
+    }
+    return getServerMeta().getMaxColumnNameLength();
   }
 
   @Override
   public int getMaxColumnsInGroupBy() throws SQLException {
     throwIfClosed();
-    return super.getMaxColumnsInGroupBy();
+    if (!getServerMetaSupported()) {
+      return super.getMaxColumnsInGroupBy();
+    }
+    return getServerMeta().getMaxColumnsInGroupBy();
   }
 
   @Override
@@ -655,13 +944,19 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getMaxColumnsInOrderBy() throws SQLException {
     throwIfClosed();
-    return super.getMaxColumnsInOrderBy();
+    if (!getServerMetaSupported()) {
+      return super.getMaxColumnsInOrderBy();
+    }
+    return getServerMeta().getMaxColumnsInOrderBy();
   }
 
   @Override
   public int getMaxColumnsInSelect() throws SQLException {
     throwIfClosed();
-    return super.getMaxColumnsInSelect();
+    if (!getServerMetaSupported()) {
+      return super.getMaxColumnsInSelect();
+    }
+    return getServerMeta().getMaxColumnsInSelect();
   }
 
   @Override
@@ -679,7 +974,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getMaxCursorNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxCursorNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxCursorNameLength();
+    }
+    return getServerMeta().getMaxCursorNameLength();
   }
 
   @Override
@@ -691,7 +989,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getMaxSchemaNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxSchemaNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxSchemaNameLength();
+    }
+    return getServerMeta().getMaxSchemaNameLength();
   }
 
   @Override
@@ -703,49 +1004,73 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getMaxCatalogNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxCatalogNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxCatalogNameLength();
+    }
+    return getServerMeta().getMaxCatalogNameLength();
   }
 
   @Override
   public int getMaxRowSize() throws SQLException {
     throwIfClosed();
-    return super.getMaxRowSize();
+    if (!getServerMetaSupported()) {
+      return super.getMaxRowSize();
+    }
+    return getServerMeta().getMaxRowSize();
   }
 
   @Override
   public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
     throwIfClosed();
-    return super.doesMaxRowSizeIncludeBlobs();
+    if (!getServerMetaSupported()) {
+      return super.doesMaxRowSizeIncludeBlobs();
+    }
+    return getServerMeta().getBlobIncludedInMaxRowSize();
   }
 
   @Override
   public int getMaxStatementLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxStatementLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxStatementLength();
+    }
+    return getServerMeta().getMaxStatementLength();
   }
 
   @Override
   public int getMaxStatements() throws SQLException {
     throwIfClosed();
-    return super.getMaxStatements();
+    if (!getServerMetaSupported()) {
+      return super.getMaxStatements();
+    }
+    return getServerMeta().getMaxStatements();
   }
 
   @Override
   public int getMaxTableNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxTableNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxTableNameLength();
+    }
+    return getServerMeta().getMaxTableNameLength();
   }
 
   @Override
   public int getMaxTablesInSelect() throws SQLException {
     throwIfClosed();
-    return super.getMaxTablesInSelect();
+    if (!getServerMetaSupported()) {
+      return super.getMaxTablesInSelect();
+    }
+    return getServerMeta().getMaxTablesInSelect();
   }
 
   @Override
   public int getMaxUserNameLength() throws SQLException {
     throwIfClosed();
-    return super.getMaxUserNameLength();
+    if (!getServerMetaSupported()) {
+      return super.getMaxUserNameLength();
+    }
+    return getServerMeta().getMaxUserNameLength();
   }
 
   @Override
@@ -757,7 +1082,10 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsTransactions() throws SQLException {
     throwIfClosed();
-    return super.supportsTransactions();
+    if (!getServerMetaSupported()) {
+      return super.supportsTransactions();
+    }
+    return getServerMeta().getTransactionSupported();
   }
 
   @Override
@@ -813,20 +1141,35 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
                              String tableNamePattern,
                              String[] types) throws SQLException {
     throwIfClosed();
-    return super.getTables(catalog, schemaPattern,tableNamePattern, types);
+    try {
+      return super.getTables(catalog, schemaPattern,tableNamePattern, types);
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
 
   @Override
   public ResultSet getSchemas() throws SQLException {
     throwIfClosed();
-    return super.getSchemas();
+    try {
+      return super.getSchemas();
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override
   public ResultSet getCatalogs() throws SQLException {
     throwIfClosed();
-    return super.getCatalogs();
+    try {
+      return super.getCatalogs();
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override
@@ -839,7 +1182,12 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   public ResultSet getColumns(String catalog, String schema, String table,
                               String columnNamePattern) throws SQLException {
     throwIfClosed();
-    return super.getColumns(catalog, schema, table, columnNamePattern);
+    try {
+      return super.getColumns(catalog, schema, table, columnNamePattern);
+    } catch(DrillRuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
   }
 
   @Override
@@ -1184,21 +1532,21 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public int getDatabaseMajorVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseMajorVersion();
     }
-    return infos.getMajorVersion();
+    return version.getMajorVersion();
   }
 
   @Override
   public int getDatabaseMinorVersion() throws SQLException {
     throwIfClosed();
-    RpcEndpointInfos infos = getServerInfos();
-    if (infos == null) {
+    Version version = getServerVersion();
+    if (version == null) {
       return super.getDatabaseMinorVersion();
     }
-    return infos.getMinorVersion();
+    return version.getMinorVersion();
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,14 +19,24 @@ package org.apache.drill;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.List;
 
+@Category(SqlFunctionTest.class)
 public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("typeExposure"));
+  }
+
   @Test
   public void testConcatWithMoreThanTwoArgs() throws Exception {
     final String query = "select concat(r_name, r_name, r_name, 'f') as col \n" +
@@ -49,24 +59,20 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   @Test
   public void testRow_NumberInView() throws Exception {
     try {
-      test("use dfs_test.tmp;");
-      final String view1 =
-          "create view TestFunctionsWithTypeExpoQueries_testViewShield1 as \n" +
-              "select rnum, position_id, " +
-              "   ntile(4) over(order by position_id) " +
-              " from (select position_id, row_number() " +
-              "       over(order by position_id) as rnum " +
-              "       from cp.`employee.json`)";
-
-      final String view2 =
-          "create view TestFunctionsWithTypeExpoQueries_testViewShield2 as \n" +
-              "select row_number() over(order by position_id) as rnum, " +
-              "    position_id, " +
-              "    ntile(4) over(order by position_id) " +
-              " from cp.`employee.json`";
-
-      test(view1);
-      test(view2);
+      test("use dfs.tmp;");
+      test(
+        "create view TestFunctionsWithTypeExpoQueries_testViewShield1 as \n" +
+        "select rnum, position_id, " +
+        "   ntile(4) over(order by position_id) " +
+        " from (select position_id, row_number() " +
+        "       over(order by position_id) as rnum " +
+        "       from cp.`employee.json`)");
+      test(
+        "create view TestFunctionsWithTypeExpoQueries_testViewShield2 as \n" +
+          "select row_number() over(order by position_id) as rnum, " +
+          "    position_id, " +
+          "    ntile(4) over(order by position_id) " +
+          " from cp.`employee.json`");
       testBuilder()
           .sqlQuery("select * from TestFunctionsWithTypeExpoQueries_testViewShield1")
           .ordered()
@@ -250,13 +256,12 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testMetaDataExposeType() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/typeExposure/metadata_caching").toURI().toString();
-    final String query = String.format("select count(*) as col \n" +
-        "from dfs_test.`%s` \n" +
-        "where concat(a, 'asdf') = 'asdf'", root);
+    final String query = "select count(*) as col " +
+        "from dfs.`typeExposure/metadata_caching` " +
+        "where concat(a, 'asdf') = 'asdf'";
 
     // Validate the plan
-    final String[] expectedPlan = {"Scan.*a.parquet.*numFiles=1"};
+    final String[] expectedPlan = {"Scan.*a.parquet.*numFiles = 1"};
     final String[] excludedPlan = {"Filter"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -265,15 +270,15 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("col")
-        .baselineValues(1l)
+        .baselineValues(1L)
         .build()
         .run();
   }
 
   @Test
   public void testDate_Part() throws Exception {
-    final String query = "select date_part('year', date '2008-2-23') as col \n" +
-        "from cp.`tpch/region.parquet` \n" +
+    final String query = "select date_part('year', date '2008-2-23') as col " +
+        "from cp.`tpch/region.parquet` " +
         "limit 0";
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -292,7 +297,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testNegativeByInterpreter() throws Exception {
-    final String query = "select * from cp.`tpch/region.parquet` \n" +
+    final String query = "select * from cp.`tpch/region.parquet` " +
         "where r_regionkey = negative(-1)";
 
     // Validate the plan
@@ -303,10 +308,10 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testSumRequiredType() throws Exception {
-    final String query = "SELECT \n" +
-        "SUM(CASE WHEN (CAST(n_regionkey AS INT) = 1) THEN 1 ELSE 0 END) AS col \n" +
-        "FROM cp.`tpch/nation.parquet` \n" +
-        "GROUP BY CAST(n_regionkey AS INT) \n" +
+    final String query = "SELECT " +
+        "SUM(CASE WHEN (CAST(n_regionkey AS INT) = 1) THEN 1 ELSE 0 END) AS col " +
+        "FROM cp.`tpch/nation.parquet` " +
+        "GROUP BY CAST(n_regionkey AS INT) " +
         "limit 0";
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -325,8 +330,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testSQRTDecimalLiteral() throws Exception {
-    final String query = "SELECT sqrt(5.1) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String query = "SELECT sqrt(5.1) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -345,8 +350,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testSQRTIntegerLiteral() throws Exception {
-    final String query = "SELECT sqrt(4) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String query = "SELECT sqrt(4) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -365,8 +370,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testTimestampDiff() throws Exception {
-    final String query = "select to_timestamp('2014-02-13 00:30:30','YYYY-MM-dd HH:mm:ss') - to_timestamp('2014-02-13 00:30:30','YYYY-MM-dd HH:mm:ss') as col \n" +
-        "from cp.`tpch/region.parquet` \n" +
+    final String query = "select to_timestamp('2014-02-13 00:30:30','YYYY-MM-dd HH:mm:ss') - to_timestamp('2014-02-13 00:30:30','YYYY-MM-dd HH:mm:ss') as col " +
+        "from cp.`tpch/region.parquet` " +
         "limit 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -385,9 +390,9 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testEqualBetweenIntervalAndTimestampDiff() throws Exception {
-    final String query = "select to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') + interval '10-11' year to month as col \n" +
-        "from cp.`tpch/region.parquet` \n" +
-        "where (to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') - to_timestamp('2016-01-01 10:00:00','YYYY-MM-dd HH:mm:ss') < interval '5 10:00:00' day to second) \n" +
+    final String query = "select to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') + interval '10-11' year to month as col " +
+        "from cp.`tpch/region.parquet` " +
+        "where (to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') - to_timestamp('2016-01-01 10:00:00','YYYY-MM-dd HH:mm:ss') < interval '5 10:00:00' day to second) " +
         "limit 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -406,11 +411,11 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testAvgAndSUM() throws Exception {
-    final String query = "SELECT AVG(cast(r_regionkey as float)) AS `col1`, \n" +
-        "SUM(cast(r_regionkey as float)) AS `col2`, \n" +
-        "SUM(1) AS `col3` \n" +
-        "FROM cp.`tpch/region.parquet` \n" +
-        "GROUP BY CAST(r_regionkey AS INTEGER) \n" +
+    final String query = "SELECT AVG(cast(r_regionkey as float)) AS `col1`, " +
+        "SUM(cast(r_regionkey as float)) AS `col2`, " +
+        "SUM(1) AS `col3` " +
+        "FROM cp.`tpch/region.parquet` " +
+        "GROUP BY CAST(r_regionkey AS INTEGER) " +
         "LIMIT 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -442,10 +447,10 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testAvgCountStar() throws Exception {
-    final String query = "select avg(distinct cast(r_regionkey as bigint)) + avg(cast(r_regionkey as integer)) as col1, \n" +
-        "sum(distinct cast(r_regionkey as bigint)) + 100 as col2, count(*) as col3 \n" +
-        "from cp.`tpch/region.parquet` alltypes_v \n" +
-        "where cast(r_regionkey as bigint) = 100000000000000000 \n" +
+    final String query = "select avg(distinct cast(r_regionkey as bigint)) + avg(cast(r_regionkey as integer)) as col1, " +
+        "sum(distinct cast(r_regionkey as bigint)) + 100 as col2, count(*) as col3 " +
+        "from cp.`tpch/region.parquet` alltypes_v " +
+        "where cast(r_regionkey as bigint) = 100000000000000000 " +
         "limit 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -476,15 +481,15 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testUDFInGroupBy() throws Exception {
-    final String query = "select count(*) as col1, substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2) as col2, \n" +
-        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) as col3 \n" +
-        "from cp.`tpch/region.parquet` t1 \n" +
-        "left outer join cp.`tpch/nation.parquet` t2 on cast(t1.r_regionkey as Integer) = cast(t2.n_nationkey as Integer) \n" +
-        "left outer join cp.`employee.json` t3 on cast(t1.r_regionkey as Integer) = cast(t3.employee_id as Integer) \n" +
-        "group by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2), \n" +
-        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) \n" +
-        "order by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2),\n" +
-        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) \n" +
+    final String query = "select count(*) as col1, substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2) as col2, " +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) as col3 " +
+        "from cp.`tpch/region.parquet` t1 " +
+        "left outer join cp.`tpch/nation.parquet` t2 on cast(t1.r_regionkey as Integer) = cast(t2.n_nationkey as Integer) " +
+        "left outer join cp.`employee.json` t3 on cast(t1.r_regionkey as Integer) = cast(t3.employee_id as Integer) " +
+        "group by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2), " +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) " +
+        "order by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)," +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) " +
         "limit 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -515,12 +520,12 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testWindowSumAvg() throws Exception {
-    final String query = "with query as ( \n" +
-        "select sum(cast(employee_id as integer)) over w as col1, cast(avg(cast(employee_id as bigint)) over w as double precision) as col2, count(*) over w as col3 \n" +
-        "from cp.`tpch/region.parquet` \n" +
-        "window w as (partition by cast(full_name as varchar(10)) order by cast(full_name as varchar(10)) nulls first)) \n" +
-        "select * \n" +
-        "from query \n" +
+    final String query = "with query as ( " +
+        "select sum(cast(employee_id as integer)) over w as col1, cast(avg(cast(employee_id as bigint)) over w as double precision) as col2, count(*) over w as col3 " +
+        "from cp.`tpch/region.parquet` " +
+        "window w as (partition by cast(full_name as varchar(10)) order by cast(full_name as varchar(10)) nulls first)) " +
+        "select * " +
+        "from query " +
         "limit 0";
 
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -551,24 +556,24 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testWindowRanking() throws Exception {
-    final String queryCUME_DIST = "select CUME_DIST() over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryCUME_DIST = "select CUME_DIST() over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
-    final String queryDENSE_RANK = "select DENSE_RANK() over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryDENSE_RANK = "select DENSE_RANK() over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
-    final String queryPERCENT_RANK = "select PERCENT_RANK() over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryPERCENT_RANK = "select PERCENT_RANK() over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
-    final String queryRANK = "select RANK() over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryRANK = "select RANK() over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
-    final String queryROW_NUMBER = "select ROW_NUMBER() over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryROW_NUMBER = "select ROW_NUMBER() over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
     final TypeProtos.MajorType majorTypeDouble = TypeProtos.MajorType.newBuilder()
@@ -629,8 +634,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testWindowNTILE() throws Exception {
-    final String query = "select ntile(1) over(order by position_id) as col \n" +
-        "from cp.`employee.json` \n" +
+    final String query = "select ntile(1) over(order by position_id) as col " +
+        "from cp.`employee.json` " +
         "limit 0";
 
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
@@ -650,11 +655,11 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testLeadLag() throws Exception {
-    final String queryLEAD = "select lead(cast(n_nationkey as BigInt)) over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryLEAD = "select lead(cast(n_nationkey as BigInt)) over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
-    final String queryLAG = "select lag(cast(n_nationkey as BigInt)) over(order by n_nationkey) as col \n" +
-        "from cp.`tpch/nation.parquet` \n" +
+    final String queryLAG = "select lag(cast(n_nationkey as BigInt)) over(order by n_nationkey) as col " +
+        "from cp.`tpch/nation.parquet` " +
         "limit 0";
 
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
@@ -680,12 +685,12 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test
   public void testFirst_Last_Value() throws Exception {
-    final String queryFirst = "select first_value(cast(position_id as integer)) over(order by position_id) as col \n" +
-        "from cp.`employee.json` \n" +
+    final String queryFirst = "select first_value(cast(position_id as integer)) over(order by position_id) as col " +
+        "from cp.`employee.json` " +
         "limit 0";
 
-    final String queryLast = "select first_value(cast(position_id as integer)) over(order by position_id) as col \n" +
-        "from cp.`employee.json` \n" +
+    final String queryLast = "select first_value(cast(position_id as integer)) over(order by position_id) as col " +
+        "from cp.`employee.json` " +
         "limit 0";
 
     final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
@@ -711,8 +716,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
   @Test // DRILL-4529
   public void testWindowSumConstant() throws Exception {
-    final String query = "select sum(1) over w as col \n" +
-        "from cp.`tpch/region.parquet` \n" +
+    final String query = "select sum(1) over w as col " +
+        "from cp.`tpch/region.parquet` " +
         "window w as (partition by r_regionkey)";
 
     final String[] expectedPlan = {"\\$SUM0"};

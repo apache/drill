@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -34,7 +36,7 @@ import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -44,7 +46,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import mockit.Injectable;
+import org.junit.experimental.categories.Category;
 
+@Category({UnlikelyTest.class, OperatorTest.class})
 public class TestNewMathFunctions extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewMathFunctions.class);
   private final DrillConfig c = DrillConfig.create();
@@ -71,7 +75,7 @@ public class TestNewMathFunctions extends ExecTest {
   }
 
   public void runTest(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
+                      @Injectable UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
@@ -106,14 +110,14 @@ public class TestNewMathFunctions extends ExecTest {
 
   @Test
   public void testTrigoMathFunc(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                           @Injectable UserClientConnection connection) throws Throwable {
     final Object [] expected = new Object[] {Math.sin(45), Math.cos(45), Math.tan(45),Math.asin(45), Math.acos(45), Math.atan(45),Math.sinh(45), Math.cosh(45), Math.tanh(45)};
     runTest(bitContext, connection, expected, "functions/testTrigoMathFunctions.json");
   }
 
   @Test
   public void testExtendedMathFunc(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                           @Injectable UserClientConnection connection) throws Throwable {
     final BigDecimal d = new BigDecimal("100111111111111111111111111111111111.00000000000000000000000000000000000000000000000000001");
     final Object [] expected = new Object[] {Math.cbrt(1000), Math.log(10), (Math.log(64.0)/Math.log(2.0)), Math.exp(10), Math.toDegrees(0.5), Math.toRadians(45.0), Math.PI, Math.cbrt(d.doubleValue()), Math.log(d.doubleValue()), (Math.log(d.doubleValue())/Math.log(2)), Math.exp(d.doubleValue()), Math.toDegrees(d.doubleValue()), Math.toRadians(d.doubleValue())};
 
@@ -122,14 +126,14 @@ public class TestNewMathFunctions extends ExecTest {
 
   @Test
   public void testTruncDivMod(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                           @Injectable UserClientConnection connection) throws Throwable{
     final Object [] expected = new Object[] {101.0, 0, 101, 1010.0, 101, 481.0, 0.001099999999931267};
     runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
   }
 
  @Test
  public void testIsNumeric(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                           @Injectable UserClientConnection connection) throws Throwable{
    final Object [] expected = new Object[] {1, 1, 1, 0};
    runTest(bitContext, connection, expected, "functions/testIsNumericFunction.json");
  }

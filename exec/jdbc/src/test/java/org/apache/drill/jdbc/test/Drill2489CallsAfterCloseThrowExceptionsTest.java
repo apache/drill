@@ -20,9 +20,11 @@ package org.apache.drill.jdbc.test;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -48,7 +50,6 @@ import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 
-
 /**
  * Test class for JDBC requirement that almost all methods throw
  * {@link SQLException} when called on a closed primary object (e.g.,
@@ -59,7 +60,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
  *   {@link Statement},
  *   {@link PreparedStatement},
  *   {@link ResultSet},
- *   {@link ResultSetMetadata}, and
+ *   {@link java.sql.ResultSetMetaData}, and
  *   {@link DatabaseMetaData}.
  * </p>
  * <p>
@@ -67,6 +68,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
  *   secondary objects such as {@link Array} or {@link Struct}).
  * </p>
  */
+@Category(JdbcTest.class)
 public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
   private static final Logger logger =
       getLogger(Drill2489CallsAfterCloseThrowExceptionsTest.class);
@@ -87,11 +89,9 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) for this test class.)
 
     final Connection connToClose =
-        new Driver().connect("jdbc:drill:zk=local",
-                             JdbcAssert.getDefaultProperties());
+        new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
     final Connection connToKeep =
-        new Driver().connect("jdbc:drill:zk=local",
-                             JdbcAssert.getDefaultProperties());
+        new Driver().connect("jdbc:drill:zk=local", getDefaultProperties());
 
     final Statement plainStmtToClose = connToKeep.createStatement();
     final Statement plainStmtToKeep = connToKeep.createStatement();

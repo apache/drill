@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,18 +19,22 @@ package org.apache.drill.jdbc.test;
 
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+@Category(JdbcTest.class)
 public class TestExecutionExceptionsToClient extends JdbcTestBase {
 
   private static Connection connection;
@@ -189,6 +193,27 @@ public class TestExecutionExceptionsToClient extends JdbcTestBase {
 
       assertThat("No expected current \"PLAN ERROR\"",
         e.getMessage(), startsWith("PLAN ERROR"));
+      throw e;
+    }
+  }
+
+  @Test(expected = SQLException.class)
+  public void testConvertFromError() throws Exception {
+    final Statement statement = connection.createStatement();
+    try {
+      statement.executeUpdate("select CONVERT_FROM('1','INTEGER') from (values(1))");
+    } catch (SQLException e) {
+      assertThat("Null getCause(); missing expected wrapped exception",
+        e.getCause(), notNullValue());
+
+      assertThat("Unexpectedly wrapped another SQLException",
+        e.getCause(), not(instanceOf(SQLException.class)));
+
+      assertThat("getCause() not UserRemoteException as expected",
+        e.getCause(), instanceOf(UserRemoteException.class));
+
+      assertTrue("No expected current \"UNSUPPORTED_OPERATION ERROR\" and/or \"Did you mean\"",
+        e.getMessage().matches("^UNSUPPORTED_OPERATION ERROR(.|\\n)*Did you mean(.|\\n)*"));
       throw e;
     }
   }

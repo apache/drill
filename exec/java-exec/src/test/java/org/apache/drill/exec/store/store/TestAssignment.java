@@ -39,14 +39,68 @@ public class TestAssignment {
 
   private static final long FILE_SIZE = 1000;
   private static List<DrillbitEndpoint> endpoints;
+  private static final int numEndPoints = 30;
+  private final int widthPerNode = 23;
 
   @BeforeClass
   public static void setup() {
     endpoints = Lists.newArrayList();
     final String pattern = "node%d";
-    for (int i = 2; i < 32; i++) {
+    for (int i = 0; i < numEndPoints; i++) {
       String host = String.format(pattern, i);
       endpoints.add(DrillbitEndpoint.newBuilder().setAddress(host).build());
+    }
+  }
+
+  @Test
+  public void testBalanceAcrossNodes() throws Exception {
+    int numChunks = widthPerNode * numEndPoints + 100;
+    List<CompleteFileWork> chunks = generateChunks(numChunks);
+    Iterator<DrillbitEndpoint> incomingEndpointsIterator = Iterators.cycle(endpoints);
+    List<DrillbitEndpoint> incomingEndpoints = Lists.newArrayList();
+    List<Integer> expectedAssignments = Lists.newArrayList();
+    List<Integer> actualAssignments = Lists.newArrayList();
+
+    final int width = widthPerNode * numEndPoints;
+    for (int i = 0; i < width; i++) {
+      incomingEndpoints.add(incomingEndpointsIterator.next());
+    }
+
+    // Calculate expected assignments for each node.
+    final int numAssignmentsPerNode = numChunks/numEndPoints;
+    int leftOver = numChunks - numAssignmentsPerNode * numEndPoints;
+    for (int i =0; i < numEndPoints; i++) {
+      int additional = leftOver > 0 ? 1 : 0;
+      expectedAssignments.add(numAssignmentsPerNode + additional);
+      if (leftOver > 0) {
+        leftOver--;
+      }
+    }
+
+    ListMultimap<Integer, CompleteFileWork> mappings = AssignmentCreator.getMappings(incomingEndpoints, chunks);
+    System.out.println(mappings.keySet().size());
+
+    // Verify that all fragments have chunks assigned.
+    for (int i = 0; i < width; i++) {
+      Assert.assertTrue("no mapping for entry " + i, mappings.get(i) != null && mappings.get(i).size() > 0);
+    }
+
+    // Verify actual and expected assignments per node match.
+    // Compute actual assignments for each node.
+    for (int i=0; i < numEndPoints; i++) {
+      int numAssignments = 0;
+      int index = i;
+
+      while(index < numEndPoints * widthPerNode) {
+        numAssignments += mappings.get(index).size();
+        index += numEndPoints;
+      }
+
+      actualAssignments.add(numAssignments);
+    }
+
+    for (int i=0; i < numEndPoints; i++) {
+      Assert.assertTrue(actualAssignments.get(i) == expectedAssignments.get(i));
     }
   }
 
@@ -58,7 +112,7 @@ public class TestAssignment {
 
     List<DrillbitEndpoint> incomingEndpoints = Lists.newArrayList();
 
-    final int width = 28 * 30;
+    final int width = widthPerNode * numEndPoints;
     for (int i = 0; i < width; i++) {
       incomingEndpoints.add(incomingEndpointsIterator.next());
     }

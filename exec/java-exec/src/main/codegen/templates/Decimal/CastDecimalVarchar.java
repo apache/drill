@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,7 +51,10 @@ import java.nio.ByteBuffer;
  */
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.STRING_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
@@ -67,22 +70,23 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         StringBuilder str = new StringBuilder();
 
-        if (in.value < 0) {
+        ${type.javatype} value = in.value;
+        if (value < 0) {
             // Negative value, add '-' to the string
             str.append("-");
 
             // Negate the number
-            in.value *= -1;
+            value *= -1;
         }
 
         ${type.javatype} separator = (${type.javatype}) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale);
 
-        str.append(in.value / separator);
+        str.append(value / separator);
 
         if (in.scale > 0) {
             str.append(".");
 
-            String fractionalPart = String.valueOf(in.value % separator);
+            String fractionalPart = String.valueOf(value % separator);
 
             /* Since we are taking modulus to find fractional part,
              * we will miss printing the leading zeroes in the fractional part
@@ -98,7 +102,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
              *
              * We missed the initial zeroes in the fractional part. Below logic accounts for this case
              */
-            str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes((in.value % separator), in.scale));
+            str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes((value % separator), in.scale));
         }
 
         out.buffer = buffer;
@@ -136,7 +140,10 @@ import java.nio.ByteBuffer;
  */
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.STRING_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;

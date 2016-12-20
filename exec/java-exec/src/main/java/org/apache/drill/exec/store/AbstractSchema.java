@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -117,15 +117,30 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
+   * Creates table entry using table name, list of partition columns
+   * and storage strategy used to create table folder and files
    *
    * @param tableName : new table name.
    * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
-   * @return
+   * @param storageStrategy : storage strategy used to create table folder and files
+   * @return create table entry
    */
-  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
     throw UserException.unsupportedError()
         .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
+  }
+
+  /**
+   * Creates table entry using table name and list of partition columns if any.
+   * Table folder and files will be created using persistent storage strategy.
+   *
+   * @param tableName : new table name.
+   * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
+   * @return create table entry
+   */
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+    return createNewTable(tableName, partitionColumns, StorageStrategy.DEFAULT);
   }
 
   /**

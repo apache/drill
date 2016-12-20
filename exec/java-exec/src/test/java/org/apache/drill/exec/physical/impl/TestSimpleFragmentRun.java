@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -46,14 +46,14 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
   public void runNoExchangeFragment() throws Exception {
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
         final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
     // run query.
     bit.run();
     client.connect();
     final String path = "/physical_test2.json";
 //      String path = "/filter/test1.json";
-    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
+    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(DrillFileUtils.getResourceAsFile(path), Charsets.UTF_8));
 
     // look at records
     final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
@@ -72,7 +72,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(value.getField().getPath());
+          System.out.print(value.getField().getName());
           System.out.print("[");
           System.out.print(value.getField().getType().getMinorType());
           System.out.print("]");
@@ -113,8 +113,8 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       bit.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
-              .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
+          Files.toString(DrillFileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
+              .replace("#{TEST_FILE}", DrillFileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
       );
 
       // look at records
@@ -147,7 +147,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(v.getField().getPath());
+          System.out.print(v.getField().getName());
           System.out.print("[");
           System.out.print(v.getField().getType().getMinorType());
           System.out.print("]");

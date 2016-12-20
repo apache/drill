@@ -27,7 +27,7 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
@@ -46,6 +46,6 @@ public class CheckStorageConfig extends DrillTest {
   public void checkPlanParsing() throws Exception{
     DrillConfig config = DrillConfig.create();
     ScanResult scan = ClassPathScanner.fromPrescan(config);
-    LogicalPlan plan = LogicalPlan.parse(new LogicalPlanPersistence(config, scan), FileUtils.getResourceAsString("/storage_engine_plan.json"));
+    LogicalPlan plan = LogicalPlan.parse(new LogicalPlanPersistence(config, scan), DrillFileUtils.getResourceAsString("/storage_engine_plan.json"));
   }
 }

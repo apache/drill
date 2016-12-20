@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,12 @@
  */
 package org.apache.drill.exec.physical.base;
 
-public abstract class AbstractWriter extends AbstractSingle implements Writer{
+import org.apache.drill.exec.store.StorageStrategy;
+
+public abstract class AbstractWriter extends AbstractSingle implements Writer {
+
+  /** Storage strategy is used during table folder and files creation*/
+  private StorageStrategy storageStrategy;
 
   public AbstractWriter(PhysicalOperator child) {
     super(child);
@@ -26,5 +31,13 @@ public abstract class AbstractWriter extends AbstractSingle implements Writer{
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitWriter(this, value);
+  }
+
+  public void setStorageStrategy(StorageStrategy storageStrategy) {
+    this.storageStrategy = storageStrategy;
+  }
+
+  public StorageStrategy getStorageStrategy() {
+    return storageStrategy;
   }
 }

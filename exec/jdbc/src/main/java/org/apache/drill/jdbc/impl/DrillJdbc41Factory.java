@@ -34,6 +34,8 @@ import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Helper;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.client.ServerMethod;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
 import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
@@ -72,7 +74,7 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   @Override
   public DrillDatabaseMetaDataImpl newDatabaseMetaData(AvaticaConnection connection) {
-    return new DrillDatabaseMetaDataImpl(connection);
+    return new DrillDatabaseMetaDataImpl((DrillConnectionImpl) connection);
   }
 
 
@@ -97,10 +99,27 @@ public class DrillJdbc41Factory extends DrillFactory {
                                                        int resultSetConcurrency,
                                                        int resultSetHoldability)
       throws SQLException {
-    String sql = signature.sql;
     DrillConnectionImpl drillConnection = (DrillConnectionImpl) connection;
+    DrillClient client = drillConnection.getClient();
+    if (drillConnection.getConfig().isServerPreparedStatementDisabled() || !client.getSupportedMethods().contains(ServerMethod.PREPARED_STATEMENT)) {
+      // fallback to client side prepared statement
+      return new DrillJdbc41PreparedStatement(drillConnection, h, signature, null, resultSetType, resultSetConcurrency, resultSetHoldability);
+    }
+    return newServerPreparedStatement(drillConnection, h, signature, resultSetType,
+        resultSetConcurrency, resultSetHoldability);
+  }
+
+  private DrillJdbc41PreparedStatement newServerPreparedStatement(DrillConnectionImpl connection,
+                                                                  StatementHandle h,
+                                                                  Meta.Signature signature,
+                                                                  int resultSetType,
+                                                                  int resultSetConcurrency,
+                                                                  int resultSetHoldability
+      ) throws SQLException {
+    String sql = signature.sql;
+
     try {
-      DrillRpcFuture<CreatePreparedStatementResp> respFuture = drillConnection.getClient().createPreparedStatement(signature.sql);
+      DrillRpcFuture<CreatePreparedStatementResp> respFuture = connection.getClient().createPreparedStatement(signature.sql);
 
       CreatePreparedStatementResp resp;
       try {
@@ -133,7 +152,7 @@ public class DrillJdbc41Factory extends DrillFactory {
             "Failed to create prepared statement. Unknown status: %s, Error: %s", status, errMsgFromServer));
       }
 
-      return new DrillJdbc41PreparedStatement((DrillConnectionImpl) connection,
+      return new DrillJdbc41PreparedStatement(connection,
           h,
           signature,
           resp.getPreparedStatement(),
@@ -147,7 +166,6 @@ public class DrillJdbc41Factory extends DrillFactory {
     } catch (Exception e) {
       throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
     }
-
   }
 
   @Override

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -33,12 +34,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import org.apache.drill.jdbc.test.JdbcAssert;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 
 /**
  * Test class for Drill's java.sql.ResultSetMetaData implementation.
@@ -46,9 +47,8 @@ import org.junit.Test;
  *   Based on JDBC 4.1 (Java 7).
  * </p>
  */
+@Category(JdbcTest.class)
 public class ResultSetMetaDataTest extends JdbcTestBase {
-
-  private static final String VIEW_SCHEMA = "dfs_test.tmp";
   private static final String VIEW_NAME =
       ResultSetMetaDataTest.class.getSimpleName() + "_View";
 
@@ -120,14 +120,13 @@ public class ResultSetMetaDataTest extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
-    connection = new Driver().connect( "jdbc:drill:zk=local",
-                                       JdbcAssert.getDefaultProperties() );
+    connection = connect("jdbc:drill:zk=local");
     final Statement stmt = connection.createStatement();
 
     ResultSet util;
 
     // Create temporary test-columns view:
-    util = stmt.executeQuery( "USE `" + VIEW_SCHEMA + "`" );
+    util = stmt.executeQuery( "USE `" + DFS_TMP_SCHEMA + "`" );
     assertTrue( util.next() );
     assertTrue( "Error setting schema for test: " + util.getString( 2 ),
                 util.getBoolean( 1 ) );
@@ -431,7 +430,7 @@ public class ResultSetMetaDataTest extends JdbcTestBase {
   @Test
   public void test_getSchemaName_forViewGetsName() throws SQLException {
     assertThat( rowMetadata.getSchemaName( ordOptBOOLEAN ),
-                anyOf( equalTo( VIEW_SCHEMA ),
+                anyOf( equalTo( DFS_TMP_SCHEMA ),
                        equalTo( "" ) ) );
   }
 

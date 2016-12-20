@@ -18,20 +18,25 @@
 package org.apache.drill;
 
 import static java.lang.String.format;
-import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.listOf;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(SqlTest.class)
 public class TestSelectWithOption extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private File genCSVFile(String name, String... rows) throws IOException {
-    File file = new File(format("target/%s_%s.csv", this.getClass().getName(), name));
+    File file = new File(format("%s/%s.csv", dirTestWatcher.getRootDir(), name));
     try (FileWriter fw = new FileWriter(file)) {
       for (int i = 0; i < rows.length; i++) {
         fw.append(rows[i] + "\n");
@@ -42,7 +47,7 @@ public class TestSelectWithOption extends BaseTestQuery {
 
   private String genCSVTable(String name, String... rows) throws IOException {
     File f = genCSVFile(name, rows);
-    return format("dfs.`${WORKING_PATH}/%s`", f.getPath());
+    return format("dfs.`%s`", f.getName());
   }
 
   private void testWithResult(String query, Object... expectedResult) throws Exception {
@@ -242,9 +247,6 @@ public class TestSelectWithOption extends BaseTestQuery {
     String[] jsonQueries = {
         format("select columns from table(%s ('JSON'))", jsonTableName),
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
-//        format("select columns from %s ('JSON')", jsonTableName),
-//        format("select columns from %s (type => 'JSON')", jsonTableName),
-//        format("select columns from %s(type => 'JSON')", jsonTableName),
         // we can use named format plugin configurations too!
         format("select columns from table(%s(type => 'Named', name => 'json'))", jsonTableName),
     };
@@ -257,7 +259,7 @@ public class TestSelectWithOption extends BaseTestQuery {
   public void testUse() throws Exception {
     File f = genCSVFile("testUse",
         "{\"columns\": [\"f\",\"g\"]}");
-    String jsonTableName = format("`${WORKING_PATH}/%s`", f.getPath());
+    String jsonTableName = String.format("dfs.`%s`", f.getName());
     // the extension is actually csv
     test("use dfs");
     try {

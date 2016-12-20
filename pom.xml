@@ -15,12 +15,13 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>14</version>
+    <version>18</version>
+    <relativePath/>
   </parent>
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.10.0-SNAPSHOT</version>
+  <version>1.12.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -35,11 +36,15 @@
     <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
-    <calcite.version>1.4.0-drill-r19</calcite.version>
+    <calcite.version>1.4.0-drill-r23</calcite.version>
+    <janino.version>2.7.6</janino.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
-    <jackson.version>2.7.1</jackson.version>
-    <mapr.release.version>5.2.0.40963-mapr</mapr.release.version>
+    <jackson.version>2.7.8</jackson.version>
+    <mapr.release.version>5.2.1-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
+    <kerby.version>1.0.0-RC2</kerby.version>
+    <findbugs.version>3.0.0</findbugs.version>
+    <netty.tcnative.classifier></netty.tcnative.classifier>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
@@ -49,7 +54,8 @@
     <hadoop.version>2.7.1</hadoop.version>
     <hbase.version>1.1.3</hbase.version>
     <fmpp.version>0.9.15</fmpp.version>
-    <freemarker.version>2.3.21</freemarker.version>
+    <freemarker.version>2.3.26-incubating</freemarker.version>
+    <excludedGroups></excludedGroups>
   </properties>
 
   <scm>
@@ -171,7 +177,6 @@
   </issueManagement>
 
   <build>
-
     <plugins>
       <plugin>
         <groupId>org.apache.rat</groupId>
@@ -211,6 +216,7 @@
             <exclude>**/*.fmpp</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/*.iml</exclude>
+            <exclude>**/.idea/**</exclude>
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
             <exclude>**/TAGS</exclude>
@@ -222,9 +228,17 @@
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>
-            <exclude>**/client/build/**</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/client/tags</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/ssl/*.csr</exclude>
+            <exclude>**/ssl/*.pem</exclude>
+            <exclude>**/ssl/*.p12</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
+            <exclude>**/*.autotools</exclude>
+            <exclude>**/*.cproject</exclude>
+            <exclude>**/*.drill</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
             <exclude>dependency-reduced-pom.xml</exclude>
           </excludes>
@@ -264,7 +278,6 @@
         <configuration>
           <excludes>
             <exclude>**/logging.properties</exclude>
-            <exclude>**/logback-test.xml</exclude>
             <exclude>**/logback.out.xml</exclude>
             <exclude>**/logback.xml</exclude>
           </excludes>
@@ -292,7 +305,6 @@
           </execution>
         </executions>
       </plugin>
-
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -348,6 +360,7 @@
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                     <exclude>log4j:log4j</exclude>
+                    <exclude>jdk.tools:jdk.tools</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -432,7 +445,8 @@
               -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=3072M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
-              -XX:+CMSClassUnloadingEnabled -ea</argLine>
+              -XX:+CMSClassUnloadingEnabled -ea
+            </argLine>
             <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
@@ -441,6 +455,7 @@
             <systemPropertyVariables>
               <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
+            <excludedGroups>${excludedGroups}</excludedGroups>
           </configuration>
         </plugin>
         <plugin>
@@ -453,6 +468,16 @@
             <goals>deploy</goals>
             <arguments>-Papache-release ${arguments}</arguments>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>xml-maven-plugin</artifactId>
+          <version>1.0</version>
         </plugin>
 
         <!--This plugin's configuration is used to store Eclipse m2e settings
@@ -541,9 +566,21 @@
   <dependencies>
 
     <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.10</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
-      <version>4.0.27.Final</version>
+      <version>4.0.48.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <version>4.0.48.Final</version>
     </dependency>
 
     <dependency>
@@ -574,6 +611,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
       <version>${dep.slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
     </dependency>
 
     <!-- Test Dependencies -->
@@ -609,12 +652,61 @@
       <version>0.9.44</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+      <version>1.1.2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-client</artifactId>
+      <scope>test</scope>
+      <version>${kerby.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-core</artifactId>
+      <scope>test</scope>
+      <version>${kerby.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-simplekdc</artifactId>
+      <scope>test</scope>
+      <version>${kerby.version}</version>
+    </dependency>
 
   </dependencies>
 
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.freemarker</groupId>
+        <artifactId>freemarker</artifactId>
+        <version>${freemarker.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-annotations</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-aws</artifactId>
@@ -644,6 +736,17 @@
           <exclusion>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-annotations</artifactId>
+        <version>${hbase.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -700,6 +803,14 @@
           <exclusion>
             <groupId>org.apache.curator</groupId>
             <artifactId>apache-curator</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -775,6 +886,14 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-common</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -803,6 +922,11 @@
             <groupId>org.slf4j</groupId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mapr.db</groupId>
@@ -850,6 +974,14 @@
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>servlet-api-2.5</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -873,6 +1005,14 @@
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -884,7 +1024,23 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative</artifactId>
+        <version>2.0.1.Final</version>
+        <classifier>${netty.tcnative.classifier}</classifier>
+        <scope>runtime</scope>
+        <optional>true</optional>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -910,7 +1066,7 @@
             <configuration>
               <algorithms>
                 <algorithm>MD5</algorithm>
-                <algorithm>SHA-1</algorithm>
+                <algorithm>SHA-512</algorithm>
               </algorithms>
               <failOnError>false</failOnError>
             </configuration>
@@ -1037,6 +1193,10 @@
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1130,6 +1290,10 @@
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1220,6 +1384,10 @@
               <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1331,10 +1499,25 @@
             </exclusions>
           </dependency>
           <dependency>
+          	<groupId>org.apache.parquet</groupId>
+          	<artifactId>parquet-hadoop</artifactId>
+          	<version>${parquet.version}</version>
+          	<exclusions>
+          		<exclusion>
+          			<groupId>org.xerial.snappy</groupId>
+          			<artifactId>snappy-java</artifactId>
+          		</exclusion>
+          	</exclusions>
+          </dependency>
+          <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
             <exclusions>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
@@ -1409,6 +1592,14 @@
             <scope>test</scope>
             <exclusions>
               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
@@ -1427,6 +1618,10 @@
               <exclusion>
                 <artifactId>asm</artifactId>
                 <groupId>asm</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-annotations</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1523,6 +1718,14 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <!-- Test Dependencies -->
@@ -1549,6 +1752,18 @@
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
         </dependencies>
@@ -1559,7 +1774,7 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.2.0-mapr-1608</hive.version>
+        <hive.version>1.2.0-mapr-1707</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1607</hadoop.version>
       </properties>
@@ -1655,6 +1870,14 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1750,6 +1973,14 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1772,6 +2003,17 @@
             <artifactId>sqlline</artifactId>
             <version>${sqlline.version}</version>
           </dependency>
+          <dependency>
+          	<groupId>org.apache.parquet</groupId>
+          	<artifactId>parquet-hadoop</artifactId>
+          	<version>${parquet.version}</version>
+          	<exclusions>
+          		<exclusion>
+          			<groupId>org.xerial.snappy</groupId>
+          			<artifactId>snappy-java</artifactId>
+          		</exclusion>
+          	</exclusions>
+          </dependency>
           <!-- Test Dependencies -->
           <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -1786,6 +2028,14 @@
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -1819,8 +2069,12 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
-                <artifactId>netty-all</artifactId>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -1869,6 +2123,10 @@
             <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
             <exclusions>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
               <exclusion>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
@@ -1943,6 +2201,14 @@
             <scope>test</scope>
             <exclusions>
               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
@@ -1962,6 +2228,10 @@
                 <artifactId>asm</artifactId>
                 <groupId>asm</groupId>
               </exclusion>
+              <exclusion>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-annotations</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -1972,6 +2242,10 @@
               <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>jdk.tools</groupId>
+                <artifactId>jdk.tools</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2032,6 +2306,14 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2054,6 +2336,14 @@
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2090,6 +2380,14 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -2112,6 +2410,14 @@
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>servlet-api-2.5</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2146,6 +2452,110 @@
       <modules>
         <module>contrib</module>
       </modules>
+    </profile>
+    <profile>
+      <!--
+        If the IDE is Eclipse, it requires you to install an additional Eclipse plugin available here:
+        http://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        or from your local maven repository:
+        ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.5.0.Final/os-maven-plugin-1.5.0.Final.jar
+        Note that installing this plugin may require you to start with a new workspace
+      -->
+      <id>openssl</id>
+      <activation>
+        <property>
+          <name>enableOpenSSL</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <!-- Configure the os-maven-plugin extension to expand the classifier on -->
+        <!-- Fedora-"like" systems. Used for netty-tcnative inclusion -->
+        <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
+        <netty.tcnative.classifier>${os.detected.classifier}</netty.tcnative.classifier>
+      </properties>
+    </profile>
+    <profile>
+      <id>findbugs</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <configuration>
+              <!--
+               Enables analysis which takes more memory but finds more bugs.
+               If you run out of memory, changes the value of the effort element
+               to 'Low'.
+               -->
+              <effort>Normal</effort>
+              <!-- Reports all bugs (other values are medium and max) -->
+              <threshold>Low</threshold>
+              <!-- Build doesn't fail if problems are found -->
+              <failOnError>false</failOnError>
+              <!-- Produces XML report -->
+              <xmlOutput>true</xmlOutput>
+              <!-- Configures the directory in which the XML report is created -->
+              <findbugsXmlOutputDirectory>${project.build.directory}/findbugs
+              </findbugsXmlOutputDirectory>
+            </configuration>
+            <executions>
+              <!--
+                Ensures that FindBugs inspects source code when project is compiled.
+              -->
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>xml-maven-plugin</artifactId>
+            <version>1.0</version>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>transform</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <transformationSets>
+                <transformationSet>
+                  <dir>${project.build.directory}/findbugs</dir>
+                  <outputDir>${project.build.directory}/findbugs</outputDir>
+                  <stylesheet>fancy-hist.xsl</stylesheet>
+                  <!--<stylesheet>default.xsl</stylesheet>-->
+                  <!--<stylesheet>plain.xsl</stylesheet>-->
+                  <!--<stylesheet>fancy.xsl</stylesheet>-->
+                  <!--<stylesheet>summary.xsl</stylesheet>-->
+                  <fileMappers>
+                    <fileMapper
+                            implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                      <targetExtension>.html</targetExtension>
+                    </fileMapper>
+                  </fileMappers>
+                </transformationSet>
+              </transformationSets>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>findbugs</artifactId>
+                <version>2.0.0</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
   <modules>

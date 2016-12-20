@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,15 +65,15 @@ public class HashAggPrel extends AggPrelBase implements Prel{
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeHashAggCost(planner);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    return super.computeHashAggCost(planner, mq);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
 
     Prel child = (Prel) this.getInput();
-    HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator), keys, aggExprs, 1.0f);
+    HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator), operPhase, keys, aggExprs, 1.0f);
 
     return creator.addMetadata(this, g);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
@@ -28,48 +29,73 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
-import static org.apache.zookeeper.ZooDefs.OpCode.create;
 import static org.junit.Assert.assertEquals;
 
 public class TestParquetFilterPushDown extends PlanTestBase {
-
-  private static final String WORKING_PATH = TestTools.getWorkingPath();
-  private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+  private static final String CTAS_TABLE = "order_ctas";
   private static FragmentContext fragContext;
 
-  static FileSystem fs;
+  private static FileSystem fs;
 
   @BeforeClass
   public static void initFSAndCreateFragContext() throws Exception {
+    fs = getLocalFileSystem();
     fragContext = new FragmentContext(bits[0].getContext(),
         BitControl.PlanFragment.getDefaultInstance(), null, bits[0].getContext().getFunctionImplementationRegistry());
 
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
-
-    fs = FileSystem.get(conf);
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquetFilterPush"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "multirowgroup.parquet"));
   }
 
   @AfterClass
-  public static void close() throws Exception {
-    fragContext.close();
+  public static void teardown() throws IOException {
     fs.close();
   }
+
+  @Rule
+  public final TestWatcher ctasWatcher = new TestWatcher() {
+    @Override
+    protected void failed(Throwable e, Description description) {
+      deleteCtasTable();
+    }
+
+    @Override
+    protected void starting(Description description) {
+      deleteCtasTable();
+    }
+
+    @Override
+    protected void finished(Description description) {
+      deleteCtasTable();
+    }
+
+    private void deleteCtasTable() {
+      FileUtils.deleteQuietly(new File(dirTestWatcher.getDfsTestTmpDir(), CTAS_TABLE));
+    }
+  };
 
   @Test
   // Test filter evaluation directly without go through SQL queries.
   public void testIntPredicateWithEval() throws Exception {
     // intTbl.parquet has only one int column
     //    intCol : [0, 100].
-    final String filePath = String.format("%s/parquetFilterPush/intTbl/intTbl.parquet", TEST_RES_PATH);
-    ParquetMetadata footer = getParquetMetaData(filePath);
+    final File file = dirTestWatcher.getRootDir()
+      .toPath()
+      .resolve(Paths.get("parquetFilterPush", "intTbl", "intTbl.parquet"))
+      .toFile();
+    ParquetMetadata footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "intCol = 100", false);
     testParquetRowGroupFilterEval(footer, "intCol = 0", false);
@@ -144,8 +170,11 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   public void testIntPredicateAgainstAllNullColWithEval() throws Exception {
     // intAllNull.parquet has only one int column with all values being NULL.
     // column values statistics: num_nulls: 25, min/max is not defined
-    final String filePath = String.format("%s/parquetFilterPush/intTbl/intAllNull.parquet", TEST_RES_PATH);
-    ParquetMetadata footer = getParquetMetaData(filePath);
+    final File file = dirTestWatcher.getRootDir()
+      .toPath()
+      .resolve(Paths.get("parquetFilterPush", "intTbl", "intAllNull.parquet"))
+      .toFile();
+    ParquetMetadata footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "intCol = 100", true);
     testParquetRowGroupFilterEval(footer, "intCol = 0", true);
@@ -163,8 +192,11 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     // The parquet file is created on drill 1.8.0 with DRILL CTAS:
     //   create table dfs.tmp.`dateTblCorrupted/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03';
 
-    final String filePath = String.format("%s/parquetFilterPush/dateTblCorrupted/t1/0_0_0.parquet", TEST_RES_PATH);
-    ParquetMetadata footer = getParquetMetaData(filePath);
+    final File file = dirTestWatcher.getRootDir()
+      .toPath()
+      .resolve(Paths.get("parquetFilterPush", "dateTblCorrupted", "t1", "0_0_0.parquet"))
+      .toFile();
+    ParquetMetadata footer = getParquetMetaData(file);
 
     testDatePredicateAgainstDrillCTASHelper(footer);
   }
@@ -174,12 +206,14 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     // The parquet file is created on drill 1.9.0-SNAPSHOT (commit id:03e8f9f3e01c56a9411bb4333e4851c92db6e410) with DRILL CTAS:
     //   create table dfs.tmp.`dateTbl1_9/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03';
 
-    final String filePath = String.format("%s/parquetFilterPush/dateTbl1_9/t1/0_0_0.parquet", TEST_RES_PATH);
-    ParquetMetadata footer = getParquetMetaData(filePath);
+    final File file = dirTestWatcher.getRootDir()
+      .toPath()
+      .resolve(Paths.get("parquetFilterPush", "dateTbl1_9", "t1", "0_0_0.parquet"))
+      .toFile();
+    ParquetMetadata footer = getParquetMetaData(file);
 
     testDatePredicateAgainstDrillCTASHelper(footer);
   }
-
 
   private void testDatePredicateAgainstDrillCTASHelper(ParquetMetadata footer) throws Exception{
     testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1992-01-01' as date)", false);
@@ -203,8 +237,11 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   public void testTimeStampPredicateWithEval() throws Exception {
     // Table dateTblCorrupted is created by CTAS in drill 1.8.0.
     //    create table dfs.tmp.`tsTbl/t1` as select DATE_ADD(cast(o_orderdate as date), INTERVAL '0 10:20:30' DAY TO SECOND) as o_ordertimestamp from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03';
-    final String filePath = String.format("%s/parquetFilterPush/tsTbl/t1/0_0_0.parquet", TEST_RES_PATH);
-    ParquetMetadata footer = getParquetMetaData(filePath);
+    final File file = dirTestWatcher.getRootDir()
+      .toPath()
+      .resolve(Paths.get("parquetFilterPush", "tsTbl", "t1", "0_0_0.parquet"))
+      .toFile();
+    ParquetMetadata footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:30' as timestamp)", false);
     testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:29' as timestamp)", true);
@@ -227,97 +264,82 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   @Test
   // Test against parquet files from Drill CTAS post 1.8.0 release.
   public void testDatePredicateAgaistDrillCTASPost1_8() throws  Exception {
-    String tableName = "order_ctas";
+    test("use dfs.tmp");
+    test("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and " +
+      "date '1992-01-03'", CTAS_TABLE);
+    test("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and " +
+      "date '1992-01-06'", CTAS_TABLE);
+    test("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and " +
+      "date '1992-01-09'", CTAS_TABLE);
 
-    try {
-      deleteTableIfExists(tableName);
+    final String query1 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate = date '1992-01-01'";
+    testParquetFilterPD(query1, 9, 1, false);
 
-      test("use dfs_test.tmp");
-      test(String.format("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03'", tableName));
-      test(String.format("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and date '1992-01-06'", tableName));
-      test(String.format("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and date '1992-01-09'", tableName));
+    final String query2 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate < date '1992-01-01'";
+    testParquetFilterPD(query2, 0, 1, false);
 
-      final String query1 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate = date '1992-01-01'";
-      testParquetFilterPD(query1, 9, 1, false);
+    final String query3 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-03'";
+    testParquetFilterPD(query3, 22, 1, false);
 
-      final String query2 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate < date '1992-01-01'";
-      testParquetFilterPD(query2, 0, 1, false);
+    final String query4 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-04'";
+    testParquetFilterPD(query4, 33, 2, false);
 
-      final String query3 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-03'";
-      testParquetFilterPD(query3, 22, 1, false);
+    final String query5 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-06'";
+    testParquetFilterPD(query5, 49, 2, false);
 
-      final String query4 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-04'";
-      testParquetFilterPD(query4, 33, 2, false);
+    final String query6 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate > date '1992-01-10'";
+    testParquetFilterPD(query6, 0, 1, false);
 
-      final String query5 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate between date '1992-01-01' and date '1992-01-06'";
-      testParquetFilterPD(query5, 49, 2, false);
-
-      final String query6 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate > date '1992-01-10'";
-      testParquetFilterPD(query6, 0, 1, false);
-
-      // Test parquet files with metadata cache files available.
-      // Now, create parquet metadata cache files, and run the above queries again. Flag "usedMetadataFile" should be true.
-      test(String.format("refresh table metadata %s", tableName));
-
-      testParquetFilterPD(query1, 9, 1, true);
-
-      testParquetFilterPD(query2, 0, 1, true);
-
-      testParquetFilterPD(query3, 22, 1, true);
-
-      testParquetFilterPD(query4, 33, 2, true);
-
-      testParquetFilterPD(query5, 49, 2, true);
-
-      testParquetFilterPD(query6, 0, 1, true);
-    } finally {
-      deleteTableIfExists(tableName);
-    }
+    // Test parquet files with metadata cache files available.
+    // Now, create parquet metadata cache files, and run the above queries again. Flag "usedMetadataFile" should be true.
+    test(String.format("refresh table metadata %s", CTAS_TABLE));
+    testParquetFilterPD(query1, 9, 1, true);
+    testParquetFilterPD(query2, 0, 1, true);
+    testParquetFilterPD(query3, 22, 1, true);
+    testParquetFilterPD(query4, 33, 2, true);
+    testParquetFilterPD(query5, 49, 2, true);
+    testParquetFilterPD(query6, 0, 1, true);
   }
 
   @Test
   public void testParquetFilterPDOptionsDisabled() throws Exception {
-    final String tableName = "order_ctas";
-
     try {
-      deleteTableIfExists(tableName);
+      test("alter session set `%s` = false", PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY);
 
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY  + "` = false");
+      test("use dfs.tmp");
+      test("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and " +
+        "date '1992-01-03'", CTAS_TABLE);
+      test("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and " +
+        "date '1992-01-06'", CTAS_TABLE);
+      test("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and " +
+        "date '1992-01-09'", CTAS_TABLE);
 
-      test("use dfs_test.tmp");
-      test(String.format("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03'", tableName));
-      test(String.format("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and date '1992-01-06'", tableName));
-      test(String.format("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and date '1992-01-09'", tableName));
-
-      final String query1 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate = date '1992-01-01'";
+      final String query1 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate = date '1992-01-01'";
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY  + "` = " + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING.getDefault().bool_val);
-      deleteTableIfExists(tableName);
+      resetSessionOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_KEY);
     }
   }
 
   @Test
   public void testParquetFilterPDOptionsThreshold() throws Exception {
-    final String tableName = "order_ctas";
-
     try {
-      deleteTableIfExists(tableName);
-
       test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY  + "` = 2 ");
 
-      test("use dfs_test.tmp");
-      test(String.format("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and date '1992-01-03'", tableName));
-      test(String.format("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and date '1992-01-06'", tableName));
-      test(String.format("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and date '1992-01-09'", tableName));
+      test("use dfs.tmp");
+      test("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and " +
+        "date '1992-01-03'", CTAS_TABLE);
+      test("create table `%s/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and " +
+        "date '1992-01-06'", CTAS_TABLE);
+      test("create table `%s/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and " +
+        "date '1992-01-09'", CTAS_TABLE);
 
-      final String query1 = "select o_orderdate from dfs_test.tmp.order_ctas where o_orderdate = date '1992-01-01'";
+      final String query1 = "select o_orderdate from dfs.tmp.order_ctas where o_orderdate = date '1992-01-01'";
       testParquetFilterPD(query1, 9, 3, false);
 
     } finally {
-      test("alter session set `" + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY  + "` = " + PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD.getDefault().num_val);
-      deleteTableIfExists(tableName);
+      resetSessionOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY);
     }
   }
 
@@ -329,22 +351,22 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     //    create table dfs.tmp.`dateTblCorrupted/t2` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and date '1992-01-06';
     //    create table dfs.tmp.`dateTblCorrupted/t3` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and date '1992-01-09';
 
-    final String query1 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate = date '1992-01-01'", TEST_RES_PATH);
+    final String query1 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate = date '1992-01-01'";
     testParquetFilterPD(query1, 9, 1, false);
 
-    final String query2 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate < date '1992-01-01'", TEST_RES_PATH);
+    final String query2 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate < date '1992-01-01'";
     testParquetFilterPD(query2, 0, 1, false);
 
-    final String query3 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-03'", TEST_RES_PATH);
+    final String query3 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-03'";
     testParquetFilterPD(query3, 22, 1, false);
 
-    final String query4 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-04'", TEST_RES_PATH);
+    final String query4 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-04'";
     testParquetFilterPD(query4, 33, 2, false);
 
-    final String query5 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-06'", TEST_RES_PATH);
+    final String query5 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate between date '1992-01-01' and date '1992-01-06'";
     testParquetFilterPD(query5, 49, 2, false);
 
-    final String query6 = String.format("select o_orderdate from dfs_test.`%s/parquetFilterPush/dateTblCorrupted` where o_orderdate > date '1992-01-10'", TEST_RES_PATH);
+    final String query6 = "select o_orderdate from dfs.`parquetFilterPush/dateTblCorrupted` where o_orderdate > date '1992-01-10'";
 
     testParquetFilterPD(query6, 0, 1, false);
   }
@@ -356,16 +378,40 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     //    create table dfs.tmp.`tsTbl/t2` as select DATE_ADD(cast(o_orderdate as date), INTERVAL '0 10:20:30' DAY TO SECOND) as o_ordertimestamp from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-04' and date '1992-01-06';
     //    create table dfs.tmp.`tsTbl/t3` as select DATE_ADD(cast(o_orderdate as date), INTERVAL '0 10:20:30' DAY TO SECOND) as o_ordertimestamp from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-07' and date '1992-01-09';
 
-    final String query1 = String.format("select o_ordertimestamp from dfs_test.`%s/parquetFilterPush/tsTbl` where o_ordertimestamp = timestamp '1992-01-01 10:20:30'", TEST_RES_PATH);
+    final String query1 = "select o_ordertimestamp from dfs.`parquetFilterPush/tsTbl` where o_ordertimestamp = timestamp '1992-01-01 10:20:30'";
     testParquetFilterPD(query1, 9, 1, false);
 
-    final String query2 = String.format("select o_ordertimestamp from dfs_test.`%s/parquetFilterPush/tsTbl` where o_ordertimestamp < timestamp '1992-01-01 10:20:30'", TEST_RES_PATH);
+    final String query2 = "select o_ordertimestamp from dfs.`parquetFilterPush/tsTbl` where o_ordertimestamp < timestamp '1992-01-01 10:20:30'";
     testParquetFilterPD(query2, 0, 1, false);
 
-    final String query3 = String.format("select o_ordertimestamp from dfs_test.`%s/parquetFilterPush/tsTbl` where o_ordertimestamp between timestamp '1992-01-01 00:00:00' and timestamp '1992-01-06 10:20:30'", TEST_RES_PATH);
+    final String query3 = "select o_ordertimestamp from dfs.`parquetFilterPush/tsTbl` where o_ordertimestamp between timestamp '1992-01-01 00:00:00' and timestamp '1992-01-06 10:20:30'";
     testParquetFilterPD(query3, 49, 2, false);
   }
 
+  @Test // DRILL-5359
+  public void testFilterWithItemFlatten() throws Exception {
+    final String sql = "select n_regionkey\n"
+        + "from (select n_regionkey, \n"
+        + "            flatten(nation.cities) as cities \n"
+        + "      from cp.`tpch/nation.parquet` nation) as flattenedCities \n"
+        + "where flattenedCities.cities.`zip` = '12345'";
+
+    final String[] expectedPlan = {"(?s)Filter.*Flatten"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+
+  }
+
+  @Test
+  public void testMultiRowGroup() throws Exception {
+    // multirowgroup is a parquet file with 2 rowgroups inside. One with a = 1 and the other with a = 2;
+    // FilterPushDown should be able to remove the rowgroup with a = 1 from the scan operator.
+    final String sql = String.format("select * from dfs.`parquet/multirowgroup.parquet` where a > 1");
+    final String[] expectedPlan = {"numRowGroups=1"};
+    final String[] excludedPlan = {};
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
@@ -393,21 +439,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     Assert.assertEquals(canDropExpected, canDrop);
   }
 
-  private ParquetMetadata getParquetMetaData(String filePathStr) throws IOException{
-    Configuration fsConf = new Configuration();
-    ParquetMetadata footer = ParquetFileReader.readFooter(fsConf, new Path(filePathStr));
-    return footer;
+  private ParquetMetadata getParquetMetaData(File file) throws IOException{
+    return ParquetFileReader.readFooter(new Configuration(fs.getConf()), new Path(file.toURI()));
   }
-
-  private static void deleteTableIfExists(String tableName) {
-    try {
-      Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);
-      if (fs.exists(path)) {
-        fs.delete(path, true);
-      }
-    } catch (Exception e) {
-      // ignore exceptions.
-    }
-  }
-
 }

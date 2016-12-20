@@ -26,18 +26,20 @@ import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.metadata.MetadataProvider;
+import org.apache.drill.exec.work.metadata.ServerMetaProvider.ServerMetaWorker;
 import org.apache.drill.exec.work.prepare.PreparedStatementProvider.PreparedStatementWorker;
 
 public class UserWorker{
@@ -124,5 +126,10 @@ public class UserWorker{
   public void submitPreparedStatementWork(final UserClientConnection connection, final CreatePreparedStatementReq req,
       final ResponseSender sender) {
     bee.addNewWork(new PreparedStatementWorker(connection, this, sender, req));
+  }
+
+  public void submitServerMetadataWork(final UserSession session, final GetServerMetaReq req,
+      final ResponseSender sender) {
+    bee.addNewWork(new ServerMetaWorker(session, bee.getContext(), req, sender));
   }
 }

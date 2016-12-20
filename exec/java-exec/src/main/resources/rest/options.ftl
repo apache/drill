@@ -18,9 +18,6 @@
   <div class="page-header">
   </div>
   <h4>System options</h4>
-  <div align="right">
-    <a href="http://drill.apache.org/docs/planning-and-execution-options/">Documentation</a>
-  </div>
   <div class="table-responsive">
     <table class="table table-hover">
       <tbody>

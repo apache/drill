@@ -24,33 +24,261 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.Meta.Signature;
 import org.apache.calcite.avatica.util.ArrayImpl.Factory;
 import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
+import org.apache.drill.jdbc.SchemaChangeListener;
 import org.slf4j.Logger;
+
+import com.google.common.collect.Queues;
 
 
 class DrillCursor implements Cursor {
+
+  ////////////////////////////////////////
+  // ResultsListener:
+  static class ResultsListener implements UserResultsListener {
+    private static final org.slf4j.Logger logger =
+        org.slf4j.LoggerFactory.getLogger(ResultsListener.class);
+
+    private static volatile int nextInstanceId = 1;
+
+    /** (Just for logging.) */
+    private final int instanceId;
+
+    private final int batchQueueThrottlingThreshold;
+
+    /** (Just for logging.) */
+    private volatile QueryId queryId;
+
+    /** (Just for logging.) */
+    private int lastReceivedBatchNumber;
+    /** (Just for logging.) */
+    private int lastDequeuedBatchNumber;
+
+    private volatile UserException executionFailureException;
+
+    // TODO:  Revisit "completed".  Determine and document exactly what it
+    // means.  Some uses imply that it means that incoming messages indicate
+    // that the _query_ has _terminated_ (not necessarily _completing_
+    // normally), while some uses imply that it's some other state of the
+    // ResultListener.  Some uses seem redundant.)
+    volatile boolean completed = false;
+
+    /** Whether throttling of incoming data is active. */
+    private final AtomicBoolean throttled = new AtomicBoolean( false );
+    private volatile ConnectionThrottle throttle;
+
+    private volatile boolean closed = false;
+
+    private final CountDownLatch firstMessageReceived = new CountDownLatch(1);
+
+    final LinkedBlockingDeque<QueryDataBatch> batchQueue =
+        Queues.newLinkedBlockingDeque();
+
+
+    /**
+     * ...
+     * @param  batchQueueThrottlingThreshold
+     *         queue size threshold for throttling server
+     */
+    ResultsListener( int batchQueueThrottlingThreshold ) {
+      instanceId = nextInstanceId++;
+      this.batchQueueThrottlingThreshold = batchQueueThrottlingThreshold;
+      logger.debug( "[#{}] Query listener created.", instanceId );
+    }
+
+    /**
+     * Starts throttling if not currently throttling.
+     * @param  throttle  the "throttlable" object to throttle
+     * @return  true if actually started (wasn't throttling already)
+     */
+    private boolean startThrottlingIfNot( ConnectionThrottle throttle ) {
+      final boolean started = throttled.compareAndSet( false, true );
+      if ( started ) {
+        this.throttle = throttle;
+        throttle.setAutoRead(false);
+      }
+      return started;
+    }
+
+    /**
+     * Stops throttling if currently throttling.
+     * @return  true if actually stopped (was throttling)
+     */
+    private boolean stopThrottlingIfSo() {
+      final boolean stopped = throttled.compareAndSet( true, false );
+      if ( stopped ) {
+        throttle.setAutoRead(true);
+        throttle = null;
+      }
+      return stopped;
+    }
+
+    public void awaitFirstMessage() throws InterruptedException {
+      firstMessageReceived.await();
+    }
+
+    private void releaseIfFirst() {
+      firstMessageReceived.countDown();
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
+      logger.debug( "[#{}] Received query ID: {}.",
+                    instanceId, QueryIdHelper.getQueryId( queryId ) );
+      this.queryId = queryId;
+    }
+
+    @Override
+    public void submissionFailed(UserException ex) {
+      logger.debug( "Received query failure:", instanceId, ex );
+      this.executionFailureException = ex;
+      completed = true;
+      close();
+      logger.info( "[#{}] Query failed: ", instanceId, ex );
+    }
+
+    @Override
+    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
+      lastReceivedBatchNumber++;
+      logger.debug( "[#{}] Received query data batch #{}: {}.",
+                    instanceId, lastReceivedBatchNumber, result );
+
+      // If we're in a closed state, just release the message.
+      if (closed) {
+        result.release();
+        // TODO:  Revisit member completed:  Is ResultListener really completed
+        // after only one data batch after being closed?
+        completed = true;
+        return;
+      }
+
+      // We're active; let's add to the queue.
+      batchQueue.add(result);
+
+      // Throttle server if queue size has exceed threshold.
+      if (batchQueue.size() > batchQueueThrottlingThreshold ) {
+        if ( startThrottlingIfNot( throttle ) ) {
+          logger.debug( "[#{}] Throttling started at queue size {}.",
+                        instanceId, batchQueue.size() );
+        }
+      }
+
+      releaseIfFirst();
+    }
+
+    @Override
+    public void queryCompleted(QueryState state) {
+      logger.debug( "[#{}] Received query completion: {}.", instanceId, state );
+      releaseIfFirst();
+      completed = true;
+    }
+
+    QueryId getQueryId() {
+      return queryId;
+    }
+
+
+    /**
+     * Gets the next batch of query results from the queue.
+     * @return  the next batch, or {@code null} after last batch has been returned
+     * @throws UserException
+     *         if the query failed
+     * @throws InterruptedException
+     *         if waiting on the queue was interrupted
+     */
+    QueryDataBatch getNext() throws UserException, InterruptedException {
+      while (true) {
+        if (executionFailureException != null) {
+          logger.debug( "[#{}] Dequeued query failure exception: {}.",
+                        instanceId, executionFailureException );
+          throw executionFailureException;
+        }
+        if (completed && batchQueue.isEmpty()) {
+          return null;
+        } else {
+          QueryDataBatch qdb = batchQueue.poll(50, TimeUnit.MILLISECONDS);
+          if (qdb != null) {
+            lastDequeuedBatchNumber++;
+            logger.debug( "[#{}] Dequeued query data batch #{}: {}.",
+                          instanceId, lastDequeuedBatchNumber, qdb );
+
+            // Unthrottle server if queue size has dropped enough below threshold:
+            if ( batchQueue.size() < batchQueueThrottlingThreshold / 2
+                 || batchQueue.size() == 0  // (in case threshold < 2)
+                 ) {
+              if ( stopThrottlingIfSo() ) {
+                logger.debug( "[#{}] Throttling stopped at queue size {}.",
+                              instanceId, batchQueue.size() );
+              }
+            }
+            return qdb;
+          }
+        }
+      }
+    }
+
+    void close() {
+      logger.debug( "[#{}] Query listener closing.", instanceId );
+      closed = true;
+      if ( stopThrottlingIfSo() ) {
+        logger.debug( "[#{}] Throttling stopped at close() (at queue size {}).",
+                      instanceId, batchQueue.size() );
+      }
+      while (!batchQueue.isEmpty()) {
+        QueryDataBatch qdb = batchQueue.poll();
+        if (qdb != null && qdb.getData() != null) {
+          qdb.getData().release();
+        }
+      }
+      // Close may be called before the first result is received and therefore
+      // when the main thread is blocked waiting for the result.  In that case
+      // we want to unblock the main thread.
+      firstMessageReceived.countDown(); // TODO:  Why not call releaseIfFirst as used elsewhere?
+      completed = true;
+    }
+
+  }
+
   private static final Logger logger = getLogger( DrillCursor.class );
 
   /** JDBC-specified string for unknown catalog, schema, and table names. */
   private static final String UNKNOWN_NAME_STRING = "";
 
-  /** The associated {@link java.sql.ResultSet} implementation. */
-  private final DrillResultSetImpl resultSet;
+  private final DrillConnectionImpl connection;
+  private final AvaticaStatement statement;
+  private final Meta.Signature signature;
 
   /** Holds current batch of records (none before first load). */
   private final RecordBatchLoader currentBatchHolder;
 
-  private final DrillResultSetImpl.ResultsListener resultsListener;
+  private final ResultsListener resultsListener;
+  private SchemaChangeListener changeListener;
 
   private final DrillAccessorList accessors = new DrillAccessorList();
 
@@ -85,6 +313,7 @@ class DrillCursor implements Cursor {
   /** Whether cursor is after the end of the sequence of records/rows. */
   private boolean afterLastRow = false;
 
+  private int currentRowNumber = -1;
   /** Zero-based offset of current record in record batch.
    * (Not <i>row</i> number.) */
   private int currentRecordNumber = -1;
@@ -92,20 +321,40 @@ class DrillCursor implements Cursor {
 
   /**
    *
-   * @param  resultSet  the associated ResultSet implementation
+   * @param statement
+   * @param signature
    */
-  DrillCursor(final DrillResultSetImpl resultSet) {
-    this.resultSet = resultSet;
-    currentBatchHolder = resultSet.batchLoader;
-    resultsListener = resultSet.resultsListener;
-  }
+  DrillCursor(DrillConnectionImpl connection, AvaticaStatement statement, Signature signature) {
+    this.connection = connection;
+    this.statement = statement;
+    this.signature = signature;
 
-  DrillResultSetImpl getResultSet() {
-    return resultSet;
+    DrillClient client = connection.getClient();
+    final int batchQueueThrottlingThreshold =
+        client.getConfig().getInt(
+            ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
+    resultsListener = new ResultsListener(batchQueueThrottlingThreshold);
+    currentBatchHolder = new RecordBatchLoader(client.getAllocator());
   }
 
   protected int getCurrentRecordNumber() {
     return currentRecordNumber;
+  }
+
+  public String getQueryId() {
+    if (resultsListener.getQueryId() != null) {
+      return QueryIdHelper.getQueryId(resultsListener.getQueryId());
+    } else {
+      return null;
+    }
+  }
+
+  public boolean isBeforeFirst() {
+    return currentRowNumber < 0;
+  }
+
+  public boolean isAfterLast() {
+    return afterLastRow;
   }
 
   // (Overly restrictive Avatica uses List<Accessor> instead of List<? extends
@@ -117,6 +366,14 @@ class DrillCursor implements Cursor {
                                         Calendar localCalendar, Factory factory) {
     columnMetaDataList = (DrillColumnMetaDataList) types;
     return accessors;
+  }
+
+  synchronized void cleanup() {
+    if (resultsListener.getQueryId() != null && ! resultsListener.completed) {
+      connection.getClient().cancelQuery(resultsListener.getQueryId());
+    }
+    resultsListener.close();
+    currentBatchHolder.clear();
   }
 
   /**
@@ -144,8 +401,8 @@ class DrillCursor implements Cursor {
         schema,
         getObjectClasses );
 
-    if (getResultSet().changeListener != null) {
-      getResultSet().changeListener.schemaChanged(schema);
+    if (changeListener != null) {
+      changeListener.schemaChanged(schema);
     }
   }
 
@@ -261,6 +518,7 @@ class DrillCursor implements Cursor {
       throw new IllegalStateException(
           "loadInitialSchema() called a second time" );
     }
+
     assert ! afterLastRow : "afterLastRow already true in loadInitialSchema()";
     assert ! afterFirstBatch : "afterLastRow already true in loadInitialSchema()";
     assert -1 == currentRecordNumber
@@ -269,6 +527,34 @@ class DrillCursor implements Cursor {
     assert 0 == currentBatchHolder.getRecordCount()
         : "currentBatchHolder.getRecordCount() not 0 (is "
           + currentBatchHolder.getRecordCount() + " in loadInitialSchema()";
+
+    final PreparedStatement preparedStatement;
+    if (statement instanceof DrillPreparedStatementImpl) {
+      DrillPreparedStatementImpl drillPreparedStatement = (DrillPreparedStatementImpl) statement;
+      preparedStatement = drillPreparedStatement.getPreparedStatementHandle();
+    } else {
+      preparedStatement = null;
+    }
+
+    if (preparedStatement != null) {
+      connection.getClient().executePreparedStatement(preparedStatement.getServerHandle(), resultsListener);
+    }
+    else {
+      connection.getClient().runQuery(QueryType.SQL, signature.sql, resultsListener);
+    }
+
+    try {
+      resultsListener.awaitFirstMessage();
+    } catch ( InterruptedException e ) {
+      // Preserve evidence that the interruption occurred so that code higher up
+      // on the call stack can learn of the interruption and respond to it if it
+      // wants to.
+      Thread.currentThread().interrupt();
+
+      // Not normally expected--Drill doesn't interrupt in this area (right?)--
+      // but JDBC client certainly could.
+      throw new SQLException("Interrupted", e );
+    }
 
     returnTrueForNextCallToNext = true;
 
@@ -297,26 +583,28 @@ class DrillCursor implements Cursor {
       return false;
     }
     else if ( returnTrueForNextCallToNext ) {
+      ++currentRowNumber;
       // We have a deferred "not after end" to report--reset and report that.
       returnTrueForNextCallToNext = false;
       return true;
     }
     else {
       accessors.clearLastColumnIndexedInRow();
-      return nextRowInternally();
+      boolean res = nextRowInternally();
+      if (res) { ++ currentRowNumber; }
+
+      return res;
     }
+  }
+
+  public void cancel() {
+    close();
   }
 
   @Override
   public void close() {
-    // currentBatchHolder is owned by resultSet and cleaned up by
-    // DrillResultSet.cleanup()
-
-    // listener is owned by resultSet and cleaned up by
-    // DrillResultSet.cleanup()
-
     // Clean up result set (to deallocate any buffers).
-    getResultSet().cleanup();
+    cleanup();
     // TODO:  CHECK:  Something might need to set statement.openResultSet to
     // null.  Also, AvaticaResultSet.close() doesn't check whether already
     // closed and skip calls to cursor.close(), statement.onResultSetClose()

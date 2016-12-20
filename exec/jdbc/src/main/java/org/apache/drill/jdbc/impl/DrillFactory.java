@@ -18,12 +18,12 @@
 
 package org.apache.drill.jdbc.impl;
 
-import java.sql.SQLException;
-import java.util.Properties;
-
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.UnregisteredDriver;
+
+import java.sql.SQLException;
+import java.util.Properties;
 
 
 /**

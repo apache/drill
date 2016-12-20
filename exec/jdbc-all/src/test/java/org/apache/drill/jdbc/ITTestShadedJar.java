@@ -31,18 +31,96 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.UUID;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 public class ITTestShadedJar {
-
   private static DrillbitClassLoader drillbitLoader;
   private static URLClassLoader rootClassLoader;
+  private static int userPort;
+
+  @ClassRule
+  public static final TestWatcher testWatcher = new TestWatcher() {
+
+    @Override
+    protected void starting(Description description) {
+      super.starting(description);
+
+      try {
+        drillbitLoader = new DrillbitClassLoader();
+        drillbitLoader.loadClass("org.apache.commons.io.FileUtils");
+        rootClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
+
+        Class<?> clazz = drillbitLoader.loadClass("org.apache.drill.test.BaseTestQuery");
+        Class<?> watcherClazz = drillbitLoader.loadClass("org.apache.drill.test.BaseDirTestWatcher");
+
+        // Setup tmp dirs
+        runMethod("starting", description);
+
+        // Configure tmp dir
+        Object watcher = clazz.getField("dirTestWatcher").get(null);
+        Method method = watcherClazz.getDeclaredMethod("getTmpDir");
+        File tmpDir = (File) method.invoke(watcher);
+        System.setProperty("DRILL_CONF_DIR", tmpDir.getAbsolutePath());
+
+        // Start the drill cluster
+        try {
+          runWithLoader("DrillbitStartThread", drillbitLoader);
+        } catch (Exception e) {
+          printClassesLoaded("root", rootClassLoader);
+          throw e;
+        }
+
+        DrillbitStartThread.SEM.acquire();
+
+        // After starting the drill cluster get the client port
+        userPort = (Integer) clazz.getMethod("getUserPort").invoke(null);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    protected void finished(Description description) {
+      super.finished(description);
+      done();
+      runMethod("finished", description);
+    }
+
+    @Override
+    protected void failed(Throwable e, Description description) {
+      super.failed(e, description);
+      done();
+      runMethod("failed", description);
+    }
+
+    private void done() {
+      try {
+        runWithLoader("DrillbitStopThread", drillbitLoader);
+        DrillbitStopThread.SEM.acquire();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    private void runMethod(String name, Description description) {
+      try {
+        Class<?> clazz = drillbitLoader.loadClass("org.apache.drill.test.BaseTestQuery");
+        Class<?> watcherClazz = drillbitLoader.loadClass("org.junit.rules.TestWatcher");
+        Object watcher = clazz.getField("dirTestWatcher").get(null);
+        Method method = watcherClazz.getDeclaredMethod(name, Description.class);
+        method.setAccessible(true);
+        method.invoke(watcher, description);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  };
 
   private static URL getJdbcUrl() throws MalformedURLException {
     return new URL(
@@ -51,22 +129,6 @@ public class ITTestShadedJar {
             System.getProperty("project.version")
             ));
 
-  }
-
-  static {
-    String dirConfDir = "DRILL_CONF_DIR";
-    if (System.getProperty(dirConfDir) == null) {
-      final File condDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
-      condDir.mkdirs();
-      condDir.deleteOnExit();
-      Runtime.getRuntime().addShutdownHook(new Thread() {
-        @Override
-        public void run() {
-          FileUtils.deleteQuietly(condDir);
-        }
-      });
-      System.setProperty(dirConfDir, condDir.getAbsolutePath());
-    }
   }
 
   @Test
@@ -84,11 +146,10 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
         DatabaseMetaData metadata = c.getMetaData();
         assertEquals("Apache Drill JDBC Driver", metadata.getDriverName());
         assertEquals("Apache Drill Server", metadata.getDatabaseProductName());
-        //assertEquals()
       }
     } catch (Exception ex) {
       throw ex;
@@ -111,9 +172,8 @@ public class ITTestShadedJar {
     Class<?> clazz = loader.loadClass("org.apache.drill.jdbc.Driver");
     try {
       Driver driver = (Driver) clazz.newInstance();
-      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
-        String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
-        printQuery(c, "select * from dfs.`" + path + "`");
+      try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:" + userPort, null)) {
+        printQuery(c, "select * from cp.`types.json`");
       }
     } catch (Exception ex) {
       throw ex;
@@ -132,25 +192,6 @@ public class ITTestShadedJar {
         System.out.println(result.getObject(1));
       }
     }
-  }
-
-
-
-  @BeforeClass
-  public static void setupDefaultTestCluster() throws Exception {
-    drillbitLoader = new DrillbitClassLoader();
-    rootClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
-    try {
-    runWithLoader("DrillbitStartThread", drillbitLoader);
-    } catch (Exception e) {
-      printClassesLoaded("root", rootClassLoader);
-      throw e;
-    }
-  }
-
-  @AfterClass
-  public static void closeClient() throws Exception {
-    runWithLoader("DrillbitStopThread", drillbitLoader);
   }
 
   private static int getClassesLoadedCount(ClassLoader classLoader) {
@@ -214,6 +255,7 @@ public class ITTestShadedJar {
   }
 
   public static class DrillbitStartThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStartThread(ClassLoader loader) {
       super(loader);
@@ -221,7 +263,7 @@ public class ITTestShadedJar {
 
     @Override
     protected void internalRun() throws Exception {
-      Class<?> clazz = loader.loadClass("org.apache.drill.BaseTestQuery");
+      Class<?> clazz = loader.loadClass("org.apache.drill.test.BaseTestQuery");
       clazz.getMethod("setupDefaultTestCluster").invoke(null);
 
       // loader.loadClass("org.apache.drill.exec.exception.SchemaChangeException");
@@ -230,11 +272,13 @@ public class ITTestShadedJar {
       clazz.getMethod("testNoResult", String.class, new Object[] {}.getClass())
           .invoke(null, "select * from (VALUES 1)", new Object[] {});
 
+      SEM.release();
     }
 
   }
 
   public static class DrillbitStopThread extends AbstractLoaderThread {
+    public static final Semaphore SEM = new Semaphore(0);
 
     public DrillbitStopThread(ClassLoader loader) {
       super(loader);
@@ -242,8 +286,9 @@ public class ITTestShadedJar {
 
     @Override
     protected void internalRun() throws Exception {
-      Class<?> clazz = loader.loadClass("org.apache.drill.BaseTestQuery");
-      clazz.getMethod("setupDefaultTestCluster").invoke(null);
+      Class<?> clazz = loader.loadClass("org.apache.drill.test.BaseTestQuery");
+      clazz.getMethod("closeClient").invoke(null);
+      SEM.release();
     }
   }
 

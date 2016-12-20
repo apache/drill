@@ -25,6 +25,7 @@ import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.SaslMessage;
 import org.apache.drill.exec.rpc.RpcException;
 
 import com.google.protobuf.MessageLite;
@@ -49,6 +50,8 @@ public class DefaultInstanceHandler {
       return QueryProfile.getDefaultInstance();
     case RpcType.RESP_CUSTOM_VALUE:
       return CustomMessage.getDefaultInstance();
+    case RpcType.SASL_MESSAGE_VALUE:
+      return SaslMessage.getDefaultInstance();
     default:
       throw new UnsupportedOperationException();
     }

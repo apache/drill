@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,41 +17,23 @@
  */
 package org.apache.drill.exec.ops;
 
-import io.netty.buffer.DrillBuf;
-
-import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-class OperatorContextImpl extends OperatorContext implements AutoCloseable {
+class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
 
-  private final BufferAllocator allocator;
-  private final ExecutionControls executionControls;
   private boolean closed = false;
-  private final PhysicalOperator popConfig;
   private final OperatorStats stats;
-  private final BufferManager manager;
-  private DrillFileSystem fs;
-  private final ExecutorService executor;
-  private final ExecutorService scanExecutor;
-  private final ExecutorService scanDecodeExecutor;
 
   /**
    * This lazily initialized executor service is used to submit a {@link Callable task} that needs a proxy user. There
@@ -62,73 +44,23 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   private ListeningExecutorService delegatePool;
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
-    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
-        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
-    this.popConfig = popConfig;
-    this.manager = new BufferManagerImpl(allocator);
-
-    OpProfileDef def =
-        new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
-    stats = context.getStats().newOperatorStats(def, allocator);
-    executionControls = context.getExecutionControls();
-    executor = context.getDrillbitContext().getExecutor();
-    scanExecutor = context.getDrillbitContext().getScanExecutor();
-    scanDecodeExecutor = context.getDrillbitContext().getScanDecodeExecutor();
+    this(popConfig, context, null);
   }
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats)
       throws OutOfMemoryException {
-    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
-        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
-    this.popConfig = popConfig;
-    this.manager = new BufferManagerImpl(allocator);
-    this.stats     = stats;
-    executionControls = context.getExecutionControls();
-    executor = context.getDrillbitContext().getExecutor();
-    scanExecutor = context.getDrillbitContext().getScanExecutor();
-    scanDecodeExecutor = context.getDrillbitContext().getScanDecodeExecutor();
-  }
-
-  @Override
-  public DrillBuf replace(DrillBuf old, int newSize) {
-    return manager.replace(old, newSize);
-  }
-
-  @Override
-  public DrillBuf getManagedBuffer() {
-    return manager.getManagedBuffer();
-  }
-
-  @Override
-  public DrillBuf getManagedBuffer(int size) {
-    return manager.getManagedBuffer(size);
-  }
-
-  // Allow an operator to use the thread pool
-  @Override
-  public ExecutorService getExecutor() {
-    return executor;
-  }
-  @Override
-  public ExecutorService getScanExecutor() {
-    return scanExecutor;
-  }
-  @Override
-  public ExecutorService getScanDecodeExecutor() {
-    return scanDecodeExecutor;
-  }
-
-  @Override
-  public ExecutionControls getExecutionControls() {
-    return executionControls;
-  }
-
-  @Override
-  public BufferAllocator getAllocator() {
-    if (allocator == null) {
-      throw new UnsupportedOperationException("Operator context does not have an allocator");
+    super(context,
+          context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+              popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation()),
+          popConfig);
+    if (stats != null) {
+      this.stats = stats;
+    } else {
+      OpProfileDef def =
+          new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(),
+                           OperatorUtilities.getChildCount(popConfig));
+      this.stats = context.getStats().newOperatorStats(def, allocator);
     }
-    return allocator;
   }
 
   public boolean isClosed() {
@@ -138,25 +70,16 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   @Override
   public void close() {
     if (closed) {
-      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? popConfig.getClass().getName() : null);
+      logger.debug("Attempted to close Operator context for {}, but context is already closed", popConfig != null ? getName() : null);
       return;
     }
-    logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
+    logger.debug("Closing context for {}", popConfig != null ? getName() : null);
 
-    manager.close();
-
-    if (allocator != null) {
-      allocator.close();
+    try {
+      super.close();
+    } finally {
+      closed = true;
     }
-
-    if (fs != null) {
-      try {
-        fs.close();
-      } catch (IOException e) {
-        throw new DrillRuntimeException(e);
-      }
-    }
-    closed = true;
   }
 
   @Override
@@ -165,11 +88,16 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   }
 
   @Override
+  public OperatorStatReceiver getStatsWriter() {
+    return stats;
+  }
+
+  @Override
   public <RESULT> ListenableFuture<RESULT> runCallableAs(final UserGroupInformation proxyUgi,
                                                          final Callable<RESULT> callable) {
     synchronized (this) {
       if (delegatePool == null) {
-        delegatePool = MoreExecutors.listeningDecorator(executor);
+        delegatePool = MoreExecutors.listeningDecorator(getExecutor());
       }
     }
     return delegatePool.submit(new Callable<RESULT>() {
@@ -193,22 +121,4 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
       }
     });
   }
-
-  @Override
-  public DrillFileSystem newFileSystem(Configuration conf) throws IOException {
-    Preconditions.checkState(fs == null, "Tried to create a second FileSystem. Can only be called once per OperatorContext");
-    fs = new DrillFileSystem(conf, getStats());
-    return fs;
-  }
-
-  @Override
-  /*
-     Creates a DrillFileSystem that does not automatically track operator stats.
-   */
-  public DrillFileSystem newNonTrackingFileSystem(Configuration conf) throws IOException {
-    Preconditions.checkState(fs == null, "Tried to create a second FileSystem. Can only be called once per OperatorContext");
-    fs = new DrillFileSystem(conf, null);
-    return fs;
-  }
-
 }

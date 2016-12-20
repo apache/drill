@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.metrics.DrillMetrics;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
@@ -102,12 +104,16 @@ public class BlockMapBuilder {
     @Override
     protected List<CompleteFileWork> runInner() throws Exception {
       final List<CompleteFileWork> work = Lists.newArrayList();
+
+      final Set<String> noDrillbitHosts = logger.isDebugEnabled() ? Sets.<String>newHashSet() : null;
+
       boolean error = false;
       if (blockify && !compressed(status)) {
         try {
           ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(status);
           for (Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()) {
-            work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(status)), l.getValue().getOffset(), l.getValue().getLength(), status.getPath().toString()));
+            work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), l.getValue().getOffset(), l.getValue().getLength(), status.getPath()
+              .toString()));
           }
         } catch (IOException e) {
           logger.warn("failure while generating file work.", e);
@@ -117,7 +123,7 @@ public class BlockMapBuilder {
 
 
       if (!blockify || error || compressed(status)) {
-        work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(status)), 0, status.getLen(), status.getPath().toString()));
+        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0, status.getLen(), status.getPath().toString()));
       }
 
       // This if-condition is specific for empty CSV file
@@ -125,7 +131,13 @@ public class BlockMapBuilder {
       // And if this CSV file is empty, rangeMap would be empty also
       // Therefore, at the point before this if-condition, work would not be populated
       if(work.isEmpty()) {
-        work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(status)), 0, 0, status.getPath().toString()));
+        work.add(new CompleteFileWork(getEndpointByteMap(noDrillbitHosts, new FileStatusWork(status)), 0, 0, status.getPath().toString()));
+      }
+
+      if (noDrillbitHosts != null) {
+        for (String host: noDrillbitHosts) {
+          logger.debug("Failure finding Drillbit running on host {}. Skipping affinity to that host.", host);
+        }
       }
 
       return work;
@@ -215,7 +227,7 @@ public class BlockMapBuilder {
    * @param work the FileWork to calculate endpoint bytes for
    * @throws IOException
    */
-  public EndpointByteMap getEndpointByteMap(FileWork work) throws IOException {
+  public EndpointByteMap getEndpointByteMap(Set<String> noDrillbitHosts, FileWork work) throws IOException {
     Stopwatch watch = Stopwatch.createStarted();
     Path fileName = new Path(work.getPath());
 
@@ -246,8 +258,8 @@ public class BlockMapBuilder {
         DrillbitEndpoint endpoint = getDrillBitEndpoint(host);
         if (endpoint != null) {
           endpointByteMap.add(endpoint, bytes);
-        } else {
-          logger.info("Failure finding Drillbit running on host {}.  Skipping affinity to that host.", host);
+        } else if (noDrillbitHosts != null) {
+          noDrillbitHosts.add(host);
         }
       }
     }
@@ -276,5 +288,4 @@ public class BlockMapBuilder {
     logger.debug("Took {} ms to build endpoint map", watch.elapsed(TimeUnit.MILLISECONDS));
     return ImmutableMap.copyOf(endpointMap);
   }
-
 }

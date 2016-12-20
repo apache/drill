@@ -17,15 +17,19 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlFunctionTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatDate;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTime;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
 
+@Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDateTruncFunctions extends BaseTestQuery {
 
   @Test

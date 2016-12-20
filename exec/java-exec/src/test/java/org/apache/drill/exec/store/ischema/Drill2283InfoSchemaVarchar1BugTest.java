@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(UnlikelyTest.class)
 public class Drill2283InfoSchemaVarchar1BugTest extends BaseTestQuery {
 
   @Test

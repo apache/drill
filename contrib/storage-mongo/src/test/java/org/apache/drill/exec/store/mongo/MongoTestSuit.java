@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -73,19 +74,27 @@ public class MongoTestSuit implements MongoTestConstants {
   private static boolean authEnabled = System.getProperty(
       "drill.mongo.tests.authEnabled", "false").equalsIgnoreCase("true");
 
+  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+
+  private static volatile boolean runningSuite = false;
+
+  public static boolean isRunningSuite() {
+    return runningSuite;
+  }
+
   private static class DistributedMode {
     private static MongosSystemForTestFactory mongosTestFactory;
 
     private static void setup() throws Exception {
       // creating configServers
-      List<IMongodConfig> configServers = new ArrayList<IMongodConfig>(1);
+      List<IMongodConfig> configServers = new ArrayList<>(1);
       IMongodConfig configIMongodConfig = crateConfigServerConfig(
           CONFIG_SERVER_PORT, true);
       configServers.add(configIMongodConfig);
 
       // creating replicaSets
-      Map<String, List<IMongodConfig>> replicaSets = new HashMap<String, List<IMongodConfig>>();
-      List<IMongodConfig> replicaSet1 = new ArrayList<IMongodConfig>();
+      Map<String, List<IMongodConfig>> replicaSets = new HashMap<>();
+      List<IMongodConfig> replicaSet1 = new ArrayList<>();
       replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false,
@@ -93,7 +102,7 @@ public class MongoTestSuit implements MongoTestConstants {
       replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false,
           REPLICA_SET_1_NAME));
       replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
-      List<IMongodConfig> replicaSet2 = new ArrayList<IMongodConfig>();
+      List<IMongodConfig> replicaSet2 = new ArrayList<>();
       replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false,
           REPLICA_SET_2_NAME));
       replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false,
@@ -116,11 +125,12 @@ public class MongoTestSuit implements MongoTestConstants {
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
     private static IMongodConfig crateConfigServerConfig(int configServerPort,
         boolean flag) throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       IMongodConfig mongodConfig = new MongodConfigBuilder()
@@ -133,7 +143,7 @@ public class MongoTestSuit implements MongoTestConstants {
     private static IMongodConfig crateIMongodConfig(int mongodPort,
         boolean flag, String replicaName) throws UnknownHostException,
         IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       Storage replication = new Storage(null, replicaName, 0);
@@ -147,7 +157,7 @@ public class MongoTestSuit implements MongoTestConstants {
 
     private static IMongosConfig createIMongosConfig()
         throws UnknownHostException, IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
+      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().useNoJournal(false).verbose(false)
           .build();
 
       IMongosConfig mongosConfig = new MongosConfigBuilder()
@@ -160,7 +170,12 @@ public class MongoTestSuit implements MongoTestConstants {
 
     private static void cleanup() {
       if (mongosTestFactory != null) {
-        mongosTestFactory.stop();
+        // ignoring exception because sometimes provided time isn't enough to stop mongod processes
+        try {
+            mongosTestFactory.stop();
+          } catch (IllegalStateException e) {
+            logger.warn("Failed to close all mongod processes during provided timeout", e);
+          }
       }
     }
 
@@ -189,6 +204,7 @@ public class MongoTestSuit implements MongoTestConstants {
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
+      createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
     }
 
     private static void cleanup() {
@@ -204,16 +220,21 @@ public class MongoTestSuit implements MongoTestConstants {
   @BeforeClass
   public static void initMongo() throws Exception {
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        logger.info("Executing tests in distributed mode");
-        DistributedMode.setup();
-      } else {
-        logger.info("Executing tests in single mode");
-        SingleMode.setup();
+      if (initCount.get() == 0) {
+        if (distMode) {
+          logger.info("Executing tests in distributed mode");
+          DistributedMode.setup();
+        } else {
+          logger.info("Executing tests in single mode");
+          SingleMode.setup();
+        }
+        TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
+        TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
+        TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+        TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
       }
-      TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
-      TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
-      TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+      initCount.incrementAndGet();
+      runningSuite = true;
     }
   }
 
@@ -234,15 +255,26 @@ public class MongoTestSuit implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownCluster() throws Exception {
-    if (mongoClient != null) {
-      mongoClient.dropDatabase(EMPLOYEE_DB);
-      mongoClient.close();
-    }
     synchronized (MongoTestSuit.class) {
-      if (distMode) {
-        DistributedMode.cleanup();
-      } else {
-        SingleMode.cleanup();
+      if (initCount.decrementAndGet() == 0) {
+        try {
+          if (mongoClient != null) {
+            mongoClient.dropDatabase(EMPLOYEE_DB);
+            mongoClient.dropDatabase(DATATYPE_DB);
+            mongoClient.dropDatabase(DONUTS_DB);
+          }
+        }
+        finally {
+          runningSuite = false;
+          if (mongoClient != null) {
+            mongoClient.close();
+          }
+          if (distMode) {
+            DistributedMode.cleanup();
+          } else {
+            SingleMode.cleanup();
+          }
+        }
       }
     }
   }

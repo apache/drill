@@ -21,12 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestNewTextReader extends BaseTestQuery {
 
@@ -65,13 +66,11 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testTabSeparatedWithQuote() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tsv").toURI().toString();
-    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
-        "from dfs_test.`%s` ", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+          "from cp.`store/text/WithQuote.tsv`")
         .unOrdered()
         .baselineColumns("c0", "c1", "c2")
         .baselineValues("a", "a", "a")
@@ -82,13 +81,11 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testSpaceSeparatedWithQuote() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.ssv").toURI().toString();
-    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
-        "from dfs_test.`%s` ", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+          "from cp.`store/text/WithQuote.ssv`")
         .unOrdered()
         .baselineColumns("c0", "c1", "c2")
         .baselineValues("a", "a", "a")
@@ -99,13 +96,11 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testPipSeparatedWithQuote() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tbl").toURI().toString();
-    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
-            "from dfs_test.`%s` ", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+          "from cp.`store/text/WithQuote.tbl`")
         .unOrdered()
         .baselineColumns("c0", "c1", "c2")
         .baselineValues("a", "a", "a")
@@ -116,13 +111,11 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test // see DRILL-3718
+  @Category(UnlikelyTest.class)
   public void testCrLfSeparatedWithQuote() throws Exception {
-    final String root = FileUtils.getResourceAsFile("/store/text/WithQuotedCrLf.tbl").toURI().toString();
-    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
-        "from dfs_test.`%s` ", root);
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+          "from cp.`store/text/WithQuotedCrLf.tbl`")
         .unOrdered()
         .baselineColumns("c0", "c1", "c2")
         .baselineValues("a\n1", "a", "a")

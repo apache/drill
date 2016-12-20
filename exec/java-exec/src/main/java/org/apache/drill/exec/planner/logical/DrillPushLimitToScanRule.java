@@ -42,8 +42,14 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
       RelOptHelper.some(DrillLimitRel.class, RelOptHelper.any(DrillScanRel.class)), "DrillPushLimitToScanRule_LimitOnScan") {
     @Override
     public boolean matches(RelOptRuleCall call) {
+      DrillLimitRel limitRel = call.rel(0);
       DrillScanRel scanRel = call.rel(1);
-      return scanRel.getGroupScan().supportsLimitPushdown(); // For now only applies to Parquet.
+      // For now only applies to Parquet. And pushdown only apply limit but not offset,
+      // so if getFetch() return null no need to run this rule.
+      if (scanRel.getGroupScan().supportsLimitPushdown() && (limitRel.getFetch() != null)) {
+        return true;
+      }
+      return false;
     }
 
     @Override
@@ -58,8 +64,14 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
       RelOptHelper.some(DrillLimitRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))), "DrillPushLimitToScanRule_LimitOnProject") {
     @Override
     public boolean matches(RelOptRuleCall call) {
+      DrillLimitRel limitRel = call.rel(0);
       DrillScanRel scanRel = call.rel(2);
-      return scanRel.getGroupScan().supportsLimitPushdown(); // For now only applies to Parquet.
+      // For now only applies to Parquet. And pushdown only apply limit but not offset,
+      // so if getFetch() return null no need to run this rule.
+      if (scanRel.getGroupScan().supportsLimitPushdown() && (limitRel.getFetch() != null)) {
+        return true;
+      }
+      return false;
     }
 
     @Override

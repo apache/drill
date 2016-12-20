@@ -17,10 +17,8 @@
  */
 package org.apache.drill.exec.server;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
-import org.apache.drill.exec.memory.BufferAllocator;
 
 public class RemoteServiceSet implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
@@ -42,12 +40,8 @@ public class RemoteServiceSet implements AutoCloseable {
     coordinator.close();
   }
 
+  @SuppressWarnings("resource")
   public static RemoteServiceSet getLocalServiceSet() {
     return new RemoteServiceSet(new LocalClusterCoordinator());
   }
-
-  public static RemoteServiceSet getServiceSetWithFullCache(DrillConfig config, BufferAllocator allocator) throws Exception{
-    return new RemoteServiceSet(new LocalClusterCoordinator());
-  }
-
 }

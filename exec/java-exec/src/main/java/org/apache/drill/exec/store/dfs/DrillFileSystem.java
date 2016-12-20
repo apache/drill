@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -62,7 +62,6 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.Progressable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -75,20 +74,20 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFileSystem.class);
   private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
 
-  public static final String HIDDEN_FILE_PREFIX = "_";
-  public static final String DOT_FILE_PREFIX = ".";
+  public static final String UNDERSCORE_PREFIX = "_";
+  public static final String DOT_PREFIX = ".";
 
   private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
 
   private final FileSystem underlyingFs;
-  private final OperatorStats operatorStats;
+  private final OperatorStatReceiver operatorStats;
   private final CompressionCodecFactory codecFactory;
 
   public DrillFileSystem(Configuration fsConf) throws IOException {
     this(fsConf, null);
   }
 
-  public DrillFileSystem(Configuration fsConf, OperatorStats operatorStats) throws IOException {
+  public DrillFileSystem(Configuration fsConf, OperatorStatReceiver operatorStats) throws IOException {
     this.underlyingFs = FileSystem.get(fsConf);
     this.codecFactory = new CompressionCodecFactory(fsConf);
     this.operatorStats = operatorStats;
@@ -745,35 +744,6 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   @Override
   public void removeXAttr(final Path path, final String name) throws IOException {
     underlyingFs.removeXAttr(path, name);
-  }
-
-  public List<FileStatus> list(boolean recursive, Path... paths) throws IOException {
-    if (recursive) {
-      List<FileStatus> statuses = Lists.newArrayList();
-      for (Path p : paths) {
-        addRecursiveStatus(underlyingFs.getFileStatus(p), statuses);
-      }
-      return statuses;
-
-    } else {
-      return Lists.newArrayList(underlyingFs.listStatus(paths));
-    }
-  }
-
-  private void addRecursiveStatus(FileStatus parent, List<FileStatus> listToFill) throws IOException {
-    if (parent.isDir()) {
-      Path pattern = new Path(parent.getPath(), "*");
-      FileStatus[] sub = underlyingFs.globStatus(pattern, new DrillPathFilter());
-      for(FileStatus s : sub){
-        if (s.isDir()) {
-          addRecursiveStatus(s, listToFill);
-        } else {
-          listToFill.add(s);
-        }
-      }
-    } else {
-      listToFill.add(parent);
-    }
   }
 
   public InputStream openPossiblyCompressedStream(Path path) throws IOException {

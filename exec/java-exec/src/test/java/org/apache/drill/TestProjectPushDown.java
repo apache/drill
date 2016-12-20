@@ -18,17 +18,26 @@
 
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
 
 // Test the optimizer plan in terms of project pushdown.
 // When a query refers to a subset of columns in a table, optimizer should push the list
 // of refereed columns to the SCAN operator, so that SCAN operator would only retrieve
 // the column values in the subset of columns.
 
+@Category(PlannerTest.class)
 public class TestProjectPushDown extends PlanTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(TestProjectPushDown.class);
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "nation.parquet"));
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data", "region.parquet"));
+  }
 
   @Test
   @Ignore
@@ -73,11 +82,11 @@ public class TestProjectPushDown extends PlanTestBase {
     String expectedColNames1 = "\"columns\" : [ \"`N_REGIONKEY`\", \"`N_NAME`\" ]";
     String expectedColNames2 = "\"columns\" : [ \"`R_REGIONKEY`\", \"`R_NAME`\" ]";
 
-    testPhysicalPlan("SELECT\n" + "  nations.N_NAME,\n" + "  regions.R_NAME\n"
+    testPhysicalPlan("SELECT nations.N_NAME, regions.R_NAME "
         + "FROM\n"
-        + "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n"
+        + "  dfs.`sample-data/nation.parquet` nations\n"
         + "JOIN\n"
-        + "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n"
+        + "  dfs.`sample-data/region.parquet` regions\n"
         + "  on nations.N_REGIONKEY = regions.R_REGIONKEY", expectedColNames1,
         expectedColNames2);
   }
@@ -265,10 +274,6 @@ public class TestProjectPushDown extends PlanTestBase {
 
   @Test
   public void testSimpleProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
-//    String sql = "select * " +
-//        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
-//        "where t0.fname = t1.sname and t1.slastname = t2.tlastname and t0.fcolumns[0] + t1.scolumns = 100";
-
     final String firstExpected = "\"columns\" : [ \"`a`\", \"`fa`\", \"`fcolumns`[0]\" ],";
     final String secondExpected = "\"columns\" : [ \"`a`\", \"`b`\", \"`c`\", \"`sa`\" ],";
     final String thirdExpected = "\"columns\" : [ \"`d`\", \"`ta`\" ],";

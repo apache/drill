@@ -32,6 +32,6 @@ public class DirectBatchCreator implements BatchCreator<DirectSubScan>{
   @Override
   public ScanBatch getBatch(FragmentContext context, DirectSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    return new ScanBatch(config, context, Collections.singleton(config.getReader()).iterator());
+    return new ScanBatch(config, context, Collections.singletonList(config.getReader()));
   }
 }

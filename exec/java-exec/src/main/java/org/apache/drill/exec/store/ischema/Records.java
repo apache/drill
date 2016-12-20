@@ -182,6 +182,18 @@ public class Records {
           this.INTERVAL_PRECISION = null;
           break;
 
+        case BOOLEAN:
+          this.COLUMN_SIZE = 1;
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+
         case TINYINT:
         case SMALLINT:
         case INTEGER:

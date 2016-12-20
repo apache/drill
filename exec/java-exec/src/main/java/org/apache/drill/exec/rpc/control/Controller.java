@@ -44,7 +44,8 @@ public interface Controller extends AutoCloseable {
    */
   public ControlTunnel getTunnel(DrillbitEndpoint node) ;
 
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException;
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, boolean allowPortHunting)
+      throws DrillbitStartupException;
 
   /**
    * Register a new handler for custom message types. Should be done before any messages. This is threadsafe as this

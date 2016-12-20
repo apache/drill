@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,12 +19,19 @@
 package org.apache.drill.exec.physical.impl.join;
 
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
+@Category(OperatorTest.class)
 public class TestHashJoinAdvanced extends BaseTestQuery {
 
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
@@ -39,6 +46,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test //DRILL-2197 Left Self Join with complex type in projection
+  @Category(UnlikelyTest.class)
   public void testLeftSelfHashJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_1.json` b on a.id=b.id order by a.id";
 
@@ -51,6 +59,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test //DRILL-2197 Left Join with complex type in projection
+  @Category(UnlikelyTest.class)
   public void testLeftHashJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from cp.`join/complex_1.json` a left outer join cp.`join/complex_2.json` b on a.id=b.id order by a.id";
 
@@ -77,6 +86,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
   }
 
   @Test  // DRILL-2771, similar problem as DRILL-2197 except problem reproduces with right outer join instead of left
+  @Category(UnlikelyTest.class)
   public void testRightJoinWithMap() throws Exception {
     final String query = " select a.id, b.oooi.oa.oab.oabc oabc, b.ooof.oa.oab oab from " +
         "cp.`join/complex_1.json` b right outer join cp.`join/complex_1.json` a on a.id = b.id order by a.id";
@@ -88,6 +98,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .build()
         .run();
   }
+
   @Test
   public void testJoinWithDifferentTypesInCondition() throws Exception {
     String query = "select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 " +
@@ -112,7 +123,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
         .unOrdered()
         .baselineColumns("bigint_col")
-        .baselineValues(1l)
+        .baselineValues(1L)
         .go();
 
     query = "select count(*) col1 from " +
@@ -123,7 +134,30 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("col1")
-        .baselineValues(4l)
+        .baselineValues(4L)
         .go();
+  }
+
+  @Test //DRILL-2197 Left Join with complex type in projection
+  @Category(UnlikelyTest.class)
+  public void testJoinWithMapAndDotField() throws Exception {
+    String fileName = "table.json";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+    }
+
+    testBuilder()
+      .sqlQuery("select t1.m.`a.b` as a,\n" +
+        "t2.m.a.b as b,\n" +
+        "t1.m['a.b'] as c,\n" +
+        "t2.rk.q as d,\n" +
+        "t1.`rk.q` as e\n" +
+        "from dfs.`%1$s` t1,\n" +
+        "dfs.`%1$s` t2\n" +
+        "where t1.m.`a.b`=t2.m.`a.b` and t1.m.a.b=t2.m.a.b", fileName)
+      .unOrdered()
+      .baselineColumns("a", "b", "c", "d", "e")
+      .baselineValues("1", "2", "1", null, "a")
+      .go();
   }
 }

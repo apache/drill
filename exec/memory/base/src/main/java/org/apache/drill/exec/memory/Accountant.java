@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.util.AssertionUtil;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
@@ -30,8 +32,57 @@ import com.google.common.base.Preconditions;
  * operations are threadsafe (except for close).
  */
 @ThreadSafe
-class Accountant implements AutoCloseable {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountant.class);
+@VisibleForTesting
+public class Accountant implements AutoCloseable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountant.class);
+
+  // See DRILL-5808
+  // Allow a "grace margin" above the allocator limit for those operators
+  // that are trying to stay within the limit, but are hindered by the
+  // current power-of-two allocations and random vector doublings. Instead
+  // of failing the query, the accountant allows an excess allocation within
+  // the grace, but issues a warning to the log.
+  //
+  // Normally, the "grace margin" (lenient) allocation is allowed only for
+  // operators that request leniency (because they attempt to manage memory)
+  // and only in production mode. Leniency is usually denied in a debug
+  // run (assertions enabled.) Use the following system option to force
+  // allowing lenient allocation in a debug run (or, to disable lenient
+  // allocation in a production run.)
+  //
+  // Force allowing lenient allocation:
+  //
+  // -Ddrill.memory.lenient.allocator=false
+  //
+  // Force strict allocation;
+  //
+  // -Ddrill.memory.lenient.allocator=false
+
+  public static final String ALLOW_LENIENT_ALLOCATION = "drill.memory.lenient.allocator";
+
+  // Allow clients to allocate beyond the limit by this factor.
+  // If the limit is 10K, then with a margin of 1, the system
+  // will allow a grace of another 10K for a hard limit of 20K.
+  // Warnings are issued for allocations that use the grace.
+
+  public static final int GRACE_MARGIN = 1;
+
+  // In large-memory allocators, don't allow more than 100 MB
+  // grace.
+
+  public static final int MAX_GRACE = 100 * 1024 * 1024;
+
+  // Use the strictness set in a system property. If not set, then
+  // default to strict in debug mode, lenient in production mode.
+
+  public static final boolean ALLOW_LENIENCY =
+      System.getProperty(ALLOW_LENIENT_ALLOCATION) == null
+      ? ! AssertionUtil.isAssertionsEnabled()
+      : Boolean.parseBoolean(System.getProperty(ALLOW_LENIENT_ALLOCATION));
+
+  // Whether leniency has been requested, and granted for this allocator.
+
+  private boolean lenient = false;
 
   /**
    * The parent allocator
@@ -77,6 +128,31 @@ class Accountant implements AutoCloseable {
                 + "Attempted to allocate %d bytes and received an outcome of %s.", reservation, outcome.name()));
       }
     }
+  }
+
+  /**
+   * Request lenient allocations: allows exceeding the allocation limit
+   * by the configured grace amount. The request is granted only if strict
+   * limits are not required.
+   *
+   * @return true if the leniency was granted, false if the current
+   * execution mode, or system property, disallows leniency
+   */
+
+  public boolean setLenient() {
+    lenient = ALLOW_LENIENCY;
+    return lenient;
+  }
+
+  /**
+   * Force lenient allocation. Used for testing to avoid the need to muck
+   * with global settings (assertions or system properties.) <b>Do not</b>
+   * use in production code!
+   */
+
+  @VisibleForTesting
+  public void forceLenient() {
+    lenient = true;
   }
 
   /**
@@ -148,7 +224,20 @@ class Accountant implements AutoCloseable {
   private AllocationOutcome allocate(final long size, final boolean incomingUpdatePeak, final boolean forceAllocation) {
     final long newLocal = locallyHeldMemory.addAndGet(size);
     final long beyondReservation = newLocal - reservation;
-    final boolean beyondLimit = newLocal > allocationLimit.get();
+    boolean beyondLimit = newLocal > allocationLimit.get();
+
+    // Non-strict allocation
+
+    if (beyondLimit && lenient) {
+      long grace = Math.min(MAX_GRACE, allocationLimit.get() * GRACE_MARGIN);
+      long graceLimit = allocationLimit.get() + grace;
+      beyondLimit = newLocal > graceLimit;
+      if (! beyondLimit) {
+        logger.warn("Excess allocation of {} bytes beyond limit of {}, " +
+                    "within grace of {}, new total allocation: {}",
+            size, allocationLimit.get(), grace, newLocal);
+      }
+    }
     final boolean updatePeak = forceAllocation || (incomingUpdatePeak && !beyondLimit);
 
     AllocationOutcome parentOutcome = AllocationOutcome.SUCCESS;
@@ -201,6 +290,7 @@ class Accountant implements AutoCloseable {
   /**
    * Close this Accountant. This will release any reservation bytes back to a parent Accountant.
    */
+  @Override
   public void close() {
     // return memory reservation to parent allocator.
     if (parent != null) {

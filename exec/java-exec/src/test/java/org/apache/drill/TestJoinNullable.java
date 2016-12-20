@@ -19,27 +19,26 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestJoinNullable extends BaseTestQuery{
+@Category(OperatorTest.class)
+public class TestJoinNullable extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJoinNullable.class);
 
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
-
   private static void enableJoin(boolean hj, boolean mj) throws Exception {
-
-    test(String.format("alter session set `planner.enable_hashjoin` = %s", hj ? "true":"false"));
-    test(String.format("alter session set `planner.enable_mergejoin` = %s", mj ? "true":"false"));
+    test("alter session set `planner.enable_hashjoin` = %s", hj);
+    test("alter session set `planner.enable_mergejoin` = %s", mj);
     test("alter session set `planner.slice_target` = 1");
   }
 
   /** InnerJoin on nullable cols, HashJoin */
   @Test
   public void testHashInnerJoinOnNullableColumns() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1, " +
-                   " dfs_test.`%s/jsoninput/nullable2.json` t2 where t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1, " +
+      " cp.`jsoninput/nullable2.json` t2 where t1.b1 = t2.b2";
     final int expectedRecordCount = 1;
 
     enableJoin(true, false);
@@ -50,9 +49,9 @@ public class TestJoinNullable extends BaseTestQuery{
   /** LeftOuterJoin on nullable cols, HashJoin */
   @Test
   public void testHashLOJOnNullableColumns() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
-                      " left outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                      " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1 " +
+      " left outer join cp.`jsoninput/nullable2.json` t2 " +
+      " on t1.b1 = t2.b2";
 
     final int expectedRecordCount = 2;
 
@@ -64,9 +63,9 @@ public class TestJoinNullable extends BaseTestQuery{
   /** RightOuterJoin on nullable cols, HashJoin */
   @Test
   public void testHashROJOnNullableColumns() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
-                      " right outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                      " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1 " +
+      " right outer join cp.`jsoninput/nullable2.json` t2 " +
+      " on t1.b1 = t2.b2";
 
     final int expectedRecordCount = 4;
 
@@ -78,9 +77,9 @@ public class TestJoinNullable extends BaseTestQuery{
   /** FullOuterJoin on nullable cols, HashJoin */
   @Test
   public void testHashFOJOnNullableColumns() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
-                      " full outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                      " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1 " +
+      " full outer join cp.`jsoninput/nullable2.json` t2 " +
+      " on t1.b1 = t2.b2";
 
     final int expectedRecordCount = +5;
 
@@ -93,11 +92,10 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeInnerJoinOnNullableColumns() throws Exception {
     String query =
-        String.format(
             "select t1.a1, t1.b1, t2.a2, t2.b2 "
-            + "  from dfs_test.`%s/jsoninput/nullable1.json` t1, "
-            + "       dfs_test.`%s/jsoninput/nullable2.json` t2 "
-            + " where t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+            + "  from cp.`jsoninput/nullable1.json` t1, "
+            + "       cp.`jsoninput/nullable2.json` t2 "
+            + " where t1.b1 = t2.b2";
     final int expectedRecordCount = 1;
 
     enableJoin(false, true);
@@ -108,9 +106,9 @@ public class TestJoinNullable extends BaseTestQuery{
   /** LeftOuterJoin on nullable cols, MergeJoin */
   @Test
   public void testMergeLOJNullable() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
-                      " left outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                      " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1 " +
+      " left outer join cp.`jsoninput/nullable2.json` t2 " +
+      " on t1.b1 = t2.b2";
 
     final int expectedRecordCount = 2;
 
@@ -122,9 +120,9 @@ public class TestJoinNullable extends BaseTestQuery{
   /** RightOuterJoin on nullable cols, MergeJoin */
   @Test
   public void testMergeROJOnNullableColumns() throws Exception {
-    String query = String.format("select t1.a1, t1.b1, t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable1.json` t1 " +
-                      " right outer join dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                      " on t1.b1 = t2.b2", TEST_RES_PATH, TEST_RES_PATH);
+    String query = "select t1.a1, t1.b1, t2.a2, t2.b2 from cp.`jsoninput/nullable1.json` t1 " +
+      " right outer join cp.`jsoninput/nullable2.json` t2 " +
+      " on t1.b1 = t2.b2";
 
     final int expectedRecordCount = 4;
 
@@ -138,12 +136,10 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableNoOrderedInputs() throws Exception {
     String query =
-        String.format(
             "SELECT * "
-            + "FROM               dfs_test.`%s/jsoninput/nullableOrdered1.json` t1 "
-            + "   left outer join dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
-            + "      using ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "FROM               cp.`jsoninput/nullableOrdered1.json` t1 "
+            + "   left outer join cp.`jsoninput/nullableOrdered2.json` t2 "
+            + "      using ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -155,15 +151,13 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableOneOrderedInputAscNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
-            + "from         dfs_test.`%s/jsoninput/nullableOrdered1.json` t1 "
+            + "from         cp.`jsoninput/nullableOrdered1.json` t1 "
             + "  LEFT OUTER JOIN "
             + "    ( SELECT key, data "
-            + "        FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
+            + "        FROM cp.`jsoninput/nullableOrdered2.json` t2 "
             + "        ORDER BY 1 ASC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -175,15 +169,13 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableOneOrderedInputAscNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
-            + "FROM         dfs_test.`%s/jsoninput/nullableOrdered1.json` t1 "
+            + "FROM         cp.`jsoninput/nullableOrdered1.json` t1 "
             + "  LEFT OUTER JOIN "
             + "    ( SELECT key, data "
-            + "        FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
+            + "        FROM cp.`jsoninput/nullableOrdered2.json` t2 "
             + "        ORDER BY 1 ASC NULLS LAST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -195,15 +187,13 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableOneOrderedInputDescNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
-            + "FROM         dfs_test.`%s/jsoninput/nullableOrdered1.json` t1 "
+            + "FROM         cp.`jsoninput/nullableOrdered1.json` t1 "
             + "  LEFT OUTER JOIN "
             + "    ( SELECT key, data "
-            + "        FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
+            + "        FROM cp.`jsoninput/nullableOrdered2.json` t2 "
             + "        ORDER BY 1 DESC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -215,15 +205,13 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableOneOrderedInputDescNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
-            + "FROM         dfs_test.`%s/jsoninput/nullableOrdered1.json` t1 "
+            + "FROM         cp.`jsoninput/nullableOrdered1.json` t1 "
             + "  LEFT OUTER JOIN "
             + "    ( SELECT key, data "
-            + "        FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` t2 "
+            + "        FROM cp.`jsoninput/nullableOrdered2.json` t2 "
             + "        ORDER BY 1 DESC NULLS LAST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -237,17 +225,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedAscNullsFirstVsAscNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -259,17 +245,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedAscNullsLastVsAscNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -281,17 +265,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedAscNullsFirstVsAscNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -303,17 +285,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedAscNullsLastVsAscNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -326,17 +306,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedDescNullsFirstVsAscNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 DESC NULLS FIRST ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -349,17 +327,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedDescNullsLastVsAscNullsFirst() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 DESC NULLS LAST  ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS FIRST ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -372,17 +348,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedDescNullsFirstVsAscNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 DESC NULLS FIRST ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);
@@ -395,17 +369,15 @@ public class TestJoinNullable extends BaseTestQuery{
   @Test
   public void testMergeLOJNullableBothInputsOrderedDescNullsLastVsAscNullsLast() throws Exception {
     String query =
-        String.format(
             "SELECT * "
             + "from ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered1.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered1.json` "
             + "         ORDER BY 1 DESC NULLS LAST  ) t1 "
             + "  LEFT OUTER JOIN "
             + "     ( SELECT key, data "
-            + "         FROM dfs_test.`%s/jsoninput/nullableOrdered2.json` "
+            + "         FROM cp.`jsoninput/nullableOrdered2.json` "
             + "         ORDER BY 1 ASC NULLS LAST  ) t2 "
-            + "    USING ( key )",
-            TEST_RES_PATH, TEST_RES_PATH);
+            + "    USING ( key )";
     final int expectedRecordCount = 6;
 
     enableJoin(false, true);

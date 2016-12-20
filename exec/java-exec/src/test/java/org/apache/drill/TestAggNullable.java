@@ -19,28 +19,26 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestAggNullable extends BaseTestQuery{
+@Category(OperatorTest.class)
+public class TestAggNullable extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAggNullable.class);
-
-  static final String WORKING_PATH = TestTools.getWorkingPath();
-  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   private static void enableAggr(boolean ha, boolean sa) throws Exception {
 
-    test(String.format("alter session set `planner.enable_hashagg` = %s", ha ? "true":"false"));
-    test(String.format("alter session set `planner.enable_streamagg` = %s", sa ? "true":"false"));
+    test("alter session set `planner.enable_hashagg` = %s", ha);
+    test("alter session set `planner.enable_streamagg` = %s", sa);
     test("alter session set `planner.slice_target` = 1");
   }
 
   @Test  // HashAgg on nullable columns
   public void testHashAggNullableColumns() throws Exception {
-    String query1 = String.format("select t2.b2 from dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                    " group by t2.b2", TEST_RES_PATH);
-    String query2 = String.format("select t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-        " group by t2.a2, t2.b2", TEST_RES_PATH);
+    String query1 = "select t2.b2 from cp.`jsoninput/nullable2.json` t2 group by t2.b2";
+    String query2 = "select t2.a2, t2.b2 from cp.`jsoninput/nullable2.json` t2 group by t2.a2, t2.b2";
 
     int actualRecordCount;
     int expectedRecordCount = 2;
@@ -58,10 +56,8 @@ public class TestAggNullable extends BaseTestQuery{
 
   @Test  // StreamingAgg on nullable columns
   public void testStreamAggNullableColumns() throws Exception {
-    String query1 = String.format("select t2.b2 from dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-                    " group by t2.b2", TEST_RES_PATH);
-    String query2 = String.format("select t2.a2, t2.b2 from dfs_test.`%s/jsoninput/nullable2.json` t2 " +
-        " group by t2.a2, t2.b2", TEST_RES_PATH);
+    String query1 = "select t2.b2 from cp.`jsoninput/nullable2.json` t2 group by t2.b2";
+    String query2 = "select t2.a2, t2.b2 from cp.`jsoninput/nullable2.json` t2 group by t2.a2, t2.b2";
 
     int actualRecordCount;
     int expectedRecordCount = 2;

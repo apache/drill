@@ -35,9 +35,12 @@ namespace exec{
 namespace Drill{
 
 //struct UserServerEndPoint;
+class  DrillClientConfig;
+class  DrillClientError;
 class  DrillClientImplBase;
 class  DrillClientImpl;
 class  DrillClientQueryResult;
+class  DrillUserProperties;
 class  FieldMetadata;
 class  PreparedStatement;
 class  RecordBatch;
@@ -49,103 +52,11 @@ enum QueryType{
     PHYSICAL = 3
 };
 
-class DECLSPEC_DRILL_CLIENT DrillClientError{
-    public:
-        static const uint32_t CONN_ERROR_START = 100;
-        static const uint32_t QRY_ERROR_START =  200;
-
-        DrillClientError(uint32_t s, uint32_t e, char* m){status=s; errnum=e; msg=m;};
-        DrillClientError(uint32_t s, uint32_t e, std::string m){status=s; errnum=e; msg=m;};
-
-        static DrillClientError*  getErrorObject(const exec::shared::DrillPBError& e);
-
-        // To get the error number we add a error range start number to
-        // the status code returned (either status_t or connectionStatus_t)
-        uint32_t status; // could be either status_t or connectionStatus_t
-        uint32_t errnum;
-        std::string msg;
-};
-
 // Only one instance of this class exists. A static member of DrillClientImpl;
 class DECLSPEC_DRILL_CLIENT DrillClientInitializer{
     public:
         DrillClientInitializer();
         ~DrillClientInitializer();
-};
-
-// Only one instance of this class exists. A static member of DrillClientImpl;
-class DECLSPEC_DRILL_CLIENT DrillClientConfig{
-    public:
-        DrillClientConfig();
-        ~DrillClientConfig();
-        static void initLogging(const char* path);
-        static void setLogLevel(logLevel_t l);
-        static void setBufferLimit(uint64_t l);
-        static uint64_t getBufferLimit();
-        static void setSocketTimeout(int32_t l);
-        static void setHandshakeTimeout(int32_t l);
-        static void setQueryTimeout(int32_t l);
-        static void setHeartbeatFrequency(int32_t l);
-        static int32_t getSocketTimeout();
-        static int32_t getHandshakeTimeout();
-        static int32_t getQueryTimeout();
-        static int32_t getHeartbeatFrequency();
-        static logLevel_t getLogLevel();
-    private:
-        // The logging level
-        static logLevel_t s_logLevel;
-        // The total amount of memory to be allocated by an instance of DrillClient.
-        // For future use. Currently, not enforced.
-        static uint64_t s_bufferLimit;
-
-        /**
-         * DrillClient configures timeout (in seconds) in a fine granularity.
-         * Disabled by setting the value to zero.
-         *
-         * s_socketTimout: (default 0)
-         *      set SO_RCVTIMEO and SO_SNDTIMEO socket options and place a
-         *		timeout on socket receives and sends. It is disabled by default.
-         *
-         * s_handshakeTimeout: (default 5)
-         *      place a timeout on validating handshake. When an endpoint (host:port)
-         *		is reachable but drillbit hangs or running another service. It will
-         *		avoid the client hanging.
-         *
-         * s_queryTimeout: (default 180)
-         *      place a timeout on waiting result of querying.
-         *
-         * s_heartbeatFrequency: (default 30)
-         *      Seconds of idle activity after which a heartbeat is sent to the drillbit
-         */
-        static int32_t s_socketTimeout;
-        static int32_t s_handshakeTimeout;
-        static int32_t s_queryTimeout;
-        static int32_t s_heartbeatFrequency;
-        static boost::mutex s_mutex;
-};
-
-
-class DECLSPEC_DRILL_CLIENT DrillUserProperties{
-    public:
-        static const std::map<std::string, uint32_t> USER_PROPERTIES;
-
-        DrillUserProperties(){};
-
-        void setProperty( const std::string& propName, const std::string& propValue){
-            std::pair< std::string, std::string> in = make_pair(propName, propValue);
-            m_properties.push_back(in);
-        }
-
-        size_t size() const { return m_properties.size(); }
-
-        const std::string& keyAt(size_t i) const { return m_properties.at(i).first; }
-
-        const std::string& valueAt(size_t i) const { return m_properties.at(i).second; }
-
-        bool validate(std::string& err);
-
-    private:
-        std::vector< std::pair< std::string, std::string> > m_properties;
 };
 
 /*
@@ -393,24 +304,26 @@ namespace meta {
    * Identified case support
    */
   enum IdentifierCase {
-      IC_STORES_LOWER,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in lower case */
-      IC_STORES_MIXED,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in mixed case */
-      IC_STORES_UPPER,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in upper case */
-      IC_SUPPORTS_MIXED /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case sensitive and stored in mixed case */
+	  IC_UNKNOWN      = -1, /**< Unknown support */
+      IC_STORES_LOWER = 0,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	         case insensitive and stored in lower case */
+      IC_STORES_MIXED = 1,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	    	 case insensitive and stored in mixed case */
+      IC_STORES_UPPER = 2,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	    	 case insensitive and stored in upper case */
+      IC_SUPPORTS_MIXED =3  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	     	 case sensitive and stored in mixed case */
   };
 
   /**
    * Null collation support
    */
   enum NullCollation {
-      NC_AT_START,/**< NULL values are sorted at the start regardless of the order*/
-      NC_AT_END,  /**< NULL values are sorted at the end regardless of the order*/
-      NC_HIGH,    /**< NULL is the highest value */
-      NC_LOW      /**< NULL is the lowest value */
+	  NC_UNKNOWN = -1,  /**< Unknown support */
+      NC_AT_START = 0,	/**< NULL values are sorted at the start regardless of the order*/
+      NC_AT_END   = 1,  /**< NULL values are sorted at the end regardless of the order*/
+      NC_HIGH     = 2,  /**< NULL is the highest value */
+      NC_LOW      = 3	/**< NULL is the lowest value */
   };
 
 
@@ -470,14 +383,15 @@ namespace meta {
    * Quoted Identified case support
    */
   enum QuotedIdentifierCase {
-      QIC_STORES_LOWER,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in lower case */
-      QIC_STORES_MIXED,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in mixed case */
-      QIC_STORES_UPPER,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in upper case */
-      QIC_SUPPORTS_MIXED /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case sensitive and stored in mixed case */
+	  QIC_UNKNOWN = -1,		 /**< Unknown support */
+      QIC_STORES_LOWER = 0,	 /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	         case insensitive and stored in lower case */
+      QIC_STORES_MIXED = 1,  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case insensitive and stored in mixed case */
+      QIC_STORES_UPPER = 2,  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case insensitive and stored in upper case */
+      QIC_SUPPORTS_MIXED =3  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case sensitive and stored in mixed case */
   };
 
   /*
@@ -1199,7 +1113,7 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          */
         DEPRECATED connectionStatus_t connect(const char* connectStr, const char* defaultSchema=NULL);
 
-        /*
+        /*  
          * Connect the client to a Drillbit using connection string and a set of user properties.
          * The connection string format can be found in comments of
          * [DRILL-780](https://issues.apache.org/jira/browse/DRILL-780)
@@ -1228,7 +1142,7 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          *     useSSL [true|false]
          *     pemLocation
          *     pemFile
-         *     (see drill/common.hpp for friendly defines and the latest list of supported proeprties)
+         *     (see drill/common.hpp for friendly defines and the latest list of supported properties)
          *
          * @param[in] connectStr: connection string
          * @param[in] properties

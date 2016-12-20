@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,9 @@ package org.apache.drill.exec.physical.impl.limit;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -31,10 +32,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Date;
 import java.util.List;
 
+@Category(PlannerTest.class)
 public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   private static final String viewName = "limitZeroEmployeeView";
@@ -45,8 +48,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @BeforeClass
   public static void createView() throws Exception {
-    test("USE dfs_test.tmp");
-    test(String.format("CREATE OR REPLACE VIEW %s AS SELECT " +
+    test("USE dfs.tmp");
+    test("CREATE OR REPLACE VIEW %s AS SELECT " +
         "CAST(employee_id AS INT) AS employee_id, " +
         "CAST(full_name AS VARCHAR(25)) AS full_name, " +
         "CAST(position_id AS INTEGER) AS position_id, " +
@@ -57,29 +60,25 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         "CAST(salary AS FLOAT) AS fsalary, " +
         "CAST((CASE WHEN marital_status = 'S' THEN true ELSE false END) AS BOOLEAN) AS single, " +
         "CAST(education_level AS VARCHAR(60)) AS education_level," +
-        "CAST(gender AS CHAR) AS gender " +
+        "CAST(gender AS CHAR(1)) AS gender " +
         "FROM cp.`employee.json` " +
         "ORDER BY employee_id " +
-        "LIMIT 1;", viewName));
-    // { "employee_id":1,"full_name":"Sheri Nowmer","first_name":"Sheri","last_name":"Nowmer","position_id":1,
-    // "position_title":"President","store_id":0,"department_id":1,"birth_date":"1961-08-26",
-    // "hire_date":"1994-12-01 00:00:00.0","end_date":null,"salary":80000.0000,"supervisor_id":0,
-    // "education_level":"Graduate Degree","marital_status":"S","gender":"F","management_role":"Senior Management" }
+        "LIMIT 1", viewName);
   }
 
   @AfterClass
   public static void tearDownView() throws Exception {
-    test("DROP VIEW " + viewName + ";");
+    test("DROP VIEW " + viewName);
   }
 
   @Before
   public void setOption() throws Exception {
-    test("SET `%s` = true;", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+    test("SET `%s` = true", ExecConstants.EARLY_LIMIT0_OPT_KEY);
   }
 
   @After
   public void resetOption() throws Exception {
-    test("RESET `%s`;", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+    test("RESET `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
   }
 
   // -------------------- SIMPLE QUERIES --------------------
@@ -87,7 +86,7 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
   @Test
   public void infoSchema() throws Exception {
     testBuilder()
-        .sqlQuery(String.format("DESCRIBE %s", viewName))
+        .sqlQuery("DESCRIBE %s", viewName)
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
         .baselineValues("employee_id", "INTEGER", "YES")
@@ -107,7 +106,7 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
   @Test
   public void simpleSelect() throws Exception {
     testBuilder()
-        .sqlQuery(String.format("SELECT * FROM %s", viewName))
+        .sqlQuery("SELECT * FROM %s", viewName)
         .ordered()
         .baselineColumns("employee_id", "full_name", "position_id", "department_id", "birth_date", "hire_date",
             "salary", "fsalary", "single", "education_level", "gender")
@@ -121,7 +120,7 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
         Pair.of(SchemaPath.getSimplePath("employee_id"), Types.optional(TypeProtos.MinorType.INT)),
-        Pair.of(SchemaPath.getSimplePath("full_name"), Types.optional(TypeProtos.MinorType.VARCHAR)),
+        Pair.of(SchemaPath.getSimplePath("full_name"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 25)),
         Pair.of(SchemaPath.getSimplePath("position_id"), Types.optional(TypeProtos.MinorType.INT)),
         Pair.of(SchemaPath.getSimplePath("department_id"), Types.optional(TypeProtos.MinorType.BIGINT)),
         Pair.of(SchemaPath.getSimplePath("birth_date"), Types.optional(TypeProtos.MinorType.DATE)),
@@ -129,8 +128,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         Pair.of(SchemaPath.getSimplePath("salary"), Types.optional(TypeProtos.MinorType.FLOAT8)),
         Pair.of(SchemaPath.getSimplePath("fsalary"), Types.optional(TypeProtos.MinorType.FLOAT4)),
         Pair.of(SchemaPath.getSimplePath("single"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("education_level"), Types.optional(TypeProtos.MinorType.VARCHAR)),
-        Pair.of(SchemaPath.getSimplePath("gender"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+        Pair.of(SchemaPath.getSimplePath("education_level"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 60)),
+        Pair.of(SchemaPath.getSimplePath("gender"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 1)));
 
     testBuilder()
         .sqlQuery(wrapLimit0(String.format("SELECT * FROM %s", viewName)))
@@ -300,7 +299,7 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         .ordered()
         .baselineColumns("s", "p", "a", "c")
         .baselineValues(null, 0.0D, 1.0D, 1L)
-        .go();
+         .go();
 
     testBuilder()
         .sqlQuery(wrapLimit0(query))
@@ -336,10 +335,10 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void nullableSumAndCount() throws Exception {
-    final String query = "SELECT " +
+    final String query = String.format("SELECT " +
         "COUNT(position_id) AS c, " +
         "SUM(CAST((CASE WHEN position_id = 1 THEN NULL ELSE position_id END) AS INT)) AS p " +
-        "FROM " + viewName;
+        "FROM %s", viewName);
 
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
@@ -409,13 +408,13 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void sumsAndCounts1() throws Exception {
-    final String query = "SELECT " +
+    final String query = String.format("SELECT " +
         "COUNT(*) as cs, " +
         "COUNT(1) as c1, " +
         "COUNT(employee_id) as cc, " +
         "SUM(1) as s1," +
         "department_id " +
-        " FROM " + viewName + " GROUP BY department_id";
+        " FROM %s GROUP BY department_id", viewName);
 
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
@@ -504,8 +503,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void cast() throws Exception {
-    final String query = "SELECT CAST(fsalary AS DOUBLE) AS d," +
-        "CAST(employee_id AS BIGINT) AS e FROM " + viewName;
+    final String query = String.format("SELECT CAST(fsalary AS DOUBLE) AS d," +
+        "CAST(employee_id AS BIGINT) AS e FROM %s", viewName);
 
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
@@ -527,10 +526,11 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     checkThatQueryPlanIsOptimized(query);
   }
 
-  public void concatTest(final String query) throws Exception {
+  public void concatTest(final String query, int precision, boolean isNullable) throws Exception {
     @SuppressWarnings("unchecked")
-    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema =
+        Lists.newArrayList(Pair.of(SchemaPath.getSimplePath("c"), Types.withPrecision(TypeProtos.MinorType.VARCHAR,
+            isNullable ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED, precision)));
 
     testBuilder()
         .sqlQuery(query)
@@ -549,12 +549,12 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void concat() throws Exception {
-    concatTest("SELECT CONCAT(full_name, education_level) AS c FROM " + viewName);
+    concatTest("SELECT CONCAT(full_name, education_level) AS c FROM " + viewName, 85, false);
   }
 
   @Test
   public void concatOp() throws Exception {
-    concatTest("SELECT full_name || education_level AS c FROM " + viewName);
+    concatTest("SELECT full_name || education_level AS c FROM " + viewName, 85, true);
   }
 
   @Test
@@ -601,7 +601,7 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
         Pair.of(SchemaPath.getSimplePath("b"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("c"), Types.optional(TypeProtos.MinorType.VARCHAR)),
+        Pair.of(SchemaPath.getSimplePath("c"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 85)),
         Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.INT)),
         Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIT)),
         Pair.of(SchemaPath.getSimplePath("g"), Types.optional(TypeProtos.MinorType.BIT)),
@@ -631,10 +631,10 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     checkThatQueryPlanIsOptimized(query);
   }
 
-  public void substringTest(final String query) throws Exception {
+  public void substringTest(final String query, int precision) throws Exception {
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
-        Pair.of(SchemaPath.getSimplePath("s"), Types.optional(TypeProtos.MinorType.VARCHAR)));
+        Pair.of(SchemaPath.getSimplePath("s"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, precision)));
 
     testBuilder()
         .sqlQuery(query)
@@ -653,11 +653,11 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void substring() throws Exception {
-    substringTest("SELECT SUBSTRING(full_name, 1, 5) AS s FROM " + viewName);
+    substringTest("SELECT SUBSTRING(full_name, 1, 5) AS s FROM " + viewName, Types.MAX_VARCHAR_LENGTH);
   }
 
   @Test
   public void substr() throws Exception {
-    substringTest("SELECT SUBSTR(full_name, 1, 5) AS s FROM " + viewName);
+    substringTest("SELECT SUBSTR(full_name, 1, 5) AS s FROM " + viewName, Types.MAX_VARCHAR_LENGTH);
   }
 }

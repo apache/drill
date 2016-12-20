@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,51 +18,22 @@
 
 package org.apache.drill.exec;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.junit.BeforeClass;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
 public class TestRepeatedReaders extends BaseTestQuery {
-
-  static FileSystem fs;
-
-  @BeforeClass
-  public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
-
-    fs = FileSystem.get(conf);
-  }
-
-  private static void deleteTableIfExists(String tableName) {
-    try {
-      Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);
-      if (fs.exists(path)) {
-        fs.delete(path, true);
-      }
-    } catch (Exception e) {
-      // ignore exceptions.
-    }
-  }
 
   private void createAndQuery(String datafile) throws Exception {
     String query = String.format("select * from cp.`parquet/%s`", datafile);
     String tableName = "test_repeated_readers_"+datafile;
 
-    try {
-      test("create table dfs_test.tmp.`%s` as %s", tableName, query);
+    test("create table dfs.tmp.`%s` as %s", tableName, query);
 
-      testBuilder()
-        .sqlQuery("select * from dfs_test.tmp.`%s` d", tableName)
-        .ordered()
-        .jsonBaselineFile("parquet/" + datafile)
-        .go();
-    } finally {
-      deleteTableIfExists(tableName);
-    }
+    testBuilder()
+      .sqlQuery("select * from dfs.tmp.`%s` d", tableName)
+      .ordered()
+      .jsonBaselineFile("parquet/" + datafile)
+      .go();
   }
 
   @Test //DRILL-2292

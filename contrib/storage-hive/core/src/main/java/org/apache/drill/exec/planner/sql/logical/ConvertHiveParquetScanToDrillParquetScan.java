@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -68,9 +68,9 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   public static final ConvertHiveParquetScanToDrillParquetScan INSTANCE = new ConvertHiveParquetScanToDrillParquetScan();
 
   private static final DrillSqlOperator INT96_TO_TIMESTAMP =
-      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA_LOCALTIMEZONE", 1, true);
+      new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA", 1, true, false);
 
-  private static final DrillSqlOperator RTRIM = new DrillSqlOperator("RTRIM", 1, true);
+  private static final DrillSqlOperator RTRIM = new DrillSqlOperator("RTRIM", 1, true, false);
 
   private ConvertHiveParquetScanToDrillParquetScan() {
     super(RelOptHelper.any(DrillScanRel.class), "ConvertHiveScanToHiveDrillNativeScan:Parquet");
@@ -233,7 +233,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     // unlike above where we expanded the '*'. HiveScan and related (subscan) can handle '*'.
     final List<SchemaPath> nativeScanCols = Lists.newArrayList();
     for(SchemaPath colName : hiveScanRel.getColumns()) {
-      final String partitionCol = partitionColMapping.get(colName.getAsUnescapedPath());
+      final String partitionCol = partitionColMapping.get(colName.getRootSegmentPath());
       if (partitionCol != null) {
         nativeScanCols.add(SchemaPath.getSimplePath(partitionCol));
       } else {

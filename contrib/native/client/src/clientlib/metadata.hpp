@@ -21,6 +21,7 @@
 #define DRILL_METADATA_H
 
 #include <boost/ref.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
@@ -159,6 +160,25 @@ namespace meta {
 		boost::reference_wrapper<const ::exec::user::ColumnMetadata> m_pMetadata;
 	};
 
+	struct ConvertSupportHasher {
+		std::size_t operator()(const exec::user::ConvertSupport& key) const {
+			std::size_t hash = 0;
+
+			boost::hash_combine(hash, key.from());
+			boost::hash_combine(hash, key.to());
+
+			return hash;
+		}
+	};
+
+	struct ConvertSupportEqualTo {
+		bool operator()(exec::user::ConvertSupport const& cs1, exec::user::ConvertSupport const& cs2) const {
+			return cs1.from() == cs2.from() && cs1.to() == cs2.to();
+		}
+	};
+
+	typedef boost::unordered_set<exec::user::ConvertSupport, ConvertSupportHasher, ConvertSupportEqualTo> convert_support_set;
+
     class DrillMetadata: public Metadata {
     public:
         static const std::string s_connectorName; 
@@ -167,21 +187,10 @@ namespace meta {
         static const std::string s_serverName;
         static const std::string s_serverVersion;
 
-        static const std::string s_catalogSeparator;
-        static const std::string s_catalogTerm;
+        // Default server meta, to be used as fallback if cannot be queried
+        static const exec::user::ServerMeta s_defaultServerMeta;
 
-        static const std::string s_identifierQuoteString;
-        static const std::vector<std::string> s_sqlKeywords;
-        static const std::vector<std::string> s_numericFunctions;
-        static const std::string s_schemaTerm;
-        static const std::string s_searchEscapeString;
-        static const std::string s_specialCharacters;
-        static const std::vector<std::string> s_stringFunctions;
-        static const std::vector<std::string> s_systemFunctions;
-        static const std::string s_tableTerm;
-        static const std::vector<std::string> s_dateTimeFunctions;
-
-        DrillMetadata(DrillClientImpl& client): Metadata(), m_client(client) {}
+        DrillMetadata(DrillClientImpl& client, const exec::user::ServerMeta&  serverMeta);
         ~DrillMetadata() {}
 
         DrillClientImpl& client() { return m_client; }
@@ -203,85 +212,111 @@ namespace meta {
         status_t getTables(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::vector<std::string>* tableTypes, Metadata::pfnTableMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle);
         status_t getColumns(const std::string& catalogPattern, const std::string& schemaPattern, const std:: string& tablePattern, const std::string& columnPattern, Metadata::pfnColumnMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle);
 
-        bool areAllTableSelectable() const { return false; }
-        bool isCatalogAtStart() const { return true; }
-        const std::string& getCatalogSeparator() const { return s_catalogSeparator; }
-        const std::string& getCatalogTerm() const { return s_catalogTerm; }
-        bool isColumnAliasingSupported() const { return true; }
-        bool isNullPlusNonNullNull() const { return true; }
+        bool areAllTableSelectable() const { return m_allTablesSelectable; }
+        bool isCatalogAtStart() const { return m_catalogAtStart; }
+        const std::string& getCatalogSeparator() const { return m_catalogSeparator; }
+        const std::string& getCatalogTerm() const { return m_catalogTerm; }
+        bool isColumnAliasingSupported() const { return m_columnAliasingSupported; }
+        bool isNullPlusNonNullNull() const { return m_nullPlusNonNullEqualsNull; }
         bool isConvertSupported(common::MinorType from, common::MinorType to) const;
-        meta::CorrelationNamesSupport getCorrelationNames() const { return meta::CN_ANY_NAMES; }
-        bool isReadOnly() const { return false; }
-        meta::DateTimeLiteralSupport getDateTimeLiteralsSupport() const {
-            return DL_DATE
-                | DL_TIME
-                | DL_TIMESTAMP
-                | DL_INTERVAL_YEAR
-                | DL_INTERVAL_MONTH
-                | DL_INTERVAL_DAY
-                | DL_INTERVAL_HOUR
-                | DL_INTERVAL_MINUTE
-                | DL_INTERVAL_SECOND
-                | DL_INTERVAL_YEAR_TO_MONTH
-                | DL_INTERVAL_DAY_TO_HOUR
-                | DL_INTERVAL_DAY_TO_MINUTE
-                | DL_INTERVAL_DAY_TO_SECOND
-                | DL_INTERVAL_HOUR_TO_MINUTE
-                | DL_INTERVAL_HOUR_TO_SECOND
-                | DL_INTERVAL_MINUTE_TO_SECOND;
-        }
+        meta::CorrelationNamesSupport getCorrelationNames() const { return m_correlationNamesSupport; }
+        bool isReadOnly() const { return m_readOnly; }
+        meta::DateTimeLiteralSupport getDateTimeLiteralsSupport() const { return m_dateTimeLiteralsSupport; }
 
-        meta::CollateSupport getCollateSupport() const { return meta::C_NONE; }// supported?
-        meta::GroupBySupport getGroupBySupport() const { return meta::GB_UNRELATED; }
-        meta::IdentifierCase getIdentifierCase() const { return meta::IC_STORES_UPPER; } // to check?
+        meta::CollateSupport getCollateSupport() const { return m_collateSupport; }
+        meta::GroupBySupport getGroupBySupport() const { return m_groupBySupport; }
+        meta::IdentifierCase getIdentifierCase() const { return m_identifierCase; }
 
-        const std::string& getIdentifierQuoteString() const { return s_identifierQuoteString; }
-        const std::vector<std::string>& getSQLKeywords() const { return s_sqlKeywords; }
-        bool isLikeEscapeClauseSupported() const { return true; }
-        std::size_t getMaxBinaryLiteralLength() const { return 0; }
-        std::size_t getMaxCatalogNameLength() const { return 0; }
-        std::size_t getMaxCharLiteralLength() const { return 0; }
-        std::size_t getMaxColumnNameLength() const { return 0; }
-        std::size_t getMaxColumnsInGroupBy() const { return 0; }
-        std::size_t getMaxColumnsInOrderBy() const { return 0; }
-        std::size_t getMaxColumnsInSelect() const { return 0; }
-        std::size_t getMaxCursorNameLength() const { return 0; }
-        std::size_t getMaxLogicalLobSize() const { return 0; }
-        std::size_t getMaxStatements() const { return 0; }
-        std::size_t getMaxRowSize() const { return 0; }
-        bool isBlobIncludedInMaxRowSize() const { return true; }
-        std::size_t getMaxSchemaNameLength() const { return 0; }
-        std::size_t getMaxStatementLength() const { return 0; }
-        std::size_t getMaxTableNameLength() const { return 0; }
-        std::size_t getMaxTablesInSelect() const { return 0; }
-        std::size_t getMaxUserNameLength() const { return 0; }
-        meta::NullCollation getNullCollation() const { return meta::NC_AT_END; }
-        const std::vector<std::string>& getNumericFunctions() const { return s_numericFunctions; }
-        meta::OuterJoinSupport getOuterJoinSupport() const { return meta::OJ_LEFT 
-            | meta::OJ_RIGHT 
-            | meta::OJ_FULL;
-        }
-        bool isUnrelatedColumnsInOrderBySupported() const { return true; }
-        meta::QuotedIdentifierCase getQuotedIdentifierCase() const { return meta::QIC_SUPPORTS_MIXED; }
-        const std::string& getSchemaTerm() const { return s_schemaTerm; }
-        const std::string& getSearchEscapeString() const { return s_searchEscapeString; }
-        const std::string& getSpecialCharacters() const { return s_specialCharacters; }
-        const std::vector<std::string>& getStringFunctions() const { return s_stringFunctions; }
-        meta::SubQuerySupport getSubQuerySupport() const { return SQ_CORRELATED
-                | SQ_IN_COMPARISON
-                | SQ_IN_EXISTS
-                | SQ_IN_QUANTIFIED;
-        }
-        const std::vector<std::string>& getSystemFunctions() const { return s_systemFunctions; }
-        const std::string& getTableTerm() const { return s_tableTerm; }
-        const std::vector<std::string>& getDateTimeFunctions() const { return s_dateTimeFunctions; }
-        bool isTransactionSupported() const { return false; }
-        meta::UnionSupport getUnionSupport() const { return meta::U_UNION | meta::U_UNION_ALL; }
-        bool isSelectForUpdateSupported() const { return false; }
+        const std::string& getIdentifierQuoteString() const { return m_identifierQuoteString; }
+        const std::vector<std::string>& getSQLKeywords() const { return m_sqlKeywords; }
+        bool isLikeEscapeClauseSupported() const { return m_likeEscapeClauseSupported; }
+        std::size_t getMaxBinaryLiteralLength() const { return m_maxBinaryLiteralLength; }
+        std::size_t getMaxCatalogNameLength() const { return m_maxCatalogNameLength; }
+        std::size_t getMaxCharLiteralLength() const { return m_maxCharLIteralLength; }
+        std::size_t getMaxColumnNameLength() const { return m_maxColumnNameLength; }
+        std::size_t getMaxColumnsInGroupBy() const { return m_maxColumnsInGroupBy; }
+        std::size_t getMaxColumnsInOrderBy() const { return m_maxColumnsInOrderBy; }
+        std::size_t getMaxColumnsInSelect() const { return m_maxColumnsInSelect; }
+        std::size_t getMaxCursorNameLength() const { return m_maxCursorNameLength; }
+        std::size_t getMaxLogicalLobSize() const { return m_maxLogicalLobSize; }
+        std::size_t getMaxStatements() const { return m_maxStatements; }
+        std::size_t getMaxRowSize() const { return m_maxRowSize; }
+        bool isBlobIncludedInMaxRowSize() const { return m_blobIncludedInMaxRowSize; }
+        std::size_t getMaxSchemaNameLength() const { return m_maxSchemaNameLength; }
+        std::size_t getMaxStatementLength() const { return m_maxStatementLength; }
+        std::size_t getMaxTableNameLength() const { return m_maxTableNameLength; }
+        std::size_t getMaxTablesInSelect() const { return m_maxTablesInSelectLength; }
+        std::size_t getMaxUserNameLength() const { return m_maxUserNameLength; }
+        meta::NullCollation getNullCollation() const { return m_nullCollation; }
+        const std::vector<std::string>& getNumericFunctions() const { return m_numericFunctions; }
+        meta::OuterJoinSupport getOuterJoinSupport() const { return m_outerJoinSupport; }
+        bool isUnrelatedColumnsInOrderBySupported() const { return m_unrelatedColumnsInOrderBySupported; }
+        meta::QuotedIdentifierCase getQuotedIdentifierCase() const { return m_quotedIdentifierCase; }
+        const std::string& getSchemaTerm() const { return m_schemaTerm; }
+        const std::string& getSearchEscapeString() const { return m_searchEscapeString; }
+        const std::string& getSpecialCharacters() const { return m_specialCharacters; }
+        const std::vector<std::string>& getStringFunctions() const { return m_stringFunctions; }
+        meta::SubQuerySupport getSubQuerySupport() const { return m_subQuerySupport; }
+        const std::vector<std::string>& getSystemFunctions() const { return m_systemFunctions; }
+        const std::string& getTableTerm() const { return m_tableTerm; }
+        const std::vector<std::string>& getDateTimeFunctions() const { return m_dateTimeFunctions; }
+        bool isTransactionSupported() const { return m_transactionSupported; }
+        meta::UnionSupport getUnionSupport() const { return m_unionSupport; }
+        bool isSelectForUpdateSupported() const { return m_selectForUpdateSupported; }
 
     private:
         DrillClientImpl& m_client;
-    };
+
+		bool m_allTablesSelectable;
+		bool m_blobIncludedInMaxRowSize;
+		bool m_catalogAtStart;
+        std::string m_catalogSeparator;
+        std::string m_catalogTerm;
+		Drill::meta::CollateSupport m_collateSupport;
+		bool m_columnAliasingSupported;
+		Drill::meta::CorrelationNamesSupport m_correlationNamesSupport;
+		convert_support_set m_convertSupport;
+        std::vector<std::string> m_dateTimeFunctions;
+		Drill::meta::DateTimeLiteralSupport m_dateTimeLiteralsSupport;
+		Drill::meta::GroupBySupport m_groupBySupport;
+		Drill::meta::IdentifierCase m_identifierCase;
+        std::string m_identifierQuoteString;
+		bool m_likeEscapeClauseSupported;
+		std::size_t m_maxBinaryLiteralLength;
+		std::size_t m_maxCatalogNameLength;
+		std::size_t m_maxCharLIteralLength;
+		std::size_t m_maxColumnNameLength;
+		std::size_t m_maxColumnsInGroupBy;
+		std::size_t m_maxColumnsInOrderBy;
+		std::size_t m_maxColumnsInSelect;
+		std::size_t m_maxCursorNameLength;
+		std::size_t m_maxLogicalLobSize;
+		std::size_t m_maxRowSize;
+		std::size_t m_maxSchemaNameLength;
+		std::size_t m_maxStatementLength;
+		std::size_t m_maxStatements;
+		std::size_t m_maxTableNameLength;
+		std::size_t m_maxTablesInSelectLength;
+		std::size_t m_maxUserNameLength;
+		Drill::meta::NullCollation m_nullCollation;
+		bool m_nullPlusNonNullEqualsNull;
+        std::vector<std::string> m_numericFunctions;
+		Drill::meta::OuterJoinSupport m_outerJoinSupport;
+		Drill::meta::QuotedIdentifierCase m_quotedIdentifierCase;
+		bool m_readOnly;
+        std::string m_schemaTerm;
+        std::string m_searchEscapeString;
+		bool m_selectForUpdateSupported;
+        std::string m_specialCharacters;
+        std::vector<std::string> m_sqlKeywords;
+        std::vector<std::string> m_stringFunctions;
+		Drill::meta::SubQuerySupport m_subQuerySupport;
+        std::vector<std::string> m_systemFunctions;
+        std::string m_tableTerm;
+		bool m_transactionSupported;
+		Drill::meta::UnionSupport m_unionSupport;
+		bool m_unrelatedColumnsInOrderBySupported;
+};
 } // namespace meta
 } // namespace Drill
 

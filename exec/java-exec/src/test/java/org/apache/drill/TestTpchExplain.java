@@ -17,10 +17,14 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestTpchExplain extends BaseTestQuery{
+@Category(PlannerTest.class)
+public class TestTpchExplain extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchExplain.class);
 
   private static final String EXPLAIN_PREFIX = "EXPLAIN PLAN FOR ";

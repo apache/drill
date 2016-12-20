@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,13 +24,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(MockStorageEngineConfig.NAME)
-public class MockStorageEngineConfig extends StoragePluginConfigBase{
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngineConfig.class);
+public class MockStorageEngineConfig extends StoragePluginConfigBase {
 
   private String url;
 
   public static final String NAME = "mock";
+  public static final MockStorageEngineConfig INSTANCE = new MockStorageEngineConfig("mock:///");
 
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("url") String url) {
@@ -40,7 +39,6 @@ public class MockStorageEngineConfig extends StoragePluginConfigBase{
   public String getUrl() {
     return url;
   }
-
 
   @Override
   public boolean equals(Object o) {
@@ -64,5 +62,4 @@ public class MockStorageEngineConfig extends StoragePluginConfigBase{
   public int hashCode() {
     return url != null ? url.hashCode() : 0;
   }
-
 }

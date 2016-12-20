@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import java.nio.charset.Charset;
+import org.apache.calcite.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,7 +117,7 @@ public class DrillHiveTable extends DrillTable{
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
           typeFactory.createSqlType(SqlTypeName.VARCHAR, maxLen), /*input type*/
-          Charset.forName("ISO-8859-1"), /*unicode char set*/
+          Util.getDefaultCharset(),
           SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
         );
       }
@@ -125,9 +125,9 @@ public class DrillHiveTable extends DrillTable{
       case CHAR: {
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
-            typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
-            Charset.forName("ISO-8859-1"), /*unicode char set*/
-            SqlCollation.IMPLICIT
+          typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
+          Util.getDefaultCharset(),
+          SqlCollation.IMPLICIT
         );
       }
 

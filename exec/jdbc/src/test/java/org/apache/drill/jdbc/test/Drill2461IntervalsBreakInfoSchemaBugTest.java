@@ -20,15 +20,17 @@ package org.apache.drill.jdbc.test;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-
+@Category(JdbcTest.class)
 public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
 
   private static final String VIEW_NAME =
@@ -54,9 +56,9 @@ public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
     ResultSet util;
 
     // Create a view using an INTERVAL type:
-    util = stmt.executeQuery( "USE dfs_test.tmp" );
+    util = stmt.executeQuery( "USE dfs.tmp" );
     assertTrue( util.next() );
-    assertTrue( "Error setting schema to dfs_test.tmp: " + util.getString( 2 ), util.getBoolean( 1 ) );
+    assertTrue( "Error setting schema to dfs.tmp: " + util.getString( 2 ), util.getBoolean( 1 ) );
     util = stmt.executeQuery(
         "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS "
       + "\n  SELECT CAST( NULL AS INTERVAL HOUR(4) TO MINUTE ) AS optINTERVAL_HM "

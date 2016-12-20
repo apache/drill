@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.drill.exec.compile.sig;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -45,6 +44,13 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod> {
   public static SignatureHolder getHolder(Class<?> signature) {
     List<SignatureHolder> innerClasses = Lists.newArrayList();
     for (Class<?> inner : signature.getClasses()) {
+
+      // Do not generate classes for nested enums.
+      // (Occurs in HashAggTemplate.)
+
+      if (inner.isEnum()) {
+        continue;
+      }
       SignatureHolder h = getHolder(inner);
       if (h.childHolders.length > 0 || h.methods.length > 0) {
         innerClasses.add(h);

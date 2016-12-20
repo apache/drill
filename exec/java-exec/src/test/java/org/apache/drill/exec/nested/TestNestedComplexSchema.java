@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.nested;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestNestedComplexSchema extends BaseTestQuery {
 
@@ -38,6 +40,7 @@ public class TestNestedComplexSchema extends BaseTestQuery {
   }
 
   @Test //DRILL-1649
+  @Category(UnlikelyTest.class)
   public void testNestedFlattenWithJoin() throws Exception {
 
     final String query="" +

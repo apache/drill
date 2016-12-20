@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,20 +17,14 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.codahale.metrics.Counter;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
@@ -40,9 +34,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.coord.DistributedSemaphore;
-import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.metrics.DrillMetrics;
@@ -71,24 +62,26 @@ import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.control.ControlTunnel;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.control.Controller;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
-import org.apache.drill.exec.util.MemoryAllocationUtilities;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
-import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
+import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
+import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.codahale.metrics.Counter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -96,26 +89,36 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+
 /**
  * Foreman manages all the fragments (local and remote) for a single query where this
  * is the driving/root node.
  *
  * The flow is as follows:
- * - Foreman is submitted as a runnable.
- * - Runnable does query planning.
- * - state changes from PENDING to RUNNING
- * - Runnable sends out starting fragments
- * - Status listener are activated
- * - The Runnable's run() completes, but the Foreman stays around
- * - Foreman listens for state change messages.
- * - state change messages can drive the state to FAILED or CANCELED, in which case
- *   messages are sent to running fragments to terminate
- * - when all fragments complete, state change messages drive the state to COMPLETED
+ * <ul>
+ * <li>Foreman is submitted as a runnable.</li>
+ * <li>Runnable does query planning.</li>
+ * <li>state changes from PENDING to RUNNING</li>
+ * <li>Runnable sends out starting fragments</li>
+ * <li>Status listener are activated</li>
+ * <li>The Runnable's run() completes, but the Foreman stays around</li>
+ * <li>Foreman listens for state change messages.</li>
+ * <li>state change messages can drive the state to FAILED or CANCELED, in which case
+ *   messages are sent to running fragments to terminate</li>
+ * <li>when all fragments complete, state change messages drive the state to COMPLETED</li>
+ * </ul>
  */
+
 public class Foreman implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
   private static final org.slf4j.Logger queryLogger = org.slf4j.LoggerFactory.getLogger("query.logger");
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(Foreman.class);
+
+  public enum ProfileOption { SYNC, ASYNC, NONE };
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
@@ -123,6 +126,9 @@ public class Foreman implements Runnable {
   private static final Counter enqueuedQueries = DrillMetrics.getRegistry().counter("drill.queries.enqueued");
   private static final Counter runningQueries = DrillMetrics.getRegistry().counter("drill.queries.running");
   private static final Counter completedQueries = DrillMetrics.getRegistry().counter("drill.queries.completed");
+  private static final Counter succeededQueries = DrillMetrics.getRegistry().counter("drill.queries.succeeded");
+  private static final Counter failedQueries = DrillMetrics.getRegistry().counter("drill.queries.failed");
+  private static final Counter canceledQueries = DrillMetrics.getRegistry().counter("drill.queries.canceled");
 
   private final QueryId queryId;
   private final String queryIdString;
@@ -134,16 +140,15 @@ public class Foreman implements Runnable {
   private final UserClientConnection initiatingClient; // used to send responses
   private volatile QueryState state;
   private boolean resume = false;
+  private final ProfileOption profileOption;
 
-  private volatile DistributedLease lease; // used to limit the number of concurrent queries
+  private final QueryResourceManager queryRM;
 
   private final ResponseSendListener responseListener = new ResponseSendListener();
   private final StateSwitch stateSwitch = new StateSwitch();
   private final ForemanResult foremanResult = new ForemanResult();
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
-  private final boolean queuingEnabled;
-
 
   private String queryText;
 
@@ -172,12 +177,22 @@ public class Foreman implements Runnable {
     queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         drillbitContext.getClusterCoordinator(), this);
 
-    final OptionManager optionManager = queryContext.getOptions();
-    queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
-
-    final QueryState initialState = queuingEnabled ? QueryState.ENQUEUED : QueryState.STARTING;
-    recordNewState(initialState);
+    recordNewState(QueryState.ENQUEUED);
     enqueuedQueries.inc();
+    queryRM = drillbitContext.getResourceManager().newQueryRM(this);
+
+    profileOption = setProfileOption(queryContext.getOptions());
+  }
+
+  private ProfileOption setProfileOption(OptionManager options) {
+    if (! options.getOption(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR)) {
+      return ProfileOption.NONE;
+    }
+    if (options.getOption(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR)) {
+      return ProfileOption.SYNC;
+    } else {
+      return ProfileOption.ASYNC;
+    }
   }
 
   private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
@@ -336,20 +351,6 @@ public class Foreman implements Runnable {
      */
   }
 
-  private void releaseLease() {
-    while (lease != null) {
-      try {
-        lease.close();
-        lease = null;
-      } catch (final InterruptedException e) {
-        // if we end up here, the while loop will try again
-      } catch (final Exception e) {
-        logger.warn("Failure while releasing lease.", e);
-        break;
-      }
-    }
-  }
-
   private void parseAndRunLogicalPlan(final String json) throws ExecutionSetupException {
     LogicalPlan logicalPlan;
     try {
@@ -417,13 +418,17 @@ public class Foreman implements Runnable {
 
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
-    MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
-    if (queuingEnabled) {
-      acquireQuerySemaphore(plan);
-      moveToState(QueryState.STARTING, null);
-    }
 
+    queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan);
+    queryRM.visitPhysicalPlan(work);
+    queryRM.setCost(plan.totalCost());
+    queryManager.setTotalCost(plan.totalCost());
+    work.applyPlan(drillbitContext.getPlanReader());
+    logWorkUnit(work);
+    admit(work);
+    queryManager.setQueueName(queryRM.queueName());
+
     final List<PlanFragment> planFragments = work.getFragments();
     final PlanFragment rootPlanFragment = work.getRootFragment();
     assert queryId == rootPlanFragment.getHandle().getQueryId();
@@ -440,6 +445,23 @@ public class Foreman implements Runnable {
 
     moveToState(QueryState.RUNNING, null);
     logger.debug("Fragments running.");
+  }
+
+  private void admit(QueryWorkUnit work) throws ForemanSetupException {
+    queryManager.markPlanningEndTime();
+    try {
+      queryRM.admit();
+    } catch (QueueTimeoutException e) {
+      throw UserException
+          .resourceError()
+          .message(e.getMessage())
+          .build(logger);
+    } catch (QueryQueueException e) {
+      throw new ForemanSetupException(e.getMessage(), e);
+    } finally {
+      queryManager.markQueueWaitEndTime();
+    }
+    moveToState(QueryState.STARTING, null);
   }
 
   /**
@@ -472,14 +494,12 @@ public class Foreman implements Runnable {
 
     final FragmentRoot rootOperator;
     try {
-      rootOperator = drillbitContext.getPlanReader().readFragmentOperator(rootFragment.getFragmentJson());
+      rootOperator = drillbitContext.getPlanReader().readFragmentRoot(rootFragment.getFragmentJson());
     } catch (IOException e) {
       throw new ExecutionSetupException(String.format("Unable to parse FragmentRoot from fragment: %s", rootFragment.getFragmentJson()));
     }
-    if (queuingEnabled) {
-      acquireQuerySemaphore(rootOperator.getCost());
-      moveToState(QueryState.STARTING, null);
-    }
+    queryRM.setCost(rootOperator.getCost());
+    admit(null);
     drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
     drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
@@ -515,9 +535,10 @@ public class Foreman implements Runnable {
           .build(logger);
     }
 
-    final String sql = serverState.getSqlQuery();
-    logger.info("Prepared statement query for QueryId {} : {}", queryId, sql);
-    runSQL(sql);
+    queryText = serverState.getSqlQuery();
+    logger.info("Prepared statement query for QueryId {} : {}", queryId, queryText);
+    runSQL(queryText);
+
   }
 
   private static void validatePlan(final PhysicalPlan plan) throws ForemanSetupException {
@@ -525,62 +546,6 @@ public class Foreman implements Runnable {
       throw new ForemanSetupException(String.format(
           "Failure running plan.  You requested a result mode of %s and a physical plan can only be output as EXEC",
           plan.getProperties().resultMode));
-    }
-  }
-
-  /**
-   * This limits the number of "small" and "large" queries that a Drill cluster will run
-   * simultaneously, if queueing is enabled. If the query is unable to run, this will block
-   * until it can. Beware that this is called under run(), and so will consume a Thread
-   * while it waits for the required distributed semaphore.
-   *
-   * @param plan the query plan
-   * @throws ForemanSetupException
-   */
-  private void acquireQuerySemaphore(final PhysicalPlan plan) throws ForemanSetupException {
-    double totalCost = 0;
-    for (final PhysicalOperator ops : plan.getSortedOperators()) {
-      totalCost += ops.getCost();
-    }
-
-    acquireQuerySemaphore(totalCost);
-    return;
-  }
-
-  private void acquireQuerySemaphore(double totalCost) throws ForemanSetupException {
-    final OptionManager optionManager = queryContext.getOptions();
-    final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
-
-    final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
-    final String queueName;
-
-    try {
-      final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
-      final DistributedSemaphore distributedSemaphore;
-
-      // get the appropriate semaphore
-      if (totalCost > queueThreshold) {
-        final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
-        distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
-        queueName = "large";
-      } else {
-        final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
-        distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
-        queueName = "small";
-      }
-
-      lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
-    } catch (final Exception e) {
-      throw new ForemanSetupException("Unable to acquire slot for query.", e);
-    }
-
-    if (lease == null) {
-      throw UserException
-          .resourceError()
-          .message(
-              "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
-              queueName, queueTimeout / 1000)
-          .build(logger);
     }
   }
 
@@ -592,54 +557,55 @@ public class Foreman implements Runnable {
     final PhysicalOperator rootOperator = plan.getSortedOperators(false).iterator().next();
     final Fragment rootFragment = rootOperator.accept(MakeFragmentsVisitor.INSTANCE, null);
     final SimpleParallelizer parallelizer = new SimpleParallelizer(queryContext);
-    final QueryWorkUnit queryWorkUnit = parallelizer.getFragments(
+    return parallelizer.getFragments(
         queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
-        queryId, queryContext.getActiveEndpoints(), drillbitContext.getPlanReader(), rootFragment,
+        queryId, queryContext.getActiveEndpoints(), rootFragment,
         initiatingClient.getSession(), queryContext.getQueryContextInfo());
+  }
 
-    if (logger.isTraceEnabled()) {
-      final StringBuilder sb = new StringBuilder();
-      sb.append("PlanFragments for query ");
-      sb.append(queryId);
+  private void logWorkUnit(QueryWorkUnit queryWorkUnit) {
+    if (! logger.isTraceEnabled()) {
+      return;
+    }
+    final StringBuilder sb = new StringBuilder();
+    sb.append("PlanFragments for query ");
+    sb.append(queryId);
+    sb.append('\n');
+
+    final List<PlanFragment> planFragments = queryWorkUnit.getFragments();
+    final int fragmentCount = planFragments.size();
+    int fragmentIndex = 0;
+    for(final PlanFragment planFragment : planFragments) {
+      final FragmentHandle fragmentHandle = planFragment.getHandle();
+      sb.append("PlanFragment(");
+      sb.append(++fragmentIndex);
+      sb.append('/');
+      sb.append(fragmentCount);
+      sb.append(") major_fragment_id ");
+      sb.append(fragmentHandle.getMajorFragmentId());
+      sb.append(" minor_fragment_id ");
+      sb.append(fragmentHandle.getMinorFragmentId());
       sb.append('\n');
 
-      final List<PlanFragment> planFragments = queryWorkUnit.getFragments();
-      final int fragmentCount = planFragments.size();
-      int fragmentIndex = 0;
-      for(final PlanFragment planFragment : planFragments) {
-        final FragmentHandle fragmentHandle = planFragment.getHandle();
-        sb.append("PlanFragment(");
-        sb.append(++fragmentIndex);
-        sb.append('/');
-        sb.append(fragmentCount);
-        sb.append(") major_fragment_id ");
-        sb.append(fragmentHandle.getMajorFragmentId());
-        sb.append(" minor_fragment_id ");
-        sb.append(fragmentHandle.getMinorFragmentId());
-        sb.append('\n');
+      final DrillbitEndpoint endpointAssignment = planFragment.getAssignment();
+      sb.append("  DrillbitEndpoint address ");
+      sb.append(endpointAssignment.getAddress());
+      sb.append('\n');
 
-        final DrillbitEndpoint endpointAssignment = planFragment.getAssignment();
-        sb.append("  DrillbitEndpoint address ");
-        sb.append(endpointAssignment.getAddress());
-        sb.append('\n');
-
-        String jsonString = "<<malformed JSON>>";
-        sb.append("  fragment_json: ");
-        final ObjectMapper objectMapper = new ObjectMapper();
-        try
-        {
-          final Object json = objectMapper.readValue(planFragment.getFragmentJson(), Object.class);
-          jsonString = objectMapper.defaultPrettyPrintingWriter().writeValueAsString(json);
-        } catch(final Exception e) {
-          // we've already set jsonString to a fallback value
-        }
-        sb.append(jsonString);
-
-        logger.trace(sb.toString());
+      String jsonString = "<<malformed JSON>>";
+      sb.append("  fragment_json: ");
+      final ObjectMapper objectMapper = new ObjectMapper();
+      try
+      {
+        final Object json = objectMapper.readValue(planFragment.getFragmentJson(), Object.class);
+        jsonString = objectMapper.defaultPrettyPrintingWriter().writeValueAsString(json);
+      } catch(final Exception e) {
+        // we've already set jsonString to a fallback value
       }
-    }
+      sb.append(jsonString);
 
-    return queryWorkUnit;
+      logger.trace(sb.toString());
+    }
   }
 
   /**
@@ -774,6 +740,7 @@ public class Foreman implements Runnable {
       }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void close() {
       Preconditions.checkState(!isClosed);
@@ -827,6 +794,13 @@ public class Foreman implements Runnable {
         uex = null;
       }
 
+      // Debug option: write query profile before sending final results so that
+      // the client can be certain the profile exists.
+
+      if (profileOption == ProfileOption.SYNC) {
+        queryManager.writeFinalProfile(uex);
+      }
+
       /*
        * If sending the result fails, we don't really have any way to modify the result we tried to send;
        * it is possible it got sent but the result came from a later part of the code path. It is also
@@ -843,7 +817,8 @@ public class Foreman implements Runnable {
 
       // Store the final result here so we can capture any error/errorId in the
       // profile for later debugging.
-      // Write the query profile AFTER sending results to the user. The observed
+      // Normal behavior is to write the query profile AFTER sending results to the user.
+      // The observed
       // user behavior is a possible time-lag between query return and appearance
       // of the query profile in persistent storage. Also, the query might
       // succeed, but the profile never appear if the profile write fails. This
@@ -852,7 +827,9 @@ public class Foreman implements Runnable {
       // storage write; query completion occurs in parallel with profile
       // persistence.
 
-      queryManager.writeFinalProfile(uex);
+      if (profileOption == ProfileOption.ASYNC) {
+        queryManager.writeFinalProfile(uex);
+      }
 
       // Remove the Foreman from the running query list.
       bee.retireForeman(Foreman.this);
@@ -863,10 +840,23 @@ public class Foreman implements Runnable {
         logger.warn("unable to close query manager", e);
       }
 
+      // Incrementing QueryState counters
+      switch (state) {
+        case FAILED:
+          failedQueries.inc();
+          break;
+        case CANCELED:
+          canceledQueries.inc();
+          break;
+        case COMPLETED:
+          succeededQueries.inc();
+          break;
+      }
+
       runningQueries.dec();
       completedQueries.inc();
       try {
-        releaseLease();
+        queryRM.exit();
       } finally {
         isClosed = true;
       }
@@ -922,7 +912,7 @@ public class Foreman implements Runnable {
         foremanResult.setCompleted(QueryState.CANCELED);
         /*
          * We don't close the foremanResult until we've gotten
-         * acknowledgements, which happens below in the case for current state
+         * acknowledgments, which happens below in the case for current state
          * == CANCELLATION_REQUESTED.
          */
         return;
@@ -1042,23 +1032,122 @@ public class Foreman implements Runnable {
       throws ExecutionSetupException {
     final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, queryContext,
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
-    final IncomingBuffers buffers = new IncomingBuffers(rootFragment, rootContext);
-    rootContext.setBuffers(buffers);
+    final FragmentStatusReporter statusReporter = new FragmentStatusReporter(rootContext);
+    final FragmentExecutor rootRunner = new FragmentExecutor(rootContext, rootFragment, statusReporter, rootOperator);
+    final RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment, rootRunner, statusReporter);
 
     queryManager.addFragmentStatusTracker(rootFragment, true);
 
-    final ControlTunnel tunnel = drillbitContext.getController().getTunnel(queryContext.getCurrentEndpoint());
-    final FragmentExecutor rootRunner = new FragmentExecutor(rootContext, rootFragment,
-        new FragmentStatusReporter(rootContext, tunnel),
-        rootOperator);
-    final RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
-
-    if (buffers.isDone()) {
+    // FragmentManager is setting buffer for FragmentContext
+    if (rootContext.isBuffersDone()) {
       // if we don't have to wait for any incoming data, start the fragment runner.
-      bee.addFragmentRunner(fragmentManager.getRunnable());
+      bee.addFragmentRunner(rootRunner);
     } else {
       // if we do, record the fragment manager in the workBus.
       drillbitContext.getWorkBus().addFragmentManager(fragmentManager);
+    }
+  }
+
+  /**
+   * Add planFragment into either of local fragment list or remote fragment map based on assigned Drillbit Endpoint node
+   * and the local Drillbit Endpoint.
+   * @param planFragment
+   * @param localEndPoint
+   * @param localFragmentList
+   * @param remoteFragmentMap
+   */
+  private void updateFragmentCollection(final PlanFragment planFragment, final DrillbitEndpoint localEndPoint,
+                                        final List<PlanFragment> localFragmentList,
+                                        final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
+    final DrillbitEndpoint assignedDrillbit = planFragment.getAssignment();
+
+    if (assignedDrillbit.equals(localEndPoint)) {
+      localFragmentList.add(planFragment);
+    } else {
+      remoteFragmentMap.put(assignedDrillbit, planFragment);
+    }
+  }
+
+  /**
+   * Send remote intermediate fragment to the assigned Drillbit node. Throw exception in case of failure to send the
+   * fragment.
+   * @param remoteFragmentMap - Map of Drillbit Endpoint to list of PlanFragment's
+   */
+  private void scheduleRemoteIntermediateFragments(final Multimap<DrillbitEndpoint, PlanFragment> remoteFragmentMap) {
+
+    final int numIntFragments = remoteFragmentMap.keySet().size();
+    final ExtendedLatch endpointLatch = new ExtendedLatch(numIntFragments);
+    final FragmentSubmitFailures fragmentSubmitFailures = new FragmentSubmitFailures();
+
+    // send remote intermediate fragments
+    for (final DrillbitEndpoint ep : remoteFragmentMap.keySet()) {
+      sendRemoteFragments(ep, remoteFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
+    }
+
+    final long timeout = RPC_WAIT_IN_MSECS_PER_FRAGMENT * numIntFragments;
+    if (numIntFragments > 0 && !endpointLatch.awaitUninterruptibly(timeout)) {
+      long numberRemaining = endpointLatch.getCount();
+      throw UserException.connectionError()
+          .message("Exceeded timeout (%d) while waiting send intermediate work fragments to remote nodes. " +
+              "Sent %d and only heard response back from %d nodes.",
+              timeout, numIntFragments, numIntFragments - numberRemaining).build(logger);
+    }
+
+    // if any of the intermediate fragment submissions failed, fail the query
+    final List<FragmentSubmitFailures.SubmissionException> submissionExceptions =
+        fragmentSubmitFailures.submissionExceptions;
+
+    if (submissionExceptions.size() > 0) {
+      Set<DrillbitEndpoint> endpoints = Sets.newHashSet();
+      StringBuilder sb = new StringBuilder();
+      boolean first = true;
+
+      for (FragmentSubmitFailures.SubmissionException e : fragmentSubmitFailures.submissionExceptions) {
+        DrillbitEndpoint endpoint = e.drillbitEndpoint;
+        if (endpoints.add(endpoint)) {
+          if (first) {
+            first = false;
+          } else {
+            sb.append(", ");
+          }
+          sb.append(endpoint.getAddress());
+        }
+      }
+      throw UserException.connectionError(submissionExceptions.get(0).rpcException)
+          .message("Error setting up remote intermediate fragment execution")
+          .addContext("Nodes with failures", sb.toString()).build(logger);
+    }
+  }
+
+
+  /**
+   * Start the locally assigned leaf or intermediate fragment
+   * @param fragment
+   * @throws ForemanException
+   */
+  private void startLocalFragment(final PlanFragment fragment) throws ForemanException {
+
+    logger.debug("Received local fragment start instruction", fragment);
+
+    try {
+      final FragmentContext fragmentContext = new FragmentContext(drillbitContext, fragment,
+          drillbitContext.getFunctionImplementationRegistry());
+      final FragmentStatusReporter statusReporter = new FragmentStatusReporter(fragmentContext);
+      final FragmentExecutor fragmentExecutor = new FragmentExecutor(fragmentContext, fragment, statusReporter);
+
+      // we either need to start the fragment if it is a leaf fragment, or set up a fragment manager if it is non leaf.
+      if (fragment.getLeafFragment()) {
+        bee.addFragmentRunner(fragmentExecutor);
+      } else {
+        // isIntermediate, store for incoming data.
+        final NonRootFragmentManager manager = new NonRootFragmentManager(fragment, fragmentExecutor, statusReporter);
+        drillbitContext.getWorkBus().addFragmentManager(manager);
+      }
+
+    } catch (final ExecutionSetupException ex) {
+      throw new ForemanException("Failed to create fragment context", ex);
+    } catch (final Exception ex) {
+      throw new ForemanException("Failed while trying to start local fragment", ex);
     }
   }
 
@@ -1078,21 +1167,32 @@ public class Foreman implements Runnable {
      * We will send a single message to each endpoint, regardless of how many fragments will be
      * executed there. We need to start up the intermediate fragments first so that they will be
      * ready once the leaf fragments start producing data. To satisfy both of these, we will
-     * make a pass through the fragments and put them into these two maps according to their
-     * leaf/intermediate state, as well as their target drillbit.
+     * make a pass through the fragments and put them into the remote maps according to their
+     * leaf/intermediate state, as well as their target drillbit. Also filter the leaf/intermediate
+     * fragments which are assigned to run on local Drillbit node (or Foreman node) into separate lists.
+     *
+     * This will help to schedule local
      */
-    final Multimap<DrillbitEndpoint, PlanFragment> leafFragmentMap = ArrayListMultimap.create();
-    final Multimap<DrillbitEndpoint, PlanFragment> intFragmentMap = ArrayListMultimap.create();
+    final Multimap<DrillbitEndpoint, PlanFragment> remoteLeafFragmentMap = ArrayListMultimap.create();
+    final List<PlanFragment> localLeafFragmentList = new ArrayList<>();
+    final Multimap<DrillbitEndpoint, PlanFragment> remoteIntFragmentMap = ArrayListMultimap.create();
+    final List<PlanFragment> localIntFragmentList = new ArrayList<>();
 
+    final DrillbitEndpoint localDrillbitEndpoint = drillbitContext.getEndpoint();
     // record all fragments for status purposes.
     for (final PlanFragment planFragment : fragments) {
-      logger.trace("Tracking intermediate remote node {} with data {}",
-                   planFragment.getAssignment(), planFragment.getFragmentJson());
+
+      if (logger.isTraceEnabled()) {
+        logger.trace("Tracking intermediate remote node {} with data {}", planFragment.getAssignment(),
+            planFragment.getFragmentJson());
+      }
+
       queryManager.addFragmentStatusTracker(planFragment, false);
+
       if (planFragment.getLeafFragment()) {
-        leafFragmentMap.put(planFragment.getAssignment(), planFragment);
+        updateFragmentCollection(planFragment, localDrillbitEndpoint, localLeafFragmentList, remoteLeafFragmentMap);
       } else {
-        intFragmentMap.put(planFragment.getAssignment(), planFragment);
+        updateFragmentCollection(planFragment, localDrillbitEndpoint, localIntFragmentList, remoteIntFragmentMap);
       }
     }
 
@@ -1104,48 +1204,11 @@ public class Foreman implements Runnable {
      * count down (see FragmentSubmitFailures), but we count the number of failures so that we'll
      * know if any submissions did fail.
      */
-    final int numIntFragments = intFragmentMap.keySet().size();
-    final ExtendedLatch endpointLatch = new ExtendedLatch(numIntFragments);
-    final FragmentSubmitFailures fragmentSubmitFailures = new FragmentSubmitFailures();
+    scheduleRemoteIntermediateFragments(remoteIntFragmentMap);
 
-    // send remote intermediate fragments
-    for (final DrillbitEndpoint ep : intFragmentMap.keySet()) {
-      sendRemoteFragments(ep, intFragmentMap.get(ep), endpointLatch, fragmentSubmitFailures);
-    }
-
-    final long timeout = RPC_WAIT_IN_MSECS_PER_FRAGMENT * numIntFragments;
-    if(numIntFragments > 0 && !endpointLatch.awaitUninterruptibly(timeout)){
-      long numberRemaining = endpointLatch.getCount();
-      throw UserException.connectionError()
-          .message(
-              "Exceeded timeout (%d) while waiting send intermediate work fragments to remote nodes. " +
-                  "Sent %d and only heard response back from %d nodes.",
-              timeout, numIntFragments, numIntFragments - numberRemaining)
-          .build(logger);
-    }
-
-    // if any of the intermediate fragment submissions failed, fail the query
-    final List<FragmentSubmitFailures.SubmissionException> submissionExceptions = fragmentSubmitFailures.submissionExceptions;
-    if (submissionExceptions.size() > 0) {
-      Set<DrillbitEndpoint> endpoints = Sets.newHashSet();
-      StringBuilder sb = new StringBuilder();
-      boolean first = true;
-
-      for (FragmentSubmitFailures.SubmissionException e : fragmentSubmitFailures.submissionExceptions) {
-        DrillbitEndpoint endpoint = e.drillbitEndpoint;
-        if (endpoints.add(endpoint)) {
-          if (first) {
-            first = false;
-          } else {
-            sb.append(", ");
-          }
-          sb.append(endpoint.getAddress());
-        }
-      }
-      throw UserException.connectionError(submissionExceptions.get(0).rpcException)
-          .message("Error setting up remote intermediate fragment execution")
-          .addContext("Nodes with failures", sb.toString())
-          .build(logger);
+    // Setup local intermediate fragments
+    for (final PlanFragment fragment : localIntFragmentList) {
+      startLocalFragment(fragment);
     }
 
     injector.injectChecked(queryContext.getExecutionControls(), "send-fragments", ForemanException.class);
@@ -1153,8 +1216,13 @@ public class Foreman implements Runnable {
      * Send the remote (leaf) fragments; we don't wait for these. Any problems will come in through
      * the regular sendListener event delivery.
      */
-    for (final DrillbitEndpoint ep : leafFragmentMap.keySet()) {
-      sendRemoteFragments(ep, leafFragmentMap.get(ep), null, null);
+    for (final DrillbitEndpoint ep : remoteLeafFragmentMap.keySet()) {
+      sendRemoteFragments(ep, remoteLeafFragmentMap.get(ep), null, null);
+    }
+
+    // Setup local leaf fragments
+    for (final PlanFragment fragment : localLeafFragmentList) {
+      startLocalFragment(fragment);
     }
   }
 
@@ -1168,6 +1236,7 @@ public class Foreman implements Runnable {
    */
   private void sendRemoteFragments(final DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
       final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
     for(final PlanFragment planFragment : fragments) {
@@ -1183,6 +1252,13 @@ public class Foreman implements Runnable {
 
   public QueryState getState() {
     return state;
+  }
+
+  /**
+   * @return sql query text of the query request
+   */
+  public String getQueryText() {
+    return queryText;
   }
 
   /**

@@ -27,16 +27,20 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.test.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -47,9 +51,16 @@ import java.util.Map;
  * -- USE schema
  * -- SHOW FILES
  */
+@Category(SqlTest.class)
 public class TestInfoSchema extends BaseTestQuery {
-
+  public static final String TEST_SUB_DIR = "testSubDir";
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+
+  @BeforeClass
+  public static void setupFiles() {
+    dirTestWatcher.copyFileToRoot(Paths.get("sample-data"));
+    dirTestWatcher.makeRootSubDir(Paths.get(TEST_SUB_DIR));
+  }
 
   @Test
   public void selectFromAllTables() throws Exception{
@@ -130,9 +141,6 @@ public class TestInfoSchema extends BaseTestQuery {
             new String[] { "dfs.tmp" },
             new String[] { "cp.default" },
             new String[] { "sys" },
-            new String[] { "dfs_test.home" },
-            new String[] { "dfs_test.default" },
-            new String[] { "dfs_test.tmp" },
             new String[] { "INFORMATION_SCHEMA" }
         );
 
@@ -158,10 +166,10 @@ public class TestInfoSchema extends BaseTestQuery {
   @Test
   public void showDatabasesWhere() throws Exception{
     testBuilder()
-        .sqlQuery("SHOW DATABASES WHERE SCHEMA_NAME='dfs_test.tmp'")
+        .sqlQuery("SHOW DATABASES WHERE SCHEMA_NAME='dfs.tmp'")
         .unOrdered()
         .baselineColumns("SCHEMA_NAME")
-        .baselineValues("dfs_test.tmp")
+        .baselineValues("dfs.tmp")
         .go();
   }
 
@@ -204,13 +212,13 @@ public class TestInfoSchema extends BaseTestQuery {
   @Test
   public void describeWhenSameTableNameExistsInMultipleSchemas() throws Exception{
     try {
-      test("USE dfs_test.tmp");
+      test("USE dfs.tmp");
       test("CREATE OR REPLACE VIEW `TABLES` AS SELECT full_name FROM cp.`employee.json`");
 
       testBuilder()
           .sqlQuery("DESCRIBE `TABLES`")
           .unOrdered()
-          .optionSettingQueriesForTestQuery("USE dfs_test.tmp")
+          .optionSettingQueriesForTestQuery("USE dfs.tmp")
           .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
           .baselineValues("full_name", "ANY", "YES")
           .go();
@@ -225,7 +233,7 @@ public class TestInfoSchema extends BaseTestQuery {
           .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
           .go();
     } finally {
-      test("DROP VIEW dfs_test.tmp.`TABLES`");
+      test("DROP VIEW dfs.tmp.`TABLES`");
     }
   }
 
@@ -277,9 +285,9 @@ public class TestInfoSchema extends BaseTestQuery {
   @Test
   public void defaultSchemaDfs() throws Exception{
     testBuilder()
-        .sqlQuery("SELECT R_REGIONKEY FROM `[WORKING_PATH]/../../sample-data/region.parquet` LIMIT 1")
+        .sqlQuery("SELECT R_REGIONKEY FROM `sample-data/region.parquet` LIMIT 1")
         .unOrdered()
-        .optionSettingQueriesForTestQuery("USE dfs_test")
+        .optionSettingQueriesForTestQuery("USE dfs")
         .baselineColumns("R_REGIONKEY")
         .baselineValues(0L)
         .go();
@@ -302,7 +310,7 @@ public class TestInfoSchema extends BaseTestQuery {
     testBuilder()
         .sqlQuery("SELECT full_name FROM cp.`employee.json` LIMIT 1")
         .unOrdered()
-        .optionSettingQueriesForTestQuery("USE dfs_test")
+        .optionSettingQueriesForTestQuery("USE dfs")
         .baselineColumns("full_name")
         .baselineValues("Sheri Nowmer")
         .go();
@@ -311,27 +319,27 @@ public class TestInfoSchema extends BaseTestQuery {
   @Test
   public void useSchema() throws Exception{
     testBuilder()
-        .sqlQuery("USE dfs_test.`default`")
+        .sqlQuery("USE dfs.`default`")
         .unOrdered()
         .baselineColumns("ok", "summary")
-        .baselineValues(true, "Default schema changed to [dfs_test.default]")
+        .baselineValues(true, "Default schema changed to [dfs.default]")
         .go();
   }
 
   @Test
   public void useSubSchemaWithinSchema() throws Exception{
     testBuilder()
-        .sqlQuery("USE dfs_test")
+        .sqlQuery("USE dfs")
         .unOrdered()
         .baselineColumns("ok", "summary")
-        .baselineValues(true, "Default schema changed to [dfs_test]")
+        .baselineValues(true, "Default schema changed to [dfs]")
         .go();
 
     testBuilder()
         .sqlQuery("USE tmp")
         .unOrdered()
         .baselineColumns("ok", "summary")
-        .baselineValues(true, "Default schema changed to [dfs_test.tmp]")
+        .baselineValues(true, "Default schema changed to [dfs.tmp]")
         .go();
 
     testBuilder()
@@ -349,7 +357,7 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   // Tests using backticks around the complete schema path
-  // select * from `dfs_test.tmp`.`/tmp/nation.parquet`;
+  // select * from `dfs.tmp`.`/tmp/nation.parquet`;
   @Test
   public void completeSchemaRef1() throws Exception {
     test("SELECT * FROM `cp.default`.`employee.json` limit 2");
@@ -357,26 +365,26 @@ public class TestInfoSchema extends BaseTestQuery {
 
   @Test
   public void showFiles() throws Exception {
-    test("show files from dfs_test.`/tmp`");
-    test("show files from `dfs_test.default`.`/tmp`");
+    test("show files from dfs.`%s`", TEST_SUB_DIR);
+    test("show files from `dfs.default`.`%s`", TEST_SUB_DIR);
   }
 
   @Test
   public void showFilesWithDefaultSchema() throws Exception{
-    test("USE dfs_test.`default`");
-    test("SHOW FILES FROM `/tmp`");
+    test("USE dfs.`default`");
+    test("SHOW FILES FROM `%s`", TEST_SUB_DIR);
   }
 
   @Test
   public void describeSchemaSyntax() throws Exception {
-    test("describe schema dfs_test");
-    test("describe schema dfs_test.`default`");
-    test("describe database dfs_test.`default`");
+    test("describe schema dfs");
+    test("describe schema dfs.`default`");
+    test("describe database dfs.`default`");
   }
 
   @Test
   public void describeSchemaOutput() throws Exception {
-    final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs_test.tmp");
+    final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs.tmp");
     assertTrue(result.size() == 1);
     final QueryDataBatch batch = result.get(0);
     final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
@@ -387,7 +395,7 @@ public class TestInfoSchema extends BaseTestQuery {
         NullableVarCharVector.class,
         loader.getValueVectorId(SchemaPath.getCompoundPath("schema")).getFieldIds());
     String schema = schemaValueVector.getValueVector().getAccessor().getObject(0).toString();
-    assertEquals("dfs_test.tmp", schema);
+    assertEquals("dfs.tmp", schema);
 
     // check properties column value
     final VectorWrapper propertiesValueVector = loader.getValueAccessorById(
@@ -405,7 +413,7 @@ public class TestInfoSchema extends BaseTestQuery {
     // check some stable properties values
     assertEquals("file", configMap.get("type"));
 
-    final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs_test").getConfig();
+    final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
     final String tmpSchemaLocation = testConfig.workspaces.get("tmp").getLocation();
     assertEquals(tmpSchemaLocation, configMap.get("location"));
 
@@ -417,5 +425,4 @@ public class TestInfoSchema extends BaseTestQuery {
   public void describeSchemaInvalid() throws Exception {
     errorMsgTestHelper("describe schema invalid.schema", "Invalid schema name [invalid.schema]");
   }
-
 }

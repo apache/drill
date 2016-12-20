@@ -19,16 +19,21 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 
 import static junit.framework.Assert.assertEquals;
 
+@Category(SecurityTest.class)
 public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(TestInboundImpersonationPrivileges.class);
@@ -38,7 +43,7 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
 
   static {
     try {
-      IMPERSONATION_POLICIES = Files.toString(FileUtils.getResourceAsFile("/inbound_impersonation_policies.json"),
+      IMPERSONATION_POLICIES = Files.toString(DrillFileUtils.getResourceAsFile("/inbound_impersonation_policies.json"),
           Charsets.UTF_8);
     } catch (final IOException e) {
       throw new RuntimeException("Cannot load impersonation policies.", e);
@@ -46,10 +51,11 @@ public class TestInboundImpersonationPrivileges extends BaseTestImpersonation {
   }
 
   private static boolean checkPrivileges(final String proxyName, final String targetName) {
+    OptionDefinition optionDefinition = SystemOptionManager.createDefaultOptionDefinitions().get(ExecConstants.IMPERSONATION_POLICIES_KEY);
     ExecConstants.IMPERSONATION_POLICY_VALIDATOR.validate(
-        OptionValue.createString(OptionValue.OptionType.SYSTEM,
+        OptionValue.create(optionDefinition.getMetaData().getAccessibleScopes(),
             ExecConstants.IMPERSONATION_POLICIES_KEY,
-            IMPERSONATION_POLICIES), null);
+            IMPERSONATION_POLICIES,OptionValue.OptionScope.SYSTEM), optionDefinition.getMetaData(),null);
     try {
       return InboundImpersonationManager.hasImpersonationPrivileges(proxyName, targetName, IMPERSONATION_POLICIES);
     } catch (final Exception e) {

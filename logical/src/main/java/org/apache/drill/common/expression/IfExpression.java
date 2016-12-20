@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +78,7 @@ public class IfExpression extends LogicalExpressionBase {
 
     public Builder setElse(LogicalExpression elseExpression) {
       this.elseExpression = elseExpression;
-            return this;
+      return this;
     }
 
     public Builder setIfCondition(IfCondition conditions) {
@@ -104,13 +105,14 @@ public class IfExpression extends LogicalExpressionBase {
       return outputType;
     }
 
-    MajorType majorType = elseExpression.getMajorType();
-    if (majorType.getMinorType() == MinorType.UNION) {
+    MajorType elseType = elseExpression.getMajorType();
+    MajorType ifType = ifCondition.expression.getMajorType();
+    if (elseType.getMinorType() == MinorType.UNION) {
       Set<MinorType> subtypes = Sets.newHashSet();
-      for (MinorType subtype : majorType.getSubTypeList()) {
+      for (MinorType subtype : elseType.getSubTypeList()) {
         subtypes.add(subtype);
       }
-      for (MinorType subtype : ifCondition.expression.getMajorType().getSubTypeList()) {
+      for (MinorType subtype : ifType.getSubTypeList()) {
         subtypes.add(subtype);
       }
       MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
@@ -119,17 +121,11 @@ public class IfExpression extends LogicalExpressionBase {
       }
       return builder.build();
     }
-    if (majorType.getMode() == DataMode.OPTIONAL) {
-      return majorType;
-    }
 
-    if (ifCondition.expression.getMajorType().getMode() == DataMode.OPTIONAL) {
-      assert ifCondition.expression.getMajorType().getMinorType() == majorType.getMinorType();
-
-      return ifCondition.expression.getMajorType();
-    }
-
-    return majorType;
+    MajorType.Builder builder = MajorType.newBuilder().setMinorType(ifType.getMinorType());
+    builder.setMode(elseType.getMode() == DataMode.OPTIONAL || ifType.getMode() == DataMode.OPTIONAL ? DataMode.OPTIONAL : elseType.getMode());
+    builder = Types.calculateTypePrecisionAndScale(ifType, elseType, builder);
+    return builder.build();
   }
 
   public static Builder newBuilder() {

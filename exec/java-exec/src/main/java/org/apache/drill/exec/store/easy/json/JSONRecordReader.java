@@ -149,6 +149,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
   }
 
+  @Override
   protected List<SchemaPath> getDefaultColumnsToRead() {
     return ImmutableList.of();
   }
@@ -228,7 +229,11 @@ public class JSONRecordReader extends AbstractRecordReader {
            handleAndRaise("Error parsing JSON", ex);
         }
     }
-    jsonReader.ensureAtLeastOneField(writer);
+    // Skip empty json file with 0 row.
+    // Only when data source has > 0 row, ensure the batch has one field.
+    if (recordCount > 0) {
+      jsonReader.ensureAtLeastOneField(writer);
+    }
     writer.setValueCount(recordCount);
     updateRunningCount();
     return recordCount;

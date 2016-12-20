@@ -16,15 +16,18 @@
 */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.SqlTest;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * DRILL-4906
  * Tests for handling nullable types in CASE function
  */
+@Category(SqlTest.class)
 public class TestCaseNullableTypes extends BaseTestQuery {
 
   @Test

@@ -23,12 +23,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Function;
+import org.junit.experimental.categories.Category;
 
+@Category(JdbcTest.class)
 public class Bug1735ResultSetCloseReleasesBuffersTest extends JdbcTestQueryBase {
 
   // TODO: Move Jetty status server disabling to DrillTest.
@@ -64,14 +67,13 @@ public class Bug1735ResultSetCloseReleasesBuffersTest extends JdbcTestQueryBase 
 
   @Test
   public void test() throws Exception {
-    JdbcAssert
-    .withNoDefaultSchema()
+    withNoDefaultSchema()
     .withConnection(
         new Function<Connection, Void>() {
           public Void apply( Connection connection ) {
             try {
               Statement statement = connection.createStatement();
-              ResultSet resultSet = statement.executeQuery( "USE dfs_test.tmp" );
+              ResultSet resultSet = statement.executeQuery( "USE dfs.tmp" );
               // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment
               // race conditions are fixed (not just DRILL-2245 fixes).
               // resultSet.close( resultSet );

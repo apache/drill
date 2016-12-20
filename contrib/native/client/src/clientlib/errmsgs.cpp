@@ -49,6 +49,15 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_UNKNOWN_ERR, ERR_CATEGORY_CONN, 0, "Handshake Failed due to an error on the server. [Server message was: (%s) %s]"},
     {ERR_CONN_NOCONN, ERR_CATEGORY_CONN, 0, "There is no connection to the server."},
     {ERR_CONN_ALREADYCONN, ERR_CATEGORY_CONN, 0, "This client is already connected to a server."},
+    {ERR_CONN_NOCONNSTR, ERR_CATEGORY_CONN, 0, "Cannot connect if either host name or port number are empty."},
+    {ERR_CONN_SSLCERTFAIL, ERR_CATEGORY_CONN, 0, "SSL certificate file %s could not be loaded (exception message: %s)."},
+    {ERR_CONN_NOSOCKET, ERR_CATEGORY_CONN, 0, "Failed to open socket connection."},
+    {ERR_CONN_NOSERVERAUTH, ERR_CATEGORY_CONN, 0, "Client needs a secure connection but server does not"
+        " support any security mechanisms. Please contact an administrator. [Warn: This"
+        " could be due to a bad configuration or a security attack is in progress.]"},
+    {ERR_CONN_NOSERVERENC, ERR_CATEGORY_CONN, 0, "Client needs encryption but encryption is disabled on the server."
+        " Please check connection parameters or contact administrator. [Warn: This"
+        " could be due to a bad configuration or a security attack is in progress.]"},
     {ERR_QRY_OUTOFMEM, ERR_CATEGORY_QRY, 0, "Out of memory."},
     {ERR_QRY_COMMERR, ERR_CATEGORY_QRY, 0, "Communication error. %s"},
     {ERR_QRY_INVREADLEN, ERR_CATEGORY_QRY, 0, "Internal Error: Received a message with an invalid read length."},
@@ -77,7 +86,7 @@ std::string getMessage(uint32_t msgId, ...){
     assert((ERR_NONE <= msgId) && (msgId < ERR_QRY_MAX));
     va_list args;
     va_start (args, msgId);
-    vsprintf (str, errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);
+    vsnprintf (str, sizeof(str), errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);
     va_end (args);
     s=std::string("[")+boost::lexical_cast<std::string>(msgId)+std::string("]")+str;
     return s;

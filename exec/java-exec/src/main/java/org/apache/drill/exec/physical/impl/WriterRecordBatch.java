@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -131,11 +131,13 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   private void addOutputContainerData() {
+    @SuppressWarnings("resource")
     final VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(
         VarCharVector.class,
         container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds())
       .getValueVector();
     AllocationHelper.allocate(fragmentIdVector, 1, 50);
+    @SuppressWarnings("resource")
     final BigIntVector summaryVector = (BigIntVector) container.getValueAccessorById(BigIntVector.class,
             container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds())
           .getValueVector();
@@ -174,13 +176,25 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     schema = container.getSchema();
   }
 
+  /** Clean up needs to be performed before closing writer. Partially written data will be removed. */
   private void closeWriter() {
-    if (recordWriter != null) {
+    if (recordWriter == null) {
+      return;
+    }
+
+    try {
+      recordWriter.cleanup();
+    } catch(IOException ex) {
+      context.fail(ex);
+    } finally {
       try {
-        recordWriter.cleanup();
+        if (!processed) {
+          recordWriter.abort();
+        }
+      } catch (IOException e) {
+        logger.error("Abort failed. There could be leftover output files.", e);
+      } finally {
         recordWriter = null;
-      } catch(IOException ex) {
-        context.fail(ex);
       }
     }
   }

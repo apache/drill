@@ -21,7 +21,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.schema.Schema.TableType;
+import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.ql.Driver;
@@ -32,6 +34,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.Map;
@@ -47,6 +50,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SE
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
 
   // DB whose warehouse directory has permissions 755, available everyone to read

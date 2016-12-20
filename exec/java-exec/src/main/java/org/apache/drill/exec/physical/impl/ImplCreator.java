@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -69,9 +70,16 @@ public class ImplCreator {
     Preconditions.checkNotNull(root);
     Preconditions.checkNotNull(context);
 
-    if (AssertionUtil.isAssertionsEnabled()) {
+    // Enable iterator (operator) validation if assertions are enabled (debug mode)
+    // or if in production mode and the ENABLE_ITERATOR_VALIDATION option is set
+    // to true.
+
+    if (AssertionUtil.isAssertionsEnabled() ||
+        context.getOptionSet().getOption(ExecConstants.ENABLE_ITERATOR_VALIDATOR) ||
+        context.getConfig().getBoolean(ExecConstants.ENABLE_ITERATOR_VALIDATION)) {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
+
     final ImplCreator creator = new ImplCreator();
     Stopwatch watch = Stopwatch.createStarted();
 
@@ -97,6 +105,7 @@ public class ImplCreator {
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
+  @SuppressWarnings("unchecked")
   private RootExec getRootExec(final FragmentRoot root, final FragmentContext context) throws ExecutionSetupException {
     final List<RecordBatch> childRecordBatches = getChildren(root, context);
 
@@ -133,6 +142,7 @@ public class ImplCreator {
         return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
           @Override
           public RecordBatch run() throws Exception {
+            @SuppressWarnings("unchecked")
             final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
                 context, op, childRecordBatches);
             operators.addFirst(batch);
@@ -145,6 +155,7 @@ public class ImplCreator {
         throw new ExecutionSetupException(errMsg, e);
       }
     } else {
+      @SuppressWarnings("unchecked")
       final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(context,
           op, childRecordBatches);
       operators.addFirst(batch);

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -260,7 +261,8 @@ fi
 # Add $DRILL_HOME/conf if the user has provided their own
 # site configuration directory.
 # Ensures we pick up the default logback.xml, etc. if the
-# user does not provide their own.
+# user does not provide their own, and that we pick up the
+# drill-distrib.conf file, if provided by the distro.
 # Also, set a variable to remember that the config dir
 # is non-default, which is needed later.
 
@@ -308,6 +310,27 @@ fi
 CP="$CP:$DRILL_HOME/jars/3rdparty/*"
 CP="$CP:$DRILL_HOME/jars/classb/*"
 
+#Followed by OS Specific jars
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  # Linux
+  # check for Fedora. netty-tcnative has a Fedora variant
+  linuxvariant=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+  if [[ "$linuxvariant" == "Fedora" ]]; then
+    CP="$CP:$DRILL_HOME/jars/3rdparty/fedora/*"
+  else
+    CP="$CP:$DRILL_HOME/jars/3rdparty/linux/*"
+  fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  # Mac OSX
+  CP="$CP:$DRILL_HOME/jars/3rdparty/osx/*"
+elif [[ "$OSTYPE" == "cygwin" ]]; then
+  # Cygwin
+  CP="$CP:$DRILL_HOME/jars/3rdparty/windows/*"
+elif [[ "$OSTYPE" == "msys" ]]; then
+  # Msys env on MinGW
+  CP="$CP:$DRILL_HOME/jars/3rdparty/windows/*"
+fi
+
 # Finally any user specified
 # Allow user jars to appear in $DRILL_CONF_DIR/jars to avoid mixing
 # user and Drill distribution jars.
@@ -347,10 +370,17 @@ case "`uname`" in
 CYGWIN*) is_cygwin=true;;
 esac
 
+if $is_cygwin; then
+  JAVA_BIN="java.exe"
+else
+  JAVA_BIN="java"
+fi
+
 # Test for or find JAVA_HOME
+
 if [ -z "$JAVA_HOME" ]; then
-  if [ -e `which java` ]; then
-    SOURCE=`which java`
+  SOURCE=`which java`
+  if [ -e $SOURCE ]; then
     while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
       DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
       SOURCE="$(readlink "$SOURCE")"
@@ -359,6 +389,7 @@ if [ -z "$JAVA_HOME" ]; then
       [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
     done
     JAVA_HOME="$( cd -P "$( dirname "$SOURCE" )" && cd .. && pwd )"
+    JAVA=$SOURCE
   fi
   # if we didn't set it
   if [ -z "$JAVA_HOME" ]; then
@@ -367,18 +398,24 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 # Now, verify that 'java' binary exists and is suitable for Drill.
-if $is_cygwin; then
-  JAVA_BIN="java.exe"
-else
-  JAVA_BIN="java"
+# If we started with `which java` above, use that path (after replacing
+# symlinks.) If we started with JAVA_HOME, try in bin. Doing so handles
+# the case in which JAVA_HOME is a JDK that has a nested JRE; we prefer
+# the JDK bin. Finally, if nothing else works, just search for the
+# executable.
+
+if [ -z "$JAVA" ]; then
+  JAVA="$JAVA_HOME/bin/$JAVA_BIN"
+  if [[ ! -e $JAVA ]]; then
+    JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
+  fi
 fi
-JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
 if [ ! -e "$JAVA" ]; then
   fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
 fi
 
 # Ensure that Java version is at least 1.7
-"$JAVA" -version 2>&1 | grep "version" | egrep -e "1.4|1.5|1.6" > /dev/null
+"$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.4|1\.5|1\.6" > /dev/null
 if [ $? -eq 0 ]; then
   fatal_error "Java 1.7 or later is required to run Apache Drill."
 fi

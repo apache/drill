@@ -18,52 +18,51 @@
 
 package org.apache.drill;
 
+import org.apache.drill.categories.PlannerTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(PlannerTest.class)
 public class TestMergeFilterPlan extends PlanTestBase {
 
   @Test
   public void testDRILL_FilterMerge() throws Exception {
-    String viewDDL = "create or replace view MyViewWithFilter as " +
-        " SELECT  first_name, " +
-        "         last_name, " +
-        "         full_name, " +
-        "         salary, " +
-        "         employee_id, " +
-        "         store_id, " +
-        "         position_id, " +
-        "         position_title, " +
-        "         education_level " +
-        " FROM cp.`employee.json` " +
-        " WHERE position_id in (1, 2, 3 ) " ;
-
-    String querySQL =  " select dat.store_id\n" +
-        "      , sum(dat.store_cost) as total_cost\n" +
-        " from (\n" +
-        "  select store_id, position_id\n" +
-        "            , sum( salary) as store_cost\n" +
-        "       from MyViewWithFilter \n" +
-        " where full_name in ( select n_name\n" +
-        "                      from cp.`tpch/nation.parquet`)\n" +
-        "  and  education_level = 'GRADUATE DEGREE' " +
-        "  and position_id in ( select position_id \n" +
-        "                       from MyViewWithFilter\n" +
-        "                        where position_title like '%VP%'\n" +
-        "                      )\n" +
-        "  group by store_id, position_id\n" +
-        ") dat\n" +
-        "group by dat.store_id\n" +
-        "order by dat.store_id";
-
     String expectedPattern1 = "Filter(condition=[AND(OR(=($0, 1), =($0, 2), =($0, 3)), =($4, 'GRADUATE DEGREE'))])";
     String expectedPattern2 = "Filter(condition=[AND(OR(=($0, 1), =($0, 2), =($0, 3)), LIKE($1, '%VP%'))])";
     String excludedPattern = "Filter(condition=[OR(=($0, 1), =($0, 2), =($0, 3))])";
 
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
 
-    test(viewDDL);
+    test("create or replace view MyViewWithFilter as " +
+      " SELECT  first_name, " +
+      "         last_name, " +
+      "         full_name, " +
+      "         salary, " +
+      "         employee_id, " +
+      "         store_id, " +
+      "         position_id, " +
+      "         position_title, " +
+      "         education_level " +
+      " FROM cp.`employee.json` " +
+      " WHERE position_id in (1, 2, 3 )");
 
-    testPlanSubstrPatterns(querySQL,
+    testPlanSubstrPatterns(" select dat.store_id " +
+        "      , sum(dat.store_cost) as total_cost " +
+        " from ( " +
+        "  select store_id, position_id " +
+        "            , sum(salary) as store_cost " +
+        "       from MyViewWithFilter " +
+        " where full_name in ( select n_name " +
+        "                      from cp.`tpch/nation.parquet`) " +
+        "  and  education_level = 'GRADUATE DEGREE' " +
+        "  and position_id in ( select position_id " +
+        "                       from MyViewWithFilter " +
+        "                        where position_title like '%VP%' " +
+        "                      ) " +
+        "  group by store_id, position_id " +
+        ") dat " +
+        "group by dat.store_id " +
+        "order by dat.store_id",
         new String[]{expectedPattern1, expectedPattern2}, new String[]{excludedPattern});
 
     test("drop view MyViewWithFilter ");

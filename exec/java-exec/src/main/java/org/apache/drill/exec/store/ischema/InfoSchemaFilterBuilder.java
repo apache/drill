@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -138,7 +138,7 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
   public ExprNode visitCastExpression(CastExpression e, Void value) throws RuntimeException {
     if (e.getInput() instanceof FieldReference) {
       FieldReference fieldRef = (FieldReference) e.getInput();
-      String field = fieldRef.getAsUnescapedPath().toUpperCase();
+      String field = fieldRef.getRootSegmentPath().toUpperCase();
       if (field.equals(CATS_COL_CATALOG_NAME)
           || field.equals(SCHS_COL_SCHEMA_NAME)
           || field.equals(SHRD_COL_TABLE_NAME)
@@ -158,7 +158,7 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
 
   @Override
   public ExprNode visitSchemaPath(SchemaPath path, Void value) throws RuntimeException {
-    String field = path.getAsUnescapedPath().toUpperCase();
+    String field = path.getRootSegmentPath().toUpperCase();
     if (field.equals(CATS_COL_CATALOG_NAME)
         || field.equals(SCHS_COL_SCHEMA_NAME)
         || field.equals(SHRD_COL_TABLE_NAME)

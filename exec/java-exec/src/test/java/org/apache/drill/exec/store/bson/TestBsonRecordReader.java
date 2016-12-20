@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
@@ -100,6 +100,17 @@ public class TestBsonRecordReader extends BaseTestQuery {
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
     assertEquals("test_string", mapReader.reader("stringKey").readText().toString());
+  }
+
+  @Test
+  public void testSpecialCharStringType() throws IOException {
+    BsonDocument bsonDoc = new BsonDocument();
+    bsonDoc.append("stringKey", new BsonString("§§§§§§§§§1"));
+    writer.reset();
+    bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
+    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    assertEquals("§§§§§§§§§1",
+        mapReader.reader("stringKey").readText().toString());
   }
 
   @Test

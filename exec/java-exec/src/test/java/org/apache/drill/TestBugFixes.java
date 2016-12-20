@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,20 +18,28 @@
 package org.apache.drill;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Category(UnlikelyTest.class)
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
-  private static final String WORKING_PATH = TestTools.getWorkingPath();
-  private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+
+  @BeforeClass
+  public static void setupTestFiles() {
+    dirTestWatcher.copyResourceToRoot(Paths.get("bugs", "DRILL-4192"));
+  }
 
   @Test
   public void leak1() throws Exception {
@@ -154,19 +162,16 @@ public class TestBugFixes extends BaseTestQuery {
 
   @Test
   public void testDRILL4192() throws Exception {
-    String query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192` order by dir1", TEST_RES_PATH));
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select dir0, dir1 from dfs.`bugs/DRILL-4192` order by dir1")
         .unOrdered()
         .baselineColumns("dir0", "dir1")
         .baselineValues("single_top_partition", "nested_partition_1")
         .baselineValues("single_top_partition", "nested_partition_2")
         .go();
 
-    query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192/*/nested_partition_1` order by dir1", TEST_RES_PATH));
-
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery("select dir0, dir1 from dfs.`bugs/DRILL-4192/*/nested_partition_1` order by dir1")
         .unOrdered()
         .baselineColumns("dir0", "dir1")
         .baselineValues("single_top_partition", "nested_partition_1")
@@ -211,15 +216,15 @@ public class TestBugFixes extends BaseTestQuery {
     int limit = 65536;
     ImmutableList.Builder<Map<String, Object>> baselineBuilder = ImmutableList.builder();
     for (int i = 0; i < limit; i++) {
-      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", String.valueOf(i + 1)));
+      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", /*String.valueOf */ (i + 1)));
     }
     List<Map<String, Object>> baseline = baselineBuilder.build();
 
     testBuilder()
-            .sqlQuery(String.format("select id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id limit %s", TEST_RES_PATH, limit))
-            .unOrdered()
-            .baselineRecords(baseline)
-            .go();
+      .sqlQuery("select cast(id as int) as id from cp.`bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id order by 1 limit %s", limit)
+      .unOrdered()
+      .baselineRecords(baseline)
+      .go();
   }
 
   @Test
@@ -230,5 +235,69 @@ public class TestBugFixes extends BaseTestQuery {
         .baselineColumns("cnt")
         .baselineValues(1L)
         .go();
+  }
+
+  @Test // DRILL-4678
+  public void testManyDateCasts() throws Exception {
+    StringBuilder query = new StringBuilder("SELECT DISTINCT dt FROM (VALUES");
+    for (int i = 0; i < 50; i++) {
+      query.append("(CAST('1964-03-07' AS DATE)),");
+    }
+    query.append("(CAST('1951-05-16' AS DATE))) tbl(dt)");
+    test(query.toString());
+  }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanOrWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT\n" +
+        "CASE WHEN employee_id IN (1) THEN 1 ELSE 0 END `first`\n" +
+        ", CASE WHEN employee_id IN (2) THEN 1 ELSE 0 END `second`\n" +
+        ", CASE WHEN employee_id IN (1, 2) THEN 1 ELSE 0 END `any`\n" +
+        "FROM cp.`employee.json` ORDER BY employee_id limit 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("first", "second", "any")
+        .baselineValues(1, 0, 1)
+        .baselineValues(0, 1, 1)
+        .go();
+  }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanAndWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT employee_id FROM cp.`employee.json` WHERE\n" +
+        "((employee_id > 1 AND employee_id < 3) OR (employee_id > 9 AND employee_id < 11))\n" +
+        "AND (employee_id > 1 AND employee_id < 3)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("employee_id")
+        .baselineValues((long) 2)
+        .go();
+  }
+
+  @Test
+  public void testDRILL5269() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.enable_nljoin_for_scalar_only` = false");
+      test("ALTER SESSION SET `planner.slice_target` = 500");
+      test("\nSELECT `one` FROM (\n" +
+          "  SELECT 1 `one` FROM cp.`tpch/nation.parquet`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT 2 `two` FROM cp.`tpch/nation.parquet`\n" +
+          "  ) `t0` ON (\n" +
+          "    `tpch/nation.parquet`.n_regionkey IS NOT DISTINCT FROM `t0`.`two`\n" +
+          "  )\n" +
+          "  GROUP BY `one`\n" +
+          ") `t1`\n" +
+          "  INNER JOIN (\n" +
+          "    SELECT count(1) `a_count` FROM cp.`tpch/nation.parquet`\n" +
+          ") `t5` ON TRUE\n");
+    } finally {
+      test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
+      test("ALTER SESSION RESET `planner.slice_target`");
+    }
   }
 }

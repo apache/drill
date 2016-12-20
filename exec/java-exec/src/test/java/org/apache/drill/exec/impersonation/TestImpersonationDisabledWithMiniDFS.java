@@ -18,11 +18,13 @@
 package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.physical.impl.writer.TestParquetWriter;
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.categories.SlowTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Note to future devs, please do not put random tests here. Make sure that they actually require
@@ -30,6 +32,7 @@ import org.junit.Test;
  * the tests. Running this mini cluster is slow and it is best for these tests to only cover
  * necessary cases.
  */
+@Category({SlowTest.class, SecurityTest.class})
 public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation {
 
   @BeforeClass
@@ -49,14 +52,14 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
     // page of data all at once, see notes above testReadLargeParquetFileFromDFS()
     test(String.format(
         "CREATE TABLE %s.tmp.large_employee AS " +
-            "(SELECT employee_id, full_name FROM cp.`/employee.json`) " +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
-        "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)",
+            "(SELECT employee_id, full_name FROM cp.`employee.json`) " +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
+        "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)",
         MINIDFS_STORAGE_PLUGIN_NAME));
   }
 

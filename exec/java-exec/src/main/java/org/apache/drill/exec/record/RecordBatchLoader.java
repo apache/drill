@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,12 +19,15 @@ package org.apache.drill.exec.record;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -38,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 
 /**
@@ -70,6 +72,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * @throws SchemaChangeException
    *   TODO:  Clean:  DRILL-2933  load(...) never actually throws SchemaChangeException.
    */
+  @SuppressWarnings("resource")
   public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
     if (logger.isTraceEnabled()) {
       logger.trace("Loading record batch with def {} and data {}", def, buf);
@@ -84,10 +87,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     // the schema has changed since the previous call.
 
     // Set up to recognize previous fields that no longer exist.
-    final Map<String, ValueVector> oldFields = Maps.newHashMap();
+    final Map<String, ValueVector> oldFields = CaseInsensitiveMap.newHashMap();
     for(final VectorWrapper<?> wrapper : container) {
       final ValueVector vector = wrapper.getValueVector();
-      oldFields.put(vector.getField().getPath(), vector);
+      oldFields.put(vector.getField().getName(), vector);
     }
 
     final VectorContainer newVectors = new VectorContainer();
@@ -96,7 +99,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       int bufOffset = 0;
       for(final SerializedField field : fields) {
         final MaterializedField fieldDef = MaterializedField.create(field);
-        ValueVector vector = oldFields.remove(fieldDef.getPath());
+        ValueVector vector = oldFields.remove(fieldDef.getName());
 
         if (vector == null) {
           // Field did not exist previously--is schema change.
@@ -107,6 +110,17 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
           // clear previous vector
           vector.clear();
           schemaChanged = true;
+          vector = TypeHelper.getNewVector(fieldDef, allocator);
+
+        // If the field is a map, check if the map schema changed.
+
+        } else if (vector.getField().getType().getMinorType() == MinorType.MAP  &&
+                   ! isSameSchema(vector.getField().getChildren(), field.getChildList())) {
+
+          // The map schema changed. Discard the old map and create a new one.
+
+          schemaChanged = true;
+          vector.clear();
           vector = TypeHelper.getNewVector(fieldDef, allocator);
         }
 
@@ -119,7 +133,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         bufOffset += field.getBufferLength();
         newVectors.add(vector);
       }
-
 
       // rebuild the schema.
       final SchemaBuilder builder = BatchSchema.newBuilder();
@@ -149,6 +162,51 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return schemaChanged;
   }
 
+  /**
+   * Check if two schemas are the same. The schemas, given as lists, represent the
+   * children of the original and new maps (AKA structures.)
+   *
+   * @param currentChildren current children of a Drill map
+   * @param newChildren new children, in an incoming batch, of the same
+   * Drill map
+   * @return true if the schemas are identical, false if a child is missing
+   * or has changed type or cardinality (AKA "mode").
+   */
+
+  private boolean isSameSchema(Collection<MaterializedField> currentChildren,
+      List<SerializedField> newChildren) {
+    if (currentChildren.size() != newChildren.size()) {
+      return false;
+    }
+
+    // Column order can permute (see DRILL-5828). So, use a map
+    // for matching.
+
+    Map<String, MaterializedField> childMap = CaseInsensitiveMap.newHashMap();
+    for (MaterializedField currentChild : currentChildren) {
+      childMap.put(currentChild.getName(), currentChild);
+    }
+    for (SerializedField newChild : newChildren) {
+      MaterializedField currentChild = childMap.get(newChild.getNamePart().getName());
+
+      // New map member?
+
+      if (currentChild == null) {
+        return false;
+      }
+
+      // Changed data type?
+
+      if (! currentChild.getType().equals(newChild.getMajorType())) {
+        return false;
+      }
+    }
+
+    // Everything matches.
+
+    return true;
+  }
+
   @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return container.getValueVectorId(path);
@@ -169,9 +227,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 //  }
 
   @Override
-  public int getRecordCount() {
-    return valueCount;
-  }
+  public int getRecordCount() { return valueCount; }
+
+  public VectorContainer getContainer() { return container; }
 
   @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids){
@@ -199,13 +257,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   }
 
   @Override
-  public BatchSchema getSchema() {
-    return schema;
-  }
+  public BatchSchema getSchema() { return schema; }
 
-  public void resetRecordCount() {
-    valueCount = 0;
-  }
+  public void resetRecordCount() { valueCount = 0; }
 
   /**
    * Clears this loader, which clears the internal vector container (see
@@ -216,22 +270,4 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     resetRecordCount();
   }
 
-  /**
-   * Sorts vectors into canonical order (by field name).  Updates schema and
-   * internal vector container.
-   */
-  public void canonicalize() {
-    //logger.debug( "RecordBatchLoader : before schema " + schema);
-    container = VectorContainer.canonicalize(container);
-
-    // rebuild the schema.
-    SchemaBuilder b = BatchSchema.newBuilder();
-    for(final VectorWrapper<?> v : container){
-      b.addField(v.getField());
-    }
-    b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
-    this.schema = b.build();
-
-    //logger.debug( "RecordBatchLoader : after schema " + schema);
-  }
 }

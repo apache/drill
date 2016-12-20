@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,9 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator.AggOutcome;
+import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -66,6 +68,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private boolean done = false;
   private boolean first = true;
   private int recordCount = 0;
+  private BatchSchema incomingSchema;
 
   /*
    * DRILL-2277, DRILL-2411: For straight aggregates without a group by clause we need to perform special handling when
@@ -85,6 +88,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
+
+    // Sorry. Horrible hack. To release memory after an in-memory sort,
+    // the External Sort normally frees in-memory sorted batches just
+    // before returning NONE. But, this operator needs the batches to
+    // be present, even after NONE. This call puts the ESB into the proper
+    // "mode". A later call explicitly releases the batches.
+
+    ExternalSortBatch.retainSv4OnNone(incoming);
   }
 
   @Override
@@ -109,8 +120,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       case STOP:
         state = BatchState.STOP;
         return;
+      default:
+        break;
     }
 
+    this.incomingSchema = incoming.getSchema();
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
@@ -173,6 +187,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         container.zeroVectors();
       }
       done = true;
+      ExternalSortBatch.releaseBatches(incoming);
       // fall through
     case RETURN_OUTCOME:
       IterOutcome outcome = aggregator.getOutcome();
@@ -188,7 +203,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       return outcome;
     case UPDATE_AGGREGATOR:
       context.fail(UserException.unsupportedError()
-        .message("Streaming aggregate does not support schema changes")
+        .message(SchemaChangeException.schemaChanged("Streaming aggregate does not support schema changes", incomingSchema, incoming.getSchema()).getMessage())
         .build(logger));
       close();
       killIncoming(false);
@@ -205,6 +220,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
    * as we want the output to be NULL. For the required vectors (only for count()) we set the value to be zero since
    * we don't zero out our buffers initially while allocating them.
    */
+  @SuppressWarnings("resource")
   private void constructSpecialBatch() {
     int exprIndex = 0;
     for (final VectorWrapper<?> vw: container) {
@@ -257,8 +273,10 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   private StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
-    ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION,
-        context.getFunctionRegistry(), context.getOptions());
+    ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
@@ -274,7 +292,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
       keyExprs[i] = expr;
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
+      @SuppressWarnings("resource")
       final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyOutputIds[i] = container.add(vector);
     }
@@ -289,7 +309,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
 
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
+      @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       TypedFieldId id = container.add(vector);
       valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
@@ -366,7 +388,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private void addRecordValues(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] valueExprs) {
     cg.setMappingSet(EVAL);
     for (final LogicalExpression ex : valueExprs) {
-      final HoldingContainer hc = cg.addExpr(ex);
+      cg.addExpr(ex);
     }
   }
 
@@ -375,7 +397,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private void outputRecordKeys(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs) {
     cg.setMappingSet(RECORD_KEYS);
     for (int i = 0; i < keyExprs.length; i++) {
-      final HoldingContainer hc = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
+      cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
     }
   }
 
@@ -395,7 +417,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(RECORD_KEYS_PREV);
       final HoldingContainer innerExpression = cg.addExpr(keyExprs[i], ClassGenerator.BlkCreateMode.FALSE);
       cg.setMappingSet(RECORD_KEYS_PREV_OUT);
-      final HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), ClassGenerator.BlkCreateMode.FALSE);
+      cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), ClassGenerator.BlkCreateMode.FALSE);
     }
   }
 
@@ -404,17 +426,17 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     case FOUR_BYTE: {
       JVar var = g.declareClassField("sv4_", g.getModel()._ref(SelectionVector4.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));
-      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));
       return;
     }
     case NONE: {
-      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));;
+      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));
       return;
     }
     case TWO_BYTE: {
       JVar var = g.declareClassField("sv2_", g.getModel()._ref(SelectionVector2.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
-      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));
       return;
     }
 

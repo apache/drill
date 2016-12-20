@@ -35,6 +35,8 @@ Install Prerequisites
   or use brew to install 
   $> brew install cmake
 
+2.0) Install cppunit 
+  $> brew install cppunit 
 
 2.1) Install protobuf 2.5.0 (or higher)
   $> brew install protobuf
@@ -42,19 +44,30 @@ Install Prerequisites
 2.2) Install zookeeper
   $> brew install zookeeper
 
-2.3) Install boost
+2.3) Install or build Cyrus SASL 
+   To Install (need macports, brew did not work for me)
+       port install cyrus-sasl2
+
+   To build your own 
+   See readme.sasl for instructions
+
+2.4) Install OpenSSL
+   [NOTE: MacOS has a neutered version of openssl installed. Install the build using brew. Make sure the brew installation is picked up]
+   brew install openssl
+
+2.5) Install boost
   $> brew install boost
 
-2.3.1) For production builds, see the readme.boost file  
+2.5.1) For production builds, see the readme.boost file  
   
-2.3.1.1 Build using XCODE
+2.6) Build using XCODE
 =========================  
 (Optional) Refresh protobuf source files
 ----------------------------------------
 When changes have been introduced to the protocol module, you might need to refresh the protobuf C++ source files too.
   $> cd DRILL_DIR/contrib/native/client
   $> mkdir build
-  $> cd build && cmake3 -G "XCode" -D CMAKE_BUILD_TYPE=Debug ..
+  $> cd build && cmake -G "Xcode" -D CMAKE_BUILD_TYPE=Debug ..
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target fixProtobufs
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target cpProtobufs
 
@@ -64,7 +77,7 @@ Build drill client
 -------------------
   $> cd DRILL_DIR/contrib/native/client
   $> mkdir build
-  $> cd build && cmake3 -G "XCode" -D CMAKE_BUILD_TYPE=Debug ..
+  $> cd build && cmake -G "Xcode" -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl "-D CMAKE_BUILD_TYPE=Debug ..
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target ALL_BUILD
 
 
@@ -72,7 +85,7 @@ XCode IDE
 ---------
   You can open the drillclient.xcodeproj file in the XCode ide and run/debug as with any other command line app
 
-2.3.1.2 Build using MAKE
+2.7) Build using MAKE
 ========================
 (Optional) Refresh protobuf source files
 ----------------------------------------
@@ -88,16 +101,22 @@ Build drill client
 -------------------
     $> cd DRILL_DIR/contrib/native/client
     $> mkdir build
-    $> cd build && cmake3 -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ..
+    $> cd build && cmake3 -G "Unix Makefiles" -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl" -D CMAKE_BUILD_TYPE=Debug ..
     $> make
 
+2.10) Build using CLion
+CLion can recognize cmake projects automatically. Check CLion documentation for help on how to use CMake with CLion.
+To prevent CLion's cmake from picking up the system installed OpenSSL set the following define in CLion/Preferences/Build, Execution, Deployment/CMake/CMake Options
+-DOPENSSL_ROOT_DIR="/usr/local/opt/openssl
+Then reload the CMake project making sure to invalidate the CMake cache
+Tools/CMake/Reset Cache and Reload Project
 
-2.4 Test
+2.9 Test
 --------
 Run query submitter from the command line
   $> querySubmitter query='select * from dfs.`/Users/pchandra/work/data/tpc-h/customer.parquet`' type=sql connectStr=local=10.250.0.146:31010 api=async logLevel=trace user=yourUserName password=yourPassWord
 
-2.5 Valgrind
+2.10 Valgrind
 ------------
   Install valgrind using brew
   $> brew install valgrind

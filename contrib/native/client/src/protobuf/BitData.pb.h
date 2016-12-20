@@ -47,11 +47,12 @@ enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
   GOODBYE = 2,
-  REQ_RECORD_BATCH = 3
+  REQ_RECORD_BATCH = 3,
+  SASL_MESSAGE = 4
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = REQ_RECORD_BATCH;
+const RpcType RpcType_MAX = SASL_MESSAGE;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -219,6 +220,22 @@ class BitServerHandshake : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 rpc_version() const;
   inline void set_rpc_version(::google::protobuf::int32 value);
 
+  // repeated string authenticationMechanisms = 2;
+  inline int authenticationmechanisms_size() const;
+  inline void clear_authenticationmechanisms();
+  static const int kAuthenticationMechanismsFieldNumber = 2;
+  inline const ::std::string& authenticationmechanisms(int index) const;
+  inline ::std::string* mutable_authenticationmechanisms(int index);
+  inline void set_authenticationmechanisms(int index, const ::std::string& value);
+  inline void set_authenticationmechanisms(int index, const char* value);
+  inline void set_authenticationmechanisms(int index, const char* value, size_t size);
+  inline ::std::string* add_authenticationmechanisms();
+  inline void add_authenticationmechanisms(const ::std::string& value);
+  inline void add_authenticationmechanisms(const char* value);
+  inline void add_authenticationmechanisms(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& authenticationmechanisms() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_authenticationmechanisms();
+
   // @@protoc_insertion_point(class_scope:exec.bit.data.BitServerHandshake)
  private:
   inline void set_has_rpc_version();
@@ -226,10 +243,11 @@ class BitServerHandshake : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::google::protobuf::RepeatedPtrField< ::std::string> authenticationmechanisms_;
   ::google::protobuf::int32 rpc_version_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -463,6 +481,50 @@ inline ::google::protobuf::int32 BitServerHandshake::rpc_version() const {
 inline void BitServerHandshake::set_rpc_version(::google::protobuf::int32 value) {
   set_has_rpc_version();
   rpc_version_ = value;
+}
+
+// repeated string authenticationMechanisms = 2;
+inline int BitServerHandshake::authenticationmechanisms_size() const {
+  return authenticationmechanisms_.size();
+}
+inline void BitServerHandshake::clear_authenticationmechanisms() {
+  authenticationmechanisms_.Clear();
+}
+inline const ::std::string& BitServerHandshake::authenticationmechanisms(int index) const {
+  return authenticationmechanisms_.Get(index);
+}
+inline ::std::string* BitServerHandshake::mutable_authenticationmechanisms(int index) {
+  return authenticationmechanisms_.Mutable(index);
+}
+inline void BitServerHandshake::set_authenticationmechanisms(int index, const ::std::string& value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitServerHandshake::set_authenticationmechanisms(int index, const char* value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitServerHandshake::set_authenticationmechanisms(int index, const char* value, size_t size) {
+  authenticationmechanisms_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* BitServerHandshake::add_authenticationmechanisms() {
+  return authenticationmechanisms_.Add();
+}
+inline void BitServerHandshake::add_authenticationmechanisms(const ::std::string& value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitServerHandshake::add_authenticationmechanisms(const char* value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitServerHandshake::add_authenticationmechanisms(const char* value, size_t size) {
+  authenticationmechanisms_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+BitServerHandshake::authenticationmechanisms() const {
+  return authenticationmechanisms_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+BitServerHandshake::mutable_authenticationmechanisms() {
+  return &authenticationmechanisms_;
 }
 
 // -------------------------------------------------------------------

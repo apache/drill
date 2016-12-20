@@ -21,6 +21,7 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -34,6 +35,7 @@ public class HashAggregate extends AbstractSingle {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregate.class);
 
+  private final AggPrelBase.OperatorPhase aggPhase;
   private final List<NamedExpression> groupByExprs;
   private final List<NamedExpression> aggrExprs;
 
@@ -41,14 +43,18 @@ public class HashAggregate extends AbstractSingle {
 
   @JsonCreator
   public HashAggregate(@JsonProperty("child") PhysicalOperator child,
+                       @JsonProperty("phase") AggPrelBase.OperatorPhase aggPhase,
                        @JsonProperty("keys") List<NamedExpression> groupByExprs,
                        @JsonProperty("exprs") List<NamedExpression> aggrExprs,
                        @JsonProperty("cardinality") float cardinality) {
     super(child);
+    this.aggPhase = aggPhase;
     this.groupByExprs = groupByExprs;
     this.aggrExprs = aggrExprs;
     this.cardinality = cardinality;
   }
+
+  public AggPrelBase.OperatorPhase getAggPhase() { return aggPhase; }
 
   public List<NamedExpression> getGroupByExprs() {
     return groupByExprs;
@@ -69,7 +75,9 @@ public class HashAggregate extends AbstractSingle {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new HashAggregate(child, groupByExprs, aggrExprs, cardinality);
+    HashAggregate newHAG = new HashAggregate(child, aggPhase, groupByExprs, aggrExprs, cardinality);
+    newHAG.setMaxAllocation(getMaxAllocation());
+    return newHAG;
   }
 
   @Override
@@ -77,5 +85,18 @@ public class HashAggregate extends AbstractSingle {
     return CoreOperatorType.HASH_AGGREGATE_VALUE;
   }
 
-
+  /**
+   *
+   * @param maxAllocation The max memory allocation to be set
+   */
+  @Override
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = maxAllocation;
+  }
+  /**
+   * The Hash Aggregate operator supports spilling
+   * @return true
+   */
+  @Override
+  public boolean isBufferedOperator() { return true; }
 }

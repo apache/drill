@@ -24,14 +24,17 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import org.apache.drill.QueryTestUtil;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.TestTools;
+import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.QueryTestUtil;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import com.google.common.collect.Sets;
@@ -45,8 +48,9 @@ import static org.junit.Assert.assertNull;
  * unstable from running a lot of queries concurrently -- it's not about
  * any particular order of execution. We ignore the results.
  */
+@Category(SlowTest.class)
 public class TestTpchDistributedConcurrent extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(140000); // Longer timeout than usual.
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(360000); // Longer timeout than usual.
 
   /*
    * Valid test names taken from TestTpchDistributed. Fuller path prefixes are

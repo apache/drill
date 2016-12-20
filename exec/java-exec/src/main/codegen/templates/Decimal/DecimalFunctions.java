@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -133,7 +133,11 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
 
-    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "subtract",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}SubtractFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -171,7 +175,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "add",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}AddFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -209,7 +217,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_MUL_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "multiply",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SUM_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}MultiplyFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -379,7 +391,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_DIV_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -416,7 +432,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MOD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -454,7 +474,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "abs",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}AbsFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder in;
@@ -500,7 +523,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"ceil", "ceiling"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}CeilFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder in;
@@ -566,7 +592,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "floor", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "floor",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}FloorFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder in;
@@ -631,7 +660,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}TruncateFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder in;
@@ -665,7 +697,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}TruncateScaleFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder left;
@@ -742,7 +777,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "round",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}RoundFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder in;
@@ -804,7 +842,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "round",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
 
         @Param  ${type.name}Holder left;
@@ -834,8 +875,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
        (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -854,8 +896,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
         (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -876,8 +919,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -898,8 +942,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -918,8 +963,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -938,8 +984,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -958,8 +1005,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "Equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -978,8 +1026,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "not equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1033,8 +1082,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
        (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -1056,8 +1106,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
        (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -1083,8 +1134,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1101,8 +1153,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1119,8 +1172,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1137,8 +1191,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1155,8 +1210,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "Equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1174,8 +1230,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "not equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1218,7 +1275,11 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("unused")
 public class ${type.name}Functions {
 
-    @FunctionTemplate(name = "add", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "add",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}AddFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1247,7 +1308,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "subtract", scope = FunctionTemplate.FunctionScope.DECIMAL_ADD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "subtract",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ADD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}SubtractFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1274,7 +1339,12 @@ public class ${type.name}Functions {
             result.scale = outputScale;
         }
     }
-    @FunctionTemplate(name = "multiply", scope = FunctionTemplate.FunctionScope.DECIMAL_MUL_SCALE, nulls = NullHandling.NULL_IF_NULL)
+
+    @FunctionTemplate(name = "multiply",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SUM_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}MultiplyFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1300,7 +1370,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "abs",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}AbsFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder in;
@@ -1320,7 +1393,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_DIV_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1353,7 +1430,11 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MOD_SCALE,
+        nulls = NullHandling.NULL_IF_NULL,
+        checkPrecisionRange = true)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1399,7 +1480,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}TruncFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder in;
@@ -1415,7 +1499,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"trunc", "truncate"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}TruncateScaleFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1432,7 +1519,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"ceil", "ceiling"},
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}CeilFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder in;
@@ -1459,7 +1549,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "floor", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "floor",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}FloorFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder in;
@@ -1484,7 +1577,10 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "round",
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_ZERO_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}RoundFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder in;
@@ -1518,8 +1614,9 @@ public class ${type.name}Functions {
     }
 
     @FunctionTemplate(name = "round",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_SET_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1577,8 +1674,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
        (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_HIGH,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+      nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullHigh implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -1601,8 +1699,9 @@ public class ${type.name}Functions {
   <#-- Comparison function for sorting and grouping relational operators
        (not for comparison expression operators (=, <, etc.)). -->
   @FunctionTemplate(name = FunctionGenerationHelper.COMPARE_TO_NULLS_LOW,
-                    scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                    nulls = NullHandling.INTERNAL)
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+    nulls = NullHandling.INTERNAL)
   public static class GCompare${leftType}Vs${rightType}NullLow implements DrillSimpleFunc {
 
     @Param ${leftType}Holder left;
@@ -1627,8 +1726,9 @@ public class ${type.name}Functions {
     <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
          not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1645,8 +1745,9 @@ public class ${type.name}Functions {
      <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
           not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "less than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}LessThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1663,8 +1764,9 @@ public class ${type.name}Functions {
      <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
           not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+        nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThan implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1681,8 +1783,9 @@ public class ${type.name}Functions {
      <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
           not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "greater than or equal to",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+            scope = FunctionTemplate.FunctionScope.SIMPLE,
+            returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+            nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}GreaterThanEq implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1699,8 +1802,9 @@ public class ${type.name}Functions {
      <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
           not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "Equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+            scope = FunctionTemplate.FunctionScope.SIMPLE,
+            returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+            nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}Equal implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1718,8 +1822,9 @@ public class ${type.name}Functions {
      <#-- Comparison function for comparison expression operator (=, &lt;, etc.),
           not for sorting and grouping relational operators.) -->
     @FunctionTemplate(name = "not equal",
-                      scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE,
-                      nulls = NullHandling.NULL_IF_NULL)
+            scope = FunctionTemplate.FunctionScope.SIMPLE,
+            returnType = FunctionTemplate.ReturnType.DECIMAL_MAX_SCALE,
+            nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}NotEqual implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;

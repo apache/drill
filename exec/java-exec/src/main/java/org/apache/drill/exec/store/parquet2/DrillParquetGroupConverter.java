@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import io.netty.buffer.DrillBuf;
+import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetColumnMetadata;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -66,8 +66,6 @@ import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
-import org.joda.time.DateTimeConstants;
-
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
@@ -79,10 +77,11 @@ import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
+import org.joda.time.DateTimeConstants;
 
 import com.google.common.collect.Lists;
 
-import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
+import io.netty.buffer.DrillBuf;
 
 public class DrillParquetGroupConverter extends GroupConverter {
 
@@ -169,6 +168,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     }
   }
 
+  @SuppressWarnings("resource")
   private PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
 
     switch(type.getPrimitiveTypeName()) {
@@ -180,7 +180,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
         switch(type.getOriginalType()) {
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            Decimal9Writer writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal9() : mapWriter.decimal9(name);
+            Decimal9Writer writer = type.getRepetition() == Repetition.REPEATED
+                ? mapWriter.list(name).decimal9()
+                : mapWriter.decimal9(name, type.getDecimalMetadata().getScale(), type.getDecimalMetadata().getPrecision());
             return new DrillDecimal9Converter(writer, type.getDecimalMetadata().getPrecision(), type.getDecimalMetadata().getScale());
           }
           case DATE: {
@@ -216,7 +218,9 @@ public class DrillParquetGroupConverter extends GroupConverter {
         switch(type.getOriginalType()) {
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            Decimal18Writer writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal18() : mapWriter.decimal18(name);
+            Decimal18Writer writer = type.getRepetition() == Repetition.REPEATED
+                ? mapWriter.list(name).decimal18()
+                : mapWriter.decimal18(name, type.getDecimalMetadata().getScale(), type.getDecimalMetadata().getPrecision());
             return new DrillDecimal18Converter(writer, type.getDecimalMetadata().getPrecision(), type.getDecimalMetadata().getScale());
           }
           case TIMESTAMP_MILLIS: {
@@ -236,7 +240,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
             return new DrillFixedBinaryToTimeStampConverter(writer);
           } else {
             VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
-            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetRecordReader.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetColumnMetadata.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
           }
         }
 
@@ -268,10 +272,14 @@ public class DrillParquetGroupConverter extends GroupConverter {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
             DecimalMetadata metadata = type.getDecimalMetadata();
             if (metadata.getPrecision() <= 28) {
-              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
+              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+                  ? mapWriter.list(name).decimal28Sparse()
+                  : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             } else {
-              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
+              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+                  ? mapWriter.list(name).decimal38Sparse()
+                  : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             }
           }
@@ -285,10 +293,14 @@ public class DrillParquetGroupConverter extends GroupConverter {
           ParquetReaderUtility.checkDecimalTypeEnabled(options);
           DecimalMetadata metadata = type.getDecimalMetadata();
           if (metadata.getPrecision() <= 28) {
-            Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
+            Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+                ? mapWriter.list(name).decimal28Sparse()
+                : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
             return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
           } else {
-            Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
+            Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED
+                ? mapWriter.list(name).decimal38Sparse()
+                : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
             return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
           }
         } else if (type.getOriginalType() == OriginalType.INTERVAL) {
@@ -618,6 +630,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     private VarBinaryWriter writer;
     private VarBinaryHolder holder = new VarBinaryHolder();
 
+    @SuppressWarnings("resource")
     public DrillFixedBinaryToVarbinaryConverter(VarBinaryWriter writer, int length, DrillBuf buf) {
       this.writer = writer;
       holder.buffer = buf = buf.reallocIfNeeded(length);
@@ -646,7 +659,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addBinary(Binary value) {
-      holder.value = getDateTimeValueFromBinary(value);
+      holder.value = getDateTimeValueFromBinary(value, true);
       writer.write(holder);
     }
   }

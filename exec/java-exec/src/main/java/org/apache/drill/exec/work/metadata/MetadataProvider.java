@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -148,6 +149,10 @@ public class MetadataProvider {
      * @return A {@link Response} message. Response must be returned in any case.
      */
     protected abstract Response runInternal(UserSession session, SchemaTreeProvider schemaProvider);
+
+    public DrillConfig getConfig() {
+      return dContext.getConfig();
+    }
   }
 
   /**
@@ -177,7 +182,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Catalog> records =
-            getPojoRecordReader(CATALOGS, filter, schemaProvider, session);
+            getPojoRecordReader(CATALOGS, filter, getConfig(), schemaProvider, session);
 
         List<CatalogMetadata> metadata = new ArrayList<>();
         for(Catalog c : records) {
@@ -233,7 +238,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Schema> records =
-            getPojoRecordReader(SCHEMATA, filter, schemaProvider, session);
+            getPojoRecordReader(SCHEMATA, filter, getConfig(), schemaProvider, session);
 
         List<SchemaMetadata> metadata = new ArrayList<>();
         for(Schema s : records) {
@@ -293,7 +298,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Table> records =
-            getPojoRecordReader(TABLES, filter, schemaProvider, session);
+            getPojoRecordReader(TABLES, filter, getConfig(), schemaProvider, session);
 
         List<TableMetadata> metadata = new ArrayList<>();
         for(Table t : records) {
@@ -354,7 +359,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Column> records =
-            getPojoRecordReader(COLUMNS, filter, schemaProvider, session);
+            getPojoRecordReader(COLUMNS, filter, getConfig(), schemaProvider, session);
 
         List<ColumnMetadata> metadata = new ArrayList<>();
         for(Column c : records) {
@@ -380,6 +385,10 @@ public class MetadataProvider {
 
           if (c.CHARACTER_OCTET_LENGTH != null) {
             columnBuilder.setCharOctetLength(c.CHARACTER_OCTET_LENGTH);
+          }
+
+          if (c.NUMERIC_SCALE != null) {
+            columnBuilder.setNumericScale(c.NUMERIC_SCALE);
           }
 
           if (c.NUMERIC_PRECISION != null) {
@@ -531,29 +540,41 @@ public class MetadataProvider {
    * @param userSession
    * @return
    */
-  private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter,
+  private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter, final DrillConfig config,
       final SchemaTreeProvider provider, final UserSession userSession) {
     final SchemaPlus rootSchema =
-        provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(userSession));
+        provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
     return tableType.getRecordReader(rootSchema, filter, userSession.getOptions());
   }
 
   /**
    * Helper method to create a {@link SchemaConfigInfoProvider} instance for metadata purposes.
    * @param session
+   * @param schemaTreeProvider
    * @return
    */
-  private static SchemaConfigInfoProvider newSchemaConfigInfoProvider(final UserSession session) {
+  private static SchemaConfigInfoProvider newSchemaConfigInfoProvider(final DrillConfig config, final UserSession session, final SchemaTreeProvider schemaTreeProvider) {
     return new SchemaConfigInfoProvider() {
+      private final ViewExpansionContext viewExpansionContext = new ViewExpansionContext(config, this);
+
       @Override
       public ViewExpansionContext getViewExpansionContext() {
-        // Metadata APIs don't expect to expand the views.
-        throw new UnsupportedOperationException("View expansion context is not supported");
+        return viewExpansionContext;
+      }
+
+      @Override
+      public SchemaPlus getRootSchema(String userName) {
+        return schemaTreeProvider.createRootSchema(userName, this);
       }
 
       @Override
       public OptionValue getOption(String optionKey) {
         return session.getOptions().getOption(optionKey);
+      }
+
+      @Override
+      public String getQueryUserName() {
+        return session.getCredentials().getUserName();
       }
     };
   }
@@ -564,7 +585,7 @@ public class MetadataProvider {
    * @param ex Exception thrown
    * @return
    */
-  private static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
+  static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
     final String errorId = UUID.randomUUID().toString();
     logger.error("Failed to {}. ErrorId: {}", failedFunction, errorId, ex);
 

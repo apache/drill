@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,11 +27,25 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue;
+import org.apache.drill.exec.work.foreman.rm.DistributedQueryQueue.ZKQueueInfo;
+import org.apache.drill.exec.work.foreman.rm.DynamicResourceManager;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue;
+import org.apache.drill.exec.work.foreman.rm.ResourceManager;
+import org.apache.drill.exec.work.foreman.rm.ThrottledResourceManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -51,6 +65,7 @@ public class DrillRoot {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getClusterInfoJSON());
   }
 
+  @SuppressWarnings("resource")
   @GET
   @Path("/cluster.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -58,8 +73,26 @@ public class DrillRoot {
     final Collection<DrillbitInfo> drillbits = Sets.newTreeSet();
     final Collection<String> mismatchedVersions = Sets.newTreeSet();
 
-    final DrillbitEndpoint currentDrillbit = work.getContext().getEndpoint();
+    final DrillbitContext dbContext = work.getContext();
+    final DrillbitEndpoint currentDrillbit = dbContext.getEndpoint();
     final String currentVersion = currentDrillbit.getVersion();
+
+    final DrillConfig config = dbContext.getConfig();
+    final boolean userEncryptionEnabled =
+        config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
+            config .getBoolean(ExecConstants.USER_SSL_ENABLED);
+    final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
+    // If the user is logged in and is admin user then show the admin user info
+    // For all other cases the user info need-not or should-not be displayed
+    OptionManager optionManager = work.getContext().getOptionManager();
+    final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
+    final String processUser = ImpersonationUtil.getProcessUserName();
+    final String processUserGroups = Joiner.on(", ").join(ImpersonationUtil.getProcessUserGroupNames());
+    String adminUsers = ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(optionManager);
+    String adminUserGroups = ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(optionManager);
+
+    final boolean shouldShowUserInfo = isUserLoggedIn &&
+            ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getBits()) {
       final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
@@ -70,8 +103,93 @@ public class DrillRoot {
       }
       drillbits.add(drillbit);
     }
+    logger.debug("Admin info: user: "  + adminUsers +  " user group: " + adminUserGroups +
+            " userLoggedIn "  + isUserLoggedIn + " shouldShowUserInfo: " + shouldShowUserInfo );
 
-    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions);
+    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+      userEncryptionEnabled, bitEncryptionEnabled, processUser, processUserGroups, adminUsers,
+      adminUserGroups, shouldShowUserInfo, QueueInfo.build(dbContext.getResourceManager()));
+  }
+
+  /**
+   * Pretty-printing wrapper class around the ZK-based queue summary.
+   */
+
+  @XmlRootElement
+  public static class QueueInfo {
+    private final ZKQueueInfo zkQueueInfo;
+
+    public static QueueInfo build(ResourceManager rm) {
+
+      // Consider queues enabled only if the ZK-based queues are in use.
+
+      ThrottledResourceManager throttledRM = null;
+      if (rm != null && rm instanceof DynamicResourceManager) {
+        DynamicResourceManager dynamicRM = (DynamicResourceManager) rm;
+        rm = dynamicRM.activeRM();
+      }
+      if (rm != null && rm instanceof ThrottledResourceManager) {
+        throttledRM = (ThrottledResourceManager) rm;
+      }
+      if (throttledRM == null) {
+        return new QueueInfo(null);
+      }
+      QueryQueue queue = throttledRM.queue();
+      if (queue == null || !(queue instanceof DistributedQueryQueue)) {
+        return new QueueInfo(null);
+      }
+
+      return new QueueInfo(((DistributedQueryQueue) queue).getInfo());
+    }
+
+    @JsonCreator
+    public QueueInfo(ZKQueueInfo queueInfo) {
+      zkQueueInfo = queueInfo;
+    }
+
+    public boolean isEnabled() { return zkQueueInfo != null; }
+
+    public int smallQueueSize() {
+      return isEnabled() ? zkQueueInfo.smallQueueSize : 0;
+    }
+
+    public int largeQueueSize() {
+      return isEnabled() ? zkQueueInfo.largeQueueSize : 0;
+    }
+
+    public String threshold() {
+      return isEnabled()
+          ? Double.toString(zkQueueInfo.queueThreshold)
+          : "N/A";
+    }
+
+    public String smallQueueMemory() {
+      return isEnabled()
+          ? toBytes(zkQueueInfo.memoryPerSmallQuery)
+          : "N/A";
+    }
+
+    public String largeQueueMemory() {
+      return isEnabled()
+          ? toBytes(zkQueueInfo.memoryPerLargeQuery)
+          : "N/A";
+    }
+
+    public String totalMemory() {
+      return isEnabled()
+          ? toBytes(zkQueueInfo.memoryPerNode)
+          : "N/A";
+    }
+
+    private final long ONE_MB = 1024 * 1024;
+
+    private String toBytes(long memory) {
+      if (memory < 10 * ONE_MB) {
+        return String.format("%,d bytes", memory);
+      } else {
+        return String.format("%,.0f MB", memory * 1.0D / ONE_MB);
+      }
+    }
   }
 
   @XmlRootElement
@@ -79,14 +197,38 @@ public class DrillRoot {
     private final Collection<DrillbitInfo> drillbits;
     private final String currentVersion;
     private final Collection<String> mismatchedVersions;
+    private final boolean userEncryptionEnabled;
+    private final boolean bitEncryptionEnabled;
+    private final String adminUsers;
+    private final String adminUserGroups;
+    private final String processUser;
+    private final String processUserGroups;
+    private final boolean shouldShowUserInfo;
+    private final QueueInfo queueInfo;
 
     @JsonCreator
     public ClusterInfo(Collection<DrillbitInfo> drillbits,
                        String currentVersion,
-                       Collection<String> mismatchedVersions) {
+                       Collection<String> mismatchedVersions,
+                       boolean userEncryption,
+                       boolean bitEncryption,
+                       String processUser,
+                       String processUserGroups,
+                       String adminUsers,
+                       String adminUserGroups,
+                       boolean shouldShowUserInfo,
+                       QueueInfo queueInfo) {
       this.drillbits = Sets.newTreeSet(drillbits);
       this.currentVersion = currentVersion;
       this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
+      this.userEncryptionEnabled = userEncryption;
+      this.bitEncryptionEnabled = bitEncryption;
+      this.processUser = processUser;
+      this.processUserGroups = processUserGroups;
+      this.adminUsers = adminUsers;
+      this.adminUserGroups = adminUserGroups;
+      this.shouldShowUserInfo = shouldShowUserInfo;
+      this.queueInfo = queueInfo;
     }
 
     public Collection<DrillbitInfo> getDrillbits() {
@@ -100,6 +242,22 @@ public class DrillRoot {
     public Collection<String> getMismatchedVersions() {
       return Sets.newTreeSet(mismatchedVersions);
     }
+
+    public boolean isUserEncryptionEnabled() { return userEncryptionEnabled; }
+
+    public boolean isBitEncryptionEnabled() { return bitEncryptionEnabled; }
+
+    public String getProcessUser() { return processUser; }
+
+    public String getProcessUserGroups() { return processUserGroups; }
+
+    public String getAdminUsers() { return adminUsers; }
+
+    public String getAdminUserGroups() { return adminUserGroups; }
+
+    public boolean shouldShowUserInfo() { return shouldShowUserInfo; }
+
+    public QueueInfo queueInfo() { return queueInfo; }
   }
 
   public static class DrillbitInfo implements Comparable<DrillbitInfo> {
@@ -122,9 +280,7 @@ public class DrillRoot {
       this.versionMatch = versionMatch;
     }
 
-    public String getAddress() {
-      return address;
-    }
+    public String getAddress() { return address; }
 
     public String getUserPort() { return userPort; }
 
@@ -132,26 +288,20 @@ public class DrillRoot {
 
     public String getDataPort() { return dataPort; }
 
-    public String getVersion() {
-      return version;
-    }
+    public String getVersion() { return version; }
 
-    public boolean isCurrent() {
-      return current;
-    }
+    public boolean isCurrent() { return current; }
 
-    public boolean isVersionMatch() {
-      return versionMatch;
-    }
+    public boolean isVersionMatch() { return versionMatch; }
 
     /**
-     * Method used to sort drillbits. Current drillbit goes first.
-     * Then drillbits with matching versions, after them drillbits with mismatching versions.
-     * Matching drillbits are sorted according address natural order,
-     * mismatching drillbits are sorted according version, address natural order.
+     * Method used to sort Drillbits. Current Drillbit goes first.
+     * Then Drillbits with matching versions, after them Drillbits with mismatching versions.
+     * Matching Drillbits are sorted according address natural order,
+     * mismatching Drillbits are sorted according version, address natural order.
      *
-     * @param drillbitToCompare drillbit to compare against
-     * @return -1 if drillbit should be before, 1 if after in list
+     * @param drillbitToCompare Drillbit to compare against
+     * @return -1 if Drillbit should be before, 1 if after in list
      */
     @Override
     public int compareTo(DrillbitInfo drillbitToCompare) {
@@ -172,5 +322,4 @@ public class DrillRoot {
       return this.versionMatch ? -1 : 1;
     }
   }
-
 }

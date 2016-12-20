@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,9 +37,9 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
-import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
+import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
@@ -90,9 +90,9 @@ import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor
 import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
+import org.apache.drill.exec.planner.physical.visitor.TopProjectVisitor;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -165,8 +165,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
-    final DrillRel drel = convertToDrel(queryRelNode, validatedRowType);
-    final Prel prel = convertToPrel(drel);
+    final DrillRel drel = convertToDrel(queryRelNode);
+    final Prel prel = convertToPrel(drel, validatedRowType);
     logAndSetTextPlan("Drill Physical", prel, logger);
     final PhysicalOperator pop = convertToPop(prel);
     final PhysicalPlan plan = convertToPlan(pop);
@@ -199,13 +199,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   /**
-   *  Given a relNode tree for SELECT statement, convert to Drill Logical RelNode tree.
-   * @param relNode
-   * @return
+   * Given a relNode tree for SELECT statement, convert to Drill Logical RelNode tree.
+   *
+   * @param relNode relational node
+   * @return Drill Logical RelNode tree
    * @throws SqlUnsupportedException
    * @throws RelConversionException
    */
-  protected DrillRel convertToDrel(final RelNode relNode) throws SqlUnsupportedException, RelConversionException {
+  protected DrillRel convertToRawDrel(final RelNode relNode) throws SqlUnsupportedException, RelConversionException {
     if (context.getOptions().getOption(ExecConstants.EARLY_LIMIT0_OPT) &&
         context.getPlannerSettings().isTypeInferenceEnabled() &&
         FindLimit0Visitor.containsLimit0(relNode)) {
@@ -279,20 +280,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   /**
    * Return Drill Logical RelNode tree for a SELECT statement, when it is executed / explained directly.
+   * Adds screen operator on top of converted node.
    *
-   * @param relNode : root RelNode corresponds to Calcite Logical RelNode.
-   * @param validatedRowType : the rowType for the final field names. A rename project may be placed on top of the root.
-   * @return
+   * @param relNode root RelNode corresponds to Calcite Logical RelNode.
+   * @return Drill Logical RelNode tree
    * @throws RelConversionException
    * @throws SqlUnsupportedException
    */
-  protected DrillRel convertToDrel(RelNode relNode, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
-    final DrillRel convertedRelNode = convertToDrel(relNode);
+  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
+    final DrillRel convertedRelNode = convertToRawDrel(relNode);
 
-    // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
-    DrillRel topPreservedNameProj = addRenamedProject(convertedRelNode, validatedRowType);
-    return new DrillScreenRel(topPreservedNameProj.getCluster(), topPreservedNameProj.getTraitSet(),
-        topPreservedNameProj);
+    return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(),
+        convertedRelNode);
   }
 
   /**
@@ -378,14 +377,11 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
       final HepPlanner planner = new HepPlanner(hepPgmBldr.build(), context.getPlannerSettings());
 
-      final List<RelMetadataProvider> list = Lists.newArrayList();
-      list.add(DrillDefaultRelMetadataProvider.INSTANCE);
-      planner.registerMetadataProviders(list);
-      final RelMetadataProvider cachingMetaDataProvider = new CachingRelMetadataProvider(
-          ChainedRelMetadataProvider.of(list), planner);
+      JaninoRelMetadataProvider relMetadataProvider = JaninoRelMetadataProvider.of(DrillDefaultRelMetadataProvider.INSTANCE);
+      RelMetadataQuery.THREAD_PROVIDERS.set(relMetadataProvider);
 
       // Modify RelMetaProvider for every RelNode in the SQL operator Rel tree.
-      input.accept(new MetaDataProviderModifier(cachingMetaDataProvider));
+      input.accept(new MetaDataProviderModifier(relMetadataProvider));
       planner.setRoot(input);
       if (!input.getTraitSet().equals(targetTraits)) {
         planner.changeTraits(input, toTraits);
@@ -414,7 +410,16 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return output;
   }
 
-  protected Prel convertToPrel(RelNode drel) throws RelConversionException, SqlUnsupportedException {
+  /**
+   * Applies physical rules and certain transformations to convert drill relational node into physical one.
+   *
+   * @param drel relational node
+   * @param validatedRowType final output row type
+   * @return physical relational node
+   * @throws RelConversionException
+   * @throws SqlUnsupportedException
+   */
+  protected Prel convertToPrel(RelNode drel, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
 
     final RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
@@ -442,8 +447,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       log("Not enough memory for this plan", phyRelNode, logger, null);
       logger.debug("Re-planning without hash operations.");
 
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false));
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false));
+      queryOptions.setLocalOption(PlannerSettings.HASHJOIN.getOptionName(), false);
+      queryOptions.setLocalOption(PlannerSettings.HASHAGG.getOptionName(), false);
 
       try {
         final RelNode relNode = transform(PlannerType.VOLCANO, PlannerPhase.PHYSICAL, drel, traits);
@@ -462,7 +467,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     /* The order of the following transformations is important */
 
     /*
-     * 0.) For select * from join query, we need insert project on top of scan and a top project just
+     * 0.)
+     * Add top project before screen operator or writer to ensure that final output column names are preserved.
+     */
+    phyRelNode = TopProjectVisitor.insertTopProject(phyRelNode, validatedRowType);
+
+    /*
+     * 1.) For select * from join query, we need insert project on top of scan and a top project just
      * under screen operator. The project on top of scan will rename from * to T1*, while the top project
      * will rename T1* to *, before it output the final result. Only the top project will allow
      * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
@@ -471,14 +482,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode);
 
     /*
-     * 1.)
+     * 2.)
      * Join might cause naming conflicts from its left and right child.
      * In such case, we have to insert Project to rename the conflicting names.
      */
     phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
 
     /*
-     * 1.1) Swap left / right for INNER hash join, if left's row count is < (1 + margin) right's row count.
+     * 2.1) Swap left / right for INNER hash join, if left's row count is < (1 + margin) right's row count.
      * We want to have smaller dataset on the right side, since hash table builds on right side.
      */
     if (context.getPlannerSettings().isHashJoinSwapEnabled()) {
@@ -493,20 +504,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     /*
-     * 1.2) Break up all expressions with complex outputs into their own project operations
+     * 2.2) Break up all expressions with complex outputs into their own project operations
      */
     phyRelNode = phyRelNode.accept(
         new SplitUpComplexExpressions(config.getConverter().getTypeFactory(), context.getDrillOperatorTable(), context
             .getPlannerSettings().functionImplementationRegistry), null);
 
     /*
-     * 1.3) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
+     * 2.3) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
      */
     phyRelNode = phyRelNode.accept(
         new RewriteProjectToFlatten(config.getConverter().getTypeFactory(), context.getDrillOperatorTable()), null);
 
     /*
-     * 2.)
+     * 3.)
      * Since our operators work via names rather than indices, we have to make to reorder any
      * output before we return data to the user as we may have accidentally shuffled things.
      * This adds a trivial project to reorder columns prior to output.
@@ -514,14 +525,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     phyRelNode = FinalColumnReorderer.addFinalColumnOrdering(phyRelNode);
 
     /*
-     * 3.)
+     * 4.)
      * If two fragments are both estimated to be parallelization one, remove the exchange
      * separating them
      */
     phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
 
 
-    /* 4.)
+    /* 5.)
      * Add ProducerConsumer after each scan if the option is set
      * Use the configured queueSize
      */
@@ -533,7 +544,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     */
 
 
-    /* 5.)
+    /* 6.)
      * if the client does not support complex types (Map, Repeated)
      * insert a project which which would convert
      */
@@ -543,20 +554,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
 
-    /* 6.)
+    /* 7.)
      * Insert LocalExchange (mux and/or demux) nodes
      */
     phyRelNode = InsertLocalExchangeVisitor.insertLocalExchanges(phyRelNode, queryOptions);
 
 
-    /* 7.)
+    /* 8.)
      * Next, we add any required selection vector removers given the supported encodings of each
      * operator. This will ultimately move to a new trait but we're managing here for now to avoid
      * introducing new issues in planning before the next release
      */
     phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
 
-    /* 8.)
+    /* 9.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */

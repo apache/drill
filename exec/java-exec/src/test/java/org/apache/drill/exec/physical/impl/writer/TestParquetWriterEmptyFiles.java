@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,41 +17,33 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.io.File;
+
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetWriterEmptyFiles extends BaseTestQuery {
-
-  private static FileSystem fs;
 
   @BeforeClass
   public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
-
-    fs = FileSystem.get(conf);
-
     updateTestCluster(3, null);
   }
 
   @Test // see DRILL-2408
   public void testWriteEmptyFile() throws Exception {
-    final String outputFile = "testparquetwriteremptyfiles_testwriteemptyfile";
+    final String outputFileName = "testparquetwriteremptyfiles_testwriteemptyfile";
+    final File outputFile = FileUtils.getFile(dirTestWatcher.getDfsTestTmpDir(), outputFileName);
 
-    try {
-      test("CREATE TABLE dfs_test.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFile);
-
-      final Path path = new Path(getDfsTestTmpSchemaLocation(), outputFile);
-      Assert.assertFalse(fs.exists(path));
-    } finally {
-      deleteTableIfExists(outputFile);
-    }
+    test("CREATE TABLE dfs.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFileName);
+    Assert.assertFalse(outputFile.exists());
   }
 
   @Test
@@ -62,24 +54,23 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
 
     try {
       final String query = "SELECT position_id FROM cp.`employee.json` WHERE position_id IN (15, 16) GROUP BY position_id";
-      test("CREATE TABLE dfs_test.tmp.%s AS %s", outputFile, query);
+
+      test("CREATE TABLE dfs.tmp.%s AS %s", outputFile, query);
 
       // this query will fail if an "empty" file was created
       testBuilder()
         .unOrdered()
-        .sqlQuery("SELECT * FROM dfs_test.tmp.%s", outputFile)
+        .sqlQuery("SELECT * FROM dfs.tmp.%s", outputFile)
         .sqlBaselineQuery(query)
         .go();
     } finally {
       runSQL("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
-      deleteTableIfExists(outputFile);
     }
   }
 
   @Test // see DRILL-2408
   public void testWriteEmptyFileAfterFlush() throws Exception {
     final String outputFile = "testparquetwriteremptyfiles_test_write_empty_file_after_flush";
-    deleteTableIfExists(outputFile);
 
     try {
       // this specific value will force a flush just after the final row is written
@@ -87,32 +78,17 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
       test("ALTER SESSION SET `store.parquet.block-size` = 19926");
 
       final String query = "SELECT * FROM cp.`employee.json` LIMIT 100";
-      test("CREATE TABLE dfs_test.tmp.%s AS %s", outputFile, query);
+      test("CREATE TABLE dfs.tmp.%s AS %s", outputFile, query);
 
       // this query will fail if an "empty" file was created
       testBuilder()
         .unOrdered()
-        .sqlQuery("SELECT * FROM dfs_test.tmp.%s", outputFile)
+        .sqlQuery("SELECT * FROM dfs.tmp.%s", outputFile)
         .sqlBaselineQuery(query)
         .go();
     } finally {
       // restore the session option
-      test("ALTER SESSION SET `store.parquet.block-size` = %d", ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR.getDefault().num_val);
-      deleteTableIfExists(outputFile);
+      resetSessionOption(ExecConstants.PARQUET_BLOCK_SIZE);
     }
-  }
-
-  private static boolean deleteTableIfExists(String tableName) {
-    try {
-      Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);
-      if (fs.exists(path)) {
-        return fs.delete(path, true);
-      }
-    } catch (Exception e) {
-      // ignore exceptions.
-      return false;
-    }
-
-    return true;
   }
 }

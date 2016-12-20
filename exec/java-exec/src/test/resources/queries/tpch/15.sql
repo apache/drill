@@ -1,5 +1,5 @@
 -- tpch15 using 1395599672 as a seed to the RNG
-use dfs_test.tmp; -- views can only be created in dfs schema
+use dfs.tmp; -- views can only be created in dfs schema
 
 create view revenue0 (supplier_no, total_revenue) as
   select

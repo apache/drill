@@ -21,18 +21,20 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
 
+import org.apache.drill.categories.JdbcTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
+import org.junit.experimental.categories.Category;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
+@Category(JdbcTest.class)
 public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTestBase {
 
   private static Connection connection;
@@ -43,7 +45,7 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTestBase {
     // (Note: Can't use JdbcTest's connect(...) because JdbcTest closes
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
-    connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
+    connection = connect();
     statement = connection.createStatement();
   }
 

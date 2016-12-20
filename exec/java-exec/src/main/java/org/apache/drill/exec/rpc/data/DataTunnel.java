@@ -33,7 +33,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ExecutionControls;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
 
 public class DataTunnel {

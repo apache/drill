@@ -21,25 +21,31 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * The status reporter is responsible for receiving changes in fragment state and propagating the status back to the
- * Foreman through a control tunnel.
+ * Foreman either through a control tunnel or locally.
  */
-public class FragmentStatusReporter {
+public class FragmentStatusReporter implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusReporter.class);
 
-  private final FragmentContext context;
-  private final ControlTunnel tunnel;
+  protected final FragmentContext context;
 
-  public FragmentStatusReporter(final FragmentContext context, final ControlTunnel tunnel) {
+  protected final AtomicReference<DrillbitEndpoint> foremanDrillbit;
+
+  protected final DrillbitEndpoint localDrillbit;
+
+  public FragmentStatusReporter(final FragmentContext context) {
     this.context = context;
-    this.tunnel = tunnel;
+    this.foremanDrillbit = new AtomicReference<>(context.getForemanEndpoint());
+    this.localDrillbit = context.getIdentity();
   }
 
   /**
@@ -80,25 +86,47 @@ public class FragmentStatusReporter {
     final FragmentStatus status = getStatus(newState, null);
     logger.info("{}: State to report: {}", QueryIdHelper.getQueryIdentifier(context.getHandle()), newState);
     switch (newState) {
-    case AWAITING_ALLOCATION:
-    case CANCELLATION_REQUESTED:
-    case CANCELLED:
-    case FINISHED:
-    case RUNNING:
-      sendStatus(status);
-      break;
-    case SENDING:
-      // no op.
-      break;
-    case FAILED:
-      // shouldn't get here since fail() should be called.
-    default:
-      throw new IllegalStateException(String.format("Received state changed event for unexpected state of %s.", newState));
+      case AWAITING_ALLOCATION:
+      case CANCELLATION_REQUESTED:
+      case CANCELLED:
+      case FINISHED:
+      case RUNNING:
+        sendStatus(status);
+        break;
+      case SENDING:
+        // no op.
+        break;
+      case FAILED:
+        // shouldn't get here since fail() should be called.
+      default:
+        throw new IllegalStateException(String.format("Received state changed event for unexpected state of %s.", newState));
     }
   }
 
-  private void sendStatus(final FragmentStatus status) {
-    tunnel.sendFragmentStatus(status);
+
+  /**
+   * Sends status to remote Foreman node using Control Tunnel or to Local Foreman bypassing
+   * Control Tunnel and using WorkEventBus.
+   *
+   * @param status
+   */
+  void sendStatus(final FragmentStatus status) {
+
+    DrillbitEndpoint foremanNode = foremanDrillbit.get();
+
+    if (foremanNode == null) {
+      logger.warn("{}: State {} is not reported as {} is closed", QueryIdHelper.getQueryIdentifier(context.getHandle()), status.getProfile().getState(), this);
+      return;
+    }
+
+    if (localDrillbit.equals(foremanNode)) {
+      // Update the status locally
+      context.getWorkEventbus().statusUpdate(status);
+    } else {
+      // Send the status via Control Tunnel to remote foreman node
+      final ControlTunnel tunnel = context.getControlTunnel(foremanNode);
+      tunnel.sendFragmentStatus(status);
+    }
   }
 
   /**
@@ -113,4 +141,13 @@ public class FragmentStatusReporter {
     sendStatus(status);
   }
 
+  @Override
+  public void close() {
+    final DrillbitEndpoint foremanNode = foremanDrillbit.getAndSet(null);
+    if (foremanNode != null) {
+      logger.debug("Closing {}", this);
+    } else {
+      logger.warn("{} was already closed", this);
+    }
+  }
 }

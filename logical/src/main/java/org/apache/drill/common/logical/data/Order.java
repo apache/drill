@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,22 +19,20 @@ package org.apache.drill.common.logical.data;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.calcite.util.PartiallyOrderedSet;
+import org.apache.calcite.rel.RelFieldCollation.Direction;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-import org.apache.calcite.rel.RelFieldCollation;
-import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -58,15 +56,15 @@ public class Order extends SingleInputOperator {
     return within;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitOrder(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+      return logicalVisitor.visitOrder(this, value);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+      return Iterators.singletonIterator(getInput());
+  }
 
 
   /**
@@ -74,22 +72,33 @@ public class Order extends SingleInputOperator {
    */
   public static class Ordering {
 
+    public static final String ORDER_ASC = "ASC";
+    public static final String ORDER_DESC = "DESC";
+    public static final String ORDER_ASCENDING = "ASCENDING";
+    public static final String ORDER_DESCENDING = "DESCENDING";
+
+    public static final String NULLS_FIRST = "FIRST";
+    public static final String NULLS_LAST = "LAST";
+    public static final String NULLS_UNSPECIFIED = "UNSPECIFIED";
+
     private final LogicalExpression expr;
     /** Net &lt;ordering specification>. */
     private final Direction direction;
     /** Net &lt;null ordering> */
     private final NullDirection nullOrdering;
     /** The values in the plans for ordering specification are ASC, DESC, not the
-     * full words featured in the calcite {@link Direction} Enum, need to map between them. */
+     * full words featured in the Calcite {@link Direction} Enum, need to map between them. */
     private static ImmutableMap<String, Direction> DRILL_TO_CALCITE_DIR_MAPPING =
         ImmutableMap.<String, Direction>builder()
-        .put("ASC", Direction.ASCENDING)
-        .put("DESC", Direction.DESCENDING).build();
+        .put(ORDER_ASC, Direction.ASCENDING)
+        .put(ORDER_DESC, Direction.DESCENDING)
+        .put(ORDER_ASCENDING, Direction.ASCENDING)
+        .put(ORDER_DESCENDING, Direction.DESCENDING).build();
     private static ImmutableMap<String, NullDirection> DRILL_TO_CALCITE_NULL_DIR_MAPPING =
         ImmutableMap.<String, NullDirection>builder()
-            .put("FIRST", NullDirection.FIRST)
-            .put("LAST", NullDirection.LAST)
-            .put("UNSPECIFIED", NullDirection.UNSPECIFIED).build();
+            .put(NULLS_FIRST, NullDirection.FIRST)
+            .put(NULLS_LAST, NullDirection.LAST)
+            .put(NULLS_UNSPECIFIED, NullDirection.UNSPECIFIED).build();
 
     /**
      * Constructs a sort specification.
@@ -123,8 +132,12 @@ public class Order extends SingleInputOperator {
       this(direction, e, NullDirection.FIRST);
     }
 
-    private static Direction getOrderingSpecFromString( String strDirection ) {
-      Direction dir = DRILL_TO_CALCITE_DIR_MAPPING.get(strDirection);
+    @VisibleForTesting
+    public static Direction getOrderingSpecFromString(String strDirection) {
+      Direction dir = null;
+      if (strDirection != null) {
+        dir = DRILL_TO_CALCITE_DIR_MAPPING.get(strDirection.toUpperCase());
+      }
       if (dir != null || strDirection == null) {
         return filterDrillSupportedDirections(dir);
       } else {
@@ -134,16 +147,20 @@ public class Order extends SingleInputOperator {
       }
     }
 
-    private static NullDirection getNullOrderingFromString( String strNullOrdering ) {
-      NullDirection nullDir = DRILL_TO_CALCITE_NULL_DIR_MAPPING.get(strNullOrdering);
+    @VisibleForTesting
+    public static NullDirection getNullOrderingFromString( String strNullOrdering ) {
+      NullDirection nullDir = null;
+      if (strNullOrdering != null) {
+        nullDir = DRILL_TO_CALCITE_NULL_DIR_MAPPING.get(strNullOrdering.toUpperCase());
+      }
       if (nullDir != null || strNullOrdering == null) {
         return filterDrillSupportedNullDirections(nullDir);
       } else {
         throw new DrillRuntimeException(
             "Internal error:  Unknown <null ordering> string (not "
-                + "\"" + NullDirection.FIRST.name() + "\", "
-                + "\"" + NullDirection.LAST.name() + "\", or "
-                + "\"" + NullDirection.UNSPECIFIED.name() + "\" or null): "
+                + "\"" + NULLS_FIRST + "\", "
+                + "\"" + NULLS_LAST + "\", or "
+                + "\"" + NULLS_UNSPECIFIED + "\" or null): "
                 + "\"" + strNullOrdering + "\"" );
       }
     }

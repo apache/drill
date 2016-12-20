@@ -17,13 +17,10 @@
  */
 package org.apache.drill.exec.rpc.control;
 
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
 import org.apache.drill.exec.rpc.ReconnectingConnection;
-import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 /**
  * Maintains connection between two particular bits.
@@ -31,34 +28,26 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
 public class ControlConnectionManager extends ReconnectingConnection<ControlConnection, BitControlHandshake>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlConnectionManager.class);
 
-  private final DrillbitEndpoint endpoint;
-  private final ControlMessageHandler handler;
-  private final BootStrapContext context;
-  private final DrillbitEndpoint localIdentity;
-  private final BufferAllocator allocator;
+  private final ControlConnectionConfig config;
+  private final DrillbitEndpoint remoteEndpoint;
 
-  public ControlConnectionManager(BufferAllocator allocator, DrillbitEndpoint remoteEndpoint,
-      DrillbitEndpoint localIdentity, ControlMessageHandler handler, BootStrapContext context) {
-    super(BitControlHandshake.newBuilder().setRpcVersion(ControlRpcConfig.RPC_VERSION).setEndpoint(localIdentity).build(), remoteEndpoint.getAddress(), remoteEndpoint.getControlPort());
-    assert remoteEndpoint != null : "Endpoint cannot be null.";
-    assert remoteEndpoint.getAddress() != null && !remoteEndpoint.getAddress().isEmpty(): "Endpoint address cannot be null.";
-    assert remoteEndpoint.getControlPort() > 0 : String.format("Bit Port must be set to a port between 1 and 65k.  Was set to %d.", remoteEndpoint.getControlPort());
+  public ControlConnectionManager(ControlConnectionConfig config, DrillbitEndpoint localEndpoint,
+                                  DrillbitEndpoint remoteEndpoint) {
+    super(
+        BitControlHandshake.newBuilder()
+            .setRpcVersion(ControlRpcConfig.RPC_VERSION)
+            .setEndpoint(localEndpoint)
+            .build(),
+        remoteEndpoint.getAddress(),
+        remoteEndpoint.getControlPort());
 
-    this.allocator = allocator;
-    this.endpoint = remoteEndpoint;
-    this.localIdentity = localIdentity;
-    this.handler = handler;
-    this.context = context;
+    this.config = config;
+    this.remoteEndpoint = remoteEndpoint;
   }
 
   @Override
   protected BasicClient<?, ControlConnection, BitControlHandshake, ?> getNewClient() {
-    return new ControlClient(allocator, endpoint, localIdentity, handler, context, new CloseHandlerCreator());
-  }
-
-
-  public DrillbitEndpoint getEndpoint() {
-    return endpoint;
+    return new ControlClient(config, remoteEndpoint, new CloseHandlerCreator());
   }
 
 }

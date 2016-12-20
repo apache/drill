@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -77,7 +77,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected IterOutcome doWork() {
     container.zeroVectors();
     int recordCount = incoming.getRecordCount();
-    filter.filterBatch(recordCount);
+    try {
+      filter.filterBatch(recordCount);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
 
     return IterOutcome.OK;
   }
@@ -140,7 +144,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV4Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry(), context.getOptions());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getOptions());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if (collector.hasErrors()) {
@@ -174,7 +178,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV2Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry(), context.getOptions());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getOptions());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector,
             context.getFunctionRegistry(), false, unionTypeEnabled);
@@ -191,7 +195,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     try {
       final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      final Filterer filter = context.getImplementationClass(cg);
+      CodeGenerator<Filterer> codeGen = cg.getCodeGenerator();
+      codeGen.plainJavaCapable(true);
+      // Uncomment out this line to debug the generated code.
+//    cg.saveCodeForDebugging(true);
+      final Filterer filter = context.getImplementationClass(codeGen);
       filter.setup(context, incoming, this, tx);
       return filter;
     } catch (ClassTransformationException | IOException e) {

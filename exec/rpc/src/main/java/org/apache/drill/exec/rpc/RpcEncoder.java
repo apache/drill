@@ -111,7 +111,7 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
         cos.writeRawVarint32(rawBodyLength);
         cos.flush(); // need to flush so that dbody goes after if cos is caching.
 
-        CompositeByteBuf cbb = new CompositeByteBuf(buf.alloc(), true, msg.dBodies.length + 1);
+        final CompositeByteBuf cbb = ctx.alloc().compositeBuffer(msg.dBodies.length + 1);
         cbb.addComponent(buf);
         int bufLength = buf.readableBytes();
         for (ByteBuf b : msg.dBodies) {

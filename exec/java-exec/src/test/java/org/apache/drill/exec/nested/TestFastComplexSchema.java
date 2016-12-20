@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.nested;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.UnlikelyTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestFastComplexSchema extends BaseTestQuery {
 
@@ -82,6 +84,7 @@ public class TestFastComplexSchema extends BaseTestQuery {
   }
 
   @Test //DRILL-4783 when resultset is empty, don't throw exception.
+  @Category(UnlikelyTest.class)
   public void test5() throws Exception {
 
     //when there is no incoming record, flatten won't throw exception

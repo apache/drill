@@ -98,6 +98,38 @@ class DECLSPEC_DRILL_CLIENT Utils{
 
 }; // Utils
 
+/*
+ * Encryption related configuration parameters. The member's are updated with value received from server
+ * and also after the SASL Handshake is done.
+ */
+class EncryptionContext {
+
+	bool m_bEncryptionReqd;
+	int m_maxWrappedSize;
+	int m_wrapSizeLimit;
+
+public:
+	EncryptionContext();
+
+	EncryptionContext(const bool& encryptionReqd, const int& maxWrappedSize, const int& wrapSizeLimit);
+
+	void setEncryptionReqd(const bool& encryptionReqd);
+
+	void setMaxWrappedSize(const int& maxWrappedSize);
+
+	void setWrapSizeLimit(const int& wrapSizeLimit);
+
+	bool isEncryptionReqd() const;
+
+	int getMaxWrappedSize() const;
+
+	int getWrapSizeLimit() const;
+
+	void reset();
+
+	friend std::ostream& operator<<(std::ostream &contextStream, const EncryptionContext& context);
+};
+
 } // namespace Drill
 
 #endif

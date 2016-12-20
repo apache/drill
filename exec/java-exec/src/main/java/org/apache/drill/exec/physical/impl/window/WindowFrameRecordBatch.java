@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -208,13 +208,19 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final VectorAccessible last = batches.get(batches.size() - 1);
     final int lastSize = last.getRecordCount();
 
-    final boolean partitionEndReached = !framers[0].isSamePartition(currentSize - 1, current, lastSize - 1, last);
-    final boolean frameEndReached = partitionEndReached || !framers[0].isPeer(currentSize - 1, current, lastSize - 1, last);
+    boolean partitionEndReached;
+    boolean frameEndReached;
+    try {
+      partitionEndReached = !framers[0].isSamePartition(currentSize - 1, current, lastSize - 1, last);
+      frameEndReached = partitionEndReached || !framers[0].isPeer(currentSize - 1, current, lastSize - 1, last);
 
-    for (final WindowFunction function : functions) {
-      if (!function.canDoWork(batches.size(), popConfig, frameEndReached, partitionEndReached)) {
-        return false;
+      for (final WindowFunction function : functions) {
+        if (!function.canDoWork(batches.size(), popConfig, frameEndReached, partitionEndReached)) {
+          return false;
+        }
       }
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
 
     return true;
@@ -326,7 +332,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     TemplateClassDefinition<WindowFramer> definition = useCustomFrame ?
       WindowFramer.FRAME_TEMPLATE_DEFINITION : WindowFramer.NOFRAME_TEMPLATE_DEFINITION;
-    final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(definition, context.getFunctionRegistry(), context.getOptions());
+    final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(definition, context.getOptions());
 
     {
       // generating framer.isSamePartition()
@@ -353,8 +359,12 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     cg.getBlock("resetValues")._return(JExpr.TRUE);
+    CodeGenerator<WindowFramer> codeGen = cg.getCodeGenerator();
+    codeGen.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    codeGen.saveCodeForDebugging(true);
 
-    return context.getImplementationClass(cg);
+    return context.getImplementationClass(codeGen);
   }
 
   /**

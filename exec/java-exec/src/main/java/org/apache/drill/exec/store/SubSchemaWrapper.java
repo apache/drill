@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -63,8 +63,8 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
-  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
-    return innerSchema.createNewTable(tableName, partitionColumns);
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
+    return innerSchema.createNewTable(tableName, partitionColumns, storageStrategy);
   }
 
   @Override

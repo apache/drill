@@ -189,7 +189,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
     PriorityQueue<List<MapRDBSubScanSpec>> minHeap = new PriorityQueue<List<MapRDBSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
     PriorityQueue<List<MapRDBSubScanSpec>> maxHeap = new PriorityQueue<List<MapRDBSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
     for(List<MapRDBSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
-      if (listOfScan.size() < minPerEndpointSlot) {
+      if (listOfScan.size() <= minPerEndpointSlot) {
         minHeap.offer(listOfScan);
       } else if (listOfScan.size() > minPerEndpointSlot){
         maxHeap.offer(listOfScan);

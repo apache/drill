@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -73,12 +73,14 @@ public class LocalFunctionRegistry {
 
   private final FunctionRegistryHolder registryHolder;
 
-  /** Registers all functions present in Drill classpath on start-up. All functions will be marked as built-in.
-   * Built-in functions are not allowed to be unregistered. */
+  /**
+   * Registers all functions present in Drill classpath on start-up. All functions will be marked as built-in.
+   * Built-in functions are not allowed to be unregistered. Initially sync registry version will be set to 0.
+   */
   public LocalFunctionRegistry(ScanResult classpathScan) {
     registryHolder = new FunctionRegistryHolder();
     validate(BUILT_IN, classpathScan);
-    register(Lists.newArrayList(new JarScan(BUILT_IN, classpathScan, this.getClass().getClassLoader())));
+    register(Lists.newArrayList(new JarScan(BUILT_IN, classpathScan, this.getClass().getClassLoader())), 0);
     if (logger.isTraceEnabled()) {
       StringBuilder allFunctions = new StringBuilder();
       for (DrillFuncHolder method: registryHolder.getAllFunctionsWithHolders().values()) {
@@ -89,7 +91,7 @@ public class LocalFunctionRegistry {
   }
 
   /**
-   * @return local function registry version number
+   * @return remote function registry version number with which local function registry is synced
    */
   public long getVersion() {
     return registryHolder.getVersion();
@@ -147,14 +149,15 @@ public class LocalFunctionRegistry {
   }
 
   /**
-   * Registers all functions present in jar.
+   * Registers all functions present in jar and updates registry version.
    * If jar name is already registered, all jar related functions will be overridden.
    * To prevent classpath collisions during loading and unloading jars,
    * each jar is shipped with its own class loader.
    *
    * @param jars list of jars to be registered
+   * @param version remote function registry version number with which local function registry is synced
    */
-  public void register(List<JarScan> jars) {
+  public void register(List<JarScan> jars, long version) {
     Map<String, List<FunctionHolder>> newJars = Maps.newHashMap();
     for (JarScan jarScan : jars) {
       FunctionConverter converter = new FunctionConverter();
@@ -174,7 +177,7 @@ public class LocalFunctionRegistry {
         }
       }
     }
-    registryHolder.addJars(newJars);
+    registryHolder.addJars(newJars, version);
   }
 
   /**
@@ -217,25 +220,31 @@ public class LocalFunctionRegistry {
     return registryHolder.getHoldersByFunctionName(name.toLowerCase(), version);
   }
 
+  /**
+   * @param name function name
+   * @return all function holders associated with the function name. Function name is case insensitive.
+   */
   public List<DrillFuncHolder> getMethods(String name) {
     return registryHolder.getHoldersByFunctionName(name.toLowerCase());
   }
 
   /**
    * Registers all functions present in {@link DrillOperatorTable},
-   * also sets local registry version used at the moment of registering.
+   * also sets sync registry version used at the moment of function registration.
    *
    * @param operatorTable drill operator table
    */
   public void register(DrillOperatorTable operatorTable) {
     AtomicLong versionHolder = new AtomicLong();
-    final Map<String, Collection<DrillFuncHolder>> registeredFunctions = registryHolder.getAllFunctionsWithHolders(versionHolder).asMap();
+    final Map<String, Collection<DrillFuncHolder>> registeredFunctions =
+        registryHolder.getAllFunctionsWithHolders(versionHolder).asMap();
     operatorTable.setFunctionRegistryVersion(versionHolder.get());
     registerOperatorsWithInference(operatorTable, registeredFunctions);
     registerOperatorsWithoutInference(operatorTable, registeredFunctions);
   }
 
-  private void registerOperatorsWithInference(DrillOperatorTable operatorTable, Map<String, Collection<DrillFuncHolder>> registeredFunctions) {
+  private void registerOperatorsWithInference(DrillOperatorTable operatorTable, Map<String,
+      Collection<DrillFuncHolder>> registeredFunctions) {
     final Map<String, DrillSqlOperator.DrillSqlOperatorBuilder> map = Maps.newHashMap();
     final Map<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> mapAgg = Maps.newHashMap();
     for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.entrySet()) {
@@ -243,6 +252,7 @@ public class LocalFunctionRegistry {
       final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
       final String name = function.getKey().toUpperCase();
       boolean isDeterministic = true;
+      boolean isNiladic = false;
       for (DrillFuncHolder func : function.getValue()) {
         final int paramCount = func.getParamCount();
         if(func.isAggregating()) {
@@ -260,6 +270,10 @@ public class LocalFunctionRegistry {
         if(!func.isDeterministic()) {
           isDeterministic = false;
         }
+
+        if(func.isNiladic()) {
+          isNiladic = true;
+        }
       }
       for (Entry<Pair<Integer, Integer>, Collection<DrillFuncHolder>> entry : functions.asMap().entrySet()) {
         final Pair<Integer, Integer> range = entry.getKey();
@@ -274,7 +288,8 @@ public class LocalFunctionRegistry {
         drillSqlOperatorBuilder
             .addFunctions(entry.getValue())
             .setArgumentCount(min, max)
-            .setDeterministic(isDeterministic);
+            .setDeterministic(isDeterministic)
+            .setNiladic(isNiladic);
       }
       for (Entry<Integer, Collection<DrillFuncHolder>> entry : aggregateFunctions.asMap().entrySet()) {
         if(!mapAgg.containsKey(name)) {
@@ -319,7 +334,7 @@ public class LocalFunctionRegistry {
             } else {
               isDeterministic = func.isDeterministic();
             }
-            op = new DrillSqlOperatorWithoutInference(name, func.getParamCount(), func.getReturnType(), isDeterministic);
+            op = new DrillSqlOperatorWithoutInference(name, func.getParamCount(), func.getReturnType(), isDeterministic, func.isNiladic());
           }
           operatorTable.addOperatorWithoutInference(function.getKey(), op);
         }

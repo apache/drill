@@ -137,11 +137,8 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return; //no filter pushdown ==> No transformation.
     }
 
-    final JsonTableGroupScan newGroupsScan = new JsonTableGroupScan(groupScan.getUserName(),
-                                                                    groupScan.getStoragePlugin(),
-                                                                    groupScan.getFormatPlugin(),
-                                                                    newScanSpec,
-                                                                    groupScan.getColumns());
+    // clone the groupScan with the newScanSpec.
+    final JsonTableGroupScan newGroupsScan = groupScan.clone(newScanSpec);
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
@@ -184,8 +181,10 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return; //no filter pushdown ==> No transformation.
     }
 
+    // Pass tableStats from old groupScan so we do not go and fetch stats (an expensive operation) again from MapR DB client.
     final BinaryTableGroupScan newGroupsScan = new BinaryTableGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
-                                                              groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns());
+                                                                        groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns(),
+                                                                        groupScan.getTableStats());
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,12 +58,8 @@ public abstract class FlattenTemplate implements Flattener {
 
   // this allows for groups to be written between batches if we run out of space, for cases where we have finished
   // a batch on the boundary it will be set to 0
-  private int innerValueIndex;
+  private int innerValueIndex = -1;
   private int currentInnerValueIndex;
-
-  public FlattenTemplate() throws SchemaChangeException {
-    innerValueIndex = -1;
-  }
 
   @Override
   public void setFlattenField(RepeatedValueVector flattenField) {
@@ -71,6 +67,7 @@ public abstract class FlattenTemplate implements Flattener {
     this.accessor = RepeatedValueVector.RepeatedAccessor.class.cast(flattenField.getAccessor());
   }
 
+  @Override
   public RepeatedValueVector getFlattenField() {
     return fieldToFlatten;
   }
@@ -188,6 +185,8 @@ public abstract class FlattenTemplate implements Flattener {
                  * and reduce the size of the currently used vectors.
                  */
                 break outer;
+              } catch (SchemaChangeException e) {
+                throw new UnsupportedOperationException(e);
               }
               outputIndex++;
               currentInnerValueIndexLocal++;
@@ -285,7 +284,7 @@ public abstract class FlattenTemplate implements Flattener {
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
     }
     this.transfers = ImmutableList.copyOf(transfers);
-    outputAllocator = outgoing.getOutgoingContainer().getOperatorContext().getAllocator();
+    outputAllocator = outgoing.getOutgoingContainer().getAllocator();
     doSetup(context, incoming, outgoing);
   }
 
@@ -295,6 +294,9 @@ public abstract class FlattenTemplate implements Flattener {
     this.currentInnerValueIndex = 0;
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") RecordBatch incoming,
+                               @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
+  public abstract boolean doEval(@Named("inIndex") int inIndex,
+                                 @Named("outIndex") int outIndex) throws SchemaChangeException;
 }

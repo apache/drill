@@ -31,11 +31,31 @@ import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
  * </p>
  */
 public enum SystemTable {
-
   OPTION("options", false, OptionValueWrapper.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
-      return new OptionIterator(context, OptionIterator.Mode.SYS_SESS);
+      return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_PUBLIC);
+    }
+  },
+
+  OPTION_VAL("options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new ExtendedOptionIterator(context, false);
+    }
+  },
+
+  INTERNAL_OPTIONS("internal_options", false, OptionValueWrapper.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new OptionIterator(context, OptionIterator.Mode.SYS_SESS_INTERNAL);
+    }
+  },
+
+  INTERNAL_OPTIONS_VAL("internal_options_val", false, ExtendedOptionIterator.ExtendedOptionValueWrapper.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new ExtendedOptionIterator(context, true);
     }
   },
 

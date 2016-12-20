@@ -147,3 +147,13 @@
 # Set to "/tmp" by default.
 #
 # export DRILL_TMP_DIR="..."
+
+# Block to put environment variable known to both Sqlline and Drillbit, but needs to be
+# differently set for both. OR set for one and unset for other.
+#
+# if [ "$DRILLBIT_CONTEXT" = "1" ]; then
+#   Set environment variable value to be consumed by Drillbit
+# else
+#   Set environment variable value to be consumed by Sqlline
+# fi
+#

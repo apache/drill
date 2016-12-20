@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -186,6 +186,7 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
           remoteRegistry.updateRegistry(updatedRegistry, version);
           return;
         } catch (VersionMismatchException ex) {
+          logger.debug("Failed to update function registry during registration, version mismatch was detected.", ex);
           retryAttempts--;
         }
       }
@@ -254,8 +255,8 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
      * @throws IOException in case of binary or source absence or problems during copying jars
      */
     void initRemoteBackup() throws IOException {
-      fs.getFileStatus(stagingBinary);
-      fs.getFileStatus(stagingSource);
+      checkPathExistence(stagingBinary);
+      checkPathExistence(stagingSource);
       fs.mkdirs(remoteTmpDir);
       FileUtil.copy(fs, stagingBinary, fs, tmpRemoteBinary, false, true, fs.getConf());
       FileUtil.copy(fs, stagingSource, fs, tmpRemoteSource, false, true, fs.getConf());
@@ -312,6 +313,19 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
     void cleanUp() {
       FileUtils.deleteQuietly(new File(localTmpDir.toUri()));
       deleteQuietly(remoteTmpDir, true);
+    }
+
+    /**
+     * Checks if passed path exists on predefined file system.
+     *
+     * @param path path to be checked
+     * @throws IOException if path does not exist
+     */
+    private void checkPathExistence(Path path) throws IOException {
+      if (!fs.exists(path)) {
+        throw new IOException(String.format("File %s does not exist on file system %s",
+            path.toUri().getPath(), fs.getUri()));
+      }
     }
 
     /**

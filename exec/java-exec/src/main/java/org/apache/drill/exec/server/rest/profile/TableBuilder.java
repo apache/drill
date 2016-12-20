@@ -21,20 +21,12 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
-class TableBuilder {
+public class TableBuilder {
   private final NumberFormat format = NumberFormat.getInstance(Locale.US);
-  private final SimpleDateFormat days = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat sdays = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat hours = new SimpleDateFormat("HH'h'mm'm'");
-  private final SimpleDateFormat shours = new SimpleDateFormat("H'h'mm'm'");
-  private final SimpleDateFormat mins = new SimpleDateFormat("mm'm'ss's'");
-  private final SimpleDateFormat smins = new SimpleDateFormat("m'm'ss's'");
-
-  private final SimpleDateFormat secs = new SimpleDateFormat("ss.SSS's'");
-  private final SimpleDateFormat ssecs = new SimpleDateFormat("s.SSS's'");
   private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
   private final DecimalFormat dec = new DecimalFormat("0.00");
   private final DecimalFormat intformat = new DecimalFormat("#,###");
@@ -43,24 +35,73 @@ class TableBuilder {
   private int w = 0;
   private int width;
 
-  public TableBuilder(final String[] columns) {
+  public TableBuilder(final String[] columns, final String[] columnTooltip) {
+    this(columns, columnTooltip, false);
+  }
+
+  public TableBuilder(final String[] columns, final String[] columnTooltip, final boolean isSortable) {
     sb = new StringBuilder();
     width = columns.length;
 
     format.setMaximumFractionDigits(3);
 
-    sb.append("<table class=\"table table-bordered text-right\">\n<tr>");
-    for (final String cn : columns) {
-      sb.append("<th>" + cn + "</th>");
+    sb.append("<table class=\"table table-bordered text-right"+(isSortable? " sortable" : "")+"\">\n<thead><tr>");
+    for (int i = 0; i < columns.length; i++) {
+      String cn = columns[i];
+      String ctt = "";
+      if (columnTooltip != null) {
+        String tooltip = columnTooltip[i];
+        if (tooltip != null) {
+          ctt = " title=\""+tooltip+"\"";
+        }
+      }
+      sb.append("<th" + ctt + ">" + cn + "</th>");
     }
-    sb.append("</tr>\n");
+    sb.append("</tr></thead>\n<tbody>\n");
+  }
+
+  public void appendCell(final String s) {
+    appendCell(s, null, null, null);
   }
 
   public void appendCell(final String s, final String link) {
+    appendCell(s, link, null, null);
+  }
+
+  public void appendCell(final String s, final String link, final String titleText) {
+    appendCell(s, link, titleText, null);
+  }
+
+  public void appendCell(final String s, final String link, final String titleText, final String backgroundColor) {
+    appendCell(s, link, titleText, backgroundColor, null);
+  }
+
+  public void appendCell(final String s, final Map<String, String> kvPairs) {
+    appendCell(s, null, null, null, kvPairs);
+  }
+
+  public void appendCell(final String s, final String link, final String titleText, final String backgroundColor,
+      final Map<String, String> kvPairs) {
     if (w == 0) {
-      sb.append("<tr>");
+      sb.append("<tr"
+          + (backgroundColor == null ? "" : " style=\"background-color:"+backgroundColor+"\"")
+          + ">");
     }
-    sb.append(String.format("<td>%s%s</td>", s, link != null ? link : ""));
+    StringBuilder tdElemSB = new StringBuilder("<td");
+    //Injecting title if specified (legacy impl)
+    if (titleText != null && titleText.length() > 0) {
+      tdElemSB.append(" title=\""+titleText+"\"");
+    }
+    //Extract other attributes for injection into element
+    if (kvPairs != null) {
+      for (String attributeName : kvPairs.keySet()) {
+        String attributeText = " " + attributeName + "=\"" + kvPairs.get(attributeName) + "\"";
+        tdElemSB.append(attributeText);
+      }
+    }
+    //Closing <td>
+    tdElemSB.append(String.format(">%s%s</td>", s, link != null ? link : ""));
+    sb.append(tdElemSB);
     if (++w >= width) {
       sb.append("</tr>\n");
       w = 0;
@@ -68,59 +109,110 @@ class TableBuilder {
   }
 
   public void appendRepeated(final String s, final String link, final int n) {
+    appendRepeated(s, link, n, null);
+  }
+
+  public void appendRepeated(final String s, final String link, final int n, final String tooltip) {
     for (int i = 0; i < n; i++) {
-      appendCell(s, link);
+      appendCell(s, link, tooltip);
     }
+  }
+
+  public void appendTime(final long d) {
+    appendTime(d, null);
   }
 
   public void appendTime(final long d, final String link) {
-    appendCell(dateFormat.format(d), link);
+    appendTime(d, link, null);
+  }
+
+  public void appendTime(final long d, final String link, final String tooltip) {
+    //Embedding dataTable's data-order attribute
+    Map<String, String> attributeMap = new HashMap<String, String>();
+    attributeMap.put("data-order", String.valueOf(d));
+    appendCell(dateFormat.format(d), link, tooltip, null, attributeMap);
+  }
+
+  public void appendMillis(final long p) {
+    appendMillis(p, null);
   }
 
   public void appendMillis(final long p, final String link) {
-    final double secs = p/1000.0;
-    final double mins = secs/60;
-    final double hours = mins/60;
-    final double days = hours / 24;
-    SimpleDateFormat timeFormat = null;
-    if (days >= 10) {
-      timeFormat = this.days;
-    } else if (days >= 1) {
-      timeFormat = this.sdays;
-    } else if (hours >= 10) {
-      timeFormat = this.hours;
-    }else if(hours >= 1){
-      timeFormat = this.shours;
-    }else if (mins >= 10){
-      timeFormat = this.mins;
-    }else if (mins >= 1){
-      timeFormat = this.smins;
-    }else if (secs >= 10){
-      timeFormat = this.secs;
-    }else {
-      timeFormat = this.ssecs;
-    }
-    appendCell(timeFormat.format(new Date(p)), null);
+    appendMillis(p, link, null);
+  }
+
+  public void appendMillis(final long p, final String link, final String tooltip) {
+    //Embedding dataTable's data-order attribute
+    Map<String, String> attributeMap = new HashMap<String, String>();
+    attributeMap.put("data-order", String.valueOf(p));
+    appendCell((new SimpleDurationFormat(0, p)).compact(), link, tooltip, null, attributeMap);
+  }
+
+  public void appendNanos(final long p) {
+    appendNanos(p, null, null);
   }
 
   public void appendNanos(final long p, final String link) {
-    appendMillis(Math.round(p / 1000.0 / 1000.0), link);
+    appendNanos(p, link, null);
+  }
+
+  public void appendNanos(final long p, final String link, final String tooltip) {
+    appendMillis(Math.round(p / 1000.0 / 1000.0), link, tooltip);
+  }
+
+  public void appendPercent(final double percentAsFraction) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), null, null);
+  }
+
+  public void appendPercent(final double percentAsFraction, final String link) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), link, null);
+  }
+
+  public void appendPercent(final double percentAsFraction, final String link, final String tooltip) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), link, tooltip);
+  }
+
+  public void appendFormattedNumber(final Number n) {
+    appendCell(format.format(n), null, null);
   }
 
   public void appendFormattedNumber(final Number n, final String link) {
-    appendCell(format.format(n), link);
+    appendCell(format.format(n), link, null);
+  }
+
+  public void appendFormattedNumber(final Number n, final String link, final String tooltip) {
+    appendCell(format.format(n), link, tooltip);
+  }
+
+  public void appendFormattedInteger(final long n) {
+    appendCell(intformat.format(n), null, null);
   }
 
   public void appendFormattedInteger(final long n, final String link) {
-    appendCell(intformat.format(n), link);
+    appendCell(intformat.format(n), link, null);
   }
 
-  public void appendInteger(final long l, final String link) {
-    appendCell(Long.toString(l), link);
+  public void appendFormattedInteger(final long n, final String link, final String tooltip) {
+    appendCell(intformat.format(n), link, tooltip);
   }
 
-  public void appendBytes(final long l, final String link){
-    appendCell(bytePrint(l), link);
+  public void appendInteger(final long l, final String link, final String tooltip) {
+    appendCell(Long.toString(l), link, tooltip);
+  }
+
+  public void appendBytes(final long l) {
+    appendBytes(l, null);
+  }
+
+  public void appendBytes(final long l, final String link) {
+    appendBytes(l, link, null);
+  }
+
+  public void appendBytes(final long l, final String link, final String tooltip) {
+    //Embedding dataTable's data-order attribute
+    Map<String, String> attributeMap = new HashMap<String, String>();
+    attributeMap.put("data-order", String.valueOf(l));
+    appendCell(bytePrint(l), link, tooltip, null, attributeMap);
   }
 
   private String bytePrint(final long size) {
@@ -150,7 +242,7 @@ class TableBuilder {
 
   public String build() {
     String rv;
-    rv = sb.append("\n</table>").toString();
+    rv = sb.append("\n</tbody>\n</table>").toString();
     sb = null;
     return rv;
   }

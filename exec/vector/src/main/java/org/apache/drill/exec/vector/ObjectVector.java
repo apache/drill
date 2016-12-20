@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,9 +22,11 @@ import io.netty.buffer.DrillBuf;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
@@ -32,11 +34,12 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 public class ObjectVector extends BaseValueVector {
+  private final int ALLOCATION_SIZE = 4096;
+
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
   private int maxCount = 0;
   private int count = 0;
-  private int allocationSize = 4096;
 
   private List<Object[]> objectArrayList = new ArrayList<>();
 
@@ -45,8 +48,8 @@ public class ObjectVector extends BaseValueVector {
   }
 
   public void addNewArray() {
-    objectArrayList.add(new Object[allocationSize]);
-    maxCount += allocationSize;
+    objectArrayList.add(new Object[ALLOCATION_SIZE]);
+    maxCount += ALLOCATION_SIZE;
   }
 
   @Override
@@ -57,11 +60,11 @@ public class ObjectVector extends BaseValueVector {
   public final class Mutator implements ValueVector.Mutator {
 
     public void set(int index, Object obj) {
-      int listOffset = index / allocationSize;
+      int listOffset = index / ALLOCATION_SIZE;
       if (listOffset >= objectArrayList.size()) {
         addNewArray();
       }
-      objectArrayList.get(listOffset)[index % allocationSize] = obj;
+      objectArrayList.get(listOffset)[index % ALLOCATION_SIZE] = obj;
     }
 
     public boolean setSafe(int index, long value) {
@@ -94,6 +97,9 @@ public class ObjectVector extends BaseValueVector {
     @Override
     public void generateTestData(int values) {
     }
+
+    @Override
+    public void exchange(ValueVector.Mutator other) { }
   }
 
   @Override
@@ -161,6 +167,11 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    throw new UnsupportedOperationException("ObjectVector does not support this");
+  }
+
+  @Override
   public int getValueCapacity() {
     return maxCount;
   }
@@ -195,14 +206,19 @@ public class ObjectVector extends BaseValueVector {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
+  @Override
+  public void toNullable(ValueVector nullableVector) {
+    throw new UnsupportedOperationException();
+  }
+
   public final class Accessor extends BaseAccessor {
     @Override
     public Object getObject(int index) {
-      int listOffset = index / allocationSize;
+      int listOffset = index / ALLOCATION_SIZE;
       if (listOffset >= objectArrayList.size()) {
         addNewArray();
       }
-      return objectArrayList.get(listOffset)[index % allocationSize];
+      return objectArrayList.get(listOffset)[index % ALLOCATION_SIZE];
     }
 
     @Override
@@ -217,5 +233,28 @@ public class ObjectVector extends BaseValueVector {
     public void get(int index, ObjectHolder holder){
       holder.obj = getObject(index);
     }
+  }
+
+  @Override
+  public void collectLedgers(Set<BufferLedger> ledgers) {}
+
+  @Override
+  public int getPayloadByteCount(int valueCount) {
+    // Values not stored in direct memory?
+    return 0;
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    ObjectVector target = (ObjectVector) other;
+    List<Object[]> tempList = objectArrayList;
+    objectArrayList = target.objectArrayList;
+    target.objectArrayList = tempList;
+    int tempCount = count;
+    count = target.count;
+    target.count = tempCount;
+    tempCount = maxCount;
+    maxCount = target.maxCount;
+    target.maxCount = tempCount;
   }
 }

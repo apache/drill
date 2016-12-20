@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,23 +34,20 @@ import com.google.common.collect.Lists;
 public class BatchPrinter {
   public static void printHyperBatch(VectorAccessible batch, SelectionVector4 sv4) {
     List<String> columns = Lists.newArrayList();
-    List<ValueVector> vectors = Lists.newArrayList();
-    int numBatches = 0;
-    for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVectors()[0].getField().getPath());
-      numBatches = vw.getValueVectors().length;
+    for (VectorWrapper<?> vw : batch) {
+      columns.add(vw.getValueVectors()[0].getField().getName());
     }
     int width = columns.size();
     for (int j = 0; j < sv4.getCount(); j++) {
-      if (j%50 == 0) {
+      if (j % 50 == 0) {
         System.out.println(StringUtils.repeat("-", width * 17 + 1));
         for (String column : columns) {
           System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
         }
         System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        System.out.println(StringUtils.repeat("-", width * 17 + 1));
       }
-      for (VectorWrapper vw : batch) {
+      for (VectorWrapper<?> vw : batch) {
         Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(sv4.get(j) & 65535);
         String value;
         if (o == null) {
@@ -60,7 +57,7 @@ public class BatchPrinter {
         } else {
           value = o.toString();
         }
-        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
+        System.out.printf("| %-15s", value.length() <= 15 ? value : value.substring(0, 14));
       }
       System.out.printf("|\n");
     }
@@ -70,33 +67,32 @@ public class BatchPrinter {
   public static void printBatch(VectorAccessible batch) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVector().getField().getPath());
+    for (VectorWrapper<?> vw : batch) {
+      columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
     int rows = vectors.get(0).getMetadata().getValueCount();
     for (int row = 0; row < rows; row++) {
-      if (row%50 == 0) {
+      if (row % 50 == 0) {
         System.out.println(StringUtils.repeat("-", width * 17 + 1));
         for (String column : columns) {
           System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
         }
         System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        System.out.println(StringUtils.repeat("-", width * 17 + 1));
       }
       for (ValueVector vv : vectors) {
         Object o = vv.getAccessor().getObject(row);
         String value;
         if (o == null) {
           value = "null";
-        } else
-        if (o instanceof byte[]) {
+        } else if (o instanceof byte[]) {
           value = new String((byte[]) o);
         } else {
           value = o.toString();
         }
-        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+        System.out.printf("| %-15s", value.length() <= 15 ? value : value.substring(0, 14));
       }
       System.out.printf("|\n");
     }
@@ -105,20 +101,20 @@ public class BatchPrinter {
   public static void printBatch(VectorAccessible batch, SelectionVector2 sv2) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVector().getField().getPath());
+    for (VectorWrapper<?> vw : batch) {
+      columns.add(vw.getValueVector().getField().getName());
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();
     int rows = vectors.get(0).getMetadata().getValueCount();
     for (int i = 0; i < rows; i++) {
-      if (i%50 == 0) {
+      if (i % 50 == 0) {
         System.out.println(StringUtils.repeat("-", width * 17 + 1));
         for (String column : columns) {
           System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
         }
         System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        System.out.println(StringUtils.repeat("-", width * 17 + 1));
       }
       int row = sv2.getIndex(i);
       for (ValueVector vv : vectors) {
@@ -126,13 +122,12 @@ public class BatchPrinter {
         String value;
         if (o == null) {
           value = "null";
-        } else
-        if (o instanceof byte[]) {
+        } else if (o instanceof byte[]) {
           value = new String((byte[]) o);
         } else {
           value = o.toString();
         }
-        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+        System.out.printf("| %-15s", value.length() <= 15 ? value : value.substring(0, 14));
       }
       System.out.printf("|\n");
     }

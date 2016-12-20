@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed
  * with this work for additional information regarding copyright
@@ -114,7 +114,7 @@ public class ChainedHashTable {
   private HashTableConfig htConfig;
   private final FragmentContext context;
   private final BufferAllocator allocator;
-  private final RecordBatch incomingBuild;
+  private RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
 
@@ -129,9 +129,19 @@ public class ChainedHashTable {
     this.outgoing = outgoing;
   }
 
-  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
+  public void updateIncoming(RecordBatch incomingBuild) {
+    this.incomingBuild = incomingBuild;
+  }
+
+  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds, int numPartitions) throws ClassTransformationException,
       IOException, SchemaChangeException {
-    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getOptions());
+    top.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // This code is called from generated code, so to step into this code,
+    // persist the code generated in HashAggBatch also.
+    // top.saveCodeForDebugging(true);
+    top.preferPlainJava(true); // use a subclass
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
@@ -187,7 +197,9 @@ public class ChainedHashTable {
      */
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
+      @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       i++;
@@ -308,8 +320,7 @@ public class ChainedHashTable {
      * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
      * for aggregation we can avoid the penalty of casting to double
      */
-    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs),
-        incomingProbe != null ? true : false);
+    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs), incomingProbe != null);
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
     HoldingContainer hash = cg.addExpr(materializedExpr);
     cg.getEvalBlock()._return(hash.getValue());

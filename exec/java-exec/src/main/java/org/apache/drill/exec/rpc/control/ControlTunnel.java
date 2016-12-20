@@ -27,7 +27,6 @@ import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
 import org.apache.drill.exec.proto.BitControl.RpcType;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -57,15 +56,9 @@ public class ControlTunnel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlTunnel.class);
 
   private final ControlConnectionManager manager;
-  private final DrillbitEndpoint endpoint;
 
-  public ControlTunnel(DrillbitEndpoint endpoint, ControlConnectionManager manager) {
+  public ControlTunnel(ControlConnectionManager manager) {
     this.manager = manager;
-    this.endpoint = endpoint;
-  }
-
-  public DrillbitEndpoint getEndpoint(){
-    return manager.getEndpoint();
   }
 
   public void sendFragments(RpcOutcomeListener<Ack> outcomeListener, InitializeFragments fragments){

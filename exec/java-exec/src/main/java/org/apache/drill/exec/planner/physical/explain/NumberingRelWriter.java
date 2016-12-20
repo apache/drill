@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -68,9 +68,8 @@ class NumberingRelWriter implements RelWriter {
       inputs = FlatLists.of(joinPrel.getRight(), joinPrel.getLeft());
     }
 
-    if (!RelMetadataQuery.isVisibleInExplain(
-        rel,
-        detailLevel)) {
+    RelMetadataQuery mq = RelMetadataQuery.instance();
+    if (!mq.isVisibleInExplain(rel, detailLevel)) {
       // render children in place of this, at same level
       explainInputs(inputs);
       return;
@@ -115,12 +114,14 @@ class NumberingRelWriter implements RelWriter {
       }
     }
     if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
-      s.append(" : rowType = " + rel.getRowType().toString());
-      s.append(": rowcount = ")
-          .append(RelMetadataQuery.getRowCount(rel))
-          .append(", cumulative cost = ")
-          .append(RelMetadataQuery.getCumulativeCost(rel));
-       s.append(", id = ").append(rel.getId());
+      s.append(" : rowType = ")
+        .append(rel.getRowType())
+        .append(": rowcount = ")
+        .append(mq.getRowCount(rel))
+        .append(", cumulative cost = ")
+        .append(mq.getCumulativeCost(rel))
+        .append(", id = ")
+        .append(rel.getId());
     }
     pw.println(s);
     spacer.add(2);

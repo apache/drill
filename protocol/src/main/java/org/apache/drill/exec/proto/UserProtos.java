@@ -29,7 +29,7 @@ public final class UserProtos {
    * Protobuf enum {@code exec.user.RpcType}
    *
    * <pre>
-   *&#47;/// UserToBit RPC ///////
+   *&#47;/// User &lt;-&gt; Bit RPC ///////
    * </pre>
    */
   public enum RpcType
@@ -123,17 +123,25 @@ public final class UserProtos {
      */
     CREATE_PREPARED_STATEMENT(12, 22),
     /**
+     * <code>GET_SERVER_META = 8;</code>
+     *
+     * <pre>
+     * user is sending a request to receive server metadata
+     * </pre>
+     */
+    GET_SERVER_META(13, 8),
+    /**
      * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
      * bit to user
      * </pre>
      */
-    QUERY_DATA(13, 6),
+    QUERY_DATA(14, 6),
     /**
      * <code>QUERY_HANDLE = 7;</code>
      */
-    QUERY_HANDLE(14, 7),
+    QUERY_HANDLE(15, 7),
     /**
      * <code>QUERY_PLAN_FRAGMENTS = 13;</code>
      *
@@ -141,7 +149,7 @@ public final class UserProtos {
      * return plan fragments
      * </pre>
      */
-    QUERY_PLAN_FRAGMENTS(15, 13),
+    QUERY_PLAN_FRAGMENTS(16, 13),
     /**
      * <code>CATALOGS = 18;</code>
      *
@@ -149,7 +157,7 @@ public final class UserProtos {
      * return catalogs metadata in response to GET_CATALOGS
      * </pre>
      */
-    CATALOGS(16, 18),
+    CATALOGS(17, 18),
     /**
      * <code>SCHEMAS = 19;</code>
      *
@@ -157,7 +165,7 @@ public final class UserProtos {
      * return schema metadata in response to GET_SCHEMAS
      * </pre>
      */
-    SCHEMAS(17, 19),
+    SCHEMAS(18, 19),
     /**
      * <code>TABLES = 20;</code>
      *
@@ -165,7 +173,7 @@ public final class UserProtos {
      * return table metadata in response to GET_TABLES
      * </pre>
      */
-    TABLES(18, 20),
+    TABLES(19, 20),
     /**
      * <code>COLUMNS = 21;</code>
      *
@@ -173,7 +181,7 @@ public final class UserProtos {
      * return column metadata in response to GET_COLUMNS
      * </pre>
      */
-    COLUMNS(19, 21),
+    COLUMNS(20, 21),
     /**
      * <code>PREPARED_STATEMENT = 23;</code>
      *
@@ -181,15 +189,15 @@ public final class UserProtos {
      * return preparated statement in response to CREATE_PREPARED_STATEMENT
      * </pre>
      */
-    PREPARED_STATEMENT(20, 23),
+    PREPARED_STATEMENT(21, 23),
     /**
-     * <code>REQ_META_FUNCTIONS = 8;</code>
+     * <code>SERVER_META = 9;</code>
+     *
+     * <pre>
+     * return server infos in respose to GET_SERVER_META
+     * </pre>
      */
-    REQ_META_FUNCTIONS(21, 8),
-    /**
-     * <code>RESP_FUNCTION_LIST = 9;</code>
-     */
-    RESP_FUNCTION_LIST(22, 9),
+    SERVER_META(22, 9),
     /**
      * <code>QUERY_RESULT = 10;</code>
      *
@@ -198,6 +206,14 @@ public final class UserProtos {
      * </pre>
      */
     QUERY_RESULT(23, 10),
+    /**
+     * <code>SASL_MESSAGE = 24;</code>
+     *
+     * <pre>
+     * user to bit and bit to user
+     * </pre>
+     */
+    SASL_MESSAGE(24, 24),
     ;
 
     /**
@@ -289,6 +305,14 @@ public final class UserProtos {
      */
     public static final int CREATE_PREPARED_STATEMENT_VALUE = 22;
     /**
+     * <code>GET_SERVER_META = 8;</code>
+     *
+     * <pre>
+     * user is sending a request to receive server metadata
+     * </pre>
+     */
+    public static final int GET_SERVER_META_VALUE = 8;
+    /**
      * <code>QUERY_DATA = 6;</code>
      *
      * <pre>
@@ -349,13 +373,13 @@ public final class UserProtos {
      */
     public static final int PREPARED_STATEMENT_VALUE = 23;
     /**
-     * <code>REQ_META_FUNCTIONS = 8;</code>
+     * <code>SERVER_META = 9;</code>
+     *
+     * <pre>
+     * return server infos in respose to GET_SERVER_META
+     * </pre>
      */
-    public static final int REQ_META_FUNCTIONS_VALUE = 8;
-    /**
-     * <code>RESP_FUNCTION_LIST = 9;</code>
-     */
-    public static final int RESP_FUNCTION_LIST_VALUE = 9;
+    public static final int SERVER_META_VALUE = 9;
     /**
      * <code>QUERY_RESULT = 10;</code>
      *
@@ -364,6 +388,14 @@ public final class UserProtos {
      * </pre>
      */
     public static final int QUERY_RESULT_VALUE = 10;
+    /**
+     * <code>SASL_MESSAGE = 24;</code>
+     *
+     * <pre>
+     * user to bit and bit to user
+     * </pre>
+     */
+    public static final int SASL_MESSAGE_VALUE = 24;
 
 
     public final int getNumber() { return value; }
@@ -383,6 +415,7 @@ public final class UserProtos {
         case 16: return GET_TABLES;
         case 17: return GET_COLUMNS;
         case 22: return CREATE_PREPARED_STATEMENT;
+        case 8: return GET_SERVER_META;
         case 6: return QUERY_DATA;
         case 7: return QUERY_HANDLE;
         case 13: return QUERY_PLAN_FRAGMENTS;
@@ -391,9 +424,9 @@ public final class UserProtos {
         case 20: return TABLES;
         case 21: return COLUMNS;
         case 23: return PREPARED_STATEMENT;
-        case 8: return REQ_META_FUNCTIONS;
-        case 9: return RESP_FUNCTION_LIST;
+        case 9: return SERVER_META;
         case 10: return QUERY_RESULT;
+        case 24: return SASL_MESSAGE;
         default: return null;
       }
     }
@@ -443,6 +476,97 @@ public final class UserProtos {
     }
 
     // @@protoc_insertion_point(enum_scope:exec.user.RpcType)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.SaslSupport}
+   */
+  public enum SaslSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNKNOWN_SASL_SUPPORT = 0;</code>
+     */
+    UNKNOWN_SASL_SUPPORT(0, 0),
+    /**
+     * <code>SASL_AUTH = 1;</code>
+     */
+    SASL_AUTH(1, 1),
+    /**
+     * <code>SASL_PRIVACY = 2;</code>
+     */
+    SASL_PRIVACY(2, 2),
+    ;
+
+    /**
+     * <code>UNKNOWN_SASL_SUPPORT = 0;</code>
+     */
+    public static final int UNKNOWN_SASL_SUPPORT_VALUE = 0;
+    /**
+     * <code>SASL_AUTH = 1;</code>
+     */
+    public static final int SASL_AUTH_VALUE = 1;
+    /**
+     * <code>SASL_PRIVACY = 2;</code>
+     */
+    public static final int SASL_PRIVACY_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static SaslSupport valueOf(int value) {
+      switch (value) {
+        case 0: return UNKNOWN_SASL_SUPPORT;
+        case 1: return SASL_AUTH;
+        case 2: return SASL_PRIVACY;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SaslSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<SaslSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SaslSupport>() {
+            public SaslSupport findValueByNumber(int number) {
+              return SaslSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final SaslSupport[] VALUES = values();
+
+    public static SaslSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private SaslSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.SaslSupport)
   }
 
   /**
@@ -501,7 +625,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
     }
 
     private static final QueryResultsMode[] VALUES = values();
@@ -563,6 +687,14 @@ public final class UserProtos {
      * </pre>
      */
     UNKNOWN_FAILURE(3, 4),
+    /**
+     * <code>AUTH_REQUIRED = 5;</code>
+     *
+     * <pre>
+     * User authentication required
+     * </pre>
+     */
+    AUTH_REQUIRED(4, 5),
     ;
 
     /**
@@ -597,6 +729,14 @@ public final class UserProtos {
      * </pre>
      */
     public static final int UNKNOWN_FAILURE_VALUE = 4;
+    /**
+     * <code>AUTH_REQUIRED = 5;</code>
+     *
+     * <pre>
+     * User authentication required
+     * </pre>
+     */
+    public static final int AUTH_REQUIRED_VALUE = 5;
 
 
     public final int getNumber() { return value; }
@@ -607,6 +747,7 @@ public final class UserProtos {
         case 2: return RPC_VERSION_MISMATCH;
         case 3: return AUTH_FAILED;
         case 4: return UNKNOWN_FAILURE;
+        case 5: return AUTH_REQUIRED;
         default: return null;
       }
     }
@@ -633,7 +774,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final HandshakeStatus[] VALUES = values();
@@ -748,7 +889,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(3);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(4);
     }
 
     private static final RequestStatus[] VALUES = values();
@@ -894,7 +1035,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(4);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(5);
     }
 
     private static final ColumnSearchability[] VALUES = values();
@@ -990,7 +1131,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(5);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(6);
     }
 
     private static final ColumnUpdatability[] VALUES = values();
@@ -1013,6 +1154,1610 @@ public final class UserProtos {
     }
 
     // @@protoc_insertion_point(enum_scope:exec.user.ColumnUpdatability)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.CollateSupport}
+   */
+  public enum CollateSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>CS_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    CS_UNKNOWN(0, 0),
+    /**
+     * <code>CS_GROUP_BY = 1;</code>
+     *
+     * <pre>
+     * COLLATE clause can be added after each grouping column
+     * </pre>
+     */
+    CS_GROUP_BY(1, 1),
+    ;
+
+    /**
+     * <code>CS_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int CS_UNKNOWN_VALUE = 0;
+    /**
+     * <code>CS_GROUP_BY = 1;</code>
+     *
+     * <pre>
+     * COLLATE clause can be added after each grouping column
+     * </pre>
+     */
+    public static final int CS_GROUP_BY_VALUE = 1;
+
+
+    public final int getNumber() { return value; }
+
+    public static CollateSupport valueOf(int value) {
+      switch (value) {
+        case 0: return CS_UNKNOWN;
+        case 1: return CS_GROUP_BY;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<CollateSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<CollateSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<CollateSupport>() {
+            public CollateSupport findValueByNumber(int number) {
+              return CollateSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(7);
+    }
+
+    private static final CollateSupport[] VALUES = values();
+
+    public static CollateSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private CollateSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.CollateSupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.CorrelationNamesSupport}
+   */
+  public enum CorrelationNamesSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>CN_NONE = 1;</code>
+     *
+     * <pre>
+     * Correlation names are not supported
+     * </pre>
+     */
+    CN_NONE(0, 1),
+    /**
+     * <code>CN_DIFFERENT_NAMES = 2;</code>
+     *
+     * <pre>
+     * Correlation names are supported, but names have to
+     * </pre>
+     */
+    CN_DIFFERENT_NAMES(1, 2),
+    /**
+     * <code>CN_ANY = 3;</code>
+     *
+     * <pre>
+     * be different from the tables they represent
+     * </pre>
+     */
+    CN_ANY(2, 3),
+    ;
+
+    /**
+     * <code>CN_NONE = 1;</code>
+     *
+     * <pre>
+     * Correlation names are not supported
+     * </pre>
+     */
+    public static final int CN_NONE_VALUE = 1;
+    /**
+     * <code>CN_DIFFERENT_NAMES = 2;</code>
+     *
+     * <pre>
+     * Correlation names are supported, but names have to
+     * </pre>
+     */
+    public static final int CN_DIFFERENT_NAMES_VALUE = 2;
+    /**
+     * <code>CN_ANY = 3;</code>
+     *
+     * <pre>
+     * be different from the tables they represent
+     * </pre>
+     */
+    public static final int CN_ANY_VALUE = 3;
+
+
+    public final int getNumber() { return value; }
+
+    public static CorrelationNamesSupport valueOf(int value) {
+      switch (value) {
+        case 1: return CN_NONE;
+        case 2: return CN_DIFFERENT_NAMES;
+        case 3: return CN_ANY;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<CorrelationNamesSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<CorrelationNamesSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<CorrelationNamesSupport>() {
+            public CorrelationNamesSupport findValueByNumber(int number) {
+              return CorrelationNamesSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(8);
+    }
+
+    private static final CorrelationNamesSupport[] VALUES = values();
+
+    public static CorrelationNamesSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private CorrelationNamesSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.CorrelationNamesSupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.DateTimeLiteralsSupport}
+   */
+  public enum DateTimeLiteralsSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>DL_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    DL_UNKNOWN(0, 0),
+    /**
+     * <code>DL_DATE = 1;</code>
+     *
+     * <pre>
+     * DATE literal is supported
+     * </pre>
+     */
+    DL_DATE(1, 1),
+    /**
+     * <code>DL_TIME = 2;</code>
+     *
+     * <pre>
+     * TIME literal is supported
+     * </pre>
+     */
+    DL_TIME(2, 2),
+    /**
+     * <code>DL_TIMESTAMP = 3;</code>
+     *
+     * <pre>
+     * TIMESTAMP literal is supported
+     * </pre>
+     */
+    DL_TIMESTAMP(3, 3),
+    /**
+     * <code>DL_INTERVAL_YEAR = 4;</code>
+     *
+     * <pre>
+     * INTERVAL YEAR literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_YEAR(4, 4),
+    /**
+     * <code>DL_INTERVAL_MONTH = 5;</code>
+     *
+     * <pre>
+     * INTERVAL MONTH literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_MONTH(5, 5),
+    /**
+     * <code>DL_INTERVAL_DAY = 6;</code>
+     *
+     * <pre>
+     * INTERVAL DAY literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_DAY(6, 6),
+    /**
+     * <code>DL_INTERVAL_HOUR = 7;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_HOUR(7, 7),
+    /**
+     * <code>DL_INTERVAL_MINUTE = 8;</code>
+     *
+     * <pre>
+     * INTERVAL MINUTE literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_MINUTE(8, 8),
+    /**
+     * <code>DL_INTERVAL_SECOND = 9;</code>
+     *
+     * <pre>
+     * INTERVAL SECOND literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_SECOND(9, 9),
+    /**
+     * <code>DL_INTERVAL_YEAR_TO_MONTH = 10;</code>
+     *
+     * <pre>
+     * INTERVAL YEAR TO MONTH literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_YEAR_TO_MONTH(10, 10),
+    /**
+     * <code>DL_INTERVAL_DAY_TO_HOUR = 11;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO HOUR literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_DAY_TO_HOUR(11, 11),
+    /**
+     * <code>DL_INTERVAL_DAY_TO_MINUTE = 12;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO MINUTE literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_DAY_TO_MINUTE(12, 12),
+    /**
+     * <code>DL_INTERVAL_DAY_TO_SECOND = 13;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO SECOND literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_DAY_TO_SECOND(13, 13),
+    /**
+     * <code>DL_INTERVAL_HOUR_TO_MINUTE = 14;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR TO MINUTE literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_HOUR_TO_MINUTE(14, 14),
+    /**
+     * <code>DL_INTERVAL_HOUR_TO_SECOND = 15;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR TO SECOND literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_HOUR_TO_SECOND(15, 15),
+    /**
+     * <code>DL_INTERVAL_MINUTE_TO_SECOND = 16;</code>
+     *
+     * <pre>
+     * INTERVAL MINUTE TO SECOND literal is supported
+     * </pre>
+     */
+    DL_INTERVAL_MINUTE_TO_SECOND(16, 16),
+    ;
+
+    /**
+     * <code>DL_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int DL_UNKNOWN_VALUE = 0;
+    /**
+     * <code>DL_DATE = 1;</code>
+     *
+     * <pre>
+     * DATE literal is supported
+     * </pre>
+     */
+    public static final int DL_DATE_VALUE = 1;
+    /**
+     * <code>DL_TIME = 2;</code>
+     *
+     * <pre>
+     * TIME literal is supported
+     * </pre>
+     */
+    public static final int DL_TIME_VALUE = 2;
+    /**
+     * <code>DL_TIMESTAMP = 3;</code>
+     *
+     * <pre>
+     * TIMESTAMP literal is supported
+     * </pre>
+     */
+    public static final int DL_TIMESTAMP_VALUE = 3;
+    /**
+     * <code>DL_INTERVAL_YEAR = 4;</code>
+     *
+     * <pre>
+     * INTERVAL YEAR literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_YEAR_VALUE = 4;
+    /**
+     * <code>DL_INTERVAL_MONTH = 5;</code>
+     *
+     * <pre>
+     * INTERVAL MONTH literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_MONTH_VALUE = 5;
+    /**
+     * <code>DL_INTERVAL_DAY = 6;</code>
+     *
+     * <pre>
+     * INTERVAL DAY literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_DAY_VALUE = 6;
+    /**
+     * <code>DL_INTERVAL_HOUR = 7;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_HOUR_VALUE = 7;
+    /**
+     * <code>DL_INTERVAL_MINUTE = 8;</code>
+     *
+     * <pre>
+     * INTERVAL MINUTE literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_MINUTE_VALUE = 8;
+    /**
+     * <code>DL_INTERVAL_SECOND = 9;</code>
+     *
+     * <pre>
+     * INTERVAL SECOND literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_SECOND_VALUE = 9;
+    /**
+     * <code>DL_INTERVAL_YEAR_TO_MONTH = 10;</code>
+     *
+     * <pre>
+     * INTERVAL YEAR TO MONTH literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_YEAR_TO_MONTH_VALUE = 10;
+    /**
+     * <code>DL_INTERVAL_DAY_TO_HOUR = 11;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO HOUR literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_DAY_TO_HOUR_VALUE = 11;
+    /**
+     * <code>DL_INTERVAL_DAY_TO_MINUTE = 12;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO MINUTE literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_DAY_TO_MINUTE_VALUE = 12;
+    /**
+     * <code>DL_INTERVAL_DAY_TO_SECOND = 13;</code>
+     *
+     * <pre>
+     * INTERVAL DAY TO SECOND literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_DAY_TO_SECOND_VALUE = 13;
+    /**
+     * <code>DL_INTERVAL_HOUR_TO_MINUTE = 14;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR TO MINUTE literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_HOUR_TO_MINUTE_VALUE = 14;
+    /**
+     * <code>DL_INTERVAL_HOUR_TO_SECOND = 15;</code>
+     *
+     * <pre>
+     * INTERVAL HOUR TO SECOND literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_HOUR_TO_SECOND_VALUE = 15;
+    /**
+     * <code>DL_INTERVAL_MINUTE_TO_SECOND = 16;</code>
+     *
+     * <pre>
+     * INTERVAL MINUTE TO SECOND literal is supported
+     * </pre>
+     */
+    public static final int DL_INTERVAL_MINUTE_TO_SECOND_VALUE = 16;
+
+
+    public final int getNumber() { return value; }
+
+    public static DateTimeLiteralsSupport valueOf(int value) {
+      switch (value) {
+        case 0: return DL_UNKNOWN;
+        case 1: return DL_DATE;
+        case 2: return DL_TIME;
+        case 3: return DL_TIMESTAMP;
+        case 4: return DL_INTERVAL_YEAR;
+        case 5: return DL_INTERVAL_MONTH;
+        case 6: return DL_INTERVAL_DAY;
+        case 7: return DL_INTERVAL_HOUR;
+        case 8: return DL_INTERVAL_MINUTE;
+        case 9: return DL_INTERVAL_SECOND;
+        case 10: return DL_INTERVAL_YEAR_TO_MONTH;
+        case 11: return DL_INTERVAL_DAY_TO_HOUR;
+        case 12: return DL_INTERVAL_DAY_TO_MINUTE;
+        case 13: return DL_INTERVAL_DAY_TO_SECOND;
+        case 14: return DL_INTERVAL_HOUR_TO_MINUTE;
+        case 15: return DL_INTERVAL_HOUR_TO_SECOND;
+        case 16: return DL_INTERVAL_MINUTE_TO_SECOND;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<DateTimeLiteralsSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<DateTimeLiteralsSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<DateTimeLiteralsSupport>() {
+            public DateTimeLiteralsSupport findValueByNumber(int number) {
+              return DateTimeLiteralsSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(9);
+    }
+
+    private static final DateTimeLiteralsSupport[] VALUES = values();
+
+    public static DateTimeLiteralsSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private DateTimeLiteralsSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.DateTimeLiteralsSupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.GroupBySupport}
+   */
+  public enum GroupBySupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>GB_NONE = 1;</code>
+     *
+     * <pre>
+     * Group by is not supported
+     * </pre>
+     */
+    GB_NONE(0, 1),
+    /**
+     * <code>GB_SELECT_ONLY = 2;</code>
+     *
+     * <pre>
+     * Group by supported with non aggregated columns in select
+     * </pre>
+     */
+    GB_SELECT_ONLY(1, 2),
+    /**
+     * <code>GB_BEYOND_SELECT = 3;</code>
+     *
+     * <pre>
+     * Group by supported with columns absent from the select list
+     *if all the non-aggregated colums from the select list are also added 
+     * </pre>
+     */
+    GB_BEYOND_SELECT(2, 3),
+    /**
+     * <code>GB_UNRELATED = 4;</code>
+     *
+     * <pre>
+     * Group by supported with columns absent from the select list
+     * </pre>
+     */
+    GB_UNRELATED(3, 4),
+    ;
+
+    /**
+     * <code>GB_NONE = 1;</code>
+     *
+     * <pre>
+     * Group by is not supported
+     * </pre>
+     */
+    public static final int GB_NONE_VALUE = 1;
+    /**
+     * <code>GB_SELECT_ONLY = 2;</code>
+     *
+     * <pre>
+     * Group by supported with non aggregated columns in select
+     * </pre>
+     */
+    public static final int GB_SELECT_ONLY_VALUE = 2;
+    /**
+     * <code>GB_BEYOND_SELECT = 3;</code>
+     *
+     * <pre>
+     * Group by supported with columns absent from the select list
+     *if all the non-aggregated colums from the select list are also added 
+     * </pre>
+     */
+    public static final int GB_BEYOND_SELECT_VALUE = 3;
+    /**
+     * <code>GB_UNRELATED = 4;</code>
+     *
+     * <pre>
+     * Group by supported with columns absent from the select list
+     * </pre>
+     */
+    public static final int GB_UNRELATED_VALUE = 4;
+
+
+    public final int getNumber() { return value; }
+
+    public static GroupBySupport valueOf(int value) {
+      switch (value) {
+        case 1: return GB_NONE;
+        case 2: return GB_SELECT_ONLY;
+        case 3: return GB_BEYOND_SELECT;
+        case 4: return GB_UNRELATED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<GroupBySupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<GroupBySupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<GroupBySupport>() {
+            public GroupBySupport findValueByNumber(int number) {
+              return GroupBySupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(10);
+    }
+
+    private static final GroupBySupport[] VALUES = values();
+
+    public static GroupBySupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private GroupBySupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.GroupBySupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.IdentifierCasing}
+   */
+  public enum IdentifierCasing
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>IC_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    IC_UNKNOWN(0, 0),
+    /**
+     * <code>IC_STORES_LOWER = 1;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in lower case 
+     * </pre>
+     */
+    IC_STORES_LOWER(1, 1),
+    /**
+     * <code>IC_STORES_MIXED = 2;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in mixed case 
+     * </pre>
+     */
+    IC_STORES_MIXED(2, 2),
+    /**
+     * <code>IC_STORES_UPPER = 3;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in upper case 
+     * </pre>
+     */
+    IC_STORES_UPPER(3, 3),
+    /**
+     * <code>IC_SUPPORTS_MIXED = 4;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case sensitive
+     *and stored in mixed case 
+     * </pre>
+     */
+    IC_SUPPORTS_MIXED(4, 4),
+    ;
+
+    /**
+     * <code>IC_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int IC_UNKNOWN_VALUE = 0;
+    /**
+     * <code>IC_STORES_LOWER = 1;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in lower case 
+     * </pre>
+     */
+    public static final int IC_STORES_LOWER_VALUE = 1;
+    /**
+     * <code>IC_STORES_MIXED = 2;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in mixed case 
+     * </pre>
+     */
+    public static final int IC_STORES_MIXED_VALUE = 2;
+    /**
+     * <code>IC_STORES_UPPER = 3;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case insensitive
+     *and stored in upper case 
+     * </pre>
+     */
+    public static final int IC_STORES_UPPER_VALUE = 3;
+    /**
+     * <code>IC_SUPPORTS_MIXED = 4;</code>
+     *
+     * <pre>
+     * Mixed case identifier is treated as case sensitive
+     *and stored in mixed case 
+     * </pre>
+     */
+    public static final int IC_SUPPORTS_MIXED_VALUE = 4;
+
+
+    public final int getNumber() { return value; }
+
+    public static IdentifierCasing valueOf(int value) {
+      switch (value) {
+        case 0: return IC_UNKNOWN;
+        case 1: return IC_STORES_LOWER;
+        case 2: return IC_STORES_MIXED;
+        case 3: return IC_STORES_UPPER;
+        case 4: return IC_SUPPORTS_MIXED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<IdentifierCasing>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<IdentifierCasing>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<IdentifierCasing>() {
+            public IdentifierCasing findValueByNumber(int number) {
+              return IdentifierCasing.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(11);
+    }
+
+    private static final IdentifierCasing[] VALUES = values();
+
+    public static IdentifierCasing valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private IdentifierCasing(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.IdentifierCasing)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.NullCollation}
+   */
+  public enum NullCollation
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>NC_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    NC_UNKNOWN(0, 0),
+    /**
+     * <code>NC_AT_START = 1;</code>
+     *
+     * <pre>
+     * NULL values are sorted at the start regardless of the order
+     * </pre>
+     */
+    NC_AT_START(1, 1),
+    /**
+     * <code>NC_AT_END = 2;</code>
+     *
+     * <pre>
+     * NULL values are sorted at the end regardless of the order
+     * </pre>
+     */
+    NC_AT_END(2, 2),
+    /**
+     * <code>NC_HIGH = 3;</code>
+     *
+     * <pre>
+     * NULL is the highest value
+     * </pre>
+     */
+    NC_HIGH(3, 3),
+    /**
+     * <code>NC_LOW = 4;</code>
+     *
+     * <pre>
+     * NULL is the lowest value
+     * </pre>
+     */
+    NC_LOW(4, 4),
+    ;
+
+    /**
+     * <code>NC_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int NC_UNKNOWN_VALUE = 0;
+    /**
+     * <code>NC_AT_START = 1;</code>
+     *
+     * <pre>
+     * NULL values are sorted at the start regardless of the order
+     * </pre>
+     */
+    public static final int NC_AT_START_VALUE = 1;
+    /**
+     * <code>NC_AT_END = 2;</code>
+     *
+     * <pre>
+     * NULL values are sorted at the end regardless of the order
+     * </pre>
+     */
+    public static final int NC_AT_END_VALUE = 2;
+    /**
+     * <code>NC_HIGH = 3;</code>
+     *
+     * <pre>
+     * NULL is the highest value
+     * </pre>
+     */
+    public static final int NC_HIGH_VALUE = 3;
+    /**
+     * <code>NC_LOW = 4;</code>
+     *
+     * <pre>
+     * NULL is the lowest value
+     * </pre>
+     */
+    public static final int NC_LOW_VALUE = 4;
+
+
+    public final int getNumber() { return value; }
+
+    public static NullCollation valueOf(int value) {
+      switch (value) {
+        case 0: return NC_UNKNOWN;
+        case 1: return NC_AT_START;
+        case 2: return NC_AT_END;
+        case 3: return NC_HIGH;
+        case 4: return NC_LOW;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<NullCollation>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<NullCollation>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<NullCollation>() {
+            public NullCollation findValueByNumber(int number) {
+              return NullCollation.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(12);
+    }
+
+    private static final NullCollation[] VALUES = values();
+
+    public static NullCollation valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private NullCollation(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.NullCollation)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.OrderBySupport}
+   */
+  public enum OrderBySupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>OB_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    OB_UNKNOWN(0, 0),
+    /**
+     * <code>OB_UNRELATED = 1;</code>
+     *
+     * <pre>
+     * ORDER BY supported with columns not in SELECT list
+     * </pre>
+     */
+    OB_UNRELATED(1, 1),
+    /**
+     * <code>OB_EXPRESSION = 2;</code>
+     *
+     * <pre>
+     * ORDER BY with expressions is supported
+     * </pre>
+     */
+    OB_EXPRESSION(2, 2),
+    ;
+
+    /**
+     * <code>OB_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int OB_UNKNOWN_VALUE = 0;
+    /**
+     * <code>OB_UNRELATED = 1;</code>
+     *
+     * <pre>
+     * ORDER BY supported with columns not in SELECT list
+     * </pre>
+     */
+    public static final int OB_UNRELATED_VALUE = 1;
+    /**
+     * <code>OB_EXPRESSION = 2;</code>
+     *
+     * <pre>
+     * ORDER BY with expressions is supported
+     * </pre>
+     */
+    public static final int OB_EXPRESSION_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static OrderBySupport valueOf(int value) {
+      switch (value) {
+        case 0: return OB_UNKNOWN;
+        case 1: return OB_UNRELATED;
+        case 2: return OB_EXPRESSION;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<OrderBySupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<OrderBySupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<OrderBySupport>() {
+            public OrderBySupport findValueByNumber(int number) {
+              return OrderBySupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(13);
+    }
+
+    private static final OrderBySupport[] VALUES = values();
+
+    public static OrderBySupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private OrderBySupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.OrderBySupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.OuterJoinSupport}
+   */
+  public enum OuterJoinSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>OJ_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    OJ_UNKNOWN(0, 0),
+    /**
+     * <code>OJ_LEFT = 1;</code>
+     *
+     * <pre>
+     * Left outer join is supported
+     * </pre>
+     */
+    OJ_LEFT(1, 1),
+    /**
+     * <code>OJ_RIGHT = 2;</code>
+     *
+     * <pre>
+     * Right outer join is supported
+     * </pre>
+     */
+    OJ_RIGHT(2, 2),
+    /**
+     * <code>OJ_FULL = 3;</code>
+     *
+     * <pre>
+     * Full outer join is supported
+     * </pre>
+     */
+    OJ_FULL(3, 3),
+    /**
+     * <code>OJ_NESTED = 4;</code>
+     *
+     * <pre>
+     * Nested outer join is supported
+     * </pre>
+     */
+    OJ_NESTED(4, 4),
+    /**
+     * <code>OJ_NOT_ORDERED = 5;</code>
+     *
+     * <pre>
+     * Column names in the ON clause don't have to share the same order
+     *as their respective table names in the OUTER JOIN clase 
+     * </pre>
+     */
+    OJ_NOT_ORDERED(5, 5),
+    /**
+     * <code>OJ_INNER = 6;</code>
+     *
+     * <pre>
+     * Inner table can also be used in an inner join
+     * </pre>
+     */
+    OJ_INNER(6, 6),
+    /**
+     * <code>OJ_ALL_COMPARISON_OPS = 7;</code>
+     *
+     * <pre>
+     * Any comparison operator is supported in the ON clause
+     * </pre>
+     */
+    OJ_ALL_COMPARISON_OPS(7, 7),
+    ;
+
+    /**
+     * <code>OJ_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int OJ_UNKNOWN_VALUE = 0;
+    /**
+     * <code>OJ_LEFT = 1;</code>
+     *
+     * <pre>
+     * Left outer join is supported
+     * </pre>
+     */
+    public static final int OJ_LEFT_VALUE = 1;
+    /**
+     * <code>OJ_RIGHT = 2;</code>
+     *
+     * <pre>
+     * Right outer join is supported
+     * </pre>
+     */
+    public static final int OJ_RIGHT_VALUE = 2;
+    /**
+     * <code>OJ_FULL = 3;</code>
+     *
+     * <pre>
+     * Full outer join is supported
+     * </pre>
+     */
+    public static final int OJ_FULL_VALUE = 3;
+    /**
+     * <code>OJ_NESTED = 4;</code>
+     *
+     * <pre>
+     * Nested outer join is supported
+     * </pre>
+     */
+    public static final int OJ_NESTED_VALUE = 4;
+    /**
+     * <code>OJ_NOT_ORDERED = 5;</code>
+     *
+     * <pre>
+     * Column names in the ON clause don't have to share the same order
+     *as their respective table names in the OUTER JOIN clase 
+     * </pre>
+     */
+    public static final int OJ_NOT_ORDERED_VALUE = 5;
+    /**
+     * <code>OJ_INNER = 6;</code>
+     *
+     * <pre>
+     * Inner table can also be used in an inner join
+     * </pre>
+     */
+    public static final int OJ_INNER_VALUE = 6;
+    /**
+     * <code>OJ_ALL_COMPARISON_OPS = 7;</code>
+     *
+     * <pre>
+     * Any comparison operator is supported in the ON clause
+     * </pre>
+     */
+    public static final int OJ_ALL_COMPARISON_OPS_VALUE = 7;
+
+
+    public final int getNumber() { return value; }
+
+    public static OuterJoinSupport valueOf(int value) {
+      switch (value) {
+        case 0: return OJ_UNKNOWN;
+        case 1: return OJ_LEFT;
+        case 2: return OJ_RIGHT;
+        case 3: return OJ_FULL;
+        case 4: return OJ_NESTED;
+        case 5: return OJ_NOT_ORDERED;
+        case 6: return OJ_INNER;
+        case 7: return OJ_ALL_COMPARISON_OPS;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<OuterJoinSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<OuterJoinSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<OuterJoinSupport>() {
+            public OuterJoinSupport findValueByNumber(int number) {
+              return OuterJoinSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(14);
+    }
+
+    private static final OuterJoinSupport[] VALUES = values();
+
+    public static OuterJoinSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private OuterJoinSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.OuterJoinSupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.SubQuerySupport}
+   */
+  public enum SubQuerySupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>SQ_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    SQ_UNKNOWN(0, 0),
+    /**
+     * <code>SQ_CORRELATED = 1;</code>
+     *
+     * <pre>
+     * Correlated subquery is supported
+     * </pre>
+     */
+    SQ_CORRELATED(1, 1),
+    /**
+     * <code>SQ_IN_COMPARISON = 2;</code>
+     *
+     * <pre>
+     * Subquery in comparison expression is supported
+     * </pre>
+     */
+    SQ_IN_COMPARISON(2, 2),
+    /**
+     * <code>SQ_IN_EXISTS = 3;</code>
+     *
+     * <pre>
+     * Subquery in EXISTS expression is supported
+     * </pre>
+     */
+    SQ_IN_EXISTS(3, 3),
+    /**
+     * <code>SQ_IN_INSERT = 4;</code>
+     *
+     * <pre>
+     * Subquery in INSERT expression is supported
+     * </pre>
+     */
+    SQ_IN_INSERT(4, 4),
+    /**
+     * <code>SQ_IN_QUANTIFIED = 5;</code>
+     *
+     * <pre>
+     * Subquery in quantified expression is supported
+     * </pre>
+     */
+    SQ_IN_QUANTIFIED(5, 5),
+    ;
+
+    /**
+     * <code>SQ_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int SQ_UNKNOWN_VALUE = 0;
+    /**
+     * <code>SQ_CORRELATED = 1;</code>
+     *
+     * <pre>
+     * Correlated subquery is supported
+     * </pre>
+     */
+    public static final int SQ_CORRELATED_VALUE = 1;
+    /**
+     * <code>SQ_IN_COMPARISON = 2;</code>
+     *
+     * <pre>
+     * Subquery in comparison expression is supported
+     * </pre>
+     */
+    public static final int SQ_IN_COMPARISON_VALUE = 2;
+    /**
+     * <code>SQ_IN_EXISTS = 3;</code>
+     *
+     * <pre>
+     * Subquery in EXISTS expression is supported
+     * </pre>
+     */
+    public static final int SQ_IN_EXISTS_VALUE = 3;
+    /**
+     * <code>SQ_IN_INSERT = 4;</code>
+     *
+     * <pre>
+     * Subquery in INSERT expression is supported
+     * </pre>
+     */
+    public static final int SQ_IN_INSERT_VALUE = 4;
+    /**
+     * <code>SQ_IN_QUANTIFIED = 5;</code>
+     *
+     * <pre>
+     * Subquery in quantified expression is supported
+     * </pre>
+     */
+    public static final int SQ_IN_QUANTIFIED_VALUE = 5;
+
+
+    public final int getNumber() { return value; }
+
+    public static SubQuerySupport valueOf(int value) {
+      switch (value) {
+        case 0: return SQ_UNKNOWN;
+        case 1: return SQ_CORRELATED;
+        case 2: return SQ_IN_COMPARISON;
+        case 3: return SQ_IN_EXISTS;
+        case 4: return SQ_IN_INSERT;
+        case 5: return SQ_IN_QUANTIFIED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SubQuerySupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<SubQuerySupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SubQuerySupport>() {
+            public SubQuerySupport findValueByNumber(int number) {
+              return SubQuerySupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(15);
+    }
+
+    private static final SubQuerySupport[] VALUES = values();
+
+    public static SubQuerySupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private SubQuerySupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.SubQuerySupport)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.UnionSupport}
+   */
+  public enum UnionSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>U_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    U_UNKNOWN(0, 0),
+    /**
+     * <code>U_UNION = 1;</code>
+     *
+     * <pre>
+     * UNION is supported
+     * </pre>
+     */
+    U_UNION(1, 1),
+    /**
+     * <code>U_UNION_ALL = 2;</code>
+     *
+     * <pre>
+     * UNION_ALL is supported
+     * </pre>
+     */
+    U_UNION_ALL(2, 2),
+    ;
+
+    /**
+     * <code>U_UNKNOWN = 0;</code>
+     *
+     * <pre>
+     * Unknown support (for forward compatibility)
+     * </pre>
+     */
+    public static final int U_UNKNOWN_VALUE = 0;
+    /**
+     * <code>U_UNION = 1;</code>
+     *
+     * <pre>
+     * UNION is supported
+     * </pre>
+     */
+    public static final int U_UNION_VALUE = 1;
+    /**
+     * <code>U_UNION_ALL = 2;</code>
+     *
+     * <pre>
+     * UNION_ALL is supported
+     * </pre>
+     */
+    public static final int U_UNION_ALL_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static UnionSupport valueOf(int value) {
+      switch (value) {
+        case 0: return U_UNKNOWN;
+        case 1: return U_UNION;
+        case 2: return U_UNION_ALL;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<UnionSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<UnionSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<UnionSupport>() {
+            public UnionSupport findValueByNumber(int number) {
+              return UnionSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(16);
+    }
+
+    private static final UnionSupport[] VALUES = values();
+
+    public static UnionSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private UnionSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.UnionSupport)
   }
 
   public interface PropertyOrBuilder
@@ -2481,6 +4226,51 @@ public final class UserProtos {
      */
     com.google.protobuf.ByteString
         getApplicationBytes();
+
+    // optional uint32 buildNumber = 7;
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    boolean hasBuildNumber();
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    int getBuildNumber();
+
+    // optional string versionQualifier = 8;
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    boolean hasVersionQualifier();
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    java.lang.String getVersionQualifier();
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getVersionQualifierBytes();
   }
   /**
    * Protobuf type {@code exec.user.RpcEndpointInfos}
@@ -2561,6 +4351,16 @@ public final class UserProtos {
             case 50: {
               bitField0_ |= 0x00000020;
               application_ = input.readBytes();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              buildNumber_ = input.readUInt32();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              versionQualifier_ = input.readBytes();
               break;
             }
           }
@@ -2840,6 +4640,85 @@ public final class UserProtos {
       }
     }
 
+    // optional uint32 buildNumber = 7;
+    public static final int BUILDNUMBER_FIELD_NUMBER = 7;
+    private int buildNumber_;
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    public boolean hasBuildNumber() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional uint32 buildNumber = 7;</code>
+     *
+     * <pre>
+     * example: 32
+     * </pre>
+     */
+    public int getBuildNumber() {
+      return buildNumber_;
+    }
+
+    // optional string versionQualifier = 8;
+    public static final int VERSIONQUALIFIER_FIELD_NUMBER = 8;
+    private java.lang.Object versionQualifier_;
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public boolean hasVersionQualifier() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public java.lang.String getVersionQualifier() {
+      java.lang.Object ref = versionQualifier_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          versionQualifier_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string versionQualifier = 8;</code>
+     *
+     * <pre>
+     * example: SNAPSHOT
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getVersionQualifierBytes() {
+      java.lang.Object ref = versionQualifier_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        versionQualifier_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       name_ = "";
       version_ = "";
@@ -2847,6 +4726,8 @@ public final class UserProtos {
       minorVersion_ = 0;
       patchVersion_ = 0;
       application_ = "";
+      buildNumber_ = 0;
+      versionQualifier_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2877,6 +4758,12 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, getApplicationBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt32(7, buildNumber_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getVersionQualifierBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -2910,6 +4797,14 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, getApplicationBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, buildNumber_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getVersionQualifierBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3039,6 +4934,10 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         application_ = "";
         bitField0_ = (bitField0_ & ~0x00000020);
+        buildNumber_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        versionQualifier_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -3091,6 +4990,14 @@ public final class UserProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.application_ = application_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.buildNumber_ = buildNumber_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.versionQualifier_ = versionQualifier_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3129,6 +5036,14 @@ public final class UserProtos {
         if (other.hasApplication()) {
           bitField0_ |= 0x00000020;
           application_ = other.application_;
+          onChanged();
+        }
+        if (other.hasBuildNumber()) {
+          setBuildNumber(other.getBuildNumber());
+        }
+        if (other.hasVersionQualifier()) {
+          bitField0_ |= 0x00000080;
+          versionQualifier_ = other.versionQualifier_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -3599,6 +5514,153 @@ public final class UserProtos {
         return this;
       }
 
+      // optional uint32 buildNumber = 7;
+      private int buildNumber_ ;
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public boolean hasBuildNumber() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public int getBuildNumber() {
+        return buildNumber_;
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public Builder setBuildNumber(int value) {
+        bitField0_ |= 0x00000040;
+        buildNumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 buildNumber = 7;</code>
+       *
+       * <pre>
+       * example: 32
+       * </pre>
+       */
+      public Builder clearBuildNumber() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        buildNumber_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string versionQualifier = 8;
+      private java.lang.Object versionQualifier_ = "";
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public boolean hasVersionQualifier() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public java.lang.String getVersionQualifier() {
+        java.lang.Object ref = versionQualifier_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          versionQualifier_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getVersionQualifierBytes() {
+        java.lang.Object ref = versionQualifier_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          versionQualifier_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder setVersionQualifier(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        versionQualifier_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder clearVersionQualifier() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        versionQualifier_ = getDefaultInstance().getVersionQualifier();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string versionQualifier = 8;</code>
+       *
+       * <pre>
+       * example: SNAPSHOT
+       * </pre>
+       */
+      public Builder setVersionQualifierBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        versionQualifier_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.user.RpcEndpointInfos)
     }
 
@@ -3704,6 +5766,16 @@ public final class UserProtos {
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder getClientInfosOrBuilder();
+
+    // optional .exec.user.SaslSupport sasl_support = 9;
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    boolean hasSaslSupport();
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport();
   }
   /**
    * Protobuf type {@code exec.user.UserToBitHandshake}
@@ -3824,6 +5896,17 @@ public final class UserProtos {
                 clientInfos_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 72: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.SaslSupport value = org.apache.drill.exec.proto.UserProtos.SaslSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(9, rawValue);
+              } else {
+                bitField0_ |= 0x00000100;
+                saslSupport_ = value;
+              }
               break;
             }
           }
@@ -4012,6 +6095,22 @@ public final class UserProtos {
       return clientInfos_;
     }
 
+    // optional .exec.user.SaslSupport sasl_support = 9;
+    public static final int SASL_SUPPORT_FIELD_NUMBER = 9;
+    private org.apache.drill.exec.proto.UserProtos.SaslSupport saslSupport_;
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    public boolean hasSaslSupport() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
+      return saslSupport_;
+    }
+
     private void initFields() {
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
@@ -4021,6 +6120,7 @@ public final class UserProtos {
       supportComplexTypes_ = false;
       supportTimeout_ = false;
       clientInfos_ = org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance();
+      saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4064,6 +6164,9 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(8, clientInfos_);
       }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeEnum(9, saslSupport_.getNumber());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -4104,6 +6207,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, clientInfos_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(9, saslSupport_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4252,6 +6359,8 @@ public final class UserProtos {
           clientInfosBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
+        saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -4324,6 +6433,10 @@ public final class UserProtos {
         } else {
           result.clientInfos_ = clientInfosBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.saslSupport_ = saslSupport_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4363,6 +6476,9 @@ public final class UserProtos {
         }
         if (other.hasClientInfos()) {
           mergeClientInfos(other.getClientInfos());
+        }
+        if (other.hasSaslSupport()) {
+          setSaslSupport(other.getSaslSupport());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4914,6 +7030,42 @@ public final class UserProtos {
           clientInfos_ = null;
         }
         return clientInfosBuilder_;
+      }
+
+      // optional .exec.user.SaslSupport sasl_support = 9;
+      private org.apache.drill.exec.proto.UserProtos.SaslSupport saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public boolean hasSaslSupport() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
+        return saslSupport_;
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public Builder setSaslSupport(org.apache.drill.exec.proto.UserProtos.SaslSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000100;
+        saslSupport_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public Builder clearSaslSupport() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.UserToBitHandshake)
@@ -7390,6 +9542,60 @@ public final class UserProtos {
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder getServerInfosOrBuilder();
+
+    // repeated string authenticationMechanisms = 7;
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    java.util.List<java.lang.String>
+    getAuthenticationMechanismsList();
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    int getAuthenticationMechanismsCount();
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    java.lang.String getAuthenticationMechanisms(int index);
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index);
+
+    // repeated .exec.user.RpcType supported_methods = 8;
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList();
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    int getSupportedMethodsCount();
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index);
+
+    // optional bool encrypted = 9;
+    /**
+     * <code>optional bool encrypted = 9;</code>
+     */
+    boolean hasEncrypted();
+    /**
+     * <code>optional bool encrypted = 9;</code>
+     */
+    boolean getEncrypted();
+
+    // optional int32 maxWrappedSize = 10;
+    /**
+     * <code>optional int32 maxWrappedSize = 10;</code>
+     */
+    boolean hasMaxWrappedSize();
+    /**
+     * <code>optional int32 maxWrappedSize = 10;</code>
+     */
+    int getMaxWrappedSize();
   }
   /**
    * Protobuf type {@code exec.user.BitToUserHandshake}
@@ -7481,6 +9687,57 @@ public final class UserProtos {
               bitField0_ |= 0x00000010;
               break;
             }
+            case 58: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              authenticationMechanisms_.add(input.readBytes());
+              break;
+            }
+            case 64: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RpcType value = org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(8, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                  supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>();
+                  mutable_bitField0_ |= 0x00000040;
+                }
+                supportedMethods_.add(value);
+              }
+              break;
+            }
+            case 66: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.RpcType value = org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(8, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                    supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>();
+                    mutable_bitField0_ |= 0x00000040;
+                  }
+                  supportedMethods_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000020;
+              encrypted_ = input.readBool();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000040;
+              maxWrappedSize_ = input.readInt32();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -7489,6 +9746,12 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(authenticationMechanisms_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -7661,12 +9924,100 @@ public final class UserProtos {
       return serverInfos_;
     }
 
+    // repeated string authenticationMechanisms = 7;
+    public static final int AUTHENTICATIONMECHANISMS_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList authenticationMechanisms_;
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public java.util.List<java.lang.String>
+        getAuthenticationMechanismsList() {
+      return authenticationMechanisms_;
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public int getAuthenticationMechanismsCount() {
+      return authenticationMechanisms_.size();
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public java.lang.String getAuthenticationMechanisms(int index) {
+      return authenticationMechanisms_.get(index);
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index) {
+      return authenticationMechanisms_.getByteString(index);
+    }
+
+    // repeated .exec.user.RpcType supported_methods = 8;
+    public static final int SUPPORTED_METHODS_FIELD_NUMBER = 8;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> supportedMethods_;
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
+      return supportedMethods_;
+    }
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public int getSupportedMethodsCount() {
+      return supportedMethods_.size();
+    }
+    /**
+     * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
+      return supportedMethods_.get(index);
+    }
+
+    // optional bool encrypted = 9;
+    public static final int ENCRYPTED_FIELD_NUMBER = 9;
+    private boolean encrypted_;
+    /**
+     * <code>optional bool encrypted = 9;</code>
+     */
+    public boolean hasEncrypted() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional bool encrypted = 9;</code>
+     */
+    public boolean getEncrypted() {
+      return encrypted_;
+    }
+
+    // optional int32 maxWrappedSize = 10;
+    public static final int MAXWRAPPEDSIZE_FIELD_NUMBER = 10;
+    private int maxWrappedSize_;
+    /**
+     * <code>optional int32 maxWrappedSize = 10;</code>
+     */
+    public boolean hasMaxWrappedSize() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int32 maxWrappedSize = 10;</code>
+     */
+    public int getMaxWrappedSize() {
+      return maxWrappedSize_;
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
       status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
       errorId_ = "";
       errorMessage_ = "";
       serverInfos_ = org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance();
+      authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      supportedMethods_ = java.util.Collections.emptyList();
+      encrypted_ = false;
+      maxWrappedSize_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7694,6 +10045,18 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeMessage(6, serverInfos_);
+      }
+      for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+        output.writeBytes(7, authenticationMechanisms_.getByteString(i));
+      }
+      for (int i = 0; i < supportedMethods_.size(); i++) {
+        output.writeEnum(8, supportedMethods_.get(i).getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBool(9, encrypted_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt32(10, maxWrappedSize_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -7723,6 +10086,32 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, serverInfos_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(authenticationMechanisms_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getAuthenticationMechanismsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < supportedMethods_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(supportedMethods_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * supportedMethods_.size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(9, encrypted_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(10, maxWrappedSize_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7855,6 +10244,14 @@ public final class UserProtos {
           serverInfosBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000010);
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        supportedMethods_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        encrypted_ = false;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        maxWrappedSize_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -7907,6 +10304,25 @@ public final class UserProtos {
         } else {
           result.serverInfos_ = serverInfosBuilder_.build();
         }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              authenticationMechanisms_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.authenticationMechanisms_ = authenticationMechanisms_;
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.supportedMethods_ = supportedMethods_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.encrypted_ = encrypted_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.maxWrappedSize_ = maxWrappedSize_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7941,6 +10357,32 @@ public final class UserProtos {
         }
         if (other.hasServerInfos()) {
           mergeServerInfos(other.getServerInfos());
+        }
+        if (!other.authenticationMechanisms_.isEmpty()) {
+          if (authenticationMechanisms_.isEmpty()) {
+            authenticationMechanisms_ = other.authenticationMechanisms_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureAuthenticationMechanismsIsMutable();
+            authenticationMechanisms_.addAll(other.authenticationMechanisms_);
+          }
+          onChanged();
+        }
+        if (!other.supportedMethods_.isEmpty()) {
+          if (supportedMethods_.isEmpty()) {
+            supportedMethods_ = other.supportedMethods_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureSupportedMethodsIsMutable();
+            supportedMethods_.addAll(other.supportedMethods_);
+          }
+          onChanged();
+        }
+        if (other.hasEncrypted()) {
+          setEncrypted(other.getEncrypted());
+        }
+        if (other.hasMaxWrappedSize()) {
+          setMaxWrappedSize(other.getMaxWrappedSize());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -8301,6 +10743,237 @@ public final class UserProtos {
           serverInfos_ = null;
         }
         return serverInfosBuilder_;
+      }
+
+      // repeated string authenticationMechanisms = 7;
+      private com.google.protobuf.LazyStringList authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureAuthenticationMechanismsIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList(authenticationMechanisms_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public java.util.List<java.lang.String>
+          getAuthenticationMechanismsList() {
+        return java.util.Collections.unmodifiableList(authenticationMechanisms_);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public int getAuthenticationMechanismsCount() {
+        return authenticationMechanisms_.size();
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public java.lang.String getAuthenticationMechanisms(int index) {
+        return authenticationMechanisms_.get(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAuthenticationMechanismsBytes(int index) {
+        return authenticationMechanisms_.getByteString(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder setAuthenticationMechanisms(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAuthenticationMechanisms(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAllAuthenticationMechanisms(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureAuthenticationMechanismsIsMutable();
+        super.addAll(values, authenticationMechanisms_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder clearAuthenticationMechanisms() {
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAuthenticationMechanismsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.RpcType supported_methods = 8;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> supportedMethods_ =
+        java.util.Collections.emptyList();
+      private void ensureSupportedMethodsIsMutable() {
+        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+          supportedMethods_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.RpcType>(supportedMethods_);
+          bitField0_ |= 0x00000040;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
+        return java.util.Collections.unmodifiableList(supportedMethods_);
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public int getSupportedMethodsCount() {
+        return supportedMethods_.size();
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
+        return supportedMethods_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder setSupportedMethods(
+          int index, org.apache.drill.exec.proto.UserProtos.RpcType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSupportedMethodsIsMutable();
+        supportedMethods_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder addSupportedMethods(org.apache.drill.exec.proto.UserProtos.RpcType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSupportedMethodsIsMutable();
+        supportedMethods_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder addAllSupportedMethods(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.RpcType> values) {
+        ensureSupportedMethodsIsMutable();
+        super.addAll(values, supportedMethods_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       */
+      public Builder clearSupportedMethods() {
+        supportedMethods_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+
+      // optional bool encrypted = 9;
+      private boolean encrypted_ ;
+      /**
+       * <code>optional bool encrypted = 9;</code>
+       */
+      public boolean hasEncrypted() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bool encrypted = 9;</code>
+       */
+      public boolean getEncrypted() {
+        return encrypted_;
+      }
+      /**
+       * <code>optional bool encrypted = 9;</code>
+       */
+      public Builder setEncrypted(boolean value) {
+        bitField0_ |= 0x00000080;
+        encrypted_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool encrypted = 9;</code>
+       */
+      public Builder clearEncrypted() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        encrypted_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 maxWrappedSize = 10;
+      private int maxWrappedSize_ ;
+      /**
+       * <code>optional int32 maxWrappedSize = 10;</code>
+       */
+      public boolean hasMaxWrappedSize() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional int32 maxWrappedSize = 10;</code>
+       */
+      public int getMaxWrappedSize() {
+        return maxWrappedSize_;
+      }
+      /**
+       * <code>optional int32 maxWrappedSize = 10;</code>
+       */
+      public Builder setMaxWrappedSize(int value) {
+        bitField0_ |= 0x00000100;
+        maxWrappedSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 maxWrappedSize = 10;</code>
+       */
+      public Builder clearMaxWrappedSize() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        maxWrappedSize_ = 0;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.BitToUserHandshake)
@@ -22321,7 +24994,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     boolean hasUpdatability();
@@ -22330,7 +25003,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability();
@@ -23201,7 +25874,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     public boolean hasUpdatability() {
@@ -23212,7 +25885,7 @@ public final class UserProtos {
      *
      * <pre>
      *
-     * Defaults to READ_ONLU
+     * Defaults to READ_ONLY
      * </pre>
      */
     public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
@@ -24962,7 +27635,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public boolean hasUpdatability() {
@@ -24973,7 +27646,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
@@ -24984,7 +27657,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public Builder setUpdatability(org.apache.drill.exec.proto.UserProtos.ColumnUpdatability value) {
@@ -25001,7 +27674,7 @@ public final class UserProtos {
        *
        * <pre>
        *
-       * Defaults to READ_ONLU
+       * Defaults to READ_ONLY
        * </pre>
        */
       public Builder clearUpdatability() {
@@ -27533,6 +30206,9938 @@ public final class UserProtos {
     // @@protoc_insertion_point(class_scope:exec.user.CreatePreparedStatementResp)
   }
 
+  public interface GetServerMetaReqOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * Protobuf type {@code exec.user.GetServerMetaReq}
+   *
+   * <pre>
+   *
+   * Request message for getting server metadata
+   * </pre>
+   */
+  public static final class GetServerMetaReq extends
+      com.google.protobuf.GeneratedMessage
+      implements GetServerMetaReqOrBuilder {
+    // Use GetServerMetaReq.newBuilder() to construct.
+    private GetServerMetaReq(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetServerMetaReq(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetServerMetaReq defaultInstance;
+    public static GetServerMetaReq getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetServerMetaReq getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetServerMetaReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.class, org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetServerMetaReq> PARSER =
+        new com.google.protobuf.AbstractParser<GetServerMetaReq>() {
+      public GetServerMetaReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetServerMetaReq(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetServerMetaReq> getParserForType() {
+      return PARSER;
+    }
+
+    private void initFields() {
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetServerMetaReq prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetServerMetaReq}
+     *
+     * <pre>
+     *
+     * Request message for getting server metadata
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetServerMetaReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.class, org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaReq_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaReq getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaReq build() {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaReq buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaReq result = new org.apache.drill.exec.proto.UserProtos.GetServerMetaReq(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetServerMetaReq) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetServerMetaReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetServerMetaReq other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetServerMetaReq.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetServerMetaReq) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetServerMetaReq)
+    }
+
+    static {
+      defaultInstance = new GetServerMetaReq(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetServerMetaReq)
+  }
+
+  public interface ConvertSupportOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required .common.MinorType from = 1;
+    /**
+     * <code>required .common.MinorType from = 1;</code>
+     */
+    boolean hasFrom();
+    /**
+     * <code>required .common.MinorType from = 1;</code>
+     */
+    org.apache.drill.common.types.TypeProtos.MinorType getFrom();
+
+    // required .common.MinorType to = 2;
+    /**
+     * <code>required .common.MinorType to = 2;</code>
+     */
+    boolean hasTo();
+    /**
+     * <code>required .common.MinorType to = 2;</code>
+     */
+    org.apache.drill.common.types.TypeProtos.MinorType getTo();
+  }
+  /**
+   * Protobuf type {@code exec.user.ConvertSupport}
+   */
+  public static final class ConvertSupport extends
+      com.google.protobuf.GeneratedMessage
+      implements ConvertSupportOrBuilder {
+    // Use ConvertSupport.newBuilder() to construct.
+    private ConvertSupport(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ConvertSupport(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ConvertSupport defaultInstance;
+    public static ConvertSupport getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ConvertSupport getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ConvertSupport(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.common.types.TypeProtos.MinorType value = org.apache.drill.common.types.TypeProtos.MinorType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                from_ = value;
+              }
+              break;
+            }
+            case 16: {
+              int rawValue = input.readEnum();
+              org.apache.drill.common.types.TypeProtos.MinorType value = org.apache.drill.common.types.TypeProtos.MinorType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(2, rawValue);
+              } else {
+                bitField0_ |= 0x00000002;
+                to_ = value;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ConvertSupport_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ConvertSupport_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.ConvertSupport.class, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ConvertSupport> PARSER =
+        new com.google.protobuf.AbstractParser<ConvertSupport>() {
+      public ConvertSupport parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ConvertSupport(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ConvertSupport> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required .common.MinorType from = 1;
+    public static final int FROM_FIELD_NUMBER = 1;
+    private org.apache.drill.common.types.TypeProtos.MinorType from_;
+    /**
+     * <code>required .common.MinorType from = 1;</code>
+     */
+    public boolean hasFrom() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .common.MinorType from = 1;</code>
+     */
+    public org.apache.drill.common.types.TypeProtos.MinorType getFrom() {
+      return from_;
+    }
+
+    // required .common.MinorType to = 2;
+    public static final int TO_FIELD_NUMBER = 2;
+    private org.apache.drill.common.types.TypeProtos.MinorType to_;
+    /**
+     * <code>required .common.MinorType to = 2;</code>
+     */
+    public boolean hasTo() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .common.MinorType to = 2;</code>
+     */
+    public org.apache.drill.common.types.TypeProtos.MinorType getTo() {
+      return to_;
+    }
+
+    private void initFields() {
+      from_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+      to_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasFrom()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTo()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, from_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeEnum(2, to_.getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, from_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(2, to_.getNumber());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ConvertSupport parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.ConvertSupport prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.ConvertSupport}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ConvertSupport_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ConvertSupport_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.ConvertSupport.class, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.ConvertSupport.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        from_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        to_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ConvertSupport_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.ConvertSupport.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport build() {
+        org.apache.drill.exec.proto.UserProtos.ConvertSupport result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.ConvertSupport result = new org.apache.drill.exec.proto.UserProtos.ConvertSupport(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.from_ = from_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.to_ = to_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.ConvertSupport) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.ConvertSupport)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.ConvertSupport other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.ConvertSupport.getDefaultInstance()) return this;
+        if (other.hasFrom()) {
+          setFrom(other.getFrom());
+        }
+        if (other.hasTo()) {
+          setTo(other.getTo());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasFrom()) {
+          
+          return false;
+        }
+        if (!hasTo()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.ConvertSupport parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.ConvertSupport) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required .common.MinorType from = 1;
+      private org.apache.drill.common.types.TypeProtos.MinorType from_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+      /**
+       * <code>required .common.MinorType from = 1;</code>
+       */
+      public boolean hasFrom() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .common.MinorType from = 1;</code>
+       */
+      public org.apache.drill.common.types.TypeProtos.MinorType getFrom() {
+        return from_;
+      }
+      /**
+       * <code>required .common.MinorType from = 1;</code>
+       */
+      public Builder setFrom(org.apache.drill.common.types.TypeProtos.MinorType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        from_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .common.MinorType from = 1;</code>
+       */
+      public Builder clearFrom() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        from_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+        onChanged();
+        return this;
+      }
+
+      // required .common.MinorType to = 2;
+      private org.apache.drill.common.types.TypeProtos.MinorType to_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+      /**
+       * <code>required .common.MinorType to = 2;</code>
+       */
+      public boolean hasTo() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .common.MinorType to = 2;</code>
+       */
+      public org.apache.drill.common.types.TypeProtos.MinorType getTo() {
+        return to_;
+      }
+      /**
+       * <code>required .common.MinorType to = 2;</code>
+       */
+      public Builder setTo(org.apache.drill.common.types.TypeProtos.MinorType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        to_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .common.MinorType to = 2;</code>
+       */
+      public Builder clearTo() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        to_ = org.apache.drill.common.types.TypeProtos.MinorType.LATE;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.ConvertSupport)
+    }
+
+    static {
+      defaultInstance = new ConvertSupport(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.ConvertSupport)
+  }
+
+  public interface GetServerMetaRespOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .exec.user.RequestStatus status = 1;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
+
+    // optional .exec.user.ServerMeta server_meta = 2;
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    boolean hasServerMeta();
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta();
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder getServerMetaOrBuilder();
+
+    // optional .exec.shared.DrillPBError error = 3;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder();
+  }
+  /**
+   * Protobuf type {@code exec.user.GetServerMetaResp}
+   *
+   * <pre>
+   *
+   * Response message for GetServerMetaReq
+   * </pre>
+   */
+  public static final class GetServerMetaResp extends
+      com.google.protobuf.GeneratedMessage
+      implements GetServerMetaRespOrBuilder {
+    // Use GetServerMetaResp.newBuilder() to construct.
+    private GetServerMetaResp(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private GetServerMetaResp(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final GetServerMetaResp defaultInstance;
+    public static GetServerMetaResp getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public GetServerMetaResp getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetServerMetaResp(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.RequestStatus value = org.apache.drill.exec.proto.UserProtos.RequestStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                status_ = value;
+              }
+              break;
+            }
+            case 18: {
+              org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = serverMeta_.toBuilder();
+              }
+              serverMeta_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.ServerMeta.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(serverMeta_);
+                serverMeta_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = error_.toBuilder();
+              }
+              error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(error_);
+                error_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaResp_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaResp_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.class, org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<GetServerMetaResp> PARSER =
+        new com.google.protobuf.AbstractParser<GetServerMetaResp>() {
+      public GetServerMetaResp parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetServerMetaResp(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetServerMetaResp> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional .exec.user.RequestStatus status = 1;
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserProtos.RequestStatus status_;
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.user.RequestStatus status = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+      return status_;
+    }
+
+    // optional .exec.user.ServerMeta server_meta = 2;
+    public static final int SERVER_META_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserProtos.ServerMeta serverMeta_;
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    public boolean hasServerMeta() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta() {
+      return serverMeta_;
+    }
+    /**
+     * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder getServerMetaOrBuilder() {
+      return serverMeta_;
+    }
+
+    // optional .exec.shared.DrillPBError error = 3;
+    public static final int ERROR_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+      return error_;
+    }
+    /**
+     * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN_STATUS;
+      serverMeta_ = org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance();
+      error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (hasServerMeta()) {
+        if (!getServerMeta().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, status_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, serverMeta_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, error_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, status_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, serverMeta_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, error_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.GetServerMetaResp prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.GetServerMetaResp}
+     *
+     * <pre>
+     *
+     * Response message for GetServerMetaReq
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.GetServerMetaRespOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaResp_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaResp_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.class, org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getServerMetaFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN_STATUS;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (serverMetaBuilder_ == null) {
+          serverMeta_ = org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance();
+        } else {
+          serverMetaBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_GetServerMetaResp_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaResp getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaResp build() {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaResp result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.GetServerMetaResp buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaResp result = new org.apache.drill.exec.proto.UserProtos.GetServerMetaResp(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.status_ = status_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (serverMetaBuilder_ == null) {
+          result.serverMeta_ = serverMeta_;
+        } else {
+          result.serverMeta_ = serverMetaBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.GetServerMetaResp) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.GetServerMetaResp)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.GetServerMetaResp other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.GetServerMetaResp.getDefaultInstance()) return this;
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        if (other.hasServerMeta()) {
+          mergeServerMeta(other.getServerMeta());
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (hasServerMeta()) {
+          if (!getServerMeta().isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.GetServerMetaResp parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.GetServerMetaResp) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.user.RequestStatus status = 1;
+      private org.apache.drill.exec.proto.UserProtos.RequestStatus status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN_STATUS;
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.RequestStatus status = 1;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        status_ = org.apache.drill.exec.proto.UserProtos.RequestStatus.UNKNOWN_STATUS;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.ServerMeta server_meta = 2;
+      private org.apache.drill.exec.proto.UserProtos.ServerMeta serverMeta_ = org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ServerMeta, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder, org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder> serverMetaBuilder_;
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public boolean hasServerMeta() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta() {
+        if (serverMetaBuilder_ == null) {
+          return serverMeta_;
+        } else {
+          return serverMetaBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public Builder setServerMeta(org.apache.drill.exec.proto.UserProtos.ServerMeta value) {
+        if (serverMetaBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          serverMeta_ = value;
+          onChanged();
+        } else {
+          serverMetaBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public Builder setServerMeta(
+          org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder builderForValue) {
+        if (serverMetaBuilder_ == null) {
+          serverMeta_ = builderForValue.build();
+          onChanged();
+        } else {
+          serverMetaBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public Builder mergeServerMeta(org.apache.drill.exec.proto.UserProtos.ServerMeta value) {
+        if (serverMetaBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              serverMeta_ != org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance()) {
+            serverMeta_ =
+              org.apache.drill.exec.proto.UserProtos.ServerMeta.newBuilder(serverMeta_).mergeFrom(value).buildPartial();
+          } else {
+            serverMeta_ = value;
+          }
+          onChanged();
+        } else {
+          serverMetaBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public Builder clearServerMeta() {
+        if (serverMetaBuilder_ == null) {
+          serverMeta_ = org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance();
+          onChanged();
+        } else {
+          serverMetaBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder getServerMetaBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getServerMetaFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder getServerMetaOrBuilder() {
+        if (serverMetaBuilder_ != null) {
+          return serverMetaBuilder_.getMessageOrBuilder();
+        } else {
+          return serverMeta_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ServerMeta, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder, org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder> 
+          getServerMetaFieldBuilder() {
+        if (serverMetaBuilder_ == null) {
+          serverMetaBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.ServerMeta, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder, org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder>(
+                  serverMeta_,
+                  getParentForChildren(),
+                  isClean());
+          serverMeta_ = null;
+        }
+        return serverMetaBuilder_;
+      }
+
+      // optional .exec.shared.DrillPBError error = 3;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder setError(
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
+            error_ =
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
+                  error_,
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.GetServerMetaResp)
+    }
+
+    static {
+      defaultInstance = new GetServerMetaResp(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.GetServerMetaResp)
+  }
+
+  public interface ServerMetaOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional bool all_tables_selectable = 1;
+    /**
+     * <code>optional bool all_tables_selectable = 1;</code>
+     *
+     * <pre>
+     * True if current user can use all tables returned by GetTables
+     * </pre>
+     */
+    boolean hasAllTablesSelectable();
+    /**
+     * <code>optional bool all_tables_selectable = 1;</code>
+     *
+     * <pre>
+     * True if current user can use all tables returned by GetTables
+     * </pre>
+     */
+    boolean getAllTablesSelectable();
+
+    // optional bool blob_included_in_max_row_size = 2;
+    /**
+     * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     *
+     * <pre>
+     * True if BLOB are included into the max row size
+     * </pre>
+     */
+    boolean hasBlobIncludedInMaxRowSize();
+    /**
+     * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     *
+     * <pre>
+     * True if BLOB are included into the max row size
+     * </pre>
+     */
+    boolean getBlobIncludedInMaxRowSize();
+
+    // optional bool catalog_at_start = 3;
+    /**
+     * <code>optional bool catalog_at_start = 3;</code>
+     *
+     * <pre>
+     * True if catalog name is at the start of a fully qualified table
+     * </pre>
+     */
+    boolean hasCatalogAtStart();
+    /**
+     * <code>optional bool catalog_at_start = 3;</code>
+     *
+     * <pre>
+     * True if catalog name is at the start of a fully qualified table
+     * </pre>
+     */
+    boolean getCatalogAtStart();
+
+    // optional string catalog_separator = 4;
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    boolean hasCatalogSeparator();
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    java.lang.String getCatalogSeparator();
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getCatalogSeparatorBytes();
+
+    // optional string catalog_term = 5;
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    boolean hasCatalogTerm();
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    java.lang.String getCatalogTerm();
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getCatalogTermBytes();
+
+    // repeated .exec.user.CollateSupport collate_support = 6;
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList();
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    int getCollateSupportCount();
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index);
+
+    // optional bool column_aliasing_supported = 7;
+    /**
+     * <code>optional bool column_aliasing_supported = 7;</code>
+     *
+     * <pre>
+     * True if column aliasing is supported
+     * </pre>
+     */
+    boolean hasColumnAliasingSupported();
+    /**
+     * <code>optional bool column_aliasing_supported = 7;</code>
+     *
+     * <pre>
+     * True if column aliasing is supported
+     * </pre>
+     */
+    boolean getColumnAliasingSupported();
+
+    // repeated .exec.user.ConvertSupport convert_support = 8;
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> 
+        getConvertSupportList();
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.ConvertSupport getConvertSupport(int index);
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    int getConvertSupportCount();
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder> 
+        getConvertSupportOrBuilderList();
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder getConvertSupportOrBuilder(
+        int index);
+
+    // optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;
+    /**
+     * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     *
+     * <pre>
+     * Correlation names support
+     * </pre>
+     */
+    boolean hasCorrelationNamesSupport();
+    /**
+     * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     *
+     * <pre>
+     * Correlation names support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport();
+
+    // repeated string date_time_functions = 10;
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getDateTimeFunctionsList();
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    int getDateTimeFunctionsCount();
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    java.lang.String getDateTimeFunctions(int index);
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getDateTimeFunctionsBytes(int index);
+
+    // repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList();
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    int getDateTimeLiteralsSupportCount();
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index);
+
+    // optional .exec.user.GroupBySupport group_by_support = 12;
+    /**
+     * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     *
+     * <pre>
+     * Group By support
+     * </pre>
+     */
+    boolean hasGroupBySupport();
+    /**
+     * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     *
+     * <pre>
+     * Group By support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport();
+
+    // optional .exec.user.IdentifierCasing identifier_casing = 13;
+    /**
+     * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     *
+     * <pre>
+     * Unquoted Identifier casing
+     * </pre>
+     */
+    boolean hasIdentifierCasing();
+    /**
+     * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     *
+     * <pre>
+     * Unquoted Identifier casing
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing();
+
+    // optional string identifier_quote_string = 14;
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    boolean hasIdentifierQuoteString();
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    java.lang.String getIdentifierQuoteString();
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getIdentifierQuoteStringBytes();
+
+    // optional bool like_escape_clause_supported = 15;
+    /**
+     * <code>optional bool like_escape_clause_supported = 15;</code>
+     *
+     * <pre>
+     * True if LIKE supports an ESCAPE clause
+     * </pre>
+     */
+    boolean hasLikeEscapeClauseSupported();
+    /**
+     * <code>optional bool like_escape_clause_supported = 15;</code>
+     *
+     * <pre>
+     * True if LIKE supports an ESCAPE clause
+     * </pre>
+     */
+    boolean getLikeEscapeClauseSupported();
+
+    // optional uint32 max_binary_literal_length = 16;
+    /**
+     * <code>optional uint32 max_binary_literal_length = 16;</code>
+     *
+     * <pre>
+     * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxBinaryLiteralLength();
+    /**
+     * <code>optional uint32 max_binary_literal_length = 16;</code>
+     *
+     * <pre>
+     * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxBinaryLiteralLength();
+
+    // optional uint32 max_catalog_name_length = 17;
+    /**
+     * <code>optional uint32 max_catalog_name_length = 17;</code>
+     *
+     * <pre>
+     * Maximum length of catalog names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxCatalogNameLength();
+    /**
+     * <code>optional uint32 max_catalog_name_length = 17;</code>
+     *
+     * <pre>
+     * Maximum length of catalog names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxCatalogNameLength();
+
+    // optional uint32 max_char_literal_length = 18;
+    /**
+     * <code>optional uint32 max_char_literal_length = 18;</code>
+     *
+     * <pre>
+     * Maximum number of characters for string literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxCharLiteralLength();
+    /**
+     * <code>optional uint32 max_char_literal_length = 18;</code>
+     *
+     * <pre>
+     * Maximum number of characters for string literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxCharLiteralLength();
+
+    // optional uint32 max_column_name_length = 19;
+    /**
+     * <code>optional uint32 max_column_name_length = 19;</code>
+     *
+     * <pre>
+     * Maximum length of column names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxColumnNameLength();
+    /**
+     * <code>optional uint32 max_column_name_length = 19;</code>
+     *
+     * <pre>
+     * Maximum length of column names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxColumnNameLength();
+
+    // optional uint32 max_columns_in_group_by = 20;
+    /**
+     * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     *
+     * <pre>
+     * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxColumnsInGroupBy();
+    /**
+     * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     *
+     * <pre>
+     * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxColumnsInGroupBy();
+
+    // optional uint32 max_columns_in_order_by = 21;
+    /**
+     * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     *
+     * <pre>
+     * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxColumnsInOrderBy();
+    /**
+     * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     *
+     * <pre>
+     * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxColumnsInOrderBy();
+
+    // optional uint32 max_columns_in_select = 22;
+    /**
+     * <code>optional uint32 max_columns_in_select = 22;</code>
+     *
+     * <pre>
+     * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxColumnsInSelect();
+    /**
+     * <code>optional uint32 max_columns_in_select = 22;</code>
+     *
+     * <pre>
+     * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxColumnsInSelect();
+
+    // optional uint32 max_cursor_name_length = 23;
+    /**
+     * <code>optional uint32 max_cursor_name_length = 23;</code>
+     *
+     * <pre>
+     * Maximum length of cursor names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxCursorNameLength();
+    /**
+     * <code>optional uint32 max_cursor_name_length = 23;</code>
+     *
+     * <pre>
+     * Maximum length of cursor names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxCursorNameLength();
+
+    // optional uint32 max_logical_lob_size = 24;
+    /**
+     * <code>optional uint32 max_logical_lob_size = 24;</code>
+     *
+     * <pre>
+     * Maximum logical size for LOB types (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxLogicalLobSize();
+    /**
+     * <code>optional uint32 max_logical_lob_size = 24;</code>
+     *
+     * <pre>
+     * Maximum logical size for LOB types (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxLogicalLobSize();
+
+    // optional uint32 max_row_size = 25;
+    /**
+     * <code>optional uint32 max_row_size = 25;</code>
+     *
+     * <pre>
+     * Maximum number of bytes for a single row (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxRowSize();
+    /**
+     * <code>optional uint32 max_row_size = 25;</code>
+     *
+     * <pre>
+     * Maximum number of bytes for a single row (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxRowSize();
+
+    // optional uint32 max_schema_name_length = 26;
+    /**
+     * <code>optional uint32 max_schema_name_length = 26;</code>
+     *
+     * <pre>
+     * Maximum length of schema names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxSchemaNameLength();
+    /**
+     * <code>optional uint32 max_schema_name_length = 26;</code>
+     *
+     * <pre>
+     * Maximum length of schema names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxSchemaNameLength();
+
+    // optional uint32 max_statement_length = 27;
+    /**
+     * <code>optional uint32 max_statement_length = 27;</code>
+     *
+     * <pre>
+     * Maximum length for statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxStatementLength();
+    /**
+     * <code>optional uint32 max_statement_length = 27;</code>
+     *
+     * <pre>
+     * Maximum length for statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxStatementLength();
+
+    // optional uint32 max_statements = 28;
+    /**
+     * <code>optional uint32 max_statements = 28;</code>
+     *
+     * <pre>
+     * Maximum number of statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxStatements();
+    /**
+     * <code>optional uint32 max_statements = 28;</code>
+     *
+     * <pre>
+     * Maximum number of statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxStatements();
+
+    // optional uint32 max_table_name_length = 29;
+    /**
+     * <code>optional uint32 max_table_name_length = 29;</code>
+     *
+     * <pre>
+     * Maximum length of table names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxTableNameLength();
+    /**
+     * <code>optional uint32 max_table_name_length = 29;</code>
+     *
+     * <pre>
+     * Maximum length of table names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxTableNameLength();
+
+    // optional uint32 max_tables_in_select = 30;
+    /**
+     * <code>optional uint32 max_tables_in_select = 30;</code>
+     *
+     * <pre>
+     * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxTablesInSelect();
+    /**
+     * <code>optional uint32 max_tables_in_select = 30;</code>
+     *
+     * <pre>
+     * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxTablesInSelect();
+
+    // optional uint32 max_user_name_length = 31;
+    /**
+     * <code>optional uint32 max_user_name_length = 31;</code>
+     *
+     * <pre>
+     * Maximum length of user names (0 if unlimited or unknown)
+     * </pre>
+     */
+    boolean hasMaxUserNameLength();
+    /**
+     * <code>optional uint32 max_user_name_length = 31;</code>
+     *
+     * <pre>
+     * Maximum length of user names (0 if unlimited or unknown)
+     * </pre>
+     */
+    int getMaxUserNameLength();
+
+    // optional .exec.user.NullCollation null_collation = 32;
+    /**
+     * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     *
+     * <pre>
+     * How NULL are sorted
+     * </pre>
+     */
+    boolean hasNullCollation();
+    /**
+     * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     *
+     * <pre>
+     * How NULL are sorted
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation();
+
+    // optional bool null_plus_non_null_equals_null = 33;
+    /**
+     * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     *
+     * <pre>
+     * True if NULL + non NULL is NULL
+     * </pre>
+     */
+    boolean hasNullPlusNonNullEqualsNull();
+    /**
+     * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     *
+     * <pre>
+     * True if NULL + non NULL is NULL
+     * </pre>
+     */
+    boolean getNullPlusNonNullEqualsNull();
+
+    // repeated string numeric_functions = 34;
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getNumericFunctionsList();
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    int getNumericFunctionsCount();
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    java.lang.String getNumericFunctions(int index);
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getNumericFunctionsBytes(int index);
+
+    // repeated .exec.user.OrderBySupport order_by_support = 35;
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList();
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    int getOrderBySupportCount();
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index);
+
+    // repeated .exec.user.OuterJoinSupport outer_join_support = 36;
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList();
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    int getOuterJoinSupportCount();
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index);
+
+    // optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;
+    /**
+     * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     *
+     * <pre>
+     * Quoted identifier casing
+     * </pre>
+     */
+    boolean hasQuotedIdentifierCasing();
+    /**
+     * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     *
+     * <pre>
+     * Quoted identifier casing
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing();
+
+    // optional bool read_only = 38;
+    /**
+     * <code>optional bool read_only = 38;</code>
+     *
+     * <pre>
+     * True if connection access is read only
+     * </pre>
+     */
+    boolean hasReadOnly();
+    /**
+     * <code>optional bool read_only = 38;</code>
+     *
+     * <pre>
+     * True if connection access is read only
+     * </pre>
+     */
+    boolean getReadOnly();
+
+    // optional string schema_term = 39;
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    boolean hasSchemaTerm();
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    java.lang.String getSchemaTerm();
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSchemaTermBytes();
+
+    // optional string search_escape_string = 40;
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    boolean hasSearchEscapeString();
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    java.lang.String getSearchEscapeString();
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSearchEscapeStringBytes();
+
+    // optional bool select_for_update_supported = 41;
+    /**
+     * <code>optional bool select_for_update_supported = 41;</code>
+     *
+     * <pre>
+     * True if SELECT FOR UPDATE is supported
+     * </pre>
+     */
+    boolean hasSelectForUpdateSupported();
+    /**
+     * <code>optional bool select_for_update_supported = 41;</code>
+     *
+     * <pre>
+     * True if SELECT FOR UPDATE is supported
+     * </pre>
+     */
+    boolean getSelectForUpdateSupported();
+
+    // optional string special_characters = 42;
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    boolean hasSpecialCharacters();
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    java.lang.String getSpecialCharacters();
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSpecialCharactersBytes();
+
+    // repeated string sql_keywords = 43;
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getSqlKeywordsList();
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    int getSqlKeywordsCount();
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    java.lang.String getSqlKeywords(int index);
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSqlKeywordsBytes(int index);
+
+    // repeated string string_functions = 44;
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getStringFunctionsList();
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    int getStringFunctionsCount();
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    java.lang.String getStringFunctions(int index);
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getStringFunctionsBytes(int index);
+
+    // repeated .exec.user.SubQuerySupport subquery_support = 45;
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList();
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    int getSubquerySupportCount();
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index);
+
+    // repeated string system_functions = 46;
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getSystemFunctionsList();
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    int getSystemFunctionsCount();
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    java.lang.String getSystemFunctions(int index);
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSystemFunctionsBytes(int index);
+
+    // optional string table_term = 47;
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    boolean hasTableTerm();
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    java.lang.String getTableTerm();
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getTableTermBytes();
+
+    // optional bool transaction_supported = 48;
+    /**
+     * <code>optional bool transaction_supported = 48;</code>
+     *
+     * <pre>
+     * True if transaction is supported
+     * </pre>
+     */
+    boolean hasTransactionSupported();
+    /**
+     * <code>optional bool transaction_supported = 48;</code>
+     *
+     * <pre>
+     * True if transaction is supported
+     * </pre>
+     */
+    boolean getTransactionSupported();
+
+    // repeated .exec.user.UnionSupport union_support = 49;
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList();
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    int getUnionSupportCount();
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index);
+  }
+  /**
+   * Protobuf type {@code exec.user.ServerMeta}
+   */
+  public static final class ServerMeta extends
+      com.google.protobuf.GeneratedMessage
+      implements ServerMetaOrBuilder {
+    // Use ServerMeta.newBuilder() to construct.
+    private ServerMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ServerMeta(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ServerMeta defaultInstance;
+    public static ServerMeta getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ServerMeta getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ServerMeta(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      int mutable_bitField1_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              allTablesSelectable_ = input.readBool();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              blobIncludedInMaxRowSize_ = input.readBool();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              catalogAtStart_ = input.readBool();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              catalogSeparator_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              catalogTerm_ = input.readBytes();
+              break;
+            }
+            case 48: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.CollateSupport value = org.apache.drill.exec.proto.UserProtos.CollateSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(6, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                  collateSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CollateSupport>();
+                  mutable_bitField0_ |= 0x00000020;
+                }
+                collateSupport_.add(value);
+              }
+              break;
+            }
+            case 50: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.CollateSupport value = org.apache.drill.exec.proto.UserProtos.CollateSupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(6, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                    collateSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CollateSupport>();
+                    mutable_bitField0_ |= 0x00000020;
+                  }
+                  collateSupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000020;
+              columnAliasingSupported_ = input.readBool();
+              break;
+            }
+            case 66: {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                convertSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ConvertSupport>();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              convertSupport_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.ConvertSupport.PARSER, extensionRegistry));
+              break;
+            }
+            case 72: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport value = org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(9, rawValue);
+              } else {
+                bitField0_ |= 0x00000040;
+                correlationNamesSupport_ = value;
+              }
+              break;
+            }
+            case 82: {
+              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+                dateTimeFunctions_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000200;
+              }
+              dateTimeFunctions_.add(input.readBytes());
+              break;
+            }
+            case 88: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value = org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(11, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                  dateTimeLiteralsSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport>();
+                  mutable_bitField0_ |= 0x00000400;
+                }
+                dateTimeLiteralsSupport_.add(value);
+              }
+              break;
+            }
+            case 90: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value = org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(11, rawValue);
+                } else {
+                  if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                    dateTimeLiteralsSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport>();
+                    mutable_bitField0_ |= 0x00000400;
+                  }
+                  dateTimeLiteralsSupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 96: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.GroupBySupport value = org.apache.drill.exec.proto.UserProtos.GroupBySupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(12, rawValue);
+              } else {
+                bitField0_ |= 0x00000080;
+                groupBySupport_ = value;
+              }
+              break;
+            }
+            case 104: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.IdentifierCasing value = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(13, rawValue);
+              } else {
+                bitField0_ |= 0x00000100;
+                identifierCasing_ = value;
+              }
+              break;
+            }
+            case 114: {
+              bitField0_ |= 0x00000200;
+              identifierQuoteString_ = input.readBytes();
+              break;
+            }
+            case 120: {
+              bitField0_ |= 0x00000400;
+              likeEscapeClauseSupported_ = input.readBool();
+              break;
+            }
+            case 128: {
+              bitField0_ |= 0x00000800;
+              maxBinaryLiteralLength_ = input.readUInt32();
+              break;
+            }
+            case 136: {
+              bitField0_ |= 0x00001000;
+              maxCatalogNameLength_ = input.readUInt32();
+              break;
+            }
+            case 144: {
+              bitField0_ |= 0x00002000;
+              maxCharLiteralLength_ = input.readUInt32();
+              break;
+            }
+            case 152: {
+              bitField0_ |= 0x00004000;
+              maxColumnNameLength_ = input.readUInt32();
+              break;
+            }
+            case 160: {
+              bitField0_ |= 0x00008000;
+              maxColumnsInGroupBy_ = input.readUInt32();
+              break;
+            }
+            case 168: {
+              bitField0_ |= 0x00010000;
+              maxColumnsInOrderBy_ = input.readUInt32();
+              break;
+            }
+            case 176: {
+              bitField0_ |= 0x00020000;
+              maxColumnsInSelect_ = input.readUInt32();
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00040000;
+              maxCursorNameLength_ = input.readUInt32();
+              break;
+            }
+            case 192: {
+              bitField0_ |= 0x00080000;
+              maxLogicalLobSize_ = input.readUInt32();
+              break;
+            }
+            case 200: {
+              bitField0_ |= 0x00100000;
+              maxRowSize_ = input.readUInt32();
+              break;
+            }
+            case 208: {
+              bitField0_ |= 0x00200000;
+              maxSchemaNameLength_ = input.readUInt32();
+              break;
+            }
+            case 216: {
+              bitField0_ |= 0x00400000;
+              maxStatementLength_ = input.readUInt32();
+              break;
+            }
+            case 224: {
+              bitField0_ |= 0x00800000;
+              maxStatements_ = input.readUInt32();
+              break;
+            }
+            case 232: {
+              bitField0_ |= 0x01000000;
+              maxTableNameLength_ = input.readUInt32();
+              break;
+            }
+            case 240: {
+              bitField0_ |= 0x02000000;
+              maxTablesInSelect_ = input.readUInt32();
+              break;
+            }
+            case 248: {
+              bitField0_ |= 0x04000000;
+              maxUserNameLength_ = input.readUInt32();
+              break;
+            }
+            case 256: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.NullCollation value = org.apache.drill.exec.proto.UserProtos.NullCollation.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(32, rawValue);
+              } else {
+                bitField0_ |= 0x08000000;
+                nullCollation_ = value;
+              }
+              break;
+            }
+            case 264: {
+              bitField0_ |= 0x10000000;
+              nullPlusNonNullEqualsNull_ = input.readBool();
+              break;
+            }
+            case 274: {
+              if (!((mutable_bitField1_ & 0x00000002) == 0x00000002)) {
+                numericFunctions_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField1_ |= 0x00000002;
+              }
+              numericFunctions_.add(input.readBytes());
+              break;
+            }
+            case 280: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.OrderBySupport value = org.apache.drill.exec.proto.UserProtos.OrderBySupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(35, rawValue);
+              } else {
+                if (!((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+                  orderBySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OrderBySupport>();
+                  mutable_bitField1_ |= 0x00000004;
+                }
+                orderBySupport_.add(value);
+              }
+              break;
+            }
+            case 282: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.OrderBySupport value = org.apache.drill.exec.proto.UserProtos.OrderBySupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(35, rawValue);
+                } else {
+                  if (!((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+                    orderBySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OrderBySupport>();
+                    mutable_bitField1_ |= 0x00000004;
+                  }
+                  orderBySupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 288: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value = org.apache.drill.exec.proto.UserProtos.OuterJoinSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(36, rawValue);
+              } else {
+                if (!((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+                  outerJoinSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport>();
+                  mutable_bitField1_ |= 0x00000008;
+                }
+                outerJoinSupport_.add(value);
+              }
+              break;
+            }
+            case 290: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value = org.apache.drill.exec.proto.UserProtos.OuterJoinSupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(36, rawValue);
+                } else {
+                  if (!((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+                    outerJoinSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport>();
+                    mutable_bitField1_ |= 0x00000008;
+                  }
+                  outerJoinSupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 296: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.IdentifierCasing value = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(37, rawValue);
+              } else {
+                bitField0_ |= 0x20000000;
+                quotedIdentifierCasing_ = value;
+              }
+              break;
+            }
+            case 304: {
+              bitField0_ |= 0x40000000;
+              readOnly_ = input.readBool();
+              break;
+            }
+            case 314: {
+              bitField0_ |= 0x80000000;
+              schemaTerm_ = input.readBytes();
+              break;
+            }
+            case 322: {
+              bitField1_ |= 0x00000001;
+              searchEscapeString_ = input.readBytes();
+              break;
+            }
+            case 328: {
+              bitField1_ |= 0x00000002;
+              selectForUpdateSupported_ = input.readBool();
+              break;
+            }
+            case 338: {
+              bitField1_ |= 0x00000004;
+              specialCharacters_ = input.readBytes();
+              break;
+            }
+            case 346: {
+              if (!((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
+                sqlKeywords_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField1_ |= 0x00000400;
+              }
+              sqlKeywords_.add(input.readBytes());
+              break;
+            }
+            case 354: {
+              if (!((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+                stringFunctions_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField1_ |= 0x00000800;
+              }
+              stringFunctions_.add(input.readBytes());
+              break;
+            }
+            case 360: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.SubQuerySupport value = org.apache.drill.exec.proto.UserProtos.SubQuerySupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(45, rawValue);
+              } else {
+                if (!((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+                  subquerySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SubQuerySupport>();
+                  mutable_bitField1_ |= 0x00001000;
+                }
+                subquerySupport_.add(value);
+              }
+              break;
+            }
+            case 362: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.SubQuerySupport value = org.apache.drill.exec.proto.UserProtos.SubQuerySupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(45, rawValue);
+                } else {
+                  if (!((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+                    subquerySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SubQuerySupport>();
+                    mutable_bitField1_ |= 0x00001000;
+                  }
+                  subquerySupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+            case 370: {
+              if (!((mutable_bitField1_ & 0x00002000) == 0x00002000)) {
+                systemFunctions_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField1_ |= 0x00002000;
+              }
+              systemFunctions_.add(input.readBytes());
+              break;
+            }
+            case 378: {
+              bitField1_ |= 0x00000008;
+              tableTerm_ = input.readBytes();
+              break;
+            }
+            case 384: {
+              bitField1_ |= 0x00000010;
+              transactionSupported_ = input.readBool();
+              break;
+            }
+            case 392: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.UnionSupport value = org.apache.drill.exec.proto.UserProtos.UnionSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(49, rawValue);
+              } else {
+                if (!((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+                  unionSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.UnionSupport>();
+                  mutable_bitField1_ |= 0x00010000;
+                }
+                unionSupport_.add(value);
+              }
+              break;
+            }
+            case 394: {
+              int length = input.readRawVarint32();
+              int oldLimit = input.pushLimit(length);
+              while(input.getBytesUntilLimit() > 0) {
+                int rawValue = input.readEnum();
+                org.apache.drill.exec.proto.UserProtos.UnionSupport value = org.apache.drill.exec.proto.UserProtos.UnionSupport.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(49, rawValue);
+                } else {
+                  if (!((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+                    unionSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.UnionSupport>();
+                    mutable_bitField1_ |= 0x00010000;
+                  }
+                  unionSupport_.add(value);
+                }
+              }
+              input.popLimit(oldLimit);
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          collateSupport_ = java.util.Collections.unmodifiableList(collateSupport_);
+        }
+        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+          convertSupport_ = java.util.Collections.unmodifiableList(convertSupport_);
+        }
+        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+          dateTimeFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(dateTimeFunctions_);
+        }
+        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+          dateTimeLiteralsSupport_ = java.util.Collections.unmodifiableList(dateTimeLiteralsSupport_);
+        }
+        if (((mutable_bitField1_ & 0x00000002) == 0x00000002)) {
+          numericFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(numericFunctions_);
+        }
+        if (((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+          orderBySupport_ = java.util.Collections.unmodifiableList(orderBySupport_);
+        }
+        if (((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+          outerJoinSupport_ = java.util.Collections.unmodifiableList(outerJoinSupport_);
+        }
+        if (((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
+          sqlKeywords_ = new com.google.protobuf.UnmodifiableLazyStringList(sqlKeywords_);
+        }
+        if (((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+          stringFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(stringFunctions_);
+        }
+        if (((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+          subquerySupport_ = java.util.Collections.unmodifiableList(subquerySupport_);
+        }
+        if (((mutable_bitField1_ & 0x00002000) == 0x00002000)) {
+          systemFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(systemFunctions_);
+        }
+        if (((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+          unionSupport_ = java.util.Collections.unmodifiableList(unionSupport_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ServerMeta_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ServerMeta_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.ServerMeta.class, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ServerMeta> PARSER =
+        new com.google.protobuf.AbstractParser<ServerMeta>() {
+      public ServerMeta parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ServerMeta(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ServerMeta> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    private int bitField1_;
+    // optional bool all_tables_selectable = 1;
+    public static final int ALL_TABLES_SELECTABLE_FIELD_NUMBER = 1;
+    private boolean allTablesSelectable_;
+    /**
+     * <code>optional bool all_tables_selectable = 1;</code>
+     *
+     * <pre>
+     * True if current user can use all tables returned by GetTables
+     * </pre>
+     */
+    public boolean hasAllTablesSelectable() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional bool all_tables_selectable = 1;</code>
+     *
+     * <pre>
+     * True if current user can use all tables returned by GetTables
+     * </pre>
+     */
+    public boolean getAllTablesSelectable() {
+      return allTablesSelectable_;
+    }
+
+    // optional bool blob_included_in_max_row_size = 2;
+    public static final int BLOB_INCLUDED_IN_MAX_ROW_SIZE_FIELD_NUMBER = 2;
+    private boolean blobIncludedInMaxRowSize_;
+    /**
+     * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     *
+     * <pre>
+     * True if BLOB are included into the max row size
+     * </pre>
+     */
+    public boolean hasBlobIncludedInMaxRowSize() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     *
+     * <pre>
+     * True if BLOB are included into the max row size
+     * </pre>
+     */
+    public boolean getBlobIncludedInMaxRowSize() {
+      return blobIncludedInMaxRowSize_;
+    }
+
+    // optional bool catalog_at_start = 3;
+    public static final int CATALOG_AT_START_FIELD_NUMBER = 3;
+    private boolean catalogAtStart_;
+    /**
+     * <code>optional bool catalog_at_start = 3;</code>
+     *
+     * <pre>
+     * True if catalog name is at the start of a fully qualified table
+     * </pre>
+     */
+    public boolean hasCatalogAtStart() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bool catalog_at_start = 3;</code>
+     *
+     * <pre>
+     * True if catalog name is at the start of a fully qualified table
+     * </pre>
+     */
+    public boolean getCatalogAtStart() {
+      return catalogAtStart_;
+    }
+
+    // optional string catalog_separator = 4;
+    public static final int CATALOG_SEPARATOR_FIELD_NUMBER = 4;
+    private java.lang.Object catalogSeparator_;
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    public boolean hasCatalogSeparator() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    public java.lang.String getCatalogSeparator() {
+      java.lang.Object ref = catalogSeparator_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogSeparator_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_separator = 4;</code>
+     *
+     * <pre>
+     * The catalog separator
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogSeparatorBytes() {
+      java.lang.Object ref = catalogSeparator_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogSeparator_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string catalog_term = 5;
+    public static final int CATALOG_TERM_FIELD_NUMBER = 5;
+    private java.lang.Object catalogTerm_;
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    public boolean hasCatalogTerm() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    public java.lang.String getCatalogTerm() {
+      java.lang.Object ref = catalogTerm_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          catalogTerm_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string catalog_term = 5;</code>
+     *
+     * <pre>
+     * The term used to designate catalogs
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getCatalogTermBytes() {
+      java.lang.Object ref = catalogTerm_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogTerm_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated .exec.user.CollateSupport collate_support = 6;
+    public static final int COLLATE_SUPPORT_FIELD_NUMBER = 6;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> collateSupport_;
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList() {
+      return collateSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    public int getCollateSupportCount() {
+      return collateSupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     *
+     * <pre>
+     * COLLATE support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index) {
+      return collateSupport_.get(index);
+    }
+
+    // optional bool column_aliasing_supported = 7;
+    public static final int COLUMN_ALIASING_SUPPORTED_FIELD_NUMBER = 7;
+    private boolean columnAliasingSupported_;
+    /**
+     * <code>optional bool column_aliasing_supported = 7;</code>
+     *
+     * <pre>
+     * True if column aliasing is supported
+     * </pre>
+     */
+    public boolean hasColumnAliasingSupported() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional bool column_aliasing_supported = 7;</code>
+     *
+     * <pre>
+     * True if column aliasing is supported
+     * </pre>
+     */
+    public boolean getColumnAliasingSupported() {
+      return columnAliasingSupported_;
+    }
+
+    // repeated .exec.user.ConvertSupport convert_support = 8;
+    public static final int CONVERT_SUPPORT_FIELD_NUMBER = 8;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> convertSupport_;
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> getConvertSupportList() {
+      return convertSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder> 
+        getConvertSupportOrBuilderList() {
+      return convertSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    public int getConvertSupportCount() {
+      return convertSupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ConvertSupport getConvertSupport(int index) {
+      return convertSupport_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+     *
+     * <pre>
+     * CONVERT support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder getConvertSupportOrBuilder(
+        int index) {
+      return convertSupport_.get(index);
+    }
+
+    // optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;
+    public static final int CORRELATION_NAMES_SUPPORT_FIELD_NUMBER = 9;
+    private org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport correlationNamesSupport_;
+    /**
+     * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     *
+     * <pre>
+     * Correlation names support
+     * </pre>
+     */
+    public boolean hasCorrelationNamesSupport() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     *
+     * <pre>
+     * Correlation names support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport() {
+      return correlationNamesSupport_;
+    }
+
+    // repeated string date_time_functions = 10;
+    public static final int DATE_TIME_FUNCTIONS_FIELD_NUMBER = 10;
+    private com.google.protobuf.LazyStringList dateTimeFunctions_;
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getDateTimeFunctionsList() {
+      return dateTimeFunctions_;
+    }
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    public int getDateTimeFunctionsCount() {
+      return dateTimeFunctions_.size();
+    }
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    public java.lang.String getDateTimeFunctions(int index) {
+      return dateTimeFunctions_.get(index);
+    }
+    /**
+     * <code>repeated string date_time_functions = 10;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC Date Time scalar functions
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getDateTimeFunctionsBytes(int index) {
+      return dateTimeFunctions_.getByteString(index);
+    }
+
+    // repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;
+    public static final int DATE_TIME_LITERALS_SUPPORT_FIELD_NUMBER = 11;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> dateTimeLiteralsSupport_;
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList() {
+      return dateTimeLiteralsSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    public int getDateTimeLiteralsSupportCount() {
+      return dateTimeLiteralsSupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     *
+     * <pre>
+     * Supported Date Time literals
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index) {
+      return dateTimeLiteralsSupport_.get(index);
+    }
+
+    // optional .exec.user.GroupBySupport group_by_support = 12;
+    public static final int GROUP_BY_SUPPORT_FIELD_NUMBER = 12;
+    private org.apache.drill.exec.proto.UserProtos.GroupBySupport groupBySupport_;
+    /**
+     * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     *
+     * <pre>
+     * Group By support
+     * </pre>
+     */
+    public boolean hasGroupBySupport() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     *
+     * <pre>
+     * Group By support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport() {
+      return groupBySupport_;
+    }
+
+    // optional .exec.user.IdentifierCasing identifier_casing = 13;
+    public static final int IDENTIFIER_CASING_FIELD_NUMBER = 13;
+    private org.apache.drill.exec.proto.UserProtos.IdentifierCasing identifierCasing_;
+    /**
+     * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     *
+     * <pre>
+     * Unquoted Identifier casing
+     * </pre>
+     */
+    public boolean hasIdentifierCasing() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     *
+     * <pre>
+     * Unquoted Identifier casing
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing() {
+      return identifierCasing_;
+    }
+
+    // optional string identifier_quote_string = 14;
+    public static final int IDENTIFIER_QUOTE_STRING_FIELD_NUMBER = 14;
+    private java.lang.Object identifierQuoteString_;
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    public boolean hasIdentifierQuoteString() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    public java.lang.String getIdentifierQuoteString() {
+      java.lang.Object ref = identifierQuoteString_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          identifierQuoteString_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string identifier_quote_string = 14;</code>
+     *
+     * <pre>
+     * Quote string for identifiers
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getIdentifierQuoteStringBytes() {
+      java.lang.Object ref = identifierQuoteString_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        identifierQuoteString_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bool like_escape_clause_supported = 15;
+    public static final int LIKE_ESCAPE_CLAUSE_SUPPORTED_FIELD_NUMBER = 15;
+    private boolean likeEscapeClauseSupported_;
+    /**
+     * <code>optional bool like_escape_clause_supported = 15;</code>
+     *
+     * <pre>
+     * True if LIKE supports an ESCAPE clause
+     * </pre>
+     */
+    public boolean hasLikeEscapeClauseSupported() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional bool like_escape_clause_supported = 15;</code>
+     *
+     * <pre>
+     * True if LIKE supports an ESCAPE clause
+     * </pre>
+     */
+    public boolean getLikeEscapeClauseSupported() {
+      return likeEscapeClauseSupported_;
+    }
+
+    // optional uint32 max_binary_literal_length = 16;
+    public static final int MAX_BINARY_LITERAL_LENGTH_FIELD_NUMBER = 16;
+    private int maxBinaryLiteralLength_;
+    /**
+     * <code>optional uint32 max_binary_literal_length = 16;</code>
+     *
+     * <pre>
+     * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxBinaryLiteralLength() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional uint32 max_binary_literal_length = 16;</code>
+     *
+     * <pre>
+     * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxBinaryLiteralLength() {
+      return maxBinaryLiteralLength_;
+    }
+
+    // optional uint32 max_catalog_name_length = 17;
+    public static final int MAX_CATALOG_NAME_LENGTH_FIELD_NUMBER = 17;
+    private int maxCatalogNameLength_;
+    /**
+     * <code>optional uint32 max_catalog_name_length = 17;</code>
+     *
+     * <pre>
+     * Maximum length of catalog names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxCatalogNameLength() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional uint32 max_catalog_name_length = 17;</code>
+     *
+     * <pre>
+     * Maximum length of catalog names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxCatalogNameLength() {
+      return maxCatalogNameLength_;
+    }
+
+    // optional uint32 max_char_literal_length = 18;
+    public static final int MAX_CHAR_LITERAL_LENGTH_FIELD_NUMBER = 18;
+    private int maxCharLiteralLength_;
+    /**
+     * <code>optional uint32 max_char_literal_length = 18;</code>
+     *
+     * <pre>
+     * Maximum number of characters for string literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxCharLiteralLength() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional uint32 max_char_literal_length = 18;</code>
+     *
+     * <pre>
+     * Maximum number of characters for string literals (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxCharLiteralLength() {
+      return maxCharLiteralLength_;
+    }
+
+    // optional uint32 max_column_name_length = 19;
+    public static final int MAX_COLUMN_NAME_LENGTH_FIELD_NUMBER = 19;
+    private int maxColumnNameLength_;
+    /**
+     * <code>optional uint32 max_column_name_length = 19;</code>
+     *
+     * <pre>
+     * Maximum length of column names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxColumnNameLength() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional uint32 max_column_name_length = 19;</code>
+     *
+     * <pre>
+     * Maximum length of column names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxColumnNameLength() {
+      return maxColumnNameLength_;
+    }
+
+    // optional uint32 max_columns_in_group_by = 20;
+    public static final int MAX_COLUMNS_IN_GROUP_BY_FIELD_NUMBER = 20;
+    private int maxColumnsInGroupBy_;
+    /**
+     * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     *
+     * <pre>
+     * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxColumnsInGroupBy() {
+      return ((bitField0_ & 0x00008000) == 0x00008000);
+    }
+    /**
+     * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     *
+     * <pre>
+     * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxColumnsInGroupBy() {
+      return maxColumnsInGroupBy_;
+    }
+
+    // optional uint32 max_columns_in_order_by = 21;
+    public static final int MAX_COLUMNS_IN_ORDER_BY_FIELD_NUMBER = 21;
+    private int maxColumnsInOrderBy_;
+    /**
+     * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     *
+     * <pre>
+     * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxColumnsInOrderBy() {
+      return ((bitField0_ & 0x00010000) == 0x00010000);
+    }
+    /**
+     * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     *
+     * <pre>
+     * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxColumnsInOrderBy() {
+      return maxColumnsInOrderBy_;
+    }
+
+    // optional uint32 max_columns_in_select = 22;
+    public static final int MAX_COLUMNS_IN_SELECT_FIELD_NUMBER = 22;
+    private int maxColumnsInSelect_;
+    /**
+     * <code>optional uint32 max_columns_in_select = 22;</code>
+     *
+     * <pre>
+     * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxColumnsInSelect() {
+      return ((bitField0_ & 0x00020000) == 0x00020000);
+    }
+    /**
+     * <code>optional uint32 max_columns_in_select = 22;</code>
+     *
+     * <pre>
+     * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxColumnsInSelect() {
+      return maxColumnsInSelect_;
+    }
+
+    // optional uint32 max_cursor_name_length = 23;
+    public static final int MAX_CURSOR_NAME_LENGTH_FIELD_NUMBER = 23;
+    private int maxCursorNameLength_;
+    /**
+     * <code>optional uint32 max_cursor_name_length = 23;</code>
+     *
+     * <pre>
+     * Maximum length of cursor names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxCursorNameLength() {
+      return ((bitField0_ & 0x00040000) == 0x00040000);
+    }
+    /**
+     * <code>optional uint32 max_cursor_name_length = 23;</code>
+     *
+     * <pre>
+     * Maximum length of cursor names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxCursorNameLength() {
+      return maxCursorNameLength_;
+    }
+
+    // optional uint32 max_logical_lob_size = 24;
+    public static final int MAX_LOGICAL_LOB_SIZE_FIELD_NUMBER = 24;
+    private int maxLogicalLobSize_;
+    /**
+     * <code>optional uint32 max_logical_lob_size = 24;</code>
+     *
+     * <pre>
+     * Maximum logical size for LOB types (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxLogicalLobSize() {
+      return ((bitField0_ & 0x00080000) == 0x00080000);
+    }
+    /**
+     * <code>optional uint32 max_logical_lob_size = 24;</code>
+     *
+     * <pre>
+     * Maximum logical size for LOB types (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxLogicalLobSize() {
+      return maxLogicalLobSize_;
+    }
+
+    // optional uint32 max_row_size = 25;
+    public static final int MAX_ROW_SIZE_FIELD_NUMBER = 25;
+    private int maxRowSize_;
+    /**
+     * <code>optional uint32 max_row_size = 25;</code>
+     *
+     * <pre>
+     * Maximum number of bytes for a single row (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxRowSize() {
+      return ((bitField0_ & 0x00100000) == 0x00100000);
+    }
+    /**
+     * <code>optional uint32 max_row_size = 25;</code>
+     *
+     * <pre>
+     * Maximum number of bytes for a single row (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxRowSize() {
+      return maxRowSize_;
+    }
+
+    // optional uint32 max_schema_name_length = 26;
+    public static final int MAX_SCHEMA_NAME_LENGTH_FIELD_NUMBER = 26;
+    private int maxSchemaNameLength_;
+    /**
+     * <code>optional uint32 max_schema_name_length = 26;</code>
+     *
+     * <pre>
+     * Maximum length of schema names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxSchemaNameLength() {
+      return ((bitField0_ & 0x00200000) == 0x00200000);
+    }
+    /**
+     * <code>optional uint32 max_schema_name_length = 26;</code>
+     *
+     * <pre>
+     * Maximum length of schema names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxSchemaNameLength() {
+      return maxSchemaNameLength_;
+    }
+
+    // optional uint32 max_statement_length = 27;
+    public static final int MAX_STATEMENT_LENGTH_FIELD_NUMBER = 27;
+    private int maxStatementLength_;
+    /**
+     * <code>optional uint32 max_statement_length = 27;</code>
+     *
+     * <pre>
+     * Maximum length for statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxStatementLength() {
+      return ((bitField0_ & 0x00400000) == 0x00400000);
+    }
+    /**
+     * <code>optional uint32 max_statement_length = 27;</code>
+     *
+     * <pre>
+     * Maximum length for statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxStatementLength() {
+      return maxStatementLength_;
+    }
+
+    // optional uint32 max_statements = 28;
+    public static final int MAX_STATEMENTS_FIELD_NUMBER = 28;
+    private int maxStatements_;
+    /**
+     * <code>optional uint32 max_statements = 28;</code>
+     *
+     * <pre>
+     * Maximum number of statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxStatements() {
+      return ((bitField0_ & 0x00800000) == 0x00800000);
+    }
+    /**
+     * <code>optional uint32 max_statements = 28;</code>
+     *
+     * <pre>
+     * Maximum number of statements (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxStatements() {
+      return maxStatements_;
+    }
+
+    // optional uint32 max_table_name_length = 29;
+    public static final int MAX_TABLE_NAME_LENGTH_FIELD_NUMBER = 29;
+    private int maxTableNameLength_;
+    /**
+     * <code>optional uint32 max_table_name_length = 29;</code>
+     *
+     * <pre>
+     * Maximum length of table names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxTableNameLength() {
+      return ((bitField0_ & 0x01000000) == 0x01000000);
+    }
+    /**
+     * <code>optional uint32 max_table_name_length = 29;</code>
+     *
+     * <pre>
+     * Maximum length of table names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxTableNameLength() {
+      return maxTableNameLength_;
+    }
+
+    // optional uint32 max_tables_in_select = 30;
+    public static final int MAX_TABLES_IN_SELECT_FIELD_NUMBER = 30;
+    private int maxTablesInSelect_;
+    /**
+     * <code>optional uint32 max_tables_in_select = 30;</code>
+     *
+     * <pre>
+     * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxTablesInSelect() {
+      return ((bitField0_ & 0x02000000) == 0x02000000);
+    }
+    /**
+     * <code>optional uint32 max_tables_in_select = 30;</code>
+     *
+     * <pre>
+     * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxTablesInSelect() {
+      return maxTablesInSelect_;
+    }
+
+    // optional uint32 max_user_name_length = 31;
+    public static final int MAX_USER_NAME_LENGTH_FIELD_NUMBER = 31;
+    private int maxUserNameLength_;
+    /**
+     * <code>optional uint32 max_user_name_length = 31;</code>
+     *
+     * <pre>
+     * Maximum length of user names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public boolean hasMaxUserNameLength() {
+      return ((bitField0_ & 0x04000000) == 0x04000000);
+    }
+    /**
+     * <code>optional uint32 max_user_name_length = 31;</code>
+     *
+     * <pre>
+     * Maximum length of user names (0 if unlimited or unknown)
+     * </pre>
+     */
+    public int getMaxUserNameLength() {
+      return maxUserNameLength_;
+    }
+
+    // optional .exec.user.NullCollation null_collation = 32;
+    public static final int NULL_COLLATION_FIELD_NUMBER = 32;
+    private org.apache.drill.exec.proto.UserProtos.NullCollation nullCollation_;
+    /**
+     * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     *
+     * <pre>
+     * How NULL are sorted
+     * </pre>
+     */
+    public boolean hasNullCollation() {
+      return ((bitField0_ & 0x08000000) == 0x08000000);
+    }
+    /**
+     * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     *
+     * <pre>
+     * How NULL are sorted
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation() {
+      return nullCollation_;
+    }
+
+    // optional bool null_plus_non_null_equals_null = 33;
+    public static final int NULL_PLUS_NON_NULL_EQUALS_NULL_FIELD_NUMBER = 33;
+    private boolean nullPlusNonNullEqualsNull_;
+    /**
+     * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     *
+     * <pre>
+     * True if NULL + non NULL is NULL
+     * </pre>
+     */
+    public boolean hasNullPlusNonNullEqualsNull() {
+      return ((bitField0_ & 0x10000000) == 0x10000000);
+    }
+    /**
+     * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     *
+     * <pre>
+     * True if NULL + non NULL is NULL
+     * </pre>
+     */
+    public boolean getNullPlusNonNullEqualsNull() {
+      return nullPlusNonNullEqualsNull_;
+    }
+
+    // repeated string numeric_functions = 34;
+    public static final int NUMERIC_FUNCTIONS_FIELD_NUMBER = 34;
+    private com.google.protobuf.LazyStringList numericFunctions_;
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getNumericFunctionsList() {
+      return numericFunctions_;
+    }
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    public int getNumericFunctionsCount() {
+      return numericFunctions_.size();
+    }
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    public java.lang.String getNumericFunctions(int index) {
+      return numericFunctions_.get(index);
+    }
+    /**
+     * <code>repeated string numeric_functions = 34;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC numeric scalar functions
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getNumericFunctionsBytes(int index) {
+      return numericFunctions_.getByteString(index);
+    }
+
+    // repeated .exec.user.OrderBySupport order_by_support = 35;
+    public static final int ORDER_BY_SUPPORT_FIELD_NUMBER = 35;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> orderBySupport_;
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList() {
+      return orderBySupport_;
+    }
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public int getOrderBySupportCount() {
+      return orderBySupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index) {
+      return orderBySupport_.get(index);
+    }
+
+    // repeated .exec.user.OuterJoinSupport outer_join_support = 36;
+    public static final int OUTER_JOIN_SUPPORT_FIELD_NUMBER = 36;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> outerJoinSupport_;
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList() {
+      return outerJoinSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public int getOuterJoinSupportCount() {
+      return outerJoinSupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     *
+     * <pre>
+     * Outer join suport
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index) {
+      return outerJoinSupport_.get(index);
+    }
+
+    // optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;
+    public static final int QUOTED_IDENTIFIER_CASING_FIELD_NUMBER = 37;
+    private org.apache.drill.exec.proto.UserProtos.IdentifierCasing quotedIdentifierCasing_;
+    /**
+     * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     *
+     * <pre>
+     * Quoted identifier casing
+     * </pre>
+     */
+    public boolean hasQuotedIdentifierCasing() {
+      return ((bitField0_ & 0x20000000) == 0x20000000);
+    }
+    /**
+     * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     *
+     * <pre>
+     * Quoted identifier casing
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing() {
+      return quotedIdentifierCasing_;
+    }
+
+    // optional bool read_only = 38;
+    public static final int READ_ONLY_FIELD_NUMBER = 38;
+    private boolean readOnly_;
+    /**
+     * <code>optional bool read_only = 38;</code>
+     *
+     * <pre>
+     * True if connection access is read only
+     * </pre>
+     */
+    public boolean hasReadOnly() {
+      return ((bitField0_ & 0x40000000) == 0x40000000);
+    }
+    /**
+     * <code>optional bool read_only = 38;</code>
+     *
+     * <pre>
+     * True if connection access is read only
+     * </pre>
+     */
+    public boolean getReadOnly() {
+      return readOnly_;
+    }
+
+    // optional string schema_term = 39;
+    public static final int SCHEMA_TERM_FIELD_NUMBER = 39;
+    private java.lang.Object schemaTerm_;
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    public boolean hasSchemaTerm() {
+      return ((bitField0_ & 0x80000000) == 0x80000000);
+    }
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    public java.lang.String getSchemaTerm() {
+      java.lang.Object ref = schemaTerm_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          schemaTerm_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string schema_term = 39;</code>
+     *
+     * <pre>
+     * The term used to designate a schema
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSchemaTermBytes() {
+      java.lang.Object ref = schemaTerm_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        schemaTerm_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string search_escape_string = 40;
+    public static final int SEARCH_ESCAPE_STRING_FIELD_NUMBER = 40;
+    private java.lang.Object searchEscapeString_;
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    public boolean hasSearchEscapeString() {
+      return ((bitField1_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    public java.lang.String getSearchEscapeString() {
+      java.lang.Object ref = searchEscapeString_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          searchEscapeString_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string search_escape_string = 40;</code>
+     *
+     * <pre>
+     * Characters used for escaping (empty if not suported)
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSearchEscapeStringBytes() {
+      java.lang.Object ref = searchEscapeString_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        searchEscapeString_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bool select_for_update_supported = 41;
+    public static final int SELECT_FOR_UPDATE_SUPPORTED_FIELD_NUMBER = 41;
+    private boolean selectForUpdateSupported_;
+    /**
+     * <code>optional bool select_for_update_supported = 41;</code>
+     *
+     * <pre>
+     * True if SELECT FOR UPDATE is supported
+     * </pre>
+     */
+    public boolean hasSelectForUpdateSupported() {
+      return ((bitField1_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bool select_for_update_supported = 41;</code>
+     *
+     * <pre>
+     * True if SELECT FOR UPDATE is supported
+     * </pre>
+     */
+    public boolean getSelectForUpdateSupported() {
+      return selectForUpdateSupported_;
+    }
+
+    // optional string special_characters = 42;
+    public static final int SPECIAL_CHARACTERS_FIELD_NUMBER = 42;
+    private java.lang.Object specialCharacters_;
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    public boolean hasSpecialCharacters() {
+      return ((bitField1_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    public java.lang.String getSpecialCharacters() {
+      java.lang.Object ref = specialCharacters_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          specialCharacters_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string special_characters = 42;</code>
+     *
+     * <pre>
+     * List of extra characters that can be used in identifier names
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSpecialCharactersBytes() {
+      java.lang.Object ref = specialCharacters_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        specialCharacters_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // repeated string sql_keywords = 43;
+    public static final int SQL_KEYWORDS_FIELD_NUMBER = 43;
+    private com.google.protobuf.LazyStringList sqlKeywords_;
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getSqlKeywordsList() {
+      return sqlKeywords_;
+    }
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    public int getSqlKeywordsCount() {
+      return sqlKeywords_.size();
+    }
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    public java.lang.String getSqlKeywords(int index) {
+      return sqlKeywords_.get(index);
+    }
+    /**
+     * <code>repeated string sql_keywords = 43;</code>
+     *
+     * <pre>
+     * list of SQL keywords
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSqlKeywordsBytes(int index) {
+      return sqlKeywords_.getByteString(index);
+    }
+
+    // repeated string string_functions = 44;
+    public static final int STRING_FUNCTIONS_FIELD_NUMBER = 44;
+    private com.google.protobuf.LazyStringList stringFunctions_;
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getStringFunctionsList() {
+      return stringFunctions_;
+    }
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    public int getStringFunctionsCount() {
+      return stringFunctions_.size();
+    }
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    public java.lang.String getStringFunctions(int index) {
+      return stringFunctions_.get(index);
+    }
+    /**
+     * <code>repeated string string_functions = 44;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC string scalar functions
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getStringFunctionsBytes(int index) {
+      return stringFunctions_.getByteString(index);
+    }
+
+    // repeated .exec.user.SubQuerySupport subquery_support = 45;
+    public static final int SUBQUERY_SUPPORT_FIELD_NUMBER = 45;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> subquerySupport_;
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList() {
+      return subquerySupport_;
+    }
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    public int getSubquerySupportCount() {
+      return subquerySupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     *
+     * <pre>
+     * Subquery support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index) {
+      return subquerySupport_.get(index);
+    }
+
+    // repeated string system_functions = 46;
+    public static final int SYSTEM_FUNCTIONS_FIELD_NUMBER = 46;
+    private com.google.protobuf.LazyStringList systemFunctions_;
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getSystemFunctionsList() {
+      return systemFunctions_;
+    }
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    public int getSystemFunctionsCount() {
+      return systemFunctions_.size();
+    }
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    public java.lang.String getSystemFunctions(int index) {
+      return systemFunctions_.get(index);
+    }
+    /**
+     * <code>repeated string system_functions = 46;</code>
+     *
+     * <pre>
+     * Supported ODBC/JDBC systen scalar functions
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSystemFunctionsBytes(int index) {
+      return systemFunctions_.getByteString(index);
+    }
+
+    // optional string table_term = 47;
+    public static final int TABLE_TERM_FIELD_NUMBER = 47;
+    private java.lang.Object tableTerm_;
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    public boolean hasTableTerm() {
+      return ((bitField1_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    public java.lang.String getTableTerm() {
+      java.lang.Object ref = tableTerm_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          tableTerm_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string table_term = 47;</code>
+     *
+     * <pre>
+     * The term used to designate a table
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getTableTermBytes() {
+      java.lang.Object ref = tableTerm_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        tableTerm_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bool transaction_supported = 48;
+    public static final int TRANSACTION_SUPPORTED_FIELD_NUMBER = 48;
+    private boolean transactionSupported_;
+    /**
+     * <code>optional bool transaction_supported = 48;</code>
+     *
+     * <pre>
+     * True if transaction is supported
+     * </pre>
+     */
+    public boolean hasTransactionSupported() {
+      return ((bitField1_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional bool transaction_supported = 48;</code>
+     *
+     * <pre>
+     * True if transaction is supported
+     * </pre>
+     */
+    public boolean getTransactionSupported() {
+      return transactionSupported_;
+    }
+
+    // repeated .exec.user.UnionSupport union_support = 49;
+    public static final int UNION_SUPPORT_FIELD_NUMBER = 49;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> unionSupport_;
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList() {
+      return unionSupport_;
+    }
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    public int getUnionSupportCount() {
+      return unionSupport_.size();
+    }
+    /**
+     * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     *
+     * <pre>
+     * UNION support
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index) {
+      return unionSupport_.get(index);
+    }
+
+    private void initFields() {
+      allTablesSelectable_ = false;
+      blobIncludedInMaxRowSize_ = false;
+      catalogAtStart_ = false;
+      catalogSeparator_ = "";
+      catalogTerm_ = "";
+      collateSupport_ = java.util.Collections.emptyList();
+      columnAliasingSupported_ = false;
+      convertSupport_ = java.util.Collections.emptyList();
+      correlationNamesSupport_ = org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport.CN_NONE;
+      dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      dateTimeLiteralsSupport_ = java.util.Collections.emptyList();
+      groupBySupport_ = org.apache.drill.exec.proto.UserProtos.GroupBySupport.GB_NONE;
+      identifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+      identifierQuoteString_ = "";
+      likeEscapeClauseSupported_ = false;
+      maxBinaryLiteralLength_ = 0;
+      maxCatalogNameLength_ = 0;
+      maxCharLiteralLength_ = 0;
+      maxColumnNameLength_ = 0;
+      maxColumnsInGroupBy_ = 0;
+      maxColumnsInOrderBy_ = 0;
+      maxColumnsInSelect_ = 0;
+      maxCursorNameLength_ = 0;
+      maxLogicalLobSize_ = 0;
+      maxRowSize_ = 0;
+      maxSchemaNameLength_ = 0;
+      maxStatementLength_ = 0;
+      maxStatements_ = 0;
+      maxTableNameLength_ = 0;
+      maxTablesInSelect_ = 0;
+      maxUserNameLength_ = 0;
+      nullCollation_ = org.apache.drill.exec.proto.UserProtos.NullCollation.NC_UNKNOWN;
+      nullPlusNonNullEqualsNull_ = false;
+      numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      orderBySupport_ = java.util.Collections.emptyList();
+      outerJoinSupport_ = java.util.Collections.emptyList();
+      quotedIdentifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+      readOnly_ = false;
+      schemaTerm_ = "";
+      searchEscapeString_ = "";
+      selectForUpdateSupported_ = false;
+      specialCharacters_ = "";
+      sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      subquerySupport_ = java.util.Collections.emptyList();
+      systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      tableTerm_ = "";
+      transactionSupported_ = false;
+      unionSupport_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      for (int i = 0; i < getConvertSupportCount(); i++) {
+        if (!getConvertSupport(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBool(1, allTablesSelectable_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(2, blobIncludedInMaxRowSize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBool(3, catalogAtStart_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getCatalogSeparatorBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getCatalogTermBytes());
+      }
+      for (int i = 0; i < collateSupport_.size(); i++) {
+        output.writeEnum(6, collateSupport_.get(i).getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBool(7, columnAliasingSupported_);
+      }
+      for (int i = 0; i < convertSupport_.size(); i++) {
+        output.writeMessage(8, convertSupport_.get(i));
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeEnum(9, correlationNamesSupport_.getNumber());
+      }
+      for (int i = 0; i < dateTimeFunctions_.size(); i++) {
+        output.writeBytes(10, dateTimeFunctions_.getByteString(i));
+      }
+      for (int i = 0; i < dateTimeLiteralsSupport_.size(); i++) {
+        output.writeEnum(11, dateTimeLiteralsSupport_.get(i).getNumber());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeEnum(12, groupBySupport_.getNumber());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeEnum(13, identifierCasing_.getNumber());
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeBytes(14, getIdentifierQuoteStringBytes());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBool(15, likeEscapeClauseSupported_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeUInt32(16, maxBinaryLiteralLength_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeUInt32(17, maxCatalogNameLength_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeUInt32(18, maxCharLiteralLength_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeUInt32(19, maxColumnNameLength_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        output.writeUInt32(20, maxColumnsInGroupBy_);
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        output.writeUInt32(21, maxColumnsInOrderBy_);
+      }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        output.writeUInt32(22, maxColumnsInSelect_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        output.writeUInt32(23, maxCursorNameLength_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        output.writeUInt32(24, maxLogicalLobSize_);
+      }
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+        output.writeUInt32(25, maxRowSize_);
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        output.writeUInt32(26, maxSchemaNameLength_);
+      }
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+        output.writeUInt32(27, maxStatementLength_);
+      }
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+        output.writeUInt32(28, maxStatements_);
+      }
+      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+        output.writeUInt32(29, maxTableNameLength_);
+      }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        output.writeUInt32(30, maxTablesInSelect_);
+      }
+      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+        output.writeUInt32(31, maxUserNameLength_);
+      }
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+        output.writeEnum(32, nullCollation_.getNumber());
+      }
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+        output.writeBool(33, nullPlusNonNullEqualsNull_);
+      }
+      for (int i = 0; i < numericFunctions_.size(); i++) {
+        output.writeBytes(34, numericFunctions_.getByteString(i));
+      }
+      for (int i = 0; i < orderBySupport_.size(); i++) {
+        output.writeEnum(35, orderBySupport_.get(i).getNumber());
+      }
+      for (int i = 0; i < outerJoinSupport_.size(); i++) {
+        output.writeEnum(36, outerJoinSupport_.get(i).getNumber());
+      }
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+        output.writeEnum(37, quotedIdentifierCasing_.getNumber());
+      }
+      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+        output.writeBool(38, readOnly_);
+      }
+      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+        output.writeBytes(39, getSchemaTermBytes());
+      }
+      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(40, getSearchEscapeStringBytes());
+      }
+      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(41, selectForUpdateSupported_);
+      }
+      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(42, getSpecialCharactersBytes());
+      }
+      for (int i = 0; i < sqlKeywords_.size(); i++) {
+        output.writeBytes(43, sqlKeywords_.getByteString(i));
+      }
+      for (int i = 0; i < stringFunctions_.size(); i++) {
+        output.writeBytes(44, stringFunctions_.getByteString(i));
+      }
+      for (int i = 0; i < subquerySupport_.size(); i++) {
+        output.writeEnum(45, subquerySupport_.get(i).getNumber());
+      }
+      for (int i = 0; i < systemFunctions_.size(); i++) {
+        output.writeBytes(46, systemFunctions_.getByteString(i));
+      }
+      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(47, getTableTermBytes());
+      }
+      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+        output.writeBool(48, transactionSupported_);
+      }
+      for (int i = 0; i < unionSupport_.size(); i++) {
+        output.writeEnum(49, unionSupport_.get(i).getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(1, allTablesSelectable_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(2, blobIncludedInMaxRowSize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, catalogAtStart_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getCatalogSeparatorBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getCatalogTermBytes());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < collateSupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(collateSupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * collateSupport_.size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(7, columnAliasingSupported_);
+      }
+      for (int i = 0; i < convertSupport_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(8, convertSupport_.get(i));
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(9, correlationNamesSupport_.getNumber());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < dateTimeFunctions_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(dateTimeFunctions_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getDateTimeFunctionsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < dateTimeLiteralsSupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(dateTimeLiteralsSupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 1 * dateTimeLiteralsSupport_.size();
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(12, groupBySupport_.getNumber());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(13, identifierCasing_.getNumber());
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(14, getIdentifierQuoteStringBytes());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(15, likeEscapeClauseSupported_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(16, maxBinaryLiteralLength_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(17, maxCatalogNameLength_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(18, maxCharLiteralLength_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(19, maxColumnNameLength_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(20, maxColumnsInGroupBy_);
+      }
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(21, maxColumnsInOrderBy_);
+      }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(22, maxColumnsInSelect_);
+      }
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(23, maxCursorNameLength_);
+      }
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(24, maxLogicalLobSize_);
+      }
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(25, maxRowSize_);
+      }
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(26, maxSchemaNameLength_);
+      }
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(27, maxStatementLength_);
+      }
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(28, maxStatements_);
+      }
+      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(29, maxTableNameLength_);
+      }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(30, maxTablesInSelect_);
+      }
+      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(31, maxUserNameLength_);
+      }
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(32, nullCollation_.getNumber());
+      }
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(33, nullPlusNonNullEqualsNull_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < numericFunctions_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(numericFunctions_.getByteString(i));
+        }
+        size += dataSize;
+        size += 2 * getNumericFunctionsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < orderBySupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(orderBySupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 2 * orderBySupport_.size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < outerJoinSupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(outerJoinSupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 2 * outerJoinSupport_.size();
+      }
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(37, quotedIdentifierCasing_.getNumber());
+      }
+      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(38, readOnly_);
+      }
+      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(39, getSchemaTermBytes());
+      }
+      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(40, getSearchEscapeStringBytes());
+      }
+      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(41, selectForUpdateSupported_);
+      }
+      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(42, getSpecialCharactersBytes());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < sqlKeywords_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(sqlKeywords_.getByteString(i));
+        }
+        size += dataSize;
+        size += 2 * getSqlKeywordsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < stringFunctions_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(stringFunctions_.getByteString(i));
+        }
+        size += dataSize;
+        size += 2 * getStringFunctionsList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < subquerySupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(subquerySupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 2 * subquerySupport_.size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < systemFunctions_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(systemFunctions_.getByteString(i));
+        }
+        size += dataSize;
+        size += 2 * getSystemFunctionsList().size();
+      }
+      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(47, getTableTermBytes());
+      }
+      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(48, transactionSupported_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < unionSupport_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeEnumSizeNoTag(unionSupport_.get(i).getNumber());
+        }
+        size += dataSize;
+        size += 2 * unionSupport_.size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.ServerMeta parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.ServerMeta prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.ServerMeta}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ServerMeta_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ServerMeta_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.ServerMeta.class, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.ServerMeta.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getConvertSupportFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        allTablesSelectable_ = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        blobIncludedInMaxRowSize_ = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        catalogAtStart_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        catalogSeparator_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        catalogTerm_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        collateSupport_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        columnAliasingSupported_ = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        if (convertSupportBuilder_ == null) {
+          convertSupport_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000080);
+        } else {
+          convertSupportBuilder_.clear();
+        }
+        correlationNamesSupport_ = org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport.CN_NONE;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        dateTimeLiteralsSupport_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000400);
+        groupBySupport_ = org.apache.drill.exec.proto.UserProtos.GroupBySupport.GB_NONE;
+        bitField0_ = (bitField0_ & ~0x00000800);
+        identifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00001000);
+        identifierQuoteString_ = "";
+        bitField0_ = (bitField0_ & ~0x00002000);
+        likeEscapeClauseSupported_ = false;
+        bitField0_ = (bitField0_ & ~0x00004000);
+        maxBinaryLiteralLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00008000);
+        maxCatalogNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00010000);
+        maxCharLiteralLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00020000);
+        maxColumnNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00040000);
+        maxColumnsInGroupBy_ = 0;
+        bitField0_ = (bitField0_ & ~0x00080000);
+        maxColumnsInOrderBy_ = 0;
+        bitField0_ = (bitField0_ & ~0x00100000);
+        maxColumnsInSelect_ = 0;
+        bitField0_ = (bitField0_ & ~0x00200000);
+        maxCursorNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00400000);
+        maxLogicalLobSize_ = 0;
+        bitField0_ = (bitField0_ & ~0x00800000);
+        maxRowSize_ = 0;
+        bitField0_ = (bitField0_ & ~0x01000000);
+        maxSchemaNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x02000000);
+        maxStatementLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x04000000);
+        maxStatements_ = 0;
+        bitField0_ = (bitField0_ & ~0x08000000);
+        maxTableNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x10000000);
+        maxTablesInSelect_ = 0;
+        bitField0_ = (bitField0_ & ~0x20000000);
+        maxUserNameLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x40000000);
+        nullCollation_ = org.apache.drill.exec.proto.UserProtos.NullCollation.NC_UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x80000000);
+        nullPlusNonNullEqualsNull_ = false;
+        bitField1_ = (bitField1_ & ~0x00000001);
+        numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000002);
+        orderBySupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000004);
+        outerJoinSupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000008);
+        quotedIdentifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+        bitField1_ = (bitField1_ & ~0x00000010);
+        readOnly_ = false;
+        bitField1_ = (bitField1_ & ~0x00000020);
+        schemaTerm_ = "";
+        bitField1_ = (bitField1_ & ~0x00000040);
+        searchEscapeString_ = "";
+        bitField1_ = (bitField1_ & ~0x00000080);
+        selectForUpdateSupported_ = false;
+        bitField1_ = (bitField1_ & ~0x00000100);
+        specialCharacters_ = "";
+        bitField1_ = (bitField1_ & ~0x00000200);
+        sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000400);
+        stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000800);
+        subquerySupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00001000);
+        systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00002000);
+        tableTerm_ = "";
+        bitField1_ = (bitField1_ & ~0x00004000);
+        transactionSupported_ = false;
+        bitField1_ = (bitField1_ & ~0x00008000);
+        unionSupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00010000);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_ServerMeta_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ServerMeta getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ServerMeta build() {
+        org.apache.drill.exec.proto.UserProtos.ServerMeta result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.ServerMeta buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.ServerMeta result = new org.apache.drill.exec.proto.UserProtos.ServerMeta(this);
+        int from_bitField0_ = bitField0_;
+        int from_bitField1_ = bitField1_;
+        int to_bitField0_ = 0;
+        int to_bitField1_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.allTablesSelectable_ = allTablesSelectable_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.blobIncludedInMaxRowSize_ = blobIncludedInMaxRowSize_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.catalogAtStart_ = catalogAtStart_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.catalogSeparator_ = catalogSeparator_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.catalogTerm_ = catalogTerm_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          collateSupport_ = java.util.Collections.unmodifiableList(collateSupport_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.collateSupport_ = collateSupport_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.columnAliasingSupported_ = columnAliasingSupported_;
+        if (convertSupportBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) == 0x00000080)) {
+            convertSupport_ = java.util.Collections.unmodifiableList(convertSupport_);
+            bitField0_ = (bitField0_ & ~0x00000080);
+          }
+          result.convertSupport_ = convertSupport_;
+        } else {
+          result.convertSupport_ = convertSupportBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.correlationNamesSupport_ = correlationNamesSupport_;
+        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+          dateTimeFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              dateTimeFunctions_);
+          bitField0_ = (bitField0_ & ~0x00000200);
+        }
+        result.dateTimeFunctions_ = dateTimeFunctions_;
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          dateTimeLiteralsSupport_ = java.util.Collections.unmodifiableList(dateTimeLiteralsSupport_);
+          bitField0_ = (bitField0_ & ~0x00000400);
+        }
+        result.dateTimeLiteralsSupport_ = dateTimeLiteralsSupport_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.groupBySupport_ = groupBySupport_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.identifierCasing_ = identifierCasing_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.identifierQuoteString_ = identifierQuoteString_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.likeEscapeClauseSupported_ = likeEscapeClauseSupported_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.maxBinaryLiteralLength_ = maxBinaryLiteralLength_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.maxCatalogNameLength_ = maxCatalogNameLength_;
+        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.maxCharLiteralLength_ = maxCharLiteralLength_;
+        if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.maxColumnNameLength_ = maxColumnNameLength_;
+        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+          to_bitField0_ |= 0x00008000;
+        }
+        result.maxColumnsInGroupBy_ = maxColumnsInGroupBy_;
+        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+          to_bitField0_ |= 0x00010000;
+        }
+        result.maxColumnsInOrderBy_ = maxColumnsInOrderBy_;
+        if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
+          to_bitField0_ |= 0x00020000;
+        }
+        result.maxColumnsInSelect_ = maxColumnsInSelect_;
+        if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
+          to_bitField0_ |= 0x00040000;
+        }
+        result.maxCursorNameLength_ = maxCursorNameLength_;
+        if (((from_bitField0_ & 0x00800000) == 0x00800000)) {
+          to_bitField0_ |= 0x00080000;
+        }
+        result.maxLogicalLobSize_ = maxLogicalLobSize_;
+        if (((from_bitField0_ & 0x01000000) == 0x01000000)) {
+          to_bitField0_ |= 0x00100000;
+        }
+        result.maxRowSize_ = maxRowSize_;
+        if (((from_bitField0_ & 0x02000000) == 0x02000000)) {
+          to_bitField0_ |= 0x00200000;
+        }
+        result.maxSchemaNameLength_ = maxSchemaNameLength_;
+        if (((from_bitField0_ & 0x04000000) == 0x04000000)) {
+          to_bitField0_ |= 0x00400000;
+        }
+        result.maxStatementLength_ = maxStatementLength_;
+        if (((from_bitField0_ & 0x08000000) == 0x08000000)) {
+          to_bitField0_ |= 0x00800000;
+        }
+        result.maxStatements_ = maxStatements_;
+        if (((from_bitField0_ & 0x10000000) == 0x10000000)) {
+          to_bitField0_ |= 0x01000000;
+        }
+        result.maxTableNameLength_ = maxTableNameLength_;
+        if (((from_bitField0_ & 0x20000000) == 0x20000000)) {
+          to_bitField0_ |= 0x02000000;
+        }
+        result.maxTablesInSelect_ = maxTablesInSelect_;
+        if (((from_bitField0_ & 0x40000000) == 0x40000000)) {
+          to_bitField0_ |= 0x04000000;
+        }
+        result.maxUserNameLength_ = maxUserNameLength_;
+        if (((from_bitField0_ & 0x80000000) == 0x80000000)) {
+          to_bitField0_ |= 0x08000000;
+        }
+        result.nullCollation_ = nullCollation_;
+        if (((from_bitField1_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x10000000;
+        }
+        result.nullPlusNonNullEqualsNull_ = nullPlusNonNullEqualsNull_;
+        if (((bitField1_ & 0x00000002) == 0x00000002)) {
+          numericFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              numericFunctions_);
+          bitField1_ = (bitField1_ & ~0x00000002);
+        }
+        result.numericFunctions_ = numericFunctions_;
+        if (((bitField1_ & 0x00000004) == 0x00000004)) {
+          orderBySupport_ = java.util.Collections.unmodifiableList(orderBySupport_);
+          bitField1_ = (bitField1_ & ~0x00000004);
+        }
+        result.orderBySupport_ = orderBySupport_;
+        if (((bitField1_ & 0x00000008) == 0x00000008)) {
+          outerJoinSupport_ = java.util.Collections.unmodifiableList(outerJoinSupport_);
+          bitField1_ = (bitField1_ & ~0x00000008);
+        }
+        result.outerJoinSupport_ = outerJoinSupport_;
+        if (((from_bitField1_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x20000000;
+        }
+        result.quotedIdentifierCasing_ = quotedIdentifierCasing_;
+        if (((from_bitField1_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x40000000;
+        }
+        result.readOnly_ = readOnly_;
+        if (((from_bitField1_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x80000000;
+        }
+        result.schemaTerm_ = schemaTerm_;
+        if (((from_bitField1_ & 0x00000080) == 0x00000080)) {
+          to_bitField1_ |= 0x00000001;
+        }
+        result.searchEscapeString_ = searchEscapeString_;
+        if (((from_bitField1_ & 0x00000100) == 0x00000100)) {
+          to_bitField1_ |= 0x00000002;
+        }
+        result.selectForUpdateSupported_ = selectForUpdateSupported_;
+        if (((from_bitField1_ & 0x00000200) == 0x00000200)) {
+          to_bitField1_ |= 0x00000004;
+        }
+        result.specialCharacters_ = specialCharacters_;
+        if (((bitField1_ & 0x00000400) == 0x00000400)) {
+          sqlKeywords_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              sqlKeywords_);
+          bitField1_ = (bitField1_ & ~0x00000400);
+        }
+        result.sqlKeywords_ = sqlKeywords_;
+        if (((bitField1_ & 0x00000800) == 0x00000800)) {
+          stringFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              stringFunctions_);
+          bitField1_ = (bitField1_ & ~0x00000800);
+        }
+        result.stringFunctions_ = stringFunctions_;
+        if (((bitField1_ & 0x00001000) == 0x00001000)) {
+          subquerySupport_ = java.util.Collections.unmodifiableList(subquerySupport_);
+          bitField1_ = (bitField1_ & ~0x00001000);
+        }
+        result.subquerySupport_ = subquerySupport_;
+        if (((bitField1_ & 0x00002000) == 0x00002000)) {
+          systemFunctions_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              systemFunctions_);
+          bitField1_ = (bitField1_ & ~0x00002000);
+        }
+        result.systemFunctions_ = systemFunctions_;
+        if (((from_bitField1_ & 0x00004000) == 0x00004000)) {
+          to_bitField1_ |= 0x00000008;
+        }
+        result.tableTerm_ = tableTerm_;
+        if (((from_bitField1_ & 0x00008000) == 0x00008000)) {
+          to_bitField1_ |= 0x00000010;
+        }
+        result.transactionSupported_ = transactionSupported_;
+        if (((bitField1_ & 0x00010000) == 0x00010000)) {
+          unionSupport_ = java.util.Collections.unmodifiableList(unionSupport_);
+          bitField1_ = (bitField1_ & ~0x00010000);
+        }
+        result.unionSupport_ = unionSupport_;
+        result.bitField0_ = to_bitField0_;
+        result.bitField1_ = to_bitField1_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.ServerMeta) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.ServerMeta)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.ServerMeta other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance()) return this;
+        if (other.hasAllTablesSelectable()) {
+          setAllTablesSelectable(other.getAllTablesSelectable());
+        }
+        if (other.hasBlobIncludedInMaxRowSize()) {
+          setBlobIncludedInMaxRowSize(other.getBlobIncludedInMaxRowSize());
+        }
+        if (other.hasCatalogAtStart()) {
+          setCatalogAtStart(other.getCatalogAtStart());
+        }
+        if (other.hasCatalogSeparator()) {
+          bitField0_ |= 0x00000008;
+          catalogSeparator_ = other.catalogSeparator_;
+          onChanged();
+        }
+        if (other.hasCatalogTerm()) {
+          bitField0_ |= 0x00000010;
+          catalogTerm_ = other.catalogTerm_;
+          onChanged();
+        }
+        if (!other.collateSupport_.isEmpty()) {
+          if (collateSupport_.isEmpty()) {
+            collateSupport_ = other.collateSupport_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureCollateSupportIsMutable();
+            collateSupport_.addAll(other.collateSupport_);
+          }
+          onChanged();
+        }
+        if (other.hasColumnAliasingSupported()) {
+          setColumnAliasingSupported(other.getColumnAliasingSupported());
+        }
+        if (convertSupportBuilder_ == null) {
+          if (!other.convertSupport_.isEmpty()) {
+            if (convertSupport_.isEmpty()) {
+              convertSupport_ = other.convertSupport_;
+              bitField0_ = (bitField0_ & ~0x00000080);
+            } else {
+              ensureConvertSupportIsMutable();
+              convertSupport_.addAll(other.convertSupport_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.convertSupport_.isEmpty()) {
+            if (convertSupportBuilder_.isEmpty()) {
+              convertSupportBuilder_.dispose();
+              convertSupportBuilder_ = null;
+              convertSupport_ = other.convertSupport_;
+              bitField0_ = (bitField0_ & ~0x00000080);
+              convertSupportBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getConvertSupportFieldBuilder() : null;
+            } else {
+              convertSupportBuilder_.addAllMessages(other.convertSupport_);
+            }
+          }
+        }
+        if (other.hasCorrelationNamesSupport()) {
+          setCorrelationNamesSupport(other.getCorrelationNamesSupport());
+        }
+        if (!other.dateTimeFunctions_.isEmpty()) {
+          if (dateTimeFunctions_.isEmpty()) {
+            dateTimeFunctions_ = other.dateTimeFunctions_;
+            bitField0_ = (bitField0_ & ~0x00000200);
+          } else {
+            ensureDateTimeFunctionsIsMutable();
+            dateTimeFunctions_.addAll(other.dateTimeFunctions_);
+          }
+          onChanged();
+        }
+        if (!other.dateTimeLiteralsSupport_.isEmpty()) {
+          if (dateTimeLiteralsSupport_.isEmpty()) {
+            dateTimeLiteralsSupport_ = other.dateTimeLiteralsSupport_;
+            bitField0_ = (bitField0_ & ~0x00000400);
+          } else {
+            ensureDateTimeLiteralsSupportIsMutable();
+            dateTimeLiteralsSupport_.addAll(other.dateTimeLiteralsSupport_);
+          }
+          onChanged();
+        }
+        if (other.hasGroupBySupport()) {
+          setGroupBySupport(other.getGroupBySupport());
+        }
+        if (other.hasIdentifierCasing()) {
+          setIdentifierCasing(other.getIdentifierCasing());
+        }
+        if (other.hasIdentifierQuoteString()) {
+          bitField0_ |= 0x00002000;
+          identifierQuoteString_ = other.identifierQuoteString_;
+          onChanged();
+        }
+        if (other.hasLikeEscapeClauseSupported()) {
+          setLikeEscapeClauseSupported(other.getLikeEscapeClauseSupported());
+        }
+        if (other.hasMaxBinaryLiteralLength()) {
+          setMaxBinaryLiteralLength(other.getMaxBinaryLiteralLength());
+        }
+        if (other.hasMaxCatalogNameLength()) {
+          setMaxCatalogNameLength(other.getMaxCatalogNameLength());
+        }
+        if (other.hasMaxCharLiteralLength()) {
+          setMaxCharLiteralLength(other.getMaxCharLiteralLength());
+        }
+        if (other.hasMaxColumnNameLength()) {
+          setMaxColumnNameLength(other.getMaxColumnNameLength());
+        }
+        if (other.hasMaxColumnsInGroupBy()) {
+          setMaxColumnsInGroupBy(other.getMaxColumnsInGroupBy());
+        }
+        if (other.hasMaxColumnsInOrderBy()) {
+          setMaxColumnsInOrderBy(other.getMaxColumnsInOrderBy());
+        }
+        if (other.hasMaxColumnsInSelect()) {
+          setMaxColumnsInSelect(other.getMaxColumnsInSelect());
+        }
+        if (other.hasMaxCursorNameLength()) {
+          setMaxCursorNameLength(other.getMaxCursorNameLength());
+        }
+        if (other.hasMaxLogicalLobSize()) {
+          setMaxLogicalLobSize(other.getMaxLogicalLobSize());
+        }
+        if (other.hasMaxRowSize()) {
+          setMaxRowSize(other.getMaxRowSize());
+        }
+        if (other.hasMaxSchemaNameLength()) {
+          setMaxSchemaNameLength(other.getMaxSchemaNameLength());
+        }
+        if (other.hasMaxStatementLength()) {
+          setMaxStatementLength(other.getMaxStatementLength());
+        }
+        if (other.hasMaxStatements()) {
+          setMaxStatements(other.getMaxStatements());
+        }
+        if (other.hasMaxTableNameLength()) {
+          setMaxTableNameLength(other.getMaxTableNameLength());
+        }
+        if (other.hasMaxTablesInSelect()) {
+          setMaxTablesInSelect(other.getMaxTablesInSelect());
+        }
+        if (other.hasMaxUserNameLength()) {
+          setMaxUserNameLength(other.getMaxUserNameLength());
+        }
+        if (other.hasNullCollation()) {
+          setNullCollation(other.getNullCollation());
+        }
+        if (other.hasNullPlusNonNullEqualsNull()) {
+          setNullPlusNonNullEqualsNull(other.getNullPlusNonNullEqualsNull());
+        }
+        if (!other.numericFunctions_.isEmpty()) {
+          if (numericFunctions_.isEmpty()) {
+            numericFunctions_ = other.numericFunctions_;
+            bitField1_ = (bitField1_ & ~0x00000002);
+          } else {
+            ensureNumericFunctionsIsMutable();
+            numericFunctions_.addAll(other.numericFunctions_);
+          }
+          onChanged();
+        }
+        if (!other.orderBySupport_.isEmpty()) {
+          if (orderBySupport_.isEmpty()) {
+            orderBySupport_ = other.orderBySupport_;
+            bitField1_ = (bitField1_ & ~0x00000004);
+          } else {
+            ensureOrderBySupportIsMutable();
+            orderBySupport_.addAll(other.orderBySupport_);
+          }
+          onChanged();
+        }
+        if (!other.outerJoinSupport_.isEmpty()) {
+          if (outerJoinSupport_.isEmpty()) {
+            outerJoinSupport_ = other.outerJoinSupport_;
+            bitField1_ = (bitField1_ & ~0x00000008);
+          } else {
+            ensureOuterJoinSupportIsMutable();
+            outerJoinSupport_.addAll(other.outerJoinSupport_);
+          }
+          onChanged();
+        }
+        if (other.hasQuotedIdentifierCasing()) {
+          setQuotedIdentifierCasing(other.getQuotedIdentifierCasing());
+        }
+        if (other.hasReadOnly()) {
+          setReadOnly(other.getReadOnly());
+        }
+        if (other.hasSchemaTerm()) {
+          bitField1_ |= 0x00000040;
+          schemaTerm_ = other.schemaTerm_;
+          onChanged();
+        }
+        if (other.hasSearchEscapeString()) {
+          bitField1_ |= 0x00000080;
+          searchEscapeString_ = other.searchEscapeString_;
+          onChanged();
+        }
+        if (other.hasSelectForUpdateSupported()) {
+          setSelectForUpdateSupported(other.getSelectForUpdateSupported());
+        }
+        if (other.hasSpecialCharacters()) {
+          bitField1_ |= 0x00000200;
+          specialCharacters_ = other.specialCharacters_;
+          onChanged();
+        }
+        if (!other.sqlKeywords_.isEmpty()) {
+          if (sqlKeywords_.isEmpty()) {
+            sqlKeywords_ = other.sqlKeywords_;
+            bitField1_ = (bitField1_ & ~0x00000400);
+          } else {
+            ensureSqlKeywordsIsMutable();
+            sqlKeywords_.addAll(other.sqlKeywords_);
+          }
+          onChanged();
+        }
+        if (!other.stringFunctions_.isEmpty()) {
+          if (stringFunctions_.isEmpty()) {
+            stringFunctions_ = other.stringFunctions_;
+            bitField1_ = (bitField1_ & ~0x00000800);
+          } else {
+            ensureStringFunctionsIsMutable();
+            stringFunctions_.addAll(other.stringFunctions_);
+          }
+          onChanged();
+        }
+        if (!other.subquerySupport_.isEmpty()) {
+          if (subquerySupport_.isEmpty()) {
+            subquerySupport_ = other.subquerySupport_;
+            bitField1_ = (bitField1_ & ~0x00001000);
+          } else {
+            ensureSubquerySupportIsMutable();
+            subquerySupport_.addAll(other.subquerySupport_);
+          }
+          onChanged();
+        }
+        if (!other.systemFunctions_.isEmpty()) {
+          if (systemFunctions_.isEmpty()) {
+            systemFunctions_ = other.systemFunctions_;
+            bitField1_ = (bitField1_ & ~0x00002000);
+          } else {
+            ensureSystemFunctionsIsMutable();
+            systemFunctions_.addAll(other.systemFunctions_);
+          }
+          onChanged();
+        }
+        if (other.hasTableTerm()) {
+          bitField1_ |= 0x00004000;
+          tableTerm_ = other.tableTerm_;
+          onChanged();
+        }
+        if (other.hasTransactionSupported()) {
+          setTransactionSupported(other.getTransactionSupported());
+        }
+        if (!other.unionSupport_.isEmpty()) {
+          if (unionSupport_.isEmpty()) {
+            unionSupport_ = other.unionSupport_;
+            bitField1_ = (bitField1_ & ~0x00010000);
+          } else {
+            ensureUnionSupportIsMutable();
+            unionSupport_.addAll(other.unionSupport_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getConvertSupportCount(); i++) {
+          if (!getConvertSupport(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.ServerMeta parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.ServerMeta) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+      private int bitField1_;
+
+      // optional bool all_tables_selectable = 1;
+      private boolean allTablesSelectable_ ;
+      /**
+       * <code>optional bool all_tables_selectable = 1;</code>
+       *
+       * <pre>
+       * True if current user can use all tables returned by GetTables
+       * </pre>
+       */
+      public boolean hasAllTablesSelectable() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bool all_tables_selectable = 1;</code>
+       *
+       * <pre>
+       * True if current user can use all tables returned by GetTables
+       * </pre>
+       */
+      public boolean getAllTablesSelectable() {
+        return allTablesSelectable_;
+      }
+      /**
+       * <code>optional bool all_tables_selectable = 1;</code>
+       *
+       * <pre>
+       * True if current user can use all tables returned by GetTables
+       * </pre>
+       */
+      public Builder setAllTablesSelectable(boolean value) {
+        bitField0_ |= 0x00000001;
+        allTablesSelectable_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool all_tables_selectable = 1;</code>
+       *
+       * <pre>
+       * True if current user can use all tables returned by GetTables
+       * </pre>
+       */
+      public Builder clearAllTablesSelectable() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        allTablesSelectable_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional bool blob_included_in_max_row_size = 2;
+      private boolean blobIncludedInMaxRowSize_ ;
+      /**
+       * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       *
+       * <pre>
+       * True if BLOB are included into the max row size
+       * </pre>
+       */
+      public boolean hasBlobIncludedInMaxRowSize() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       *
+       * <pre>
+       * True if BLOB are included into the max row size
+       * </pre>
+       */
+      public boolean getBlobIncludedInMaxRowSize() {
+        return blobIncludedInMaxRowSize_;
+      }
+      /**
+       * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       *
+       * <pre>
+       * True if BLOB are included into the max row size
+       * </pre>
+       */
+      public Builder setBlobIncludedInMaxRowSize(boolean value) {
+        bitField0_ |= 0x00000002;
+        blobIncludedInMaxRowSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       *
+       * <pre>
+       * True if BLOB are included into the max row size
+       * </pre>
+       */
+      public Builder clearBlobIncludedInMaxRowSize() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        blobIncludedInMaxRowSize_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional bool catalog_at_start = 3;
+      private boolean catalogAtStart_ ;
+      /**
+       * <code>optional bool catalog_at_start = 3;</code>
+       *
+       * <pre>
+       * True if catalog name is at the start of a fully qualified table
+       * </pre>
+       */
+      public boolean hasCatalogAtStart() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bool catalog_at_start = 3;</code>
+       *
+       * <pre>
+       * True if catalog name is at the start of a fully qualified table
+       * </pre>
+       */
+      public boolean getCatalogAtStart() {
+        return catalogAtStart_;
+      }
+      /**
+       * <code>optional bool catalog_at_start = 3;</code>
+       *
+       * <pre>
+       * True if catalog name is at the start of a fully qualified table
+       * </pre>
+       */
+      public Builder setCatalogAtStart(boolean value) {
+        bitField0_ |= 0x00000004;
+        catalogAtStart_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool catalog_at_start = 3;</code>
+       *
+       * <pre>
+       * True if catalog name is at the start of a fully qualified table
+       * </pre>
+       */
+      public Builder clearCatalogAtStart() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        catalogAtStart_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional string catalog_separator = 4;
+      private java.lang.Object catalogSeparator_ = "";
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public boolean hasCatalogSeparator() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public java.lang.String getCatalogSeparator() {
+        java.lang.Object ref = catalogSeparator_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogSeparator_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogSeparatorBytes() {
+        java.lang.Object ref = catalogSeparator_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogSeparator_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public Builder setCatalogSeparator(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        catalogSeparator_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public Builder clearCatalogSeparator() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        catalogSeparator_ = getDefaultInstance().getCatalogSeparator();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_separator = 4;</code>
+       *
+       * <pre>
+       * The catalog separator
+       * </pre>
+       */
+      public Builder setCatalogSeparatorBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        catalogSeparator_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string catalog_term = 5;
+      private java.lang.Object catalogTerm_ = "";
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public boolean hasCatalogTerm() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public java.lang.String getCatalogTerm() {
+        java.lang.Object ref = catalogTerm_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          catalogTerm_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getCatalogTermBytes() {
+        java.lang.Object ref = catalogTerm_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogTerm_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public Builder setCatalogTerm(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        catalogTerm_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public Builder clearCatalogTerm() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        catalogTerm_ = getDefaultInstance().getCatalogTerm();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string catalog_term = 5;</code>
+       *
+       * <pre>
+       * The term used to designate catalogs
+       * </pre>
+       */
+      public Builder setCatalogTermBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        catalogTerm_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.CollateSupport collate_support = 6;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> collateSupport_ =
+        java.util.Collections.emptyList();
+      private void ensureCollateSupportIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          collateSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CollateSupport>(collateSupport_);
+          bitField0_ |= 0x00000020;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList() {
+        return java.util.Collections.unmodifiableList(collateSupport_);
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public int getCollateSupportCount() {
+        return collateSupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index) {
+        return collateSupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public Builder setCollateSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.CollateSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureCollateSupportIsMutable();
+        collateSupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public Builder addCollateSupport(org.apache.drill.exec.proto.UserProtos.CollateSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureCollateSupportIsMutable();
+        collateSupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public Builder addAllCollateSupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.CollateSupport> values) {
+        ensureCollateSupportIsMutable();
+        super.addAll(values, collateSupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       *
+       * <pre>
+       * COLLATE support
+       * </pre>
+       */
+      public Builder clearCollateSupport() {
+        collateSupport_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+
+      // optional bool column_aliasing_supported = 7;
+      private boolean columnAliasingSupported_ ;
+      /**
+       * <code>optional bool column_aliasing_supported = 7;</code>
+       *
+       * <pre>
+       * True if column aliasing is supported
+       * </pre>
+       */
+      public boolean hasColumnAliasingSupported() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bool column_aliasing_supported = 7;</code>
+       *
+       * <pre>
+       * True if column aliasing is supported
+       * </pre>
+       */
+      public boolean getColumnAliasingSupported() {
+        return columnAliasingSupported_;
+      }
+      /**
+       * <code>optional bool column_aliasing_supported = 7;</code>
+       *
+       * <pre>
+       * True if column aliasing is supported
+       * </pre>
+       */
+      public Builder setColumnAliasingSupported(boolean value) {
+        bitField0_ |= 0x00000040;
+        columnAliasingSupported_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool column_aliasing_supported = 7;</code>
+       *
+       * <pre>
+       * True if column aliasing is supported
+       * </pre>
+       */
+      public Builder clearColumnAliasingSupported() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        columnAliasingSupported_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.ConvertSupport convert_support = 8;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> convertSupport_ =
+        java.util.Collections.emptyList();
+      private void ensureConvertSupportIsMutable() {
+        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+          convertSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ConvertSupport>(convertSupport_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ConvertSupport, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder, org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder> convertSupportBuilder_;
+
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> getConvertSupportList() {
+        if (convertSupportBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(convertSupport_);
+        } else {
+          return convertSupportBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public int getConvertSupportCount() {
+        if (convertSupportBuilder_ == null) {
+          return convertSupport_.size();
+        } else {
+          return convertSupportBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport getConvertSupport(int index) {
+        if (convertSupportBuilder_ == null) {
+          return convertSupport_.get(index);
+        } else {
+          return convertSupportBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder setConvertSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.ConvertSupport value) {
+        if (convertSupportBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureConvertSupportIsMutable();
+          convertSupport_.set(index, value);
+          onChanged();
+        } else {
+          convertSupportBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder setConvertSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder builderForValue) {
+        if (convertSupportBuilder_ == null) {
+          ensureConvertSupportIsMutable();
+          convertSupport_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          convertSupportBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder addConvertSupport(org.apache.drill.exec.proto.UserProtos.ConvertSupport value) {
+        if (convertSupportBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureConvertSupportIsMutable();
+          convertSupport_.add(value);
+          onChanged();
+        } else {
+          convertSupportBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder addConvertSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.ConvertSupport value) {
+        if (convertSupportBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureConvertSupportIsMutable();
+          convertSupport_.add(index, value);
+          onChanged();
+        } else {
+          convertSupportBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder addConvertSupport(
+          org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder builderForValue) {
+        if (convertSupportBuilder_ == null) {
+          ensureConvertSupportIsMutable();
+          convertSupport_.add(builderForValue.build());
+          onChanged();
+        } else {
+          convertSupportBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder addConvertSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder builderForValue) {
+        if (convertSupportBuilder_ == null) {
+          ensureConvertSupportIsMutable();
+          convertSupport_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          convertSupportBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder addAllConvertSupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.ConvertSupport> values) {
+        if (convertSupportBuilder_ == null) {
+          ensureConvertSupportIsMutable();
+          super.addAll(values, convertSupport_);
+          onChanged();
+        } else {
+          convertSupportBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder clearConvertSupport() {
+        if (convertSupportBuilder_ == null) {
+          convertSupport_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000080);
+          onChanged();
+        } else {
+          convertSupportBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public Builder removeConvertSupport(int index) {
+        if (convertSupportBuilder_ == null) {
+          ensureConvertSupportIsMutable();
+          convertSupport_.remove(index);
+          onChanged();
+        } else {
+          convertSupportBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder getConvertSupportBuilder(
+          int index) {
+        return getConvertSupportFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder getConvertSupportOrBuilder(
+          int index) {
+        if (convertSupportBuilder_ == null) {
+          return convertSupport_.get(index);  } else {
+          return convertSupportBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder> 
+           getConvertSupportOrBuilderList() {
+        if (convertSupportBuilder_ != null) {
+          return convertSupportBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(convertSupport_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder addConvertSupportBuilder() {
+        return getConvertSupportFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.ConvertSupport.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder addConvertSupportBuilder(
+          int index) {
+        return getConvertSupportFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.ConvertSupport.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.ConvertSupport convert_support = 8;</code>
+       *
+       * <pre>
+       * CONVERT support
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder> 
+           getConvertSupportBuilderList() {
+        return getConvertSupportFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.ConvertSupport, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder, org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder> 
+          getConvertSupportFieldBuilder() {
+        if (convertSupportBuilder_ == null) {
+          convertSupportBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.ConvertSupport, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder, org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder>(
+                  convertSupport_,
+                  ((bitField0_ & 0x00000080) == 0x00000080),
+                  getParentForChildren(),
+                  isClean());
+          convertSupport_ = null;
+        }
+        return convertSupportBuilder_;
+      }
+
+      // optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;
+      private org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport correlationNamesSupport_ = org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport.CN_NONE;
+      /**
+       * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       *
+       * <pre>
+       * Correlation names support
+       * </pre>
+       */
+      public boolean hasCorrelationNamesSupport() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       *
+       * <pre>
+       * Correlation names support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport() {
+        return correlationNamesSupport_;
+      }
+      /**
+       * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       *
+       * <pre>
+       * Correlation names support
+       * </pre>
+       */
+      public Builder setCorrelationNamesSupport(org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000100;
+        correlationNamesSupport_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       *
+       * <pre>
+       * Correlation names support
+       * </pre>
+       */
+      public Builder clearCorrelationNamesSupport() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        correlationNamesSupport_ = org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport.CN_NONE;
+        onChanged();
+        return this;
+      }
+
+      // repeated string date_time_functions = 10;
+      private com.google.protobuf.LazyStringList dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureDateTimeFunctionsIsMutable() {
+        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
+          dateTimeFunctions_ = new com.google.protobuf.LazyStringArrayList(dateTimeFunctions_);
+          bitField0_ |= 0x00000200;
+         }
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getDateTimeFunctionsList() {
+        return java.util.Collections.unmodifiableList(dateTimeFunctions_);
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public int getDateTimeFunctionsCount() {
+        return dateTimeFunctions_.size();
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public java.lang.String getDateTimeFunctions(int index) {
+        return dateTimeFunctions_.get(index);
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getDateTimeFunctionsBytes(int index) {
+        return dateTimeFunctions_.getByteString(index);
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public Builder setDateTimeFunctions(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDateTimeFunctionsIsMutable();
+        dateTimeFunctions_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public Builder addDateTimeFunctions(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDateTimeFunctionsIsMutable();
+        dateTimeFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public Builder addAllDateTimeFunctions(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureDateTimeFunctionsIsMutable();
+        super.addAll(values, dateTimeFunctions_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public Builder clearDateTimeFunctions() {
+        dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string date_time_functions = 10;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC Date Time scalar functions
+       * </pre>
+       */
+      public Builder addDateTimeFunctionsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDateTimeFunctionsIsMutable();
+        dateTimeFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> dateTimeLiteralsSupport_ =
+        java.util.Collections.emptyList();
+      private void ensureDateTimeLiteralsSupportIsMutable() {
+        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+          dateTimeLiteralsSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport>(dateTimeLiteralsSupport_);
+          bitField0_ |= 0x00000400;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList() {
+        return java.util.Collections.unmodifiableList(dateTimeLiteralsSupport_);
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public int getDateTimeLiteralsSupportCount() {
+        return dateTimeLiteralsSupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index) {
+        return dateTimeLiteralsSupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public Builder setDateTimeLiteralsSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureDateTimeLiteralsSupportIsMutable();
+        dateTimeLiteralsSupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public Builder addDateTimeLiteralsSupport(org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureDateTimeLiteralsSupportIsMutable();
+        dateTimeLiteralsSupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public Builder addAllDateTimeLiteralsSupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> values) {
+        ensureDateTimeLiteralsSupportIsMutable();
+        super.addAll(values, dateTimeLiteralsSupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       *
+       * <pre>
+       * Supported Date Time literals
+       * </pre>
+       */
+      public Builder clearDateTimeLiteralsSupport() {
+        dateTimeLiteralsSupport_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000400);
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.GroupBySupport group_by_support = 12;
+      private org.apache.drill.exec.proto.UserProtos.GroupBySupport groupBySupport_ = org.apache.drill.exec.proto.UserProtos.GroupBySupport.GB_NONE;
+      /**
+       * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       *
+       * <pre>
+       * Group By support
+       * </pre>
+       */
+      public boolean hasGroupBySupport() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       *
+       * <pre>
+       * Group By support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport() {
+        return groupBySupport_;
+      }
+      /**
+       * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       *
+       * <pre>
+       * Group By support
+       * </pre>
+       */
+      public Builder setGroupBySupport(org.apache.drill.exec.proto.UserProtos.GroupBySupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000800;
+        groupBySupport_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       *
+       * <pre>
+       * Group By support
+       * </pre>
+       */
+      public Builder clearGroupBySupport() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        groupBySupport_ = org.apache.drill.exec.proto.UserProtos.GroupBySupport.GB_NONE;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.IdentifierCasing identifier_casing = 13;
+      private org.apache.drill.exec.proto.UserProtos.IdentifierCasing identifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+      /**
+       * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       *
+       * <pre>
+       * Unquoted Identifier casing
+       * </pre>
+       */
+      public boolean hasIdentifierCasing() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       *
+       * <pre>
+       * Unquoted Identifier casing
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing() {
+        return identifierCasing_;
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       *
+       * <pre>
+       * Unquoted Identifier casing
+       * </pre>
+       */
+      public Builder setIdentifierCasing(org.apache.drill.exec.proto.UserProtos.IdentifierCasing value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00001000;
+        identifierCasing_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       *
+       * <pre>
+       * Unquoted Identifier casing
+       * </pre>
+       */
+      public Builder clearIdentifierCasing() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        identifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // optional string identifier_quote_string = 14;
+      private java.lang.Object identifierQuoteString_ = "";
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public boolean hasIdentifierQuoteString() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public java.lang.String getIdentifierQuoteString() {
+        java.lang.Object ref = identifierQuoteString_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          identifierQuoteString_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getIdentifierQuoteStringBytes() {
+        java.lang.Object ref = identifierQuoteString_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          identifierQuoteString_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public Builder setIdentifierQuoteString(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        identifierQuoteString_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public Builder clearIdentifierQuoteString() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        identifierQuoteString_ = getDefaultInstance().getIdentifierQuoteString();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string identifier_quote_string = 14;</code>
+       *
+       * <pre>
+       * Quote string for identifiers
+       * </pre>
+       */
+      public Builder setIdentifierQuoteStringBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        identifierQuoteString_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bool like_escape_clause_supported = 15;
+      private boolean likeEscapeClauseSupported_ ;
+      /**
+       * <code>optional bool like_escape_clause_supported = 15;</code>
+       *
+       * <pre>
+       * True if LIKE supports an ESCAPE clause
+       * </pre>
+       */
+      public boolean hasLikeEscapeClauseSupported() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional bool like_escape_clause_supported = 15;</code>
+       *
+       * <pre>
+       * True if LIKE supports an ESCAPE clause
+       * </pre>
+       */
+      public boolean getLikeEscapeClauseSupported() {
+        return likeEscapeClauseSupported_;
+      }
+      /**
+       * <code>optional bool like_escape_clause_supported = 15;</code>
+       *
+       * <pre>
+       * True if LIKE supports an ESCAPE clause
+       * </pre>
+       */
+      public Builder setLikeEscapeClauseSupported(boolean value) {
+        bitField0_ |= 0x00004000;
+        likeEscapeClauseSupported_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool like_escape_clause_supported = 15;</code>
+       *
+       * <pre>
+       * True if LIKE supports an ESCAPE clause
+       * </pre>
+       */
+      public Builder clearLikeEscapeClauseSupported() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        likeEscapeClauseSupported_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_binary_literal_length = 16;
+      private int maxBinaryLiteralLength_ ;
+      /**
+       * <code>optional uint32 max_binary_literal_length = 16;</code>
+       *
+       * <pre>
+       * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxBinaryLiteralLength() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional uint32 max_binary_literal_length = 16;</code>
+       *
+       * <pre>
+       * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxBinaryLiteralLength() {
+        return maxBinaryLiteralLength_;
+      }
+      /**
+       * <code>optional uint32 max_binary_literal_length = 16;</code>
+       *
+       * <pre>
+       * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxBinaryLiteralLength(int value) {
+        bitField0_ |= 0x00008000;
+        maxBinaryLiteralLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_binary_literal_length = 16;</code>
+       *
+       * <pre>
+       * Maximum number of hexa characters for binary literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxBinaryLiteralLength() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        maxBinaryLiteralLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_catalog_name_length = 17;
+      private int maxCatalogNameLength_ ;
+      /**
+       * <code>optional uint32 max_catalog_name_length = 17;</code>
+       *
+       * <pre>
+       * Maximum length of catalog names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxCatalogNameLength() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional uint32 max_catalog_name_length = 17;</code>
+       *
+       * <pre>
+       * Maximum length of catalog names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxCatalogNameLength() {
+        return maxCatalogNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_catalog_name_length = 17;</code>
+       *
+       * <pre>
+       * Maximum length of catalog names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxCatalogNameLength(int value) {
+        bitField0_ |= 0x00010000;
+        maxCatalogNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_catalog_name_length = 17;</code>
+       *
+       * <pre>
+       * Maximum length of catalog names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxCatalogNameLength() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        maxCatalogNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_char_literal_length = 18;
+      private int maxCharLiteralLength_ ;
+      /**
+       * <code>optional uint32 max_char_literal_length = 18;</code>
+       *
+       * <pre>
+       * Maximum number of characters for string literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxCharLiteralLength() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      /**
+       * <code>optional uint32 max_char_literal_length = 18;</code>
+       *
+       * <pre>
+       * Maximum number of characters for string literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxCharLiteralLength() {
+        return maxCharLiteralLength_;
+      }
+      /**
+       * <code>optional uint32 max_char_literal_length = 18;</code>
+       *
+       * <pre>
+       * Maximum number of characters for string literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxCharLiteralLength(int value) {
+        bitField0_ |= 0x00020000;
+        maxCharLiteralLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_char_literal_length = 18;</code>
+       *
+       * <pre>
+       * Maximum number of characters for string literals (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxCharLiteralLength() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        maxCharLiteralLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_column_name_length = 19;
+      private int maxColumnNameLength_ ;
+      /**
+       * <code>optional uint32 max_column_name_length = 19;</code>
+       *
+       * <pre>
+       * Maximum length of column names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxColumnNameLength() {
+        return ((bitField0_ & 0x00040000) == 0x00040000);
+      }
+      /**
+       * <code>optional uint32 max_column_name_length = 19;</code>
+       *
+       * <pre>
+       * Maximum length of column names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxColumnNameLength() {
+        return maxColumnNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_column_name_length = 19;</code>
+       *
+       * <pre>
+       * Maximum length of column names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxColumnNameLength(int value) {
+        bitField0_ |= 0x00040000;
+        maxColumnNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_column_name_length = 19;</code>
+       *
+       * <pre>
+       * Maximum length of column names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxColumnNameLength() {
+        bitField0_ = (bitField0_ & ~0x00040000);
+        maxColumnNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_columns_in_group_by = 20;
+      private int maxColumnsInGroupBy_ ;
+      /**
+       * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       *
+       * <pre>
+       * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxColumnsInGroupBy() {
+        return ((bitField0_ & 0x00080000) == 0x00080000);
+      }
+      /**
+       * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       *
+       * <pre>
+       * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxColumnsInGroupBy() {
+        return maxColumnsInGroupBy_;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       *
+       * <pre>
+       * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxColumnsInGroupBy(int value) {
+        bitField0_ |= 0x00080000;
+        maxColumnsInGroupBy_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       *
+       * <pre>
+       * Maximum number of columns in GROUP BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxColumnsInGroupBy() {
+        bitField0_ = (bitField0_ & ~0x00080000);
+        maxColumnsInGroupBy_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_columns_in_order_by = 21;
+      private int maxColumnsInOrderBy_ ;
+      /**
+       * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       *
+       * <pre>
+       * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxColumnsInOrderBy() {
+        return ((bitField0_ & 0x00100000) == 0x00100000);
+      }
+      /**
+       * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       *
+       * <pre>
+       * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxColumnsInOrderBy() {
+        return maxColumnsInOrderBy_;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       *
+       * <pre>
+       * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxColumnsInOrderBy(int value) {
+        bitField0_ |= 0x00100000;
+        maxColumnsInOrderBy_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       *
+       * <pre>
+       * Maximum number of columns in ORDER BY expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxColumnsInOrderBy() {
+        bitField0_ = (bitField0_ & ~0x00100000);
+        maxColumnsInOrderBy_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_columns_in_select = 22;
+      private int maxColumnsInSelect_ ;
+      /**
+       * <code>optional uint32 max_columns_in_select = 22;</code>
+       *
+       * <pre>
+       * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxColumnsInSelect() {
+        return ((bitField0_ & 0x00200000) == 0x00200000);
+      }
+      /**
+       * <code>optional uint32 max_columns_in_select = 22;</code>
+       *
+       * <pre>
+       * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxColumnsInSelect() {
+        return maxColumnsInSelect_;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_select = 22;</code>
+       *
+       * <pre>
+       * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxColumnsInSelect(int value) {
+        bitField0_ |= 0x00200000;
+        maxColumnsInSelect_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_columns_in_select = 22;</code>
+       *
+       * <pre>
+       * Maximum number of columns in SELECT expressions (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxColumnsInSelect() {
+        bitField0_ = (bitField0_ & ~0x00200000);
+        maxColumnsInSelect_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_cursor_name_length = 23;
+      private int maxCursorNameLength_ ;
+      /**
+       * <code>optional uint32 max_cursor_name_length = 23;</code>
+       *
+       * <pre>
+       * Maximum length of cursor names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxCursorNameLength() {
+        return ((bitField0_ & 0x00400000) == 0x00400000);
+      }
+      /**
+       * <code>optional uint32 max_cursor_name_length = 23;</code>
+       *
+       * <pre>
+       * Maximum length of cursor names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxCursorNameLength() {
+        return maxCursorNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_cursor_name_length = 23;</code>
+       *
+       * <pre>
+       * Maximum length of cursor names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxCursorNameLength(int value) {
+        bitField0_ |= 0x00400000;
+        maxCursorNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_cursor_name_length = 23;</code>
+       *
+       * <pre>
+       * Maximum length of cursor names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxCursorNameLength() {
+        bitField0_ = (bitField0_ & ~0x00400000);
+        maxCursorNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_logical_lob_size = 24;
+      private int maxLogicalLobSize_ ;
+      /**
+       * <code>optional uint32 max_logical_lob_size = 24;</code>
+       *
+       * <pre>
+       * Maximum logical size for LOB types (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxLogicalLobSize() {
+        return ((bitField0_ & 0x00800000) == 0x00800000);
+      }
+      /**
+       * <code>optional uint32 max_logical_lob_size = 24;</code>
+       *
+       * <pre>
+       * Maximum logical size for LOB types (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxLogicalLobSize() {
+        return maxLogicalLobSize_;
+      }
+      /**
+       * <code>optional uint32 max_logical_lob_size = 24;</code>
+       *
+       * <pre>
+       * Maximum logical size for LOB types (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxLogicalLobSize(int value) {
+        bitField0_ |= 0x00800000;
+        maxLogicalLobSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_logical_lob_size = 24;</code>
+       *
+       * <pre>
+       * Maximum logical size for LOB types (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxLogicalLobSize() {
+        bitField0_ = (bitField0_ & ~0x00800000);
+        maxLogicalLobSize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_row_size = 25;
+      private int maxRowSize_ ;
+      /**
+       * <code>optional uint32 max_row_size = 25;</code>
+       *
+       * <pre>
+       * Maximum number of bytes for a single row (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxRowSize() {
+        return ((bitField0_ & 0x01000000) == 0x01000000);
+      }
+      /**
+       * <code>optional uint32 max_row_size = 25;</code>
+       *
+       * <pre>
+       * Maximum number of bytes for a single row (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxRowSize() {
+        return maxRowSize_;
+      }
+      /**
+       * <code>optional uint32 max_row_size = 25;</code>
+       *
+       * <pre>
+       * Maximum number of bytes for a single row (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxRowSize(int value) {
+        bitField0_ |= 0x01000000;
+        maxRowSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_row_size = 25;</code>
+       *
+       * <pre>
+       * Maximum number of bytes for a single row (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxRowSize() {
+        bitField0_ = (bitField0_ & ~0x01000000);
+        maxRowSize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_schema_name_length = 26;
+      private int maxSchemaNameLength_ ;
+      /**
+       * <code>optional uint32 max_schema_name_length = 26;</code>
+       *
+       * <pre>
+       * Maximum length of schema names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxSchemaNameLength() {
+        return ((bitField0_ & 0x02000000) == 0x02000000);
+      }
+      /**
+       * <code>optional uint32 max_schema_name_length = 26;</code>
+       *
+       * <pre>
+       * Maximum length of schema names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxSchemaNameLength() {
+        return maxSchemaNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_schema_name_length = 26;</code>
+       *
+       * <pre>
+       * Maximum length of schema names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxSchemaNameLength(int value) {
+        bitField0_ |= 0x02000000;
+        maxSchemaNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_schema_name_length = 26;</code>
+       *
+       * <pre>
+       * Maximum length of schema names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxSchemaNameLength() {
+        bitField0_ = (bitField0_ & ~0x02000000);
+        maxSchemaNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_statement_length = 27;
+      private int maxStatementLength_ ;
+      /**
+       * <code>optional uint32 max_statement_length = 27;</code>
+       *
+       * <pre>
+       * Maximum length for statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxStatementLength() {
+        return ((bitField0_ & 0x04000000) == 0x04000000);
+      }
+      /**
+       * <code>optional uint32 max_statement_length = 27;</code>
+       *
+       * <pre>
+       * Maximum length for statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxStatementLength() {
+        return maxStatementLength_;
+      }
+      /**
+       * <code>optional uint32 max_statement_length = 27;</code>
+       *
+       * <pre>
+       * Maximum length for statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxStatementLength(int value) {
+        bitField0_ |= 0x04000000;
+        maxStatementLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_statement_length = 27;</code>
+       *
+       * <pre>
+       * Maximum length for statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxStatementLength() {
+        bitField0_ = (bitField0_ & ~0x04000000);
+        maxStatementLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_statements = 28;
+      private int maxStatements_ ;
+      /**
+       * <code>optional uint32 max_statements = 28;</code>
+       *
+       * <pre>
+       * Maximum number of statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxStatements() {
+        return ((bitField0_ & 0x08000000) == 0x08000000);
+      }
+      /**
+       * <code>optional uint32 max_statements = 28;</code>
+       *
+       * <pre>
+       * Maximum number of statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxStatements() {
+        return maxStatements_;
+      }
+      /**
+       * <code>optional uint32 max_statements = 28;</code>
+       *
+       * <pre>
+       * Maximum number of statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxStatements(int value) {
+        bitField0_ |= 0x08000000;
+        maxStatements_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_statements = 28;</code>
+       *
+       * <pre>
+       * Maximum number of statements (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxStatements() {
+        bitField0_ = (bitField0_ & ~0x08000000);
+        maxStatements_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_table_name_length = 29;
+      private int maxTableNameLength_ ;
+      /**
+       * <code>optional uint32 max_table_name_length = 29;</code>
+       *
+       * <pre>
+       * Maximum length of table names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxTableNameLength() {
+        return ((bitField0_ & 0x10000000) == 0x10000000);
+      }
+      /**
+       * <code>optional uint32 max_table_name_length = 29;</code>
+       *
+       * <pre>
+       * Maximum length of table names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxTableNameLength() {
+        return maxTableNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_table_name_length = 29;</code>
+       *
+       * <pre>
+       * Maximum length of table names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxTableNameLength(int value) {
+        bitField0_ |= 0x10000000;
+        maxTableNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_table_name_length = 29;</code>
+       *
+       * <pre>
+       * Maximum length of table names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxTableNameLength() {
+        bitField0_ = (bitField0_ & ~0x10000000);
+        maxTableNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_tables_in_select = 30;
+      private int maxTablesInSelect_ ;
+      /**
+       * <code>optional uint32 max_tables_in_select = 30;</code>
+       *
+       * <pre>
+       * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxTablesInSelect() {
+        return ((bitField0_ & 0x20000000) == 0x20000000);
+      }
+      /**
+       * <code>optional uint32 max_tables_in_select = 30;</code>
+       *
+       * <pre>
+       * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxTablesInSelect() {
+        return maxTablesInSelect_;
+      }
+      /**
+       * <code>optional uint32 max_tables_in_select = 30;</code>
+       *
+       * <pre>
+       * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxTablesInSelect(int value) {
+        bitField0_ |= 0x20000000;
+        maxTablesInSelect_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_tables_in_select = 30;</code>
+       *
+       * <pre>
+       * Maximum number of tables in a SELECT expression (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxTablesInSelect() {
+        bitField0_ = (bitField0_ & ~0x20000000);
+        maxTablesInSelect_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 max_user_name_length = 31;
+      private int maxUserNameLength_ ;
+      /**
+       * <code>optional uint32 max_user_name_length = 31;</code>
+       *
+       * <pre>
+       * Maximum length of user names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public boolean hasMaxUserNameLength() {
+        return ((bitField0_ & 0x40000000) == 0x40000000);
+      }
+      /**
+       * <code>optional uint32 max_user_name_length = 31;</code>
+       *
+       * <pre>
+       * Maximum length of user names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public int getMaxUserNameLength() {
+        return maxUserNameLength_;
+      }
+      /**
+       * <code>optional uint32 max_user_name_length = 31;</code>
+       *
+       * <pre>
+       * Maximum length of user names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder setMaxUserNameLength(int value) {
+        bitField0_ |= 0x40000000;
+        maxUserNameLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 max_user_name_length = 31;</code>
+       *
+       * <pre>
+       * Maximum length of user names (0 if unlimited or unknown)
+       * </pre>
+       */
+      public Builder clearMaxUserNameLength() {
+        bitField0_ = (bitField0_ & ~0x40000000);
+        maxUserNameLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.NullCollation null_collation = 32;
+      private org.apache.drill.exec.proto.UserProtos.NullCollation nullCollation_ = org.apache.drill.exec.proto.UserProtos.NullCollation.NC_UNKNOWN;
+      /**
+       * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       *
+       * <pre>
+       * How NULL are sorted
+       * </pre>
+       */
+      public boolean hasNullCollation() {
+        return ((bitField0_ & 0x80000000) == 0x80000000);
+      }
+      /**
+       * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       *
+       * <pre>
+       * How NULL are sorted
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation() {
+        return nullCollation_;
+      }
+      /**
+       * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       *
+       * <pre>
+       * How NULL are sorted
+       * </pre>
+       */
+      public Builder setNullCollation(org.apache.drill.exec.proto.UserProtos.NullCollation value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x80000000;
+        nullCollation_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       *
+       * <pre>
+       * How NULL are sorted
+       * </pre>
+       */
+      public Builder clearNullCollation() {
+        bitField0_ = (bitField0_ & ~0x80000000);
+        nullCollation_ = org.apache.drill.exec.proto.UserProtos.NullCollation.NC_UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // optional bool null_plus_non_null_equals_null = 33;
+      private boolean nullPlusNonNullEqualsNull_ ;
+      /**
+       * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       *
+       * <pre>
+       * True if NULL + non NULL is NULL
+       * </pre>
+       */
+      public boolean hasNullPlusNonNullEqualsNull() {
+        return ((bitField1_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       *
+       * <pre>
+       * True if NULL + non NULL is NULL
+       * </pre>
+       */
+      public boolean getNullPlusNonNullEqualsNull() {
+        return nullPlusNonNullEqualsNull_;
+      }
+      /**
+       * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       *
+       * <pre>
+       * True if NULL + non NULL is NULL
+       * </pre>
+       */
+      public Builder setNullPlusNonNullEqualsNull(boolean value) {
+        bitField1_ |= 0x00000001;
+        nullPlusNonNullEqualsNull_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       *
+       * <pre>
+       * True if NULL + non NULL is NULL
+       * </pre>
+       */
+      public Builder clearNullPlusNonNullEqualsNull() {
+        bitField1_ = (bitField1_ & ~0x00000001);
+        nullPlusNonNullEqualsNull_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated string numeric_functions = 34;
+      private com.google.protobuf.LazyStringList numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureNumericFunctionsIsMutable() {
+        if (!((bitField1_ & 0x00000002) == 0x00000002)) {
+          numericFunctions_ = new com.google.protobuf.LazyStringArrayList(numericFunctions_);
+          bitField1_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getNumericFunctionsList() {
+        return java.util.Collections.unmodifiableList(numericFunctions_);
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public int getNumericFunctionsCount() {
+        return numericFunctions_.size();
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public java.lang.String getNumericFunctions(int index) {
+        return numericFunctions_.get(index);
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getNumericFunctionsBytes(int index) {
+        return numericFunctions_.getByteString(index);
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public Builder setNumericFunctions(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureNumericFunctionsIsMutable();
+        numericFunctions_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public Builder addNumericFunctions(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureNumericFunctionsIsMutable();
+        numericFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public Builder addAllNumericFunctions(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureNumericFunctionsIsMutable();
+        super.addAll(values, numericFunctions_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public Builder clearNumericFunctions() {
+        numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string numeric_functions = 34;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC numeric scalar functions
+       * </pre>
+       */
+      public Builder addNumericFunctionsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureNumericFunctionsIsMutable();
+        numericFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.OrderBySupport order_by_support = 35;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> orderBySupport_ =
+        java.util.Collections.emptyList();
+      private void ensureOrderBySupportIsMutable() {
+        if (!((bitField1_ & 0x00000004) == 0x00000004)) {
+          orderBySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OrderBySupport>(orderBySupport_);
+          bitField1_ |= 0x00000004;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList() {
+        return java.util.Collections.unmodifiableList(orderBySupport_);
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public int getOrderBySupportCount() {
+        return orderBySupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index) {
+        return orderBySupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder setOrderBySupport(
+          int index, org.apache.drill.exec.proto.UserProtos.OrderBySupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureOrderBySupportIsMutable();
+        orderBySupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder addOrderBySupport(org.apache.drill.exec.proto.UserProtos.OrderBySupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureOrderBySupportIsMutable();
+        orderBySupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder addAllOrderBySupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.OrderBySupport> values) {
+        ensureOrderBySupportIsMutable();
+        super.addAll(values, orderBySupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder clearOrderBySupport() {
+        orderBySupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.OuterJoinSupport outer_join_support = 36;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> outerJoinSupport_ =
+        java.util.Collections.emptyList();
+      private void ensureOuterJoinSupportIsMutable() {
+        if (!((bitField1_ & 0x00000008) == 0x00000008)) {
+          outerJoinSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport>(outerJoinSupport_);
+          bitField1_ |= 0x00000008;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList() {
+        return java.util.Collections.unmodifiableList(outerJoinSupport_);
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public int getOuterJoinSupportCount() {
+        return outerJoinSupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index) {
+        return outerJoinSupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder setOuterJoinSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureOuterJoinSupportIsMutable();
+        outerJoinSupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder addOuterJoinSupport(org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureOuterJoinSupportIsMutable();
+        outerJoinSupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder addAllOuterJoinSupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> values) {
+        ensureOuterJoinSupportIsMutable();
+        super.addAll(values, outerJoinSupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       *
+       * <pre>
+       * Outer join suport
+       * </pre>
+       */
+      public Builder clearOuterJoinSupport() {
+        outerJoinSupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;
+      private org.apache.drill.exec.proto.UserProtos.IdentifierCasing quotedIdentifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+      /**
+       * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       *
+       * <pre>
+       * Quoted identifier casing
+       * </pre>
+       */
+      public boolean hasQuotedIdentifierCasing() {
+        return ((bitField1_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       *
+       * <pre>
+       * Quoted identifier casing
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing() {
+        return quotedIdentifierCasing_;
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       *
+       * <pre>
+       * Quoted identifier casing
+       * </pre>
+       */
+      public Builder setQuotedIdentifierCasing(org.apache.drill.exec.proto.UserProtos.IdentifierCasing value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField1_ |= 0x00000010;
+        quotedIdentifierCasing_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       *
+       * <pre>
+       * Quoted identifier casing
+       * </pre>
+       */
+      public Builder clearQuotedIdentifierCasing() {
+        bitField1_ = (bitField1_ & ~0x00000010);
+        quotedIdentifierCasing_ = org.apache.drill.exec.proto.UserProtos.IdentifierCasing.IC_UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // optional bool read_only = 38;
+      private boolean readOnly_ ;
+      /**
+       * <code>optional bool read_only = 38;</code>
+       *
+       * <pre>
+       * True if connection access is read only
+       * </pre>
+       */
+      public boolean hasReadOnly() {
+        return ((bitField1_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional bool read_only = 38;</code>
+       *
+       * <pre>
+       * True if connection access is read only
+       * </pre>
+       */
+      public boolean getReadOnly() {
+        return readOnly_;
+      }
+      /**
+       * <code>optional bool read_only = 38;</code>
+       *
+       * <pre>
+       * True if connection access is read only
+       * </pre>
+       */
+      public Builder setReadOnly(boolean value) {
+        bitField1_ |= 0x00000020;
+        readOnly_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool read_only = 38;</code>
+       *
+       * <pre>
+       * True if connection access is read only
+       * </pre>
+       */
+      public Builder clearReadOnly() {
+        bitField1_ = (bitField1_ & ~0x00000020);
+        readOnly_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional string schema_term = 39;
+      private java.lang.Object schemaTerm_ = "";
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public boolean hasSchemaTerm() {
+        return ((bitField1_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public java.lang.String getSchemaTerm() {
+        java.lang.Object ref = schemaTerm_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          schemaTerm_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSchemaTermBytes() {
+        java.lang.Object ref = schemaTerm_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          schemaTerm_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public Builder setSchemaTerm(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000040;
+        schemaTerm_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public Builder clearSchemaTerm() {
+        bitField1_ = (bitField1_ & ~0x00000040);
+        schemaTerm_ = getDefaultInstance().getSchemaTerm();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string schema_term = 39;</code>
+       *
+       * <pre>
+       * The term used to designate a schema
+       * </pre>
+       */
+      public Builder setSchemaTermBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000040;
+        schemaTerm_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string search_escape_string = 40;
+      private java.lang.Object searchEscapeString_ = "";
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public boolean hasSearchEscapeString() {
+        return ((bitField1_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public java.lang.String getSearchEscapeString() {
+        java.lang.Object ref = searchEscapeString_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          searchEscapeString_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSearchEscapeStringBytes() {
+        java.lang.Object ref = searchEscapeString_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          searchEscapeString_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public Builder setSearchEscapeString(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000080;
+        searchEscapeString_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public Builder clearSearchEscapeString() {
+        bitField1_ = (bitField1_ & ~0x00000080);
+        searchEscapeString_ = getDefaultInstance().getSearchEscapeString();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string search_escape_string = 40;</code>
+       *
+       * <pre>
+       * Characters used for escaping (empty if not suported)
+       * </pre>
+       */
+      public Builder setSearchEscapeStringBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000080;
+        searchEscapeString_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bool select_for_update_supported = 41;
+      private boolean selectForUpdateSupported_ ;
+      /**
+       * <code>optional bool select_for_update_supported = 41;</code>
+       *
+       * <pre>
+       * True if SELECT FOR UPDATE is supported
+       * </pre>
+       */
+      public boolean hasSelectForUpdateSupported() {
+        return ((bitField1_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional bool select_for_update_supported = 41;</code>
+       *
+       * <pre>
+       * True if SELECT FOR UPDATE is supported
+       * </pre>
+       */
+      public boolean getSelectForUpdateSupported() {
+        return selectForUpdateSupported_;
+      }
+      /**
+       * <code>optional bool select_for_update_supported = 41;</code>
+       *
+       * <pre>
+       * True if SELECT FOR UPDATE is supported
+       * </pre>
+       */
+      public Builder setSelectForUpdateSupported(boolean value) {
+        bitField1_ |= 0x00000100;
+        selectForUpdateSupported_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool select_for_update_supported = 41;</code>
+       *
+       * <pre>
+       * True if SELECT FOR UPDATE is supported
+       * </pre>
+       */
+      public Builder clearSelectForUpdateSupported() {
+        bitField1_ = (bitField1_ & ~0x00000100);
+        selectForUpdateSupported_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional string special_characters = 42;
+      private java.lang.Object specialCharacters_ = "";
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public boolean hasSpecialCharacters() {
+        return ((bitField1_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public java.lang.String getSpecialCharacters() {
+        java.lang.Object ref = specialCharacters_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          specialCharacters_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSpecialCharactersBytes() {
+        java.lang.Object ref = specialCharacters_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          specialCharacters_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public Builder setSpecialCharacters(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000200;
+        specialCharacters_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public Builder clearSpecialCharacters() {
+        bitField1_ = (bitField1_ & ~0x00000200);
+        specialCharacters_ = getDefaultInstance().getSpecialCharacters();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string special_characters = 42;</code>
+       *
+       * <pre>
+       * List of extra characters that can be used in identifier names
+       * </pre>
+       */
+      public Builder setSpecialCharactersBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00000200;
+        specialCharacters_ = value;
+        onChanged();
+        return this;
+      }
+
+      // repeated string sql_keywords = 43;
+      private com.google.protobuf.LazyStringList sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureSqlKeywordsIsMutable() {
+        if (!((bitField1_ & 0x00000400) == 0x00000400)) {
+          sqlKeywords_ = new com.google.protobuf.LazyStringArrayList(sqlKeywords_);
+          bitField1_ |= 0x00000400;
+         }
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getSqlKeywordsList() {
+        return java.util.Collections.unmodifiableList(sqlKeywords_);
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public int getSqlKeywordsCount() {
+        return sqlKeywords_.size();
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public java.lang.String getSqlKeywords(int index) {
+        return sqlKeywords_.get(index);
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSqlKeywordsBytes(int index) {
+        return sqlKeywords_.getByteString(index);
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public Builder setSqlKeywords(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSqlKeywordsIsMutable();
+        sqlKeywords_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public Builder addSqlKeywords(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSqlKeywordsIsMutable();
+        sqlKeywords_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public Builder addAllSqlKeywords(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureSqlKeywordsIsMutable();
+        super.addAll(values, sqlKeywords_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public Builder clearSqlKeywords() {
+        sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000400);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sql_keywords = 43;</code>
+       *
+       * <pre>
+       * list of SQL keywords
+       * </pre>
+       */
+      public Builder addSqlKeywordsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSqlKeywordsIsMutable();
+        sqlKeywords_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated string string_functions = 44;
+      private com.google.protobuf.LazyStringList stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureStringFunctionsIsMutable() {
+        if (!((bitField1_ & 0x00000800) == 0x00000800)) {
+          stringFunctions_ = new com.google.protobuf.LazyStringArrayList(stringFunctions_);
+          bitField1_ |= 0x00000800;
+         }
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getStringFunctionsList() {
+        return java.util.Collections.unmodifiableList(stringFunctions_);
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public int getStringFunctionsCount() {
+        return stringFunctions_.size();
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public java.lang.String getStringFunctions(int index) {
+        return stringFunctions_.get(index);
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getStringFunctionsBytes(int index) {
+        return stringFunctions_.getByteString(index);
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public Builder setStringFunctions(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureStringFunctionsIsMutable();
+        stringFunctions_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public Builder addStringFunctions(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureStringFunctionsIsMutable();
+        stringFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public Builder addAllStringFunctions(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureStringFunctionsIsMutable();
+        super.addAll(values, stringFunctions_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public Builder clearStringFunctions() {
+        stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000800);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string string_functions = 44;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC string scalar functions
+       * </pre>
+       */
+      public Builder addStringFunctionsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureStringFunctionsIsMutable();
+        stringFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.SubQuerySupport subquery_support = 45;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> subquerySupport_ =
+        java.util.Collections.emptyList();
+      private void ensureSubquerySupportIsMutable() {
+        if (!((bitField1_ & 0x00001000) == 0x00001000)) {
+          subquerySupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SubQuerySupport>(subquerySupport_);
+          bitField1_ |= 0x00001000;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList() {
+        return java.util.Collections.unmodifiableList(subquerySupport_);
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public int getSubquerySupportCount() {
+        return subquerySupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index) {
+        return subquerySupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public Builder setSubquerySupport(
+          int index, org.apache.drill.exec.proto.UserProtos.SubQuerySupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSubquerySupportIsMutable();
+        subquerySupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public Builder addSubquerySupport(org.apache.drill.exec.proto.UserProtos.SubQuerySupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSubquerySupportIsMutable();
+        subquerySupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public Builder addAllSubquerySupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.SubQuerySupport> values) {
+        ensureSubquerySupportIsMutable();
+        super.addAll(values, subquerySupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       *
+       * <pre>
+       * Subquery support
+       * </pre>
+       */
+      public Builder clearSubquerySupport() {
+        subquerySupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00001000);
+        onChanged();
+        return this;
+      }
+
+      // repeated string system_functions = 46;
+      private com.google.protobuf.LazyStringList systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureSystemFunctionsIsMutable() {
+        if (!((bitField1_ & 0x00002000) == 0x00002000)) {
+          systemFunctions_ = new com.google.protobuf.LazyStringArrayList(systemFunctions_);
+          bitField1_ |= 0x00002000;
+         }
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getSystemFunctionsList() {
+        return java.util.Collections.unmodifiableList(systemFunctions_);
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public int getSystemFunctionsCount() {
+        return systemFunctions_.size();
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public java.lang.String getSystemFunctions(int index) {
+        return systemFunctions_.get(index);
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSystemFunctionsBytes(int index) {
+        return systemFunctions_.getByteString(index);
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public Builder setSystemFunctions(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSystemFunctionsIsMutable();
+        systemFunctions_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public Builder addSystemFunctions(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSystemFunctionsIsMutable();
+        systemFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public Builder addAllSystemFunctions(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureSystemFunctionsIsMutable();
+        super.addAll(values, systemFunctions_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public Builder clearSystemFunctions() {
+        systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00002000);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string system_functions = 46;</code>
+       *
+       * <pre>
+       * Supported ODBC/JDBC systen scalar functions
+       * </pre>
+       */
+      public Builder addSystemFunctionsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSystemFunctionsIsMutable();
+        systemFunctions_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // optional string table_term = 47;
+      private java.lang.Object tableTerm_ = "";
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public boolean hasTableTerm() {
+        return ((bitField1_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public java.lang.String getTableTerm() {
+        java.lang.Object ref = tableTerm_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          tableTerm_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getTableTermBytes() {
+        java.lang.Object ref = tableTerm_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          tableTerm_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public Builder setTableTerm(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00004000;
+        tableTerm_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public Builder clearTableTerm() {
+        bitField1_ = (bitField1_ & ~0x00004000);
+        tableTerm_ = getDefaultInstance().getTableTerm();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string table_term = 47;</code>
+       *
+       * <pre>
+       * The term used to designate a table
+       * </pre>
+       */
+      public Builder setTableTermBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField1_ |= 0x00004000;
+        tableTerm_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bool transaction_supported = 48;
+      private boolean transactionSupported_ ;
+      /**
+       * <code>optional bool transaction_supported = 48;</code>
+       *
+       * <pre>
+       * True if transaction is supported
+       * </pre>
+       */
+      public boolean hasTransactionSupported() {
+        return ((bitField1_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional bool transaction_supported = 48;</code>
+       *
+       * <pre>
+       * True if transaction is supported
+       * </pre>
+       */
+      public boolean getTransactionSupported() {
+        return transactionSupported_;
+      }
+      /**
+       * <code>optional bool transaction_supported = 48;</code>
+       *
+       * <pre>
+       * True if transaction is supported
+       * </pre>
+       */
+      public Builder setTransactionSupported(boolean value) {
+        bitField1_ |= 0x00008000;
+        transactionSupported_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool transaction_supported = 48;</code>
+       *
+       * <pre>
+       * True if transaction is supported
+       * </pre>
+       */
+      public Builder clearTransactionSupported() {
+        bitField1_ = (bitField1_ & ~0x00008000);
+        transactionSupported_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.user.UnionSupport union_support = 49;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> unionSupport_ =
+        java.util.Collections.emptyList();
+      private void ensureUnionSupportIsMutable() {
+        if (!((bitField1_ & 0x00010000) == 0x00010000)) {
+          unionSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.UnionSupport>(unionSupport_);
+          bitField1_ |= 0x00010000;
+        }
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList() {
+        return java.util.Collections.unmodifiableList(unionSupport_);
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public int getUnionSupportCount() {
+        return unionSupport_.size();
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index) {
+        return unionSupport_.get(index);
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public Builder setUnionSupport(
+          int index, org.apache.drill.exec.proto.UserProtos.UnionSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureUnionSupportIsMutable();
+        unionSupport_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public Builder addUnionSupport(org.apache.drill.exec.proto.UserProtos.UnionSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureUnionSupportIsMutable();
+        unionSupport_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public Builder addAllUnionSupport(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.UnionSupport> values) {
+        ensureUnionSupportIsMutable();
+        super.addAll(values, unionSupport_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       *
+       * <pre>
+       * UNION support
+       * </pre>
+       */
+      public Builder clearUnionSupport() {
+        unionSupport_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00010000);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.ServerMeta)
+    }
+
+    static {
+      defaultInstance = new ServerMeta(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.ServerMeta)
+  }
+
   public interface RunQueryOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -29169,6 +41774,26 @@ public final class UserProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_user_CreatePreparedStatementResp_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetServerMetaReq_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetServerMetaReq_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_ConvertSupport_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_ConvertSupport_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_GetServerMetaResp_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_GetServerMetaResp_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_ServerMeta_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_ServerMeta_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_RunQuery_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -29183,136 +41808,228 @@ public final class UserProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\nUser.proto\022\texec.user\032\017SchemaDef.proto" +
-      "\032\023UserBitShared.proto\032\rBitData.proto\032\020Bi" +
-      "tControl.proto\032\025ExecutionProtos.proto\"&\n" +
-      "\010Property\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"9\n" +
-      "\016UserProperties\022\'\n\nproperties\030\001 \003(\0132\023.ex" +
-      "ec.user.Property\"\210\001\n\020RpcEndpointInfos\022\014\n" +
-      "\004name\030\001 \001(\t\022\017\n\007version\030\002 \001(\t\022\024\n\014majorVer" +
-      "sion\030\003 \001(\r\022\024\n\014minorVersion\030\004 \001(\r\022\024\n\014patc" +
-      "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\317\002\n\022" +
-      "UserToBitHandshake\022.\n\007channel\030\001 \001(\0162\027.ex",
-      "ec.shared.RpcChannel:\004USER\022\031\n\021support_li" +
-      "stening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\0221\n\013cr" +
-      "edentials\030\004 \001(\0132\034.exec.shared.UserCreden" +
-      "tials\022-\n\nproperties\030\005 \001(\0132\031.exec.user.Us" +
-      "erProperties\022$\n\025support_complex_types\030\006 " +
-      "\001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010:\005fal" +
-      "se\0221\n\014client_infos\030\010 \001(\0132\033.exec.user.Rpc" +
-      "EndpointInfos\"S\n\016RequestResults\022&\n\010query" +
-      "_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021maxim" +
-      "um_responses\030\002 \001(\005\"g\n\025GetQueryPlanFragme",
-      "nts\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026.exec." +
-      "shared.QueryType\022\031\n\nsplit_plan\030\003 \001(\010:\005fa" +
-      "lse\"\316\001\n\022QueryPlanFragments\0223\n\006status\030\001 \002" +
-      "(\0162#.exec.shared.QueryResult.QueryState\022" +
-      "&\n\010query_id\030\002 \001(\0132\024.exec.shared.QueryId\022" +
-      "1\n\tfragments\030\003 \003(\0132\036.exec.bit.control.Pl" +
-      "anFragment\022(\n\005error\030\004 \001(\0132\031.exec.shared." +
-      "DrillPBError\"\257\001\n\022BitToUserHandshake\022\023\n\013r" +
-      "pc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec." +
-      "user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n",
-      "\014errorMessage\030\005 \001(\t\0221\n\014server_infos\030\006 \001(" +
-      "\0132\033.exec.user.RpcEndpointInfos\"-\n\nLikeFi" +
-      "lter\022\017\n\007pattern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n" +
-      "\016GetCatalogsReq\0222\n\023catalog_name_filter\030\001" +
-      " \001(\0132\025.exec.user.LikeFilter\"M\n\017CatalogMe" +
-      "tadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013descript" +
-      "ion\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalo" +
-      "gsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Reque" +
-      "stStatus\022,\n\010catalogs\030\002 \003(\0132\032.exec.user.C" +
-      "atalogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sha",
-      "red.DrillPBError\"v\n\rGetSchemasReq\0222\n\023cat" +
+      "\032\013Types.proto\032\023UserBitShared.proto\032\rBitD" +
+      "ata.proto\032\020BitControl.proto\032\025ExecutionPr" +
+      "otos.proto\"&\n\010Property\022\013\n\003key\030\001 \002(\t\022\r\n\005v" +
+      "alue\030\002 \002(\t\"9\n\016UserProperties\022\'\n\nproperti" +
+      "es\030\001 \003(\0132\023.exec.user.Property\"\267\001\n\020RpcEnd" +
+      "pointInfos\022\014\n\004name\030\001 \001(\t\022\017\n\007version\030\002 \001(" +
+      "\t\022\024\n\014majorVersion\030\003 \001(\r\022\024\n\014minorVersion\030" +
+      "\004 \001(\r\022\024\n\014patchVersion\030\005 \001(\r\022\023\n\013applicati" +
+      "on\030\006 \001(\t\022\023\n\013buildNumber\030\007 \001(\r\022\030\n\020version",
+      "Qualifier\030\010 \001(\t\"\375\002\n\022UserToBitHandshake\022." +
+      "\n\007channel\030\001 \001(\0162\027.exec.shared.RpcChannel" +
+      ":\004USER\022\031\n\021support_listening\030\002 \001(\010\022\023\n\013rpc" +
+      "_version\030\003 \001(\005\0221\n\013credentials\030\004 \001(\0132\034.ex" +
+      "ec.shared.UserCredentials\022-\n\nproperties\030" +
+      "\005 \001(\0132\031.exec.user.UserProperties\022$\n\025supp" +
+      "ort_complex_types\030\006 \001(\010:\005false\022\036\n\017suppor" +
+      "t_timeout\030\007 \001(\010:\005false\0221\n\014client_infos\030\010" +
+      " \001(\0132\033.exec.user.RpcEndpointInfos\022,\n\014sas" +
+      "l_support\030\t \001(\0162\026.exec.user.SaslSupport\"",
+      "S\n\016RequestResults\022&\n\010query_id\030\001 \001(\0132\024.ex" +
+      "ec.shared.QueryId\022\031\n\021maximum_responses\030\002" +
+      " \001(\005\"g\n\025GetQueryPlanFragments\022\r\n\005query\030\001" +
+      " \002(\t\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTy" +
+      "pe\022\031\n\nsplit_plan\030\003 \001(\010:\005false\"\316\001\n\022QueryP" +
+      "lanFragments\0223\n\006status\030\001 \002(\0162#.exec.shar" +
+      "ed.QueryResult.QueryState\022&\n\010query_id\030\002 " +
+      "\001(\0132\024.exec.shared.QueryId\0221\n\tfragments\030\003" +
+      " \003(\0132\036.exec.bit.control.PlanFragment\022(\n\005" +
+      "error\030\004 \001(\0132\031.exec.shared.DrillPBError\"\253",
+      "\002\n\022BitToUserHandshake\022\023\n\013rpc_version\030\002 \001" +
+      "(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.Handshake" +
+      "Status\022\017\n\007errorId\030\004 \001(\t\022\024\n\014errorMessage\030" +
+      "\005 \001(\t\0221\n\014server_infos\030\006 \001(\0132\033.exec.user." +
+      "RpcEndpointInfos\022 \n\030authenticationMechan" +
+      "isms\030\007 \003(\t\022-\n\021supported_methods\030\010 \003(\0162\022." +
+      "exec.user.RpcType\022\021\n\tencrypted\030\t \001(\010\022\026\n\016" +
+      "maxWrappedSize\030\n \001(\005\"-\n\nLikeFilter\022\017\n\007pa" +
+      "ttern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n\016GetCatalo" +
+      "gsReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exe",
+      "c.user.LikeFilter\"M\n\017CatalogMetadata\022\024\n\014" +
+      "catalog_name\030\001 \001(\t\022\023\n\013description\030\002 \001(\t\022" +
+      "\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalogsResp\022(\n\006" +
+      "status\030\001 \001(\0162\030.exec.user.RequestStatus\022," +
+      "\n\010catalogs\030\002 \003(\0132\032.exec.user.CatalogMeta" +
+      "data\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillP" +
+      "BError\"v\n\rGetSchemasReq\0222\n\023catalog_name_" +
+      "filter\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022s" +
+      "chema_name_filter\030\002 \001(\0132\025.exec.user.Like" +
+      "Filter\"i\n\016SchemaMetadata\022\024\n\014catalog_name",
+      "\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n\005owner\030\003 \001" +
+      "(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 \001(\t\"\220\001\n\016Ge" +
+      "tSchemasResp\022(\n\006status\030\001 \001(\0162\030.exec.user" +
+      ".RequestStatus\022*\n\007schemas\030\002 \003(\0132\031.exec.u" +
+      "ser.SchemaMetadata\022(\n\005error\030\003 \001(\0132\031.exec" +
+      ".shared.DrillPBError\"\302\001\n\014GetTablesReq\0222\n" +
+      "\023catalog_name_filter\030\001 \001(\0132\025.exec.user.L" +
+      "ikeFilter\0221\n\022schema_name_filter\030\002 \001(\0132\025." +
+      "exec.user.LikeFilter\0220\n\021table_name_filte" +
+      "r\030\003 \001(\0132\025.exec.user.LikeFilter\022\031\n\021table_",
+      "type_filter\030\004 \003(\t\"\\\n\rTableMetadata\022\024\n\014ca" +
+      "talog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n" +
+      "\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\"\215\001\n\rGetT" +
+      "ablesResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re" +
+      "questStatus\022(\n\006tables\030\002 \003(\0132\030.exec.user." +
+      "TableMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shar" +
+      "ed.DrillPBError\"\333\001\n\rGetColumnsReq\0222\n\023cat" +
       "alog_name_filter\030\001 \001(\0132\025.exec.user.LikeF" +
       "ilter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec" +
-      ".user.LikeFilter\"i\n\016SchemaMetadata\022\024\n\014ca" +
-      "talog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n" +
-      "\005owner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 " +
-      "\001(\t\"\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(\0162\030" +
-      ".exec.user.RequestStatus\022*\n\007schemas\030\002 \003(" +
-      "\0132\031.exec.user.SchemaMetadata\022(\n\005error\030\003 " +
-      "\001(\0132\031.exec.shared.DrillPBError\"\302\001\n\014GetTa",
-      "blesReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.e" +
-      "xec.user.LikeFilter\0221\n\022schema_name_filte" +
-      "r\030\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021table_" +
-      "name_filter\030\003 \001(\0132\025.exec.user.LikeFilter" +
-      "\022\031\n\021table_type_filter\030\004 \003(\t\"\\\n\rTableMeta" +
-      "data\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_nam" +
-      "e\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(" +
-      "\t\"\215\001\n\rGetTablesResp\022(\n\006status\030\001 \001(\0162\030.ex" +
-      "ec.user.RequestStatus\022(\n\006tables\030\002 \003(\0132\030." +
-      "exec.user.TableMetadata\022(\n\005error\030\003 \001(\0132\031",
-      ".exec.shared.DrillPBError\"\333\001\n\rGetColumns" +
-      "Req\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec." +
-      "user.LikeFilter\0221\n\022schema_name_filter\030\002 " +
-      "\001(\0132\025.exec.user.LikeFilter\0220\n\021table_name" +
-      "_filter\030\003 \001(\0132\025.exec.user.LikeFilter\0221\n\022" +
-      "column_name_filter\030\004 \001(\0132\025.exec.user.Lik" +
-      "eFilter\"\251\003\n\016ColumnMetadata\022\024\n\014catalog_na" +
-      "me\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_n" +
-      "ame\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\030\n\020ordina" +
-      "l_position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022",
-      "\023\n\013is_nullable\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022" +
-      "\027\n\017char_max_length\030\t \001(\005\022\031\n\021char_octet_l" +
-      "ength\030\n \001(\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037" +
-      "\n\027numeric_precision_radix\030\014 \001(\005\022\025\n\rnumer" +
-      "ic_scale\030\r \001(\005\022\033\n\023date_time_precision\030\016 " +
-      "\001(\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022interval_p" +
-      "recision\030\020 \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016" +
-      "GetColumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.us" +
-      "er.RequestStatus\022*\n\007columns\030\002 \003(\0132\031.exec" +
-      ".user.ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.ex",
-      "ec.shared.DrillPBError\"/\n\032CreatePrepared" +
-      "StatementReq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024Resu" +
-      "ltColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023" +
+      ".user.LikeFilter\0220\n\021table_name_filter\030\003 ",
+      "\001(\0132\025.exec.user.LikeFilter\0221\n\022column_nam" +
+      "e_filter\030\004 \001(\0132\025.exec.user.LikeFilter\"\251\003" +
+      "\n\016ColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023" +
       "\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022" +
-      "\023\n\013column_name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\td" +
-      "ata_type\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tp" +
-      "recision\030\010 \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030" +
-      "\n \001(\010\022\024\n\014display_size\030\013 \001(\005\022\022\n\nis_aliase" +
-      "d\030\014 \001(\010\0225\n\rsearchability\030\r \001(\0162\036.exec.us" +
-      "er.ColumnSearchability\0223\n\014updatability\030\016",
-      " \001(\0162\035.exec.user.ColumnUpdatability\022\026\n\016a" +
-      "uto_increment\030\017 \001(\010\022\030\n\020case_sensitivity\030" +
-      "\020 \001(\010\022\020\n\010sortable\030\021 \001(\010\022\022\n\nclass_name\030\022 " +
-      "\001(\t\022\023\n\013is_currency\030\024 \001(\010\".\n\027PreparedStat" +
-      "ementHandle\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021Pre" +
-      "paredStatement\0220\n\007columns\030\001 \003(\0132\037.exec.u" +
-      "ser.ResultColumnMetadata\0229\n\rserver_handl" +
-      "e\030\002 \001(\0132\".exec.user.PreparedStatementHan" +
-      "dle\"\253\001\n\033CreatePreparedStatementResp\022(\n\006s" +
-      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\0228\n",
-      "\022prepared_statement\030\002 \001(\0132\034.exec.user.Pr" +
-      "eparedStatement\022(\n\005error\030\003 \001(\0132\031.exec.sh" +
-      "ared.DrillPBError\"\353\001\n\010RunQuery\0221\n\014result" +
-      "s_mode\030\001 \001(\0162\033.exec.user.QueryResultsMod" +
-      "e\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022" +
-      "\014\n\004plan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec." +
-      "bit.control.PlanFragment\022E\n\031prepared_sta" +
-      "tement_handle\030\005 \001(\0132\".exec.user.Prepared" +
-      "StatementHandle*\310\003\n\007RpcType\022\r\n\tHANDSHAKE" +
-      "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022",
-      "\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027" +
-      "\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLA" +
-      "N_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_S" +
-      "CHEMAS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020" +
-      "\021\022\035\n\031CREATE_PREPARED_STATEMENT\020\026\022\016\n\nQUER" +
-      "Y_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN" +
-      "_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022" +
-      "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA" +
-      "TEMENT\020\027\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP" +
-      "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020Qu",
-      "eryResultsMode\022\017\n\013STREAM_FULL\020\001*^\n\017Hands" +
-      "hakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_M" +
-      "ISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FA" +
-      "ILURE\020\004*D\n\rRequestStatus\022\022\n\016UNKNOWN_STAT" +
-      "US\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n" +
-      "\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHAB" +
-      "ILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022" +
-      "\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNOW" +
-      "N_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITA" +
-      "BLE\020\002B+\n\033org.apache.drill.exec.protoB\nUs",
-      "erProtosH\001"
+      "\023\n\013column_name\030\004 \001(\t\022\030\n\020ordinal_position" +
+      "\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022\023\n\013is_null" +
+      "able\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022\027\n\017char_ma" +
+      "x_length\030\t \001(\005\022\031\n\021char_octet_length\030\n \001(" +
+      "\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037\n\027numeric_" +
+      "precision_radix\030\014 \001(\005\022\025\n\rnumeric_scale\030\r",
+      " \001(\005\022\033\n\023date_time_precision\030\016 \001(\005\022\025\n\rint" +
+      "erval_type\030\017 \001(\t\022\032\n\022interval_precision\030\020" +
+      " \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016GetColumns" +
+      "Resp\022(\n\006status\030\001 \001(\0162\030.exec.user.Request" +
+      "Status\022*\n\007columns\030\002 \003(\0132\031.exec.user.Colu" +
+      "mnMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shared." +
+      "DrillPBError\"/\n\032CreatePreparedStatementR" +
+      "eq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024ResultColumnMe" +
+      "tadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_n" +
+      "ame\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_",
+      "name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\tdata_type\030\006" +
+      " \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tprecision\030\010" +
+      " \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014d" +
+      "isplay_size\030\013 \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n" +
+      "\rsearchability\030\r \001(\0162\036.exec.user.ColumnS" +
+      "earchability\0223\n\014updatability\030\016 \001(\0162\035.exe" +
+      "c.user.ColumnUpdatability\022\026\n\016auto_increm" +
+      "ent\030\017 \001(\010\022\030\n\020case_sensitivity\030\020 \001(\010\022\020\n\010s" +
+      "ortable\030\021 \001(\010\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_" +
+      "currency\030\024 \001(\010\".\n\027PreparedStatementHandl",
+      "e\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021PreparedState" +
+      "ment\0220\n\007columns\030\001 \003(\0132\037.exec.user.Result" +
+      "ColumnMetadata\0229\n\rserver_handle\030\002 \001(\0132\"." +
+      "exec.user.PreparedStatementHandle\"\253\001\n\033Cr" +
+      "eatePreparedStatementResp\022(\n\006status\030\001 \001(" +
+      "\0162\030.exec.user.RequestStatus\0228\n\022prepared_" +
+      "statement\030\002 \001(\0132\034.exec.user.PreparedStat" +
+      "ement\022(\n\005error\030\003 \001(\0132\031.exec.shared.Drill" +
+      "PBError\"\022\n\020GetServerMetaReq\"P\n\016ConvertSu" +
+      "pport\022\037\n\004from\030\001 \002(\0162\021.common.MinorType\022\035",
+      "\n\002to\030\002 \002(\0162\021.common.MinorType\"\223\001\n\021GetSer" +
+      "verMetaResp\022(\n\006status\030\001 \001(\0162\030.exec.user." +
+      "RequestStatus\022*\n\013server_meta\030\002 \001(\0132\025.exe" +
+      "c.user.ServerMeta\022(\n\005error\030\003 \001(\0132\031.exec." +
+      "shared.DrillPBError\"\377\r\n\nServerMeta\022\035\n\025al" +
+      "l_tables_selectable\030\001 \001(\010\022%\n\035blob_includ" +
+      "ed_in_max_row_size\030\002 \001(\010\022\030\n\020catalog_at_s" +
+      "tart\030\003 \001(\010\022\031\n\021catalog_separator\030\004 \001(\t\022\024\n" +
+      "\014catalog_term\030\005 \001(\t\0222\n\017collate_support\030\006" +
+      " \003(\0162\031.exec.user.CollateSupport\022!\n\031colum",
+      "n_aliasing_supported\030\007 \001(\010\0222\n\017convert_su" +
+      "pport\030\010 \003(\0132\031.exec.user.ConvertSupport\022E" +
+      "\n\031correlation_names_support\030\t \001(\0162\".exec" +
+      ".user.CorrelationNamesSupport\022\033\n\023date_ti" +
+      "me_functions\030\n \003(\t\022F\n\032date_time_literals" +
+      "_support\030\013 \003(\0162\".exec.user.DateTimeLiter" +
+      "alsSupport\0223\n\020group_by_support\030\014 \001(\0162\031.e" +
+      "xec.user.GroupBySupport\0226\n\021identifier_ca" +
+      "sing\030\r \001(\0162\033.exec.user.IdentifierCasing\022" +
+      "\037\n\027identifier_quote_string\030\016 \001(\t\022$\n\034like",
+      "_escape_clause_supported\030\017 \001(\010\022!\n\031max_bi" +
+      "nary_literal_length\030\020 \001(\r\022\037\n\027max_catalog" +
+      "_name_length\030\021 \001(\r\022\037\n\027max_char_literal_l" +
+      "ength\030\022 \001(\r\022\036\n\026max_column_name_length\030\023 " +
+      "\001(\r\022\037\n\027max_columns_in_group_by\030\024 \001(\r\022\037\n\027" +
+      "max_columns_in_order_by\030\025 \001(\r\022\035\n\025max_col" +
+      "umns_in_select\030\026 \001(\r\022\036\n\026max_cursor_name_" +
+      "length\030\027 \001(\r\022\034\n\024max_logical_lob_size\030\030 \001" +
+      "(\r\022\024\n\014max_row_size\030\031 \001(\r\022\036\n\026max_schema_n" +
+      "ame_length\030\032 \001(\r\022\034\n\024max_statement_length",
+      "\030\033 \001(\r\022\026\n\016max_statements\030\034 \001(\r\022\035\n\025max_ta" +
+      "ble_name_length\030\035 \001(\r\022\034\n\024max_tables_in_s" +
+      "elect\030\036 \001(\r\022\034\n\024max_user_name_length\030\037 \001(" +
+      "\r\0220\n\016null_collation\030  \001(\0162\030.exec.user.Nu" +
+      "llCollation\022&\n\036null_plus_non_null_equals" +
+      "_null\030! \001(\010\022\031\n\021numeric_functions\030\" \003(\t\0223" +
+      "\n\020order_by_support\030# \003(\0162\031.exec.user.Ord" +
+      "erBySupport\0227\n\022outer_join_support\030$ \003(\0162" +
+      "\033.exec.user.OuterJoinSupport\022=\n\030quoted_i" +
+      "dentifier_casing\030% \001(\0162\033.exec.user.Ident",
+      "ifierCasing\022\021\n\tread_only\030& \001(\010\022\023\n\013schema" +
+      "_term\030\' \001(\t\022\034\n\024search_escape_string\030( \001(" +
+      "\t\022#\n\033select_for_update_supported\030) \001(\010\022\032" +
+      "\n\022special_characters\030* \001(\t\022\024\n\014sql_keywor" +
+      "ds\030+ \003(\t\022\030\n\020string_functions\030, \003(\t\0224\n\020su" +
+      "bquery_support\030- \003(\0162\032.exec.user.SubQuer" +
+      "ySupport\022\030\n\020system_functions\030. \003(\t\022\022\n\nta" +
+      "ble_term\030/ \001(\t\022\035\n\025transaction_supported\030" +
+      "0 \001(\010\022.\n\runion_support\0301 \003(\0162\027.exec.user" +
+      ".UnionSupport\"\353\001\n\010RunQuery\0221\n\014results_mo",
+      "de\030\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n" +
+      "\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004p" +
+      "lan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec.bit." +
+      "control.PlanFragment\022E\n\031prepared_stateme" +
+      "nt_handle\030\005 \001(\0132\".exec.user.PreparedStat" +
+      "ementHandle*\320\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007" +
+      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014C" +
+      "ANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023RE" +
+      "SUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLAN_FR" +
+      "AGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_SCHEM",
+      "AS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n" +
+      "\031CREATE_PREPARED_STATEMENT\020\026\022\023\n\017GET_SERV" +
+      "ER_META\020\010\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDL" +
+      "E\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOG" +
+      "S\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020" +
+      "\025\022\026\n\022PREPARED_STATEMENT\020\027\022\017\n\013SERVER_META" +
+      "\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SASL_MESSAGE\020\030*H" +
+      "\n\013SaslSupport\022\030\n\024UNKNOWN_SASL_SUPPORT\020\000\022" +
+      "\r\n\tSASL_AUTH\020\001\022\020\n\014SASL_PRIVACY\020\002*#\n\020Quer" +
+      "yResultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017Handsha",
+      "keStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MIS" +
+      "MATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAIL" +
+      "URE\020\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatu" +
+      "s\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020" +
+      "\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n" +
+      "\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CH" +
+      "AR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdat" +
+      "ability\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREA" +
+      "D_ONLY\020\001\022\014\n\010WRITABLE\020\002*1\n\016CollateSupport" +
+      "\022\016\n\nCS_UNKNOWN\020\000\022\017\n\013CS_GROUP_BY\020\001*J\n\027Cor",
+      "relationNamesSupport\022\013\n\007CN_NONE\020\001\022\026\n\022CN_" +
+      "DIFFERENT_NAMES\020\002\022\n\n\006CN_ANY\020\003*\271\003\n\027DateTi" +
+      "meLiteralsSupport\022\016\n\nDL_UNKNOWN\020\000\022\013\n\007DL_" +
+      "DATE\020\001\022\013\n\007DL_TIME\020\002\022\020\n\014DL_TIMESTAMP\020\003\022\024\n" +
+      "\020DL_INTERVAL_YEAR\020\004\022\025\n\021DL_INTERVAL_MONTH" +
+      "\020\005\022\023\n\017DL_INTERVAL_DAY\020\006\022\024\n\020DL_INTERVAL_H" +
+      "OUR\020\007\022\026\n\022DL_INTERVAL_MINUTE\020\010\022\026\n\022DL_INTE" +
+      "RVAL_SECOND\020\t\022\035\n\031DL_INTERVAL_YEAR_TO_MON" +
+      "TH\020\n\022\033\n\027DL_INTERVAL_DAY_TO_HOUR\020\013\022\035\n\031DL_" +
+      "INTERVAL_DAY_TO_MINUTE\020\014\022\035\n\031DL_INTERVAL_",
+      "DAY_TO_SECOND\020\r\022\036\n\032DL_INTERVAL_HOUR_TO_M" +
+      "INUTE\020\016\022\036\n\032DL_INTERVAL_HOUR_TO_SECOND\020\017\022" +
+      " \n\034DL_INTERVAL_MINUTE_TO_SECOND\020\020*Y\n\016Gro" +
+      "upBySupport\022\013\n\007GB_NONE\020\001\022\022\n\016GB_SELECT_ON" +
+      "LY\020\002\022\024\n\020GB_BEYOND_SELECT\020\003\022\020\n\014GB_UNRELAT" +
+      "ED\020\004*x\n\020IdentifierCasing\022\016\n\nIC_UNKNOWN\020\000" +
+      "\022\023\n\017IC_STORES_LOWER\020\001\022\023\n\017IC_STORES_MIXED" +
+      "\020\002\022\023\n\017IC_STORES_UPPER\020\003\022\025\n\021IC_SUPPORTS_M" +
+      "IXED\020\004*X\n\rNullCollation\022\016\n\nNC_UNKNOWN\020\000\022" +
+      "\017\n\013NC_AT_START\020\001\022\r\n\tNC_AT_END\020\002\022\013\n\007NC_HI",
+      "GH\020\003\022\n\n\006NC_LOW\020\004*E\n\016OrderBySupport\022\016\n\nOB" +
+      "_UNKNOWN\020\000\022\020\n\014OB_UNRELATED\020\001\022\021\n\rOB_EXPRE" +
+      "SSION\020\002*\226\001\n\020OuterJoinSupport\022\016\n\nOJ_UNKNO" +
+      "WN\020\000\022\013\n\007OJ_LEFT\020\001\022\014\n\010OJ_RIGHT\020\002\022\013\n\007OJ_FU" +
+      "LL\020\003\022\r\n\tOJ_NESTED\020\004\022\022\n\016OJ_NOT_ORDERED\020\005\022" +
+      "\014\n\010OJ_INNER\020\006\022\031\n\025OJ_ALL_COMPARISON_OPS\020\007" +
+      "*\204\001\n\017SubQuerySupport\022\016\n\nSQ_UNKNOWN\020\000\022\021\n\r" +
+      "SQ_CORRELATED\020\001\022\024\n\020SQ_IN_COMPARISON\020\002\022\020\n" +
+      "\014SQ_IN_EXISTS\020\003\022\020\n\014SQ_IN_INSERT\020\004\022\024\n\020SQ_" +
+      "IN_QUANTIFIED\020\005*;\n\014UnionSupport\022\r\n\tU_UNK",
+      "NOWN\020\000\022\013\n\007U_UNION\020\001\022\017\n\013U_UNION_ALL\020\002B+\n\033" +
+      "org.apache.drill.exec.protoB\nUserProtosH" +
+      "\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -29336,13 +42053,13 @@ public final class UserProtos {
           internal_static_exec_user_RpcEndpointInfos_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_RpcEndpointInfos_descriptor,
-              new java.lang.String[] { "Name", "Version", "MajorVersion", "MinorVersion", "PatchVersion", "Application", });
+              new java.lang.String[] { "Name", "Version", "MajorVersion", "MinorVersion", "PatchVersion", "Application", "BuildNumber", "VersionQualifier", });
           internal_static_exec_user_UserToBitHandshake_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", "SupportTimeout", "ClientInfos", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", "SupportTimeout", "ClientInfos", "SaslSupport", });
           internal_static_exec_user_RequestResults_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new
@@ -29366,7 +42083,7 @@ public final class UserProtos {
           internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", });
+              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", "AuthenticationMechanisms", "SupportedMethods", "Encrypted", "MaxWrappedSize", });
           internal_static_exec_user_LikeFilter_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_exec_user_LikeFilter_fieldAccessorTable = new
@@ -29475,8 +42192,32 @@ public final class UserProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_CreatePreparedStatementResp_descriptor,
               new java.lang.String[] { "Status", "PreparedStatement", "Error", });
-          internal_static_exec_user_RunQuery_descriptor =
+          internal_static_exec_user_GetServerMetaReq_descriptor =
             getDescriptor().getMessageTypes().get(26);
+          internal_static_exec_user_GetServerMetaReq_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetServerMetaReq_descriptor,
+              new java.lang.String[] { });
+          internal_static_exec_user_ConvertSupport_descriptor =
+            getDescriptor().getMessageTypes().get(27);
+          internal_static_exec_user_ConvertSupport_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_ConvertSupport_descriptor,
+              new java.lang.String[] { "From", "To", });
+          internal_static_exec_user_GetServerMetaResp_descriptor =
+            getDescriptor().getMessageTypes().get(28);
+          internal_static_exec_user_GetServerMetaResp_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_GetServerMetaResp_descriptor,
+              new java.lang.String[] { "Status", "ServerMeta", "Error", });
+          internal_static_exec_user_ServerMeta_descriptor =
+            getDescriptor().getMessageTypes().get(29);
+          internal_static_exec_user_ServerMeta_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_ServerMeta_descriptor,
+              new java.lang.String[] { "AllTablesSelectable", "BlobIncludedInMaxRowSize", "CatalogAtStart", "CatalogSeparator", "CatalogTerm", "CollateSupport", "ColumnAliasingSupported", "ConvertSupport", "CorrelationNamesSupport", "DateTimeFunctions", "DateTimeLiteralsSupport", "GroupBySupport", "IdentifierCasing", "IdentifierQuoteString", "LikeEscapeClauseSupported", "MaxBinaryLiteralLength", "MaxCatalogNameLength", "MaxCharLiteralLength", "MaxColumnNameLength", "MaxColumnsInGroupBy", "MaxColumnsInOrderBy", "MaxColumnsInSelect", "MaxCursorNameLength", "MaxLogicalLobSize", "MaxRowSize", "MaxSchemaNameLength", "MaxStatementLength", "MaxStatements", "MaxTableNameLength", "MaxTablesInSelect", "MaxUserNameLength", "NullCollation", "NullPlusNonNullEqualsNull", "NumericFunctions", "OrderBySupport", "OuterJoinSupport", "QuotedIdentifierCasing", "ReadOnly", "SchemaTerm", "SearchEscapeString", "SelectForUpdateSupported", "SpecialCharacters", "SqlKeywords", "StringFunctions", "SubquerySupport", "SystemFunctions", "TableTerm", "TransactionSupported", "UnionSupport", });
+          internal_static_exec_user_RunQuery_descriptor =
+            getDescriptor().getMessageTypes().get(30);
           internal_static_exec_user_RunQuery_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_RunQuery_descriptor,
@@ -29488,6 +42229,7 @@ public final class UserProtos {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor(),
+          org.apache.drill.common.types.TypeProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
           org.apache.drill.exec.proto.BitData.getDescriptor(),
           org.apache.drill.exec.proto.BitControl.getDescriptor(),

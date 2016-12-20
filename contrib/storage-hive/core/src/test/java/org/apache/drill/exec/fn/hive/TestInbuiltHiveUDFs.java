@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,14 +19,22 @@ package org.apache.drill.exec.fn.hive;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.test.QueryTestUtil;
+import org.apache.drill.test.TestBuilder;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.hive.HiveTestBase;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.joda.time.DateTime;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestInbuiltHiveUDFs extends HiveTestBase {
 
   @Test // DRILL-3273
@@ -104,4 +112,75 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
             .baselineValues(false)
             .go();
   }
+
+  @Test //DRILL-4868
+  public void testEmbeddedHiveFunctionCall() throws Exception {
+    // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
+    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ClassTransformer.ScalarReplacementOption.TRY);
+
+    try {
+      final String[] queries = {
+          "SELECT convert_from(unhex(key2), 'INT_BE') as intkey \n" +
+              "FROM cp.`functions/conv/conv.json`",
+      };
+
+      for (String query: queries) {
+        testBuilder()
+            .sqlQuery(query)
+            .ordered()
+            .baselineColumns("intkey")
+            .baselineValues(1244739896)
+            .baselineValues(new Object[] { null })
+            .baselineValues(1313814865)
+            .baselineValues(1852782897)
+            .build()
+            .run();
+      }
+
+    } finally {
+      // restore the system option
+      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
+    }
+  }
+
+  @Test
+  public void testLastDay() throws Exception {
+    testBuilder()
+        .sqlQuery("select last_day(to_date('1994-02-01','yyyy-MM-dd')) as `LAST_DAY` from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("LAST_DAY")
+        .baselineValues("1994-02-28")
+        .go();
+  }
+
+  @Test
+  public void testDatediff() throws Exception {
+    testBuilder()
+        .sqlQuery("select datediff(date '1996-03-01', timestamp '1997-02-10 17:32:00.0') as `DATEDIFF` from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("DATEDIFF")
+        .baselineValues(-346)
+        .go();
+  }
+
+  @Test
+  public void testFromUTCTimestamp() throws Exception {
+    testBuilder()
+        .sqlQuery("select from_utc_timestamp('1970-01-01 08:00:00','PST') as PST_TIMESTAMP from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("PST_TIMESTAMP")
+        .baselineValues(DateTime.parse("1970-01-01T00:00:00.0"))
+        .go();
+  }
+
+  @Test
+  public void testToUTCTimestamp() throws Exception {
+    testBuilder()
+        .sqlQuery("select to_utc_timestamp('1970-01-01 00:00:00','PST') as UTC_TIMESTAMP from (VALUES(1))")
+        .unOrdered()
+        .baselineColumns("UTC_TIMESTAMP")
+        .baselineValues(DateTime.parse("1970-01-01T08:00:00.0"))
+        .go();
+  }
+
 }

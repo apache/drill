@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.testing;
 
-import static org.apache.drill.exec.ExecConstants.DRILLBIT_CONTROLS_VALIDATOR;
 import static org.apache.drill.exec.ExecConstants.DRILLBIT_CONTROL_INJECTIONS;
 import static org.junit.Assert.fail;
 
@@ -30,8 +29,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.SessionOptionManager;
 
 /**
  * Static methods for constructing exception and pause injections for testing purposes.
@@ -70,13 +68,10 @@ public class ControlsInjectionUtil {
 
   public static void setControls(final UserSession session, final String controls) {
     validateControlsString(controls);
-    final OptionValue opValue = OptionValue.createString(OptionValue.OptionType.SESSION,
-      DRILLBIT_CONTROL_INJECTIONS, controls);
 
-    final OptionManager options = session.getOptions();
+    final SessionOptionManager options = session.getOptions();
     try {
-      DRILLBIT_CONTROLS_VALIDATOR.validate(opValue, null);
-      options.setOption(opValue);
+      options.setLocalOption(DRILLBIT_CONTROL_INJECTIONS, controls);
     } catch (final Exception e) {
       fail("Could not set controls options: " + e.getMessage());
     }

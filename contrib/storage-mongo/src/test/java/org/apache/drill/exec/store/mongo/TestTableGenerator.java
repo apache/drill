@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import de.flapdoodle.embed.mongo.MongoImportProcess;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class TestTableGenerator implements MongoTestConstants {
       .getLogger(TestTableGenerator.class);
 
   public static void importData(String dbName, String collectionName,
-      String fileName) throws IOException {
+      String fileName) throws InterruptedException,IOException {
     String jsonFile = Resources.getResource(fileName).toString();
     jsonFile = jsonFile.replaceFirst("file:", StringUtils.EMPTY);
     generateTable(dbName, collectionName, jsonFile, true, true, false);
@@ -48,7 +49,7 @@ public class TestTableGenerator implements MongoTestConstants {
 
   public static void generateTable(String dbName, String collection,
       String jsonFile, Boolean jsonArray, Boolean upsert, Boolean drop)
-      throws UnknownHostException, IOException {
+      throws InterruptedException, IOException {
     logger.info("Started importing file {} into collection {} ", jsonFile,
         collection);
     IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
@@ -58,7 +59,13 @@ public class TestTableGenerator implements MongoTestConstants {
         .jsonArray(jsonArray).importFile(jsonFile).build();
     MongoImportExecutable importExecutable = MongoImportStarter
         .getDefaultInstance().prepare(mongoImportConfig);
-    importExecutable.start();
+    MongoImportProcess importProcess = importExecutable.start();
+
+    // import is in a separate process, we should wait until the process exit
+    while (importProcess.isProcessRunning()) {
+        Thread.sleep(1000);
+    }
+
     logger.info("Imported file {} into collection {} ", jsonFile, collection);
   }
 
