@@ -121,7 +121,7 @@ public class PlanProperties {
       return this;
     }
 
-    public PlanPropertiesBuilder generator(boolean hasResourcePlan) {
+    public PlanPropertiesBuilder hasResourcePlan(boolean hasResourcePlan) {
       this.hasResourcePlan = hasResourcePlan;
       return this;
     }
