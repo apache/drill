@@ -165,11 +165,11 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final MockGroupScanPOP.MockColumn[] columns = new MockGroupScanPOP.MockColumn[colNames.length];
 
     for (int i = 0; i < colNames.length; i++ ) {
-      columns[i] = new MockGroupScanPOP.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(),0,0,0);
+      columns[i] = new MockGroupScanPOP.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(), 0, 0, 0, null, null);
     }
 
     final MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
-    final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
+    final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
     final ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 

@@ -51,6 +51,8 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
+import org.apache.drill.exec.store.mock.MockStorageEngine;
+import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
@@ -125,7 +127,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     availablePlugins = findAvailablePlugins(classpathScan);
 
     // create registered plugins defined in "storage-plugins.json"
-    this.plugins.putAll(createPlugins());
+    plugins.putAll(createPlugins());
   }
 
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
@@ -145,7 +147,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
             String pluginsData = Resources.toString(url, Charsets.UTF_8);
             StoragePlugins plugins = lpPersistence.getMapper().readValue(pluginsData, StoragePlugins.class);
             for (Map.Entry<String, StoragePluginConfig> config : plugins) {
-              if (!pluginSystemTable.putIfAbsent(config.getKey(), config.getValue())) {
+              if (!definePluginConfig(config.getKey(), config.getValue())) {
                 logger.warn("Duplicate plugin instance '{}' defined in [{}, {}], ignoring the later one.",
                     config.getKey(), pluginURLMap.get(config.getKey()), url);
                 continue;
@@ -183,6 +185,24 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       logger.error("Failure setting up storage plugins.  Drillbit exiting.", e);
       throw new IllegalStateException(e);
     }
+  }
+
+  /**
+   * Add a plugin and configuration. Assumes neither exists. Primarily
+   * for testing.
+   *
+   * @param name plugin name
+   * @param config plugin config
+   * @param plugin plugin implementation
+   */
+
+  public void definePlugin(String name, StoragePluginConfig config, StoragePlugin plugin) {
+    addPlugin(name, plugin);
+    definePluginConfig(name, config);
+  }
+
+  private boolean definePluginConfig(String name, StoragePluginConfig config) {
+    return pluginSystemTable.putIfAbsent(name, config);
   }
 
   @Override

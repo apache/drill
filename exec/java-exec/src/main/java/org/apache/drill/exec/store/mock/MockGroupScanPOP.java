@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -49,15 +49,20 @@ public class MockGroupScanPOP extends AbstractGroupScan {
 
   private final String url;
   protected final List<MockScanEntry> readEntries;
-  private  LinkedList<MockScanEntry>[] mappings;
+  private LinkedList<MockScanEntry>[] mappings;
+  private boolean extended;
 
   @JsonCreator
-  public MockGroupScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
+  public MockGroupScanPOP(@JsonProperty("url") String url,
+                          @JsonProperty("extended") Boolean extended,
+                          @JsonProperty("entries") List<MockScanEntry> readEntries) {
     super((String)null);
     this.readEntries = readEntries;
     this.url = url;
+    this.extended = extended == null ? false : extended;
   }
 
+  @Override
   public ScanStats getScanStats() {
     return ScanStats.TRIVIAL_TABLE;
   }
@@ -71,22 +76,15 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     return readEntries;
   }
 
-  public static class MockScanEntry{
+  public static class MockScanEntry {
 
     private final int records;
     private final MockColumn[] types;
-    private final int recordSize;
-
 
     @JsonCreator
     public MockScanEntry(@JsonProperty("records") int records, @JsonProperty("types") MockColumn[] types) {
       this.records = records;
       this.types = types;
-      int size = 0;
-      for (MockColumn dt : types) {
-        size += TypeHelper.getSize(dt.getMajorType());
-      }
-      this.recordSize = size;
     }
 
     public int getRecords() {
@@ -104,44 +102,46 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   }
 
   @JsonInclude(Include.NON_NULL)
-  public static class MockColumn{
+  public static class MockColumn {
     @JsonProperty("type") public MinorType minorType;
     public String name;
     public DataMode mode;
     public Integer width;
     public Integer precision;
     public Integer scale;
-
+    public String generator;
+    public Integer repeat;
 
     @JsonCreator
-    public MockColumn(@JsonProperty("name") String name, @JsonProperty("type") MinorType minorType, @JsonProperty("mode") DataMode mode, @JsonProperty("width") Integer width, @JsonProperty("precision") Integer precision, @JsonProperty("scale") Integer scale) {
+    public MockColumn(@JsonProperty("name") String name,
+                      @JsonProperty("type") MinorType minorType,
+                      @JsonProperty("mode") DataMode mode,
+                      @JsonProperty("width") Integer width,
+                      @JsonProperty("precision") Integer precision,
+                      @JsonProperty("scale") Integer scale,
+                      @JsonProperty("generator") String generator,
+                      @JsonProperty("repeat") Integer repeat) {
       this.name = name;
       this.minorType = minorType;
       this.mode = mode;
       this.width = width;
       this.precision = precision;
       this.scale = scale;
+      this.generator = generator;
+      this.repeat = repeat;
     }
 
     @JsonProperty("type")
-    public MinorType getMinorType() {
-      return minorType;
-    }
-    public String getName() {
-      return name;
-    }
-    public DataMode getMode() {
-      return mode;
-    }
-    public Integer getWidth() {
-      return width;
-    }
-    public Integer getPrecision() {
-      return precision;
-    }
-    public Integer getScale() {
-      return scale;
-    }
+    public MinorType getMinorType() { return minorType; }
+    public String getName() { return name; }
+    public DataMode getMode() { return mode; }
+    public Integer getWidth() { return width; }
+    public Integer getPrecision() { return precision; }
+    public Integer getScale() { return scale; }
+    public String getGenerator( ) { return generator; }
+    public Integer getRepeat() { return repeat; }
+    @JsonIgnore
+    public int getRepeatCount() { return repeat == null ? 1 : repeat; }
 
     @JsonIgnore
     public MajorType getMajorType() {
@@ -164,7 +164,6 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public String toString() {
       return "MockColumn [minorType=" + minorType + ", name=" + name + ", mode=" + mode + "]";
     }
-
   }
 
   @SuppressWarnings("unchecked")
@@ -192,7 +191,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId < mappings.length : String.format("Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.length, minorFragmentId);
-    return new MockSubScanPOP(url, mappings[minorFragmentId]);
+    return new MockSubScanPOP(url, extended, mappings[minorFragmentId]);
   }
 
   @Override
@@ -204,13 +203,58 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MockGroupScanPOP(url, readEntries);
+    return new MockGroupScanPOP(url, extended, readEntries);
 
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    return this;
+    if (columns.isEmpty()) {
+      throw new IllegalArgumentException("No columns for mock scan");
+    }
+    List<MockColumn> mockCols = new ArrayList<>( );
+    Pattern p = Pattern.compile( "(\\w+)_([isd])(\\d*)" );
+    for (SchemaPath path : columns) {
+      String col = path.getLastSegment().getNameSegment().getPath();
+      if (col.equals("*")) {
+        return this;
+      }
+      Matcher m = p.matcher(col);
+      if (! m.matches()) {
+        throw new IllegalArgumentException( "Badly formatted mock column name: " + col );
+      }
+      @SuppressWarnings("unused")
+      String name = m.group(1);
+      String type = m.group(2);
+      String length = m.group(3);
+      int width = 10;
+      if ( ! length.isEmpty() ) {
+        width = Integer.parseInt(length);
+      }
+      MinorType minorType;
+      switch(type) {
+      case "i":
+        minorType = MinorType.INT;
+        break;
+      case "s":
+        minorType = MinorType.VARCHAR;
+        break;
+      case "d":
+        minorType = MinorType.FLOAT8;
+        break;
+      default:
+        throw new IllegalArgumentException( "Unsupported field type " + type + " for mock column " + col );
+      }
+      MockColumn mockCol = new MockColumn(col, minorType, DataMode.REQUIRED, width, 0, 0, null, 1);
+      mockCols.add(mockCol);
+    }
+    MockScanEntry entry = readEntries.get(0);
+    MockColumn types[] = new MockColumn[mockCols.size()];
+    mockCols.toArray(types);
+    MockScanEntry newEntry = new MockScanEntry( entry.records, types );
+    List<MockScanEntry> newEntries = new ArrayList<>( );
+    newEntries.add(newEntry);
+    return new MockGroupScanPOP( url, true, newEntries );
   }
 
   @Override
@@ -224,4 +268,9 @@ public class MockGroupScanPOP extends AbstractGroupScan {
         + ", readEntries=" + readEntries + "]";
   }
 
+  @Override
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
 }

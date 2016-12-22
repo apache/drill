@@ -51,7 +51,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * @param name
    *          The name of the plugin
    * @param config
-   *          The plugin confgiruation
+   *          The plugin configuration
    * @param persist
    *          Whether to persist the plugin for later use or treat it as ephemeral.
    * @return The StoragePlugin instance.

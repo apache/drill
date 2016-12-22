@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -34,34 +38,62 @@ import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
-public class MockRecordReader extends AbstractRecordReader {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
+public class ExtendedMockRecordReader extends AbstractRecordReader {
+
+  private ValueVector[] valueVectors;
+  private int batchRecordCount;
+  private int recordsRead;
 
   private final MockScanEntry config;
   private final FragmentContext context;
-  private ValueVector[] valueVectors;
-  private int recordsRead;
-  private int batchRecordCount;
-  @SuppressWarnings("unused")
-  private OperatorContext operatorContext;
+  private final ColumnDef fields[];
 
-  public MockRecordReader(FragmentContext context, MockScanEntry config) {
+  public ExtendedMockRecordReader(FragmentContext context, MockScanEntry config) {
     this.context = context;
     this.config = config;
+
+    fields = buildColumnDefs( );
+  }
+
+  private ColumnDef[] buildColumnDefs() {
+    List<ColumnDef> defs = new ArrayList<>( );
+
+    // Look for duplicate names. Bad things happen when the sama name
+    // appears twice.
+
+    Set<String> names = new HashSet<>();
+    MockColumn cols[] = config.getTypes();
+    for ( int i = 0;  i < cols.length;  i++ ) {
+      MockColumn col = cols[i];
+      if (names.contains(col.name)) {
+        throw new IllegalArgumentException("Duplicate column name: " + col.name);
+      }
+      names.add(col.name);
+      int repeat = Math.min( 1, col.getRepeatCount( ) );
+      if ( repeat == 1 ) {
+        defs.add( new ColumnDef(col) );
+      } else {
+        for ( int j = 0;  j < repeat;  j++ ) {
+          defs.add( new ColumnDef(col, j+1) );
+        }
+      }
+    }
+    ColumnDef[] defArray = new ColumnDef[defs.size()];
+    defs.toArray(defArray);
+    return defArray;
   }
 
   private int getEstimatedRecordSize(MockColumn[] types) {
-    int x = 0;
-    for (int i = 0; i < types.length; i++) {
-      x += TypeHelper.getSize(types[i].getMajorType());
+    int size = 0;
+    for (int i = 0; i < fields.length; i++) {
+      size += TypeHelper.getSize(fields[i].getConfig().getMajorType());
     }
-    return x;
+    return size;
   }
 
   private MaterializedField getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    final MaterializedField f = MaterializedField.create(name, type);
-    return f;
+    return MaterializedField.create(name, type);
   }
 
   @Override
@@ -71,9 +103,10 @@ public class MockRecordReader extends AbstractRecordReader {
       valueVectors = new ValueVector[config.getTypes().length];
       batchRecordCount = 250000 / estimateRowSize;
 
-      for (int i = 0; i < config.getTypes().length; i++) {
-        final MajorType type = config.getTypes()[i].getMajorType();
-        final MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
+      for (int i = 0; i < fields.length; i++) {
+        final ColumnDef col = fields[i];
+        final MajorType type = col.getConfig( ).getMajorType();
+        final MaterializedField field = getVector(col.getName(), type, batchRecordCount);
         final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }
@@ -90,9 +123,11 @@ public class MockRecordReader extends AbstractRecordReader {
 
     final int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
     recordsRead += recordSetSize;
-    for (final ValueVector v : valueVectors) {
-      final ValueVector.Mutator m = v.getMutator();
-      m.generateTestData(recordSetSize);
+    for ( int i = 0;  i < recordSetSize;  i++ ) {
+      int j = 0;
+      for (final ValueVector v : valueVectors) {
+        fields[j++].generator.setValue(v, i);
+      }
     }
 
     return recordSetSize;
