@@ -72,6 +72,13 @@ public enum SystemTable {
   public Iterator<Object> getIterator(final FragmentContext context) {
       return new ThreadsIterator(context);
     }
+  },
+
+  PROFILES("profiles", false, ProfileIterator.ProfileInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(FragmentContext context) {
+      return new ProfileIterator(context);
+    }
   };
 
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTable.class);

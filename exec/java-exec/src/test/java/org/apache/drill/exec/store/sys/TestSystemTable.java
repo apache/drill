@@ -66,4 +66,9 @@ public class TestSystemTable extends BaseTestQuery {
   public void memoryTable() throws Exception {
     test("select * from sys.memory");
   }
+
+  @Test
+  public void profilesTable() throws Exception {
+    test("select * from sys.profiles");
+  }
 }
