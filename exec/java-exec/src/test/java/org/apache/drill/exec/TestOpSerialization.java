@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,7 +47,7 @@ public class TestOpSerialization {
   public void testSerializedDeserialize() throws Throwable {
     DrillConfig c = DrillConfig.create();
     PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
-    MockSubScanPOP s = new MockSubScanPOP("abc", null);
+    MockSubScanPOP s = new MockSubScanPOP("abc", false, null);
     s.setOperatorId(3);
     Filter f = new Filter(s, new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN), 0.1f);
     f.setOperatorId(2);

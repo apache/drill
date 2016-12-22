@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -71,7 +71,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException;
 
-  /** Method returns a jackson serializable object that extends a StoragePluginConfig
+  /** Method returns a Jackson serializable object that extends a StoragePluginConfig
   * @return an extension of StoragePluginConfig
   */
   public StoragePluginConfig getConfig();
@@ -80,5 +80,4 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Initialize the storage plugin. The storage plugin will not be used until this method is called.
    */
   public void start() throws IOException;
-
 }
