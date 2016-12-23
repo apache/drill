@@ -17,11 +17,15 @@
  */
 package org.apache.drill.exec.sql;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Map;
 
 public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
@@ -125,8 +129,7 @@ public class TestCTAS extends BaseTestQuery {
     try {
       final String ctasQuery = String.format("CREATE TABLE %s.%s PARTITION BY AS SELECT * from cp.`region.json`", TEMP_SCHEMA, newTblName);
 
-      errorMsgTestHelper(ctasQuery,
-          String.format("PARSE ERROR: Encountered \"AS\""));
+      errorMsgTestHelper(ctasQuery,"PARSE ERROR: Encountered \"AS\"");
     } finally {
       FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
     }
@@ -235,6 +238,41 @@ public class TestCTAS extends BaseTestQuery {
           .run();
     } finally {
       FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
+  @Test
+  public void testPartitionByForAllTypes() throws Exception {
+    final String location = "partitioned_tables_with_nulls";
+    final String ctasQuery = "create table %s partition by (%s) as %s";
+    final String tablePath = "%s.`%s/%s_%s`";
+
+    // key - new table suffix, value - data query
+    final Map<String, String> variations = Maps.newHashMap();
+    variations.put("required", "select * from cp.`parquet/alltypes_required.parquet`");
+    variations.put("optional", "select * from cp.`parquet/alltypes_optional.parquet`");
+    variations.put("nulls_only", "select * from cp.`parquet/alltypes_optional.parquet` where %s is null");
+
+    try {
+      final QueryDataBatch result = testSqlWithResults("select * from cp.`parquet/alltypes_required.parquet` limit 0").get(0);
+      for (UserBitShared.SerializedField field : result.getHeader().getDef().getFieldList()) {
+        final String fieldName = field.getNamePart().getName();
+
+        for (Map.Entry<String, String> variation : variations.entrySet()) {
+          final String table = String.format(tablePath, TEMP_SCHEMA, location, fieldName, variation.getKey());
+          final String dataQuery = String.format(variation.getValue(), fieldName);
+          test(ctasQuery, table, fieldName, dataQuery, fieldName);
+          testBuilder()
+              .sqlQuery("select * from %s", table)
+              .unOrdered()
+              .sqlBaselineQuery(dataQuery)
+              .build()
+              .run();
+        }
+      }
+      result.release();
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), location));
     }
   }
 
