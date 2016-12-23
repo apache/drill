@@ -25,6 +25,8 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -285,40 +287,50 @@ public class TestAggregateFunctions extends BaseTestQuery {
 
   }
   @Test
-  public void minEmptyNonnullableInput() throws Exception {
-    // test min function on required type
-    String query = "select " +
-        "min(bool_col) col1, min(int_col) col2, min(bigint_col) col3, min(float4_col) col4, min(float8_col) col5, " +
-        "min(date_col) col6, min(time_col) col7, min(timestamp_col) col8, min(interval_year_col) col9, " +
-        "min(varhcar_col) col10 " +
-        "from cp.`parquet/alltypes_required.parquet` where 1 = 0";
+  public void minMaxEmptyNonNullableInput() throws Exception {
+    // test min and max functions on required type
 
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9", "col10")
-        .baselineValues(null, null, null, null, null, null, null, null, null, null)
-        .go();
+    final QueryDataBatch result = testSqlWithResults("select * from cp.`parquet/alltypes_required.parquet` limit 0")
+        .get(0);
+
+    final Map<String, StringBuilder> functions = Maps.newHashMap();
+    functions.put("min", new StringBuilder());
+    functions.put("max", new StringBuilder());
+
+    final Map<String, Object> resultingValues = Maps.newHashMap();
+    for (UserBitShared.SerializedField field : result.getHeader().getDef().getFieldList()) {
+      final String fieldName = field.getNamePart().getName();
+      // Only COUNT aggregate function supported for Boolean type
+      if (fieldName.equals("col_bln")) {
+        continue;
+      }
+      resultingValues.put(String.format("`%s`", fieldName), null);
+      for (Map.Entry<String, StringBuilder> function : functions.entrySet()) {
+        function.getValue()
+            .append(function.getKey())
+            .append("(")
+            .append(fieldName)
+            .append(") ")
+            .append(fieldName)
+            .append(",");
+      }
+    }
+    result.release();
+
+    final String query = "select %s from cp.`parquet/alltypes_required.parquet` where 1 = 0";
+    final List<Map<String, Object>> baselineRecords = Lists.newArrayList();
+    baselineRecords.add(resultingValues);
+
+    for (StringBuilder selectBody : functions.values()) {
+      selectBody.setLength(selectBody.length() - 1);
+
+      testBuilder()
+          .sqlQuery(query, selectBody.toString())
+          .unOrdered()
+          .baselineRecords(baselineRecords)
+          .go();
+    }
   }
-
-  @Test
-  public void maxEmptyNonnullableInput() throws Exception {
-
-    // test max function
-    final String query = "select " +
-        "max(int_col) col1, max(bigint_col) col2, max(float4_col) col3, max(float8_col) col4, " +
-        "max(date_col) col5, max(time_col) col6, max(timestamp_col) col7, max(interval_year_col) col8, " +
-        "max(varhcar_col) col9 " +
-        "from cp.`parquet/alltypes_required.parquet` where 1 = 0";
-
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9")
-        .baselineValues(null, null, null, null, null, null, null, null, null)
-        .go();
-  }
-
 
   /*
    * Streaming agg on top of a filter produces wrong results if the first two batches are filtered out.
