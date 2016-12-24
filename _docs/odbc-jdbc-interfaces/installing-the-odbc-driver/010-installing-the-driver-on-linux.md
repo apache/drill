@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2016-07-22 00:44:51 UTC
+date: 2016-12-24 00:01:40 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -38,10 +38,10 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
 To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Download the MapR Drill ODBC Driver
-Download either the 32- or 64-bit driver:
+Download either the 32 or 64-bit driver:
 
-  * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.1.1000/MapRDrillODBC-32bit-1.2.1.i686.rpm)
-  * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.1.1000/MapRDrillODBC-1.2.1.x86_64.rpm)
+  * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/maprdrill-1.3.0.1009-1.i686.rpm)
+  * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/maprdrill-1.3.0.1009-1.x86_64.rpm)
 
 ## Step 2: Install the MapR Drill ODBC Driver
 

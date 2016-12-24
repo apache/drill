@@ -1,6 +1,6 @@
 ---
 title: "Interfaces Introduction"
-date: 2016-01-20 22:37:33 UTC
+date: 2016-12-24 00:01:38 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:
@@ -11,15 +11,15 @@ You can connect to Apache Drill through the following interfaces:
   * [JDBC]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows/)
   * C++ API
 
-*Apache Drill does not have an open source ODBC driver. However, MapR provides an ODBC 3.8 driver developed specifically for connecting Apache Drill to BI tools. 
+*Apache Drill does not have an open source ODBC driver. However, MapR provides an ODBC driver developed specifically for connecting Apache Drill to BI tools. 
 
 ## Using ODBC to Access Apache Drill from BI Tools
 
-MapR provides an ODBC 3.8 driver that connects Windows, Mac OS X, and Linux to Apache Drill and BI tools. Install the latest version of Apache Drill with the latest version of the MapR Drill ODBC driver. An ODBC driver that you installed with a older version of Drill probably will not work with an upgraded version of Drill.
+MapR provides an ODBC driver that connects Windows, Mac OS X, and Linux to Apache Drill and BI tools. Install the latest version of Apache Drill with the latest version of the MapR Drill ODBC driver. An ODBC driver that you installed with an older version of Drill may not work with an upgraded version of Drill.
 
-Access the latest MapR Drill ODBC drivers in the following location:
+Access the latest MapR Drill ODBC drivers in the following location:  
 
-<http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.1.1000/>
+<http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/>
 
 ## Using JDBC to Access Apache Drill from SQuirrel
 

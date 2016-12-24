@@ -1,6 +1,6 @@
 ---
 title: "ODBC Configuration Reference"
-date:  
+date: 2016-12-24 00:01:39 UTC
 parent: "Configuring ODBC"
 ---
 
@@ -12,23 +12,25 @@ Drill ODBC Driver. You can use these options in a connection string or in the
 
 ## Configuration Options
 
-The following table provides a list of the configuration options and a brief description. Subsequent sections describe options in more detail:
+The following table provides a list of the configuration options and a brief description. Subsequent sections describe options in more detail:  
 
-| Property           | Valid Values                              | Brief Description                                                                                                                                                               |
-|--------------------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Catalog            | DRILL                                     | The name of the synthetic catalog under which all of the schemas/databases are organized.                                                                                       |
-| ConnectionType     | Direct or ZooKeeper                       | Direct connects to a Drill server using Host and Port properties. ZooKeeper connects to a ZooKeeper cluster using ZKQuorum and ZKClusterID properties.                          |
-| Driver             | MapR Drill ODBC Driver                    | The name of the installed driver.                                                                                                                                               |
-| Host               | \<host name\>                             | If the ConnectionType property is set to Direct, set the host name of the Drill server using the Host property.                                                                 |
-| Port               | 31010                                     | If the ConnectionType property is set to Direct, set the e TCP port on which the Drill server is listening.                                                                     |
-| Schema             | \<schema name\>                           | The name of the database schema or storage plugin name to use when the query does not explicitly specify the schema or storage plugin.                                          |
-| ZKClusterID        | drillbits1                                | If the ConnectionType property is set to ZooKeeper, then set ZKClusterID to the name of the Drillbit cluster to use.                                                            |
-| ZKQuorum           | \<IP address\>,\<IP address\> . . .       | If the ConnectionType property is set to ZooKeeper, then use ZKQuorum to indicate the server(s) in your ZooKeeper cluster. Separate multiple servers using a comma (,).         |
-| AuthenticationType | No Authentication or Basic Authentication | Basic Authentication enables [impersonation]({{site.baseurl}}/docs/configuring-user-impersonation/).                                                                            |
-| UID                | \<user name\>                             | If AuthenticationType is Basic Authentication, set the UID to a user name.                                                                                                      |
-| PWD                | \<password\>                              | If AuthenticationType is Basic Authentication, set the PWD to a password.                                                                                                       |
-| AdvancedProperties | {\<property\>;\<property\>; . . .}        | Separate advanced properties using a semi-colon (;) and then surround all advanced properties in a connection string using braces { and }.                                      |
-| DisableAsync       | 0 or 1                                    | Disables asynchronous ODBC connection and enables a synchronous connection. A change in state occurs during driver initialization and is propagated to all driver DSNs.         |
+| Property           | Valid Values                                | Brief Description                                                                                                                                                             |
+|--------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Catalog            | DRILL                                       | The   name of the synthetic catalog under which all of the schemas/databases are   organized.                                                                                 |
+| ConnectionType     | Direct   or ZooKeeper                       | Direct   connects to a Drill server using Host and Port properties. ZooKeeper connects   to a ZooKeeper cluster using ZKQuorum and ZKClusterID properties.                    |
+| Driver             | MapR   Drill ODBC Driver                    | The   name of the installed driver.                                                                                                                                           |
+| Host               | <host   name>                               | If   the ConnectionType property is set to Direct, set the host name of the Drill   server using the Host property.                                                           |
+| Port               | 31010                                       | If   the ConnectionType property is set to Direct, set the e TCP port on which the   Drill server is listening.                                                               |
+| Schema             | <schema   name>                             | The   name of the database schema or storage plugin name to use when the query does   not explicitly specify the schema or storage plugin.                                    |
+| ZKClusterID        | drillbits1                                  | If   the ConnectionType property is set to ZooKeeper, then set ZKClusterID to the   name of the Drillbit cluster to use.                                                      |
+| ZKQuorum           | <IP   address>,<IP address> . . .           | If   the ConnectionType property is set to ZooKeeper, then use ZKQuorum to   indicate the server(s) in your ZooKeeper cluster. Separate multiple servers   using a comma (,). |
+| AuthenticationType | No   Authentication or Basic Authentication | Basic Authentication   enables impersonation.                                                                                                                                 |
+| UID                | <user   name>                               | If   AuthenticationType is Basic Authentication, set the UID to a user name.                                                                                                  |
+| PWD                | <password>                                  | If   AuthenticationType is Basic Authentication, set the PWD to a password.                                                                                                   |
+| DelegationUID      | <impersonation_target>                      | The impersonation target for the   authorized proxy user. See Configuring Inbound Impersonation.                                                                              |
+| AdvancedProperties | {<property>;<property>;   . . .}            | Separate   advanced properties using a semi-colon (;) and then surround all advanced   properties in a connection string using braces { and }.                                |
+| DisableAsync       | 0   or 1                                    | Disables   asynchronous ODBC connection and enables a synchronous connection. A change   in state occurs during driver initialization and is propagated to all driver   DSNs. |  
+
 
 ### Catalog
 

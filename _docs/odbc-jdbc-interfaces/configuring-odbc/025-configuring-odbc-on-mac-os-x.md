@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Mac OS X"
-date:  
+date: 2016-12-24 00:01:39 UTC
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
@@ -9,8 +9,7 @@ steps:
 
 * [Step 1: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-1:-set-environment-variables)
 * [Step 2: Define the ODBC Data Sources in odbc.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-2:-define-the-odbc-data-sources-in-.odbc.ini)
-* [Step 3: (Optional) Define the ODBC Driver in odbcinst.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-3:-(optional)-define-the-odbc-driver-in-.odbcinst.ini)
-* [Step 4: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-4:-configure-the-mapr-drill-odbc-driver)
+* [Step 3: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-4:-configure-the-mapr-drill-odbc-driver)
 
 ## Sample Configuration Files
 
@@ -25,7 +24,6 @@ In your home directory, rename the files as hidden files. Use sudo if necessary:
 
 * .mapr.drillodbc.ini
 * .odbc.ini
-* .odbcinst.ini
 
 The installer for Mac OS X creates a sample user DSN in odbc.ini in either of the following locations:
 
@@ -40,10 +38,11 @@ Depending on the driver manager you use, the user DSN in one of these files will
 
 ## Step 1: Set Environment Variables 
 
-Create or modify the `/etc/launchd.conf` file to set environment variables. Set the SIMBAINI variable to point to the `.mapr.drillodbc.ini` file, the ODBCSYSINI varialbe to the `.odbcinst.ini` file, the ODBCINI variable to the `.odbc.ini` file, and the DYLD_LIBRARY_PATH to the location of the dynamic linker (DYLD) libraries and to the MapR Drill ODBC Driver. If you installed the iODBC driver manager using the DMG, the DYLD libraries are installed in `/usr/local/iODBC/lib`. The launchd.conf file should look something like this:
+Create or modify the `/etc/launchd.conf` file to set environment variables. Set the SIMBAINI variable to point to the `.mapr.drillodbc.ini` file, the ODBCINI variable to the `.odbc.ini` file, and the DYLD_LIBRARY_PATH to the location of the dynamic linker (DYLD) libraries and to the MapR Drill ODBC Driver. 
+
+If you installed the iODBC driver manager using the DMG, the DYLD libraries are installed in `/usr/local/iODBC/lib`. The launchd.conf file should look something like this:
 
     setenv SIMBAINI /Users/joeuser/.mapr.drillodbc.ini
-    setenv ODBCSYSINI /Users/joeuser/.odbcinst.ini
     setenv ODBCINI /Users/joeuser/.odbc.ini
     setenv DYLD_LIBRARY_PATH /usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal
 
@@ -131,24 +130,7 @@ behavior of DSNs using the MapR Drill ODBC Driver.
 
 ----------
 
-## Step 3: (Optional) Define the ODBC Driver in .odbcinst.ini
-
-The `.odbcinst.ini` is an optional configuration file that defines the ODBC
-Drivers. This configuration file is optional because you can specify drivers
-directly in the` .odbc.ini` configuration file. The following sample shows a possible configuration.
-  
-**Example**
-
-    [ODBC Drivers]
-    MapR Drill ODBC Driver=Installed
-   
-    [MapR Drill ODBC Driver]
-    Description=MapR Drill ODBC Driver
-    Driver=/opt/mapr/drillodbc/lib/universal/libmaprdrillodbc.dylib
-
-----------
-
-## Step 4: Configure the MapR Drill ODBC Driver
+## Step 3: Configure the MapR Drill ODBC Driver
 
 Configure the MapR Drill ODBC Driver for your environment by modifying the `.mapr.drillodbc.ini` configuration
 file. This configures the driver to work with your ODBC driver manager. The following sample shows a possible configuration, which you can use as is if you installed the default iODBC driver manager.

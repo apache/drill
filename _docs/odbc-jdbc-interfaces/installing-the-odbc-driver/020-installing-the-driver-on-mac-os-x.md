@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2016-01-20 21:22:50 UTC
+date: 2016-12-24 00:01:40 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -32,7 +32,7 @@ To install the driver, you need Administrator privileges on the computer.
 
 Click the following link to download the driver:  
 
-[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.1.1000/MapRDrillODBC.dmg)
+[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/MapR_Drill_1.3.dmg)
 
 ----------
 
@@ -40,7 +40,7 @@ Click the following link to download the driver:
 
 To install the driver, complete the following steps:
 
-  1. Double-click `MapRDrillODBC.dmg` to mount the disk image.
+  1. Double-click `MapRDrill1.3.dmg` to mount the disk image.
   2. Double-click `MapRDrillODBC.pkg` to run the Installer.
   3. Follow the instructions in the Installer to complete the installation process.
   4. When the installation completes, click **Close.**
@@ -57,7 +57,7 @@ To check the version of the driver you installed, use the following command on t
 
     $ pkgutil --info mapr.drillodbc
     package-id: mapr.drillodbc
-    version: 1.2.0
+    version: 1.3.0 (may also display as 3.52.12)
     volume: /
     location: 
     install-time: 1433465518
