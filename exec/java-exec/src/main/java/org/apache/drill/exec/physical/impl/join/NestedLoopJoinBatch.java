@@ -247,7 +247,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       JVar outVV = nLJClassGenerator.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, outputFieldId));
 
       nLJClassGenerator.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(leftIndex).arg(outIndex).arg(inVV));
-
+      nLJClassGenerator.rotateBlock();
       fieldId++;
       outputFieldId++;
     }
@@ -270,7 +270,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
           .arg(recordIndexWithinBatch)
           .arg(outIndex)
           .arg(inVV.component(batchIndex)));
-
+      nLJClassGenerator.rotateBlock();
       fieldId++;
       outputFieldId++;
     }

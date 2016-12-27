@@ -439,7 +439,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
             .arg(outIndex)
             .arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))));
-
+        g.rotateBlock();
         fieldId++;
       }
     }
@@ -475,7 +475,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         final JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));
 
         g.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV));
-
+        g.rotateBlock();
         fieldId++;
         outputFieldId++;
       }

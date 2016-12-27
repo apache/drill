@@ -345,6 +345,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyLeftMapping.getValueReadIndex())
           .arg(copyLeftMapping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
@@ -373,6 +374,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           .arg(copyRightMappping.getValueReadIndex())
           .arg(copyRightMappping.getValueWriteIndex())
           .arg(vvIn));
+        cg.rotateBlock();
         ++vectorId;
       }
     }
