@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.univocity.parsers.common.TextParsingException;
 import io.netty.buffer.DrillBuf;
@@ -51,8 +52,12 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompliantTextRecordReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
-  static final int READ_BUFFER = 1024*1024;
+  private static final int READ_BUFFER = 1024*1024;
   private static final int WHITE_SPACE_BUFFER = 64*1024;
+  // When no named column is required, ask SCAN to return a DEFAULT column.
+  // If such column does not exist, it will be returned as a nullable-int column.
+  private static final List<SchemaPath> DEFAULT_NAMED_TEXT_COLS_TO_READ =
+      ImmutableList.of(SchemaPath.getSimplePath("_DEFAULT_COL_TO_READ_"));
 
   // settings to be used while parsing
   private TextParsingSettings settings;
@@ -89,8 +94,19 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     return super.isStarQuery();
   }
 
+  /**
+   * Returns list of default columns to read to replace empty list of columns.
+   * For text files without headers returns "columns[0]".
+   * Text files with headers do not support columns syntax,
+   * so when header extraction is enabled, returns fake named column "_DEFAULT_COL_TO_READ_".
+   *
+   * @return list of default columns to read
+   */
   @Override
   protected List<SchemaPath> getDefaultColumnsToRead() {
+    if (settings.isHeaderExtractionEnabled()) {
+      return DEFAULT_NAMED_TEXT_COLS_TO_READ;
+    }
     return DEFAULT_TEXT_COLS_TO_READ;
   }
 

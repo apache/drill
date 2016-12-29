@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.text;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
@@ -24,14 +25,14 @@ import org.apache.drill.common.util.FileUtils;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestCsvHeader extends BaseTestQuery{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCsvHeader.class);
-  String root;
+  private String root;
 
   @Before
   public void initialize() throws Exception {
@@ -185,4 +186,21 @@ public class TestCsvHeader extends BaseTestQuery{
       }
       builder.go();
   }
+
+  @Test
+  public void testCountOnCsvWithHeader() throws Exception {
+    final String query = "select count(%s) as cnt from %s.`%s`";
+    final List<Object> options = Lists.<Object>newArrayList("*", 1, "'A'");
+
+    for (Object option : options) {
+      testBuilder()
+          .sqlQuery(query, option, TEMP_SCHEMA, root)
+          .unOrdered()
+          .baselineColumns("cnt")
+          .baselineValues(4L)
+          .build()
+          .run();
+    }
+  }
+
 }
