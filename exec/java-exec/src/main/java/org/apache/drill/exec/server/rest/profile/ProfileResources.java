@@ -72,6 +72,8 @@ public class ProfileResources {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private String queryId;
+    private long startTime;
+    private long endTime;
     private Date time;
     private String location;
     private String foreman;
@@ -79,9 +81,21 @@ public class ProfileResources {
     private String state;
     private String user;
 
-    public ProfileInfo(String queryId, long time, String foreman, String query, String state, String user) {
+    public ProfileInfo(String queryId, long startTime, String foreman, String query, String state, String user) {
       this.queryId = queryId;
-      this.time = new Date(time);
+      this.startTime = startTime;
+      this.time = new Date(startTime);
+      this.foreman = foreman;
+      this.location = "http://localhost:8047/profile/" + queryId + ".json";
+      this.query = query.substring(0,  Math.min(query.length(), 150));
+      this.state = state;
+      this.user = user;
+    }
+    public ProfileInfo(String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
+      this.queryId = queryId;
+      this.startTime = startTime;
+      this.endTime = endTime;
+      this.time = new Date(startTime);
       this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
       this.query = query.substring(0,  Math.min(query.length(), 150));
@@ -105,7 +119,13 @@ public class ProfileResources {
       return format.format(time);
     }
 
+    public long getStartTime() {
+      return startTime;
+    }
 
+    public long getEndTime() {
+      return endTime;
+    }
     public String getState() {
       return state;
     }
@@ -192,7 +212,7 @@ public class ProfileResources {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
           final QueryProfile profile = profileEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());

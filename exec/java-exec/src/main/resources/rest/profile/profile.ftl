@@ -106,7 +106,13 @@
   <p>STATE: ${model.getProfile().getState().name()}</p>
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
-
+  <p>
+  <#if (model.getProfile().getState().name() == "RUNNING")> 
+    ELAPSED: ${(.now?long - model.getProfile().getStart()) / 1000} 
+  <#else> 
+    DURATION: ${(model.getProfile().getEnd() - model.getProfile().getStart()) / 1000} 
+  </#if>
+  sec</p>
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
     <div class="page-header"></div>
