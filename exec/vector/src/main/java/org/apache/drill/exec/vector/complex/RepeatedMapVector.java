@@ -413,10 +413,9 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    final int expectedBufferSize = getBufferSize();
-    final int actualBufferSize = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
+    //final int expectedBufferSize = getBufferSize();
+    //final int actualBufferSize = super.getBufferSize();
+    //Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
     return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
 
