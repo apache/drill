@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.indexr;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -55,6 +56,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import io.indexr.segment.helper.RangeWork;
 import io.indexr.server.HybridTable;
@@ -248,7 +251,13 @@ public class IndexRGroupScan extends AbstractGroupScan {
           String errorMsg = String.format(//
               "Realtime works on %s cannot be assigned, because thery are not in work list %s.",//
               endpoint.getAddress(),//
-              Lists.transform(endpoints, DrillbitEndpoint::getAddress));
+              Lists.transform(endpoints, new Function<DrillbitEndpoint, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable DrillbitEndpoint input) {
+                  return input.getAddress();
+                }
+              }));
           throw new IllegalStateException(errorMsg);
         }
       }

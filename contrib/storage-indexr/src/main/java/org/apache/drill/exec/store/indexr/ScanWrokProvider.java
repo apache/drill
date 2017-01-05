@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -86,13 +87,13 @@ public class ScanWrokProvider {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {return true;}
+      if (o == null || getClass() != o.getClass()) {return false;}
 
       CacheKey cacheKey = (CacheKey) o;
 
-      if (scanId != null ? !scanId.equals(cacheKey.scanId) : cacheKey.scanId != null) return false;
-      if (limitScanRows != cacheKey.limitScanRows) return false;
+      if (scanId != null ? !scanId.equals(cacheKey.scanId) : cacheKey.scanId != null) {return false;}
+      if (limitScanRows != cacheKey.limitScanRows) {return false;}
       return scanSpec != null ? scanSpec.equals(cacheKey.scanSpec) : cacheKey.scanSpec == null;
     }
 
@@ -166,7 +167,12 @@ public class ScanWrokProvider {
                              List<SchemaPath> columns) {
     CacheKey key = new CacheKey(scanId, scanSpec, limitScanRows);
     try {
-      return statCache.get(key, () -> calStat(plugin, scanSpec, scanId, limitScanRows, columns));
+      return statCache.get(key, new Callable<Stat>() {
+        @Override
+        public Stat call() throws Exception {
+          return calStat(plugin, scanSpec, scanId, limitScanRows, columns);
+        }
+      });
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
@@ -260,7 +266,13 @@ public class ScanWrokProvider {
     CacheKey key = new CacheKey(scanId, scanSpec, limitScanRows);
     try {
       return must
-          ? workCache.get(key, () -> calScanWorks(plugin, scanSpec, scanId, limitScanRows, columns))
+          ? workCache.get(key,
+          new Callable<Works>() {
+            @Override
+            public Works call() throws Exception {
+              return calScanWorks(plugin, scanSpec, scanId, limitScanRows, columns);
+            }
+          })
           : workCache.getIfPresent(key);
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
