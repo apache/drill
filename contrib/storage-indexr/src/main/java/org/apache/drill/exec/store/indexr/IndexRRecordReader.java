@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import io.indexr.segment.ColumnSchema;
 import io.indexr.segment.Segment;
@@ -144,7 +145,12 @@ public abstract class IndexRRecordReader extends AbstractRecordReader {
   @Override
   public void close() throws Exception {
     if (segmentMap != null) {
-      segmentMap.values().forEach(IOUtils::closeQuietly);
+      segmentMap.values().forEach(new Consumer<Segment>() {
+        @Override
+        public void accept(Segment segment) {
+          IOUtils.closeQuietly(segment);
+        }
+      });
       segmentMap.clear();
       segmentMap = null;
     }

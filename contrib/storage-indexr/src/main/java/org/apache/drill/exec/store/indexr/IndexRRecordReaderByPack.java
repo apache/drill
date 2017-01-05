@@ -38,8 +38,10 @@ import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import io.indexr.data.BytePiece;
+import io.indexr.data.BytePieceSetter;
 import io.indexr.data.DoubleSetter;
 import io.indexr.data.FloatSetter;
 import io.indexr.data.IntSetter;
@@ -93,11 +95,15 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
 
     if (rsFilter != null) {
       Set<String> predicateColumns = new HashSet<>();
-      rsFilter.foreach(op -> {
-        for (Attr attr : op.attr()) {
-          predicateColumns.add(attr.columnName());
-        }
-      });
+      rsFilter.foreach(
+          new Consumer<RCOperator>() {
+            @Override
+            public void accept(RCOperator op) {
+              for (Attr attr : op.attr()) {
+                predicateColumns.add(attr.columnName());
+              }
+            }
+          });
       // The late materialization is worthy only when there are columns not included in predicates.
       isLateMaterialization = predicateColumns.size() < projectColumnInfos.length;
     }
@@ -164,14 +170,18 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
 
     long time = System.currentTimeMillis();
 
-    rsFilter.foreachEX(op -> {
-      for (Attr attr : op.attr()) {
-        int columnId = attr.columnId();
-        if (rowPacks[columnId] == null) {
-          rowPacks[columnId] = (DataPack) segment.column(columnId).pack(packId);
-        }
-      }
-    });
+    rsFilter.foreachEX(
+        new RCOperator.OpConsumer() {
+          @Override
+          public void accept(RCOperator op) throws IOException {
+            for (Attr attr : op.attr()) {
+              int columnId = attr.columnId();
+              if (rowPacks[columnId] == null) {
+                rowPacks[columnId] = (DataPack) segment.column(columnId).pack(packId);
+              }
+            }
+          }
+        });
 
     long time2 = System.currentTimeMillis();
     getPackTime = time2 - time;
@@ -222,35 +232,59 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             IntVector.Mutator mutator = (IntVector.Mutator) projectInfo.valueVector.getMutator();
             // Force the vector to allocate engough space.
             mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, (IntSetter) mutator::set);
+            dataPack.foreach(0, count, new IntSetter() {
+              @Override
+              public void set(int id, int value) {
+                mutator.set(id, value);
+              }
+            });
             break;
           }
           case ColumnType.LONG: {
             BigIntVector.Mutator mutator = (BigIntVector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, (LongSetter) mutator::set);
+            dataPack.foreach(0, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id, value);
+              }
+            });
             break;
           }
           case ColumnType.FLOAT: {
             Float4Vector.Mutator mutator = (Float4Vector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, (FloatSetter) mutator::set);
+            dataPack.foreach(0, count, new FloatSetter() {
+              @Override
+              public void set(int id, float value) {
+                mutator.set(id, value);
+              }
+            });
             break;
           }
           case ColumnType.DOUBLE: {
             Float8Vector.Mutator mutator = (Float8Vector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, (DoubleSetter) mutator::set);
+            dataPack.foreach(0, count, new DoubleSetter() {
+              @Override
+              public void set(int id, double value) {
+                mutator.set(id, value);
+              }
+            });
             break;
           }
           case ColumnType.STRING: {
             ByteBuffer byteBuffer = MemoryUtil.getHollowDirectByteBuffer();
             VarCharVector.Mutator mutator = (VarCharVector.Mutator) projectInfo.valueVector.getMutator();
-            dataPack.foreach(0, count, (int id, BytePiece bytes) -> {
-              assert bytes.base == null;
-              MemoryUtil.setByteBuffer(byteBuffer, bytes.addr, bytes.len, null);
-              mutator.setSafe(id, byteBuffer, 0, byteBuffer.remaining());
-            });
+            dataPack.foreach(0, count,
+                new BytePieceSetter() {
+                  @Override
+                  public void set(int id, BytePiece bytes) {
+                    assert bytes.base == null;
+                    MemoryUtil.setByteBuffer(byteBuffer, bytes.addr, bytes.len, null);
+                    mutator.setSafe(id, byteBuffer, 0, byteBuffer.remaining());
+                  }
+                });
             break;
           }
           default:

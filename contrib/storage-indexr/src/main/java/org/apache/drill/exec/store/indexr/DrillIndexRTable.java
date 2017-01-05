@@ -22,7 +22,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Util;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
@@ -30,6 +30,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import io.indexr.segment.ColumnSchema;
 import io.indexr.segment.ColumnType;
@@ -107,10 +108,14 @@ public class DrillIndexRTable extends DynamicDrillTable {
 
   private static Pair<ColumnSchema, Integer> mapColumn(SegmentSchema segmentSchema, String colName) {
     int[] ordinal = new int[]{-1};
-    ColumnSchema cs = segmentSchema.columns.stream().filter(s -> {
-      ordinal[0]++;
-      return s.name.equalsIgnoreCase(colName);
-    }).findFirst().get();
+    ColumnSchema cs = segmentSchema.columns.stream().filter(
+        new Predicate<ColumnSchema>() {
+          @Override
+          public boolean test(ColumnSchema schema) {
+            ordinal[0]++;
+            return schema.name.equalsIgnoreCase(colName);
+          }
+        }).findFirst().get();
     return cs == null ? null : Pair.of(cs, ordinal[0]);
   }
 

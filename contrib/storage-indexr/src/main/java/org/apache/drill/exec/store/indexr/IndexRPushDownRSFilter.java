@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import io.indexr.segment.rc.RCOperator;
 import io.indexr.util.Trick;
@@ -140,7 +141,14 @@ public class IndexRPushDownRSFilter {
       LimitPrel hashJoin = (LimitPrel) call.rel(0);
       ScanPrel scan = (ScanPrel) call.rel(1);
       List<RelNode> children = hashJoin.getInputs();
-      BroadcastExchangePrel broadcastExchange = (BroadcastExchangePrel) Trick.find(children, n -> n instanceof BroadcastExchangePrel);
+      BroadcastExchangePrel broadcastExchange = (BroadcastExchangePrel) Trick.find(
+          children,
+          new Predicate<RelNode>() {
+            @Override
+            public boolean test(RelNode node) {
+              return node instanceof BroadcastExchangePrel;
+            }
+          });
       if (broadcastExchange == null) {
         return;
       }
