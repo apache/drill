@@ -99,6 +99,7 @@
         <include>org.apache.drill.contrib:drill-format-mapr</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage</include>
         <include>org.apache.drill.contrib:drill-kudu-storage</include>
+        <include>org.apache.drill.contrib:drill-indexr-storage</include>
         <include>org.apache.drill.contrib:drill-gis</include>
       </includes>
       <excludes>
