@@ -28,6 +28,9 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -119,7 +122,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
     if (!DrillRelOptUtil.guessRows(this)         //Statistics present for left and right side of the join
         && jr.getJoinType() == JoinRelType.INNER
-        && RelOptUtil.analyzeSimpleEquiJoin(jr, joinFields)) {
+        && DrillRelOptUtil.analyzeSimpleEquiJoin(jr, joinFields)) {
       ImmutableBitSet leq = ImmutableBitSet.of(joinFields[0]);
       ImmutableBitSet req = ImmutableBitSet.of(joinFields[1]);
 

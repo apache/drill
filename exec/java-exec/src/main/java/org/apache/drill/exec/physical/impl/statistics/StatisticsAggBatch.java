@@ -82,13 +82,13 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   private int schema = 0;
 
   public StatisticsAggBatch(StatisticsAggregate popConfig, RecordBatch incoming,
-                            FragmentContext context) throws OutOfMemoryException {
+      FragmentContext context) throws OutOfMemoryException {
     super(popConfig, incoming, context);
     this.functions = popConfig.getFunctions();
   }
 
   private void createKeyColumn(String name, LogicalExpression expr, List<LogicalExpression> keyExprs,
-                               List<TypedFieldId> keyOutputIds) throws SchemaChangeException {
+      List<TypedFieldId> keyOutputIds) throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
 
     LogicalExpression mle = ExpressionTreeMaterializer.materialize(expr, incoming, collector,
@@ -107,8 +107,8 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private void createNestedKeyColumn(MapVector parent, String name, LogicalExpression expr,
-                                     List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds)
-                                        throws SchemaChangeException {
+      List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds)
+          throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
 
     LogicalExpression mle = ExpressionTreeMaterializer.materialize(expr, incoming, collector,
@@ -138,7 +138,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private void addMapVector(String name, MapVector parent, LogicalExpression expr,
-                            List<LogicalExpression> valueExprs) throws SchemaChangeException {
+      List<LogicalExpression> valueExprs) throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
 
     LogicalExpression mle = ExpressionTreeMaterializer.materialize(expr, incoming, collector,
@@ -164,8 +164,8 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private StreamingAggregator codegenAggregator(List<LogicalExpression> keyExprs,
-                                                List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds)
-      throws SchemaChangeException, ClassTransformationException, IOException {
+      List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds)
+          throws SchemaChangeException, ClassTransformationException, IOException {
     ClassGenerator<StreamingAggregator> cg =
         CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry(),
             context.getOptions());
@@ -208,8 +208,8 @@ public class StatisticsAggBatch extends StreamingAggBatch {
     calendar.setTimeInMillis(System.currentTimeMillis());
 
     if (this.getPopConfig() instanceof StatisticsAggregate
-            && (((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_1of1
-                || ((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_2of2)) {
+        && (((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_1of1
+            || ((StatisticsAggregate) this.getPopConfig()).getPhase() == OperatorPhase.PHASE_2of2)) {
       createKeyColumn("schema",
           ValueExpressions.getBigInt(schema++),
           keyExprs,

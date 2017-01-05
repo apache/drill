@@ -26,17 +26,23 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalCalc;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVisitor;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.Util;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -181,7 +187,7 @@ public abstract class DrillRelOptUtil {
    * */
   public static boolean guessRows(RelNode rel) {
     final PlannerSettings settings =
-            rel.getCluster().getPlanner().getContext().unwrap(PlannerSettings.class);
+        rel.getCluster().getPlanner().getContext().unwrap(PlannerSettings.class);
     if (!settings.useStatistics()) {
       return true;
     }
@@ -205,7 +211,10 @@ public abstract class DrillRelOptUtil {
       } else {
         return true;
       }
-    } else {
+    } /*else if (rel instanceof Filter
+          && findLikeOrRangePredicate(((Filter) rel).getCondition())) {
+      return true;
+    } */else {
       for (RelNode child : rel.getInputs()) {
         if (guessRows(child)) { // at least one child is a guess
           return true;
@@ -213,5 +222,61 @@ public abstract class DrillRelOptUtil {
       }
     }
     return false;
+  }
+
+  private static boolean findLikeOrRangePredicate(RexNode predicate) {
+    if ((predicate == null) || predicate.isAlwaysTrue()) {
+      return false;
+    }
+    for (RexNode pred : RelOptUtil.conjunctions(predicate)) {
+      for (RexNode orPred : RelOptUtil.disjunctions(pred)) {
+        if (!orPred.isA(SqlKind.EQUALS) ||
+             orPred.isA(SqlKind.LIKE)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public static boolean analyzeSimpleEquiJoin(LogicalJoin join, int[] joinFieldOrdinals) {
+    RexNode joinExp = join.getCondition();
+    if(joinExp.getKind() != SqlKind.EQUALS) {
+      return false;
+    } else {
+      RexCall binaryExpression = (RexCall)joinExp;
+      RexNode leftComparand = (RexNode)binaryExpression.operands.get(0);
+      RexNode rightComparand = (RexNode)binaryExpression.operands.get(1);
+      if(!(leftComparand instanceof RexInputRef)) {
+        return false;
+      } else if(!(rightComparand instanceof RexInputRef)) {
+        return false;
+      } else {
+        int leftFieldCount = join.getLeft().getRowType().getFieldCount();
+        int rightFieldCount = join.getRight().getRowType().getFieldCount();
+        RexInputRef leftFieldAccess = (RexInputRef)leftComparand;
+        RexInputRef rightFieldAccess = (RexInputRef)rightComparand;
+        if(leftFieldAccess.getIndex() >= leftFieldCount+rightFieldCount ||
+           rightFieldAccess.getIndex() >= leftFieldCount+rightFieldCount) {
+          return false;
+        }
+        /* Both columns reference same table */
+        if((leftFieldAccess.getIndex() >= leftFieldCount &&
+            rightFieldAccess.getIndex() >= leftFieldCount) ||
+           (leftFieldAccess.getIndex() < leftFieldCount &&
+            rightFieldAccess.getIndex() < leftFieldCount)) {
+          return false;
+        } else {
+          if (leftFieldAccess.getIndex() < leftFieldCount) {
+            joinFieldOrdinals[0] = leftFieldAccess.getIndex();
+            joinFieldOrdinals[1] = rightFieldAccess.getIndex() - leftFieldCount;
+          } else {
+            joinFieldOrdinals[0] = rightFieldAccess.getIndex();
+            joinFieldOrdinals[1] = leftFieldAccess.getIndex() - leftFieldCount;
+          }
+          return true;
+        }
+      }
+    }
   }
 }

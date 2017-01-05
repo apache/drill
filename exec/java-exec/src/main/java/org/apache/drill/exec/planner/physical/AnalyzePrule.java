@@ -58,17 +58,17 @@ public class AnalyzePrule extends Prule {
   );*/
 
   private static final List<String> PHASE_1_FUNCTIONS = ImmutableList.of(
-      "statcount",        // total number of entries in the table
-      "nonnullstatcount", // total number of non-null entries in the table
-      "sum_width",
-      "hll"
+      "statcount",        // total number of entries in table fragment
+      "nonnullstatcount", // total number of non-null entries in table fragment
+      "sum_width",        // total column width across all entries in table fragment
+      "hll"               // total distinct values in table fragment
     );
   private static final List<String> PHASE_2_FUNCTIONS = ImmutableList.of(
       "statcount",        // total number of entries in the table
       "nonnullstatcount", // total number of non-null entries in the table
-      "avg_width",
-      "hll_merge",
-      "ndv"
+      "avg_width",        // average column width across all entries in the table
+      "hll_merge",        // total distinct values(computed using hll) in the table
+      "ndv"               // total distinct values across all entries in the table
     );
 
   public AnalyzePrule() {

@@ -22,6 +22,7 @@ import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdSelectivity;
 import org.apache.calcite.rel.metadata.RelMdUtil;
@@ -40,7 +41,6 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.Util;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 
@@ -60,8 +60,8 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
 
   @Override
   public Double getSelectivity(RelNode rel, RexNode predicate) {
-    if (rel instanceof DrillScanRelBase) {
-      return getScanSelectivity((DrillScanRelBase) rel, predicate);
+    if (rel instanceof TableScan) {
+      return getScanSelectivity((TableScan) rel, predicate);
     } else if (rel instanceof DrillJoinRelBase) {
       return getJoinSelectivity(((DrillJoinRelBase) rel), predicate);
     } else if (rel instanceof SingleRel && !DrillRelOptUtil.guessRows(rel)) {
@@ -138,7 +138,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     return sel;
   }
 
-  private Double getScanSelectivity(DrillScanRelBase scan, RexNode predicate) {
+  private Double getScanSelectivity(TableScan scan, RexNode predicate) {
     DrillTable table = scan.getTable().unwrap(DrillTable.class);
     if (table == null) {
       table = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();

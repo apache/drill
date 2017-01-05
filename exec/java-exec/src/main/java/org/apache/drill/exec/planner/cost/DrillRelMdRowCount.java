@@ -20,13 +20,13 @@ package org.apache.drill.exec.planner.cost;
 import java.io.IOException;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
@@ -38,8 +38,8 @@ public class DrillRelMdRowCount extends RelMdRowCount{
 
   @Override
   public Double getRowCount(RelNode rel) {
-    if (rel instanceof DrillScanRelBase) {
-      return getRowCount((DrillScanRelBase) rel);
+    if (rel instanceof TableScan) {
+      return getRowCount((TableScan) rel);
     } else if (rel instanceof DrillFilterRelBase) {
       return getRowCount((DrillFilterRelBase) rel);
     } else {
@@ -55,7 +55,7 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     return rel.getRows();
   }
 
-  private Double getRowCount(DrillScanRelBase rel) {
+  private Double getRowCount(TableScan rel) {
     DrillTable table;
     if (DrillRelOptUtil.guessRows(rel)) {
       return super.getRowCount(rel);
