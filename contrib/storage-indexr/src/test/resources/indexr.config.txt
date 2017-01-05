@@ -1,0 +1,5 @@
+indexr.zk.addr=localhost:2181
+indexr.zk.root=/indexr
+indexr.fs.connection=file:///
+indexr.fs.data.root=/indexr
+indexr.local.data.root=/data/indexr
