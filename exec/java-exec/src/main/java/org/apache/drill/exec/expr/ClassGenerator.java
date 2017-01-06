@@ -488,16 +488,20 @@ public class ClassGenerator<T>{
 
   private void addCtor(Class<?>[] parameters) {
     JMethod ctor = clazz.constructor(JMod.PUBLIC);
-    JInvocation superCall = null;
-    if (parameters.length > 0) {
-      superCall = JExpr.invoke("super");
-    }
-    for (int i = 1; i < parameters.length; i++) {
-      Class<?> p = parameters[i];
-      superCall.arg(ctor.param(model._ref(p), "arg" + i));
-    }
     JBlock body = ctor.body();
-    if (superCall != null) {
+
+    // If there are parameters, need to pass them to the super class.
+    if (parameters.length > 0) {
+      JInvocation superCall = JExpr.invoke("super");
+
+      // This case only occurs for nested classes, and all nested classes
+      // in Drill are inner classes. Don't pass along the (hidden)
+      // this$0 field.
+
+      for (int i = 1; i < parameters.length; i++) {
+        Class<?> p = parameters[i];
+        superCall.arg(ctor.param(model._ref(p), "arg" + i));
+      }
       body.add(superCall);
     }
     JTryBlock tryBlock = body._try();

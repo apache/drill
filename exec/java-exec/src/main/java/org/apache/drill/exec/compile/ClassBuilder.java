@@ -78,7 +78,6 @@ import org.codehaus.commons.compiler.CompileException;
 
 public class ClassBuilder {
 
-  public static final String SAVE_CODE_OPTION = CodeCompiler.COMPILE_BASE + ".save_source";
   public static final String CODE_DIR_OPTION = CodeCompiler.COMPILE_BASE + ".code_dir";
 
   private final DrillConfig config;
@@ -90,7 +89,7 @@ public class ClassBuilder {
     options = optionManager;
 
     // Code can be saved per-class to enable debugging.
-    // Just mark the code generator as to be persistented,
+    // Just mark the code generator as to be persisted,
     // point your debugger to the directory set below, and you
     // can step into the code for debugging. Code is not saved
     // be default because doing so is expensive and unnecessary.

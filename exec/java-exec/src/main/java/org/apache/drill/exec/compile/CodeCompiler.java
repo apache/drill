@@ -205,7 +205,7 @@ public class CodeCompiler {
   }
 
   /**
-   * Called when the requested class does not exist in the class and should
+   * Called when the requested class does not exist in the cache and should
    * be compiled using the preferred code generation technique.
    *
    * @param cg the code generator for the class
