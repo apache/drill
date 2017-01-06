@@ -248,11 +248,11 @@ public class CodeCompiler {
    */
 
   public void close() {
-    logger.info("Class gen count: " + classGenCount);
-    logger.info("Cache miss count: " + cacheMissCount);
+    int hitRate = 0;
     if (classGenCount > 0) {
-      int hitRate = (int) Math.round((classGenCount - cacheMissCount) * 100.0 / classGenCount);
-      logger.info("Cache hit rate: " + hitRate);
+      hitRate = (int) Math.round((classGenCount - cacheMissCount) * 100.0 / classGenCount);
     }
+    logger.info(String.format("Stats: code gen count: %d, cache miss count: %d, hit rate: %d%%",
+                classGenCount, cacheMissCount, hitRate));
   }
 }
