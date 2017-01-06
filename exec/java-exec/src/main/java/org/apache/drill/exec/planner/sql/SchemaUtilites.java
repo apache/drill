@@ -65,6 +65,7 @@ public class SchemaUtilites {
     return null;
   }
 
+
   /**
    * Same utility as {@link #findSchema(SchemaPlus, List)} except the search schema path given here is complete path
    * instead of list. Use "." separator to divided the schema into nested schema names.
@@ -185,6 +186,35 @@ public class SchemaUtilites {
   }
 
   /**
+   * Given a schema in schema tree, once this schema is found resolve it into a mutable <i>AbstractDrillSchema</i>
+   *  instance. A {@link UserException} is throws when:
+   *   1. Schema is a root schema
+   *   2. schema is not a mutable schema.
+   * @param schema
+   * @return
+   */
+  public static AbstractSchema toMutableDrillSchema(final SchemaPlus schema) {
+    if (schema == null) {
+      throwSchemaNotFoundException(schema, schema.getName());
+    }
+
+    if (isRootSchema(schema)) {
+      throw UserException.validationError()
+          .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
+              "Select a schema using 'USE schema' command.")
+          .build(logger);
+    }
+
+    final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
+    if (!drillSchema.isMutable()) {
+      throw UserException.validationError()
+          .message("Unable to create or drop tables/views. Schema [%s] is immutable.", getSchemaPath(schema))
+          .build(logger);
+    }
+
+    return drillSchema;
+  }
+   /**
    * Looks in schema tree for default temporary workspace instance.
    *
    * @param defaultSchema default schema

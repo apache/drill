@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
@@ -28,6 +29,7 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
@@ -56,19 +58,22 @@ public class DropTableHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
+
     String originalTableName = dropTableNode.getName();
-    SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
-    List<String> tableSchema = dropTableNode.getSchema();
+    //List<String> tableSchema = dropTableNode.getSchema();
+    //SchemaPlus defaultSchema = config.getConverter().getExpandedDefaultSchema(tableSchema);
     DrillConfig drillConfig = context.getConfig();
     UserSession session = context.getSession();
 
-    AbstractSchema temporarySchema = resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
+    AbstractSchema temporarySchema = resolveToTemporarySchema(dropTableNode);//tableSchema, defaultSchema, drillConfig);
     boolean isTemporaryTable = session.isTemporaryTable(temporarySchema, drillConfig, originalTableName);
 
     if (isTemporaryTable) {
       session.removeTemporaryTable(temporarySchema, originalTableName, drillConfig);
     } else {
-      AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+      AbstractSchema drillSchema =  SchemaUtilites.toMutableDrillSchema(
+          config.getConverter().getExpandedDefaultSchema(dropTableNode.getSchema()));
+
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
       if (tableToDrop == null || tableToDrop.getJdbcTableType() != Schema.TableType.TABLE) {
         if (dropTableNode.checkTableExistence()) {
@@ -88,17 +93,20 @@ public class DropTableHandler extends DefaultSqlHandler {
   /**
    * If table schema is not indicated in sql call, returns temporary workspace.
    * If schema is indicated, resolves to mutable table schema.
-   *
-   * @param tableSchema table schema
-   * @param defaultSchema default schema
-   * @param config drill config
    * @return resolved schema
    */
-  private AbstractSchema resolveToTemporarySchema(List<String> tableSchema, SchemaPlus defaultSchema, DrillConfig config) {
+  private AbstractSchema resolveToTemporarySchema(SqlDropTable sqlDropTable) {
+  //List<String> tableSchema, SchemaPlus defaultSchema, DrillConfig config) {
+    List<String> tableSchema = sqlDropTable.getSchema();
+    SchemaPlus defaultSchema = config.getConverter().getExpandedDefaultSchema(tableSchema);
     if (tableSchema.size() == 0) {
-      return SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+      List<String> temporarySchemaPath = Lists.newArrayList(context.getConfig().
+              getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
+      defaultSchema = config.getConverter().getExpandedDefaultSchema(temporarySchemaPath);
+      return SchemaUtilites.getTemporaryWorkspace(defaultSchema, context.getConfig());
     } else {
-      return SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+      AbstractSchema resolvedSchema = SchemaUtilites.toMutableDrillSchema(defaultSchema);
+      return resolvedSchema;
     }
   }
 

@@ -67,12 +67,11 @@ public class DescribeTableHandler extends DefaultSqlHandler {
           ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
-      final SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
       final List<String> schemaPathGivenInCmd = Util.skipLast(table.names);
-      final SchemaPlus schema = SchemaUtilites.findSchema(defaultSchema, schemaPathGivenInCmd);
+      final SchemaPlus schema = config.getConverter().getExpandedDefaultSchema(schemaPathGivenInCmd);
 
       if (schema == null) {
-        SchemaUtilites.throwSchemaNotFoundException(defaultSchema,
+        SchemaUtilites.throwSchemaNotFoundException(config.getConverter().getDefaultSchema(),
             SchemaUtilites.SCHEMA_PATH_JOINER.join(schemaPathGivenInCmd));
       }
 
