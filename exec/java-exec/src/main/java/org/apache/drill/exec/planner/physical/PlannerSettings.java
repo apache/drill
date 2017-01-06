@@ -107,6 +107,7 @@ public class PlannerSettings implements Context{
 
   public static final BooleanValidator STATISTICS_PARALLEL_ANALYZE = new BooleanValidator("planner.statistics.parallel_analyze", true);
   public static final BooleanValidator STATISTICS_USE = new BooleanValidator("planner.statistics.use", true);
+  public static final PositiveLongValidator STATISTICS_JOIN_NDV_ESTIMATE = new PositiveLongValidator("planner.statistics.join_ndv_estimate", 4, 1);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -270,6 +271,10 @@ public class PlannerSettings implements Context{
 
   public boolean useStatistics() {
     return options.getOption(STATISTICS_USE);
+  }
+
+  public long getJoinNDVEstimateToUse() {
+    return options.getOption(STATISTICS_JOIN_NDV_ESTIMATE.getOptionName()).num_val;
   }
 
   @Override

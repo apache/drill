@@ -17,22 +17,35 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.cost;
 
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
+import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.NumberUtil;
+import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
   private static final DrillRelMdDistinctRowCount INSTANCE =
@@ -49,6 +62,20 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     } else if (rel instanceof SingleRel && !DrillRelOptUtil.guessRows(rel)) {
         return RelMetadataQuery.getDistinctRowCount(((SingleRel) rel).getInput(), groupKey,
             predicate);
+    } else if (rel instanceof DrillJoinRelBase) {
+      PlannerSettings settings = PrelUtil.getPlannerSettings(rel.getCluster());
+      if (settings.getJoinNDVEstimateToUse() == 1) {
+        //Use product of ndvs - same as calcite
+        return RelMdUtil.getJoinDistinctRowCount(rel, ((DrillJoinRelBase)rel).getJoinType(), groupKey, predicate, false);
+      } else if (settings.getJoinNDVEstimateToUse() == 2) {
+        //Use max of ndvs - prevent overestimate of ndv(thereby underestimate of join cardinality)
+        return RelMdUtil.getJoinDistinctRowCount(rel, ((DrillJoinRelBase)rel).getJoinType(), groupKey, predicate, true);
+      } else if (settings.getJoinNDVEstimateToUse() == 3) {
+        //Assume ndv is unaffected by the join
+        return getDistinctRowCount(((DrillJoinRelBase) rel), groupKey, predicate);
+      } else {
+        return super.getDistinctRowCount(rel, groupKey, predicate);
+      }
     } else if (rel instanceof RelSubset && !DrillRelOptUtil.guessRows(rel)) {
       if (((RelSubset) rel).getBest() != null) {
         return RelMetadataQuery.getDistinctRowCount(((RelSubset) rel).getBest(), groupKey,
@@ -119,6 +146,64 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       return selectivity * rowCount;
     } else {
       return (1 - s) * selectivity * rowCount;
+    }
+  }
+
+  public Double getDistinctRowCount(DrillJoinRelBase joinRel, ImmutableBitSet groupKey, RexNode predicate) {
+    PlannerSettings settings = PrelUtil.getPlannerSettings(joinRel.getCluster());
+    if (settings.getJoinNDVEstimateToUse() == 1) {
+      //Use product of ndvs - same as calcite
+      return RelMdUtil.getJoinDistinctRowCount(joinRel, ((DrillJoinRelBase) joinRel).getJoinType(), groupKey, predicate, false);
+    } else if (settings.getJoinNDVEstimateToUse() == 2) {
+      //Use max of ndvs - prevent overestimate of ndv(thereby underestimate of join cardinality)
+      return RelMdUtil.getJoinDistinctRowCount(joinRel, ((DrillJoinRelBase) joinRel).getJoinType(), groupKey, predicate, true);
+    } else if (settings.getJoinNDVEstimateToUse() >= 3) {
+      //Assume ndv is unaffected by the join
+      ImmutableBitSet.Builder leftMask = ImmutableBitSet.builder();
+      ImmutableBitSet.Builder rightMask = ImmutableBitSet.builder();
+      JoinRelType joinType = joinRel.getJoinType();
+      RelNode left = (RelNode) joinRel.getInputs().get(0);
+      RelNode right = (RelNode) joinRel.getInputs().get(1);
+      RelMdUtil.setLeftRightBitmaps(groupKey, leftMask, rightMask, left.getRowType().getFieldCount());
+      RexNode leftPred = null;
+      RexNode rightPred = null;
+      if (predicate != null) {
+        ArrayList leftFilters = new ArrayList();
+        ArrayList rightFilters = new ArrayList();
+        ArrayList joinFilters = new ArrayList();
+        List predList = RelOptUtil.conjunctions(predicate);
+        RelOptUtil.classifyFilters(joinRel, predList, joinType, joinType == JoinRelType.INNER, !joinType.generatesNullsOnLeft(), !joinType.generatesNullsOnRight(), joinFilters, leftFilters, rightFilters);
+        RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
+        leftPred = RexUtil.composeConjunction(rexBuilder, leftFilters, true);
+        rightPred = RexUtil.composeConjunction(rexBuilder, rightFilters, true);
+      }
+
+      double leftDistRowCount = -1;
+      double rightDistRowCount = -1;
+      double distRowCount = 1;
+      ImmutableBitSet lmb = leftMask.build();
+      ImmutableBitSet rmb = rightMask.build();
+      if (lmb.length() > 0) {
+        leftDistRowCount = RelMetadataQuery.getDistinctRowCount(left, lmb, leftPred).doubleValue();
+        distRowCount = leftDistRowCount;
+      }
+      if (rmb.length() > 0) {
+        rightDistRowCount = RelMetadataQuery.getDistinctRowCount(right, rmb, rightPred).doubleValue();
+        distRowCount = rightDistRowCount;
+      }
+      if (leftDistRowCount >= 0 && rightDistRowCount >= 0) {
+        if (settings.getJoinNDVEstimateToUse() == 3) {
+          distRowCount = NumberUtil.multiply(leftDistRowCount, rightDistRowCount);
+        } else {
+          distRowCount = Math.max(leftDistRowCount, rightDistRowCount);
+        }
+        return RelMdUtil.numDistinctVals(distRowCount, RelMetadataQuery.getRowCount(joinRel));
+      } else {
+        return RelMdUtil.numDistinctVals(distRowCount, RelMetadataQuery.getRowCount(joinRel));
+        //return distRowCount;
+      }
+    } else {
+      return super.getDistinctRowCount(joinRel, groupKey, predicate);
     }
   }
 }
