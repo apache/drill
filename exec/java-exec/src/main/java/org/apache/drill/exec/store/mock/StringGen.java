@@ -22,17 +22,24 @@ import java.util.Random;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 
+/**
+ * Generates a mock string field of the given length. Fields are composed
+ * of upper case letters uniformly distributed from A to Z, and repeated
+ * or the length of the field. Exampled for a 4-character field:
+ * DDDD, MMMM, AAAA, RRRR, ...
+ */
+
 public class StringGen implements FieldGen {
 
-  Random rand = new Random( );
-  int length;
+  private final Random rand = new Random( );
+  private int length;
 
   @Override
   public void setup( ColumnDef colDef ) {
     length = colDef.width;
   }
 
-  public String value( ) {
+  private String value( ) {
     String c = Character.toString( (char) (rand.nextInt(26) + 'A') );
     StringBuilder buf = new StringBuilder( );
     for ( int i = 0;  i < length;  i++ ) {

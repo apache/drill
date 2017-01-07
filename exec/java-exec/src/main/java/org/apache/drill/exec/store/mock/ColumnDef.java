@@ -165,7 +165,7 @@ public class ColumnDef {
 
   public ColumnDef( MockColumn mockCol, int rep ) {
     this( mockCol );
-    name = name += Integer.toString(rep);
+    name += Integer.toString(rep);
   }
 
   public MockColumn getConfig() {

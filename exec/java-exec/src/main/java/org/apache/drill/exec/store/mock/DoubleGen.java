@@ -22,15 +22,21 @@ import java.util.Random;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * Generates random field values uniformly distributed over
+ * the range +-1 million, with any number of digits past
+ * the decimal point.
+ */
+
 public class DoubleGen implements FieldGen {
 
-  Random rand = new Random( );
+  private final Random rand = new Random( );
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  public double value( ) {
-    return rand.nextDouble() * 1_000_000;
+  private double value( ) {
+    return rand.nextDouble() * 2_000_000 - 1_000_000;
   }
 
   @Override

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.fn.interp;
 
 import static org.junit.Assert.assertEquals;
@@ -22,15 +22,10 @@ import static org.junit.Assert.assertEquals;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.parser.ExprLexer;
-import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.DrillStringUtils;
@@ -154,7 +149,9 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    @SuppressWarnings("resource")
     final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
 
     bit1.run();
@@ -171,10 +168,12 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
     final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
+    @SuppressWarnings("resource")
     final ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
 
+    @SuppressWarnings("resource")
     final ValueVector vv = evalExprWithInterpreter(expressionStr, batch, bit1);
 
     // Verify the first 2 values in the output of evaluation.
@@ -190,6 +189,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     bit1.close();
   }
 
+  @SuppressWarnings("resource")
   private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
     final List<RecordBatch> children = Lists.newArrayList();
     final MockScanBatchCreator creator = new MockScanBatchCreator();

@@ -38,6 +38,16 @@ import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * Extended form of the mock record reader that uses generator class
+ * instances to create the mock values. This is a work in progress.
+ * Generators exist for a few simple required types. One also exists
+ * to generate strings that contain dates.
+ * <p>
+ * The definition is provided inside the sub scan used to create the
+ * {@link ScanBatch} used to create this record reader.
+ */
+
 public class ExtendedMockRecordReader extends AbstractRecordReader {
 
   private ValueVector[] valueVectors;
@@ -58,8 +68,10 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
   private ColumnDef[] buildColumnDefs() {
     List<ColumnDef> defs = new ArrayList<>( );
 
-    // Look for duplicate names. Bad things happen when the sama name
-    // appears twice.
+    // Look for duplicate names. Bad things happen when the same name
+    // appears twice. We must do this here because some tests create
+    // a physical plan directly, meaning that this is the first
+    // opportunity to review the column definitions.
 
     Set<String> names = new HashSet<>();
     MockColumn cols[] = config.getTypes();
@@ -91,11 +103,6 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
     return size;
   }
 
-  private MaterializedField getVector(String name, MajorType type, int length) {
-    assert context != null : "Context shouldn't be null.";
-    return MaterializedField.create(name, type);
-  }
-
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try {
@@ -106,7 +113,7 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
       for (int i = 0; i < fields.length; i++) {
         final ColumnDef col = fields[i];
         final MajorType type = col.getConfig( ).getMajorType();
-        final MaterializedField field = getVector(col.getName(), type, batchRecordCount);
+        final MaterializedField field = MaterializedField.create(col.getName(), type);
         final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
       }

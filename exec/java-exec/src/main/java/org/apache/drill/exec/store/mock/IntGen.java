@@ -22,14 +22,20 @@ import java.util.Random;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * Generates integer values uniformly randomly distributed over
+ * the entire 32-bit integer range from
+ * {@link Integer.MIN_VALUE} to {@link Integer.MAX_VALUE}.
+ */
+
 public class IntGen implements FieldGen {
 
-  Random rand = new Random( );
+  private final Random rand = new Random( );
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  public int value( ) {
+  private int value( ) {
     return rand.nextInt();
   }
 
@@ -38,5 +44,4 @@ public class IntGen implements FieldGen {
     IntVector vector = (IntVector) v;
     vector.getMutator().set(index, value());
   }
-
 }

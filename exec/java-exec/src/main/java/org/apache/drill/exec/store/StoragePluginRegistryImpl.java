@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,8 +51,6 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
-import org.apache.drill.exec.store.mock.MockStorageEngine;
-import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
@@ -130,6 +128,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     plugins.putAll(createPlugins());
   }
 
+  @SuppressWarnings({ "resource" })
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     try {
       /*
@@ -212,6 +211,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   @Override
   public void deletePlugin(String name) {
+    @SuppressWarnings("resource")
     StoragePlugin plugin = plugins.remove(name);
     closePlugin(plugin);
     pluginSystemTable.delete(name);
@@ -229,6 +229,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @SuppressWarnings("resource")
   @Override
   public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist)
       throws ExecutionSetupException {
@@ -319,6 +320,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
   }
 
+  @SuppressWarnings("resource")
   @Override
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig)
       throws ExecutionSetupException {
@@ -366,6 +368,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   public class DrillSchemaFactory implements SchemaFactory {
 
+    @SuppressWarnings({ "resource" })
     @Override
     public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
       Stopwatch watch = Stopwatch.createStarted();

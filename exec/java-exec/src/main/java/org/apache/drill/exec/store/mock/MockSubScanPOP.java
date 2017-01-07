@@ -33,13 +33,37 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
+/**
+ * Describes a physical scan operation for the mock data source. Each operator
+ * can, in general, give rise to one or more actual scans. For the mock data
+ * source, each sub-scan does exactly one (simulated) scan.
+ */
+
 @JsonTypeName("mock-sub-scan")
 public class MockSubScanPOP extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockGroupScanPOP.class);
 
   private final String url;
   protected final List<MockGroupScanPOP.MockScanEntry> readEntries;
-  private boolean extended;
+  private final boolean extended;
+
+  /**
+   * This constructor is called from Jackson and is designed to support both
+   * older physical plans and the newer ("extended") plans. Jackson will fill
+   * in a null value for the <tt>extended</tt> field for older plans; we use
+   * that null value to know that the plan is old, thus not extended. Newer
+   * plans simply provide the value.
+   *
+   * @param url
+   *          not used for the mock plan, appears to be a vestige of creating
+   *          this from a file-based plugin. Must keep it because older physical
+   *          plans contained a dummy URL value.
+   * @param extended
+   *          see above
+   * @param readEntries
+   *          a description of the columns to generate in a Jackson-serialized
+   *          form unique to the mock data source plugin.
+   */
 
   @JsonCreator
   public MockSubScanPOP(@JsonProperty("url") String url,
