@@ -81,16 +81,6 @@ public class ProfileResources {
     private String state;
     private String user;
 
-    public ProfileInfo(String queryId, long startTime, String foreman, String query, String state, String user) {
-      this.queryId = queryId;
-      this.startTime = startTime;
-      this.time = new Date(startTime);
-      this.foreman = foreman;
-      this.location = "http://localhost:8047/profile/" + queryId + ".json";
-      this.query = query.substring(0,  Math.min(query.length(), 150));
-      this.state = state;
-      this.user = user;
-    }
     public ProfileInfo(String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
       this.queryId = queryId;
       this.startTime = startTime;
@@ -126,6 +116,19 @@ public class ProfileResources {
     public long getEndTime() {
       return endTime;
     }
+
+    public String getDuration() {
+      long duration = endTime - startTime;
+      long hours = TimeUnit.MILLISECONDS.toHours(duration);
+      long minutes = TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration));
+      long seconds = TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
+      long milliSeconds = duration - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(duration));
+      String formattedDuration = (hours > 0? hours+" hr ": "") +
+        ((minutes + hours) > 0 ? minutes +" min ": "") +
+        seconds + "." + String.format("%03d sec", milliSeconds) ;
+      return formattedDuration;
+    }
+
     public String getState() {
       return state;
     }
@@ -194,7 +197,7 @@ public class ProfileResources {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());

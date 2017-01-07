@@ -63,9 +63,9 @@
               </a>
             </td> 
             <td>
-              <div style="height:100%;width:100%">${query.getState()}</div>          
+              <div style="height:100%;width:100%">${query.getState()}</div>
             <td>
-              <div style="height:100%;width:100%">${(.now?long - query.getStartTime()) / 1000} sec</div>          
+              <div style="height:100%;width:100%">${query.getDuration()}</div>
             <td>
                 <div style="height:100%;width:100%">
                   ${query.getForeman()}
@@ -125,7 +125,7 @@
               <div style="height:100%;width:100%">${query.getState()}</div>
           </td>
           <td>
-              <div style="height:100%;width:100%">${(query.getEndTime() - query.getStartTime()) / 1000} sec</div>
+              <div style="height:100%;width:100%">${query.getDuration()}</div>
           </td>
           <td>
               <div style="height:100%;width:100%">

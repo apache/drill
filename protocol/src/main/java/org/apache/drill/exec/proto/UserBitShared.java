@@ -20,6 +20,8 @@
 
 package org.apache.drill.exec.proto;
 
+import java.util.concurrent.TimeUnit;
+
 public final class UserBitShared {
   private UserBitShared() {}
   public static void registerAllExtensions(
@@ -13595,6 +13597,17 @@ public final class UserBitShared {
       return end_;
     }
 
+    public String getDuration() {
+      long duration = end_ - start_;
+      long hours = TimeUnit.MILLISECONDS.toHours(duration);
+      long minutes = TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration));
+      long seconds = TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
+      long milliSeconds = duration - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(duration));
+      String formattedDuration = (hours > 0? hours+" hr ": "") +
+        ((minutes + hours) > 0 ? minutes +" min ": "") +
+        seconds + "." + String.format("%03d sec", milliSeconds) ;
+      return formattedDuration;
+    }
     // optional string query = 5;
     public static final int QUERY_FIELD_NUMBER = 5;
     private java.lang.Object query_;
