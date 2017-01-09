@@ -95,6 +95,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       PlannerSettings.STATISTICS_PARALLEL_ANALYZE,
       PlannerSettings.STATISTICS_USE,
       PlannerSettings.STATISTICS_JOIN_NDV_ESTIMATE,
+      PlannerSettings.STATISTICS_COMPARISON_FILTER_SELECTIVITY,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,

@@ -21,6 +21,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.TableScan;
@@ -33,6 +34,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.NumberUtil;
@@ -204,6 +206,31 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       }
     } else {
       return super.getDistinctRowCount(joinRel, groupKey, predicate);
+    }
+  }
+
+  public Double getDistinctRowCount(Aggregate rel, ImmutableBitSet groupKey, RexNode predicate) {
+    ArrayList notPushable = new ArrayList();
+    ArrayList pushable = new ArrayList();
+    RelOptUtil.splitFilters(rel.getGroupSet(), predicate, pushable, notPushable);
+    RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+    RexNode childPreds = RexUtil.composeConjunction(rexBuilder, pushable, true);
+    ImmutableBitSet.Builder childKey = ImmutableBitSet.builder();
+    RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
+    Double distinctRowCount = RelMetadataQuery.getDistinctRowCount(rel.getInput(), childKey.build(), childPreds);
+    if(distinctRowCount == null) {
+      return null;
+    } else if(notPushable.isEmpty()) {
+      return distinctRowCount;
+    } else {
+      RexNode pred = RexUtil.composeConjunction(rexBuilder, notPushable, true);
+      Double guess;
+      if (pred != null && pred.isA(SqlKind.COMPARISON)) {
+        guess = PrelUtil.getPlannerSettings(rel.getCluster()).getComparisonFilterSelectivity();
+      } else {
+        guess = RelMdUtil.guessSelectivity(pred);
+      }
+      return Double.valueOf(distinctRowCount.doubleValue() * guess);
     }
   }
 }
