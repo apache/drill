@@ -28,6 +28,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
@@ -265,7 +266,7 @@ public abstract class DrillRelOptUtil {
     return false;
   }
 
-  public static boolean analyzeSimpleEquiJoin(LogicalJoin join, int[] joinFieldOrdinals) {
+  public static boolean analyzeSimpleEquiJoin(Join join, int[] joinFieldOrdinals) {
     RexNode joinExp = join.getCondition();
     if(joinExp.getKind() != SqlKind.EQUALS) {
       return false;

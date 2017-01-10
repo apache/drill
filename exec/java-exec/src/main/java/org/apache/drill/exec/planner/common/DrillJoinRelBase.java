@@ -122,7 +122,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
 
     if (!DrillRelOptUtil.guessRows(this)         //Statistics present for left and right side of the join
         && jr.getJoinType() == JoinRelType.INNER
-        && DrillRelOptUtil.analyzeSimpleEquiJoin(jr, joinFields)) {
+        && DrillRelOptUtil.analyzeSimpleEquiJoin((Join)jr, joinFields)) {
       ImmutableBitSet leq = ImmutableBitSet.of(joinFields[0]);
       ImmutableBitSet req = ImmutableBitSet.of(joinFields[1]);
 
