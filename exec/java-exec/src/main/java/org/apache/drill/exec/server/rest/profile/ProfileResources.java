@@ -68,6 +68,17 @@ public class ProfileResources {
   @Inject DrillUserPrincipal principal;
   @Inject SecurityContext sc;
 
+  public static String getPrettyDuration(long durationInMillis) {
+    long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
+    long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(durationInMillis));
+    long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis));
+    long milliSeconds = durationInMillis - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(durationInMillis));
+    String formattedDuration = (hours > 0? hours+" hr ": "") +
+      ((minutes + hours) > 0 ? minutes +" min ": "") +
+      seconds + "." + String.format("%03d sec", milliSeconds) ;
+    return formattedDuration;
+  }
+
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
@@ -118,15 +129,7 @@ public class ProfileResources {
     }
 
     public String getDuration() {
-      long duration = endTime - startTime;
-      long hours = TimeUnit.MILLISECONDS.toHours(duration);
-      long minutes = TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration));
-      long seconds = TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
-      long milliSeconds = duration - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(duration));
-      String formattedDuration = (hours > 0? hours+" hr ": "") +
-        ((minutes + hours) > 0 ? minutes +" min ": "") +
-        seconds + "." + String.format("%03d sec", milliSeconds) ;
-      return formattedDuration;
+      return getPrettyDuration(endTime - startTime);
     }
 
     public String getState() {
