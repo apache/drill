@@ -211,12 +211,38 @@ public abstract class DrillRelOptUtil {
       } else {
         return true;
       }
-    } /*else if (rel instanceof Filter
-          && findLikeOrRangePredicate(((Filter) rel).getCondition())) {
-      return true;
-    } */else {
+    } else {
       for (RelNode child : rel.getInputs()) {
         if (guessRows(child)) { // at least one child is a guess
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public static boolean findComplexPredicate(RelNode rel) {
+    if (rel instanceof RelSubset) {
+      if (((RelSubset) rel).getBest() != null) {
+        return findComplexPredicate(((RelSubset) rel).getBest());
+      } else if (((RelSubset) rel).getOriginal() != null) {
+        return findComplexPredicate(((RelSubset) rel).getOriginal());
+      }
+    } else if (rel instanceof HepRelVertex) {
+      if (((HepRelVertex) rel).getCurrentRel() != null) {
+        return findComplexPredicate(((HepRelVertex) rel).getCurrentRel());
+      }
+    } else if (rel instanceof Filter) {
+      if (findLikeOrRangePredicate(((Filter) rel).getCondition())) {
+        return true;
+      } else {
+        return findComplexPredicate(((Filter) rel).getInput());
+      }
+    } else if (rel instanceof TableScan) {
+      return false;
+    } else {
+      for (RelNode child : rel.getInputs()) {
+        if (findComplexPredicate(child)) { // at least one child is a guess
           return true;
         }
       }

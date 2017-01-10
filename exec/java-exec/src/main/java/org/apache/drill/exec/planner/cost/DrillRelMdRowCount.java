@@ -25,6 +25,8 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillFilterRelBase;
@@ -91,7 +93,14 @@ public class DrillRelMdRowCount extends RelMdRowCount{
       return 1.0;
     }
     else {
-      return super.getRowCount(rel);
+      Double distinctRowCount = null;
+      // If has an underlying complex predicate (which we cannot accurately estimate) then
+      // Aggregate NDV = 0.1 * input rows
+      if (!DrillRelOptUtil.findComplexPredicate(rel)) {
+        distinctRowCount = RelMetadataQuery.getDistinctRowCount(rel.getInput(), groupKey, (RexNode) null);
+      }
+      return distinctRowCount == null ? Double.valueOf(RelMetadataQuery.getRowCount(rel.getInput()).doubleValue() / 10.0D) : distinctRowCount;
+      //return super.getRowCount(rel);
     }
   }
 }
