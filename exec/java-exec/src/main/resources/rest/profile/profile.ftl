@@ -19,6 +19,24 @@
         "queryid" : "${model.getQueryId()}",
         "operators" : ${model.getOperatorsJSON()}
     };
+    var elapsedInMillis = <#if (model.getProfile().getState().name() == "RUNNING")> 
+      ${(.now?long - model.getProfile().getStart())?c};
+    <#else> ${(model.getProfile().getEnd() - model.getProfile().getStart())?c};
+    </#if>
+    //Convert milliseconds to human readable time format
+    var prettyElapsed = function (timeInMillis) {
+      var seconds = (timeInMillis%60000)/1000;
+      var minutes = parseInt((timeInMillis/(1000*60))%60);
+      var hours = parseInt((timeInMillis/(1000*60*60))%24);
+      seconds = ((seconds < 10) ? "0" + seconds : seconds) + " sec";
+      minutes = ( (minutes+hours) > 0) ? minutes + " min " : "";
+      hours = (hours > 0) ? hours + " hr ": "";
+      return <#if (model.getProfile().getState().name() == "RUNNING" 
+        || model.getProfile().getState().name() == "STARTING")>
+        "ELAPSED : "
+      <#else> "DURATION : "
+      </#if> + hours + minutes + seconds;
+    };
 </script>
 </#macro>
 
@@ -106,14 +124,9 @@
   <p>STATE: ${model.getProfile().getState().name()}</p>
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
-  <p>
-  <#if (model.getProfile().getState().name() == "RUNNING" 
-     || model.getProfile().getState().name() == "STARTING")> 
-    ELAPSED: 
-  <#else> DURATION: 
-  </#if> 
-  ${model.getProfile().getDuration()}
-  </p>
+  <script>document.getElementById("queryDuration").innerHTML = prettyElapsed(elapsedInMillis);</script>
+  <p id="queryDuration">ELAPSED: <i>Unavailable</i></p>
+
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
     <div class="page-header"></div>
