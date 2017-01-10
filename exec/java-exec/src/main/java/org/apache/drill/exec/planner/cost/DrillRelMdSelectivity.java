@@ -21,7 +21,6 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
@@ -44,8 +43,6 @@ import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,27 +76,6 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       }
     } else {
       return super.getSelectivity(rel, predicate);
-    }
-  }
-
-  public Double getSelectivity(Aggregate rel, RexNode predicate) {
-    ArrayList notPushable = new ArrayList();
-    ArrayList pushable = new ArrayList();
-    RelOptUtil.splitFilters(rel.getGroupSet(), predicate, pushable, notPushable);
-    RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-    RexNode childPred = RexUtil.composeConjunction(rexBuilder, pushable, true);
-    Double selectivity = RelMetadataQuery.getSelectivity(rel.getInput(), childPred);
-    if(selectivity == null) {
-      return null;
-    } else {
-      RexNode pred = RexUtil.composeConjunction(rexBuilder, notPushable, true);
-      Double guess;
-      if (pred != null && pred.isA(SqlKind.COMPARISON)) {
-        guess = PrelUtil.getPlannerSettings(rel.getCluster()).getComparisonFilterSelectivity();
-      } else {
-        guess = RelMdUtil.guessSelectivity(pred);
-      }
-      return Double.valueOf(selectivity.doubleValue() * guess);
     }
   }
 

@@ -108,7 +108,6 @@ public class PlannerSettings implements Context{
   public static final BooleanValidator STATISTICS_PARALLEL_ANALYZE = new BooleanValidator("planner.statistics.parallel_analyze", true);
   public static final BooleanValidator STATISTICS_USE = new BooleanValidator("planner.statistics.use", true);
   public static final PositiveLongValidator STATISTICS_JOIN_NDV_ESTIMATE = new PositiveLongValidator("planner.statistics.join_ndv_estimate", 4, 1);
-  public static final DoubleValidator STATISTICS_COMPARISON_FILTER_SELECTIVITY = new DoubleValidator("planner.statistics.comparison_filter_selectivity", 0.5);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -278,9 +277,6 @@ public class PlannerSettings implements Context{
     return options.getOption(STATISTICS_JOIN_NDV_ESTIMATE.getOptionName()).num_val;
   }
 
-  public double getComparisonFilterSelectivity() {
-    return options.getOption(STATISTICS_COMPARISON_FILTER_SELECTIVITY.getOptionName()).float_val;
-  }
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){
