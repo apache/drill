@@ -124,8 +124,8 @@
   <p>STATE: ${model.getProfile().getState().name()}</p>
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
-  <script>document.getElementById("queryDuration").innerHTML = prettyElapsed(elapsedInMillis);</script>
   <p id="queryDuration">ELAPSED: <i>Unavailable</i></p>
+  <script>document.getElementById("queryDuration").innerHTML = prettyElapsed(elapsedInMillis);</script>
 
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
