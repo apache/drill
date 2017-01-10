@@ -62,11 +62,11 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
     this.context = context;
     this.config = config;
 
-    fields = buildColumnDefs( );
+    fields = buildColumnDefs();
   }
 
   private ColumnDef[] buildColumnDefs() {
-    List<ColumnDef> defs = new ArrayList<>( );
+    List<ColumnDef> defs = new ArrayList<>();
 
     // Look for duplicate names. Bad things happen when the same name
     // appears twice. We must do this here because some tests create
@@ -75,18 +75,18 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
 
     Set<String> names = new HashSet<>();
     MockColumn cols[] = config.getTypes();
-    for ( int i = 0;  i < cols.length;  i++ ) {
+    for (int i = 0; i < cols.length; i++) {
       MockColumn col = cols[i];
       if (names.contains(col.name)) {
         throw new IllegalArgumentException("Duplicate column name: " + col.name);
       }
       names.add(col.name);
-      int repeat = Math.min( 1, col.getRepeatCount( ) );
-      if ( repeat == 1 ) {
-        defs.add( new ColumnDef(col) );
+      int repeat = Math.min(1, col.getRepeatCount());
+      if (repeat == 1) {
+        defs.add(new ColumnDef(col));
       } else {
-        for ( int j = 0;  j < repeat;  j++ ) {
-          defs.add( new ColumnDef(col, j+1) );
+        for (int j = 0; j < repeat; j++) {
+          defs.add(new ColumnDef(col, j+1));
         }
       }
     }
@@ -112,7 +112,7 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
 
       for (int i = 0; i < fields.length; i++) {
         final ColumnDef col = fields[i];
-        final MajorType type = col.getConfig( ).getMajorType();
+        final MajorType type = col.getConfig().getMajorType();
         final MaterializedField field = MaterializedField.create(col.getName(), type);
         final Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         valueVectors[i] = output.addField(field, vvClass);
@@ -130,7 +130,7 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
 
     final int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
     recordsRead += recordSetSize;
-    for ( int i = 0;  i < recordSetSize;  i++ ) {
+    for (int i = 0; i < recordSetSize; i++) {
       int j = 0;
       for (final ValueVector v : valueVectors) {
         fields[j++].generator.setValue(v, i);

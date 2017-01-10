@@ -31,25 +31,25 @@ import org.apache.drill.exec.vector.VarCharVector;
 
 public class StringGen implements FieldGen {
 
-  private final Random rand = new Random( );
+  private final Random rand = new Random();
   private int length;
 
   @Override
-  public void setup( ColumnDef colDef ) {
+  public void setup(ColumnDef colDef) {
     length = colDef.width;
   }
 
-  private String value( ) {
-    String c = Character.toString( (char) (rand.nextInt(26) + 'A') );
-    StringBuilder buf = new StringBuilder( );
-    for ( int i = 0;  i < length;  i++ ) {
-      buf.append( c );
+  private String value() {
+    String c = Character.toString((char) (rand.nextInt(26) + 'A'));
+    StringBuilder buf = new StringBuilder();
+    for (int i = 0; i < length; i++) {
+      buf.append(c);
     }
     return buf.toString();
   }
 
   @Override
-  public void setValue( ValueVector v, int index ) {
+  public void setValue(ValueVector v, int index) {
     VarCharVector vector = (VarCharVector) v;
     vector.getMutator().setSafe(index, value().getBytes());
   }

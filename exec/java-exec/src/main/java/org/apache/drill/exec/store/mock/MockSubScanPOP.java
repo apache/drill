@@ -83,7 +83,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   }
 
   public String getUrl() { return url; }
-  public boolean isExtended( ) { return extended; }
+  public boolean isExtended() { return extended; }
 
   @JsonProperty("entries")
   public List<MockGroupScanPOP.MockScanEntry> getReadEntries() {

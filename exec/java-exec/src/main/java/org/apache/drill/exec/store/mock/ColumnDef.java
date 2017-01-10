@@ -34,11 +34,11 @@ public class ColumnDef {
   public int width;
   public FieldGen generator;
 
-  public ColumnDef( MockColumn mockCol ) {
+  public ColumnDef(MockColumn mockCol) {
     this.mockCol = mockCol;
     name = mockCol.getName();
     width = TypeHelper.getSize(mockCol.getMajorType());
-    makeGenerator( );
+    makeGenerator();
   }
 
   /**
@@ -50,31 +50,31 @@ public class ColumnDef {
    * class in this package.
    */
 
-  private void makeGenerator( ) {
-    String genName = mockCol.getGenerator( );
-    if ( genName != null ) {
-      if ( ! genName.contains(".") ) {
+  private void makeGenerator() {
+    String genName = mockCol.getGenerator();
+    if (genName != null) {
+      if (! genName.contains(".")) {
         genName = "org.apache.drill.exec.store.mock." + genName;
       }
       try {
-        ClassLoader cl = getClass( ).getClassLoader();
+        ClassLoader cl = getClass().getClassLoader();
         Class<?> genClass = cl.loadClass(genName);
-        generator = (FieldGen) genClass.newInstance( );
+        generator = (FieldGen) genClass.newInstance();
       } catch (ClassNotFoundException | InstantiationException
           | IllegalAccessException | ClassCastException e) {
-        throw new IllegalArgumentException( "Generator " + genName + " is undefined for mock field " + name );
+        throw new IllegalArgumentException("Generator " + genName + " is undefined for mock field " + name);
       }
-      generator.setup( this );
+      generator.setup(this);
       return;
     }
 
-    makeDefaultGenerator( );
+    makeDefaultGenerator();
   }
 
-  private void makeDefaultGenerator( ) {
+  private void makeDefaultGenerator() {
 
     MinorType minorType = mockCol.getMinorType();
-    switch ( minorType ) {
+    switch (minorType) {
     case BIGINT:
       break;
     case BIT:
@@ -102,12 +102,12 @@ public class ColumnDef {
     case FLOAT4:
       break;
     case FLOAT8:
-      generator = new DoubleGen( );
+      generator = new DoubleGen();
       break;
     case GENERIC_OBJECT:
       break;
     case INT:
-      generator = new IntGen( );
+      generator = new IntGen();
       break;
     case INTERVAL:
       break;
@@ -152,19 +152,19 @@ public class ColumnDef {
     case VARBINARY:
       break;
     case VARCHAR:
-      generator = new StringGen( );
+      generator = new StringGen();
       break;
     default:
       break;
     }
-    if ( generator == null ) {
-      throw new IllegalArgumentException( "No default column generator for column " + name + " of type " + minorType );
+    if (generator == null) {
+      throw new IllegalArgumentException("No default column generator for column " + name + " of type " + minorType);
     }
     generator.setup(this);
   }
 
-  public ColumnDef( MockColumn mockCol, int rep ) {
-    this( mockCol );
+  public ColumnDef(MockColumn mockCol, int rep) {
+    this(mockCol);
     name += Integer.toString(rep);
   }
 

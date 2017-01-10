@@ -31,17 +31,17 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public class MoneyGen implements FieldGen {
 
-  private final Random rand = new Random( );
+  private final Random rand = new Random();
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  private double value( ) {
-    return Math.ceil( rand.nextDouble() * 1_000_000 * 100) / 100;
+  private double value() {
+    return Math.ceil(rand.nextDouble() * 1_000_000 * 100) / 100;
   }
 
   @Override
-  public void setValue( ValueVector v, int index ) {
+  public void setValue(ValueVector v, int index) {
     Float8Vector vector = (Float8Vector) v;
     vector.getMutator().set(index, value());
   }

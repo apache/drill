@@ -42,27 +42,27 @@ public class DateGen implements FieldGen {
   private final int ONE_DAY = 24 * 60 * 60 * 1000;
   private final int ONE_YEAR = ONE_DAY * 365;
 
-  private final Random rand = new Random( );
+  private final Random rand = new Random();
   private long baseTime;
   private SimpleDateFormat fmt;
 
-  public DateGen( ) {
+  public DateGen() {
     // Start a year ago.
     baseTime = System.currentTimeMillis() - ONE_YEAR;
-    fmt = new SimpleDateFormat( "yyyy-mm-DD" );
+    fmt = new SimpleDateFormat("yyyy-mm-DD");
   }
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  private long value( ) {
-    return baseTime + rand.nextInt( 365 ) * ONE_DAY;
+  private long value() {
+    return baseTime + rand.nextInt(365) * ONE_DAY;
   }
 
   @Override
-  public void setValue( ValueVector v, int index ) {
+  public void setValue(ValueVector v, int index) {
     VarCharVector vector = (VarCharVector) v;
-    long randTime = baseTime + value( );
+    long randTime = baseTime + value();
     String str = fmt.format(new Date(randTime));
     vector.getMutator().setSafe(index, str.getBytes());
   }

@@ -109,9 +109,9 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
     @Override
     public Table getTable(String name) {
-      Pattern p = Pattern.compile( "(\\w+)_(\\d+)(k|m)?", Pattern.CASE_INSENSITIVE);
+      Pattern p = Pattern.compile("(\\w+)_(\\d+)(k|m)?", Pattern.CASE_INSENSITIVE);
       Matcher m = p.matcher(name);
-      if ( ! m.matches() ) {
+      if (! m.matches()) {
         return null;
       }
       @SuppressWarnings("unused")
@@ -122,13 +122,13 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
       MockScanEntry entry = new MockScanEntry(n, null);
       List<MockScanEntry> list = new ArrayList<>();
-      list.add( entry );
-      return new DynamicDrillTable(engine, this.name, list );
+      list.add(entry);
+      return new DynamicDrillTable(engine, this.name, list);
     }
 
     @Override
     public Set<String> getTableNames() {
-      return new HashSet<>( );
+      return new HashSet<>();
     }
 
     @Override

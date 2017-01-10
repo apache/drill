@@ -29,7 +29,7 @@ public class MockStorageEngineConfig extends StoragePluginConfigBase {
   private String url;
 
   public static final String NAME = "mock";
-  public static final MockStorageEngineConfig INSTANCE = new MockStorageEngineConfig( "mock:///" );
+  public static final MockStorageEngineConfig INSTANCE = new MockStorageEngineConfig("mock:///");
 
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("url") String url) {

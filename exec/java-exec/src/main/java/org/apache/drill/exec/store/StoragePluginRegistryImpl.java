@@ -128,7 +128,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     plugins.putAll(createPlugins());
   }
 
-  @SuppressWarnings({ "resource" })
+  @SuppressWarnings("resource")
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     try {
       /*
@@ -368,7 +368,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   public class DrillSchemaFactory implements SchemaFactory {
 
-    @SuppressWarnings({ "resource" })
+    @SuppressWarnings("resource")
     @Override
     public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
       Stopwatch watch = Stopwatch.createStarted();

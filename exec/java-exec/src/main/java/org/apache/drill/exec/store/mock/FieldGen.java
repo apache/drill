@@ -33,5 +33,5 @@ import org.apache.drill.exec.vector.ValueVector;
  */
 public interface FieldGen {
   void setup(ColumnDef colDef);
-  void setValue( ValueVector v, int index );
+  void setValue(ValueVector v, int index);
 }

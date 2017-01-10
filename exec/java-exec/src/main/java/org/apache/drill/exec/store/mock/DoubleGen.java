@@ -30,17 +30,17 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public class DoubleGen implements FieldGen {
 
-  private final Random rand = new Random( );
+  private final Random rand = new Random();
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  private double value( ) {
+  private double value() {
     return rand.nextDouble() * 2_000_000 - 1_000_000;
   }
 
   @Override
-  public void setValue( ValueVector v, int index ) {
+  public void setValue(ValueVector v, int index) {
     Float8Vector vector = (Float8Vector) v;
     vector.getMutator().set(index, value());
   }
