@@ -65,15 +65,17 @@ public class CodeCompiler {
      */
 
     public Class<?> compile(final CodeGenerator<?> cg) throws Exception {
-       if (cg.isPlainOldJava()) {
+       if (cg.isPlainJava()) {
 
         // Generate class as plain-old Java
 
+         logger.trace(String.format("Class %s generated as plain Java", cg.getClassName()));
         return classBuilder.getImplementationClass(cg);
       } else {
 
         // Generate class parts and assemble byte-codes.
 
+        logger.trace(String.format("Class %s generated via byte-code manipulation", cg.getClassName()));
         return transformer.getImplementationClass(cg);
       }
     }
@@ -139,6 +141,7 @@ public class CodeCompiler {
         .maximumSize(config.getInt(MAX_LOADING_CACHE_SIZE_CONFIG))
         .build(new Loader());
     preferPlainJava = config.getBoolean(PREFER_POJ_CONFIG);
+    logger.info(String.format("Plain java code generation preferred: %b", preferPlainJava));
   }
 
   /**
@@ -168,7 +171,7 @@ public class CodeCompiler {
   @SuppressWarnings("unchecked")
   public <T> List<T> createInstances(final CodeGenerator<?> cg, int count) throws ClassTransformationException {
     if (preferPlainJava && cg.supportsPlainJava()) {
-      cg.preferPlainOldJava(true);
+      cg.preferPlainJava(true);
     }
     cg.generate();
     classGenCount++;
@@ -176,6 +179,7 @@ public class CodeCompiler {
       final GeneratedClassEntry ce;
       if (useCache) {
         ce = cache.get(cg);
+        logger.trace(String.format("Class %s found in code cache", cg.getClassName()));
       } else {
         ce = makeClass(cg);
       }

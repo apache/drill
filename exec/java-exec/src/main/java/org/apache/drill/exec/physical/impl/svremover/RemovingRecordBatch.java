@@ -238,9 +238,9 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       CopyUtil.generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this);
-      cg.plainOldJavaCapable(true);
+      cg.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.
-//      cg.persistCode(true);
+//      cg.saveCodeForDebugging(true);
 
       return copier;
     } catch (ClassTransformationException | IOException e) {
@@ -264,9 +264,9 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry(), context.getOptions());
       CopyUtil.generateCopies(cg.getRoot(), batch, true);
-      cg.plainOldJavaCapable(true);
+      cg.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.
-//      cg.persistCode(true);
+//      cg.saveCodeForDebugging(true);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, batch, outgoing);
       return copier;

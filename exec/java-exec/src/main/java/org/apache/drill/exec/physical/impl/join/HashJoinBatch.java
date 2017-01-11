@@ -402,9 +402,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
   public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
     final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    cg.plainOldJavaCapable(true);
+    cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
     final ClassGenerator<HashJoinProbe> g = cg.getRoot();
 
     // Generate the code to project build side records

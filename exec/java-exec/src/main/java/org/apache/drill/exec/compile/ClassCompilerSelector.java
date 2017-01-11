@@ -63,6 +63,8 @@ import org.codehaus.commons.compiler.CompileException;
  */
 
 public class ClassCompilerSelector {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassCompilerSelector.class);
+
   public enum CompilerPolicy {
     DEFAULT, JDK, JANINO;
   }
@@ -101,16 +103,18 @@ public class ClassCompilerSelector {
 
   public ClassCompilerSelector(ClassLoader classLoader, DrillConfig config, OptionManager sessionOptions) {
     OptionValue value = sessionOptions.getOption(JAVA_COMPILER_OPTION);
-    this.policy = CompilerPolicy.valueOf((value != null) ? value.string_val.toUpperCase() : config.getString(JAVA_COMPILER_CONFIG).toUpperCase());
+    policy = CompilerPolicy.valueOf((value != null) ? value.string_val.toUpperCase() : config.getString(JAVA_COMPILER_CONFIG).toUpperCase());
 
     value = sessionOptions.getOption(JAVA_COMPILER_JANINO_MAXSIZE_OPTION);
-    this.janinoThreshold = (value != null) ? value.num_val : config.getLong(JAVA_COMPILER_JANINO_MAXSIZE_CONFIG);
+    janinoThreshold = (value != null) ? value.num_val : config.getLong(JAVA_COMPILER_JANINO_MAXSIZE_CONFIG);
 
     value = sessionOptions.getOption(JAVA_COMPILER_DEBUG_OPTION);
     boolean debug = (value != null) ? value.bool_val : config.getBoolean(JAVA_COMPILER_DEBUG_CONFIG);
 
-    this.janinoClassCompiler = (policy == CompilerPolicy.JANINO || policy == CompilerPolicy.DEFAULT) ? new JaninoClassCompiler(classLoader, debug) : null;
-    this.jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? JDKClassCompiler.newInstance(classLoader, debug) : null;
+    janinoClassCompiler = (policy == CompilerPolicy.JANINO || policy == CompilerPolicy.DEFAULT) ? new JaninoClassCompiler(classLoader, debug) : null;
+    jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? JDKClassCompiler.newInstance(classLoader, debug) : null;
+
+    logger.info(String.format("Java compiler policy: %s, Debug option: %b", policy, debug));
   }
 
   byte[][] getClassByteCode(ClassNames className, String sourceCode)

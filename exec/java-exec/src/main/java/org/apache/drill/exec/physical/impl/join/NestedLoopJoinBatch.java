@@ -223,9 +223,9 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
    */
   private NestedLoopJoin setupWorker() throws IOException, ClassTransformationException {
     final CodeGenerator<NestedLoopJoin> nLJCodeGenerator = CodeGenerator.get(NestedLoopJoin.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    nLJCodeGenerator.plainOldJavaCapable(true);
+    nLJCodeGenerator.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    nLJCodeGenerator.persistCode(true);
+//    nLJCodeGenerator.saveCodeForDebugging(true);
     final ClassGenerator<NestedLoopJoin> nLJClassGenerator = nLJCodeGenerator.getRoot();
 
 

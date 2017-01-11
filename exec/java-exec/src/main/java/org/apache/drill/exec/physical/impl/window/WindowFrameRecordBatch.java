@@ -361,9 +361,9 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     cg.getBlock("resetValues")._return(JExpr.TRUE);
     CodeGenerator<WindowFramer> codeGen = cg.getCodeGenerator();
-    codeGen.plainOldJavaCapable(true);
+    codeGen.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    codeGen.persistCode(true);
+//    codeGen.saveCodeForDebugging(true);
 
     return context.getImplementationClass(codeGen);
   }

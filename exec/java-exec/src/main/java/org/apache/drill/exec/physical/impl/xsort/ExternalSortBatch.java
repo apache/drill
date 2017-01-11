@@ -716,19 +716,19 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
-    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
+    cg.plainJavaCapable(true); // This class can generate plain-old Java.
     // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
     return context.getImplementationClass(cg);
   }
 
   public SingleBatchSorter createNewSorter(FragmentContext context, VectorAccessible batch)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<SingleBatchSorter> cg = CodeGenerator.get(SingleBatchSorter.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    cg.plainOldJavaCapable(true); // This class can generate plain-old Java.
+    cg.plainJavaCapable(true); // This class can generate plain-old Java.
 
     // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
     generateComparisons(cg.getRoot(), batch);
     return context.getImplementationClass(cg);
   }
@@ -772,9 +772,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     try {
       if (copier == null) {
         CodeGenerator<PriorityQueueCopier> cg = CodeGenerator.get(PriorityQueueCopier.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-        cg.plainOldJavaCapable(true);
+        cg.plainJavaCapable(true);
         // Uncomment out this line to debug the generated code.
-//        cg.persistCode(true);
+//        cg.saveCodeForDebugging(true);
         ClassGenerator<PriorityQueueCopier> g = cg.getRoot();
 
         generateComparisons(g, batch);

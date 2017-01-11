@@ -638,9 +638,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
     try {
       final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-      cg.plainOldJavaCapable(true);
+      cg.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.
-//      cg.persistCode(true);
+//      cg.saveCodeForDebugging(true);
       final ClassGenerator<MergingReceiverGeneratorBase> g = cg.getRoot();
 
       ExpandableHyperContainer batch = null;

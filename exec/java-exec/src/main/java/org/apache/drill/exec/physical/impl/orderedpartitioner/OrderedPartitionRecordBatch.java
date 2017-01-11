@@ -426,7 +426,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // no tests are available for this operator.
 //    cg.getCodeGenerator().plainOldJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.getCodeGenerator().persistCode(true);
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     int i = 0;
     for (Ordering od : orderings) {
@@ -598,7 +598,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // no tests are available for this operator.
 //    cg.getCodeGenerator().plainOldJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.getCodeGenerator().persistCode(true);
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     for (VectorWrapper<?> vw : batch) {
       TransferPair tp = vw.getValueVector().getTransferPair(oContext.getAllocator());

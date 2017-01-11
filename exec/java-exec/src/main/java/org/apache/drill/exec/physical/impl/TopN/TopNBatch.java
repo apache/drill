@@ -336,9 +336,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
                                                      VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    cg.plainOldJavaCapable(true);
+    cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 

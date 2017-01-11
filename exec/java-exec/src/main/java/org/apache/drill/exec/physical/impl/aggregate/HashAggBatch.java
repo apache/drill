@@ -189,9 +189,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
-    top.plainOldJavaCapable(true);
+    top.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    top.persistCode(true);
+//    top.saveCodeForDebugging(true);
 
     container.clear();
 

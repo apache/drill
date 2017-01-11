@@ -31,6 +31,7 @@ import java.util.List;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -86,9 +87,10 @@ public class TestConvertFunctions extends BaseTestQuery {
     //
     // The setting here forces byte-code merge even if the
     // config file asks for plain-old Java.
+    //
     // TODO: Fix the tests to handle both cases.
 
-    System.setProperty("drill.compile.prefer_plain_java", "false");
+    System.setProperty(CodeCompiler.PREFER_POJ_CONFIG, "false");
   }
 
   @Test // DRILL-3854

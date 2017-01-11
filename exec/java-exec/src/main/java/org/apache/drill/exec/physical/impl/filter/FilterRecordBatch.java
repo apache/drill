@@ -196,9 +196,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     try {
       final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
       CodeGenerator<Filterer> codeGen = cg.getCodeGenerator();
-      codeGen.plainOldJavaCapable(true);
+      codeGen.plainJavaCapable(true);
       // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
       final Filterer filter = context.getImplementationClass(codeGen);
       filter.setup(context, incoming, this, tx);
       return filter;

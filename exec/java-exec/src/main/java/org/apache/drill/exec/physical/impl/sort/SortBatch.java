@@ -167,7 +167,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     // works with Plain-old Java.
 //    cg.plainOldJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.persistCode(true);
+//    cg.saveCodeForDebugging(true);
     ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 

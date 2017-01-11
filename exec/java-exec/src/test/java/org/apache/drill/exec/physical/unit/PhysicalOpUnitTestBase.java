@@ -297,8 +297,8 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         fragContext.getHandle(); result = ExecProtos.FragmentHandle.getDefaultInstance();
         try {
           CodeGenerator<?> cg = CodeGenerator.get(templateClassDefinition, funcReg);
-          cg.plainOldJavaCapable(true);
-//          cg.persistCode(true);
+          cg.plainJavaCapable(true);
+//          cg.saveCodeForDebugging(true);
           fragContext.getImplementationClass(withAny(cg));
           result = new Delegate<Object>()
           {

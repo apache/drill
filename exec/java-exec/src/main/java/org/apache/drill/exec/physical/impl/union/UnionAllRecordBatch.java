@@ -182,9 +182,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     }
 
     final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
-    cg.getCodeGenerator().plainOldJavaCapable(true);
+    cg.getCodeGenerator().plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-//    cg.getCodeGenerator().persistCode(true);
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
     int index = 0;
     for(VectorWrapper<?> vw : current) {
        ValueVector vvIn = vw.getValueVector();

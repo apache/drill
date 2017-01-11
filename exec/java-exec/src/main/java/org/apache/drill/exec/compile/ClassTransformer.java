@@ -221,6 +221,7 @@ public class ClassTransformer {
     }
   }
 
+  @SuppressWarnings("resource")
   public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
     final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
     return getImplementationClass(loader, cg.getDefinition(),
@@ -310,7 +311,10 @@ public class ClassTransformer {
 
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
+             c.getSimpleName(),
+             DrillStringUtils.readable(totalBytecodeSize),
+             (System.nanoTime() - t1 + 500_000) / 1_000_000);
         return c;
       }
 

@@ -23,14 +23,18 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.codehaus.commons.compiler.CompileException;
+import org.objectweb.asm.tree.ClassNode;
+
+import com.google.common.collect.Maps;
 
 /**
- * Implements the "plain-old Java" method of code generation and
+ * Implements the "plain Java" method of code generation and
  * compilation. Given a {@link CodeGenerator}, obtains the generated
  * source code, compiles it with the selected compiler, loads the
  * byte-codes into a class loader and provides the resulting
@@ -41,22 +45,22 @@ import org.codehaus.commons.compiler.CompileException;
  * so that the JVM can use normal Java inheritance to associate the
  * template and generated methods.
  * <p>
- * Here is how to use the plain-old Java technique to debug
+ * Here is how to use the plain Java technique to debug
  * generated code:
  * <ul>
  * <li>Set the config option <tt>drill.exec.compile.code_dir</tt>
  * to the location where you want to save the generated source
  * code.</li>
  * <li>Where you generate code (using a {@link CodeGenerator}),
- * set the "plain-old Java" options:<pre>
+ * set the "plain Java" options:<pre>
  * CodeGenerator&lt;Foo> cg = ...
- * cg.plainOldJavaCapable(true); // Class supports plain-old Java
- * cg.preferPlainOldJava(true); // Actually generate plain-old Java
- * cg.persistCode(true); // Save code for debugging
+ * cg.plainJavaCapable(true); // Class supports plain Java
+ * cg.preferPlainJava(true); // Actually generate plain Java
+ * cg.saveCodeForDebugging(true); // Save code for debugging
  * ...</pre>
- * Note that <tt>persistCode</tt> automatically sets the POJ
- * option if the generator is capable. Call <tt>preferPlainOldJava</tt>
- * only if you want to try POJ for this particular generated class
+ * Note that <tt>saveCodeForDebugging</tt> automatically sets the PJ
+ * option if the generator is capable. Call <tt>preferPlainJava</tt>
+ * only if you want to try PJ for this particular generated class
  * without saving the generated code.</li>
  * <li>In your favorite IDE, add to the code lookup path the
  * code directory saved earlier. In Eclipse, for example, you do
@@ -67,17 +71,18 @@ import org.codehaus.commons.compiler.CompileException;
  * local variables. Have fun!</li>
  * </ul>
  * <p>
- * Most generated classes have been upgraded to support Plain-old Java
+ * Most generated classes have been upgraded to support Plain Java
  * compilation. Once this work is complete, the calls to
- * <tt>plainOldJavaCapable<tt> can be removed as all generated classes
+ * <tt>plainJavaCapable<tt> can be removed as all generated classes
  * will be capable.
  * <p>
- * The setting to prefer plain-old Java is ignored for any remaining generated
- * classes not marked as plain-old Java capable.
+ * The setting to prefer plain Java is ignored for any remaining generated
+ * classes not marked as plain Java capable.
  */
 
 public class ClassBuilder {
 
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassBuilder.class);
   public static final String CODE_DIR_OPTION = CodeCompiler.COMPILE_BASE + ".code_dir";
 
   private final DrillConfig config;
@@ -98,12 +103,12 @@ public class ClassBuilder {
   }
 
   /**
-   * Given a code generator which has already generated plain-old Java
+   * Given a code generator which has already generated plain Java
    * code, compile the code, create a class loader, and return the
    * resulting Java class.
    *
-   * @param cg a plain-old Java capable code generator that has generated
-   * plain-old Java code
+   * @param cg a plain Java capable code generator that has generated
+   * plain Java code
    * @return the class that the code generator defines
    * @throws ClassTransformationException
    */
@@ -129,8 +134,9 @@ public class ClassBuilder {
    */
   @SuppressWarnings("resource")
   private Class<?> compileClass(CodeGenerator<?> cg) throws IOException, CompileException, ClassNotFoundException, ClassTransformationException {
+    final long t1 = System.nanoTime();
 
-    // Get the plain-old Java code.
+    // Get the plain Java code.
 
     String code = cg.getGeneratedCode();
 
@@ -142,7 +148,7 @@ public class ClassBuilder {
     // A key advantage of this method is that the code can be
     // saved and debugged, if needed.
 
-    if (cg.persistCode()) {
+    if (cg.isCodeToBeSaved()) {
       saveCode(code, name);
     }
 
@@ -152,6 +158,15 @@ public class ClassBuilder {
     ClassCompilerSelector compilerSelector = new ClassCompilerSelector(classLoader, config, options);
     Map<String,byte[]> results = compilerSelector.compile(name, code);
     classLoader.addClasses(results);
+
+    long totalBytecodeSize = 0;
+    for (byte[] clazz : results.values()) {
+      totalBytecodeSize += clazz.length;
+    }
+    logger.debug("Compiled {}: bytecode size = {}, time = {} ms.",
+                 cg.getClassName(),
+                  DrillStringUtils.readable(totalBytecodeSize),
+                  (System.nanoTime() - t1 + 500_000) / 1_000_000);
 
     // Get the class from the class loader.
 

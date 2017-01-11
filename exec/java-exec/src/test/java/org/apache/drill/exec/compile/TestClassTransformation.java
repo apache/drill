@@ -45,8 +45,10 @@ public class TestClassTransformation extends BaseTestQuery {
   @BeforeClass
   public static void beforeTestClassTransformation() throws Exception {
     // Tests here require the byte-code merge technique and are meaningless
-    // if the plain-old Java technique is selected.
-    System.setProperty("drill.compile.prefer_plain_java", "false");
+    // if the plain-old Java technique is selected. Force the plain-Java
+    // technique to be off if it happened to be set on in the default
+    // configuration.
+    System.setProperty(CodeCompiler.PREFER_POJ_CONFIG, "false");
     final UserSession userSession = UserSession.Builder.newBuilder()
       .withOptionManager(getDrillbitContext().getOptionManager())
       .build();
@@ -109,7 +111,7 @@ public class TestClassTransformation extends BaseTestQuery {
    */
   private void compilationInnerClass(boolean asPoj) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
-    cg.preferPlainOldJava(asPoj);
+    cg.preferPlainJava(asPoj);
 
     CodeCompiler.CodeGenCompiler cc = new CodeCompiler.CodeGenCompiler(config, sessionOptions);
     @SuppressWarnings("unchecked")
@@ -122,7 +124,7 @@ public class TestClassTransformation extends BaseTestQuery {
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
     CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry(), getDrillbitContext().getOptionManager());
-    cg.plainOldJavaCapable(true);
+    cg.plainJavaCapable(true);
 
     ClassGenerator<T> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));
