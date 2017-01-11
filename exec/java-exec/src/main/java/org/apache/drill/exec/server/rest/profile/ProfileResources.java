@@ -68,13 +68,21 @@ public class ProfileResources {
   @Inject DrillUserPrincipal principal;
   @Inject SecurityContext sc;
 
-  public static String getPrettyDuration(long durationInMillis) {
+  /**
+   * Returns elapsed time a human-readable format. If end time is less than the start time, current epoch time is assumed as the end time.
+   * e.g. getPrettyDuration(1468368841695,1468394096016) = '7 hr 00 min 54.321 sec'
+   * @param startTimeMillis Start Time in milliseconds
+   * @param endTimeMillis   End Time in milliseconds
+   * @return                Human-Readable Elapsed Time
+   */
+  public static String getPrettyDuration(long startTimeMillis, long endTimeMillis) {
+    long durationInMillis = ( startTimeMillis > endTimeMillis ? System.currentTimeMillis() : endTimeMillis ) - startTimeMillis;
     long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
     long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(durationInMillis));
     long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis));
     long milliSeconds = durationInMillis - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(durationInMillis));
-    String formattedDuration = (hours > 0? hours+" hr ": "") +
-      ((minutes + hours) > 0 ? minutes +" min ": "") +
+    String formattedDuration = (hours > 0 ? hours + " hr " : "") +
+      ((minutes + hours) > 0 ? String.format("%02d min ", minutes) : "") +
       seconds + "." + String.format("%03d sec", milliSeconds) ;
     return formattedDuration;
   }
@@ -129,7 +137,7 @@ public class ProfileResources {
     }
 
     public String getDuration() {
-      return getPrettyDuration(endTime - startTime);
+      return getPrettyDuration(startTime,endTime);
     }
 
     public String getState() {
