@@ -1790,6 +1790,8 @@ public final class SchemaUserBitShared
                     output.writeString(16, message.getErrorNode(), false);
                 if(message.hasOptionsJson())
                     output.writeString(17, message.getOptionsJson(), false);
+                if(message.hasPlanEnd())
+                    output.writeInt64(18, message.getPlanEnd(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1883,6 +1885,9 @@ public final class SchemaUserBitShared
                         case 17:
                             builder.setOptionsJson(input.readString());
                             break;
+                        case 18:
+                            builder.setPlanEnd(input.readInt64());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1940,6 +1945,7 @@ public final class SchemaUserBitShared
                 case 15: return "errorId";
                 case 16: return "errorNode";
                 case 17: return "optionsJson";
+                case 18: return "planEnd";
                 default: return null;
             }
         }
@@ -1968,6 +1974,7 @@ public final class SchemaUserBitShared
             fieldMap.put("errorId", 15);
             fieldMap.put("errorNode", 16);
             fieldMap.put("optionsJson", 17);
+            fieldMap.put("planEnd", 18);
         }
     }
 

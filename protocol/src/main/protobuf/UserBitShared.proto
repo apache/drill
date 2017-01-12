@@ -207,6 +207,7 @@ message QueryProfile {
   optional string error_id = 15;
   optional string error_node = 16;
   optional string options_json = 17;
+  optional int64 planEnd = 18;
 }
 
 message MajorFragmentProfile {

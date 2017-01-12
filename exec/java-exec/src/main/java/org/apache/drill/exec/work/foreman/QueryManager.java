@@ -100,6 +100,7 @@ public class QueryManager implements AutoCloseable {
   private String planText;
   private long startTime = System.currentTimeMillis();
   private long endTime;
+  private long planningEndTime;
 
   // How many nodes have finished their execution.  Query is complete when all nodes are complete.
   private final AtomicInteger finishedNodes = new AtomicInteger(0);
@@ -341,6 +342,7 @@ public class QueryManager implements AutoCloseable {
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
         .setEnd(endTime)
+        .setPlanEnd(planningEndTime)
         .setTotalFragments(fragmentDataSet.size())
         .setFinishedFragments(finishedFragments.get())
         .setOptionsJson(getQueryOptionsAsJson());
@@ -414,6 +416,10 @@ public class QueryManager implements AutoCloseable {
 
   void markEndTime() {
     endTime = System.currentTimeMillis();
+  }
+
+  void markPlanningEndTime() {
+    planningEndTime = System.currentTimeMillis();
   }
 
   /**

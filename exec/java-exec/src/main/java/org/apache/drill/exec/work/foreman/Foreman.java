@@ -417,6 +417,9 @@ public class Foreman implements Runnable {
 
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
+    //Marking endTime of Planning
+    queryManager.markPlanningEndTime();
+
     MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
     if (queuingEnabled) {
       acquireQuerySemaphore(plan);
