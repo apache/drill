@@ -68,10 +68,31 @@ public class ProfileResources {
   @Inject DrillUserPrincipal principal;
   @Inject SecurityContext sc;
 
+  /**
+   * Returns elapsed time a human-readable format. If end time is less than the start time, current epoch time is assumed as the end time.
+   * e.g. getPrettyDuration(1468368841695,1468394096016) = '7 hr 00 min 54.321 sec'
+   * @param startTimeMillis Start Time in milliseconds
+   * @param endTimeMillis   End Time in milliseconds
+   * @return                Human-Readable Elapsed Time
+   */
+  public static String getPrettyDuration(long startTimeMillis, long endTimeMillis) {
+    long durationInMillis = (startTimeMillis > endTimeMillis ? System.currentTimeMillis() : endTimeMillis) - startTimeMillis;
+    long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
+    long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(durationInMillis));
+    long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis));
+    long milliSeconds = durationInMillis - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(durationInMillis));
+    String formattedDuration = (hours > 0 ? hours + " hr " : "") +
+      ((minutes + hours) > 0 ? String.format("%02d min ", minutes) : "") +
+      seconds + "." + String.format("%03d sec", milliSeconds) ;
+    return formattedDuration;
+  }
+
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private String queryId;
+    private long startTime;
+    private long endTime;
     private Date time;
     private String location;
     private String foreman;
@@ -79,9 +100,11 @@ public class ProfileResources {
     private String state;
     private String user;
 
-    public ProfileInfo(String queryId, long time, String foreman, String query, String state, String user) {
+    public ProfileInfo(String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
       this.queryId = queryId;
-      this.time = new Date(time);
+      this.startTime = startTime;
+      this.endTime = endTime;
+      this.time = new Date(startTime);
       this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
       this.query = query.substring(0,  Math.min(query.length(), 150));
@@ -105,6 +128,17 @@ public class ProfileResources {
       return format.format(time);
     }
 
+    public long getStartTime() {
+      return startTime;
+    }
+
+    public long getEndTime() {
+      return endTime;
+    }
+
+    public String getDuration() {
+      return getPrettyDuration(startTime, endTime);
+    }
 
     public String getState() {
       return state;
@@ -174,7 +208,7 @@ public class ProfileResources {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -192,7 +226,7 @@ public class ProfileResources {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
           final QueryProfile profile = profileEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
