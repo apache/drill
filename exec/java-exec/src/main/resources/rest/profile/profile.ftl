@@ -106,6 +106,7 @@
   <p>STATE: ${model.getProfile().getState().name()}</p>
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
+  <p>DURATION: ${model.getProfileDuration()}</p>
 
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
