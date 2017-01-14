@@ -4,7 +4,8 @@
         version:"1",
         generator:{
             type:"manual"
-        }
+        },
+        hasResourcePlan: true
     },
     graph:[
         {
