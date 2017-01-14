@@ -36,6 +36,7 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
+    MongoTestSuit.initMongo();
     initMongoStoragePlugin();
   }
 
@@ -84,6 +85,7 @@ public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownMongoTestBase() throws Exception {
+    MongoTestSuit.tearDownCluster();
     storagePlugin = null;
   }
 
