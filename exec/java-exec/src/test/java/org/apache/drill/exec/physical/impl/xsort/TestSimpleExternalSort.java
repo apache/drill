@@ -42,7 +42,6 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-@Ignore
 public class TestSimpleExternalSort extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
   DrillConfig c = DrillConfig.create();
@@ -50,6 +49,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80000);
 
+  @Ignore
   @Test
   public void mergeSortWithSv2() throws Exception {
     List<QueryDataBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending_sv2.json");
@@ -132,6 +132,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void sortOneKeyDescendingExternalSort() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -186,6 +187,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void outOfMemoryExternalSort() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
