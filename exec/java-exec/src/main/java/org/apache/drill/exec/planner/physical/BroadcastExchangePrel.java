@@ -21,17 +21,22 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.BroadcastExchange;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.core.Exchange;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.BroadcastExchange;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
+import org.apache.drill.exec.planner.common.DrillJoinRelBase;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 
 public class BroadcastExchangePrel extends ExchangePrel{
 
@@ -52,17 +57,86 @@ public class BroadcastExchangePrel extends ExchangePrel{
 
     RelNode child = this.getInput();
 
-    final int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
+    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
     final double broadcastFactor = PrelUtil.getSettings(getCluster()).getBroadcastFactor();
     final double inputRows = RelMetadataQuery.getRowCount(child);
-
+    if (!DrillRelOptUtil.guessRows(this)) {
+      RelNode root = planner.getRoot();
+      RelNode parent = getParent(root, null, child);
+      if (parent instanceof DrillJoinRelBase) {
+        double leftRows, rightRows;
+        if (child instanceof RelSubset) {
+          if (findNode(((DrillJoinRelBase) parent).getLeft(), child)) {
+            leftRows = RelMetadataQuery.getRowCount(((DrillJoinRelBase) parent).getLeft());
+            rightRows = RelMetadataQuery.getRowCount(((DrillJoinRelBase) parent).getRight());
+            if (Math.min(leftRows, rightRows) > 100000) {
+              numEndPoints = (int) (Math.max(1.0, Math.round(rightRows / leftRows)));
+            }
+          } else if (findNode(((DrillJoinRelBase) parent).getRight(), child)) {
+            leftRows = RelMetadataQuery.getRowCount(((DrillJoinRelBase) parent).getLeft());
+            rightRows = RelMetadataQuery.getRowCount(((DrillJoinRelBase) parent).getRight());
+            if (Math.min(leftRows, rightRows) > 100000) {
+              numEndPoints = (int) (Math.max(1.0, Math.round(leftRows / rightRows)));
+            }
+          }
+        }
+      }
+    }
     final int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
-    final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows ;
+    final double cpuCost = broadcastFactor * DrillCostBase.SVR_CPU_COST * inputRows;
     final double networkCost = broadcastFactor * DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
 
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);
   }
 
+  private boolean findNode(RelNode node, RelNode target) {
+    if (node == target
+            || (target instanceof RelSubset
+            && ((((RelSubset) target).getOriginal() == node)
+            || ((RelSubset) target).getBest() == node))) {
+      return true;
+    }
+    if (node instanceof RelSubset) {
+      if (((RelSubset) node).getBest() != null) {
+        return findNode(((RelSubset) node).getBest(), target);
+      } else if (((RelSubset) node).getOriginal() != null) {
+        return findNode(((RelSubset) node).getOriginal(), target);
+      }
+    } else {
+      for (RelNode child : node.getInputs()) {
+        if (findNode(child, target)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  private RelNode getParent(RelNode node, RelNode parent, RelNode target) {
+    if (node == target
+        || (target instanceof RelSubset
+            && ((((RelSubset) target).getOriginal() == node)
+                || ((RelSubset) target).getBest() == node))) {
+      return parent;
+    }
+    // Skip subset/single rels when determining parent node
+    if (node instanceof RelSubset) {
+      if (((RelSubset) node).getBest() != null) {
+        return getParent(((RelSubset) node).getBest(), parent, target);
+      } else if (((RelSubset) node).getOriginal() != null) {
+        return getParent(((RelSubset) node).getOriginal(), parent, target);
+      }
+    } else if (node instanceof SingleRel) {
+      return getParent(((SingleRel) node).getInput(), parent, target);
+    } else {
+      for (RelNode child : node.getInputs()) {
+        RelNode par = getParent(child, node, target);
+        if (par != null) {
+          return par;
+        }
+      }
+    }
+    return null;
+  }
   @Override
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;

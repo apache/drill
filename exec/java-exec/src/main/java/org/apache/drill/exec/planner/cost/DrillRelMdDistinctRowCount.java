@@ -64,13 +64,16 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
             predicate);
     } else if (rel instanceof DrillJoinRelBase) {
       PlannerSettings settings = PrelUtil.getPlannerSettings(rel.getCluster());
+      if (DrillRelOptUtil.guessRows(rel)) {
+        return super.getDistinctRowCount(rel, groupKey, predicate);
+      }
       if (settings.getJoinNDVEstimateToUse() == 1) {
         //Use product of ndvs - same as calcite
         return RelMdUtil.getJoinDistinctRowCount(rel, ((DrillJoinRelBase)rel).getJoinType(), groupKey, predicate, false);
       } else if (settings.getJoinNDVEstimateToUse() == 2) {
         //Use max of ndvs - prevent overestimate of ndv(thereby underestimate of join cardinality)
         return RelMdUtil.getJoinDistinctRowCount(rel, ((DrillJoinRelBase)rel).getJoinType(), groupKey, predicate, true);
-      } else if (settings.getJoinNDVEstimateToUse() == 3) {
+      } else if (settings.getJoinNDVEstimateToUse() >= 3) {
         //Assume ndv is unaffected by the join
         return getDistinctRowCount(((DrillJoinRelBase) rel), groupKey, predicate);
       } else {
@@ -151,12 +154,15 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
 
   public Double getDistinctRowCount(DrillJoinRelBase joinRel, ImmutableBitSet groupKey, RexNode predicate) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(joinRel.getCluster());
+    if (DrillRelOptUtil.guessRows(joinRel)) {
+      return super.getDistinctRowCount(joinRel, groupKey, predicate);
+    }
     if (settings.getJoinNDVEstimateToUse() == 1) {
       //Use product of ndvs - same as calcite
-      return RelMdUtil.getJoinDistinctRowCount(joinRel, ((DrillJoinRelBase) joinRel).getJoinType(), groupKey, predicate, false);
+      return RelMdUtil.getJoinDistinctRowCount(joinRel, joinRel.getJoinType(), groupKey, predicate, false);
     } else if (settings.getJoinNDVEstimateToUse() == 2) {
       //Use max of ndvs - prevent overestimate of ndv(thereby underestimate of join cardinality)
-      return RelMdUtil.getJoinDistinctRowCount(joinRel, ((DrillJoinRelBase) joinRel).getJoinType(), groupKey, predicate, true);
+      return RelMdUtil.getJoinDistinctRowCount(joinRel, joinRel.getJoinType(), groupKey, predicate, true);
     } else if (settings.getJoinNDVEstimateToUse() >= 3) {
       //Assume ndv is unaffected by the join
       ImmutableBitSet.Builder leftMask = ImmutableBitSet.builder();
@@ -172,26 +178,31 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
         ArrayList rightFilters = new ArrayList();
         ArrayList joinFilters = new ArrayList();
         List predList = RelOptUtil.conjunctions(predicate);
-        RelOptUtil.classifyFilters(joinRel, predList, joinType, joinType == JoinRelType.INNER, !joinType.generatesNullsOnLeft(), !joinType.generatesNullsOnRight(), joinFilters, leftFilters, rightFilters);
+        RelOptUtil.classifyFilters(joinRel, predList, joinType, joinType == JoinRelType.INNER,
+            !joinType.generatesNullsOnLeft(), !joinType.generatesNullsOnRight(), joinFilters, leftFilters, rightFilters);
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
         leftPred = RexUtil.composeConjunction(rexBuilder, leftFilters, true);
         rightPred = RexUtil.composeConjunction(rexBuilder, rightFilters, true);
       }
 
-      double leftDistRowCount = -1;
-      double rightDistRowCount = -1;
+      Double leftDistRowCount = null;
+      Double rightDistRowCount = null;
       double distRowCount = 1;
       ImmutableBitSet lmb = leftMask.build();
       ImmutableBitSet rmb = rightMask.build();
       if (lmb.length() > 0) {
-        leftDistRowCount = RelMetadataQuery.getDistinctRowCount(left, lmb, leftPred).doubleValue();
-        distRowCount = leftDistRowCount;
+        leftDistRowCount = RelMetadataQuery.getDistinctRowCount(left, lmb, leftPred);
+        if (leftDistRowCount != null) {
+          distRowCount = leftDistRowCount.doubleValue();
+        }
       }
       if (rmb.length() > 0) {
-        rightDistRowCount = RelMetadataQuery.getDistinctRowCount(right, rmb, rightPred).doubleValue();
-        distRowCount = rightDistRowCount;
+        rightDistRowCount = RelMetadataQuery.getDistinctRowCount(right, rmb, rightPred);
+        if (rightDistRowCount != null) {
+          distRowCount = rightDistRowCount.doubleValue();
+        }
       }
-      if (leftDistRowCount >= 0 && rightDistRowCount >= 0) {
+      if (leftDistRowCount != null && rightDistRowCount != null) {
         if (settings.getJoinNDVEstimateToUse() == 3) {
           distRowCount = NumberUtil.multiply(leftDistRowCount, rightDistRowCount);
         } else {
