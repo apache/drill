@@ -60,7 +60,8 @@ public class BroadcastExchangePrel extends ExchangePrel{
     int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
     final double broadcastFactor = PrelUtil.getSettings(getCluster()).getBroadcastFactor();
     final double inputRows = RelMetadataQuery.getRowCount(child);
-    if (!DrillRelOptUtil.guessRows(this)) {
+    if (!DrillRelOptUtil.guessRows(this)
+        && PrelUtil.getSettings(getCluster()).useNewBroadcastEstimate()) {
       RelNode root = planner.getRoot();
       RelNode parent = getParent(root, null, child);
       if (parent instanceof DrillJoinRelBase) {
