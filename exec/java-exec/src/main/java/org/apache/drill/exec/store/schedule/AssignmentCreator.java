@@ -106,9 +106,13 @@ public class AssignmentCreator<T extends CompleteWork> {
     LinkedList<WorkEndpointListPair<T>> unassignedWorkList;
     Map<DrillbitEndpoint,FragIteratorWrapper> endpointIterators = getEndpointIterators();
 
+    // Assign upto minCount per node based on locality.
     unassignedWorkList = assign(workList, endpointIterators, true);
-
+    // Assign upto maxCount per node based on locality.
+    unassignedWorkList = assign(unassignedWorkList, endpointIterators, false);
+    // Assign upto minCount per node in a round robin fashion.
     assignLeftovers(unassignedWorkList, endpointIterators, true);
+    // Assign upto maxCount per node in a round robin fashion.
     assignLeftovers(unassignedWorkList, endpointIterators, false);
 
     if (unassignedWorkList.size() != 0) {
@@ -241,13 +245,30 @@ public class AssignmentCreator<T extends CompleteWork> {
       mmap.put(endpoint, intList);
     }
 
+    int totalMaxCount = 0;
     for (DrillbitEndpoint endpoint : mmap.keySet()) {
       FragIteratorWrapper wrapper = new FragIteratorWrapper();
       wrapper.iter = Iterators.cycle(mmap.get(endpoint));
-      wrapper.maxCount = maxWork * mmap.get(endpoint).size();
+      // To distribute the load among nodes equally, limit the maxCount per node.
+      int maxCount = (int) ((double)mmap.get(endpoint).size()/incomingEndpoints.size() * units.size());
+      wrapper.maxCount = Math.min(maxWork * mmap.get(endpoint).size(), maxCount);
+      totalMaxCount += wrapper.maxCount;
       wrapper.minCount = Math.max(maxWork - 1, 1) * mmap.get(endpoint).size();
       map.put(endpoint, wrapper);
     }
+
+    // Take care of leftovers.
+    while (totalMaxCount < units.size()) {
+      for (Entry<DrillbitEndpoint, FragIteratorWrapper> entry : map.entrySet()) {
+        FragIteratorWrapper iteratorWrapper = entry.getValue();
+        iteratorWrapper.maxCount++;
+        totalMaxCount++;
+        if (totalMaxCount == units.size()) {
+          break;
+        }
+      }
+    }
+
     return map;
   }
 
