@@ -51,7 +51,7 @@ public class DrillIndexRTable extends DynamicDrillTable {
     List<String> names = new ArrayList<>();
     List<RelDataType> types = new ArrayList<>();
     for (ColumnSchema cs : schema.columns) {
-      names.add(cs.name);
+      names.add(cs.name.toLowerCase());
       types.add(parseDataType(typeFactory, cs.dataType));
     }
     return typeFactory.createStructType(types, names);
@@ -122,7 +122,7 @@ public class DrillIndexRTable extends DynamicDrillTable {
   public static Integer mapColumn(ColumnSchema columnSchema, SegmentSchema segmentSchema) {
     int index = 0;
     for (ColumnSchema cs : segmentSchema.columns) {
-      if (StringUtils.equals(cs.name, columnSchema.name) && cs.dataType == columnSchema.dataType) {
+      if (StringUtils.equalsIgnoreCase(cs.name, columnSchema.name) && cs.dataType == columnSchema.dataType) {
         return index;
       }
       index++;
