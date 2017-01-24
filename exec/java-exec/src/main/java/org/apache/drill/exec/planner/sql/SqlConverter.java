@@ -333,6 +333,7 @@ public class SqlConverter {
     }
 
     private RelNode expandView(String queryString, SqlConverter converter) {
+      converter.disallowTemporaryTables();
       final SqlNode parsedNode = converter.parse(queryString);
       final SqlNode validatedNode = converter.validate(parsedNode);
       return converter.toRel(validatedNode);
