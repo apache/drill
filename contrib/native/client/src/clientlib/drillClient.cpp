@@ -52,6 +52,8 @@ int32_t DrillClientConfig::s_socketTimeout=0;
 int32_t DrillClientConfig::s_handshakeTimeout=5;
 int32_t DrillClientConfig::s_queryTimeout=180;
 int32_t DrillClientConfig::s_heartbeatFrequency=15; // 15 seconds
+std::string DrillClientConfig::s_clientName(DRILL_CONNECTOR_NAME);
+std::string DrillClientConfig::s_applicationName;
 
 boost::mutex DrillClientConfig::s_mutex;
 
@@ -134,6 +136,26 @@ int32_t DrillClientConfig::getHeartbeatFrequency(){
 logLevel_t DrillClientConfig::getLogLevel(){
     boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_logLevel;
+}
+
+const std::string& DrillClientConfig::getClientName() {
+	boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+	return s_clientName;
+}
+
+void DrillClientConfig::setClientName(const std::string& name) {
+	boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+	s_clientName = name;
+}
+
+const std::string& DrillClientConfig::getApplicationName() {
+	boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+	return s_applicationName;
+}
+
+void DrillClientConfig::setApplicationName(const std::string& name) {
+	boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+	s_applicationName = name;
 }
 
 //Using boost assign to initialize maps. 
