@@ -210,6 +210,7 @@ class DrillClientQueryResult: public DrillClientBaseHandle<pfnQueryResultsListen
         m_pSchemaListener=l;
     }
 
+    void cancel();
     // Synchronous call to get data. Caller assumes ownership of the record batch
     // returned and it is assumed to have been consumed.
     RecordBatch*  getNext();
@@ -519,7 +520,6 @@ class DrillClientImpl : public DrillClientImplBase{
                 DrillClientQueryResult* pQueryResult);
         void broadcastError(DrillClientError* pErr);
         void removeQueryHandle(DrillClientQueryHandle* pQueryHandle);
-        void removeQueryResult(DrillClientQueryResult* pQueryResult);
         void sendAck(const rpc::InBoundRpcMessage& msg, bool isOk);
         void sendCancel(const exec::shared::QueryId* pQueryId);
 

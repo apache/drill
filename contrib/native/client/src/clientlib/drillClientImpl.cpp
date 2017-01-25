@@ -1012,7 +1012,7 @@ status_t DrillClientImpl::processQueryData(AllocatedBufferPtr allocatedBuffer, c
             DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing Query cancellation " << std::endl;)
         	delete qr;
         	delete allocatedBuffer;
-        	ret =  QRY_CANCEL;
+        	ret =  QRY_CANCELED;
         } else {
         	//Validate the RPC message
         	std::string valErr;
@@ -1689,7 +1689,6 @@ status_t DrillClientImpl::handleQryCancellation(status_t status, DrillClientQuer
 	pQueryHandle->setIsQueryPending(false);
 	DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Client app cancelled query." << std::endl;)
 	pQueryHandle->setQueryStatus(status);
-	removeQueryResult(pQueryHandle);
 	removeQueryHandle(pQueryHandle);
 	return status;
 }
@@ -1732,25 +1731,23 @@ status_t DrillClientImpl::handleTerminatedQryState(
 
 void DrillClientImpl::removeQueryHandle(DrillClientQueryHandle* pQueryHandle){
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    if(!m_queryHandles.empty()){
-        for(std::map<int, DrillClientQueryHandle*>::const_iterator iter=m_queryHandles.begin(); iter!=m_queryHandles.end(); iter++) {
-            if(pQueryHandle==(DrillClientQueryHandle*)iter->second){
-                m_queryHandles.erase(iter->first);
-                break;
-            }
-        }
+    // Removing first the base handle
+    for(std::map<int, DrillClientQueryHandle*>::const_iterator iter=m_queryHandles.begin(); iter!=m_queryHandles.end(); iter++) {
+    	if(pQueryHandle==(DrillClientQueryHandle*)iter->second){
+    		m_queryHandles.erase(iter->first);
+    		break;
+    	}
     }
-}
 
-void DrillClientImpl::removeQueryResult(DrillClientQueryResult* pQueryResult){
-    boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    if(!m_queryResults.empty()){
-        for(std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::const_iterator it=m_queryResults.begin(); it!=m_queryResults.end(); it++) {
-            if(pQueryResult==(DrillClientQueryResult*)it->second){
-                m_queryResults.erase(it->first);
-                break;
-            }
-        }
+    // if the query handle is a result handle, m_queryResults also need to be cleaned.
+    DrillClientQueryResult* pQueryResult = dynamic_cast<DrillClientQueryResult*>(pQueryHandle);
+    if (pQueryResult) {
+    	for(std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::const_iterator it=m_queryResults.begin(); it!=m_queryResults.end(); it++) {
+    		if(pQueryResult==(DrillClientQueryResult*)it->second){
+    			m_queryResults.erase(it->first);
+    			break;
+    		}
+    	}
     }
 }
 
@@ -1949,6 +1946,16 @@ RecordBatch*  DrillClientQueryResult::peekNext(){
     return pRecordBatch;
 }
 
+void DrillClientQueryResult::cancel() {
+	// Calling parent class
+	DrillClientBaseHandle<pfnQueryResultsListener, RecordBatch*>::cancel();
+
+	// If queryId has already been received, don't wait to send the
+	// cancellation message
+	if (this->m_pQueryId) {
+		this->client().handleQryCancellation(QRY_CANCELED, this);
+	}
+}
 RecordBatch*  DrillClientQueryResult::getNext() {
     RecordBatch* pRecordBatch=NULL;
     boost::unique_lock<boost::mutex> cvLock(this->m_cvMutex);
@@ -2072,9 +2079,6 @@ void DrillClientQueryResult::clearAndDestroy(){
     if(this->m_pQueryId!=NULL){
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Clearing state for Query Id - " << debugPrintQid(*this->m_pQueryId) << std::endl;)
     }
-
-    //Tell the parent to remove this from its lists
-    this->client().removeQueryResult(this);
 
     //clear query id map entries.
     if(this->m_pQueryId!=NULL){
