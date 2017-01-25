@@ -41,6 +41,7 @@ struct Option{
     {"syncSend", "Send query only after previous result is received", false},
     {"hshakeTimeout", "Handshake timeout (second).", false},
     {"queryTimeout", "Query timeout (second).", false},
+    {"heartbeatFrequency", "Heartbeat frequency (second). Disabled if set to 0.", false},
     {"user", "Username", false},
     {"password", "Password", false}
 };
@@ -282,6 +283,7 @@ int main(int argc, char* argv[]) {
         std::string syncSend=qsOptionValues["syncSend"];
         std::string hshakeTimeout=qsOptionValues["hshakeTimeout"];
         std::string queryTimeout=qsOptionValues["queryTimeout"];
+        std::string heartbeatFrequency=qsOptionValues["heartbeatFrequency"];
         std::string user=qsOptionValues["user"];
         std::string password=qsOptionValues["password"];
 
@@ -342,6 +344,9 @@ int main(int argc, char* argv[]) {
         }
         if (!queryTimeout.empty()){
             Drill::DrillClientConfig::setQueryTimeout(atoi(queryTimeout.c_str()));
+        }
+        if(!heartbeatFrequency.empty()) {
+            Drill::DrillClientConfig::setHeartbeatFrequency(atoi(heartbeatFrequency.c_str()));
         }
 
         Drill::DrillUserProperties props;

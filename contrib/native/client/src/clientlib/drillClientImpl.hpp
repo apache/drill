@@ -451,9 +451,8 @@ class DrillClientImpl : public DrillClientImplBase{
         // Direct connection to a drillbit
         // host can be name or ip address, port can be port number or name of service in /etc/services
         connectionStatus_t connect(const char* host, const char* port);
-        void startHeartbeatTimer();// start a heartbeat timer
+        void startHeartbeatTimer();// start or restart the heartbeat timer
         connectionStatus_t sendHeartbeat(); // send a heartbeat to the server
-        void resetHeartbeatTimer(); // reset the heartbeat timer (called every time one sends a message to the server (after sendAck, or submitQuery)
         void handleHeartbeatTimeout(const boost::system::error_code & err); // send a heartbeat. If send fails, broadcast error, close connection and bail out.
 
         int32_t getNextCoordinationId(){ return ++m_coordinationId; };

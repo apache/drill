@@ -150,15 +150,18 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
 }
 
 void DrillClientImpl::startHeartbeatTimer(){
-    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Started new heartbeat timer with "
-        << DrillClientConfig::getHeartbeatFrequency() << " seconds." << std::endl;)
-    m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getHeartbeatFrequency()));
-    m_heartbeatTimer.async_wait(boost::bind(
+    if (DrillClientConfig::getHeartbeatFrequency() > 0) {
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Started new heartbeat timer with "
+                                          << DrillClientConfig::getHeartbeatFrequency()
+                                          << " seconds." << std::endl;)
+        m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getHeartbeatFrequency()));
+        m_heartbeatTimer.async_wait(boost::bind(
                 &DrillClientImpl::handleHeartbeatTimeout,
                 this,
                 boost::asio::placeholders::error
-                ));
+        ));
         startMessageListener(); // start this thread early so we don't have the timer blocked
+    }
 }
 
 connectionStatus_t DrillClientImpl::sendHeartbeat(){
@@ -176,12 +179,6 @@ connectionStatus_t DrillClientImpl::sendHeartbeat(){
         getNextResult(); // async wait for results
     }
     return status;
-}
-
-void DrillClientImpl::resetHeartbeatTimer(){
-    m_heartbeatTimer.cancel();
-    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Reset Heartbeat timer." << std::endl;)
-    startHeartbeatTimer();
 }
 
 void DrillClientImpl::handleHeartbeatTimeout(const boost::system::error_code & err){
@@ -350,7 +347,7 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
     u2b.set_channel(exec::shared::USER);
     u2b.set_rpc_version(DRILL_RPC_VERSION);
     u2b.set_support_listening(true);
-    u2b.set_support_timeout(true);
+    u2b.set_support_timeout(DrillClientConfig::getHeartbeatFrequency() > 0);
 
     // Adding version info
     exec::user::RpcEndpointInfos* infos = u2b.mutable_client_infos();
@@ -663,7 +660,7 @@ void DrillClientImpl::getNextResult(){
             ));
     }
 
-    resetHeartbeatTimer();
+    startHeartbeatTimer();
 
     async_read(
             this->m_socket,
@@ -1397,23 +1394,6 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
 
         case exec::user::QUERY_DATA:
             s = processQueryData(allocatedBuffer, msg);
-            break;
-
-        case exec::user::HANDSHAKE:
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake request from server. Send response.\n";)
-            delete allocatedBuffer;
-            // In one case when the client hung, we observed that the server was sending a handshake request to the client
-            // We should properly handle these handshake requests/responses
-            {
-                boost::lock_guard<boost::mutex> lockDC(this->m_dcMutex);
-                exec::user::UserToBitHandshake u2b;
-                u2b.set_channel(exec::shared::USER);
-                u2b.set_rpc_version(DRILL_RPC_VERSION);
-                u2b.set_support_listening(true);
-                rpc::OutBoundRpcMessage out_msg(exec::rpc::RESPONSE, exec::user::HANDSHAKE, msg.m_coord_id, &u2b);
-                sendSync(out_msg);
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response sent.\n";)
-            }
             break;
 
         default:
