@@ -367,11 +367,7 @@ connectionStatus_t DrillClient::connect(const char* connectStr, DrillUserPropert
     connectionStatus_t ret=CONN_SUCCESS;
     ret=this->m_pImpl->connect(connectStr);
     if(ret==CONN_SUCCESS){
-        if(properties!=NULL){
-            ret=this->m_pImpl->validateHandshake(properties);
-        }else{
-            ret=this->m_pImpl->validateHandshake(NULL);
-        }
+        ret=this->m_pImpl->validateHandshake(properties);
     }
     return ret;
 }

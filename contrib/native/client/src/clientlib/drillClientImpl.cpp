@@ -370,8 +370,13 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         for(size_t i=0; i<properties->size(); i++){
             std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(properties->keyAt(i));
             if(it==DrillUserProperties::USER_PROPERTIES.end()){
-                DRILL_MT_LOG(DRILL_LOG(LOG_WARNING) << "Connection property ("<< properties->keyAt(i)
-                    << ") is unknown and is being skipped" << std::endl;)
+                DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connection property ("<< properties->keyAt(i)
+                    << ") is unknown" << std::endl;)
+
+                exec::user::Property* connProp = userProperties->add_properties();
+                connProp->set_key(properties->keyAt(i));
+                connProp->set_value(properties->valueAt(i));
+
                 continue;
             }
             if(IS_BITSET((*it).second,USERPROP_FLAGS_SERVERPROP)){
