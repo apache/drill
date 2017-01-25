@@ -354,7 +354,8 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
 
     // Adding version info
     exec::user::RpcEndpointInfos* infos = u2b.mutable_client_infos();
-    infos->set_name(DRILL_CONNECTOR_NAME);
+    infos->set_name(DrillClientConfig::getClientName());
+    infos->set_application(DrillClientConfig::getApplicationName());
     infos->set_version(DRILL_VERSION_STRING);
     infos->set_majorversion(DRILL_VERSION_MAJOR);
     infos->set_minorversion(DRILL_VERSION_MINOR);

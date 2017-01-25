@@ -91,6 +91,43 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         static int32_t getQueryTimeout();
         static int32_t getHeartbeatFrequency();
         static logLevel_t getLogLevel();
+
+        /**
+         * Return the client name sent to the server when connecting
+         *
+         * @return the current client name
+         */
+        static const std::string& getClientName();
+
+        /**
+         * Set the client name to be sent to the server when connecting.
+         *
+         * Only new connections will use the new value. Existing connections
+         * will be left unchanged.
+         *
+         * @param name the name to be send to the server
+         */
+        static void setClientName(const std::string& name);
+
+        /**
+         * Return the application name sent to the server when connecting
+         *
+         * @return the current application name
+         */
+        static const std::string& getApplicationName();
+
+        /**
+         * Set the application name to be sent to the server when connecting.
+         *
+         * Only new connections will use the new value. Existing connections
+         * will be left unchanged.
+         *
+         * @param name the name to be send to the server
+         */
+        static void setApplicationName(const std::string& name);
+
+
+
     private:
         // The logging level
         static logLevel_t s_logLevel;
@@ -122,6 +159,11 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         static int32_t s_queryTimeout;
         static int32_t s_heartbeatFrequency;
         static boost::mutex s_mutex;
+
+        // The client name (default to DRILL_CONNECTOR_NAME)
+        static std::string s_clientName;
+        // The application name (default to <empty>)
+        static std::string s_applicationName;
 };
 
 
