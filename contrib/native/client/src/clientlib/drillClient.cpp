@@ -105,7 +105,7 @@ void DrillClientConfig::setQueryTimeout(int32_t t){
 }
 
 void DrillClientConfig::setHeartbeatFrequency(int32_t t){
-    if (t>0){
+    if (t>=0){
         boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
         s_heartbeatFrequency=t;
     }
