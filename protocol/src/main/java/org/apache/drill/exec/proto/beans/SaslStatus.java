@@ -20,17 +20,17 @@
 
 package org.apache.drill.exec.proto.beans;
 
-public enum HandshakeStatus implements com.dyuproject.protostuff.EnumLite<HandshakeStatus>
+public enum SaslStatus implements com.dyuproject.protostuff.EnumLite<SaslStatus>
 {
-    SUCCESS(1),
-    RPC_VERSION_MISMATCH(2),
-    AUTH_FAILED(3),
-    UNKNOWN_FAILURE(4),
-    AUTH_REQUIRED(5);
+    SASL_UNKNOWN(0),
+    SASL_START(1),
+    SASL_IN_PROGRESS(2),
+    SASL_SUCCESS(3),
+    SASL_FAILED(4);
     
     public final int number;
     
-    private HandshakeStatus (int number)
+    private SaslStatus (int number)
     {
         this.number = number;
     }
@@ -40,15 +40,15 @@ public enum HandshakeStatus implements com.dyuproject.protostuff.EnumLite<Handsh
         return number;
     }
     
-    public static HandshakeStatus valueOf(int number)
+    public static SaslStatus valueOf(int number)
     {
         switch(number) 
         {
-            case 1: return SUCCESS;
-            case 2: return RPC_VERSION_MISMATCH;
-            case 3: return AUTH_FAILED;
-            case 4: return UNKNOWN_FAILURE;
-            case 5: return AUTH_REQUIRED;
+            case 0: return SASL_UNKNOWN;
+            case 1: return SASL_START;
+            case 2: return SASL_IN_PROGRESS;
+            case 3: return SASL_SUCCESS;
+            case 4: return SASL_FAILED;
             default: return null;
         }
     }

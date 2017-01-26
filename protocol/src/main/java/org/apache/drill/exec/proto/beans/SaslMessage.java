@@ -24,64 +24,77 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.List;
 
+import com.dyuproject.protostuff.ByteString;
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
 import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
 
-public final class BitServerHandshake implements Externalizable, Message<BitServerHandshake>, Schema<BitServerHandshake>
+public final class SaslMessage implements Externalizable, Message<SaslMessage>, Schema<SaslMessage>
 {
 
-    public static Schema<BitServerHandshake> getSchema()
+    public static Schema<SaslMessage> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static BitServerHandshake getDefaultInstance()
+    public static SaslMessage getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final BitServerHandshake DEFAULT_INSTANCE = new BitServerHandshake();
+    static final SaslMessage DEFAULT_INSTANCE = new SaslMessage();
 
     
-    private int rpcVersion;
-    private List<String> authenticationMechanisms;
+    private String mechanism;
+    private ByteString data;
+    private SaslStatus status;
 
-    public BitServerHandshake()
+    public SaslMessage()
     {
         
     }
 
     // getters and setters
 
-    // rpcVersion
+    // mechanism
 
-    public int getRpcVersion()
+    public String getMechanism()
     {
-        return rpcVersion;
+        return mechanism;
     }
 
-    public BitServerHandshake setRpcVersion(int rpcVersion)
+    public SaslMessage setMechanism(String mechanism)
     {
-        this.rpcVersion = rpcVersion;
+        this.mechanism = mechanism;
         return this;
     }
 
-    // authenticationMechanisms
+    // data
 
-    public List<String> getAuthenticationMechanismsList()
+    public ByteString getData()
     {
-        return authenticationMechanisms;
+        return data;
     }
 
-    public BitServerHandshake setAuthenticationMechanismsList(List<String> authenticationMechanisms)
+    public SaslMessage setData(ByteString data)
     {
-        this.authenticationMechanisms = authenticationMechanisms;
+        this.data = data;
+        return this;
+    }
+
+    // status
+
+    public SaslStatus getStatus()
+    {
+        return status == null ? SaslStatus.SASL_UNKNOWN : status;
+    }
+
+    public SaslMessage setStatus(SaslStatus status)
+    {
+        this.status = status;
         return this;
     }
 
@@ -99,39 +112,39 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
 
     // message method
 
-    public Schema<BitServerHandshake> cachedSchema()
+    public Schema<SaslMessage> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public BitServerHandshake newMessage()
+    public SaslMessage newMessage()
     {
-        return new BitServerHandshake();
+        return new SaslMessage();
     }
 
-    public Class<BitServerHandshake> typeClass()
+    public Class<SaslMessage> typeClass()
     {
-        return BitServerHandshake.class;
+        return SaslMessage.class;
     }
 
     public String messageName()
     {
-        return BitServerHandshake.class.getSimpleName();
+        return SaslMessage.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return BitServerHandshake.class.getName();
+        return SaslMessage.class.getName();
     }
 
-    public boolean isInitialized(BitServerHandshake message)
+    public boolean isInitialized(SaslMessage message)
     {
         return true;
     }
 
-    public void mergeFrom(Input input, BitServerHandshake message) throws IOException
+    public void mergeFrom(Input input, SaslMessage message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -140,12 +153,13 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
                 case 0:
                     return;
                 case 1:
-                    message.rpcVersion = input.readInt32();
+                    message.mechanism = input.readString();
                     break;
                 case 2:
-                    if(message.authenticationMechanisms == null)
-                        message.authenticationMechanisms = new ArrayList<String>();
-                    message.authenticationMechanisms.add(input.readString());
+                    message.data = input.readBytes();
+                    break;
+                case 3:
+                    message.status = SaslStatus.valueOf(input.readEnum());
                     break;
                 default:
                     input.handleUnknownField(number, this);
@@ -154,27 +168,25 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
     }
 
 
-    public void writeTo(Output output, BitServerHandshake message) throws IOException
+    public void writeTo(Output output, SaslMessage message) throws IOException
     {
-        if(message.rpcVersion != 0)
-            output.writeInt32(1, message.rpcVersion, false);
+        if(message.mechanism != null)
+            output.writeString(1, message.mechanism, false);
 
-        if(message.authenticationMechanisms != null)
-        {
-            for(String authenticationMechanisms : message.authenticationMechanisms)
-            {
-                if(authenticationMechanisms != null)
-                    output.writeString(2, authenticationMechanisms, true);
-            }
-        }
+        if(message.data != null)
+            output.writeBytes(2, message.data, false);
+
+        if(message.status != null)
+             output.writeEnum(3, message.status.number, false);
     }
 
     public String getFieldName(int number)
     {
         switch(number)
         {
-            case 1: return "rpcVersion";
-            case 2: return "authenticationMechanisms";
+            case 1: return "mechanism";
+            case 2: return "data";
+            case 3: return "status";
             default: return null;
         }
     }
@@ -188,8 +200,9 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("rpcVersion", 1);
-        __fieldMap.put("authenticationMechanisms", 2);
+        __fieldMap.put("mechanism", 1);
+        __fieldMap.put("data", 2);
+        __fieldMap.put("status", 3);
     }
     
 }

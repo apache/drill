@@ -45,7 +45,8 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
     PREPARED_STATEMENT(23),
     REQ_META_FUNCTIONS(8),
     RESP_FUNCTION_LIST(9),
-    QUERY_RESULT(10);
+    QUERY_RESULT(10),
+    SASL_MESSAGE(24);
     
     public final int number;
     
@@ -87,6 +88,7 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
             case 21: return COLUMNS;
             case 22: return CREATE_PREPARED_STATEMENT;
             case 23: return PREPARED_STATEMENT;
+            case 24: return SASL_MESSAGE;
             default: return null;
         }
     }

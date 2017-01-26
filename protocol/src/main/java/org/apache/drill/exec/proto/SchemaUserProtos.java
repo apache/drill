@@ -431,6 +431,8 @@ public final class SchemaUserProtos
                 if(message.hasClientInfos())
                     output.writeObject(8, message.getClientInfos(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.WRITE, false);
 
+                if(message.hasSaslSupport())
+                    output.writeEnum(9, message.getSaslSupport().getNumber(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.UserToBitHandshake message)
             {
@@ -497,6 +499,9 @@ public final class SchemaUserProtos
                             builder.setClientInfos(input.mergeObject(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MERGE));
 
                             break;
+                        case 9:
+                            builder.setSaslSupport(org.apache.drill.exec.proto.UserProtos.SaslSupport.valueOf(input.readEnum()));
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -545,6 +550,7 @@ public final class SchemaUserProtos
                 case 6: return "supportComplexTypes";
                 case 7: return "supportTimeout";
                 case 8: return "clientInfos";
+                case 9: return "saslSupport";
                 default: return null;
             }
         }
@@ -564,6 +570,7 @@ public final class SchemaUserProtos
             fieldMap.put("supportComplexTypes", 6);
             fieldMap.put("supportTimeout", 7);
             fieldMap.put("clientInfos", 8);
+            fieldMap.put("saslSupport", 9);
         }
     }
 
@@ -972,6 +979,8 @@ public final class SchemaUserProtos
                 if(message.hasServerInfos())
                     output.writeObject(6, message.getServerInfos(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.WRITE, false);
 
+                for(String authenticationMechanisms : message.getAuthenticationMechanismsList())
+                    output.writeString(7, authenticationMechanisms, true);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.BitToUserHandshake message)
             {
@@ -1027,6 +1036,9 @@ public final class SchemaUserProtos
                             builder.setServerInfos(input.mergeObject(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.newBuilder(), org.apache.drill.exec.proto.SchemaUserProtos.RpcEndpointInfos.MERGE));
 
                             break;
+                        case 7:
+                            builder.addAuthenticationMechanisms(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1072,6 +1084,7 @@ public final class SchemaUserProtos
                 case 4: return "errorId";
                 case 5: return "errorMessage";
                 case 6: return "serverInfos";
+                case 7: return "authenticationMechanisms";
                 default: return null;
             }
         }
@@ -1088,6 +1101,7 @@ public final class SchemaUserProtos
             fieldMap.put("errorId", 4);
             fieldMap.put("errorMessage", 5);
             fieldMap.put("serverInfos", 6);
+            fieldMap.put("authenticationMechanisms", 7);
         }
     }
 
