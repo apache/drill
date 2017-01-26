@@ -211,6 +211,7 @@
             <exclude>**/*.fmpp</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/*.iml</exclude>
+            <exclude>**/.idea/**</exclude>
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
             <exclude>**/TAGS</exclude>
@@ -223,6 +224,7 @@
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>
             <exclude>**/client/build/**</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
