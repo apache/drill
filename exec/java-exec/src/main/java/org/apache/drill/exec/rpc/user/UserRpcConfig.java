@@ -25,6 +25,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.SaslMessage;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
@@ -44,7 +45,7 @@ import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.RpcConfig;
 
 public class UserRpcConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserRpcConfig.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserRpcConfig.class);
 
   public static RpcConfig getMapping(DrillConfig config, Executor executor) {
     return RpcConfig.newBuilder()
@@ -65,8 +66,13 @@ public class UserRpcConfig {
         .add(RpcType.GET_COLUMNS, GetColumnsReq.class, RpcType.COLUMNS, GetColumnsResp.class) // user to bit
         .add(RpcType.CREATE_PREPARED_STATEMENT, CreatePreparedStatementReq.class,
             RpcType.PREPARED_STATEMENT, CreatePreparedStatementResp.class) // user to bit
+        .add(RpcType.SASL_MESSAGE, SaslMessage.class, RpcType.SASL_MESSAGE, SaslMessage.class) // user <-> bit
         .build();
   }
 
-  public static int RPC_VERSION = 5;
+  public static final int RPC_VERSION = 5;
+
+  // prevent instantiation
+  private UserRpcConfig() {
+  }
 }
