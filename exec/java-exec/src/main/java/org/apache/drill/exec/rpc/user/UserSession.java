@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.user;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -278,7 +277,7 @@ public class UserSession implements Closeable {
    */
   public String registerTemporaryTable(AbstractSchema schema, String tableName) throws IOException {
       addTemporaryLocation((WorkspaceSchemaFactory.WorkspaceSchema) schema);
-      String temporaryTableName = Paths.get(sessionId, UUID.randomUUID().toString()).toString();
+      String temporaryTableName = new Path(sessionId, UUID.randomUUID().toString()).toUri().getPath();
       String oldTemporaryTableName = temporaryTables.putIfAbsent(tableName.toLowerCase(), temporaryTableName);
       return oldTemporaryTableName == null ? temporaryTableName : oldTemporaryTableName;
   }
@@ -351,8 +350,8 @@ public class UserSession implements Closeable {
    */
   private void addTemporaryLocation(WorkspaceSchemaFactory.WorkspaceSchema temporaryWorkspace) throws IOException {
     DrillFileSystem fs = temporaryWorkspace.getFS();
-    Path temporaryLocation = new Path(Paths.get(fs.getUri().toString(),
-        temporaryWorkspace.getDefaultLocation(), sessionId).toString());
+    Path temporaryLocation = new Path(fs.getUri().toString(),
+        new Path(temporaryWorkspace.getDefaultLocation(), sessionId));
 
     FileSystem fileSystem = temporaryLocations.putIfAbsent(temporaryLocation, fs);
 
