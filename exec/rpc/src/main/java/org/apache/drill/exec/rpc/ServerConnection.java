@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,21 @@
  */
 package org.apache.drill.exec.rpc;
 
-public interface RpcConnectionHandler<T extends RemoteConnection> {
+import javax.security.sasl.SaslServer;
+import java.io.IOException;
 
-  enum FailureType {CONNECTION, HANDSHAKE_COMMUNICATION, HANDSHAKE_VALIDATION, AUTHENTICATION}
+public interface ServerConnection<S extends ServerConnection<S>> extends RemoteConnection {
 
-  void connectionSucceeded(T connection);
+  // init only once
+  void initSaslServer(String mechanismName) throws IOException;
 
-  void connectionFailed(FailureType type, Throwable t);
+  // get only after setting
+  SaslServer getSaslServer();
+
+  void finalizeSaslSession() throws IOException;
+
+  RequestHandler<S> getCurrentHandler();
+
+  void changeHandlerTo(RequestHandler<S> handler);
 
 }

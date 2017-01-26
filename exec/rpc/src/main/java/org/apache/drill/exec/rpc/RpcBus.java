@@ -51,7 +51,8 @@ import com.google.protobuf.Parser;
  * The Rpc Bus deals with incoming and outgoing communication and is used on both the server and the client side of a
  * system.
  *
- * @param <T>
+ * @param <T> RPC type
+ * @param <C> Remote connection type
  */
 public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> implements Closeable {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
@@ -61,11 +62,8 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
 
-  protected void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException{
-    sender.send(handle(connection, rpcType, pBody, dBody));
-  }
-
-  protected abstract Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException;
+  protected abstract void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender)
+      throws RpcException;
 
   protected final RpcConfig rpcConfig;
 
@@ -82,20 +80,23 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     this.local = local;
   }
 
-  <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  DrillRpcFuture<RECEIVE> send(C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+                               ByteBuf... dataBodies) {
     DrillRpcFutureImpl<RECEIVE> rpcFuture = new DrillRpcFutureImpl<RECEIVE>();
     this.send(rpcFuture, connection, rpcType, protobufBody, clazz, dataBodies);
     return rpcFuture;
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+            ByteBuf... dataBodies) {
     send(listener, connection, rpcType, protobufBody, clazz, false, dataBodies);
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+            boolean allowInEventLoop, ByteBuf... dataBodies) {
 
     Preconditions
         .checkArgument(
@@ -141,7 +142,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
   }
 
-  public abstract C initRemoteConnection(SocketChannel channel);
+  protected abstract C initRemoteConnection(SocketChannel channel);
 
   public class ChannelClosedHandler implements GenericFutureListener<ChannelFuture> {
 
@@ -163,12 +164,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         msg = String.format("Channel closed %s <--> %s.", future.channel().localAddress(), future.channel().remoteAddress());
       }
 
-      final ChannelClosedException ex = future.cause() != null ? new ChannelClosedException(msg, future.cause()) : new ChannelClosedException(msg);
-      try {
-        clientConnection.closeSession();
-      } finally {
-        clientConnection.channelClosed(ex);
-      }
+      final ChannelClosedException ex = future.cause() != null ?
+          new ChannelClosedException(msg, future.cause()) :
+          new ChannelClosedException(msg);
+      clientConnection.channelClosed(ex);
     }
 
   }
