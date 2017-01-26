@@ -107,9 +107,12 @@ public interface ExecConstants {
   String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
   String IMPERSONATION_ENABLED = "drill.exec.impersonation.enabled";
   String IMPERSONATION_MAX_CHAINED_USER_HOPS = "drill.exec.impersonation.max_chained_user_hops";
+  String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";
   String USER_AUTHENTICATION_ENABLED = "drill.exec.security.user.auth.enabled";
   String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
   String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
+  String BIT_AUTHENTICATION_ENABLED = "drill.exec.security.bit.auth.enabled";
+  String BIT_AUTHENTICATION_MECHANISM = "drill.exec.security.bit.auth.mechanism";
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";
