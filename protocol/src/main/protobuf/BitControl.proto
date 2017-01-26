@@ -33,12 +33,16 @@ enum RpcType {
   RESP_BIT_STATUS = 13;
   RESP_QUERY_STATUS = 14;
   RESP_CUSTOM = 18;
+
+  // both bit request and response
+  SASL_MESSAGE = 19;
 }
 
 message BitControlHandshake{
   optional int32 rpc_version = 1;
   optional exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
   optional DrillbitEndpoint endpoint = 3;
+  repeated string authenticationMechanisms = 4;
 }
 
 message BitStatus {
