@@ -39,13 +39,10 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.ControllerImpl;
-import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.work.WorkManager.WorkerBee;
-import org.apache.drill.exec.work.batch.ControlMessageHandler;
-import org.apache.drill.exec.work.user.UserWorker;
+import org.apache.drill.exec.work.WorkManager;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
@@ -58,16 +55,17 @@ public class ServiceEngine implements AutoCloseable {
   private final Controller controller;
   private final DataConnectionCreator dataPool;
   private final DrillConfig config;
-  boolean useIP = false;
   private final boolean allowPortHunting;
   private final boolean isDistributedMode;
   private final BufferAllocator userAllocator;
   private final BufferAllocator controlAllocator;
   private final BufferAllocator dataAllocator;
+  private final String hostName;
 
 
-  public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context,
-      WorkEventBus workBus, WorkerBee bee, boolean allowPortHunting, boolean isDistributedMode) throws DrillbitStartupException {
+  public ServiceEngine(final WorkManager manager, final BootStrapContext context,
+                       final boolean allowPortHunting, final boolean isDistributedMode)
+      throws DrillbitStartupException {
     userAllocator = newAllocator(context, "rpc:user", "drill.exec.rpc.user.server.memory.reservation",
         "drill.exec.rpc.user.server.memory.maximum");
     controlAllocator = newAllocator(context, "rpc:bit-control",
@@ -76,18 +74,15 @@ public class ServiceEngine implements AutoCloseable {
         "drill.exec.rpc.bit.server.memory.data.reservation", "drill.exec.rpc.bit.server.memory.data.maximum");
     final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
         context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
-    this.userServer = new UserServer(
-        context.getConfig(),
-        context.getClasspathScan(),
-        userAllocator,
-        eventLoopGroup,
-        userWorker,
-        context.getExecutor());
-    this.controller = new ControllerImpl(context, controlMessageHandler, controlAllocator, allowPortHunting);
-    this.dataPool = new DataConnectionCreator(context, dataAllocator, workBus, bee, allowPortHunting);
+    userServer = new UserServer(context, userAllocator, eventLoopGroup, manager.getUserWorker());
+    controller = new ControllerImpl(context, controlAllocator, manager.getControlMessageHandler(),
+        allowPortHunting);
+    dataPool = new DataConnectionCreator(context, dataAllocator, manager.getWorkBus(), manager.getBee(),
+        allowPortHunting);
     this.config = context.getConfig();
     this.allowPortHunting = allowPortHunting;
     this.isDistributedMode = isDistributedMode;
+    this.hostName = context.getHostName();
     registerMetrics(context.getMetrics());
 
   }
@@ -141,23 +136,16 @@ public class ServiceEngine implements AutoCloseable {
         name, context.getConfig().getLong(initReservation), context.getConfig().getLong(maxAllocation));
   }
 
-  private String getHostName() throws UnknownHostException{
-    // DRILL_HOST_NAME sets custom host name.  See drill-env.sh for details.
-    String customHost = System.getenv("DRILL_HOST_NAME");
-    if (customHost != null) {
-      return customHost;
-    }
-    return useIP ? InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
-  }
+  public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException {
+    final int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
 
-  public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException{
-    int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
-    String address = getHostName();
-    checkLoopbackAddress(address);
+    // loopback address check
+    if (isDistributedMode && InetAddress.getByName(hostName).isLoopbackAddress()) {
+      throw new DrillbitStartupException("Drillbit is disallowed to bind to loopback address in distributed mode.");
+    }
 
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
-        .setAddress(address)
-        //.setAddress("localhost")
+        .setAddress(hostName)
         .setUserPort(userPort)
         .setVersion(DrillVersionInfo.getVersion())
         .build();
@@ -190,12 +178,6 @@ public class ServiceEngine implements AutoCloseable {
         }
       }
     });
-  }
-
-  private void checkLoopbackAddress(String address) throws DrillbitStartupException, UnknownHostException {
-    if (isDistributedMode && InetAddress.getByName(address).isLoopbackAddress()) {
-      throw new DrillbitStartupException("Drillbit is disallowed to bind to loopback address in distributed mode.");
-    }
   }
 
   @Override
