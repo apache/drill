@@ -62,7 +62,7 @@ public class NonRootFragmentManager implements FragmentManager {
   }
 
   /* (non-Javadoc)
-   * @see org.apache.drill.exec.work.fragment.FragmentHandler#handle(org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle, org.apache.drill.exec.record.RawFragmentBatch)
+   * @see org.apache.drill.exec.work.fragment.FragmentHandler#handle(org.apache.drill.exec.rpc.AbstractRemoteConnection.ConnectionThrottle, org.apache.drill.exec.record.RawFragmentBatch)
    */
   @Override
   public boolean handle(final IncomingDataBatch batch) throws FragmentSetupException, IOException {
