@@ -349,7 +349,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       }
 
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
-      final MaterializedField outputField = MaterializedField.create(outputName, expr.getMajorType());
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
@@ -364,10 +363,23 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
         cg.addExpr(expr);
-      } else{
+      } else {
         // need to do evaluation.
-        @SuppressWarnings("resource")
-        ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+        final MaterializedField outputField;
+        if (expr instanceof ValueVectorReadExpression) {
+          final TypedFieldId id = ValueVectorReadExpression.class.cast(expr).getFieldId();
+          final ValueVector incomingVector = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
+          // outputField is taken from the incoming schema to avoid the loss of nested fields
+          // when the first batch will be empty.
+          if (incomingVector != null) {
+            outputField = incomingVector.getField().clone();
+          } else {
+            outputField = MaterializedField.create(outputName, expr.getMajorType());
+          }
+        } else {
+          outputField = MaterializedField.create(outputName, expr.getMajorType());
+        }
+        final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
