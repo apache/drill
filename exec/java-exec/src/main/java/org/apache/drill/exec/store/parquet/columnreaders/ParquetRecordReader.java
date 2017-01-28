@@ -459,7 +459,6 @@ public class ParquetRecordReader extends AbstractRecordReader {
       }
     } catch (Exception e) {
       handleAndRaise("Failure in setting up reader", e);
-    } finally {
     }
   }
 

@@ -45,7 +45,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
 
   private static final int DEFAULT_BUFFER_SIZE = 8192 * 1024; // 8 MiB
   private static final int DEFAULT_TEMP_BUFFER_SIZE = 8192; // 8 KiB
-  private static final int SMALL_BUFFER_SIZE = 256 * 1024; // 64 KiB
+  private static final int SMALL_BUFFER_SIZE = 256 * 1024; // 256 KiB
 
   /**
    * The internal buffer to keep data read from the underlying inputStream.
@@ -146,10 +146,11 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     buffer.clear();
     this.count = this.curPosInBuffer = 0;
 
-    logger.trace(
-        "PERF: Disk read start. {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, Count: {}, "
-            + "CurPosInStream: {}, CurPosInBuffer: {}", this.streamId, this.startOffset, this.totalByteSize,
-        this.bufSize, this.count, this.curPosInStream, this.curPosInBuffer);
+    if(logger.isTraceEnabled()) {
+      logger.trace(
+          "PERF: Disk read start. {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, Count: {}, " + "CurPosInStream: {}, CurPosInBuffer: {}", this.streamId, this.startOffset,
+          this.totalByteSize, this.bufSize, this.count, this.curPosInStream, this.curPosInBuffer);
+    }
     Stopwatch timer = Stopwatch.createStarted();
     int bytesToRead = 0;
     // We *cannot* rely on the totalByteSize being correct because
@@ -188,11 +189,13 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
         this.count = nBytes + this.curPosInBuffer;
         this.curPosInStream = getInputStream().getPos();
         bytesRead = nBytes;
-        logger.trace(
-            "PERF: Disk read complete. {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, BytesRead: {}, Count: {}, "
-                + "CurPosInStream: {}, CurPosInBuffer: {}, Time: {} ms", this.streamId, this.startOffset,
-            this.totalByteSize, this.bufSize, bytesRead, this.count, this.curPosInStream,
-            this.curPosInBuffer, ((double)timer.elapsed(TimeUnit.MICROSECONDS))/1000);
+        if(logger.isTraceEnabled()) {
+          logger.trace(
+              "PERF: Disk read complete. {}, StartOffset: {}, TotalByteSize: {}, BufferSize: {}, BytesRead: {}, Count: {}, "
+                  + "CurPosInStream: {}, CurPosInBuffer: {}, Time: {} ms", this.streamId, this.startOffset,
+              this.totalByteSize, this.bufSize, bytesRead, this.count, this.curPosInStream, this.curPosInBuffer, ((double) timer.elapsed(TimeUnit.MICROSECONDS))
+                  / 1000);
+        }
       }
     }
     return this.count - this.curPosInBuffer;
