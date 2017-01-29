@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
@@ -113,11 +114,6 @@ public class NullableFixedByteAlignedReaders {
    * impala timestamp values with nanoseconds precision (12 bytes). It reads such values as a drill timestamp (8 bytes).
    */
   static class NullableFixedBinaryAsTimeStampReader extends NullableFixedByteAlignedReader<NullableTimeStampVector> {
-    /**
-     * The width of each element of the TimeStampVector is 8 byte(s).
-     */
-    private static final int TIMESTAMP_LENGTH_IN_BITS = 64;
-
     NullableFixedBinaryAsTimeStampReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                               ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeStampVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
@@ -127,7 +123,7 @@ public class NullableFixedByteAlignedReaders {
     protected void readField(long recordsToReadInThisPass) {
       this.bytebuf = pageReader.pageData;
       if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
           Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
@@ -137,9 +133,8 @@ public class NullableFixedByteAlignedReaders {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
       }
-      // The nanos precision is cut to millis. Therefore the length of single timestamp value is 8 bytes(s)
-      // instead of 12 byte(s).
-      dataTypeLengthInBits = TIMESTAMP_LENGTH_IN_BITS;
+      // The width of each element of the TimeStampVector is 8 bytes (64 bits) instead of 12 bytes.
+      dataTypeLengthInBits = NullableTimeStampHolder.WIDTH * 8;
     }
   }
 

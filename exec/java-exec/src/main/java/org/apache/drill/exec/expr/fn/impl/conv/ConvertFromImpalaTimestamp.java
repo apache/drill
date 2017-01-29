@@ -49,7 +49,7 @@ public class ConvertFromImpalaTimestamp {
           org.joda.time.DateTimeConstants.MILLIS_PER_DAY + (nanosOfDay / org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.NANOS_PER_MILLISECOND);
       /* Note: This function uses local timezone for drill backward compatibility
                and to avoid issues while reading hive parquet files */
-      out.value = new org.joda.time.DateTime(dateTime, org.joda.time.chrono.JulianChronology.getInstance()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      out.value = org.joda.time.DateTimeZone.getDefault().convertUTCToLocal(dateTime);
     }
   }
 }
