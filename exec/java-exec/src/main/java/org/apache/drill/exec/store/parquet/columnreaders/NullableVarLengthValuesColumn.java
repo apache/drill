@@ -20,10 +20,14 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
-
+import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -69,11 +73,16 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     if ( currDefLevel == -1 ) {
       currDefLevel = pageReader.definitionLevels.readInteger();
     }
-    if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel) {
+
+    if (columnDescriptor.getMaxDefinitionLevel() > currDefLevel) {
       nullsRead++;
-      // set length of zero, each index in the vector defaults to null so no need to set the nullability
-      variableWidthVector.getMutator().setValueLengthSafe(
-          valuesReadInCurrentPass + pageReader.valuesReadyToRead, 0);
+      // set length of zero, each index in the vector defaults to null so no
+      // need to set the nullability
+      if (variableWidthVector == null) {
+        addDecimalLength(null); // store null length in BYTES for null value
+      } else {
+        variableWidthVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, 0);
+      }
       currentValNull = true;
       return false;// field is null, no length to add to data vector
     }
@@ -83,18 +92,26 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
         currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
       }
       currDictValToWrite = currLengthDeterminingDictVal;
-      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+
+      // re-purposing this field here for length in BYTES to prevent
+      // repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
     }
     else {
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = pageReader.pageData.getInt((int) pageReader.readyToReadPosInBytes);
     }
-    // I think this also needs to happen if it is null for the random access
-    boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
-        (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
-    if ( ! success ) {
-      return true;
+
+    if (variableWidthVector == null) {
+      addDecimalLength(dataTypeLengthInBits); // store decimal length variable length decimal field
+    }
+    else {
+      // I think this also needs to happen if it is null for the random access
+      boolean success = setSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, pageReader.pageData,
+               (int) pageReader.readyToReadPosInBytes + 4, dataTypeLengthInBits);
+      if ( ! success ) {
+        return true;
+      }
     }
     return false;
   }
@@ -122,19 +139,34 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   protected void readField(long recordsToRead) {
     // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
     // should verify that this is not breaking anything
-    currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
+    if (variableWidthVector == null) {
+      currentValNull = getDecimalLength(valuesReadInCurrentPass) == null;
+    }
+    else {
+      currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
+    }
+
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
-    if (! currentValNull) {
+    if (!currentValNull) {
+      boolean conventionalSetSafe = true;
       if (usingDictionary) {
         currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+
+        if (variableWidthVector == null) {
+          ByteBuffer bf = currDictValToWrite.toByteBuffer();
+          BigDecimal bd = DecimalUtility.getBigDecimalFromByteBuffer(bf, schemaElement.getScale());
+          boolean success = setSafe(valuesReadInCurrentPass, bd);
+          assert success;
+          conventionalSetSafe = false;
+        }
       }
-      // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-      dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);
-      boolean success = setSafe(valuesReadInCurrentPass, pageReader.pageData,
+      if (conventionalSetSafe) {
+        setDataTypeLength();
+        boolean success = setSafe(valuesReadInCurrentPass, pageReader.pageData,
           (int) pageReader.readPosInBytes + 4, dataTypeLengthInBits);
-      assert success;
+        assert success;
+      }
     }
     updatePosition();
   }
-
 }
