@@ -17,6 +17,7 @@
 package org.apache.drill.exec.fn.impl.testing;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.exceptions.UserException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,6 +27,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 public class TestDateConversions extends BaseTestQuery {
 
   private static String TEMP_DIR;
@@ -196,5 +199,25 @@ public class TestDateConversions extends BaseTestQuery {
       .baselineValues(true, true)
       .baselineValues(false, true)
       .go();
+  }
+
+  @Test(expected = UserException.class)
+  public void testPostgresPatternFormatError() throws Exception {
+    try {
+      test("SELECT sql_to_date('1970-01-02', 'yyyy-QQ-MM') from (values(1))");
+    } catch (UserException e) {
+      assertThat("No expected current \"FUNCTION ERROR\"", e.getMessage(), startsWith("FUNCTION ERROR"));
+      throw e;
+    }
+  }
+
+  @Test(expected = UserException.class)
+  public void testPostgresDateFormatError() throws Exception {
+    try {
+      test("SELECT sql_to_date('1970/01/02', 'yyyy-DD-MM') from (values(1))");
+    } catch (UserException e) {
+      assertThat("No expected current \"FUNCTION ERROR\"", e.getMessage(), startsWith("FUNCTION ERROR"));
+      throw e;
+    }
   }
 }

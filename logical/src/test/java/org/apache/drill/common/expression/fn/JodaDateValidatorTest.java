@@ -16,11 +16,15 @@
 */
 package org.apache.drill.common.expression.fn;
 
+import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat;
 import static org.joda.time.DateTime.parse;
@@ -28,22 +32,46 @@ import static org.joda.time.format.DateTimeFormat.forPattern;
 
 public class JodaDateValidatorTest {
 
-  @Test
-  public void testDayOfYearMonthDateFormat() {
-    String jodaDate = toJodaFormat("ddd-mm-yyyy");
-    Assert.assertEquals(jodaDate, "D-MM-yyyy");
+  private static final Map<String, String> TEST_CASES = Maps.newHashMap();
+
+  @BeforeClass
+  public static void fillTestCases() {
+    TEST_CASES.put("ddd-mm-yyyy", "D-MM-yyyy");
+    TEST_CASES.put("DDD-MM-YYYY", "D-MM-yyyy");
+    TEST_CASES.put("ddd/yyyy", "D/yyyy");
+    TEST_CASES.put("DDD/YYYY", "D/yyyy");
+    TEST_CASES.put("yyyy-Mon-dd", "yyyy-MMM-d");
+    TEST_CASES.put("YYYY-mon-DD", "yyyy-MMM-d");
+    TEST_CASES.put("yyyy-mon-dd", "yyyy-MMM-d");
+    TEST_CASES.put("YYYY-MON-DD", "yyyy-MMM-d");
+    TEST_CASES.put("YYYY-MON-DD-D", "yyyy-MMM-d-e");
+    TEST_CASES.put("YYYY-MONTH-DD", "yyyy-MMMM-d");
+    TEST_CASES.put("dayyyy", "EEEEyyy");
+    TEST_CASES.put("dayy", "EEEEy");
+    TEST_CASES.put("dyy", "Ey");
+    TEST_CASES.put("ddd\"D\"mm\"D\"yyyy", "D'D'MM'D'yyyy");
+    TEST_CASES.put("ddd\"ddd-mm-yyyy\"mm-yyyy", "D'ddd-mm-yyyy'MM-yyyy");
+    TEST_CASES.put("ddd\"ddd-mm-yyyy\"mm\"ddd-mm-yyyy\"yyyy", "D'ddd-mm-yyyy'MM'ddd-mm-yyyy'yyyy");
+    TEST_CASES.put("DD-mm-yyyy", "d-MM-yyyy");
+    TEST_CASES.put("DddDDD", "edD");
+    TEST_CASES.put("dddddd", "DD");
+    TEST_CASES.put("mmmmyyyyddd", "MMMMyyyyD");
+    TEST_CASES.put("wweeiyyy", "wGxxxx");
+    TEST_CASES.put("iweeiyy", "wGxxx");
+    TEST_CASES.put("wweei", "wGx");
+    TEST_CASES.put("hhmissmsam", "hmssSSSaa");
+    TEST_CASES.put("HHMISSMSAM", "hmssSSSaa");
+    TEST_CASES.put("HHmiSSmsPM", "hmssSSSaa");
+    TEST_CASES.put("hh12missmsam", "hmssSSSaa");
+    TEST_CASES.put("hh24missmsam", "HmssSSSaa");
+    TEST_CASES.put("hh24mifmssfxmsam", "HmssSSSaa");
   }
 
   @Test
-  public void testDayOfYearDateFormat() {
-    String jodaDate = toJodaFormat("ddd/yyyy");
-    Assert.assertEquals(jodaDate, "D/yyyy");
-  }
-
-  @Test
-  public void testYearMonthNameDateFormat() {
-    String jodaDate = toJodaFormat("yyyy-Mon-dd");
-    Assert.assertEquals(jodaDate, "yyyy-MMM-d");
+  public void testDateCases() {
+    for (Map.Entry<String, String> testEntry : TEST_CASES.entrySet()) {
+      Assert.assertEquals(testEntry.getValue(), toJodaFormat(testEntry.getKey()));
+    }
   }
 
   @Test
@@ -105,7 +133,7 @@ public class JodaDateValidatorTest {
     int hours = 15;
     int minutes = 50;
     int seconds = 5;
-    DateTime date = parseDateFromPostgres(hours + ":" + minutes + ":" + seconds, "hh24:Mi:ss");
+    DateTime date = parseDateFromPostgres(hours + ":" + minutes + ":" + seconds, "hh24:mi:ss");
     Assert.assertTrue(date.getHourOfDay() == hours &&
                         date.getMinuteOfHour() == minutes &&
                         date.getSecondOfMinute() == seconds);
@@ -170,7 +198,6 @@ public class JodaDateValidatorTest {
   private DateTime parseDateFromPostgres(String date, String pattern) {
     String jodaFormat = toJodaFormat(pattern);
     DateTimeFormatter format = forPattern(jodaFormat);
-    DateTime res = parse(date, format).withZoneRetainFields(DateTimeZone.UTC);
-    return res;
+    return parse(date, format).withZoneRetainFields(DateTimeZone.UTC);
   }
 }

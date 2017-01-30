@@ -45,33 +45,40 @@ import org.apache.drill.exec.expr.holders.*;
                   nulls = NullHandling.NULL_IF_NULL)
 public class SqlTo${type} implements DrillSimpleFunc {
 
-    @Param  VarCharHolder left;
-    @Param  VarCharHolder right;
-    @Workspace org.joda.time.format.DateTimeFormatter format;
-    @Output ${type}Holder out;
+  @Param  VarCharHolder left;
+  @Param  VarCharHolder right;
+  @Workspace org.joda.time.format.DateTimeFormatter format;
+  @Output ${type}Holder out;
 
-    public void setup() {
-        // Get the desired output format
-        byte[] buf = new byte[right.end - right.start];
-        right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-        String formatString = new String(buf, com.google.common.base.Charsets.UTF_8);
-        String pattern = org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat(formatString);
-        format = org.joda.time.format.DateTimeFormat.forPattern(pattern);
+  public void setup() {
+    // Get the desired output format
+    String formatString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(right);
+    String pattern = org.apache.drill.common.expression.fn.JodaDateValidator.toJodaFormat(formatString);
+    try {
+      format = org.joda.time.format.DateTimeFormat.forPattern(pattern);
+    } catch (IllegalArgumentException e) {
+      throw org.apache.drill.common.exceptions.UserException.functionError(e)
+        .message("Error parsing formatter %s in %s function", formatString, "sql_to_${type?lower_case}")
+        .build();
     }
+  }
 
-    public void eval() {
-        // Get the input
-        byte[] buf1 = new byte[left.end - left.start];
-        left.buffer.getBytes(left.start, buf1, 0, left.end - left.start);
-        String input = new String(buf1, com.google.common.base.Charsets.UTF_8);
-
-        <#if type == "Date">
-        out.value = (org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
-        <#elseif type == "TimeStamp">
-        out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
-        <#elseif type == "Time">
-        out.value = (int) ((format.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
-        </#if>
+  public void eval() {
+    // Get the input
+    String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(left);
+    try {
+      <#if type == "Date">
+      out.value = org.joda.time.DateMidnight.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      <#elseif type == "TimeStamp">
+      out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      <#elseif type == "Time">
+      out.value = (int) format.parseDateTime(input).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
+      </#if>
+    } catch (IllegalArgumentException e) {
+      throw org.apache.drill.common.exceptions.UserException.functionError(e)
+        .message("Error parsing date-time %s in %s function", input, "sql_to_${type?lower_case}")
+        .build();
     }
+  }
 }
 </#list>
