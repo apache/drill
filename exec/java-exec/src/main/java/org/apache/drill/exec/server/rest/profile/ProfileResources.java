@@ -68,25 +68,6 @@ public class ProfileResources {
   @Inject DrillUserPrincipal principal;
   @Inject SecurityContext sc;
 
-  /**
-   * Returns elapsed time a human-readable format. If end time is less than the start time, current epoch time is assumed as the end time.
-   * e.g. getPrettyDuration(1468368841695,1468394096016) = '7 hr 00 min 54.321 sec'
-   * @param startTimeMillis Start Time in milliseconds
-   * @param endTimeMillis   End Time in milliseconds
-   * @return                Human-Readable Elapsed Time
-   */
-  public static String getPrettyDuration(long startTimeMillis, long endTimeMillis) {
-    long durationInMillis = (startTimeMillis > endTimeMillis ? System.currentTimeMillis() : endTimeMillis) - startTimeMillis;
-    long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
-    long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(durationInMillis));
-    long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis));
-    long milliSeconds = durationInMillis - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(durationInMillis));
-    String formattedDuration = (hours > 0 ? hours + " hr " : "") +
-      ((minutes + hours) > 0 ? String.format("%02d min ", minutes) : "") +
-      seconds + "." + String.format("%03d sec", milliSeconds) ;
-    return formattedDuration;
-  }
-
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
@@ -137,7 +118,7 @@ public class ProfileResources {
     }
 
     public String getDuration() {
-      return getPrettyDuration(startTime, endTime);
+      return (new SimpleDurationFormat(startTime, endTime)).verbose();
     }
 
     public String getState() {
@@ -237,8 +218,8 @@ public class ProfileResources {
       return new QProfiles(runningQueries, finishedQueries, errors);
     } catch (Exception e) {
       throw UserException.resourceError(e)
-          .message("Failed to get profiles from persistent or ephemeral store.")
-          .build(logger);
+      .message("Failed to get profiles from persistent or ephemeral store.")
+      .build(logger);
     }
   }
 
@@ -291,8 +272,8 @@ public class ProfileResources {
     }
 
     throw UserException.validationError()
-        .message("No profile with given query id '%s' exists. Please verify the query id.", queryId)
-        .build(logger);
+    .message("No profile with given query id '%s' exists. Please verify the query id.", queryId)
+    .build(logger);
   }
 
 
@@ -352,16 +333,17 @@ public class ProfileResources {
   private void checkOrThrowProfileViewAuthorization(final QueryProfile profile) {
     if (!principal.canManageProfileOf(profile.getUser())) {
       throw UserException.permissionError()
-          .message("Not authorized to view the profile of query '%s'", profile.getId())
-          .build(logger);
+      .message("Not authorized to view the profile of query '%s'", profile.getId())
+      .build(logger);
     }
   }
 
   private void checkOrThrowQueryCancelAuthorization(final String queryUser, final String queryId) {
     if (!principal.canManageQueryOf(queryUser)) {
       throw UserException.permissionError()
-          .message("Not authorized to cancel the query '%s'", queryId)
-          .build(logger);
+      .message("Not authorized to cancel the query '%s'", queryId)
+      .build(logger);
     }
   }
 }
+

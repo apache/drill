@@ -57,8 +57,6 @@ public class FragmentWrapper {
   public static final int NUM_NULLABLE_OVERVIEW_COLUMNS = FRAGMENT_OVERVIEW_COLUMNS.length - 2;
 
   public void addSummary(TableBuilder tb) {
-    final String fmt = " (%d)";
-
     // Use only minor fragments that have complete profiles
     // Complete iff the fragment profile has at least one operator profile, and start and end times.
     final List<MinorFragmentProfile> complete = new ArrayList<>(
@@ -75,13 +73,13 @@ public class FragmentWrapper {
 
     final MinorFragmentProfile firstStart = Collections.min(complete, Comparators.startTime);
     final MinorFragmentProfile lastStart = Collections.max(complete, Comparators.startTime);
-    tb.appendMillis(firstStart.getStartTime() - start, String.format(fmt, firstStart.getMinorFragmentId()));
-    tb.appendMillis(lastStart.getStartTime() - start, String.format(fmt, lastStart.getMinorFragmentId()));
+    tb.appendMillis(firstStart.getStartTime() - start, null);
+    tb.appendMillis(lastStart.getStartTime() - start, null);
 
     final MinorFragmentProfile firstEnd = Collections.min(complete, Comparators.endTime);
     final MinorFragmentProfile lastEnd = Collections.max(complete, Comparators.endTime);
-    tb.appendMillis(firstEnd.getEndTime() - start, String.format(fmt, firstEnd.getMinorFragmentId()));
-    tb.appendMillis(lastEnd.getEndTime() - start, String.format(fmt, lastEnd.getMinorFragmentId()));
+    tb.appendMillis(firstEnd.getEndTime() - start, null);
+    tb.appendMillis(lastEnd.getEndTime() - start, null);
 
     long total = 0;
     for (final MinorFragmentProfile p : complete) {
@@ -90,9 +88,9 @@ public class FragmentWrapper {
 
     final MinorFragmentProfile shortRun = Collections.min(complete, Comparators.runTime);
     final MinorFragmentProfile longRun = Collections.max(complete, Comparators.runTime);
-    tb.appendMillis(shortRun.getEndTime() - shortRun.getStartTime(), String.format(fmt, shortRun.getMinorFragmentId()));
+    tb.appendMillis(shortRun.getEndTime() - shortRun.getStartTime(), null);
     tb.appendMillis(total / complete.size(), null);
-    tb.appendMillis(longRun.getEndTime() - longRun.getStartTime(), String.format(fmt, longRun.getMinorFragmentId()));
+    tb.appendMillis(longRun.getEndTime() - longRun.getStartTime(), null);
 
     final MinorFragmentProfile lastUpdate = Collections.max(complete, Comparators.lastUpdate);
     tb.appendTime(lastUpdate.getLastUpdate(), null);

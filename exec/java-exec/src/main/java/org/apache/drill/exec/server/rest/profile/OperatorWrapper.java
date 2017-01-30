@@ -32,8 +32,6 @@ import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
  * Wrapper class for profiles of ALL operator instances of the same operator type within a major fragment.
  */
 public class OperatorWrapper {
-  private static final String format = " (%s)";
-
   private final int major;
   private final List<ImmutablePair<OperatorProfile, Integer>> ops; // operator profile --> minor fragment number
   private final OperatorProfile firstProfile;
@@ -114,21 +112,21 @@ public class OperatorWrapper {
 
     final ImmutablePair<OperatorProfile, Integer> shortSetup = Collections.min(ops, Comparators.setupTime);
     final ImmutablePair<OperatorProfile, Integer> longSetup = Collections.max(ops, Comparators.setupTime);
-    tb.appendNanos(shortSetup.getLeft().getSetupNanos(), String.format(format, shortSetup.getRight()));
+    tb.appendNanos(shortSetup.getLeft().getSetupNanos(), null);
     tb.appendNanos(Math.round(setupSum / size), null);
-    tb.appendNanos(longSetup.getLeft().getSetupNanos(), String.format(format, longSetup.getRight()));
+    tb.appendNanos(longSetup.getLeft().getSetupNanos(), null);
 
     final ImmutablePair<OperatorProfile, Integer> shortProcess = Collections.min(ops, Comparators.processTime);
     final ImmutablePair<OperatorProfile, Integer> longProcess = Collections.max(ops, Comparators.processTime);
-    tb.appendNanos(shortProcess.getLeft().getProcessNanos(), String.format(format, shortProcess.getRight()));
+    tb.appendNanos(shortProcess.getLeft().getProcessNanos(), null);
     tb.appendNanos(Math.round(processSum / size), null);
-    tb.appendNanos(longProcess.getLeft().getProcessNanos(), String.format(format, longProcess.getRight()));
+    tb.appendNanos(longProcess.getLeft().getProcessNanos(), null);
 
     final ImmutablePair<OperatorProfile, Integer> shortWait = Collections.min(ops, Comparators.waitTime);
     final ImmutablePair<OperatorProfile, Integer> longWait = Collections.max(ops, Comparators.waitTime);
-    tb.appendNanos(shortWait.getLeft().getWaitNanos(), String.format(format, shortWait.getRight()));
+    tb.appendNanos(shortWait.getLeft().getWaitNanos(), null);
     tb.appendNanos(Math.round(waitSum / size), null);
-    tb.appendNanos(longWait.getLeft().getWaitNanos(), String.format(format, longWait.getRight()));
+    tb.appendNanos(longWait.getLeft().getWaitNanos(), null);
 
     final ImmutablePair<OperatorProfile, Integer> peakMem = Collections.max(ops, Comparators.operatorPeakMemory);
     tb.appendBytes(Math.round(memSum / size), null);

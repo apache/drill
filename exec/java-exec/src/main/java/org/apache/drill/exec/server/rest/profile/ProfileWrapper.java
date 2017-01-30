@@ -115,7 +115,7 @@ public class ProfileWrapper {
   }
 
   public String getProfileDuration() {
-    return ProfileResources.getPrettyDuration(profile.getStart(), profile.getEnd());
+    return (new SimpleDurationFormat(profile.getStart(), profile.getEnd())).verbose();
   }
 
   public String getQueryId() {
