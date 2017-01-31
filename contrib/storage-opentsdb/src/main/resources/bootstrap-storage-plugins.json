@@ -1,0 +1,9 @@
+{
+  "storage": {
+    openTSDB: {
+      type: "openTSDB",
+      connection: "172.16.229.128:4242",
+      enabled: false
+    }
+  }
+}
