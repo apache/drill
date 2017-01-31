@@ -34,13 +34,14 @@ public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
   private static final TypeProtos.MajorType NONE = TypeProtos.MajorType.getDefaultInstance();
   private final TypeProtos.MajorType returnType;
 
-  public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic) {
+  public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic, boolean isNiladic) {
     super(name,
         new ArrayList< DrillFuncHolder>(),
         argCount,
         argCount,
         isDeterminisitic,
-        DynamicReturnType.INSTANCE);
+        DynamicReturnType.INSTANCE,
+        isNiladic);
     this.returnType = Preconditions.checkNotNull(returnType);
   }
 

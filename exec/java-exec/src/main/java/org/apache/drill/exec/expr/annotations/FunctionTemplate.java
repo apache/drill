@@ -60,6 +60,22 @@ public @interface FunctionTemplate {
   String desc() default "";
   FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
 
+  /**
+   * Set Operand type-checking strategy for an operator which takes no operands and need to be invoked
+   * without parentheses. E.g.: session_id is a niladic function.
+   *
+   * Niladic functions override columns that have names same as any niladic function. Such columns cannot be
+   * queried without the table qualification. Value of the niladic function is returned when table
+   * qualification is not used.
+   *
+   * For e.g. in the case of session_id:
+   *
+   * select session_id from <table> -> returns the value of niladic function session_id
+   * select t1.session_id from <table> t1 -> returns session_id column value from <table>
+   *
+   */
+  boolean isNiladic() default false;
+
   public static enum NullHandling {
     /**
      * Method handles nulls.

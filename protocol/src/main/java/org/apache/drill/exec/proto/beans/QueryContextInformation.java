@@ -50,6 +50,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
     private long queryStartTime;
     private int timeZone;
     private String defaultSchemaName;
+    private String sessionId;
 
     public QueryContextInformation()
     {
@@ -94,6 +95,19 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
     public QueryContextInformation setDefaultSchemaName(String defaultSchemaName)
     {
         this.defaultSchemaName = defaultSchemaName;
+        return this;
+    }
+
+    // sessionId
+
+    public String getSessionId()
+    {
+        return sessionId;
+    }
+
+    public QueryContextInformation setSessionId(String sessionId)
+    {
+        this.sessionId = sessionId;
         return this;
     }
 
@@ -160,6 +174,9 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
                 case 3:
                     message.defaultSchemaName = input.readString();
                     break;
+                case 4:
+                    message.sessionId = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -177,6 +194,9 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
 
         if(message.defaultSchemaName != null)
             output.writeString(3, message.defaultSchemaName, false);
+
+        if(message.sessionId != null)
+            output.writeString(4, message.sessionId, false);
     }
 
     public String getFieldName(int number)
@@ -186,6 +206,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
             case 1: return "queryStartTime";
             case 2: return "timeZone";
             case 3: return "defaultSchemaName";
+            case 4: return "sessionId";
             default: return null;
         }
     }
@@ -202,6 +223,7 @@ public final class QueryContextInformation implements Externalizable, Message<Qu
         __fieldMap.put("queryStartTime", 1);
         __fieldMap.put("timeZone", 2);
         __fieldMap.put("defaultSchemaName", 3);
+        __fieldMap.put("sessionId", 4);
     }
     
 }

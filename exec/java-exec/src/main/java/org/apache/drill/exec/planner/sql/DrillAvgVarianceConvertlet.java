@@ -52,7 +52,7 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
               SqlTypeName.ANY,
               opBinding.getOperandType(0).isNullable());
         }
-      });
+      }, false);
 
   public DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype subtype) {
     this.subtype = subtype;

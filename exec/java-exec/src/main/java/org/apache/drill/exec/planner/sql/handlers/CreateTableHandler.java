@@ -236,7 +236,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
   }
 
   private RexNode createPartitionColComparator(final RexBuilder rexBuilder, List<RexNode> inputs) {
-    final DrillSqlOperator op = new DrillSqlOperator(WriterPrel.PARTITION_COMPARATOR_FUNC, 1, true);
+    final DrillSqlOperator op = new DrillSqlOperator(WriterPrel.PARTITION_COMPARATOR_FUNC, 1, true, false);
 
     final List<RexNode> compFuncs = Lists.newArrayListWithExpectedSize(inputs.size());
 
@@ -249,7 +249,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   private RexNode composeDisjunction(final RexBuilder rexBuilder, List<RexNode> compFuncs) {
     final DrillSqlOperator booleanOrFunc
-             = new DrillSqlOperator("orNoShortCircuit", 2, true);
+             = new DrillSqlOperator("orNoShortCircuit", 2, true, false);
     RexNode node = compFuncs.remove(0);
     while (!compFuncs.isEmpty()) {
       node = rexBuilder.makeCall(booleanOrFunc, node, compFuncs.remove(0));
