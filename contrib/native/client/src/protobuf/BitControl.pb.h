@@ -67,11 +67,12 @@ enum RpcType {
   RESP_FRAGMENT_STATUS = 12,
   RESP_BIT_STATUS = 13,
   RESP_QUERY_STATUS = 14,
-  RESP_CUSTOM = 18
+  RESP_CUSTOM = 18,
+  SASL_MESSAGE = 19
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = RESP_CUSTOM;
+const RpcType RpcType_MAX = SASL_MESSAGE;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -163,6 +164,22 @@ class BitControlHandshake : public ::google::protobuf::Message {
   inline ::exec::DrillbitEndpoint* release_endpoint();
   inline void set_allocated_endpoint(::exec::DrillbitEndpoint* endpoint);
 
+  // repeated string authenticationMechanisms = 4;
+  inline int authenticationmechanisms_size() const;
+  inline void clear_authenticationmechanisms();
+  static const int kAuthenticationMechanismsFieldNumber = 4;
+  inline const ::std::string& authenticationmechanisms(int index) const;
+  inline ::std::string* mutable_authenticationmechanisms(int index);
+  inline void set_authenticationmechanisms(int index, const ::std::string& value);
+  inline void set_authenticationmechanisms(int index, const char* value);
+  inline void set_authenticationmechanisms(int index, const char* value, size_t size);
+  inline ::std::string* add_authenticationmechanisms();
+  inline void add_authenticationmechanisms(const ::std::string& value);
+  inline void add_authenticationmechanisms(const char* value);
+  inline void add_authenticationmechanisms(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& authenticationmechanisms() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_authenticationmechanisms();
+
   // @@protoc_insertion_point(class_scope:exec.bit.control.BitControlHandshake)
  private:
   inline void set_has_rpc_version();
@@ -177,9 +194,10 @@ class BitControlHandshake : public ::google::protobuf::Message {
   ::google::protobuf::int32 rpc_version_;
   int channel_;
   ::exec::DrillbitEndpoint* endpoint_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> authenticationmechanisms_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitControl_2eproto();
   friend void protobuf_AssignDesc_BitControl_2eproto();
@@ -994,6 +1012,18 @@ class QueryContextInformation : public ::google::protobuf::Message {
   inline ::std::string* release_default_schema_name();
   inline void set_allocated_default_schema_name(::std::string* default_schema_name);
 
+  // optional string session_id = 4;
+  inline bool has_session_id() const;
+  inline void clear_session_id();
+  static const int kSessionIdFieldNumber = 4;
+  inline const ::std::string& session_id() const;
+  inline void set_session_id(const ::std::string& value);
+  inline void set_session_id(const char* value);
+  inline void set_session_id(const char* value, size_t size);
+  inline ::std::string* mutable_session_id();
+  inline ::std::string* release_session_id();
+  inline void set_allocated_session_id(::std::string* session_id);
+
   // @@protoc_insertion_point(class_scope:exec.bit.control.QueryContextInformation)
  private:
   inline void set_has_query_start_time();
@@ -1002,15 +1032,18 @@ class QueryContextInformation : public ::google::protobuf::Message {
   inline void clear_has_time_zone();
   inline void set_has_default_schema_name();
   inline void clear_has_default_schema_name();
+  inline void set_has_session_id();
+  inline void clear_has_session_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int64 query_start_time_;
   ::std::string* default_schema_name_;
+  ::std::string* session_id_;
   ::google::protobuf::int32 time_zone_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitControl_2eproto();
   friend void protobuf_AssignDesc_BitControl_2eproto();
@@ -1307,6 +1340,50 @@ inline void BitControlHandshake::set_allocated_endpoint(::exec::DrillbitEndpoint
   } else {
     clear_has_endpoint();
   }
+}
+
+// repeated string authenticationMechanisms = 4;
+inline int BitControlHandshake::authenticationmechanisms_size() const {
+  return authenticationmechanisms_.size();
+}
+inline void BitControlHandshake::clear_authenticationmechanisms() {
+  authenticationmechanisms_.Clear();
+}
+inline const ::std::string& BitControlHandshake::authenticationmechanisms(int index) const {
+  return authenticationmechanisms_.Get(index);
+}
+inline ::std::string* BitControlHandshake::mutable_authenticationmechanisms(int index) {
+  return authenticationmechanisms_.Mutable(index);
+}
+inline void BitControlHandshake::set_authenticationmechanisms(int index, const ::std::string& value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitControlHandshake::set_authenticationmechanisms(int index, const char* value) {
+  authenticationmechanisms_.Mutable(index)->assign(value);
+}
+inline void BitControlHandshake::set_authenticationmechanisms(int index, const char* value, size_t size) {
+  authenticationmechanisms_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* BitControlHandshake::add_authenticationmechanisms() {
+  return authenticationmechanisms_.Add();
+}
+inline void BitControlHandshake::add_authenticationmechanisms(const ::std::string& value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitControlHandshake::add_authenticationmechanisms(const char* value) {
+  authenticationmechanisms_.Add()->assign(value);
+}
+inline void BitControlHandshake::add_authenticationmechanisms(const char* value, size_t size) {
+  authenticationmechanisms_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+BitControlHandshake::authenticationmechanisms() const {
+  return authenticationmechanisms_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+BitControlHandshake::mutable_authenticationmechanisms() {
+  return &authenticationmechanisms_;
 }
 
 // -------------------------------------------------------------------
@@ -2266,6 +2343,76 @@ inline void QueryContextInformation::set_allocated_default_schema_name(::std::st
   } else {
     clear_has_default_schema_name();
     default_schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string session_id = 4;
+inline bool QueryContextInformation::has_session_id() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void QueryContextInformation::set_has_session_id() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void QueryContextInformation::clear_has_session_id() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void QueryContextInformation::clear_session_id() {
+  if (session_id_ != &::google::protobuf::internal::kEmptyString) {
+    session_id_->clear();
+  }
+  clear_has_session_id();
+}
+inline const ::std::string& QueryContextInformation::session_id() const {
+  return *session_id_;
+}
+inline void QueryContextInformation::set_session_id(const ::std::string& value) {
+  set_has_session_id();
+  if (session_id_ == &::google::protobuf::internal::kEmptyString) {
+    session_id_ = new ::std::string;
+  }
+  session_id_->assign(value);
+}
+inline void QueryContextInformation::set_session_id(const char* value) {
+  set_has_session_id();
+  if (session_id_ == &::google::protobuf::internal::kEmptyString) {
+    session_id_ = new ::std::string;
+  }
+  session_id_->assign(value);
+}
+inline void QueryContextInformation::set_session_id(const char* value, size_t size) {
+  set_has_session_id();
+  if (session_id_ == &::google::protobuf::internal::kEmptyString) {
+    session_id_ = new ::std::string;
+  }
+  session_id_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryContextInformation::mutable_session_id() {
+  set_has_session_id();
+  if (session_id_ == &::google::protobuf::internal::kEmptyString) {
+    session_id_ = new ::std::string;
+  }
+  return session_id_;
+}
+inline ::std::string* QueryContextInformation::release_session_id() {
+  clear_has_session_id();
+  if (session_id_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = session_id_;
+    session_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryContextInformation::set_allocated_session_id(::std::string* session_id) {
+  if (session_id_ != &::google::protobuf::internal::kEmptyString) {
+    delete session_id_;
+  }
+  if (session_id) {
+    set_has_session_id();
+    session_id_ = session_id;
+  } else {
+    clear_has_session_id();
+    session_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 

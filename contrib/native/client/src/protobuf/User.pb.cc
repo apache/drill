@@ -103,6 +103,7 @@ const ::google::protobuf::Descriptor* RunQuery_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   RunQuery_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor_ = NULL;
+const ::google::protobuf::EnumDescriptor* SaslSupport_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* QueryResultsMode_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* HandshakeStatus_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* RequestStatus_descriptor_ = NULL;
@@ -170,7 +171,7 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(RpcEndpointInfos));
   UserToBitHandshake_descriptor_ = file->message_type(3);
-  static const int UserToBitHandshake_offsets_[8] = {
+  static const int UserToBitHandshake_offsets_[9] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, channel_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_listening_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, rpc_version_),
@@ -179,6 +180,7 @@ void protobuf_AssignDesc_User_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_complex_types_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_timeout_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, client_infos_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, sasl_support_),
   };
   UserToBitHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -243,12 +245,13 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryPlanFragments));
   BitToUserHandshake_descriptor_ = file->message_type(7);
-  static const int BitToUserHandshake_offsets_[5] = {
+  static const int BitToUserHandshake_offsets_[6] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, rpc_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, status_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, errorid_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, errormessage_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, server_infos_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, authenticationmechanisms_),
   };
   BitToUserHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -613,11 +616,12 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(RunQuery));
   RpcType_descriptor_ = file->enum_type(0);
-  QueryResultsMode_descriptor_ = file->enum_type(1);
-  HandshakeStatus_descriptor_ = file->enum_type(2);
-  RequestStatus_descriptor_ = file->enum_type(3);
-  ColumnSearchability_descriptor_ = file->enum_type(4);
-  ColumnUpdatability_descriptor_ = file->enum_type(5);
+  SaslSupport_descriptor_ = file->enum_type(1);
+  QueryResultsMode_descriptor_ = file->enum_type(2);
+  HandshakeStatus_descriptor_ = file->enum_type(3);
+  RequestStatus_descriptor_ = file->enum_type(4);
+  ColumnSearchability_descriptor_ = file->enum_type(5);
+  ColumnUpdatability_descriptor_ = file->enum_type(6);
 }
 
 namespace {
@@ -765,7 +769,7 @@ void protobuf_AddDesc_User_2eproto() {
     "ec.user.Property\"\210\001\n\020RpcEndpointInfos\022\014\n"
     "\004name\030\001 \001(\t\022\017\n\007version\030\002 \001(\t\022\024\n\014majorVer"
     "sion\030\003 \001(\r\022\024\n\014minorVersion\030\004 \001(\r\022\024\n\014patc"
-    "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\317\002\n\022"
+    "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\375\002\n\022"
     "UserToBitHandshake\022.\n\007channel\030\001 \001(\0162\027.ex"
     "ec.shared.RpcChannel:\004USER\022\031\n\021support_li"
     "stening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\0221\n\013cr"
@@ -774,21 +778,23 @@ void protobuf_AddDesc_User_2eproto() {
     "erProperties\022$\n\025support_complex_types\030\006 "
     "\001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010:\005fal"
     "se\0221\n\014client_infos\030\010 \001(\0132\033.exec.user.Rpc"
-    "EndpointInfos\"S\n\016RequestResults\022&\n\010query"
-    "_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021maxim"
-    "um_responses\030\002 \001(\005\"g\n\025GetQueryPlanFragme"
-    "nts\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026.exec."
-    "shared.QueryType\022\031\n\nsplit_plan\030\003 \001(\010:\005fa"
-    "lse\"\316\001\n\022QueryPlanFragments\0223\n\006status\030\001 \002"
-    "(\0162#.exec.shared.QueryResult.QueryState\022"
-    "&\n\010query_id\030\002 \001(\0132\024.exec.shared.QueryId\022"
-    "1\n\tfragments\030\003 \003(\0132\036.exec.bit.control.Pl"
-    "anFragment\022(\n\005error\030\004 \001(\0132\031.exec.shared."
-    "DrillPBError\"\257\001\n\022BitToUserHandshake\022\023\n\013r"
-    "pc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec."
-    "user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n"
-    "\014errorMessage\030\005 \001(\t\0221\n\014server_infos\030\006 \001("
-    "\0132\033.exec.user.RpcEndpointInfos\"-\n\nLikeFi"
+    "EndpointInfos\022,\n\014sasl_support\030\t \001(\0162\026.ex"
+    "ec.user.SaslSupport\"S\n\016RequestResults\022&\n"
+    "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n"
+    "\021maximum_responses\030\002 \001(\005\"g\n\025GetQueryPlan"
+    "Fragments\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026"
+    ".exec.shared.QueryType\022\031\n\nsplit_plan\030\003 \001"
+    "(\010:\005false\"\316\001\n\022QueryPlanFragments\0223\n\006stat"
+    "us\030\001 \002(\0162#.exec.shared.QueryResult.Query"
+    "State\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Qu"
+    "eryId\0221\n\tfragments\030\003 \003(\0132\036.exec.bit.cont"
+    "rol.PlanFragment\022(\n\005error\030\004 \001(\0132\031.exec.s"
+    "hared.DrillPBError\"\321\001\n\022BitToUserHandshak"
+    "e\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032"
+    ".exec.user.HandshakeStatus\022\017\n\007errorId\030\004 "
+    "\001(\t\022\024\n\014errorMessage\030\005 \001(\t\0221\n\014server_info"
+    "s\030\006 \001(\0132\033.exec.user.RpcEndpointInfos\022 \n\030"
+    "authenticationMechanisms\030\007 \003(\t\"-\n\nLikeFi"
     "lter\022\017\n\007pattern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n"
     "\016GetCatalogsReq\0222\n\023catalog_name_filter\030\001"
     " \001(\0132\025.exec.user.LikeFilter\"M\n\017CatalogMe"
@@ -865,7 +871,7 @@ void protobuf_AddDesc_User_2eproto() {
     "\014\n\004plan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec."
     "bit.control.PlanFragment\022E\n\031prepared_sta"
     "tement_handle\030\005 \001(\0132\".exec.user.Prepared"
-    "StatementHandle*\310\003\n\007RpcType\022\r\n\tHANDSHAKE"
+    "StatementHandle*\332\003\n\007RpcType\022\r\n\tHANDSHAKE"
     "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022"
     "\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027"
     "\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLA"
@@ -876,18 +882,20 @@ void protobuf_AddDesc_User_2eproto() {
     "_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022"
     "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA"
     "TEMENT\020\027\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP"
-    "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020Qu"
-    "eryResultsMode\022\017\n\013STREAM_FULL\020\001*^\n\017Hands"
-    "hakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_M"
-    "ISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FA"
-    "ILURE\020\004*D\n\rRequestStatus\022\022\n\016UNKNOWN_STAT"
-    "US\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n"
-    "\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHAB"
-    "ILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022"
-    "\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNOW"
-    "N_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITA"
-    "BLE\020\002B+\n\033org.apache.drill.exec.protoB\nUs"
-    "erProtosH\001", 5210);
+    "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SA"
+    "SL_MESSAGE\020\030*6\n\013SaslSupport\022\030\n\024UNKNOWN_S"
+    "ASL_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001*#\n\020QueryRes"
+    "ultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017HandshakeSt"
+    "atus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATC"
+    "H\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020"
+    "\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatus\022\022\n"
+    "\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n"
+    "\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n\025UNK"
+    "NOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002"
+    "\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdatabil"
+    "ity\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREAD_ON"
+    "LY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org.apache.drill.e"
+    "xec.protoB\nUserProtosH\001", 5383);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -983,6 +991,21 @@ bool RpcType_IsValid(int value) {
     case 21:
     case 22:
     case 23:
+    case 24:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::google::protobuf::EnumDescriptor* SaslSupport_descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return SaslSupport_descriptor_;
+}
+bool SaslSupport_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
       return true;
     default:
       return false;
@@ -1012,6 +1035,7 @@ bool HandshakeStatus_IsValid(int value) {
     case 2:
     case 3:
     case 4:
+    case 5:
       return true;
     default:
       return false;
@@ -2026,6 +2050,7 @@ const int UserToBitHandshake::kPropertiesFieldNumber;
 const int UserToBitHandshake::kSupportComplexTypesFieldNumber;
 const int UserToBitHandshake::kSupportTimeoutFieldNumber;
 const int UserToBitHandshake::kClientInfosFieldNumber;
+const int UserToBitHandshake::kSaslSupportFieldNumber;
 #endif  // !_MSC_VER
 
 UserToBitHandshake::UserToBitHandshake()
@@ -2055,6 +2080,7 @@ void UserToBitHandshake::SharedCtor() {
   support_complex_types_ = false;
   support_timeout_ = false;
   client_infos_ = NULL;
+  sasl_support_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2107,6 +2133,9 @@ void UserToBitHandshake::Clear() {
     if (has_client_infos()) {
       if (client_infos_ != NULL) client_infos_->::exec::user::RpcEndpointInfos::Clear();
     }
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    sasl_support_ = 0;
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -2240,6 +2269,27 @@ bool UserToBitHandshake::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(72)) goto parse_sasl_support;
+        break;
+      }
+
+      // optional .exec.user.SaslSupport sasl_support = 9;
+      case 9: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_sasl_support:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::exec::user::SaslSupport_IsValid(value)) {
+            set_sasl_support(static_cast< ::exec::user::SaslSupport >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(9, value);
+          }
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -2306,6 +2356,12 @@ void UserToBitHandshake::SerializeWithCachedSizes(
       8, this->client_infos(), output);
   }
 
+  // optional .exec.user.SaslSupport sasl_support = 9;
+  if (has_sasl_support()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      9, this->sasl_support(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -2359,6 +2415,12 @@ void UserToBitHandshake::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         8, this->client_infos(), target);
+  }
+
+  // optional .exec.user.SaslSupport sasl_support = 9;
+  if (has_sasl_support()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      9, this->sasl_support(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -2422,6 +2484,14 @@ int UserToBitHandshake::ByteSize() const {
     }
 
   }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    // optional .exec.user.SaslSupport sasl_support = 9;
+    if (has_sasl_support()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->sasl_support());
+    }
+
+  }
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -2473,6 +2543,11 @@ void UserToBitHandshake::MergeFrom(const UserToBitHandshake& from) {
       mutable_client_infos()->::exec::user::RpcEndpointInfos::MergeFrom(from.client_infos());
     }
   }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    if (from.has_sasl_support()) {
+      set_sasl_support(from.sasl_support());
+    }
+  }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
@@ -2506,6 +2581,7 @@ void UserToBitHandshake::Swap(UserToBitHandshake* other) {
     std::swap(support_complex_types_, other->support_complex_types_);
     std::swap(support_timeout_, other->support_timeout_);
     std::swap(client_infos_, other->client_infos_);
+    std::swap(sasl_support_, other->sasl_support_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -3437,6 +3513,7 @@ const int BitToUserHandshake::kStatusFieldNumber;
 const int BitToUserHandshake::kErrorIdFieldNumber;
 const int BitToUserHandshake::kErrorMessageFieldNumber;
 const int BitToUserHandshake::kServerInfosFieldNumber;
+const int BitToUserHandshake::kAuthenticationMechanismsFieldNumber;
 #endif  // !_MSC_VER
 
 BitToUserHandshake::BitToUserHandshake()
@@ -3519,6 +3596,7 @@ void BitToUserHandshake::Clear() {
       if (server_infos_ != NULL) server_infos_->::exec::user::RpcEndpointInfos::Clear();
     }
   }
+  authenticationmechanisms_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -3609,6 +3687,25 @@ bool BitToUserHandshake::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(58)) goto parse_authenticationMechanisms;
+        break;
+      }
+
+      // repeated string authenticationMechanisms = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_authenticationMechanisms:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_authenticationmechanisms()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).data(),
+            this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(58)) goto parse_authenticationMechanisms;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -3666,6 +3763,15 @@ void BitToUserHandshake::SerializeWithCachedSizes(
       6, this->server_infos(), output);
   }
 
+  // repeated string authenticationMechanisms = 7;
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->authenticationmechanisms(i).data(), this->authenticationmechanisms(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      7, this->authenticationmechanisms(i), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -3710,6 +3816,15 @@ void BitToUserHandshake::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         6, this->server_infos(), target);
+  }
+
+  // repeated string authenticationMechanisms = 7;
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->authenticationmechanisms(i).data(), this->authenticationmechanisms(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(7, this->authenticationmechanisms(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -3758,6 +3873,13 @@ int BitToUserHandshake::ByteSize() const {
     }
 
   }
+  // repeated string authenticationMechanisms = 7;
+  total_size += 1 * this->authenticationmechanisms_size();
+  for (int i = 0; i < this->authenticationmechanisms_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->authenticationmechanisms(i));
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -3783,6 +3905,7 @@ void BitToUserHandshake::MergeFrom(const ::google::protobuf::Message& from) {
 
 void BitToUserHandshake::MergeFrom(const BitToUserHandshake& from) {
   GOOGLE_CHECK_NE(&from, this);
+  authenticationmechanisms_.MergeFrom(from.authenticationmechanisms_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_rpc_version()) {
       set_rpc_version(from.rpc_version());
@@ -3827,6 +3950,7 @@ void BitToUserHandshake::Swap(BitToUserHandshake* other) {
     std::swap(errorid_, other->errorid_);
     std::swap(errormessage_, other->errormessage_);
     std::swap(server_infos_, other->server_infos_);
+    authenticationmechanisms_.Swap(&other->authenticationmechanisms_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
