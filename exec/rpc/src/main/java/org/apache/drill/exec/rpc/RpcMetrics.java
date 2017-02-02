@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.rpc;
 
-import javax.security.sasl.SaslClient;
+/**
+ * Holder interface for all the metrics used in RPC layer
+ */
+public interface RpcMetrics {
 
-public interface ClientConnection extends RemoteConnection, EncryptionContext {
+  void addConnectionCount();
 
-  // set only once
-  void setSaslClient(SaslClient saslClient);
-
-  // get only after setting
-  SaslClient getSaslClient();
-
-  // dispose the saslClient object
-  void disposeSaslClient();
-
+  void decConnectionCount();
 }

@@ -33,6 +33,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.ServerConnection;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
@@ -87,7 +88,7 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
       try {
         saslResponse = SaslMessage.PARSER.parseFrom(new ByteBufInputStream(pBody));
       } catch (final InvalidProtocolBufferException e) {
-        handleAuthFailure(remoteAddress, sender, e, saslResponseType);
+        handleAuthFailure(connection, sender, e, saslResponseType);
         return;
       }
 
@@ -95,17 +96,17 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
       final SaslResponseProcessor processor = RESPONSE_PROCESSORS.get(saslResponse.getStatus());
       if (processor == null) {
         logger.info("Unknown message type from client from {}. Will stop authentication.", remoteAddress);
-        handleAuthFailure(remoteAddress, sender, new SaslException("Received unexpected message"),
+        handleAuthFailure(connection, sender, new SaslException("Received unexpected message"),
             saslResponseType);
         return;
       }
 
-      final SaslResponseContext<S, T> context = new SaslResponseContext<>(saslResponse, connection, remoteAddress,
-          sender, requestHandler, saslResponseType);
+      final SaslResponseContext<S, T> context = new SaslResponseContext<>(saslResponse, connection, sender,
+          requestHandler, saslResponseType);
       try {
         processor.process(context);
       } catch (final Exception e) {
-        handleAuthFailure(remoteAddress, sender, e, saslResponseType);
+        handleAuthFailure(connection, sender, e, saslResponseType);
       }
     } else {
 
@@ -115,9 +116,9 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
       // but the client should not be making any requests before authenticating.
       // drop connection
       throw new RpcException(
-          String.format("Request of type %d is not allowed without authentication. " +
-                  "Client on %s must authenticate before making requests. Connection dropped.",
-              rpcType, remoteAddress));
+          String.format("Request of type %d is not allowed without authentication. Client on %s must authenticate " +
+              "before making requests. Connection dropped. [Details: %s]",
+              rpcType, remoteAddress, connection.getEncryptionCtxtString()));
     }
   }
 
@@ -125,16 +126,14 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
 
     final SaslMessage saslResponse;
     final S connection;
-    final String remoteAddress;
     final ResponseSender sender;
     final RequestHandler<S> requestHandler;
     final T saslResponseType;
 
-    SaslResponseContext(SaslMessage saslResponse, S connection, String remoteAddress, ResponseSender sender,
+    SaslResponseContext(SaslMessage saslResponse, S connection, ResponseSender sender,
                         RequestHandler<S> requestHandler, T saslResponseType) {
       this.saslResponse = checkNotNull(saslResponse);
       this.connection = checkNotNull(connection);
-      this.remoteAddress = checkNotNull(remoteAddress);
       this.sender = checkNotNull(sender);
       this.requestHandler = checkNotNull(requestHandler);
       this.saslResponseType = checkNotNull(saslResponseType);
@@ -208,8 +207,11 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
 
         handleSuccess(context, challenge, saslServer);
       } else {
-        logger.info("Failed to authenticate client from {}", context.remoteAddress);
-        throw new SaslException("Client allegedly succeeded authentication, but server did not. Suspicious?");
+        final S connection = context.connection;
+        logger.info("Failed to authenticate client from {} with encryption context:{}",
+            connection.getRemoteAddress().toString(), connection.getEncryptionCtxtString());
+        throw new SaslException(String.format("Client allegedly succeeded authentication but server did not. " +
+            "Suspicious? [Details: %s]", connection.getEncryptionCtxtString()));
       }
     }
   }
@@ -219,9 +221,11 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
     @Override
     public <S extends ServerConnection<S>, T extends EnumLite>
     void process(SaslResponseContext<S, T> context) throws Exception {
-      logger.info("Client from {} failed authentication graciously, and does not want to continue.",
-          context.remoteAddress);
-      throw new SaslException("Client graciously failed authentication");
+      final S connection = context.connection;
+      logger.info("Client from {} failed authentication with encryption context:{} graciously, and does not want to " +
+          "continue.", connection.getRemoteAddress().toString(), connection.getEncryptionCtxtString());
+      throw new SaslException(String.format("Client graciously failed authentication. [Details: %s]",
+          connection.getEncryptionCtxtString()));
     }
   }
 
@@ -251,25 +255,67 @@ public class ServerAuthenticationHandler<S extends ServerConnection<S>, T extend
   private static <S extends ServerConnection<S>, T extends EnumLite>
   void handleSuccess(final SaslResponseContext<S, T> context, final SaslMessage.Builder challenge,
                      final SaslServer saslServer) throws IOException {
-    context.connection.changeHandlerTo(context.requestHandler);
-    context.connection.finalizeSaslSession();
-    context.sender.send(new Response(context.saslResponseType, challenge.build()));
 
-    // setup security layers here..
+    final S connection = context.connection;
+    connection.changeHandlerTo(context.requestHandler);
+    connection.finalizeSaslSession();
+
+    // Check the negotiated property before sending the response back to client
+    try {
+      final String negotiatedQOP = saslServer.getNegotiatedProperty(Sasl.QOP).toString();
+      final String expectedQOP = (connection.isEncryptionEnabled())
+          ? SaslProperties.QualityOfProtection.PRIVACY.getSaslQop()
+          : SaslProperties.QualityOfProtection.AUTHENTICATION.getSaslQop();
+
+      if (!(negotiatedQOP.equals(expectedQOP))) {
+        throw new SaslException(String.format("Mismatch in negotiated QOP value: %s and Expected QOP value: %s",
+            negotiatedQOP, expectedQOP));
+      }
+
+      // Update the rawWrapSendSize with the negotiated rawSendSize since we cannot call encode with more than the
+      // negotiated size of buffer
+      if (connection.isEncryptionEnabled()) {
+        final int negotiatedRawSendSize = Integer.parseInt(
+            saslServer.getNegotiatedProperty(Sasl.RAW_SEND_SIZE).toString());
+        if (negotiatedRawSendSize <= 0) {
+          throw new SaslException(String.format("Negotiated rawSendSize: %d is invalid. Please check the configured " +
+              "value of encryption.sasl.max_wrapped_size. It might be configured to a very small value.",
+              negotiatedRawSendSize));
+        }
+        connection.setWrapSizeLimit(negotiatedRawSendSize);
+      }
+    } catch (IllegalStateException | NumberFormatException e) {
+      throw new SaslException(String.format("Unexpected failure while retrieving negotiated property values (%s)",
+          e.getMessage()), e);
+    }
 
     if (logger.isTraceEnabled()) {
-      logger.trace("Authenticated {} successfully using {} from {}", saslServer.getAuthorizationID(),
-          saslServer.getMechanismName(), context.remoteAddress);
+      logger.trace("Authenticated {} successfully using {} from {} with encryption context {}",
+          saslServer.getAuthorizationID(), saslServer.getMechanismName(), connection.getRemoteAddress().toString(),
+          connection.getEncryptionCtxtString());
+    }
+
+    // All checks have passed let's send the response back to client before adding handlers.
+    context.sender.send(new Response(context.saslResponseType, challenge.build()));
+
+    if (connection.isEncryptionEnabled()) {
+      connection.addSecurityHandlers();
+    } else {
+      // Encryption is not required hence we don't need to hold on to saslServer object.
+      connection.disposeSaslServer();
     }
   }
 
   private static final SaslMessage SASL_FAILED_MESSAGE =
       SaslMessage.newBuilder().setStatus(SaslStatus.SASL_FAILED).build();
 
-  private static <T extends EnumLite>
-  void handleAuthFailure(final String remoteAddress, final ResponseSender sender,
+  private static <S extends ServerConnection<S>, T extends EnumLite>
+  void handleAuthFailure(final S connection, final ResponseSender sender,
                          final Exception e, final T saslResponseType) throws RpcException {
-    logger.debug("Authentication failed from client {} due to {}", remoteAddress, e);
+    final String remoteAddress = connection.getRemoteAddress().toString();
+
+    logger.debug("Authentication using mechanism {} with encryption context {} failed from client {} due to {}",
+        connection.getSaslServer().getMechanismName(), connection.getEncryptionCtxtString(), remoteAddress, e);
 
     // inform the client that authentication failed, and no more
     sender.send(new Response(saslResponseType, SASL_FAILED_MESSAGE));

@@ -18,6 +18,8 @@
 package org.apache.drill.exec.rpc.control;
 
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.MessageLite;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
@@ -36,13 +38,14 @@ import org.apache.drill.exec.rpc.RpcCommand;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.FailingRequestHandler;
+import org.apache.drill.exec.rpc.security.SaslProperties;
 
-import com.google.protobuf.MessageLite;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake> {
@@ -105,9 +108,12 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
     if (handshake.getAuthenticationMechanismsCount() != 0) { // remote requires authentication
       final SaslClient saslClient;
       try {
+        final Map<String, String> saslProperties = SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
+                                                                                    connection.getMaxWrappedSize());
+
         saslClient = config.getAuthFactory(handshake.getAuthenticationMechanismsList())
             .createSaslClient(UserGroupInformation.getLoginUser(),
-                config.getSaslClientProperties(remoteEndpoint));
+                config.getSaslClientProperties(remoteEndpoint, saslProperties));
       } catch (final IOException e) {
         throw new RpcException(String.format("Failed to initiate authenticate to %s", remoteEndpoint.getAddress()), e);
       }
@@ -118,7 +124,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
     } else {
       if (config.getAuthMechanismToUse() != null) { // local requires authentication
         throw new RpcException(String.format("Drillbit (%s) does not require auth, but auth is enabled.",
-                remoteEndpoint.getAddress()));
+            remoteEndpoint.getAddress()));
       }
     }
   }
@@ -126,6 +132,9 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   @Override
   protected void finalizeConnection(BitControlHandshake handshake, ControlConnection connection) {
     connection.setEndpoint(handshake.getEndpoint());
+
+    // Increment the Control Connection counter.
+    connection.incConnectionCounter();
   }
 
   @Override

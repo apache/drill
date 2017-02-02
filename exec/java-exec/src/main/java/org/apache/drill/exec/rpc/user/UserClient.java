@@ -69,6 +69,7 @@ import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.ClientAuthenticatorProvider;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 
@@ -80,6 +81,7 @@ import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.MessageLite;
+
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
@@ -137,18 +139,32 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
    */
   public void connect(final DrillbitEndpoint endpoint, final DrillProperties properties,
                       final UserCredentials credentials) throws RpcException {
-    final UserToBitHandshake handshake = UserToBitHandshake.newBuilder()
+    final UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)
         .setSupportComplexTypes(supportComplexTypes)
         .setSupportTimeout(true)
         .setCredentials(credentials)
         .setClientInfos(UserRpcUtils.getRpcEndpointInfos(clientName))
-        .setSaslSupport(SaslSupport.SASL_AUTH)
-        .setProperties(properties.serializeForServer())
-        .build();
+        .setSaslSupport(SaslSupport.SASL_PRIVACY)
+        .setProperties(properties.serializeForServer());
 
-    connect(handshake, endpoint).checkedGet();
+    // Only used for testing purpose
+    if (properties.containsKey(DrillProperties.TEST_SASL_LEVEL)) {
+      hsBuilder.setSaslSupport(SaslSupport.valueOf(
+          Integer.parseInt(properties.getProperty(DrillProperties.TEST_SASL_LEVEL))));
+    }
+
+    connect(hsBuilder.build(), endpoint).checkedGet();
+
+    // Check if client needs encryption and server is not configured for encryption.
+    final boolean clientNeedsEncryption = properties.containsKey(DrillProperties.SASL_ENCRYPT)
+        && Boolean.parseBoolean(properties.getProperty(DrillProperties.SASL_ENCRYPT));
+
+    if(clientNeedsEncryption && !connection.isEncryptionEnabled()) {
+      throw new NonTransientRpcException("Client needs encrypted connection but server is not configured for " +
+          "encryption. Please check connection parameter or contact your administrator");
+    }
 
     if (serverAuthMechanisms != null) {
       try {
@@ -192,6 +208,12 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
   private CheckedFuture<Void, SaslException> authenticate(final DrillProperties properties) {
     final Map<String, String> propertiesMap = properties.stringPropertiesAsMap();
 
+    // Set correct QOP property and Strength based on server needs encryption or not.
+    // If ChunkMode is enabled then negotiate for buffer size equal to wrapChunkSize,
+    // If ChunkMode is disabled then negotiate for MAX_WRAPPED_SIZE buffer size.
+    propertiesMap.putAll(SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
+                                                          connection.getMaxWrappedSize()));
+
     final SettableFuture<Void> authSettable = SettableFuture.create(); // use handleAuthFailure to setException
     final CheckedFuture<Void, SaslException> authFuture =
         new AbstractCheckedFuture<Void, SaslException>(authSettable) {
@@ -201,10 +223,12 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
             if (e instanceof ExecutionException) {
               final Throwable cause = Throwables.getRootCause(e);
               if (cause instanceof SaslException) {
-                return new SaslException("Authentication failed: " + cause.getMessage(), cause);
+                return new SaslException(String.format("Authentication failed. [Details: %s, Error %s]",
+                    connection.getEncryptionCtxtString(), cause.getMessage()), cause);
               }
             }
-            return new SaslException("Authentication failed unexpectedly.", e);
+            return new SaslException(String.format("Authentication failed unexpectedly. [Details: %s, Error %s]",
+                connection.getEncryptionCtxtString(), e.getMessage()), e);
           }
         };
 
@@ -215,11 +239,13 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
     try {
       factory = getAuthenticatorFactory(properties);
       mechanismName = factory.getSimpleName();
-      logger.trace("Will try to authenticate to server using {} mechanism.", mechanismName);
+      logger.trace("Will try to authenticate to server using {} mechanism with encryption context {}",
+          mechanismName, connection.getEncryptionCtxtString());
       ugi = factory.createAndLoginUser(propertiesMap);
       saslClient = factory.createSaslClient(ugi, propertiesMap);
       if (saslClient == null) {
-        throw new SaslException("Cannot initiate authentication. Insufficient credentials?");
+        throw new SaslException(String.format("Cannot initiate authentication using %s mechanism. Insufficient " +
+            "credentials or selected mechanism doesn't support configured security layers?", factory.getSimpleName()));
       }
       connection.setSaslClient(saslClient);
     } catch (final IOException e) {
@@ -255,13 +281,12 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
     // first, check if a certain mechanism must be used
     String authMechanism = properties.getProperty(DrillProperties.AUTH_MECHANISM);
     if (authMechanism != null) {
-      if (!ClientAuthenticatorProvider.getInstance()
-          .containsFactory(authMechanism)) {
+      if (!ClientAuthenticatorProvider.getInstance().containsFactory(authMechanism)) {
         throw new SaslException(String.format("Unknown mechanism: %s", authMechanism));
       }
       if (!mechanismSet.contains(authMechanism.toUpperCase())) {
-        throw new SaslException(String.format("Server does not support authentication using: %s",
-            authMechanism));
+        throw new SaslException(String.format("Server does not support authentication using: %s. [Details: %s]",
+            authMechanism, connection.getEncryptionCtxtString()));
       }
       return ClientAuthenticatorProvider.getInstance()
           .getAuthenticatorFactory(authMechanism);
@@ -282,8 +307,8 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
           .getAuthenticatorFactory(PlainFactory.SIMPLE_NAME);
     }
 
-    throw new SaslException(String.format("Server requires authentication using %s. Insufficient credentials?",
-        serverAuthMechanisms));
+    throw new SaslException(String.format("Server requires authentication using %s. Insufficient credentials?. " +
+        "[Details: %s]. ", serverAuthMechanisms, connection.getEncryptionCtxtString()));
   }
 
   protected <SEND extends MessageLite, RECEIVE extends MessageLite>
@@ -331,8 +356,8 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
     if (!authComplete) {
       // Remote should not be making any requests before authenticating, drop connection
       throw new RpcException(String.format("Request of type %d is not allowed without authentication. " +
-                  "Remote on %s must authenticate before making requests. Connection dropped.",
-              rpcType, connection.getRemoteAddress()));
+          "Remote on %s must authenticate before making requests. Connection dropped.",
+          rpcType, connection.getRemoteAddress()));
     }
     switch (rpcType) {
     case RpcType.QUERY_DATA_VALUE:
@@ -361,8 +386,14 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
       break;
     case AUTH_REQUIRED: {
       authComplete = false;
-      logger.trace("Server requires authentication before proceeding.");
       serverAuthMechanisms = ImmutableList.copyOf(inbound.getAuthenticationMechanismsList());
+      connection.setEncryption(inbound.hasEncrypted() && inbound.getEncrypted());
+
+      if (inbound.hasMaxWrappedSize()) {
+        connection.setMaxWrappedSize(inbound.getMaxWrappedSize());
+      }
+      logger.trace(String.format("Server requires authentication with encryption context %s before proceeding.",
+          connection.getEncryptionCtxtString()));
       break;
     }
     case AUTH_FAILED:
@@ -384,6 +415,9 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
   public class UserToBitConnection extends AbstractClientConnection {
 
     UserToBitConnection(SocketChannel channel) {
+
+      // by default connection is not set for encryption. After receiving handshake msg from server we set the
+      // isEncryptionEnabled, useChunkMode and chunkModeSize correctly.
       super(channel, "user client");
     }
 
@@ -395,6 +429,16 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
     @Override
     protected Logger getLogger() {
       return logger;
+    }
+
+    @Override
+    public void incConnectionCounter() {
+      // no-op
+    }
+
+    @Override
+    public void decConnectionCounter() {
+      // no-op
     }
   }
 

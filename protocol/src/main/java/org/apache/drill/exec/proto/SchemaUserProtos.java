@@ -997,6 +997,10 @@ public final class SchemaUserProtos
                     output.writeString(7, authenticationMechanisms, true);
                 for(org.apache.drill.exec.proto.UserProtos.RpcType supportedMethods : message.getSupportedMethodsList())
                     output.writeEnum(8, supportedMethods.getNumber(), true);
+                if(message.hasEncrypted())
+                    output.writeBool(9, message.getEncrypted(), false);
+                if(message.hasMaxWrappedSize())
+                    output.writeInt32(10, message.getMaxWrappedSize(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.BitToUserHandshake message)
             {
@@ -1058,6 +1062,12 @@ public final class SchemaUserProtos
                         case 8:
                             builder.addSupportedMethods(org.apache.drill.exec.proto.UserProtos.RpcType.valueOf(input.readEnum()));
                             break;
+                        case 9:
+                            builder.setEncrypted(input.readBool());
+                            break;
+                        case 10:
+                            builder.setMaxWrappedSize(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1105,6 +1115,8 @@ public final class SchemaUserProtos
                 case 6: return "serverInfos";
                 case 7: return "authenticationMechanisms";
                 case 8: return "supportedMethods";
+                case 9: return "encrypted";
+                case 10: return "maxWrappedSize";
                 default: return null;
             }
         }
@@ -1123,6 +1135,8 @@ public final class SchemaUserProtos
             fieldMap.put("serverInfos", 6);
             fieldMap.put("authenticationMechanisms", 7);
             fieldMap.put("supportedMethods", 8);
+            fieldMap.put("encrypted", 9);
+            fieldMap.put("maxWrappedSize", 10);
         }
     }
 

@@ -20,7 +20,7 @@ package org.apache.drill.exec.rpc;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 
-public interface ServerConnection<S extends ServerConnection<S>> extends RemoteConnection {
+public interface ServerConnection<S extends ServerConnection<S>> extends RemoteConnection, EncryptionContext {
 
   // init only once
   void initSaslServer(String mechanismName) throws IOException;
@@ -33,5 +33,7 @@ public interface ServerConnection<S extends ServerConnection<S>> extends RemoteC
   RequestHandler<S> getCurrentHandler();
 
   void changeHandlerTo(RequestHandler<S> handler);
+
+  void disposeSaslServer();
 
 }

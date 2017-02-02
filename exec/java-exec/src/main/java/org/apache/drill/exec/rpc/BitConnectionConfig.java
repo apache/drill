@@ -26,6 +26,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
+import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -46,16 +47,38 @@ public abstract class BitConnectionConfig extends AbstractConnectionConfig {
     super(allocator, context);
 
     final DrillConfig config = context.getConfig();
+    final AuthenticatorProvider authProvider = getAuthProvider();
+
     if (config.getBoolean(ExecConstants.BIT_AUTHENTICATION_ENABLED)) {
       this.authMechanismToUse = config.getString(ExecConstants.BIT_AUTHENTICATION_MECHANISM);
       try {
-        getAuthProvider().getAuthenticatorFactory(authMechanismToUse);
+        authProvider.getAuthenticatorFactory(authMechanismToUse);
       } catch (final SaslException e) {
         throw new DrillbitStartupException(String.format(
             "'%s' mechanism not found for bit-to-bit authentication. Please check authentication configuration.",
             authMechanismToUse));
       }
-      logger.info("Configured bit-to-bit connections to require authentication using: {}", authMechanismToUse);
+
+      // Update encryption related configurations
+      encryptionContext.setEncryption(config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED));
+      final int maxWrappedSize = config.getInt(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE);
+
+      if (maxWrappedSize <= 0) {
+        throw new DrillbitStartupException(String.format("Invalid value configured for " +
+            "bit.encryption.sasl.max_wrapped_size. Must be a positive integer in bytes with a recommended max value " +
+            "of %s", RpcConstants.MAX_RECOMMENDED_WRAPPED_SIZE));
+      } else if (maxWrappedSize > RpcConstants.MAX_RECOMMENDED_WRAPPED_SIZE) {
+        logger.warn("The configured value of bit.encryption.sasl.max_wrapped_size is too big. This may cause higher" +
+            " memory pressure. [Details: Recommended max value is %s]", RpcConstants.MAX_RECOMMENDED_WRAPPED_SIZE);
+      }
+      encryptionContext.setMaxWrappedSize(maxWrappedSize);
+
+      logger.info("Configured bit-to-bit connections to require authentication using: {} with encryption: {}",
+          authMechanismToUse, encryptionContext.getEncryptionCtxtString());
+
+    } else if (config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED)) {
+      throw new DrillbitStartupException("Invalid security configuration. Encryption using SASL is enabled with " +
+          "authentication disabled. Please check the security.bit configurations.");
     } else {
       this.authMechanismToUse = null;
     }
@@ -78,7 +101,8 @@ public abstract class BitConnectionConfig extends AbstractConnectionConfig {
     return getAuthProvider().getAuthenticatorFactory(authMechanismToUse);
   }
 
-  public Map<String, ?> getSaslClientProperties(final DrillbitEndpoint remoteEndpoint) throws IOException {
+  public Map<String, ?> getSaslClientProperties(final DrillbitEndpoint remoteEndpoint,
+                                                final Map<String, String> overrides) throws IOException {
     final DrillProperties properties = DrillProperties.createEmpty();
 
     final UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
@@ -93,6 +117,8 @@ public abstract class BitConnectionConfig extends AbstractConnectionConfig {
         properties.setProperty(DrillProperties.SERVICE_PRINCIPAL, loginPrincipal.toString());
       }
     }
+
+    properties.merge(overrides);
     return properties.stringPropertiesAsMap();
   }
 }

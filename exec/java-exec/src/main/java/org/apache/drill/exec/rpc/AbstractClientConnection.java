@@ -30,8 +30,13 @@ public abstract class AbstractClientConnection extends AbstractRemoteConnection 
 
   private SaslClient saslClient;
 
+  public AbstractClientConnection(SocketChannel channel, String name,
+                                  EncryptionContext encryptContext) {
+    super(channel, name, encryptContext);
+  }
+
   public AbstractClientConnection(SocketChannel channel, String name) {
-    super(channel, name);
+    this(channel, name, new EncryptionContextImpl());
   }
 
   protected abstract Logger getLogger();
@@ -40,6 +45,25 @@ public abstract class AbstractClientConnection extends AbstractRemoteConnection 
   public void setSaslClient(final SaslClient saslClient) {
     checkState(this.saslClient == null);
     this.saslClient = saslClient;
+
+    // If encryption is enabled set the backend wrapper instance corresponding to this SaslClient in the connection
+    // object. This is later used to do wrap/unwrap in handlers.
+    if (isEncryptionEnabled()) {
+      saslCodec = new SaslCodec() {
+
+        @Override
+        public byte[] wrap(byte[] data, int offset, int len) throws SaslException {
+          checkState(saslClient != null);
+          return saslClient.wrap(data, offset, len);
+        }
+
+        @Override
+        public byte[] unwrap(byte[] data, int offset, int len) throws SaslException {
+          checkState(saslClient != null);
+          return saslClient.unwrap(data, offset, len);
+        }
+      };
+    }
   }
 
   @Override
@@ -49,7 +73,7 @@ public abstract class AbstractClientConnection extends AbstractRemoteConnection 
   }
 
   @Override
-  public void close() {
+  public void disposeSaslClient() {
     try {
       if (saslClient != null) {
         saslClient.dispose();
@@ -58,6 +82,18 @@ public abstract class AbstractClientConnection extends AbstractRemoteConnection 
     } catch (final SaslException e) {
       getLogger().warn("Unclean disposal", e);
     }
-    super.close();
+  }
+
+  @Override
+  public void channelClosed(RpcException ex) {
+    // This will be triggered from Netty when a channel is closed. We should cleanup here
+    // as this will handle case for both client closing the connection or server closing the
+    // connection.
+    disposeSaslClient();
+
+    // Decrease the connection counter here since the close handler will be triggered
+    // for all the types of connection
+    decConnectionCounter();
+    super.channelClosed(ex);
   }
 }

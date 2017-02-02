@@ -23,7 +23,8 @@ package org.apache.drill.exec.proto.beans;
 public enum SaslSupport implements com.dyuproject.protostuff.EnumLite<SaslSupport>
 {
     UNKNOWN_SASL_SUPPORT(0),
-    SASL_AUTH(1);
+    SASL_AUTH(1),
+    SASL_PRIVACY(2);
     
     public final int number;
     
@@ -43,6 +44,7 @@ public enum SaslSupport implements com.dyuproject.protostuff.EnumLite<SaslSuppor
         {
             case 0: return UNKNOWN_SASL_SUPPORT;
             case 1: return SASL_AUTH;
+            case 2: return SASL_PRIVACY;
             default: return null;
         }
     }

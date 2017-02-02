@@ -229,6 +229,8 @@
             <exclude>**/cmake_install.cmake</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
+            <exclude>**/*.autotools</exclude>
+            <exclude>**/*.cproject</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
             <exclude>dependency-reduced-pom.xml</exclude>
           </excludes>

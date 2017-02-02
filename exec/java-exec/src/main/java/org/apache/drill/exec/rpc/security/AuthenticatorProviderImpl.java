@@ -137,5 +137,4 @@ public class AuthenticatorProviderImpl implements AuthenticatorProvider {
     AutoCloseables.close(authFactories.values());
     authFactories.clear();
   }
-
 }

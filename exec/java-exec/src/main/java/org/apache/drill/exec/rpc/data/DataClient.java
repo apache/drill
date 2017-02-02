@@ -18,11 +18,11 @@
 package org.apache.drill.exec.rpc.data;
 
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
@@ -34,15 +34,15 @@ import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcCommand;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-
-import com.google.protobuf.MessageLite;
+import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
+import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class DataClient extends BasicClient<RpcType, DataClientConnection, BitClientHandshake, BitServerHandshake> {
@@ -72,7 +72,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   @Override
   protected DataClientConnection initRemoteConnection(SocketChannel channel) {
     super.initRemoteConnection(channel);
-    this.connection = new DataClientConnection(channel, this);
+    this.connection = new DataClientConnection(channel, this, config.getEncryptionCtxt());
     return connection;
   }
 
@@ -107,9 +107,13 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
     if (handshake.getAuthenticationMechanismsCount() != 0) { // remote requires authentication
       final SaslClient saslClient;
       try {
+
+        final Map<String, String> saslProperties = SaslProperties.getSaslProperties(connection.isEncryptionEnabled(),
+                                                                                    connection.getMaxWrappedSize());
+
         saslClient = config.getAuthFactory(handshake.getAuthenticationMechanismsList())
             .createSaslClient(UserGroupInformation.getLoginUser(),
-                config.getSaslClientProperties(remoteEndpoint));
+                config.getSaslClientProperties(remoteEndpoint, saslProperties));
       } catch (final IOException e) {
         throw new RpcException(String.format("Failed to initiate authenticate to %s", remoteEndpoint.getAddress()), e);
       }
@@ -126,6 +130,11 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   }
 
   @Override
+  protected void finalizeConnection(BitServerHandshake handshake, DataClientConnection connection) {
+    // Increment the Data Connection counter.
+    connection.incConnectionCounter();
+  }
+
   protected <M extends MessageLite> RpcCommand<M, DataClientConnection>
   getInitialCommand(final RpcCommand<M, DataClientConnection> command) {
     final RpcCommand<M, DataClientConnection> initialCommand = super.getInitialCommand(command);

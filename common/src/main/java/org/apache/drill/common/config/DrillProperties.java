@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.config;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -58,6 +59,12 @@ public final class DrillProperties extends Properties {
   public static final String REALM = "realm";
 
   public static final String KEYTAB = "keytab";
+
+  public static final String SASL_ENCRYPT = "sasl_encrypt";
+
+  // Should only be used for testing backward compatibility
+  @VisibleForTesting
+  public static final String TEST_SASL_LEVEL = "test_sasl_level";
 
   // for subject that has pre-authenticated to KDC (AS) i.e. required credentials are populated in
   // Subject's credentials set
@@ -107,6 +114,15 @@ public final class DrillProperties extends Properties {
     }
     for (final String key : overrides.stringPropertyNames()) {
       setProperty(key.toLowerCase(), overrides.getProperty(key));
+    }
+  }
+
+  public void merge(final Map<String, String> overrides) {
+    if (overrides == null) {
+      return;
+    }
+    for (final String key : overrides.keySet()) {
+      setProperty(key.toLowerCase(), overrides.get(key));
     }
   }
 

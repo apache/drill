@@ -56,6 +56,8 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
     private RpcEndpointInfos serverInfos;
     private List<String> authenticationMechanisms;
     private List<RpcType> supportedMethods;
+    private Boolean encrypted;
+    private int maxWrappedSize;
 
     public BitToUserHandshake()
     {
@@ -155,6 +157,32 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         return this;
     }
 
+    // encrypted
+
+    public Boolean getEncrypted()
+    {
+        return encrypted;
+    }
+
+    public BitToUserHandshake setEncrypted(Boolean encrypted)
+    {
+        this.encrypted = encrypted;
+        return this;
+    }
+
+    // maxWrappedSize
+
+    public int getMaxWrappedSize()
+    {
+        return maxWrappedSize;
+    }
+
+    public BitToUserHandshake setMaxWrappedSize(int maxWrappedSize)
+    {
+        this.maxWrappedSize = maxWrappedSize;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -235,6 +263,12 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                         message.supportedMethods = new ArrayList<RpcType>();
                     message.supportedMethods.add(RpcType.valueOf(input.readEnum()));
                     break;
+                case 9:
+                    message.encrypted = input.readBool();
+                    break;
+                case 10:
+                    message.maxWrappedSize = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -277,6 +311,12 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
                     output.writeEnum(8, supportedMethods.number, true);
             }
         }
+
+        if(message.encrypted != null)
+            output.writeBool(9, message.encrypted, false);
+
+        if(message.maxWrappedSize != 0)
+            output.writeInt32(10, message.maxWrappedSize, false);
     }
 
     public String getFieldName(int number)
@@ -290,6 +330,8 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
             case 6: return "serverInfos";
             case 7: return "authenticationMechanisms";
             case 8: return "supportedMethods";
+            case 9: return "encrypted";
+            case 10: return "maxWrappedSize";
             default: return null;
         }
     }
@@ -310,6 +352,8 @@ public final class BitToUserHandshake implements Externalizable, Message<BitToUs
         __fieldMap.put("serverInfos", 6);
         __fieldMap.put("authenticationMechanisms", 7);
         __fieldMap.put("supportedMethods", 8);
+        __fieldMap.put("encrypted", 9);
+        __fieldMap.put("maxWrappedSize", 10);
     }
     
 }

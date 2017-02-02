@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.channel.socket.SocketChannel;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.rpc.security.SaslProperties;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
 
   public AbstractServerConnection(SocketChannel channel, String name, ConnectionConfig config,
                                   RequestHandler<S> handler) {
-    super(channel, name);
+    super(channel, name, config.getEncryptionCtxt());
     this.config = config;
     this.currentHandler = handler;
   }
@@ -65,8 +66,8 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
     try {
       this.saslServer = config.getAuthProvider()
           .getAuthenticatorFactory(mechanismName)
-          .createSaslServer(UserGroupInformation.getLoginUser(), null
-              /** properties; default QOP is auth */);
+          .createSaslServer(UserGroupInformation.getLoginUser(),
+              SaslProperties.getSaslProperties(isEncryptionEnabled(), getMaxWrappedSize()));
     } catch (final IOException e) {
       getLogger().debug("Login failed.", e);
       final Throwable cause = e.getCause();
@@ -76,7 +77,27 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
       throw new SaslException("Unexpected failure trying to login.", cause);
     }
     if (saslServer == null) {
-      throw new SaslException("Server could not initiate authentication. Insufficient parameters?");
+      throw new SaslException(String.format("Server cannot initiate authentication using %s mechanism. Insufficient" +
+          " parameters or selected mechanism doesn't support configured security layers ?", mechanismName));
+    }
+
+    // If encryption is enabled set the backend wrapper instance corresponding to this SaslServer in the connection
+    // object. This is later used to do wrap/unwrap in handlers.
+    if (isEncryptionEnabled()) {
+      saslCodec = new SaslCodec() {
+
+        @Override
+        public byte[] wrap(byte[] data, int offset, int len) throws SaslException {
+          checkState(saslServer != null);
+          return saslServer.wrap(data, offset, len);
+        }
+
+        @Override
+        public byte[] unwrap(byte[] data, int offset, int len) throws SaslException {
+          checkState(saslServer != null);
+          return saslServer.unwrap(data, offset, len);
+        }
+      };
     }
   }
 
@@ -110,7 +131,17 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
   }
 
   @Override
-  public void close() {
+  public void setEncryption(boolean encrypted) {
+    throw new UnsupportedOperationException("Changing encryption setting on server connection is not permitted.");
+  }
+
+  @Override
+  public void setMaxWrappedSize(int maxWrappedSize) {
+    throw new UnsupportedOperationException("Changing maxWrappedSize setting on server connection is not permitted.");
+  }
+
+  @Override
+  public void disposeSaslServer() {
     try {
       if (saslServer != null) {
         saslServer.dispose();
@@ -119,6 +150,18 @@ public abstract class AbstractServerConnection<S extends ServerConnection<S>>
     } catch (final SaslException e) {
       getLogger().warn("Unclean disposal.", e);
     }
-    super.close();
+  }
+
+  @Override
+  public void channelClosed(RpcException ex) {
+    // This will be triggered from Netty when a channel is closed. We should cleanup here
+    // as this will handle case for both client closing the connection or server closing the
+    // connection.
+    disposeSaslServer();
+
+    // Decrease the connection counter here since the close handler will be triggered
+    // for all the types of connection
+    decConnectionCounter();
+    super.channelClosed(ex);
   }
 }

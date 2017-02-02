@@ -39,4 +39,13 @@ public class DataServerConnection extends AbstractServerConnection<DataServerCon
     return logger;
   }
 
+  @Override
+  public void incConnectionCounter() {
+    DataRpcMetrics.getInstance().addConnectionCount();
+  }
+
+  @Override
+  public void decConnectionCounter() {
+    DataRpcMetrics.getInstance().decConnectionCount();
+  }
 }

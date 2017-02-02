@@ -101,17 +101,17 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
 
             final ChannelPipeline pipe = ch.pipeline();
 
-            pipe.addLast("protocol-decoder", getDecoder(connection.getAllocator()));
-            pipe.addLast("message-decoder", new RpcDecoder("c-" + rpcConfig.getName()));
-            pipe.addLast("protocol-encoder", new RpcEncoder("c-" + rpcConfig.getName()));
-            pipe.addLast("handshake-handler", new ClientHandshakeHandler(connection));
+            pipe.addLast(RpcConstants.PROTOCOL_DECODER, getDecoder(connection.getAllocator()));
+            pipe.addLast(RpcConstants.MESSAGE_DECODER, new RpcDecoder("c-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.PROTOCOL_ENCODER, new RpcEncoder("c-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.HANDSHAKE_HANDLER, new ClientHandshakeHandler(connection));
 
             if(pingHandler != null){
-              pipe.addLast("idle-state-handler", pingHandler);
+              pipe.addLast(RpcConstants.IDLE_STATE_HANDLER, pingHandler);
             }
 
-            pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler<CC>(connection));
+            pipe.addLast(RpcConstants.MESSAGE_HANDLER, new InboundHandler(connection));
+            pipe.addLast(RpcConstants.EXCEPTION_HANDLER, new RpcExceptionHandler<CC>(connection));
           }
         }); //
 
@@ -323,5 +323,4 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
       connection.close();
     }
   }
-
 }

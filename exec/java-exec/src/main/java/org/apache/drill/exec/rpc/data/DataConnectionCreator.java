@@ -44,6 +44,9 @@ public class DataConnectionCreator implements AutoCloseable {
   public DataConnectionCreator(BootStrapContext context, BufferAllocator allocator, WorkEventBus workBus,
                                WorkerBee bee) throws DrillbitStartupException {
     config = new DataConnectionConfig(allocator, context, new DataServerRequestHandler(workBus, bee));
+
+    // Initialize the singleton instance of DataRpcMetrics.
+    ((DataRpcMetrics) DataRpcMetrics.getInstance()).initialize(config.isEncryptionEnabled(), allocator);
   }
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, boolean allowPortHunting) {
@@ -59,7 +62,7 @@ public class DataConnectionCreator implements AutoCloseable {
   public DataTunnel getTunnel(DrillbitEndpoint endpoint) {
     DataConnectionManager newManager = new DataConnectionManager(endpoint, config);
     DataConnectionManager oldManager = connectionManager.putIfAbsent(endpoint, newManager);
-    if(oldManager != null){
+    if (oldManager != null) {
       newManager = oldManager;
     }
     return new DataTunnel(newManager);

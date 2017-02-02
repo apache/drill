@@ -31,4 +31,7 @@ public interface ConnectionConfig {
 
   AuthenticatorProvider getAuthProvider();
 
+  boolean isEncryptionEnabled();
+
+  EncryptionContext getEncryptionCtxt();
 }
