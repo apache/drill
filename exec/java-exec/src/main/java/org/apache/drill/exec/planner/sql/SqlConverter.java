@@ -479,25 +479,27 @@ public class SqlConverter {
     private boolean allowTemporaryTables;
 
     DrillCalciteCatalogReader(CalciteSchema rootSchema,
-                                     boolean caseSensitive,
-                                     List<String> defaultSchema,
-                                     JavaTypeFactory typeFactory,
-                                     DrillConfig drillConfig,
-                                     UserSession session) {
+                              boolean caseSensitive,
+                              List<String> defaultSchema,
+                              JavaTypeFactory typeFactory,
+                              DrillConfig drillConfig,
+                              UserSession session) {
       super(rootSchema, caseSensitive, defaultSchema, typeFactory);
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
     }
 
-    /** Disallow temporary tables presence in sql statement (ex: in view definitions) */
+    /**
+     * Disallow temporary tables presence in sql statement (ex: in view definitions)
+     */
     public void disallowTemporaryTables() {
       this.allowTemporaryTables = false;
     }
 
     /**
      * If schema is not indicated (only one element in the list) or schema is default temporary workspace,
-     * we need to check among session temporary tables first in default temporary workspace.
+     * we need to check among session temporary tables in default temporary workspace first.
      * If temporary table is found and temporary tables usage is allowed, its table instance will be returned,
      * otherwise search will be conducted in original workspace.
      *
@@ -508,8 +510,8 @@ public class SqlConverter {
     @Override
     public RelOptTableImpl getTable(final List<String> names) {
       RelOptTableImpl temporaryTable = null;
-      String schemaPath = SchemaUtilites.getSchemaPath(names.subList(0, names.size() - 1));
-      if (names.size() == 1 || SchemaUtilites.isTemporaryWorkspace(schemaPath, drillConfig)) {
+
+      if (mightBeTemporaryTable(names, session.getDefaultSchemaPath(), drillConfig)) {
         String temporaryTableName = session.resolveTemporaryTableName(names.get(names.size() - 1));
         if (temporaryTableName != null) {
           List<String> temporaryNames = Lists.newArrayList(temporarySchema, temporaryTableName);
@@ -526,6 +528,32 @@ public class SqlConverter {
             .build(logger);
       }
       return super.getTable(names);
+    }
+
+    /**
+     * We should check if passed table is temporary or not if:
+     * <li>schema is not indicated (only one element in the names list)<li/>
+     * <li>current schema or indicated schema is default temporary workspace<li/>
+     *
+     * Examples (where dfs.tmp is default temporary workspace):
+     * <li>select * from t<li/>
+     * <li>select * from dfs.tmp.t<li/>
+     * <li>use dfs; select * from tmp.t<li/>
+     *
+     * @param names             list of schema and table names, table name is always the last element
+     * @param defaultSchemaPath current schema path set using USE command
+     * @param drillConfig       drill config
+     * @return true if check for temporary table should be done, false otherwise
+     */
+    private boolean mightBeTemporaryTable(List<String> names, String defaultSchemaPath, DrillConfig drillConfig) {
+      if (names.size() == 1) {
+        return true;
+      }
+
+      String schemaPath = SchemaUtilites.getSchemaPath(names.subList(0, names.size() - 1));
+      return SchemaUtilites.isTemporaryWorkspace(schemaPath, drillConfig) ||
+          SchemaUtilites.isTemporaryWorkspace(
+              SchemaUtilites.SCHEMA_PATH_JOINER.join(defaultSchemaPath, schemaPath), drillConfig);
     }
   }
 }
