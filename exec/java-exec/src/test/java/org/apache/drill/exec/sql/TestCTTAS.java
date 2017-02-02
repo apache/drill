@@ -143,6 +143,20 @@ public class TestCTTAS extends BaseTestQuery {
   }
 
   @Test
+  public void testResolveTemporaryTableWithPartialSchema() throws Exception {
+    String temporaryTableName = "temporary_table_with_partial_schema";
+    test("use %s", test_schema);
+    test("create temporary table tmp.%s as select 'A' as c1 from (values(1))", temporaryTableName);
+
+    testBuilder()
+        .sqlQuery("select * from tmp.%s", temporaryTableName)
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues("A")
+        .go();
+  }
+
+  @Test
   public void testPartitionByWithTemporaryTables() throws Exception {
     String temporaryTableName = "temporary_table_with_partitions";
     mockRandomUUID(UUID.nameUUIDFromBytes(temporaryTableName.getBytes()));

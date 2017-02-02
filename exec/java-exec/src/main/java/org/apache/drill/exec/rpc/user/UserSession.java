@@ -65,8 +65,8 @@ public class UserSession implements Closeable {
 
   private boolean supportComplexTypes = false;
   private UserCredentials credentials;
-  private Map<String, String> properties;
   private OptionManager sessionOptions;
+  private final Map<String, String> properties;
   private final AtomicInteger queryCount;
   private final String sessionId;
 
@@ -121,7 +121,6 @@ public class UserSession implements Closeable {
     }
 
     public Builder withUserProperties(UserProperties properties) {
-      userSession.properties = Maps.newHashMap();
       if (properties != null) {
         for (int i = 0; i < properties.getPropertiesCount(); i++) {
           final Property property = properties.getProperties(i);
@@ -157,6 +156,7 @@ public class UserSession implements Closeable {
     sessionId = UUID.randomUUID().toString();
     temporaryTables = Maps.newConcurrentMap();
     temporaryLocations = Maps.newConcurrentMap();
+    properties = Maps.newHashMap();
   }
 
   public boolean isSupportComplexTypes() {
@@ -187,10 +187,6 @@ public class UserSession implements Closeable {
 
   public String getTargetUserName() {
     return properties.get(IMPERSONATION_TARGET);
-  }
-
-  public String getDefaultSchemaName() {
-    return getProp(SCHEMA);
   }
 
   public void incrementQueryCount(final QueryCountIncrementer incrementer) {
