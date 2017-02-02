@@ -122,7 +122,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   protected void readField(long recordsToRead) {
     // TODO - unlike most implementations of this method, the recordsReadInThisIteration field is not set here
     // should verify that this is not breaking anything
-    currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
+    currentValNull = variableWidthVector.getAccessor().isNull(valuesReadInCurrentPass);
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
       if (usingDictionary) {
