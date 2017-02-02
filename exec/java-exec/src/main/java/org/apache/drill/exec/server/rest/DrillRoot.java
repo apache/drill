@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.work.WorkManager;
@@ -61,6 +63,10 @@ public class DrillRoot {
     final DrillbitEndpoint currentDrillbit = work.getContext().getEndpoint();
     final String currentVersion = currentDrillbit.getVersion();
 
+    final DrillConfig config = work.getContext().getConfig();
+    final boolean userEncryptionEnabled = config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED);
+    final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
+
     for (DrillbitEndpoint endpoint : work.getContext().getBits()) {
       final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
               currentDrillbit.equals(endpoint),
@@ -71,7 +77,8 @@ public class DrillRoot {
       drillbits.add(drillbit);
     }
 
-    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions);
+    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+      userEncryptionEnabled, bitEncryptionEnabled);
   }
 
   @XmlRootElement
@@ -79,14 +86,20 @@ public class DrillRoot {
     private final Collection<DrillbitInfo> drillbits;
     private final String currentVersion;
     private final Collection<String> mismatchedVersions;
+    private final boolean userEncryptionEnabled;
+    private final boolean bitEncryptionEnabled;
 
     @JsonCreator
     public ClusterInfo(Collection<DrillbitInfo> drillbits,
                        String currentVersion,
-                       Collection<String> mismatchedVersions) {
+                       Collection<String> mismatchedVersions,
+                       boolean userEncryption,
+                       boolean bitEncryption) {
       this.drillbits = Sets.newTreeSet(drillbits);
       this.currentVersion = currentVersion;
       this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
+      this.userEncryptionEnabled = userEncryption;
+      this.bitEncryptionEnabled = bitEncryption;
     }
 
     public Collection<DrillbitInfo> getDrillbits() {
@@ -100,6 +113,10 @@ public class DrillRoot {
     public Collection<String> getMismatchedVersions() {
       return Sets.newTreeSet(mismatchedVersions);
     }
+
+    public boolean isUserEncryptionEnabled() { return userEncryptionEnabled; }
+
+    public boolean isBitEncryptionEnabled() { return bitEncryptionEnabled; }
   }
 
   public static class DrillbitInfo implements Comparable<DrillbitInfo> {

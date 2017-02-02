@@ -18,15 +18,20 @@
 package org.apache.drill.exec.rpc.control;
 
 import com.google.protobuf.MessageLite;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
+
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.AbstractServerConnection;
 import org.apache.drill.exec.rpc.ClientConnection;
 import org.apache.drill.exec.rpc.RequestHandler;
 import org.apache.drill.exec.rpc.RpcBus;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.SaslCodec;
+
 import org.slf4j.Logger;
 
 import javax.security.sasl.SaslClient;
@@ -115,6 +120,24 @@ public class ControlConnection extends AbstractServerConnection<ControlConnectio
   public void setSaslClient(final SaslClient saslClient) {
     checkState(this.saslClient == null);
     this.saslClient = saslClient;
+
+    // If encryption is enabled set the backend wrapper instance corresponding to this SaslClient in the connection
+    // object. This is later used to do wrap/unwrap in handlers.
+    if (isEncryptionEnabled()) {
+      saslCodec = new SaslCodec() {
+        @Override
+        public byte[] wrap(byte[] data, int offset, int len) throws SaslException {
+          assert saslClient != null;
+          return saslClient.wrap(data, offset, len);
+        }
+
+        @Override
+        public byte[] unwrap(byte[] data, int offset, int len) throws SaslException {
+          assert saslClient != null;
+          return saslClient.unwrap(data, offset, len);
+        }
+      };
+    }
   }
 
   @Override
@@ -124,7 +147,7 @@ public class ControlConnection extends AbstractServerConnection<ControlConnectio
   }
 
   @Override
-  public void close() {
+  public void disposeSaslClient() {
     try {
       if (saslClient != null) {
         saslClient.dispose();
@@ -133,7 +156,25 @@ public class ControlConnection extends AbstractServerConnection<ControlConnectio
     } catch (final SaslException e) {
       getLogger().warn("Unclean disposal", e);
     }
-    super.close();
   }
 
+  @Override
+  public void channelClosed(RpcException ex) {
+    // This will be triggered from Netty when a channel is closed. We should cleanup here
+    // as this will handle case for both client closing the connection or server closing the
+    // connection.
+    disposeSaslClient();
+
+    super.channelClosed(ex);
+  }
+
+  @Override
+  public void incConnectionCounter() {
+    ControlRpcMetrics.getInstance().addConnectionCount();
+  }
+
+  @Override
+  public void decConnectionCounter() {
+    ControlRpcMetrics.getInstance().decConnectionCount();
+  }
 }

@@ -31,6 +31,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import java.io.IOException;
@@ -55,7 +56,8 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(AuthenticationOutcomeListener.class);
 
-  private static final ImmutableMap<SaslStatus, SaslChallengeProcessor> CHALLENGE_PROCESSORS;
+  private static final ImmutableMap<SaslStatus, SaslChallengeProcessor>
+      CHALLENGE_PROCESSORS;
   static {
     final Map<SaslStatus, SaslChallengeProcessor> map = new EnumMap<>(SaslStatus.class);
     map.put(SaslStatus.SASL_IN_PROGRESS, new SaslInProgressProcessor());
@@ -99,7 +101,7 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
               .setData(responseData)
               .build(),
           SaslMessage.class,
-          true /** the connection will not be backed up at this point */);
+          true /* the connection will not be backed up at this point */);
       logger.trace("Initiated SASL exchange.");
     } catch (final Exception e) {
       completionListener.failed(RpcException.mapException(e));
@@ -120,19 +122,24 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
           new SaslException("Server sent a corrupt message.")));
     } else {
       try {
-        final SaslChallengeContext context = new SaslChallengeContext(value, connection.getSaslClient(), ugi);
-
+        final SaslChallengeContext<C> context = new SaslChallengeContext<>(value, ugi, connection);
         final SaslMessage saslResponse = processor.process(context);
 
         if (saslResponse != null) {
           client.send(new AuthenticationOutcomeListener<>(client, connection, saslRpcType, ugi, completionListener),
               connection, saslRpcType, saslResponse, SaslMessage.class,
-              true /** the connection will not be backed up at this point */);
+              true /* the connection will not be backed up at this point */);
         } else {
           // success
           completionListener.success(null, null);
+          if (logger.isTraceEnabled()) {
+            logger.trace("Successfully authenticated to server using {} mechanism and encryption context: {}",
+                connection.getSaslClient().getMechanismName(), connection.getEncryptionCtxtString());
+          }
         }
       } catch (final Exception e) {
+        logger.error("Authentication with encryption context: {} using mechanism {} failed with {}",
+            connection.getEncryptionCtxtString(), connection.getSaslClient().getMechanismName(), e.getMessage());
         completionListener.failed(RpcException.mapException(e));
       }
     }
@@ -143,16 +150,16 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
     completionListener.interrupted(e);
   }
 
-  private static class SaslChallengeContext {
+  private static class SaslChallengeContext<C extends ClientConnection> {
 
     final SaslMessage challenge;
-    final SaslClient saslClient;
     final UserGroupInformation ugi;
+    final C connection;
 
-    SaslChallengeContext(SaslMessage challenge, SaslClient saslClient, UserGroupInformation ugi) {
+    SaslChallengeContext(SaslMessage challenge, UserGroupInformation ugi, C connection) {
       this.challenge = checkNotNull(challenge);
-      this.saslClient = checkNotNull(saslClient);
       this.ugi = checkNotNull(ugi);
+      this.connection = checkNotNull(connection);
     }
   }
 
@@ -165,22 +172,24 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
      *
      * @param context challenge context
      * @return response
-     * @throws Exception
+     * @throws Exception in case of any failure
      */
-    SaslMessage process(SaslChallengeContext context) throws Exception;
+    <CC extends ClientConnection>
+    SaslMessage process(SaslChallengeContext<CC> context) throws Exception;
 
   }
 
   private static class SaslInProgressProcessor implements SaslChallengeProcessor {
 
     @Override
-    public SaslMessage process(SaslChallengeContext context) throws Exception {
+    public <CC extends ClientConnection> SaslMessage process(SaslChallengeContext<CC> context) throws Exception {
       final SaslMessage.Builder response = SaslMessage.newBuilder();
+      final SaslClient saslClient = context.connection.getSaslClient();
 
-      final byte[] responseBytes = evaluateChallenge(context.ugi, context.saslClient,
+      final byte[] responseBytes = evaluateChallenge(context.ugi, saslClient,
           context.challenge.getData().toByteArray());
 
-      final boolean isComplete = context.saslClient.isComplete();
+      final boolean isComplete = saslClient.isComplete();
       logger.trace("Evaluated challenge. Completed? {}.", isComplete);
       response.setData(responseBytes != null ? ByteString.copyFrom(responseBytes) : ByteString.EMPTY);
       // if isComplete, the client will get one more response from server
@@ -192,20 +201,18 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
   private static class SaslSuccessProcessor implements SaslChallengeProcessor {
 
     @Override
-    public SaslMessage process(SaslChallengeContext context) throws Exception {
-      if (context.saslClient.isComplete()) {
-        logger.trace("Successfully authenticated to server using {}", context.saslClient.getMechanismName());
-        // setup security layers here..
+    public <CC extends ClientConnection> SaslMessage process(SaslChallengeContext<CC> context) throws Exception {
+      final SaslClient saslClient = context.connection.getSaslClient();
+
+      if (saslClient.isComplete()) {
+        handleSuccess(context);
         return null;
       } else {
-
         // server completed before client; so try once, fail otherwise
-        evaluateChallenge(context.ugi, context.saslClient,
-            context.challenge.getData().toByteArray()); // discard response
+        evaluateChallenge(context.ugi, saslClient, context.challenge.getData().toByteArray()); // discard response
 
-        if (context.saslClient.isComplete()) {
-          logger.trace("Successfully authenticated to server using {}", context.saslClient.getMechanismName());
-          // setup security layers here..
+        if (saslClient.isComplete()) {
+          handleSuccess(context);
           return null;
         } else {
           throw new SaslException("Server allegedly succeeded authentication, but client did not. Suspicious?");
@@ -217,8 +224,9 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
   private static class SaslFailedProcessor implements SaslChallengeProcessor {
 
     @Override
-    public SaslMessage process(SaslChallengeContext context) throws Exception {
-      throw new SaslException("Authentication failed. Incorrect credentials?");
+    public <CC extends ClientConnection> SaslMessage process(SaslChallengeContext<CC> context) throws Exception {
+      throw new SaslException(String.format("Authentication failed. Incorrect credentials? [Details: %s]",
+          context.connection.getEncryptionCtxtString()));
     }
   }
 
@@ -241,6 +249,50 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
         throw new SaslException(
             String.format("Unexpected failure (%s)", saslClient.getMechanismName()), e);
       }
+    }
+  }
+
+
+  private static <CC extends ClientConnection> void handleSuccess(SaslChallengeContext<CC> context) throws
+      SaslException {
+    final CC connection = context.connection;
+    final SaslClient saslClient = connection.getSaslClient();
+
+    try {
+      // Check if connection was marked for being secure then verify for negotiated QOP value for
+      // correctness.
+      final String negotiatedQOP = saslClient.getNegotiatedProperty(Sasl.QOP).toString();
+      final String expectedQOP = connection.isEncryptionEnabled()
+          ? SaslProperties.QualityOfProtection.PRIVACY.getSaslQop()
+          : SaslProperties.QualityOfProtection.AUTHENTICATION.getSaslQop();
+
+      if (!(negotiatedQOP.equals(expectedQOP))) {
+        throw new SaslException(String.format("Mismatch in negotiated QOP value: %s and Expected QOP value: %s",
+            negotiatedQOP, expectedQOP));
+      }
+
+      // Update the rawWrapChunkSize with the negotiated buffer size since we cannot call encode with more than
+      // negotiated size of buffer.
+      if (connection.isEncryptionEnabled()) {
+        final int negotiatedRawSendSize = Integer.parseInt(
+            saslClient.getNegotiatedProperty(Sasl.RAW_SEND_SIZE).toString());
+        if (negotiatedRawSendSize <= 0) {
+          throw new SaslException(String.format("Negotiated rawSendSize: %d is invalid. Please check the configured " +
+              "value of encryption.sasl.max_wrapped_size. It might be configured to a very small value.",
+              negotiatedRawSendSize));
+        }
+        connection.setWrapSizeLimit(negotiatedRawSendSize);
+      }
+    } catch (Exception e) {
+      throw new SaslException(String.format("Unexpected failure while retrieving negotiated property values (%s)",
+          e.getMessage()), e);
+    }
+
+    if (connection.isEncryptionEnabled()) {
+      connection.addSecurityHandlers();
+    } else {
+      // Encryption is not required hence we don't need to hold on to saslClient object.
+      connection.disposeSaslClient();
     }
   }
 }

@@ -69,6 +69,27 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-md-12">
+        <h3>Encryption Info <span class="label label-primary"></span></h3>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <tbody>
+                <tr>
+                  <td>Client to Bit Encryption:</td>
+                  <td>${model.isUserEncryptionEnabled()?string("enabled", "disabled")}</td>
+                </tr>
+                <tr>
+                  <td>Bit to Bit Encryption:</td>
+                  <td>${model.isBitEncryptionEnabled()?string("enabled", "disabled")}</td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
   </div>
 </#macro>
 

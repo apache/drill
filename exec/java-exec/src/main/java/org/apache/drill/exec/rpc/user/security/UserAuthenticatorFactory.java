@@ -46,6 +46,12 @@ public class UserAuthenticatorFactory {
    */
   public static UserAuthenticator createAuthenticator(final DrillConfig config, ScanResult scan)
       throws DrillbitStartupException {
+
+    if(!config.hasPath(USER_AUTHENTICATOR_IMPL)) {
+      throw new DrillbitStartupException(String.format("BOOT option '%s' is missing in config.",
+          USER_AUTHENTICATOR_IMPL));
+    }
+
     final String authImplConfigured = config.getString(USER_AUTHENTICATOR_IMPL);
 
     if (Strings.isNullOrEmpty(authImplConfigured)) {

@@ -20,27 +20,35 @@ package org.apache.drill.exec.rpc;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 import java.net.SocketAddress;
+import java.nio.ByteOrder;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
-public abstract class AbstractRemoteConnection implements RemoteConnection {
+public abstract class AbstractRemoteConnection implements RemoteConnection, EncryptionContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractRemoteConnection.class);
 
   private final Channel channel;
   private final WriteManager writeManager;
   private final RequestIdMap requestIdMap = new RequestIdMap();
   private final String clientName;
-
   private String name;
 
-  public AbstractRemoteConnection(SocketChannel channel, String name) {
+  // Encryption related parameters
+  private final EncryptionContext encryptionContext;
+  // SaslCodec to hold instance of SaslClient/SaslServer
+  protected SaslCodec saslCodec;
+
+  public AbstractRemoteConnection(SocketChannel channel, String name, EncryptionContext encryptionContext) {
     this.channel = channel;
     this.clientName = name;
     this.writeManager = new WriteManager();
+    this.encryptionContext = new EncryptionContextImpl(encryptionContext);
     channel.pipeline().addLast(new BackPressureHandler());
   }
 
@@ -222,6 +230,100 @@ public abstract class AbstractRemoteConnection implements RemoteConnection {
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
     }
+  }
+
+  /**
+   * Helps to add all the required security handler's after negotiation for encryption is completed.
+   * <p>Handler's before encryption is negotiated are:</p>
+   * <ul>
+   *    <li>  PROTOCOL_DECODER {@link ProtobufLengthDecoder} </li>
+   *    <li>  MESSAGE_DECODER {@link RpcDecoder}  </li>
+   *    <li>  PROTOCOL_ENCODER {@link RpcEncoder} </li>
+   *    <li>  HANDSHAKE_HANDLER {@link org.apache.drill.exec.rpc.BasicClient.ClientHandshakeHandler} OR
+   *                            {@link org.apache.drill.exec.rpc.BasicServer.ServerHandshakeHandler}  </li>
+   *    <li>  optional - IDLE_STATE_HANDLER {@link org.apache.drill.exec.rpc.BasicClient.IdlePingHandler} OR
+   *                   - TIMEOUT_HANDLER {@link org.apache.drill.exec.rpc.BasicServer.LoggingReadTimeoutHandler}  </li>
+   *    <li>  MESSAGE_HANDLER {@link org.apache.drill.exec.rpc.RpcBus.InboundHandler} </li>
+   *    <li>  EXCEPTION_HANDLER {@link RpcExceptionHandler} </li>
+   * </ul>
+   * <p>Handler's after encryption is negotiated are:</p>
+   * <ul>
+   *    <li>  LENGTH_DECODER_HANDLER {@link LengthFieldBasedFrameDecoder}
+   *    <li>  SASL_DECRYPTION_HANDLER {@link SaslDecryptionHandler}
+   *    <li>  PROTOCOL_DECODER {@link ProtobufLengthDecoder}
+   *    <li>  MESSAGE_DECODER {@link RpcDecoder}
+   *    <li>  SASL_ENCRYPTION_HANDLER {@link SaslEncryptionHandler}
+   *    <li>  CHUNK_CREATION_HANDLER {@link ChunkCreationHandler}
+   *    <li>  PROTOCOL_ENCODER {@link RpcEncoder}
+   *    <li>  HANDSHAKE_HANDLER {@link org.apache.drill.exec.rpc.BasicClient.ClientHandshakeHandler} OR
+   *                            {@link org.apache.drill.exec.rpc.BasicServer.ServerHandshakeHandler}
+   *    <li>  optional - IDLE_STATE_HANDLER {@link org.apache.drill.exec.rpc.BasicClient.IdlePingHandler} OR
+   *                   - TIMEOUT_HANDLER {@link org.apache.drill.exec.rpc.BasicServer.LoggingReadTimeoutHandler}
+   *    <li>  MESSAGE_HANDLER {@link org.apache.drill.exec.rpc.RpcBus.InboundHandler}
+   *    <li>  EXCEPTION_HANDLER {@link RpcExceptionHandler}
+   * </ul>
+   * <p>
+   *  If encryption is enabled ChunkCreationHandler is always added to divide the Rpc message into chunks of
+   *  negotiated {@link EncryptionContextImpl#wrapSizeLimit} bytes. This helps to make a generic encryption handler.
+   * </p>
+   */
+  @Override
+  public void addSecurityHandlers() {
+
+    final ChannelPipeline channelPipeline = getChannel().pipeline();
+    channelPipeline.addFirst(RpcConstants.SASL_DECRYPTION_HANDLER,
+        new SaslDecryptionHandler(saslCodec, getMaxWrappedSize(), OutOfMemoryHandler.DEFAULT_INSTANCE));
+
+    channelPipeline.addFirst(RpcConstants.LENGTH_DECODER_HANDLER,
+        new LengthFieldBasedFrameDecoder(ByteOrder.BIG_ENDIAN, Integer.MAX_VALUE,
+            RpcConstants.LENGTH_FIELD_OFFSET, RpcConstants.LENGTH_FIELD_LENGTH,
+            RpcConstants.LENGTH_ADJUSTMENT, RpcConstants.INITIAL_BYTES_TO_STRIP, true));
+
+    channelPipeline.addAfter(RpcConstants.MESSAGE_DECODER, RpcConstants.SASL_ENCRYPTION_HANDLER,
+        new SaslEncryptionHandler(saslCodec, getWrapSizeLimit(),
+            OutOfMemoryHandler.DEFAULT_INSTANCE));
+
+    channelPipeline.addAfter(RpcConstants.SASL_ENCRYPTION_HANDLER, RpcConstants.CHUNK_CREATION_HANDLER,
+        new ChunkCreationHandler(getWrapSizeLimit()));
+  }
+
+  public abstract void incConnectionCounter();
+
+  public abstract void decConnectionCounter();
+
+  @Override
+  public void setEncryption(boolean encrypted) {
+    encryptionContext.setEncryption(encrypted);
+  }
+
+  @Override
+  public boolean isEncryptionEnabled() {
+    return encryptionContext.isEncryptionEnabled();
+  }
+
+  @Override
+  public String getEncryptionCtxtString() {
+    return encryptionContext.toString();
+  }
+
+  @Override
+  public void setMaxWrappedSize(int maxWrappedChunkSize) {
+    encryptionContext.setMaxWrappedSize(maxWrappedChunkSize);
+  }
+
+  @Override
+  public int getMaxWrappedSize() {
+    return encryptionContext.getMaxWrappedSize();
+  }
+
+  @Override
+  public void setWrapSizeLimit(int wrapSizeLimit) {
+    encryptionContext.setWrapSizeLimit(wrapSizeLimit);
+  }
+
+  @Override
+  public int getWrapSizeLimit() {
+    return encryptionContext.getWrapSizeLimit();
   }
 
 }

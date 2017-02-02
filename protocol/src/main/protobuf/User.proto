@@ -70,6 +70,7 @@ message RpcEndpointInfos {
 enum SaslSupport {
   UNKNOWN_SASL_SUPPORT = 0;
   SASL_AUTH = 1;
+  SASL_PRIVACY = 2;
 }
 
 message UserToBitHandshake {
@@ -124,6 +125,8 @@ message BitToUserHandshake {
   optional RpcEndpointInfos server_infos = 6;
   repeated string authenticationMechanisms = 7;
   repeated RpcType supported_methods = 8;
+  optional bool encrypted = 9;
+  optional int32 maxWrappedSize = 10;
 }
 
 /*

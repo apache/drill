@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import com.google.protobuf.MessageLite;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
@@ -30,8 +30,6 @@ import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RpcException;
-
-import com.google.protobuf.MessageLite;
 
 public class DataServer extends BasicServer<RpcType, DataServerConnection> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataServer.class);
@@ -84,6 +82,10 @@ public class DataServer extends BasicServer<RpcType, DataServerConnection> {
         if (config.getAuthMechanismToUse() != null) {
           builder.addAllAuthenticationMechanisms(config.getAuthProvider().getAllFactoryNames());
         }
+
+        // Increase the Data Connection counter on server side.
+        connection.incConnectionCounter();
+
         return builder.build();
       }
 

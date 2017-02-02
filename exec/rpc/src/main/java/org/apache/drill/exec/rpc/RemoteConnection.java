@@ -51,6 +51,8 @@ public interface RemoteConnection extends ConnectionThrottle, AutoCloseable {
 
   SocketAddress getRemoteAddress();
 
+  void addSecurityHandlers();
+
   @Override
   void close();
 

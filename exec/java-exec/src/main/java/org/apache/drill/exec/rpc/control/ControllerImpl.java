@@ -48,6 +48,9 @@ public class ControllerImpl implements Controller {
     config = new ControlConnectionConfig(allocator, context, handler);
     this.connectionRegistry = new ConnectionManagerRegistry(config);
     this.handlerRegistry = handler.getHandlerRegistry();
+
+    // Initialize the singleton instance of ControlRpcMetrics.
+    ((ControlRpcMetrics)ControlRpcMetrics.getInstance()).initialize(config.isEncryptionEnabled(), allocator);
   }
 
   @Override

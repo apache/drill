@@ -116,6 +116,11 @@ public interface ExecConstants {
   String BIT_AUTHENTICATION_ENABLED = "drill.exec.security.bit.auth.enabled";
   String BIT_AUTHENTICATION_MECHANISM = "drill.exec.security.bit.auth.mechanism";
   String USE_LOGIN_PRINCIPAL = "drill.exec.security.bit.auth.use_login_principal";
+  String USER_ENCRYPTION_SASL_ENABLED = "drill.exec.security.user.encryption.sasl.enabled";
+  String USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.user.encryption.sasl.max_wrapped_size";
+  String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
+  String BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.bit.encryption.sasl.max_wrapped_size";
+
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";

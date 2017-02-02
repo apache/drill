@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.rpc.AbstractClientConnection;
+import org.apache.drill.exec.rpc.EncryptionContext;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
 import com.google.protobuf.MessageLite;
@@ -37,8 +38,9 @@ public class DataClientConnection extends AbstractClientConnection {
   private final DataClient client;
   private final UUID id;
 
-  public DataClientConnection(SocketChannel channel, DataClient client) {
-    super(channel, "data client");
+  public DataClientConnection(SocketChannel channel, DataClient client,
+                              EncryptionContext encryptionContextImpl) {
+    super(channel, "data client", encryptionContextImpl);
     this.client = client;
     this.id = UUID.randomUUID();
   }
@@ -87,5 +89,15 @@ public class DataClientConnection extends AbstractClientConnection {
   @Override
   protected Logger getLogger() {
     return logger;
+  }
+
+  @Override
+  public void incConnectionCounter() {
+    DataRpcMetrics.getInstance().addConnectionCount();
+  }
+
+  @Override
+  public void decConnectionCounter() {
+    DataRpcMetrics.getInstance().decConnectionCount();
   }
 }

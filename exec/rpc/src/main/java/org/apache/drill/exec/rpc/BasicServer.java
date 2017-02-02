@@ -53,8 +53,6 @@ import com.google.protobuf.Parser;
 public abstract class BasicServer<T extends EnumLite, SC extends ServerConnection<SC>> extends RpcBus<T, SC> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
-  protected static final String TIMEOUT_HANDLER = "timeout-handler";
-
   private final ServerBootstrap b;
   private volatile boolean connect = false;
   private final EventLoopGroup eventLoopGroup;
@@ -84,18 +82,18 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
             ch.closeFuture().addListener(getCloseHandler(ch, connection));
 
             final ChannelPipeline pipe = ch.pipeline();
-            pipe.addLast("protocol-decoder", getDecoder(connection.getAllocator(), getOutOfMemoryHandler()));
-            pipe.addLast("message-decoder", new RpcDecoder("s-" + rpcConfig.getName()));
-            pipe.addLast("protocol-encoder", new RpcEncoder("s-" + rpcConfig.getName()));
-            pipe.addLast("handshake-handler", getHandshakeHandler(connection));
+            pipe.addLast(RpcConstants.PROTOCOL_DECODER, getDecoder(connection.getAllocator(), getOutOfMemoryHandler()));
+            pipe.addLast(RpcConstants.MESSAGE_DECODER, new RpcDecoder("s-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.PROTOCOL_ENCODER, new RpcEncoder("s-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.HANDSHAKE_HANDLER, getHandshakeHandler(connection));
 
             if (rpcMapping.hasTimeout()) {
-              pipe.addLast(TIMEOUT_HANDLER,
+              pipe.addLast(RpcConstants.TIMEOUT_HANDLER,
                   new LoggingReadTimeoutHandler(connection, rpcMapping.getTimeout()));
             }
 
-            pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler<>(connection));
+            pipe.addLast(RpcConstants.MESSAGE_HANDLER, new InboundHandler(connection));
+            pipe.addLast(RpcConstants.EXCEPTION_HANDLER, new RpcExceptionHandler<>(connection));
 
             connect = true;
 //            logger.debug("Server connection initialization completed.");

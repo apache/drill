@@ -17,19 +17,13 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
 import mockit.Injectable;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.NonStrictExpectations;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -57,8 +51,12 @@ import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.junit.Assert.assertTrue;
 
 public class TestBitRpc extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);

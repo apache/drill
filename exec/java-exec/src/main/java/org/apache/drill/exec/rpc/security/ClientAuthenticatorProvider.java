@@ -48,7 +48,7 @@ public class ClientAuthenticatorProvider implements AuthenticatorProvider {
   // Mapping: simple name -> authenticator factory
   private final Map<String, AuthenticatorFactory> authFactories = CaseInsensitiveMap.newHashMapWithExpectedSize(5);
 
-  public ClientAuthenticatorProvider() {
+  private ClientAuthenticatorProvider() {
     // factories provided by Drill
     final KerberosFactory kerberosFactory = new KerberosFactory();
     authFactories.put(kerberosFactory.getSimpleName(), kerberosFactory);

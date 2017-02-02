@@ -26,10 +26,12 @@ public abstract class AbstractConnectionConfig implements ConnectionConfig {
 
   private final BufferAllocator allocator;
   private final BootStrapContext context;
+  protected EncryptionContext encryptionContext;
 
   protected AbstractConnectionConfig(BufferAllocator allocator, BootStrapContext context) {
     this.allocator = allocator;
     this.context = context;
+    this.encryptionContext = new EncryptionContextImpl();
   }
 
   @Override
@@ -45,5 +47,14 @@ public abstract class AbstractConnectionConfig implements ConnectionConfig {
   @Override
   public AuthenticatorProvider getAuthProvider() {
     return context.getAuthProvider();
+  }
+
+  @Override
+  public boolean isEncryptionEnabled() {
+    return encryptionContext.isEncryptionEnabled();
+  }
+
+  public EncryptionContext getEncryptionCtxt() {
+    return encryptionContext;
   }
 }
