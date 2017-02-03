@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -93,7 +93,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
     table = new DrillOperatorTable(getFunctionRegistry(), drillbitContext.getOptionManager());
 
-    queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
+    queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
     allocator = drillbitContext.getAllocator().newChildAllocator(
