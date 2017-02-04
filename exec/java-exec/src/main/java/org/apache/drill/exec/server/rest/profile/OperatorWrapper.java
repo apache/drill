@@ -19,6 +19,8 @@ package org.apache.drill.exec.server.rest.profile;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -163,11 +165,18 @@ public class OperatorWrapper {
           null);
 
       final Number[] values = new Number[metricNames.length];
+      //Track new/Unknown Metrics
+      final Set<Integer> unknownMetrics = new TreeSet<Integer>();
       for (final MetricValue metric : op.getMetricList()) {
-        if (metric.hasLongValue()) {
-          values[metric.getMetricId()] = metric.getLongValue();
-        } else if (metric.hasDoubleValue()) {
-          values[metric.getMetricId()] = metric.getDoubleValue();
+        if (metric.getMetricId() < metricNames.length) {
+          if (metric.hasLongValue()) {
+            values[metric.getMetricId()] = metric.getLongValue();
+          } else if (metric.hasDoubleValue()) {
+            values[metric.getMetricId()] = metric.getDoubleValue();
+          }
+        } else {
+          //Tracking unknown metric IDs
+          unknownMetrics.add(metric.getMetricId());
         }
       }
       for (final Number value : values) {
