@@ -145,6 +145,13 @@ public class KuduGroupScan extends AbstractGroupScan {
     public int compareTo(CompleteWork o) {
       return 0;
     }
+
+    @Override
+    public DrillbitEndpoint getPreferredEndpoint() {
+      // TODO: we should populate this if we want to do locality based
+      // scan (localAffinity) for kudu.
+      return null;
+    }
   }
 
   /**

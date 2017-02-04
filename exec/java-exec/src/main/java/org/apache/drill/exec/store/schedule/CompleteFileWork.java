@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.schedule;
 
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -66,6 +67,11 @@ public class CompleteFileWork implements FileWork, CompleteWork {
   @Override
   public EndpointByteMap getByteMap() {
     return byteMap;
+  }
+
+  @Override
+  public DrillbitEndpoint getPreferredEndpoint() {
+    return null;
   }
 
   @Override

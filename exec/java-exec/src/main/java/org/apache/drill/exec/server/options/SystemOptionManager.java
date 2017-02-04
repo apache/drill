@@ -110,6 +110,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR,
       ExecConstants.PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR,
       ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR,
+      ExecConstants.PARQUET_LOCAL_AFFINITY_IMPLEMENTATION_VALIDATOR,
       ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.ENABLE_UNION_TYPE,
       ExecConstants.TEXT_ESTIMATED_ROW_SIZE,
