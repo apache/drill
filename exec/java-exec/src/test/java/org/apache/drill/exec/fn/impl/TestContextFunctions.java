@@ -93,7 +93,7 @@ public class TestContextFunctions extends BaseTestQuery {
 
   @Test
   public void sessionIdUDFWithinSameSession() throws Exception {
-    final String sessionIdQuery = "select session_id as sessionId from (values(1));";
+    final String sessionIdQuery = "select session_id as sessionId from (values(1))";
     testBuilder()
         .sqlQuery(sessionIdQuery)
         .ordered()
