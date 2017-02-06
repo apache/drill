@@ -397,7 +397,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     for (Path location : cleanUpLocations) {
       try {
         if (fs.exists(location)) {
-          fs.delete(location, false);
+          fs.delete(location, true);
           logger.info("Aborting writer. Location [{}] on file system [{}] is deleted.",
               location.toUri().getPath(), fs.getUri());
         }
