@@ -148,10 +148,6 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
     if (curSegment != segment) {
       curSegment = segment;
 
-      // Set the attrs to the real columnIds.
-      if (rsFilter != null) {
-        rsFilter.materialize(schemas);
-      }
       // Set the project columns to the real columnIds.
       for (int i = 0; i < projectColumnInfos.length; i++) {
         ColumnSchema column = projectColumnInfos[i].columnSchema;
@@ -162,6 +158,10 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
         }
         projectColumnIds[i] = columnId;
       }
+    }
+    // Set the attrs to the real columnIds.
+    if (rsFilter != null) {
+      rsFilter.materialize(schemas);
     }
 
     if (!isLateMaterialization || rsFilter == null) {
