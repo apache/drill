@@ -290,7 +290,7 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof TypedNullConstant)) {
       return false;
     }
-    return e.getMajorType().equals(e.getMajorType());
+    return value.getMajorType().equals(e.getMajorType());
   }
 
   @Override
