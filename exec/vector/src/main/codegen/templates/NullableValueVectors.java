@@ -509,7 +509,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major != "VarLen">
       throw new UnsupportedOperationException();
       <#else>
-      fillEmpties(index);
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
 
       bits.getMutator().setSafe(index, 1);
       values.getMutator().setSafe(index, value, start, length);
@@ -522,7 +524,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major != "VarLen">
       throw new UnsupportedOperationException();
       <#else>
-      fillEmpties(index);
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
 
       bits.getMutator().setSafe(index, 1);
       values.getMutator().setSafe(index, value, start, length);
@@ -587,7 +591,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
     public void setSafe(int index, int isSet<#list fields as field><#if field.include!true >, ${field.type} ${field.name}Field</#if></#list> ) {
       <#if type.major == "VarLen">
-      fillEmpties(index);
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
       </#if>
 
       bits.getMutator().setSafe(index, isSet);
@@ -600,7 +606,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     public void setSafe(int index, Nullable${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      fillEmpties(index);
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
       </#if>
       bits.getMutator().setSafe(index, value.isSet);
       values.getMutator().setSafe(index, value);
@@ -611,7 +619,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     public void setSafe(int index, ${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      fillEmpties(index);
+      if (index > lastSet + 1) {
+        fillEmpties(index);
+      }
       </#if>
       bits.getMutator().setSafe(index, 1);
       values.getMutator().setSafe(index, value);
@@ -622,7 +632,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "Interval" || minor.class == "IntervalDay")>
       public void setSafe(int index, ${minor.javaType!type.javaType} value) {
         <#if type.major == "VarLen">
-        fillEmpties(index);
+        if (index > lastSet + 1) {
+          fillEmpties(index);
+        }
         </#if>
         bits.getMutator().setSafe(index, 1);
         values.getMutator().setSafe(index, value);
