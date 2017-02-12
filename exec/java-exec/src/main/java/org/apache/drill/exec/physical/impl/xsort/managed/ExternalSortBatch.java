@@ -1202,6 +1202,17 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     mergeCount = Math.min(mergeCount, maxMergeWidth);
 
+    // If we are going to merge, and we have batches in memory,
+    // spill them and try again. We need to do this to ensure we
+    // have adequate memory to hold the merge batches. We are into
+    // a second-generation sort/merge so there is no point in holding
+    // onto batches in memory.
+
+    if (inMemCount > 0) {
+      spillFromMemory();
+      return true;
+    }
+
     // Do the merge, then loop to try again in case not
     // all the target batches spilled in one go.
 
