@@ -56,7 +56,7 @@ public class ClientFixture implements AutoCloseable {
       return this;
     }
 
-    ClientFixture build( ) {
+    public ClientFixture build( ) {
       try {
         return new ClientFixture(this);
       } catch (RpcException e) {
@@ -185,11 +185,14 @@ public class ClientFixture implements AutoCloseable {
    */
 
   public ProfileParser parseProfile(String queryId) throws IOException {
+    return new ProfileParser(getProfileFile(queryId));
+  }
+
+  public File getProfileFile(String queryId) {
     String tmpDir = cluster().config().getString(ExecConstants.DRILL_TMP_DIR);
     File drillTmp = new File(new File(tmpDir), "drill");
     File profileDir = new File(drillTmp, "profiles" );
-    File file = new File( profileDir, queryId + ".sys.drill" );
-    return new ProfileParser(file);
+    return new File( profileDir, queryId + ".sys.drill" );
   }
 
 }

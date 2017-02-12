@@ -78,6 +78,7 @@ public class ColumnDef {
     case BIGINT:
       break;
     case BIT:
+      generator = new BooleanGen( );
       break;
     case DATE:
       break;
