@@ -236,11 +236,11 @@ public class RecordBatchSizer {
     netRowWidth += colSize.estSize;
   }
 
-  public static int roundUp(int denom, int num) {
-    if(num == 0) {
+  public static int roundUp(int num, int denom) {
+    if(denom == 0) {
       return 0;
     }
-    return (int) Math.ceil((double) denom / num);
+    return (int) Math.ceil((double) num / denom);
   }
 
   public int rowCount() { return rowCount; }
@@ -257,7 +257,7 @@ public class RecordBatchSizer {
    * Look for columns backed by vectors larger than the 16 MiB size
    * employed by the Netty allocator. Such large blocks can lead to
    * memory fragmentation and unexpected OOM errors.
-   * @return if any column is oversize
+   * @return true if any column is oversized
    */
   public boolean checkOversizeCols() {
     boolean hasOversize = false;
