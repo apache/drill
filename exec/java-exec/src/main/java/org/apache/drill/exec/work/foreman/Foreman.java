@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -117,6 +118,8 @@ public class Foreman implements Runnable {
   private static final org.slf4j.Logger queryLogger = org.slf4j.LoggerFactory.getLogger("query.logger");
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(Foreman.class);
 
+  public enum ProfileOption { SYNC, ASYNC, NONE };
+
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
 
@@ -134,6 +137,7 @@ public class Foreman implements Runnable {
   private final UserClientConnection initiatingClient; // used to send responses
   private volatile QueryState state;
   private boolean resume = false;
+  private final ProfileOption profileOption;
 
   private volatile DistributedLease lease; // used to limit the number of concurrent queries
 
@@ -178,6 +182,19 @@ public class Foreman implements Runnable {
     final QueryState initialState = queuingEnabled ? QueryState.ENQUEUED : QueryState.STARTING;
     recordNewState(initialState);
     enqueuedQueries.inc();
+
+    profileOption = setProfileOption(queryContext.getOptions());
+  }
+
+  private ProfileOption setProfileOption(OptionManager options) {
+    if (! options.getOption(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR)) {
+      return ProfileOption.NONE;
+    }
+    if (options.getOption(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR)) {
+      return ProfileOption.SYNC;
+    } else {
+      return ProfileOption.ASYNC;
+    }
   }
 
   private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
@@ -828,6 +845,13 @@ public class Foreman implements Runnable {
         uex = null;
       }
 
+      // Debug option: write query profile before sending final results so that
+      // the client can be certain the profile exists.
+
+      if (profileOption == ProfileOption.SYNC) {
+        queryManager.writeFinalProfile(uex);
+      }
+
       /*
        * If sending the result fails, we don't really have any way to modify the result we tried to send;
        * it is possible it got sent but the result came from a later part of the code path. It is also
@@ -844,7 +868,8 @@ public class Foreman implements Runnable {
 
       // Store the final result here so we can capture any error/errorId in the
       // profile for later debugging.
-      // Write the query profile AFTER sending results to the user. The observed
+      // Normal behavior is to write the query profile AFTER sending results to the user.
+      // The observed
       // user behavior is a possible time-lag between query return and appearance
       // of the query profile in persistent storage. Also, the query might
       // succeed, but the profile never appear if the profile write fails. This
@@ -853,7 +878,9 @@ public class Foreman implements Runnable {
       // storage write; query completion occurs in parallel with profile
       // persistence.
 
-      queryManager.writeFinalProfile(uex);
+      if (profileOption == ProfileOption.ASYNC) {
+        queryManager.writeFinalProfile(uex);
+      }
 
       // Remove the Foreman from the running query list.
       bee.retireForeman(Foreman.this);
@@ -1041,8 +1068,10 @@ public class Foreman implements Runnable {
    */
   private void setupRootFragment(final PlanFragment rootFragment, final FragmentRoot rootOperator)
       throws ExecutionSetupException {
+    @SuppressWarnings("resource")
     final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, queryContext,
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
+    @SuppressWarnings("resource")
     final IncomingBuffers buffers = new IncomingBuffers(rootFragment, rootContext);
     rootContext.setBuffers(buffers);
 
@@ -1169,6 +1198,7 @@ public class Foreman implements Runnable {
    */
   private void sendRemoteFragments(final DrillbitEndpoint assignment, final Collection<PlanFragment> fragments,
       final CountDownLatch latch, final FragmentSubmitFailures fragmentSubmitFailures) {
+    @SuppressWarnings("resource")
     final Controller controller = drillbitContext.getController();
     final InitializeFragments.Builder fb = InitializeFragments.newBuilder();
     for(final PlanFragment planFragment : fragments) {

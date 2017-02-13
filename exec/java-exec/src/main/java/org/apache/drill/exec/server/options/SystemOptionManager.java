@@ -163,7 +163,9 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR,
       ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR,
       ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR,
-      ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION
+      ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION,
+      ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR,
+      ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {
