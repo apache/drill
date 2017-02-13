@@ -241,23 +241,6 @@ public class FixtureBuilder {
   }
 
   /**
-   * Enable saving of query profiles. The only way to save them is
-   * to enable local store provider writes, which also saves the
-   * storage plugin configs. Doing so causes the CTTAS feature to
-   * fail on the next run, so the test fixture deletes all local
-   * files on start and close, unless
-   * {@link #keepLocalFiles()} is set.
-   *
-   * @return this builder
-   */
-
-  public FixtureBuilder saveProfiles() {
-    configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
-//  configProperty(ExecConstants.QUERY_PROFILE_OPTION, "sync") // Temporary until DRILL-5257 is available
-    return this;
-  }
-
-  /**
    * Starting with the addition of the CTTAS feature, a Drillbit will
    * not restart unless we delete all local storage files before
    * starting the Drillbit again. In particular, the stored copies
@@ -276,6 +259,24 @@ public class FixtureBuilder {
 
   public FixtureBuilder keepLocalFiles() {
     preserveLocalFiles = true;
+    return this;
+  }
+
+  /**
+   * Enable saving of query profiles. The only way to save them is
+   * to enable local store provider writes, which also saves the
+   * storage plugin configs. Doing so causes the CTTAS feature to
+   * fail on the next run, so the test fixture deletes all local
+   * files on start and close, unless
+   * {@link #keepLocalFiles()} is set.
+   *
+   * @return this builder
+   */
+
+  public FixtureBuilder saveProfiles() {
+    configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+    systemOption(ExecConstants.ENABLE_QUERY_PROFILE_OPTION, true);
+    systemOption(ExecConstants.QUERY_PROFILE_DEBUG_OPTION, true);
     return this;
   }
 

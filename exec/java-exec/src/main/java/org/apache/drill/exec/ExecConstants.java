@@ -414,4 +414,22 @@ public interface ExecConstants {
 
   String DYNAMIC_UDF_SUPPORT_ENABLED = "exec.udf.enable_dynamic_support";
   BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED, true, true);
+
+  /**
+   * Option to save query profiles. If false, no query profile will be saved
+   * for any query.
+   */
+  String ENABLE_QUERY_PROFILE_OPTION = "exec.query_profile.save";
+  BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(
+      ENABLE_QUERY_PROFILE_OPTION, true, false);
+
+  /**
+   * Profiles are normally written after the last client message to reduce latency.
+   * When running tests, however, we want the profile written <i>before</i> the
+   * return so that the client can immediately read the profile for test
+   * verification.
+   */
+  String QUERY_PROFILE_DEBUG_OPTION = "exec.query_profile.debug_mode";
+  BooleanValidator QUERY_PROFILE_DEBUG_VALIDATOR = new BooleanValidator(
+      QUERY_PROFILE_DEBUG_OPTION, false, false);
 }
