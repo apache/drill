@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import static org.apache.drill.exec.store.parquet.ParquetRecordWriter.DRILL_VERSION_PROPERTY;
+import static org.apache.drill.TestBuilder.convertToLocalTimestamp;
 import static org.apache.parquet.format.converter.ParquetMetadataConverter.SKIP_ROW_GROUPS;
 import static org.junit.Assert.assertEquals;
 
@@ -25,7 +26,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,8 +45,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Level;
-import org.apache.parquet.Log;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.joda.time.DateTime;
@@ -57,7 +55,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -971,13 +968,16 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testInt96TimeStampValueWidth() throws Exception {
     try {
       testBuilder()
-          .ordered()
-          .sqlQuery("select c, d from cp.`parquet/data.snappy.parquet` where d = '2015-07-18 13:52:51'")
+          .unOrdered()
+          .sqlQuery("select c, d from cp.`parquet/data.snappy.parquet` " +
+              "where `a` is not null and `c` is not null and `d` is not null")
           .optionSettingQueriesForTestQuery(
               "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
           .baselineColumns("c", "d")
-          .baselineValues(new DateTime(Date.valueOf("2011-04-11").getTime()),
-              new DateTime(Timestamp.valueOf("2015-07-18 13:52:51").getTime()))
+          .baselineValues(new DateTime(Date.valueOf("2012-12-15").getTime()),
+              new DateTime(convertToLocalTimestamp("2016-04-24 20:06:28")))
+          .baselineValues(new DateTime(Date.valueOf("2011-07-09").getTime()),
+              new DateTime(convertToLocalTimestamp("2015-04-15 22:35:49")))
           .build()
           .run();
     } finally {
