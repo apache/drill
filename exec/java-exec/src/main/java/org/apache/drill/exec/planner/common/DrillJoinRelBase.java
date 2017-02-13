@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,9 +28,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.cost.DrillRelOptCost;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.RelNode;
@@ -68,7 +66,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
       if (PrelUtil.getPlannerSettings(planner).isNestedLoopJoinEnabled()) {
         if (PrelUtil.getPlannerSettings(planner).isNlJoinForScalarOnly()) {
-          if (hasScalarSubqueryInput()) {
+          if (JoinUtils.hasScalarSubqueryInput(left, right)) {
             return computeLogicalJoinCost(planner);
           } else {
             /*
@@ -202,15 +200,6 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
 
     return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0, memCost);
-  }
-
-  private boolean hasScalarSubqueryInput() {
-    if (JoinUtils.isScalarSubquery(this.getLeft())
-        || JoinUtils.isScalarSubquery(this.getRight())) {
-      return true;
-    }
-
-    return false;
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,24 +28,18 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillFilterRel;
-import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class JoinUtils {
 
@@ -255,6 +249,18 @@ public class JoinUtils {
       return JoinCategory.INEQUALITY;
     }
     return JoinCategory.EQUALITY;
+  }
+
+  /**
+   * Utility method to check if a any of input RelNodes is provably scalar.
+   *
+   * @param left  the RelNode to be inspected.
+   * @param right the RelNode to be inspected.
+   * @return      Return true if any of the given RelNodes is provably scalar.
+   *              Otherwise, return false
+   */
+  public static boolean hasScalarSubqueryInput(RelNode left, RelNode right) {
+    return isScalarSubquery(left) || isScalarSubquery(right);
   }
 
 }

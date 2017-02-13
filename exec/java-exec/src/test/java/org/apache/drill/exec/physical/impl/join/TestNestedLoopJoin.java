@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +19,13 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringStartsWith.startsWith;
 
 public class TestNestedLoopJoin extends PlanTestBase {
 
@@ -252,5 +254,20 @@ public class TestNestedLoopJoin extends PlanTestBase {
     test(ENABLE_NLJ_SCALAR);
     test(ENABLE_HJ);
     test(ENABLE_MJ);
+  }
+
+  @Test(expected = UserRemoteException.class)
+  public void testExceptionLeftNlJoin() throws Exception {
+    try {
+      test(DISABLE_NLJ_SCALAR);
+      test("select r.r_regionkey, n.n_nationkey from cp.`tpch/nation.parquet` n " +
+            " left join cp.`tpch/region.parquet` r on n.n_regionkey < r.r_regionkey where n.n_nationkey < 3");
+    } catch (UserRemoteException e) {
+      assertThat("No expected current \"UNSUPPORTED_OPERATION ERROR\"",
+        e.getMessage(), startsWith("UNSUPPORTED_OPERATION ERROR"));
+      throw e;
+    } finally {
+      test("alter session reset `planner.enable_nljoin_for_scalar_only`");
+    }
   }
 }
