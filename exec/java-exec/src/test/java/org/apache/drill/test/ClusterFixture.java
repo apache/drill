@@ -153,7 +153,6 @@ public class ClusterFixture implements AutoCloseable {
     Preconditions.checkArgument(builder.bitCount > 0);
     int bitCount = builder.bitCount;
     for (int i = 0; i < bitCount; i++) {
-      @SuppressWarnings("resource")
       Drillbit bit = new Drillbit(config, serviceSet);
       bit.run();
 

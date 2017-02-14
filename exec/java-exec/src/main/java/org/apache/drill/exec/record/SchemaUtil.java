@@ -17,26 +17,24 @@
  */
 package org.apache.drill.exec.record;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Utility class for dealing with changing schemas
@@ -96,6 +94,7 @@ public class SchemaUtil {
     return s;
   }
 
+  @SuppressWarnings("resource")
   private static  ValueVector coerceVector(ValueVector v, VectorContainer c, MaterializedField field,
                                            int recordCount, OperatorContext context) {
     if (v != null) {
@@ -154,13 +153,14 @@ public class SchemaUtil {
     int recordCount = in.getRecordCount();
     boolean isHyper = false;
     Map<String, Object> vectorMap = Maps.newHashMap();
-    for (VectorWrapper w : in) {
+    for (VectorWrapper<?> w : in) {
       if (w.isHyper()) {
         isHyper = true;
         final ValueVector[] vvs = w.getValueVectors();
         vectorMap.put(vvs[0].getField().getPath(), vvs);
       } else {
         assert !isHyper;
+        @SuppressWarnings("resource")
         final ValueVector v = w.getValueVector();
         vectorMap.put(v.getField().getPath(), v);
       }
@@ -183,6 +183,7 @@ public class SchemaUtil {
         }
         c.add(vvsOut);
       } else {
+        @SuppressWarnings("resource")
         final ValueVector v = (ValueVector) vectorMap.remove(field.getPath());
         c.add(coerceVector(v, c, field, recordCount, context));
       }

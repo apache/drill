@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -117,6 +116,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return addOrGet(field, null);
   }
 
+  @SuppressWarnings({ "resource", "unchecked" })
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getPath()));
     final ValueVector vector;
@@ -159,10 +159,10 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return vc;
   }
 
-  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers, OperatorContext oContext) {
+  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper<?>[] ignoreWrappers, OperatorContext oContext) {
     Iterable<VectorWrapper<?>> wrappers = incoming;
     if (ignoreWrappers != null) {
-      final List<VectorWrapper> ignored = Lists.newArrayList(ignoreWrappers);
+      final List<VectorWrapper<?>> ignored = Lists.newArrayList(ignoreWrappers);
       final Set<VectorWrapper<?>> resultant = Sets.newLinkedHashSet(incoming);
       resultant.removeAll(ignored);
       wrappers = resultant;
@@ -184,6 +184,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
     // Sort list of VectorWrapper alphabetically based on SchemaPath.
     Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
+      @Override
       public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
         return v1.getField().getPath().compareTo(v2.getField().getPath());
       }
@@ -265,6 +266,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
   }
 
+  @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
@@ -310,6 +312,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return schema != null;
   }
 
+  @Override
   public BatchSchema getSchema() {
     Preconditions
         .checkNotNull(schema,

@@ -230,7 +230,7 @@ public class ScanBatch implements CloseableRecordBatch {
       hasReadNonEmptyFile = true;
       populateImplicitVectors();
 
-      for (VectorWrapper w : container) {
+      for (VectorWrapper<?> w : container) {
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
 
@@ -270,6 +270,7 @@ public class ScanBatch implements CloseableRecordBatch {
       if (implicitValues != null) {
         for (String column : implicitValues.keySet()) {
           final MaterializedField field = MaterializedField.create(column, Types.optional(MinorType.VARCHAR));
+          @SuppressWarnings("resource")
           final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
           implicitVectors.put(column, v);
         }
@@ -282,6 +283,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private void populateImplicitVectors() {
     if (implicitValues != null) {
       for (Map.Entry<String, String> entry : implicitValues.entrySet()) {
+        @SuppressWarnings("resource")
         final NullableVarCharVector v = (NullableVarCharVector) implicitVectors.get(entry.getKey());
         String val;
         if ((val = entry.getValue()) != null) {
@@ -325,7 +327,7 @@ public class ScanBatch implements CloseableRecordBatch {
     private boolean schemaChanged = true;
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("resource")
     @Override
     public <T extends ValueVector> T addField(MaterializedField field,
                                               Class<T> clazz) throws SchemaChangeException {

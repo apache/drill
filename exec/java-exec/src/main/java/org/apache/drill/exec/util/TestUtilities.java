@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.io.Files;
+import java.io.File;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
-import java.io.File;
+import com.google.common.io.Files;
 
 /**
  * This class contains utility methods to speed up tests. Some of the production code currently calls this method
@@ -64,6 +64,7 @@ public class TestUtilities {
   public static void updateDfsTestTmpSchemaLocation(final StoragePluginRegistry pluginRegistry,
                                                       final String tmpDirPath)
       throws ExecutionSetupException {
+    @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsTestPluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     final WorkspaceConfig tmpWSConfig = pluginConfig.workspaces.get(dfsTestTmpSchema);
@@ -81,6 +82,7 @@ public class TestUtilities {
    * Schema "dfs.tmp" added as part of the default bootstrap plugins file that comes with drill-java-exec jar
    */
   public static void makeDfsTmpSchemaImmutable(final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+    @SuppressWarnings("resource")
     final FileSystemPlugin dfsPlugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsPluginName);
     final FileSystemConfig dfsPluginConfig = (FileSystemConfig) dfsPlugin.getConfig();
     final WorkspaceConfig tmpWSConfig = dfsPluginConfig.workspaces.get(dfsTmpSchema);

@@ -28,6 +28,12 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.carrotsearch.hppc.IntArrayList;
 import com.google.common.base.Preconditions;
 
+/**
+ * Declares a value vector field, providing metadata about the field.
+ * Drives code generation by providing type and other structural
+ * information that determine code structure.
+ */
+
 public class TypedFieldId {
   final MajorType finalType;
   final MajorType secondaryFinal;
@@ -103,6 +109,13 @@ public class TypedFieldId {
   public MajorType getIntermediateType() {
     return intermediateType;
   }
+
+  /**
+   * Return the class for the value vector (type, mode).
+   *
+   * @return the specific, generated ValueVector subclass that
+   * stores values of the given (type, mode) combination
+   */
 
   public Class<? extends ValueVector> getIntermediateClass() {
     return (Class<? extends ValueVector>) BasicTypeHelper.getValueVectorClass(intermediateType.getMinorType(),

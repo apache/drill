@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.mock;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -26,19 +25,21 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.mock.MockTableDef.MockColumn;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
@@ -75,20 +76,50 @@ public class MockGroupScanPOP extends AbstractGroupScan {
    */
 
   private boolean extended;
+  private ScanStats scanStats = ScanStats.TRIVIAL_TABLE;
 
   @JsonCreator
   public MockGroupScanPOP(@JsonProperty("url") String url,
-      @JsonProperty("extended") Boolean extended,
       @JsonProperty("entries") List<MockScanEntry> readEntries) {
     super((String) null);
     this.readEntries = readEntries;
     this.url = url;
-    this.extended = extended == null ? false : extended;
+
+    // Compute decent row-count stats for this mock data source so that
+    // the planner is "fooled" into thinking that this operator wil do
+    // disk I/O.
+
+    int rowCount = 0;
+    int rowWidth = 0;
+    for (MockScanEntry entry : readEntries) {
+      rowCount += entry.getRecords();
+      int width = 0;
+      if (entry.getTypes() == null) {
+        width = 50;
+      } else {
+        for (MockColumn col : entry.getTypes()) {
+          int colWidth = 0;
+          if (col.getWidthValue() == 0) {
+            colWidth = TypeHelper.getSize(col.getMajorType());
+          } else {
+            colWidth = col.getWidthValue();
+          }
+          colWidth *= col.getRepeatCount();
+          width += colWidth;
+        }
+      }
+      rowWidth = Math.max(rowWidth, width);
+    }
+    int dataSize = rowCount * rowWidth;
+    scanStats = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT,
+                               rowCount,
+                               DrillCostBase.BASE_CPU_COST * dataSize,
+                               DrillCostBase.BYTE_DISK_READ_COST * dataSize);
   }
 
   @Override
   public ScanStats getScanStats() {
-    return ScanStats.TRIVIAL_TABLE;
+    return scanStats;
   }
 
   public String getUrl() {
@@ -98,162 +129,6 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @JsonProperty("entries")
   public List<MockScanEntry> getReadEntries() {
     return readEntries;
-  }
-
-  /**
-   * Describes one simulated file (or block) within the logical file scan
-   * described by this group scan. Each block can have a distinct schema to test
-   * for schema changes.
-   */
-
-  public static class MockScanEntry {
-
-    private final int records;
-    private final MockColumn[] types;
-
-    @JsonCreator
-    public MockScanEntry(@JsonProperty("records") int records,
-        @JsonProperty("types") MockColumn[] types) {
-      this.records = records;
-      this.types = types;
-    }
-
-    public int getRecords() {
-      return records;
-    }
-
-    public MockColumn[] getTypes() {
-      return types;
-    }
-
-    @Override
-    public String toString() {
-      return "MockScanEntry [records=" + records + ", columns="
-          + Arrays.toString(types) + "]";
-    }
-  }
-
-  /**
-   * Meta-data description of the columns we wish to create during a simulated
-   * scan.
-   */
-
-  @JsonInclude(Include.NON_NULL)
-  public static class MockColumn {
-
-    /**
-     * Column type given as a Drill minor type (that is, a type without the
-     * extra information such as cardinality, width, etc.
-     */
-
-    @JsonProperty("type")
-    public MinorType minorType;
-    public String name;
-    public DataMode mode;
-    public Integer width;
-    public Integer precision;
-    public Integer scale;
-
-    /**
-     * The scan can request to use a specific data generator class. The name of
-     * that class appears here. The name can be a simple class name, if that
-     * class resides in this Java package. Or, it can be a fully qualified name
-     * of a class that resides elsewhere. If null, the default generator for the
-     * data type is used.
-     */
-
-    public String generator;
-
-    /**
-     * Some tests want to create a very wide row with many columns. This field
-     * eases that task: specify a value other than 1 and the data source will
-     * generate that many copies of the column, each with separately generated
-     * random values. For example, to create 20 copies of field, "foo", set
-     * repeat to 20 and the actual generated batches will contain fields
-     * foo1, foo2, ... foo20.
-     */
-
-    public Integer repeat;
-
-    @JsonCreator
-    public MockColumn(@JsonProperty("name") String name,
-        @JsonProperty("type") MinorType minorType,
-        @JsonProperty("mode") DataMode mode,
-        @JsonProperty("width") Integer width,
-        @JsonProperty("precision") Integer precision,
-        @JsonProperty("scale") Integer scale,
-        @JsonProperty("generator") String generator,
-        @JsonProperty("repeat") Integer repeat) {
-      this.name = name;
-      this.minorType = minorType;
-      this.mode = mode;
-      this.width = width;
-      this.precision = precision;
-      this.scale = scale;
-      this.generator = generator;
-      this.repeat = repeat;
-    }
-
-    @JsonProperty("type")
-    public MinorType getMinorType() {
-      return minorType;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public DataMode getMode() {
-      return mode;
-    }
-
-    public Integer getWidth() {
-      return width;
-    }
-
-    public Integer getPrecision() {
-      return precision;
-    }
-
-    public Integer getScale() {
-      return scale;
-    }
-
-    public String getGenerator() {
-      return generator;
-    }
-
-    public Integer getRepeat() {
-      return repeat;
-    }
-
-    @JsonIgnore
-    public int getRepeatCount() {
-      return repeat == null ? 1 : repeat;
-    }
-
-    @JsonIgnore
-    public MajorType getMajorType() {
-      MajorType.Builder b = MajorType.newBuilder();
-      b.setMode(mode);
-      b.setMinorType(minorType);
-      if (precision != null) {
-        b.setPrecision(precision);
-      }
-      if (width != null) {
-        b.setWidth(width);
-      }
-      if (scale != null) {
-        b.setScale(scale);
-      }
-      return b.build();
-    }
-
-    @Override
-    public String toString() {
-      return "MockColumn [minorType=" + minorType + ", name=" + name + ", mode="
-          + mode + "]";
-    }
   }
 
   @SuppressWarnings("unchecked")
@@ -295,7 +170,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MockGroupScanPOP(url, extended, readEntries);
+    return new MockGroupScanPOP(url, readEntries);
   }
 
   @Override
@@ -304,7 +179,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       throw new IllegalArgumentException("No columns for mock scan");
     }
     List<MockColumn> mockCols = new ArrayList<>();
-    Pattern p = Pattern.compile("(\\w+)_([isd])(\\d*)");
+    Pattern p = Pattern.compile("(\\w+)_([isdb])(\\d*)");
     for (SchemaPath path : columns) {
       String col = path.getLastSegment().getNameSegment().getPath();
       if (col.equals("*")) {
@@ -334,21 +209,24 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       case "d":
         minorType = MinorType.FLOAT8;
         break;
+      case "b":
+        minorType = MinorType.BIT;
+        break;
       default:
         throw new IllegalArgumentException(
             "Unsupported field type " + type + " for mock column " + col);
       }
-      MockColumn mockCol = new MockColumn(col, minorType, DataMode.REQUIRED,
-          width, 0, 0, null, 1);
+      MockTableDef.MockColumn mockCol = new MockColumn(
+          col, minorType, DataMode.REQUIRED, width, 0, 0, null, 1, null);
       mockCols.add(mockCol);
     }
     MockScanEntry entry = readEntries.get(0);
     MockColumn types[] = new MockColumn[mockCols.size()];
     mockCols.toArray(types);
-    MockScanEntry newEntry = new MockScanEntry(entry.records, types);
+    MockScanEntry newEntry = new MockScanEntry(entry.records, true, 0, types);
     List<MockScanEntry> newEntries = new ArrayList<>();
     newEntries.add(newEntry);
-    return new MockGroupScanPOP(url, true, newEntries);
+    return new MockGroupScanPOP(url, newEntries);
   }
 
   @Override
