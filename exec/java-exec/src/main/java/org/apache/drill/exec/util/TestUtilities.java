@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.io.Files;
+import java.io.File;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
-import java.io.File;
+import com.google.common.io.Files;
 
 /**
  * This class contains utility methods to speed up tests. Some of the production code currently calls this method

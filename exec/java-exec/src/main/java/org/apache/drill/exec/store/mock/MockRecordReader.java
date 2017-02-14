@@ -29,8 +29,8 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
+import org.apache.drill.exec.store.mock.MockTableDef.MockColumn;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 

@@ -25,7 +25,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 
 /**
- * Very simple date vaue generator that produces ISO dates
+ * Very simple date value generator that produces ISO dates
  * uniformly distributed over the last year. ISO format
  * is: 2016-12-07.
  * <p>

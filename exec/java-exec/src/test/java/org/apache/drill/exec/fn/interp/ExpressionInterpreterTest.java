@@ -42,11 +42,12 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP;
 import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
+import org.apache.drill.exec.store.mock.MockTableDef;
 import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -123,9 +124,9 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final String expressionStr = "now()";
     final BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
     final QueryContextInformation queryContextInfo = planFragment.getContext();
-    final int                        timeZoneIndex = queryContextInfo.getTimeZone();
-    final org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-    final org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
+    final int timeZoneIndex = queryContextInfo.getTimeZone();
+    final DateTimeZone timeZone = DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    final org.joda.time.DateTime now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
     final long queryStartDate = now.getMillis();
 
@@ -159,13 +160,13 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     // Create a mock scan batch as input for evaluation.
     assertEquals(colNames.length, colTypes.length);
 
-    final MockGroupScanPOP.MockColumn[] columns = new MockGroupScanPOP.MockColumn[colNames.length];
+    final MockTableDef.MockColumn[] columns = new MockTableDef.MockColumn[colNames.length];
 
     for (int i = 0; i < colNames.length; i++ ) {
-      columns[i] = new MockGroupScanPOP.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(), 0, 0, 0, null, null);
+      columns[i] = new MockTableDef.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(), 0, 0, 0, null, null, null);
     }
 
-    final MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
+    final MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(10, false, 0, 1, columns);
     final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
     @SuppressWarnings("resource")

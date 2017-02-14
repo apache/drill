@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,13 +26,13 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 
 /**
  * Describes a physical scan operation for the mock data source. Each operator
@@ -44,7 +45,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockGroupScanPOP.class);
 
   private final String url;
-  protected final List<MockGroupScanPOP.MockScanEntry> readEntries;
+  protected final List<MockScanEntry> readEntries;
   private final boolean extended;
 
   /**
@@ -68,7 +69,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   @JsonCreator
   public MockSubScanPOP(@JsonProperty("url") String url,
                         @JsonProperty("extended") Boolean extended,
-                        @JsonProperty("entries") List<MockGroupScanPOP.MockScanEntry> readEntries) {
+                        @JsonProperty("entries") List<MockScanEntry> readEntries) {
     this.readEntries = readEntries;
 //    OperatorCost cost = new OperatorCost(0,0,0,0);
 //    Size size = new Size(0,0);
@@ -86,13 +87,13 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   public boolean isExtended() { return extended; }
 
   @JsonProperty("entries")
-  public List<MockGroupScanPOP.MockScanEntry> getReadEntries() {
+  public List<MockScanEntry> getReadEntries() {
     return readEntries;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   // will want to replace these two methods with an interface above for AbstractSubScan

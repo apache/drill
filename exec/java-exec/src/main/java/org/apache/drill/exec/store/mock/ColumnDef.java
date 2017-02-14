@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.mock;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
+import org.apache.drill.exec.store.mock.MockTableDef.MockColumn;
 
 /**
  * Defines a column for the "enhanced" version of the mock data
@@ -37,7 +37,12 @@ public class ColumnDef {
   public ColumnDef(MockColumn mockCol) {
     this.mockCol = mockCol;
     name = mockCol.getName();
-    width = TypeHelper.getSize(mockCol.getMajorType());
+    if (mockCol.getMinorType() == MinorType.VARCHAR &&
+        mockCol.getWidth() > 0) {
+      width = mockCol.getWidth();
+    } else {
+      width = TypeHelper.getSize(mockCol.getMajorType());
+    }
     makeGenerator();
   }
 
@@ -78,6 +83,7 @@ public class ColumnDef {
     case BIGINT:
       break;
     case BIT:
+      generator = new BooleanGen();
       break;
     case DATE:
       break;
@@ -168,11 +174,6 @@ public class ColumnDef {
     name += Integer.toString(rep);
   }
 
-  public MockColumn getConfig() {
-    return mockCol;
-  }
-
-  public String getName() {
-    return name;
-  }
+  public MockColumn getConfig() { return mockCol; }
+  public String getName() { return name; }
 }

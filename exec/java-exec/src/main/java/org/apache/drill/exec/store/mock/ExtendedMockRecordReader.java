@@ -31,10 +31,11 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
+import org.apache.drill.exec.store.mock.MockTableDef.MockColumn;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -55,11 +56,9 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
   private int recordsRead;
 
   private final MockScanEntry config;
-  private final FragmentContext context;
   private final ColumnDef fields[];
 
   public ExtendedMockRecordReader(FragmentContext context, MockScanEntry config) {
-    this.context = context;
     this.config = config;
 
     fields = buildColumnDefs();
@@ -76,7 +75,7 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
     Set<String> names = new HashSet<>();
     MockColumn cols[] = config.getTypes();
     for (int i = 0; i < cols.length; i++) {
-      MockColumn col = cols[i];
+      MockTableDef.MockColumn col = cols[i];
       if (names.contains(col.name)) {
         throw new IllegalArgumentException("Duplicate column name: " + col.name);
       }
@@ -95,10 +94,10 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
     return defArray;
   }
 
-  private int getEstimatedRecordSize(MockColumn[] types) {
+  private int getEstimatedRecordSize() {
     int size = 0;
     for (int i = 0; i < fields.length; i++) {
-      size += TypeHelper.getSize(fields[i].getConfig().getMajorType());
+      size += fields[i].width;
     }
     return size;
   }
@@ -106,9 +105,14 @@ public class ExtendedMockRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try {
-      final int estimateRowSize = getEstimatedRecordSize(config.getTypes());
-      valueVectors = new ValueVector[config.getTypes().length];
-      batchRecordCount = 250000 / estimateRowSize;
+      final int estimateRowSize = getEstimatedRecordSize();
+      valueVectors = new ValueVector[fields.length];
+      int batchSize = config.getBatchSize();
+      if (batchSize == 0) {
+        batchSize = 10 * 1024 * 1024;
+      }
+      batchRecordCount = Math.max(1, batchSize / estimateRowSize);
+      batchRecordCount = Math.min(batchRecordCount, Character.MAX_VALUE);
 
       for (int i = 0; i < fields.length; i++) {
         final ColumnDef col = fields[i];

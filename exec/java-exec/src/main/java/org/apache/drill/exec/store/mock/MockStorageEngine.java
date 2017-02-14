@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mock;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,11 +37,15 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 public class MockStorageEngine extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
@@ -57,21 +62,12 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
 
-    List<MockScanEntry> readEntries = selection.getListWith(new ObjectMapper(),
-        new TypeReference<ArrayList<MockScanEntry>>() {
+    List<MockTableDef.MockScanEntry> readEntries = selection.getListWith(new ObjectMapper(),
+        new TypeReference<ArrayList<MockTableDef.MockScanEntry>>() {
         });
 
-    // The classic (logical-plan based) and extended (SQL-based) paths
-    // come through here. If this is a SQL query, then no columns are
-    // defined in the plan.
-
     assert ! readEntries.isEmpty();
-    boolean extended = readEntries.size() == 1;
-    if (extended) {
-      MockScanEntry entry = readEntries.get(0);
-      extended = entry.getTypes() == null;
-    }
-    return new MockGroupScanPOP(null, extended, readEntries);
+    return new MockGroupScanPOP(null, readEntries);
   }
 
   @Override
@@ -89,14 +85,31 @@ public class MockStorageEngine extends AbstractStoragePlugin {
     return true;
   }
 
-//  public static class ImplicitTable extends DynamicDrillTable {
-//
-//    public ImplicitTable(StoragePlugin plugin, String storageEngineName,
-//        Object selection) {
-//      super(plugin, storageEngineName, selection);
-//    }
-//
-//  }
+  /**
+   * Resolves table names within the mock data source. Tables can be of two forms:
+   * <p>
+   * <tt><name>_<n><unit></tt>
+   * <p>
+   * Where the "name" can be anything, "n" is the number of rows, and "unit" is
+   * the units for the row count: non, K (thousand) or M (million).
+   * <p>
+   * The above form generates a table directly with no other information needed.
+   * Column names must be provided, and must be of the form:
+   * <p>
+   * <tt><name>_<type><size></tt>
+   * <p>
+   * Where the name can be anything, the type must be i (integer), d (double),
+   * b (boolean)
+   * or s (string, AKA VarChar). The length is needed only for string fields.
+   * <p>
+   * Direct tables are quick, but limited. The other option is to provide the
+   * name of a definition file:
+   * <p>
+   * <tt><fileName>.json</tt>
+   * <p>
+   * In this case, the JSON file must be a resource visible on the class path.
+   * Omit the leading slash in the resource path name.
+   */
 
   private static class MockSchema extends AbstractSchema {
 
@@ -109,6 +122,36 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
     @Override
     public Table getTable(String name) {
+      if (name.toLowerCase().endsWith(".json")) {
+        return getConfigFile(name);
+      } else {
+        return getDirectTable(name);
+      }
+    }
+
+    private Table getConfigFile(String name) {
+      final URL url = Resources.getResource(name);
+      if (url == null) {
+        throw new IllegalArgumentException(
+            "Unable to find mock table config file " + name);
+      }
+      MockTableDef mockTableDefn;
+      try {
+        String json = Resources.toString(url, Charsets.UTF_8);
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+        mockTableDefn = mapper.readValue(json, MockTableDef.class);
+      } catch (JsonParseException e) {
+        throw new IllegalArgumentException("Unable to parse mock table definition file: " + name, e);
+      } catch (JsonMappingException e) {
+        throw new IllegalArgumentException("Unable to Jackson deserialize mock table definition file: " + name, e);
+      } catch (IOException e) {
+        throw new IllegalArgumentException("Unable to read mock table definition file: " + name, e);
+      }
+      return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries());
+    }
+
+    private Table getDirectTable(String name) {
       Pattern p = Pattern.compile("(\\w+)_(\\d+)(k|m)?", Pattern.CASE_INSENSITIVE);
       Matcher m = p.matcher(name);
       if (! m.matches()) {
@@ -118,10 +161,11 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       String baseName = m.group(1);
       int n = Integer.parseInt(m.group(2));
       String unit = m.group(3);
-      if (unit.equalsIgnoreCase("K")) { n *= 1000; }
+      if (unit == null) { }
+      else if (unit.equalsIgnoreCase("K")) { n *= 1000; }
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
-      MockScanEntry entry = new MockScanEntry(n, null);
-      List<MockScanEntry> list = new ArrayList<>();
+      MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
+      List<MockTableDef.MockScanEntry> list = new ArrayList<>();
       list.add(entry);
       return new DynamicDrillTable(engine, this.name, list);
     }

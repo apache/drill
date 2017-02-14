@@ -30,19 +30,21 @@
  * </ul>
  * <h3>Classic Mode</h3>
  * Create a scan operator that looks like the following (from
- * <tt></tt>):
+ * <tt>/src/test/resources/functions/cast/two_way_implicit_cast.json</tt>,
+ * used in {@link TestReverseImplicitCast}):
  * <pre><code>
  *    graph:[
- *      {
- *        {@literal @}id:1,
- *        pop:"mock-scan",
- *        url: "http://apache.org",
- *        entries:[
- *          {records: 1000000, types: [
- *             {name: "blue", type: "INT", mode: "REQUIRED"},
- *             {name: "green", type: "INT", mode: "REQUIRED"}
- *        ]}
- *      ]
+ *        {
+ *            @id:1,
+ *            pop:"mock-scan",
+ *            url: "http://apache.org",
+ *            entries:[
+ *                {records: 1, types: [
+ *                    {name: "col1", type: "FLOAT4", mode: "REQUIRED"},
+ *                    {name: "col2", type: "FLOAT8", mode: "REQUIRED"}
+ *                ]}
+ *            ]
+ *        },
  *    }, ...
  * </code></pre>
  * Here:
@@ -60,6 +62,18 @@
  * <li>The <tt>mode</tt> is one of the supported Drill
  * {@link DataMode} names: usually <tt>OPTIONAL</tt> or <tt>REQUIRED</tt>.</li>
  * </ul>
+ * <p>
+ * Recent extensions include:
+ * <ul>
+ * <li><tt>repeat</tt> in either the "entry" or "record" elements allow
+ * repeating entries (simulating multiple blocks or row groups) and
+ * repeating fields (easily create a dozen fields of some type.)</li>
+ * <li><tt>generator</tt> in a field definition lets you specify a
+ * specific data generator (see below.)</tt>
+ * <li><tt>properties</tt> in a field definition lets you pass
+ * generator-specific values to the data generator (such as, say
+ * a minimum and maximum value.)</li>
+ * </ul>
  *
  * <h3>Enhanced Mode</h3>
  * Enhanced builds on the Classic mode to add additional capabilities.
@@ -67,7 +81,7 @@
  * is randomly generated over a wide range of values and can be
  * controlled by custom generator classes. When
  * in a physical plan, the <tt>records</tt> section has additional
- * attributes as described in {@link MockGroupScanPOP.MockColumn}:
+ * attributes as described in {@link MockTableDef.MockColumn}:
  * <ul>
  * <li>The <tt>generator</tt> lets you specify a class to generate the
  * sample data. Rules for the class name is that it can either contain
@@ -111,6 +125,9 @@
  * (multiply row count by one million), case insensitive.</li>
  * <li>Another field (not yet implemented) might specify the split count.</li>
  * </ul>
+ * <h3>Enhanced Mode with Definition File</h3>
+ * You can reference a mock data definition file directly from SQL as follows:
+ * <pre<code>SELECT * FROM `mock`.`your_defn_file.json`</code></pre>
  * <h3>Data Generators</h3>
  * The classic mode uses data generators built into each vector to generate
  * the sample data. These generators use a very simple black/white alternating
