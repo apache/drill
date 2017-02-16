@@ -1,0 +1,4 @@
+SELECT f1, SUM(f2)
+  FROM [Table]
+  GROUP BY f1
+  HAVING SUM(f2) > 1000;

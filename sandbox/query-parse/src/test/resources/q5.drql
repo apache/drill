@@ -1,0 +1,1 @@
+SELECT f1, COUNT(m1.f2) WITHIN RECORD AS cnt FROM [Table];

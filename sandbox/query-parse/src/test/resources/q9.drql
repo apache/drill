@@ -1,0 +1,1 @@
+SELECT f1, COUNT(f2) FROM [Table] GROUP BY f1, f3;
