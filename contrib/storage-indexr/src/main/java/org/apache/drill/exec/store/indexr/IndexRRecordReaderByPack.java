@@ -71,6 +71,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
   private RCOperator rsFilter;
   private int curStepId = 0;
 
+  private long setupTimePoint = 0;
   private long getPackTime = 0;
   private long setValueTime = 0;
   private long lmCheckTime = 0;
@@ -93,8 +94,8 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    setupTimePoint = System.currentTimeMillis();
     super.setup(context, output);
-
     projectColumnIds = new int[projectColumnInfos.length];
 
     if (rsFilter != null) {
@@ -188,7 +189,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
         });
 
     long time2 = System.currentTimeMillis();
-    getPackTime = time2 - time;
+    getPackTime += time2 - time;
 
     byte res = rsFilter.roughCheckOnRow(rowPacks);
     lmCheckTime += System.currentTimeMillis() - time2;
@@ -398,6 +399,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
   @Override
   public void close() throws Exception {
     super.close();
-    log.debug("cost: getPack: {}ms, setValue: {}ms, lmCheck: {}ms", getPackTime, setValueTime, lmCheckTime);
+    long now = System.currentTimeMillis();
+    log.debug("cost: total: {}ms, getPack: {}ms, setValue: {}ms, lmCheck: {}ms", now - setupTimePoint, getPackTime, setValueTime, lmCheckTime);
   }
 }
