@@ -57,7 +57,6 @@ import org.apache.parquet.format.FileMetaData;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.CodecFactory;
-import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
@@ -73,6 +72,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
   private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
+  private static final int DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH = 65535;
   private static final int NUM_RECORDS_TO_READ_NOT_SPECIFIED = -1;
 
   // When no column is required by the downstrea operator, ask SCAN to return a DEFAULT column. If such column does not exist,
@@ -128,6 +128,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public boolean enforceTotalSize;
   public long readQueueSize;
 
+  @SuppressWarnings("unused")
   private String name;
 
 
@@ -333,6 +334,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     }
   }
 
+  @SuppressWarnings({ "resource", "unchecked" })
   @Override
   public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = operatorContext;
@@ -351,7 +353,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
     MaterializedField field;
 //    ParquetMetadataConverter metaConverter = new ParquetMetadataConverter();
-    FileMetaData fileMetaData;
+//    FileMetaData fileMetaData;
 
     logger.debug("Reading row group({}) with {} records in file {}.", rowGroupIndex, footer.getBlocks().get(rowGroupIndex).getRowCount(),
         hadoopPath.toUri().getPath());
@@ -376,14 +378,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
       if (dataTypeLength == -1) {
           allFieldsFixedLength = false;
         } else {
-        bitWidthAllFixedFields += dataTypeLength;
+          bitWidthAllFixedFields += dataTypeLength;
         }
       }
 //    rowGroupOffset = footer.getBlocks().get(rowGroupIndex).getColumns().get(0).getFirstDataPageOffset();
 
     if (columnsToScan != 0  && allFieldsFixedLength) {
       recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,
-          footer.getBlocks().get(0).getColumns().get(0).getValueCount()), 65535);
+          footer.getBlocks().get(0).getColumns().get(0).getValueCount()), DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH);
     }
     else {
       recordsPerBatch = DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH;

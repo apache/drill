@@ -70,33 +70,31 @@ public class VarLenBinaryReader {
     return recordsReadInCurrentPass;
   }
 
-
   private long determineSizesSerial(long recordsToReadInThisPass) throws IOException {
-    int lengthVarFieldsInCurrentRecord = 0;
-    boolean exitLengthDeterminingLoop = false;
-    long totalVariableLengthData = 0;
-    long recordsReadInCurrentPass = 0;
-    do {
+
+    // Can't read any more records than fixed width fields will fit.
+    // Note: this calculation is very likely wrong; it is a simplified
+    // version of earlier code, but probably needs even more attention.
+
+    int totalFixedFieldWidth = parentReader.getBitWidthAllFixedFields() / 8;
+    long batchSize = parentReader.getBatchSize();
+    if (totalFixedFieldWidth > 0) {
+      recordsToReadInThisPass = Math.min(recordsToReadInThisPass, batchSize / totalFixedFieldWidth);
+    }
+
+    int recordsReadInCurrentPass = 0;
+    top: do {
       for (VarLengthColumn<?> columnReader : columns) {
-        if (!exitLengthDeterminingLoop) {
-          exitLengthDeterminingLoop =
-              columnReader.determineSize(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord);
-        } else {
-          break;
+        // Return status is "done reading", meaning stop if true.
+        if (columnReader.determineSize(recordsReadInCurrentPass, 0 /* unused */ )) {
+          break top;
         }
-      }
-      // check that the next record will fit in the batch
-      if (exitLengthDeterminingLoop ||
-          (recordsReadInCurrentPass + 1) * parentReader.getBitWidthAllFixedFields()
-              + totalVariableLengthData + lengthVarFieldsInCurrentRecord > parentReader.getBatchSize()) {
-        break;
       }
       for (VarLengthColumn<?> columnReader : columns) {
         columnReader.updateReadyToReadPosition();
         columnReader.currDefLevel = -1;
       }
       recordsReadInCurrentPass++;
-      totalVariableLengthData += lengthVarFieldsInCurrentRecord;
     } while (recordsReadInCurrentPass < recordsToReadInThisPass);
 
     return recordsReadInCurrentPass;
