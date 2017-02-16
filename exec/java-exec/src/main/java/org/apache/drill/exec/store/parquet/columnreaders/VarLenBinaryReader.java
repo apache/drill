@@ -33,24 +33,34 @@ public class VarLenBinaryReader {
   ParquetRecordReader parentReader;
   final List<VarLengthColumn<? extends ValueVector>> columns;
   final boolean useAsyncTasks;
+  private final long targetRecordCount;
 
   public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn<? extends ValueVector>> columns) {
     this.parentReader = parentReader;
     this.columns = columns;
     useAsyncTasks = parentReader.useAsyncColReader;
+
+    // Can't read any more records than fixed width fields will fit.
+    // Note: this calculation is very likely wrong; it is a simplified
+    // version of earlier code, but probably needs even more attention.
+
+    int totalFixedFieldWidth = parentReader.getBitWidthAllFixedFields() / 8;
+    if (totalFixedFieldWidth == 0) {
+      targetRecordCount = 0;
+    } else {
+      targetRecordCount = parentReader.getBatchSize() / totalFixedFieldWidth;
+    }
   }
 
   /**
    * Reads as many variable length values as possible.
    *
    * @param recordsToReadInThisPass - the number of records recommended for reading form the reader
-   * @param firstColumnStatus - a reference to the first column status in the parquet file to grab metatdata from
+   * @param firstColumnStatus - a reference to the first column status in the Parquet file to grab metatdata from
    * @return - the number of fixed length fields that will fit in the batch
    * @throws IOException
    */
-  public long readFields(long recordsToReadInThisPass, ColumnReader<?> firstColumnStatus) throws IOException {
-
-    long recordsReadInCurrentPass = 0;
+  public long readFields(long recordsToReadInThisPass) throws IOException {
 
     // write the first 0 offset
     for (VarLengthColumn<?> columnReader : columns) {
@@ -58,10 +68,16 @@ public class VarLenBinaryReader {
     }
     Stopwatch timer = Stopwatch.createStarted();
 
-    recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
-    if(useAsyncTasks){
+    // Can't read any more records than fixed width fields will fit.
+
+    if (targetRecordCount > 0) {
+      recordsToReadInThisPass = Math.min(recordsToReadInThisPass, targetRecordCount);
+    }
+    long recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
+
+    if(useAsyncTasks) {
       readRecordsParallel(recordsReadInCurrentPass);
-    }else{
+    } else {
       readRecordsSerial(recordsReadInCurrentPass);
     }
 
@@ -70,33 +86,21 @@ public class VarLenBinaryReader {
     return recordsReadInCurrentPass;
   }
 
-
   private long determineSizesSerial(long recordsToReadInThisPass) throws IOException {
-    int lengthVarFieldsInCurrentRecord = 0;
-    boolean exitLengthDeterminingLoop = false;
-    long totalVariableLengthData = 0;
-    long recordsReadInCurrentPass = 0;
-    do {
+
+    int recordsReadInCurrentPass = 0;
+    top: do {
       for (VarLengthColumn<?> columnReader : columns) {
-        if (!exitLengthDeterminingLoop) {
-          exitLengthDeterminingLoop =
-              columnReader.determineSize(recordsReadInCurrentPass, lengthVarFieldsInCurrentRecord);
-        } else {
-          break;
+        // Return status is "done reading", meaning stop if true.
+        if (columnReader.determineSize(recordsReadInCurrentPass)) {
+          break top;
         }
-      }
-      // check that the next record will fit in the batch
-      if (exitLengthDeterminingLoop ||
-          (recordsReadInCurrentPass + 1) * parentReader.getBitWidthAllFixedFields()
-              + totalVariableLengthData + lengthVarFieldsInCurrentRecord > parentReader.getBatchSize()) {
-        break;
       }
       for (VarLengthColumn<?> columnReader : columns) {
         columnReader.updateReadyToReadPosition();
         columnReader.currDefLevel = -1;
       }
       recordsReadInCurrentPass++;
-      totalVariableLengthData += lengthVarFieldsInCurrentRecord;
     } while (recordsReadInCurrentPass < recordsToReadInThisPass);
 
     return recordsReadInCurrentPass;
@@ -118,7 +122,7 @@ public class VarLenBinaryReader {
       futures.add(f);
     }
     Exception exception = null;
-    for(Future f: futures){
+    for(Future<Integer> f: futures){
       if(exception != null) {
         f.cancel(true);
       } else {
