@@ -98,7 +98,7 @@ public class RSFilterGenerator extends AbstractExprVisitor<RCOperator, Void, Run
     }
     RCOperator operator;
     Attr attr = genAttr(processor.getPath());
-    long numValue = processor.getNumValue(attr.columType());
+    long numValue = processor.getNumValue(attr.sqlType());
     UTF8String strValue = processor.getUTF8StrValue();
     switch (processor.getFunctionName()) {
       case "equal": {
@@ -143,6 +143,6 @@ public class RSFilterGenerator extends AbstractExprVisitor<RCOperator, Void, Run
     String tableName = groupScan.getScanSpec().getTableName();
     TableSchema schema = groupScan.getStoragePlugin().indexRNode().getTablePool().getTableSchema(tableName);
     ColumnSchema columnSchema = DrillIndexRTable.mapColumn(tableName, schema.schema, path).first;
-    return new Attr(columnSchema.getName(), columnSchema.getDataType());
+    return new Attr(columnSchema.getName(), columnSchema.getSqlType());
   }
 }

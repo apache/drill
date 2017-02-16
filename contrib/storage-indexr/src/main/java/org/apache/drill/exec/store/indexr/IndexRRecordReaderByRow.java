@@ -19,9 +19,12 @@ package org.apache.drill.exec.store.indexr;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.TimeStampVector;
+import org.apache.drill.exec.vector.TimeVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.spark.unsafe.Platform;
 import org.slf4j.Logger;
@@ -32,8 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.indexr.data.BytePiece;
-import io.indexr.segment.ColumnType;
 import io.indexr.segment.Row;
+import io.indexr.segment.SQLType;
 import io.indexr.segment.Segment;
 import io.indexr.segment.SegmentSchema;
 import io.indexr.segment.helper.SegmentOpener;
@@ -92,7 +95,7 @@ public class IndexRRecordReaderByRow extends IndexRRecordReader {
 
   private int read(SegmentSchema schema, Iterator<Row> iterator, int maxRow) {
     int colCount = projectColumnInfos.length;
-    byte[] dataTypes = new byte[colCount];
+    SQLType[] sqlTypes = new SQLType[colCount];
     int[] columnIds = new int[colCount];
     for (int i = 0; i < colCount; i++) {
       ProjectedColumnInfo info = projectColumnInfos[i];
@@ -101,7 +104,7 @@ public class IndexRRecordReaderByRow extends IndexRRecordReader {
         log.error("column {} not found in {}", info.columnSchema, schema);
         return -1;
       }
-      dataTypes[i] = info.columnSchema.dataType;
+      sqlTypes[i] = info.columnSchema.getSqlType();
       columnIds[i] = columnId;
     }
     int rowId = 0;
@@ -112,29 +115,44 @@ public class IndexRRecordReaderByRow extends IndexRRecordReader {
       for (int i = 0; i < colCount; i++) {
         ProjectedColumnInfo info = projectColumnInfos[i];
         int columnId = columnIds[i];
-        byte dataType = dataTypes[i];
-        switch (dataTypes[i]) {
-          case ColumnType.INT: {
+        SQLType sqlType = sqlTypes[i];
+        switch (sqlType) {
+          case INT: {
             IntVector.Mutator mutator = (IntVector.Mutator) info.valueVector.getMutator();
             mutator.setSafe(rowId, row.getInt(columnId));
             break;
           }
-          case ColumnType.LONG: {
+          case BIGINT: {
             BigIntVector.Mutator mutator = (BigIntVector.Mutator) info.valueVector.getMutator();
             mutator.setSafe(rowId, row.getLong(columnId));
             break;
           }
-          case ColumnType.FLOAT: {
+          case FLOAT: {
             Float4Vector.Mutator mutator = (Float4Vector.Mutator) info.valueVector.getMutator();
             mutator.setSafe(rowId, row.getFloat(columnId));
             break;
           }
-          case ColumnType.DOUBLE: {
+          case DOUBLE: {
             Float8Vector.Mutator mutator = (Float8Vector.Mutator) info.valueVector.getMutator();
             mutator.setSafe(rowId, row.getDouble(columnId));
             break;
           }
-          case ColumnType.STRING: {
+          case DATE: {
+            DateVector.Mutator mutator = (DateVector.Mutator) info.valueVector.getMutator();
+            mutator.setSafe(rowId, row.getLong(columnId));
+            break;
+          }
+          case TIME: {
+            TimeVector.Mutator mutator = (TimeVector.Mutator) info.valueVector.getMutator();
+            mutator.setSafe(rowId, row.getInt(columnId));
+            break;
+          }
+          case DATETIME: {
+            TimeStampVector.Mutator mutator = (TimeStampVector.Mutator) info.valueVector.getMutator();
+            mutator.setSafe(rowId, row.getLong(columnId));
+            break;
+          }
+          case VARCHAR: {
             VarCharVector.Mutator mutator = (VarCharVector.Mutator) info.valueVector.getMutator();
             row.getRaw(columnId, bp);
             if (bp.base != null) {
@@ -149,7 +167,7 @@ public class IndexRRecordReaderByRow extends IndexRRecordReader {
             break;
           }
           default:
-            throw new IllegalStateException(String.format("Unhandled date type %s", info.columnSchema.dataType));
+            throw new IllegalStateException(String.format("Unhandled date type %s", info.columnSchema.getSqlType()));
         }
       }
       rowId++;

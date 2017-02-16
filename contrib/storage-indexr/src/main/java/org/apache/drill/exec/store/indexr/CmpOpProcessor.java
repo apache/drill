@@ -29,11 +29,11 @@ import org.apache.spark.unsafe.types.UTF8String;
 
 import java.util.Set;
 
-import io.indexr.segment.ColumnType;
+import io.indexr.segment.SQLType;
+import io.indexr.util.DateTimeUtil;
+import io.indexr.util.UTF8Util;
 
 public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
-  private boolean setNum = false;
-  private long numValue;
   private String strValue;
   private SchemaPath path;
   private String functionName;
@@ -52,21 +52,24 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
   public CmpOpProcessor() {}
 
-  public long getNumValue(byte type) {
-    if (setNum) {
-      return numValue;
-    }
+  public long getNumValue(SQLType type) {
     switch (type) {
-      case ColumnType.INT:
+      case INT:
         return Integer.parseInt(strValue);
-      case ColumnType.LONG:
+      case BIGINT:
         return Long.parseLong(strValue);
-      case ColumnType.FLOAT:
+      case FLOAT:
         return Double.doubleToRawLongBits(Float.parseFloat(strValue));
-      case ColumnType.DOUBLE:
+      case DOUBLE:
         return Double.doubleToRawLongBits(Double.parseDouble(strValue));
-      case ColumnType.STRING:
-        return numValue;
+      case VARCHAR:
+        return 0;
+      case DATE:
+        return DateTimeUtil.parseDate(UTF8Util.toUtf8(strValue));
+      case TIME:
+        return DateTimeUtil.parseTime(UTF8Util.toUtf8(strValue));
+      case DATETIME:
+        return DateTimeUtil.parseDateTime(UTF8Util.toUtf8(strValue));
       default:
         throw new IllegalStateException("unsupported type " + type);
     }
@@ -94,8 +97,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
   public boolean process(FunctionCall function) {
     // clear
-    setNum = false;
-    numValue = 0;
     strValue = null;
     path = null;
 
@@ -143,8 +144,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
     if (valueArg instanceof ValueExpressions.IntExpression) {
       int value = ((ValueExpressions.IntExpression) valueArg).getInt();
-      this.setNum = true;
-      this.numValue = value;
       this.strValue = String.valueOf(value);
       this.path = path;
       return true;
@@ -152,8 +151,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
     if (valueArg instanceof ValueExpressions.LongExpression) {
       long value = ((ValueExpressions.LongExpression) valueArg).getLong();
-      this.setNum = true;
-      this.numValue = value;
       this.strValue = String.valueOf(value);
       this.path = path;
       return true;
@@ -161,8 +158,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
     if (valueArg instanceof ValueExpressions.FloatExpression) {
       float value = ((ValueExpressions.FloatExpression) valueArg).getFloat();
-      this.setNum = true;
-      this.numValue = Double.doubleToRawLongBits(value);
       this.strValue = String.valueOf(value);
       this.path = path;
       return true;
@@ -170,8 +165,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
     if (valueArg instanceof ValueExpressions.DoubleExpression) {
       double value = ((ValueExpressions.DoubleExpression) valueArg).getDouble();
-      this.setNum = true;
-      this.numValue = Double.doubleToRawLongBits(value);
       this.strValue = String.valueOf(value);
       this.path = path;
       return true;
@@ -179,8 +172,6 @@ public class CmpOpProcessor extends AbstractExprVisitor<Boolean, LogicalExpressi
 
     if (valueArg instanceof ValueExpressions.BooleanExpression) {
       boolean value = ((ValueExpressions.BooleanExpression) valueArg).getBoolean();
-      this.setNum = true;
-      this.numValue = value ? 1 : 0;
       this.strValue = String.valueOf(value);
       this.path = path;
       return true;

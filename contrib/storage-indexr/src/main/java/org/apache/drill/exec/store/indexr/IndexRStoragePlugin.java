@@ -136,8 +136,7 @@ public class IndexRStoragePlugin extends AbstractStoragePlugin {
   public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return Sets.newHashSet(
         IndexRPushDownRSFilter.FilterScan,
-        IndexRPushDownRSFilter.FilterProjectScan,
-        IndexRPushDownRSFilter.HashJoinScan);
+        IndexRPushDownRSFilter.FilterProjectScan);
   }
 
   @Override

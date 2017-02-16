@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 
 import io.indexr.segment.ColumnSchema;
+import io.indexr.segment.SQLType;
 import io.indexr.segment.SegmentSchema;
 
 public class EmptyRecordReader extends AbstractRecordReader {
@@ -41,12 +42,12 @@ public class EmptyRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     for (ColumnSchema cs : schema.columns) {
-      addFeild(cs.dataType, cs.name, output);
+      addFeild(cs.getSqlType(), cs.name, output);
     }
   }
 
   @SuppressWarnings("unchecked")
-  private void addFeild(byte dataType, String name, OutputMutator output) {
+  private void addFeild(SQLType dataType, String name, OutputMutator output) {
     TypeProtos.MinorType minorType = DrillIndexRTable.parseMinorType(dataType);
     TypeProtos.MajorType majorType = Types.required(minorType);
     MaterializedField field = MaterializedField.create(name, majorType);

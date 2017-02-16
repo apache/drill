@@ -25,9 +25,12 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.TimeStampVector;
+import org.apache.drill.exec.vector.TimeVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.slf4j.Logger;
@@ -50,6 +53,7 @@ import io.indexr.io.ByteSlice;
 import io.indexr.segment.ColumnSchema;
 import io.indexr.segment.ColumnType;
 import io.indexr.segment.RSValue;
+import io.indexr.segment.SQLType;
 import io.indexr.segment.Segment;
 import io.indexr.segment.SegmentSchema;
 import io.indexr.segment.helper.SegmentOpener;
@@ -100,7 +104,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             @Override
             public void accept(RCOperator op) {
               for (Attr attr : op.attr()) {
-                predicateColumns.add(attr.columnName());
+                predicateColumns.add(attr.name());
               }
             }
           });
@@ -215,7 +219,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
       long time2 = System.currentTimeMillis();
       getPackTime += time2 - time;
 
-      byte dataType = projectInfo.columnSchema.dataType;
+      SQLType sqlType = projectInfo.columnSchema.getSqlType();
       int count = dataPack.count();
       if (count == 0) {
         log.warn("segment[{}]: found empty pack, packId: [{}]", segment.name(), packId);
@@ -227,8 +231,8 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
       assert read == count;
 
       if (dataPack.version() == Version.VERSION_0_ID) {
-        switch (dataType) {
-          case ColumnType.INT: {
+        switch (sqlType) {
+          case INT: {
             IntVector.Mutator mutator = (IntVector.Mutator) projectInfo.valueVector.getMutator();
             // Force the vector to allocate engough space.
             mutator.setSafe(count - 1, 0);
@@ -240,7 +244,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             });
             break;
           }
-          case ColumnType.LONG: {
+          case BIGINT: {
             BigIntVector.Mutator mutator = (BigIntVector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
             dataPack.foreach(0, count, new LongSetter() {
@@ -251,7 +255,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             });
             break;
           }
-          case ColumnType.FLOAT: {
+          case FLOAT: {
             Float4Vector.Mutator mutator = (Float4Vector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
             dataPack.foreach(0, count, new FloatSetter() {
@@ -262,7 +266,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             });
             break;
           }
-          case ColumnType.DOUBLE: {
+          case DOUBLE: {
             Float8Vector.Mutator mutator = (Float8Vector.Mutator) projectInfo.valueVector.getMutator();
             mutator.setSafe(count - 1, 0);
             dataPack.foreach(0, count, new DoubleSetter() {
@@ -273,7 +277,40 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             });
             break;
           }
-          case ColumnType.STRING: {
+          case DATE: {
+            DateVector.Mutator mutator = (DateVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(0, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id, value);
+              }
+            });
+            break;
+          }
+          case TIME: {
+            TimeVector.Mutator mutator = (TimeVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(0, count, new IntSetter() {
+              @Override
+              public void set(int id, int value) {
+                mutator.set(id, value);
+              }
+            });
+            break;
+          }
+          case DATETIME: {
+            TimeStampVector.Mutator mutator = (TimeStampVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(0, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id, value);
+              }
+            });
+            break;
+          }
+          case VARCHAR: {
             ByteBuffer byteBuffer = MemoryUtil.getHollowDirectByteBuffer();
             VarCharVector.Mutator mutator = (VarCharVector.Mutator) projectInfo.valueVector.getMutator();
             dataPack.foreach(0, count,
@@ -288,12 +325,12 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
             break;
           }
           default:
-            throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.dataType));
+            throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.getSqlType()));
         }
       } else {
         // Start from v1, we directly copy the memory into vector, to avoid the traversing cost.
 
-        if (dataType == ColumnType.STRING) {
+        if (sqlType == SQLType.VARCHAR) {
           VarCharVector vector = (VarCharVector) projectInfo.valueVector;
           UInt4Vector offsetVector = vector.getOffsetVector();
 
@@ -318,27 +355,36 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
           BaseDataValueVector vector = (BaseDataValueVector) projectInfo.valueVector;
 
           // Expand the vector if needed.
-          switch (dataType) {
-            case ColumnType.INT:
+          switch (sqlType) {
+            case INT:
               ((IntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
               break;
-            case ColumnType.LONG:
+            case BIGINT:
               ((BigIntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
               break;
-            case ColumnType.FLOAT:
+            case FLOAT:
               ((Float4Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
               break;
-            case ColumnType.DOUBLE:
+            case DOUBLE:
               ((Float8Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
               break;
+            case DATE:
+              ((DateVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case TIME:
+              ((TimeVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case DATETIME:
+              ((TimeStampVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
             default:
-              throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.dataType));
+              throw new IllegalStateException(String.format("Unsupported data type %s", projectInfo.columnSchema.getSqlType()));
           }
 
           DrillBuf vectorBuffer = vector.getBuffer();
           ByteSlice packData = dataPack.data();
 
-          Preconditions.checkState((count << ColumnType.numTypeShift(dataType)) == packData.size(), "Illegal pack size");
+          Preconditions.checkState((count << ColumnType.numTypeShift(sqlType.dataType)) == packData.size(), "Illegal pack size");
           Preconditions.checkState(vectorBuffer.capacity() >= packData.size(), "Illegal drill vector buff capacity");
 
           MemoryUtil.copyMemory(packData.address(), vectorBuffer.memoryAddress(), packData.size());

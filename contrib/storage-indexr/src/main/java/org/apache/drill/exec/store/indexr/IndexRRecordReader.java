@@ -84,7 +84,7 @@ public abstract class IndexRRecordReader extends AbstractRecordReader {
 
   @SuppressWarnings("unchecked")
   private ProjectedColumnInfo genPCI(ColumnSchema columnSchema, OutputMutator output) {
-    TypeProtos.MinorType minorType = DrillIndexRTable.parseMinorType(columnSchema.dataType);
+    TypeProtos.MinorType minorType = DrillIndexRTable.parseMinorType(columnSchema.getSqlType());
     TypeProtos.MajorType majorType = Types.required(minorType);
     MaterializedField field = MaterializedField.create(columnSchema.name, majorType);
     final Class<? extends ValueVector> clazz = (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(minorType, majorType.getMode());

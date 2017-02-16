@@ -28,24 +28,15 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.physical.BroadcastExchangePrel;
 import org.apache.drill.exec.planner.physical.FilterPrel;
-import org.apache.drill.exec.planner.physical.HashAggPrel;
-import org.apache.drill.exec.planner.physical.HashJoinPrel;
-import org.apache.drill.exec.planner.physical.LimitPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
-import org.apache.drill.exec.planner.physical.ValuesPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.function.Predicate;
-
 import io.indexr.segment.rc.RCOperator;
-import io.indexr.util.Trick;
 
 public class IndexRPushDownRSFilter {
   private static final Logger log = LoggerFactory.getLogger(IndexRPushDownRSFilter.class);
@@ -116,54 +107,4 @@ public class IndexRPushDownRSFilter {
       setRSFilter(call, filter, project, scan, condition);
     }
   };
-
-  public static StoragePluginOptimizerRule HashJoinScan = new StoragePluginOptimizerRule(
-      RelOptHelper.some(HashJoinPrel.class,
-          RelOptHelper.some(ProjectPrel.class,
-              RelOptHelper.any(ScanPrel.class)),
-          RelOptHelper.some(BroadcastExchangePrel.class,
-              RelOptHelper.some(HashAggPrel.class,
-                  RelOptHelper.any(ValuesPrel.class))))
-
-      //RelOptHelper.some(HashJoinPrel.class,
-      //    RelOptHelper.some(ProjectPrel.class,
-      //        RelOptHelper.any(ScanPrel.class)),
-      //    RelOptHelper.some(HashAggPrel.class,
-      //        RelOptHelper.any(ValuesPrel.class)))
-      , "JoinFromIn") {
-    @Override
-    public void onMatch(RelOptRuleCall call) {
-      log.debug("=========onMatch JoinFromIn");
-      if (true) {
-        return;
-      }
-
-      LimitPrel hashJoin = (LimitPrel) call.rel(0);
-      ScanPrel scan = (ScanPrel) call.rel(1);
-      List<RelNode> children = hashJoin.getInputs();
-      BroadcastExchangePrel broadcastExchange = (BroadcastExchangePrel) Trick.find(
-          children,
-          new Predicate<RelNode>() {
-            @Override
-            public boolean test(RelNode node) {
-              return node instanceof BroadcastExchangePrel;
-            }
-          });
-      if (broadcastExchange == null) {
-        return;
-      }
-      if (!(broadcastExchange.getInput() instanceof HashAggPrel)) {
-        return;
-      }
-      HashAggPrel hashAgg = (HashAggPrel) broadcastExchange.getInput();
-      if (!(hashAgg.getInput() instanceof ValuesPrel)) {
-        return;
-      }
-      ValuesPrel values = (ValuesPrel) hashAgg.getInput();
-
-    }
-  };
-
-  //private static List<RelNode> fetchList
-
 }

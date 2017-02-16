@@ -37,7 +37,7 @@ public class TestIndexRPlugin extends BaseTestQuery {
     //    "from indexr.campaign where user_id in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19) and campaign_id > 10 " +
     //    "group by spot_id order by sum(cost) desc limit 10";
 
-    String sql = "select * from indexr.test where d1 like 'a_b%' and m4 = '-6162087.0' limit 10";
+    String sql = "select * from indexr.test where `date` = '2017-02-14' limit 10";
 
     //sql = "select * from indexr.test limit 100";
 

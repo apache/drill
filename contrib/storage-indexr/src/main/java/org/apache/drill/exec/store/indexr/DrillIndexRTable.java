@@ -34,6 +34,7 @@ import java.util.function.Predicate;
 
 import io.indexr.segment.ColumnSchema;
 import io.indexr.segment.ColumnType;
+import io.indexr.segment.SQLType;
 import io.indexr.segment.SegmentSchema;
 import io.indexr.server.HybridTable;
 import io.indexr.util.Pair;
@@ -52,22 +53,28 @@ public class DrillIndexRTable extends DynamicDrillTable {
     List<RelDataType> types = new ArrayList<>();
     for (ColumnSchema cs : schema.columns) {
       names.add(cs.name.toLowerCase());
-      types.add(parseDataType(typeFactory, cs.dataType));
+      types.add(parseDataType(typeFactory, cs.getSqlType()));
     }
     return typeFactory.createStructType(types, names);
   }
 
-  public static RelDataType parseDataType(RelDataTypeFactory typeFactory, byte type) {
+  public static RelDataType parseDataType(RelDataTypeFactory typeFactory, SQLType type) {
     switch (type) {
-      case ColumnType.INT:
+      case INT:
         return typeFactory.createSqlType(SqlTypeName.INTEGER);
-      case ColumnType.LONG:
+      case BIGINT:
         return typeFactory.createSqlType(SqlTypeName.BIGINT);
-      case ColumnType.FLOAT:
+      case FLOAT:
         return typeFactory.createSqlType(SqlTypeName.FLOAT);
-      case ColumnType.DOUBLE:
+      case DOUBLE:
         return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-      case ColumnType.STRING:
+      case DATE:
+        return typeFactory.createSqlType(SqlTypeName.DATE);
+      case TIME:
+        return typeFactory.createSqlType(SqlTypeName.TIME);
+      case DATETIME:
+        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+      case VARCHAR:
         return typeFactory.createTypeWithCharsetAndCollation(
             typeFactory.createSqlType(SqlTypeName.VARCHAR, ColumnType.MAX_STRING_UTF8_SIZE),
             Util.getDefaultCharset(),
@@ -78,18 +85,24 @@ public class DrillIndexRTable extends DynamicDrillTable {
     }
   }
 
-  public static MinorType parseMinorType(byte type) {
+  public static MinorType parseMinorType(SQLType type) {
     switch (type) {
-      case ColumnType.INT:
+      case INT:
         return MinorType.INT;
-      case ColumnType.LONG:
+      case BIGINT:
         return MinorType.BIGINT;
-      case ColumnType.FLOAT:
+      case FLOAT:
         return MinorType.FLOAT4;
-      case ColumnType.DOUBLE:
+      case DOUBLE:
         return MinorType.FLOAT8;
-      case ColumnType.STRING:
+      case VARCHAR:
         return MinorType.VARCHAR;
+      case DATE:
+        return MinorType.DATE;
+      case TIME:
+        return MinorType.TIME;
+      case DATETIME:
+        return MinorType.TIMESTAMP;
       default:
         throw new UnsupportedOperationException(String.format("Unsupported type [%s]", type));
     }
@@ -122,7 +135,7 @@ public class DrillIndexRTable extends DynamicDrillTable {
   public static Integer mapColumn(ColumnSchema columnSchema, SegmentSchema segmentSchema) {
     int index = 0;
     for (ColumnSchema cs : segmentSchema.columns) {
-      if (StringUtils.equalsIgnoreCase(cs.name, columnSchema.name) && cs.dataType == columnSchema.dataType) {
+      if (StringUtils.equalsIgnoreCase(cs.name, columnSchema.name) && cs.getSqlType() == columnSchema.getSqlType()) {
         return index;
       }
       index++;
@@ -131,7 +144,7 @@ public class DrillIndexRTable extends DynamicDrillTable {
   }
 
   public static double bytCostPerField(ColumnSchema cs, boolean isCompress) {
-    switch (cs.dataType) {
+    switch (cs.getDataType()) {
       case ColumnType.INT:
         return isCompress ? 4 : 4 * 0.2;
       case ColumnType.LONG:
@@ -143,7 +156,7 @@ public class DrillIndexRTable extends DynamicDrillTable {
       case ColumnType.STRING:
         return isCompress ? 100 : 100 * 0.75;
       default:
-        throw new UnsupportedOperationException(String.format("Unsupported type [%s]", cs.dataType));
+        throw new UnsupportedOperationException(String.format("Unsupported type [%s]", cs.getDataType()));
     }
   }
 
