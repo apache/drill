@@ -63,6 +63,11 @@ public class QueryBuilder {
 
   public class SummaryOnlyQueryEventListener implements UserResultsListener {
 
+    /**
+     * The future to be notified. Created here and returned by the
+     * query builder.
+     */
+
     private final QuerySummaryFuture future;
     private QueryId queryId;
     private int recordCount;
@@ -326,14 +331,13 @@ public class QueryBuilder {
    * @return the number of rows returned
    * @throws Exception if anything goes wrong with query execution
    */
+
   public long print() throws Exception {
     DrillConfig config = client.cluster().config( );
 
-    // Note: verbose check disabled until that change is
-    // committed.
 
-    boolean verbose = ! config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT) /* ||
-                      DrillTest.verbose() */;
+    boolean verbose = ! config.getBoolean(QueryTestUtil.TEST_QUERY_PRINTING_SILENT) ||
+                      DrillTest.verbose();
     if (verbose) {
       return print(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
     } else {

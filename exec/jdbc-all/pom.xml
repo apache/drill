@@ -314,6 +314,7 @@
               <exclude>org.mockito:mockito-core</exclude>
               <exclude>org.objenesis:objenesis</exclude>
               <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>commons-io:commons-io</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -431,7 +432,7 @@
          </filters>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -446,11 +447,11 @@
               <rules>
                 <requireFilesSize>
                   <message>
-                  
-                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range. 
-                  
+
+                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range.
+
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
-                  
+
                   </message>
                   <maxsize>21000000</maxsize>
                   <minsize>15000000</minsize>
