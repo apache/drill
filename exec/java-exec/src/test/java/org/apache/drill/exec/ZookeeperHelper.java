@@ -31,13 +31,21 @@ import org.apache.drill.exec.util.MiniZooKeeperCluster;
  *
  * <p>Tests that need a Zookeeper instance can initialize a static instance of this class in
  * their {@link org.junit.BeforeClass} section to set up Zookeeper.
+ * <p>
+ * Modified to also work in the {@link ClusterFixture} class. The "bare" use sets up a
+ * Drill config. The use in the cluster fixture delegates to the cluster fixture the task
+ * of setting up the Drill config. In the "bare" case, the port number comes from the
+ * Drill config. In the cluster fixture case, we let ZK choose the port and we learn
+ * what it is. As a result, the code is a bit more cluttered than if we could just use
+ * the class for one purpose.
  */
+
 public class ZookeeperHelper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperHelper.class);
 
   private final File testDir = new File("target/test-data");
   private final DrillConfig config;
-  private final String zkUrl;
+  private String zkUrl;
   private MiniZooKeeperCluster zkCluster;
 
   /**
@@ -65,10 +73,19 @@ public class ZookeeperHelper {
     config = DrillConfig.create(overrideProps);
     zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
 
-    if (!testDir.exists()) {
-      testDir.mkdirs();
-    }
+    testDir.mkdirs();
   }
+
+  /**
+   * Constructor for the cluster fixture case. Don't create a Drill config.
+   * Let ZK choose the port.
+   */
+
+  public ZookeeperHelper(String dummy) {
+    zkUrl = null;
+    config = null;
+    testDir.mkdirs();
+ }
 
   /**
    * Start the Zookeeper instance.
@@ -84,8 +101,13 @@ public class ZookeeperHelper {
 
     try {
       zkCluster = new MiniZooKeeperCluster();
-      zkCluster.setDefaultClientPort(Integer.parseInt(zkUrl.split(":")[1]));
+      if (zkUrl != null) {
+        zkCluster.setDefaultClientPort(Integer.parseInt(zkUrl.split(":")[1]));
+      }
       zkCluster.startup(testDir, numServers);
+      if (zkUrl == null) {
+        zkUrl = "localhost:" + zkCluster.getClientPort();
+      }
     } catch (IOException | InterruptedException e) {
       propagate(e);
     }
@@ -115,5 +137,9 @@ public class ZookeeperHelper {
    */
   public DrillConfig getConfig() {
     return config;
+  }
+
+  public String getConnectionString( ) {
+    return zkUrl;
   }
 }

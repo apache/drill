@@ -75,9 +75,8 @@ import org.apache.drill.exec.vector.ValueVector;
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  protected static final String TEMP_SCHEMA = "dfs_test.tmp";
+  public static final String TEMP_SCHEMA = "dfs_test.tmp";
 
-  private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
   private static final int MAX_WIDTH_PER_NODE = 2;
 
   @SuppressWarnings("serial")
@@ -182,11 +181,7 @@ public class BaseTestQuery extends ExecTest {
 
   private static void openClient() throws Exception {
     allocator = RootAllocatorFactory.newRoot(config);
-    if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
-      serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-    } else {
-      serviceSet = RemoteServiceSet.getLocalServiceSet();
-    }
+    serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
 

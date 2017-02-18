@@ -182,6 +182,7 @@ public class QueryTestUtil {
    * @param srOption the scalar replacement option value to use
    * @return the original scalar replacement option setting (so it can be restored)
    */
+  @SuppressWarnings("resource")
   public static OptionValue setupScalarReplacementOption(
       final Drillbit drillbit, final ClassTransformer.ScalarReplacementOption srOption) {
     // set the system option
@@ -208,7 +209,9 @@ public class QueryTestUtil {
    * @param srOption the scalar replacement option value to use
    */
   public static void restoreScalarReplacementOption(final Drillbit drillbit, final OptionValue srOption) {
+    @SuppressWarnings("resource")
     final DrillbitContext drillbitContext = drillbit.getContext();
+    @SuppressWarnings("resource")
     final OptionManager optionManager = drillbitContext.getOptionManager();
     optionManager.setOption(srOption);
 

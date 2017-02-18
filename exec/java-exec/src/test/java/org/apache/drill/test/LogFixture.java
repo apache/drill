@@ -48,7 +48,7 @@ import ch.qos.logback.core.ConsoleAppender;
  *   }
  * }</code></pre>
  *  <p>
- * You can &ndash; and should &ndash; combine the log fixtue with the
+ * You can &ndash; and should &ndash; combine the log fixture with the
  * cluster and client fixtures to have complete control over your test-time
  * Drill environment.
  */
@@ -194,7 +194,7 @@ public class LogFixture implements AutoCloseable {
   }
 
   private void setupConsole(LogFixtureBuilder builder) {
-    Logger drillLogger = (Logger)LoggerFactory.getLogger(DRILL_PACKAGE_NAME);
+    drillLogger = (Logger)LoggerFactory.getLogger(DRILL_PACKAGE_NAME);
     if (drillLogger.getAppender("STDOUT") != null) {
       return;
     }
