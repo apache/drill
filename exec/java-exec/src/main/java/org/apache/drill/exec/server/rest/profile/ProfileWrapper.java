@@ -31,6 +31,7 @@ import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -41,6 +42,8 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
  */
 public class ProfileWrapper {
+  private static final String ESTIMATED_LABEL = " (Estimated)";
+  private static final String UNKNOWN_END_OF_PLANNING = "Not Available";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
@@ -120,6 +123,28 @@ public class ProfileWrapper {
 
   public String getQueryId() {
     return id;
+  }
+
+  public String getPlanningDuration() {
+    if (profile.getStart() > profile.getPlanEnd()) {
+      //Don't estimate/calculate Planning if no fragments exist
+      if (profile.getFragmentProfileCount() == 0) {
+        return UNKNOWN_END_OF_PLANNING;
+      }
+      //Providing Invalid Planning End Time (Will update later)
+      long estimatedPlanEnd = Long.MAX_VALUE;
+      //Using Screen MajorFragment as reference
+      MajorFragmentProfile majorFrag0 = profile.getFragmentProfile(0);
+      //Searching for earliest starting fragment
+      for (MinorFragmentProfile fragmentWrapper : majorFrag0.getMinorFragmentProfileList()) {
+        long minorFragmentStart = fragmentWrapper.getStartTime();
+        if (minorFragmentStart > 0 && minorFragmentStart < estimatedPlanEnd) {
+          estimatedPlanEnd = minorFragmentStart;
+        }
+      }
+      return ProfileResources.getPrettyDuration(profile.getStart(), estimatedPlanEnd) + ESTIMATED_LABEL;
+    }
+    return ProfileResources.getPrettyDuration(profile.getStart(), profile.getPlanEnd());
   }
 
   public List<FragmentWrapper> getFragmentProfiles() {

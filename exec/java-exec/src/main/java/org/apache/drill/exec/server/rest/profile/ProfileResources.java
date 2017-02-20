@@ -77,12 +77,14 @@ public class ProfileResources {
    */
   public static String getPrettyDuration(long startTimeMillis, long endTimeMillis) {
     long durationInMillis = (startTimeMillis > endTimeMillis ? System.currentTimeMillis() : endTimeMillis) - startTimeMillis;
-    long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis);
+    long days = TimeUnit.MILLISECONDS.toDays(durationInMillis);
+    long hours = TimeUnit.MILLISECONDS.toHours(durationInMillis) - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(durationInMillis));
     long minutes = TimeUnit.MILLISECONDS.toMinutes(durationInMillis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(durationInMillis));
     long seconds = TimeUnit.MILLISECONDS.toSeconds(durationInMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationInMillis));
     long milliSeconds = durationInMillis - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(durationInMillis));
-    String formattedDuration = (hours > 0 ? hours + " hr " : "") +
-      ((minutes + hours) > 0 ? String.format("%02d min ", minutes) : "") +
+    String formattedDuration = (days > 0 ? days + " day " : "") +
+      ((hours + days) > 0 ? hours + " hr " : "") +
+      ((minutes + hours + days) > 0 ? String.format("%02d min ", minutes) : "") +
       seconds + "." + String.format("%03d sec", milliSeconds) ;
     return formattedDuration;
   }
