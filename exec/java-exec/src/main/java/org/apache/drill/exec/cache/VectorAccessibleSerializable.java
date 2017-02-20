@@ -57,6 +57,12 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   private BatchSchema.SelectionVectorMode svMode = BatchSchema.SelectionVectorMode.NONE;
   private SelectionVector2 sv2;
 
+  /**
+   * Disk I/O buffer used for all reads and writes of DrillBufs.
+   */
+
+  private byte buffer[] = new byte[32*1024];
+
   private boolean retain = false;
 
   public VectorAccessibleSerializable(BufferAllocator allocator) {
@@ -90,6 +96,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param input the InputStream to read from
    * @throws IOException
    */
+  @SuppressWarnings("resource")
   @Override
   public void readFromStream(InputStream input) throws IOException {
     final VectorContainer container = new VectorContainer();
@@ -112,7 +119,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       final DrillBuf buf = allocator.buffer(dataLength);
       final ValueVector vector;
       try {
-        buf.writeBytes(input, dataLength);
+        readBuf(buf, input, dataLength);
         vector = TypeHelper.getNewVector(field, allocator);
         vector.load(metaData, buf);
       } finally {
@@ -126,6 +133,26 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     va = container;
   }
 
+  /**
+   * Read the contents of a DrillBuf from a stream. Done this way, rather
+   * than calling the DrillBuf.writeBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   *
+   * @param buf the buffer to read with space already allocated
+   * @param input input stream from which to read data
+   * @param bufLength number of bytes to read
+   * @throws IOException if a read error occurs
+   */
+
+  private void readBuf(DrillBuf buf, InputStream input, int bufLength) throws IOException {
+    buf.clear();
+    for (int posn = 0; posn < bufLength; posn += buffer.length) {
+      int len = Math.min(buffer.length, bufLength - posn);
+      input.read(buffer, 0, len);
+      buf.writeBytes(buffer, 0, len);
+    }
+  }
+
   public void writeToStreamAndRetain(OutputStream output) throws IOException {
     retain = true;
     writeToStream(output);
@@ -136,6 +163,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param output the OutputStream to write to
    * @throws IOException
    */
+  @SuppressWarnings("resource")
   @Override
   public void writeToStream(OutputStream output) throws IOException {
     Preconditions.checkNotNull(output);
@@ -159,7 +187,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
 
       /* If we have a selection vector, dump it to file first */
       if (svBuf != null) {
-        svBuf.getBytes(0, output, svBuf.readableBytes());
+        writeBuf(svBuf, output);
         sv2.setBuffer(svBuf);
         svBuf.release(); // sv2 now owns the buffer
         sv2.setRecordCount(svCount);
@@ -168,8 +196,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       /* Dump the array of ByteBuf's associated with the value vectors */
       for (DrillBuf buf : incomingBuffers) {
                 /* dump the buffer into the OutputStream */
-        int bufLength = buf.readableBytes();
-        buf.getBytes(0, output, bufLength);
+        writeBuf(buf, output);
       }
 
       output.flush();
@@ -179,6 +206,25 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       throw new RuntimeException(e);
     } finally {
       clear();
+    }
+  }
+
+  /**
+   * Write the contents of a DrillBuf to a stream. Done this way, rather
+   * than calling the DrillBuf.getBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   *
+   * @param buf the Drillbuf to write
+   * @param output the output stream
+   * @throws IOException if a write error occurs
+   */
+
+  private void writeBuf(DrillBuf buf, OutputStream output) throws IOException {
+    int bufLength = buf.readableBytes();
+    for (int posn = 0; posn < bufLength; posn += buffer.length) {
+      int len = Math.min(buffer.length, bufLength - posn);
+      buf.getBytes(posn, buffer, 0, len);
+      output.write(buffer, 0, len);
     }
   }
 
