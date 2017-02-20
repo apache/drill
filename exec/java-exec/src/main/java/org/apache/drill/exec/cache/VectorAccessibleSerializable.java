@@ -90,6 +90,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param input the InputStream to read from
    * @throws IOException
    */
+  @SuppressWarnings("resource")
   @Override
   public void readFromStream(InputStream input) throws IOException {
     final VectorContainer container = new VectorContainer();
@@ -112,7 +113,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       final DrillBuf buf = allocator.buffer(dataLength);
       final ValueVector vector;
       try {
-        buf.writeBytes(input, dataLength);
+        allocator.read(buf, input, dataLength);
         vector = TypeHelper.getNewVector(field, allocator);
         vector.load(metaData, buf);
       } finally {
@@ -136,6 +137,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
    * @param output the OutputStream to write to
    * @throws IOException
    */
+  @SuppressWarnings("resource")
   @Override
   public void writeToStream(OutputStream output) throws IOException {
     Preconditions.checkNotNull(output);
@@ -159,7 +161,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
 
       /* If we have a selection vector, dump it to file first */
       if (svBuf != null) {
-        svBuf.getBytes(0, output, svBuf.readableBytes());
+        allocator.write(svBuf, output);
         sv2.setBuffer(svBuf);
         svBuf.release(); // sv2 now owns the buffer
         sv2.setRecordCount(svCount);
@@ -168,8 +170,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       /* Dump the array of ByteBuf's associated with the value vectors */
       for (DrillBuf buf : incomingBuffers) {
                 /* dump the buffer into the OutputStream */
-        int bufLength = buf.readableBytes();
-        buf.getBytes(0, output, bufLength);
+        allocator.write(buf, output);
       }
 
       output.flush();

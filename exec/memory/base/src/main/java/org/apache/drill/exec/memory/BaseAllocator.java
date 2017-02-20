@@ -21,6 +21,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -788,5 +791,39 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static boolean isDebug() {
     return DEBUG;
+  }
+
+  /**
+   * Disk I/O buffer used for all reads and writes of DrillBufs.
+   */
+
+  private byte ioBuffer[];
+
+  public byte[] getIOBuffer() {
+    if (ioBuffer == null) {
+      ioBuffer = new byte[32*1024];
+    }
+    return ioBuffer;
+  }
+
+  public void read(DrillBuf buf, InputStream in, int length) throws IOException {
+    buf.clear();
+
+    byte[] buffer = getIOBuffer();
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
+      in.read(buffer, 0, len);
+      buf.writeBytes(buffer, 0, len);
+    }
+  }
+
+  public void write(DrillBuf buf, OutputStream out) throws IOException {
+    byte[] buffer = getIOBuffer();
+    int bufLength = buf.readableBytes();
+    for (int posn = 0; posn < bufLength; posn += buffer.length) {
+      int len = Math.min(buffer.length, bufLength - posn);
+      buf.getBytes(posn, buffer, 0, len);
+      out.write(buffer, 0, len);
+    }
   }
 }
