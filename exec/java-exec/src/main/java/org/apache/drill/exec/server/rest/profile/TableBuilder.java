@@ -21,20 +21,11 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 class TableBuilder {
   private final NumberFormat format = NumberFormat.getInstance(Locale.US);
-  private final SimpleDateFormat days = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat sdays = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat hours = new SimpleDateFormat("HH'h'mm'm'");
-  private final SimpleDateFormat shours = new SimpleDateFormat("H'h'mm'm'");
-  private final SimpleDateFormat mins = new SimpleDateFormat("mm'm'ss's'");
-  private final SimpleDateFormat smins = new SimpleDateFormat("m'm'ss's'");
-
-  private final SimpleDateFormat secs = new SimpleDateFormat("ss.SSS's'");
-  private final SimpleDateFormat ssecs = new SimpleDateFormat("s.SSS's'");
   private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
   private final DecimalFormat dec = new DecimalFormat("0.00");
   private final DecimalFormat intformat = new DecimalFormat("#,###");
@@ -78,29 +69,22 @@ class TableBuilder {
   }
 
   public void appendMillis(final long p, final String link) {
-    final double secs = p/1000.0;
-    final double mins = secs/60;
-    final double hours = mins/60;
-    final double days = hours / 24;
-    SimpleDateFormat timeFormat = null;
-    if (days >= 10) {
-      timeFormat = this.days;
-    } else if (days >= 1) {
-      timeFormat = this.sdays;
-    } else if (hours >= 10) {
-      timeFormat = this.hours;
-    }else if(hours >= 1){
-      timeFormat = this.shours;
-    }else if (mins >= 10){
-      timeFormat = this.mins;
-    }else if (mins >= 1){
-      timeFormat = this.smins;
-    }else if (secs >= 10){
-      timeFormat = this.secs;
-    }else {
-      timeFormat = this.ssecs;
+    long days = TimeUnit.MILLISECONDS.toDays(p);
+    long hours = TimeUnit.MILLISECONDS.toHours(p) - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(p));
+    long minutes = TimeUnit.MILLISECONDS.toMinutes(p) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(p));
+    long seconds = TimeUnit.MILLISECONDS.toSeconds(p) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(p));
+    long milliSeconds = p - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(p));
+    String formattedDuration = "";
+    if (days >= 1) {
+      formattedDuration = days + "d" + hours + "h" + minutes + "m";
+    } else if (hours >= 1) {
+      formattedDuration = hours + "h" + minutes + "m";
+    } else if (minutes >= 1) {
+      formattedDuration = minutes + "m" + seconds + "s";
+    } else {
+      formattedDuration = seconds + "." + milliSeconds + "s";
     }
-    appendCell(timeFormat.format(new Date(p)), null);
+    appendCell(formattedDuration, null);
   }
 
   public void appendNanos(final long p, final String link) {
