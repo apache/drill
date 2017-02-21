@@ -31,12 +31,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -60,8 +63,6 @@ import com.google.common.collect.Lists;
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class ProfileResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
-
-  public final static int MAX_PROFILES = 100;
 
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
@@ -171,10 +172,13 @@ public class ProfileResources {
     public List<String> getErrors() { return errors; }
   }
 
+  //max Param to cap listing of profiles
+  private static final String MAX_QPROFILES_PARAM = "max";
+
   @GET
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public QProfiles getProfilesJSON() {
+  public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
     try {
       final PersistentStore<QueryProfile> completed = getProvider().getOrCreateStore(QueryManager.QUERY_PROFILE);
       final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
@@ -201,7 +205,15 @@ public class ProfileResources {
 
       final List<ProfileInfo> finishedQueries = Lists.newArrayList();
 
-      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, MAX_PROFILES);
+      //Defining #Profiles to load
+      int maxProfilesToLoad = work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
+      String maxProfilesParams = uriInfo.getQueryParameters().getFirst(MAX_QPROFILES_PARAM);
+      if (maxProfilesParams != null && !maxProfilesParams.isEmpty()) {
+        maxProfilesToLoad = Integer.valueOf(maxProfilesParams);
+      }
+
+      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
+
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
@@ -226,8 +238,8 @@ public class ProfileResources {
   @GET
   @Path("/profiles")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfiles() {
-    QProfiles profiles = getProfilesJSON();
+  public Viewable getProfiles(@Context UriInfo uriInfo) {
+    QProfiles profiles = getProfilesJSON(uriInfo);
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
   }
 
