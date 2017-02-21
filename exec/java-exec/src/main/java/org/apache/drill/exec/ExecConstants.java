@@ -413,4 +413,13 @@ public interface ExecConstants {
 
   String DYNAMIC_UDF_SUPPORT_ENABLED = "exec.udf.enable_dynamic_support";
   BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED, true, true);
+
+  // Experimental enhanced default selectivity reduction factor
+  // calculations.
+
+  String OPTIMIZER_ENHANCED_DEFAULTS = "drill.exec.optimizer.enhanced_defaults";
+  String OPTIMIZER_ENHANCED_DEFAULTS_ENABLE = OPTIMIZER_ENHANCED_DEFAULTS + ".enable";
+  String OPTIMIZER_ENHANCED_DEFAULTS_PROB_EQ = OPTIMIZER_ENHANCED_DEFAULTS + ".prob_eq";
+  String OPTIMIZER_ENHANCED_DEFAULTS_PROB_NULL = OPTIMIZER_ENHANCED_DEFAULTS + ".prob_null";
+  String OPTIMIZER_ENHANCED_DEFAULTS_PROB_LIKE = OPTIMIZER_ENHANCED_DEFAULTS + ".prob_like";
 }

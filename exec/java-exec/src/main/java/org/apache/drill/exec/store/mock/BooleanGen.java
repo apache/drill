@@ -14,21 +14,29 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package org.apache.drill.exec.planner.cost;
+ */
+package org.apache.drill.exec.store.mock;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
-import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
-import org.apache.calcite.rel.metadata.RelMetadataProvider;
+import java.util.Random;
 
-public class DrillDefaultRelMetadataProvider {
-  private DrillDefaultRelMetadataProvider() {
+import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.exec.vector.ValueVector;
+
+public class BooleanGen implements FieldGen {
+
+  Random rand = new Random( );
+
+  @Override
+  public void setup(ColumnDef colDef) { }
+
+  public int value( ) {
+    return rand.nextBoolean() ? 1 : 0;
   }
 
-  public static final RelMetadataProvider INSTANCE = ChainedRelMetadataProvider.of(ImmutableList
-      .of(DrillRelMdRowCount.SOURCE,
-          DrillRelMdDistinctRowCount.SOURCE,
-          DrillRelDefaultMdSelectivity.SOURCE,
-          new DefaultRelMetadataProvider()));
+  @Override
+  public void setValue( ValueVector v, int index ) {
+    BitVector vector = (BitVector) v;
+    vector.getMutator().set(index, value());
+  }
+
 }

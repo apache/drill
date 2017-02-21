@@ -28,11 +28,14 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -75,6 +78,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
    */
 
   private boolean extended;
+  private ScanStats scanStats = ScanStats.TRIVIAL_TABLE;
 
   @JsonCreator
   public MockGroupScanPOP(@JsonProperty("url") String url,
@@ -84,11 +88,38 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     this.readEntries = readEntries;
     this.url = url;
     this.extended = extended == null ? false : extended;
+
+    int rowCount = 0;
+    int rowWidth = 0;
+    for (MockScanEntry entry : readEntries) {
+      rowCount += entry.getRecords();
+      int width = 0;
+      if (entry.getTypes() == null ) {
+        width = 50;
+      } else {
+        for (MockColumn col : entry.getTypes()) {
+          int colWidth = 0;
+          if ( col.getWidth() == 0 ) {
+            colWidth = TypeHelper.getSize(col.getMajorType());
+          } else {
+            colWidth = col.getWidth();
+          }
+          colWidth *= col.getRepeatCount();
+          width += colWidth;
+        }
+      }
+      rowWidth = Math.max(rowWidth, width);
+    }
+    int dataSize = rowCount * rowWidth;
+    scanStats = new ScanStats( GroupScanProperty.EXACT_ROW_COUNT,
+        rowCount,
+        DrillCostBase.BASE_CPU_COST * dataSize,
+        DrillCostBase.BYTE_DISK_READ_COST * dataSize);
   }
 
   @Override
   public ScanStats getScanStats() {
-    return ScanStats.TRIVIAL_TABLE;
+    return scanStats;
   }
 
   public String getUrl() {
@@ -304,7 +335,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       throw new IllegalArgumentException("No columns for mock scan");
     }
     List<MockColumn> mockCols = new ArrayList<>();
-    Pattern p = Pattern.compile("(\\w+)_([isd])(\\d*)");
+    Pattern p = Pattern.compile("(\\w+)_([isdb])(\\d*)");
     for (SchemaPath path : columns) {
       String col = path.getLastSegment().getNameSegment().getPath();
       if (col.equals("*")) {
@@ -333,6 +364,9 @@ public class MockGroupScanPOP extends AbstractGroupScan {
         break;
       case "d":
         minorType = MinorType.FLOAT8;
+        break;
+      case "b":
+        minorType = MinorType.BIT;
         break;
       default:
         throw new IllegalArgumentException(
