@@ -57,7 +57,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
   private static final OutboundRpcMessage PONG = new OutboundRpcMessage(RpcMode.PONG, 0, 0, Acks.OK);
-  private static final boolean ENABLE_SEPARATE_THREADS = "true".equals(System.getProperty("drill.enable_rpc_offload"));
+  private static final boolean DISABLE_SEPARATE_THREADS = "false".equals(System.getProperty("drill.enable_rpc_offload"));
 
   protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
 
@@ -255,7 +255,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       super();
       Preconditions.checkNotNull(connection);
       this.connection = connection;
-      final Executor underlyingExecutor = ENABLE_SEPARATE_THREADS ? rpcConfig.getExecutor() : new SameExecutor();
+      final Executor underlyingExecutor = DISABLE_SEPARATE_THREADS ? new SameExecutor() : rpcConfig.getExecutor();
       this.exec = new RpcEventHandler(underlyingExecutor);
     }
 
