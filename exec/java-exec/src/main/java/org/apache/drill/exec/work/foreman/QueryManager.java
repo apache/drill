@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
@@ -108,6 +109,9 @@ public class QueryManager implements AutoCloseable {
 
   // How many fragments have finished their execution.
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
+
+  // Is the query saved in transient store
+  private boolean inTransientStore;
 
   public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
       final ClusterCoordinator coordinator, final Foreman foreman) {
@@ -282,13 +286,21 @@ public class QueryManager implements AutoCloseable {
     }
   }
 
-  QueryState updateEphemeralState(final QueryState queryState) {
-    switch (queryState) {
+  void updateEphemeralState(final QueryState queryState) {
+      // If query is already in zk transient store, ignore the transient state update option.
+      // Else, they will not be removed from transient store upon completion.
+      if (!inTransientStore &&
+          !foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE)) {
+        return;
+      }
+
+      switch (queryState) {
       case ENQUEUED:
       case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
         transientProfiles.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        inTransientStore = true;
         break;
 
       case COMPLETED:
@@ -296,17 +308,15 @@ public class QueryManager implements AutoCloseable {
       case FAILED:
         try {
           transientProfiles.remove(stringQueryId);
+          inTransientStore = false;
         } catch(final Exception e) {
           logger.warn("Failure while trying to delete the estore profile for this query.", e);
         }
-
         break;
 
       default:
         throw new IllegalStateException("unrecognized queryState " + queryState);
     }
-
-    return queryState;
   }
 
   void writeFinalProfile(UserException ex) {
