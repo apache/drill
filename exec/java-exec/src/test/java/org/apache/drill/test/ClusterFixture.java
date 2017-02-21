@@ -129,11 +129,18 @@ public class ClusterFixture implements AutoCloseable {
   private boolean ownsZK;
   private ZookeeperHelper zkHelper;
   private RemoteServiceSet serviceSet;
-  private String dfsTestTmpSchemaLocation;
+  private File dfsTestTempDir;
   protected List<ClientFixture> clients = new ArrayList<>();
   private boolean usesZk;
   private boolean preserveLocalFiles;
   private boolean isLocal;
+
+  /**
+   * Temporary directories created for this test cluster.
+   * Each is removed when closing the cluster.
+   */
+
+  private List<File> tempDirs = new ArrayList<>();
 
   ClusterFixture(FixtureBuilder builder) {
 
@@ -237,7 +244,7 @@ public class ClusterFixture implements AutoCloseable {
 //    new File(logDir).mkdirs();
 //    System.setProperty("drill.log-dir", logDir);
 
-     dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
+    dfsTestTempDir = makeTempDir("dfs-test");
 
     // Clean up any files that may have been left from the
     // last run.
@@ -287,7 +294,7 @@ public class ClusterFixture implements AutoCloseable {
 
     @SuppressWarnings("resource")
     final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
-    TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTmpSchemaLocation);
+    TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTempDir.getAbsolutePath());
     TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
 
     // Create the mock data plugin
@@ -333,6 +340,7 @@ public class ClusterFixture implements AutoCloseable {
   public RemoteServiceSet serviceSet() { return serviceSet; }
   public BufferAllocator allocator() { return allocator; }
   public DrillConfig config() { return config; }
+  public File getDfsTestTmpDir() { return dfsTestTempDir; }
 
   public ClientFixture.ClientBuilder clientBuilder() {
     return new ClientFixture.ClientBuilder(this);
@@ -404,6 +412,13 @@ public class ClusterFixture implements AutoCloseable {
         }
     }
 
+    // Remove temporary directories created for this cluster session.
+
+    try {
+      removeTempDirs();
+    } catch (Exception e) {
+      ex = ex == null ? e : ex;
+    }
   }
 
   /**
@@ -440,6 +455,27 @@ public class ClusterFixture implements AutoCloseable {
     }
   }
 
+  private void removeTempDirs() throws IOException {
+    IOException ex = null;
+    for (File dir : tempDirs) {
+      try {
+        removeDir(dir);
+      } catch (IOException e) {
+        ex = ex == null ? e : ex;
+      }
+    }
+    if (ex != null) {
+      throw ex;
+    }
+  }
+
+  public void removeDir(File dir) throws IOException {
+    if (! dir.exists()) {
+      return;
+    }
+    FileUtils.deleteDirectory(dir);
+  }
+
   /**
    * Close a resource, suppressing the exception, and keeping
    * only the first exception that may occur. We assume that only
@@ -469,13 +505,19 @@ public class ClusterFixture implements AutoCloseable {
    * @param schemaName name of the new schema
    * @param path directory location (usually local)
    * @param defaultFormat default format for files in the schema
-   * @throws ExecutionSetupException if something goes wrong
    */
 
   public void defineWorkspace(String pluginName, String schemaName, String path,
-      String defaultFormat) throws ExecutionSetupException {
+      String defaultFormat) {
     for (Drillbit bit : drillbits()) {
-      defineWorkspace(bit, pluginName, schemaName, path, defaultFormat);
+      try {
+        defineWorkspace(bit, pluginName, schemaName, path, defaultFormat);
+      } catch (ExecutionSetupException e) {
+        // This functionality is supposed to work in tests. Change
+        // exception to unchecked to make test code simpler.
+
+        throw new IllegalStateException(e);
+      }
     }
   }
 
@@ -644,6 +686,38 @@ public class ClusterFixture implements AutoCloseable {
     File tempDir = new File(dir, dirName);
     tempDir.mkdirs();
     return tempDir;
+  }
+
+  /**
+   * Create a temporary directory which will be removed when the
+   * cluster closes.
+   *
+   * @param dirName the name of the leaf directory
+   * @return the path to the temporary directory which is usually
+   * under the temporary directory structure for this machine
+   */
+
+  public File makeTempDir(final String dirName) {
+    File dir = getTempDir(dirName);
+    tempDirs.add(dir);
+    return dir;
+  }
+
+  /**
+   * Create a temporary data directory which will be removed when the
+   * cluster closes, and register it as a "dfs" name space.
+   *
+   * @param key the name to use for the directory and the name space.
+   * Access the directory as "dfs.<key>".
+   * @param defaultFormat default storage format for the workspace
+   * @return location of the directory which can be used to create
+   * temporary input files
+   */
+
+  public File makeDataDir(String key, String defaultFormat) {
+    File dir = makeTempDir(key);
+    defineWorkspace("dfs", key, dir.getAbsolutePath(), defaultFormat);
+    return dir;
   }
 
   public File getDrillTempDir() {
