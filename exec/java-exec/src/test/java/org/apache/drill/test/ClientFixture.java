@@ -29,6 +29,8 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.testing.Controls;
+import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.apache.drill.test.ClusterFixture.FixtureTestServices;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 
@@ -98,12 +100,12 @@ public class ClientFixture implements AutoCloseable {
    * @throws RpcException
    */
 
-  public void alterSession(String key, Object value ) throws Exception {
+  public void alterSession(String key, Object value ) {
     String sql = "ALTER SESSION SET `" + key + "` = " + ClusterFixture.stringify( value );
     runSqlSilently( sql );
   }
 
-  public void alterSystem(String key, Object value ) throws Exception {
+  public void alterSystem(String key, Object value ) {
     String sql = "ALTER SYSTEM SET `" + key + "` = " + ClusterFixture.stringify( value );
     runSqlSilently( sql );
   }
@@ -115,8 +117,14 @@ public class ClientFixture implements AutoCloseable {
    * @throws RpcException
    */
 
-  public void runSqlSilently(String sql) throws Exception {
-    queryBuilder().sql(sql).run();
+  public void runSqlSilently(String sql) {
+    try {
+      queryBuilder().sql(sql).run();
+    } catch (Exception e) {
+      // Should not fail during tests. Convert exception to unchecked
+      // to simplify test code.
+      new IllegalStateException(e);
+    }
   }
 
   public QueryBuilder queryBuilder() {
@@ -193,4 +201,18 @@ public class ClientFixture implements AutoCloseable {
     return new ProfileParser(file);
   }
 
+  /**
+   * Set a set of injection controls that apply <b>on the next query
+   * only</b>. That query should be your target query, but may
+   * accidentally be an ALTER SESSION, EXPLAIN, etc. So, call this just
+   * before the SELECT statement.
+   *
+   * @param controls the controls string created by
+   * {@link Controls#newBuilder()} builder.
+   */
+
+  public void setControls(String controls) {
+    ControlsInjectionUtil.validateControlsString(controls);
+    alterSession(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, controls);
+  }
 }
