@@ -31,6 +31,7 @@ import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -41,6 +42,8 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
  */
 public class ProfileWrapper {
+  private static final String ESTIMATED_LABEL = " (Estimated)";
+  private static final String NOT_AVAILABLE_LABEL = "Not Available";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
@@ -120,6 +123,89 @@ public class ProfileWrapper {
 
   public String getQueryId() {
     return id;
+  }
+
+  public String getPlanningDuration() {
+    //Check if Planning End is known
+    if (profile.getPlanEnd() > 0L) {
+      return (new SimpleDurationFormat(profile.getStart(), profile.getPlanEnd())).verbose();
+    }
+
+    //Check if any fragments have started
+    if (profile.getFragmentProfileCount() > 0) {
+      //Init Planning End Time
+      long estimatedPlanEnd = Long.MAX_VALUE;
+      //Using Screen MajorFragment as reference
+      MajorFragmentProfile majorFrag0 = profile.getFragmentProfile(0);
+      //Searching for earliest starting fragment
+      for (MinorFragmentProfile fragmentWrapper : majorFrag0.getMinorFragmentProfileList()) {
+        long minorFragmentStart = fragmentWrapper.getStartTime();
+        if (minorFragmentStart > 0 && minorFragmentStart < estimatedPlanEnd) {
+          estimatedPlanEnd = minorFragmentStart;
+        }
+      }
+      //Provide estimated plan time
+      return (new SimpleDurationFormat(profile.getStart(), estimatedPlanEnd)).verbose() + ESTIMATED_LABEL;
+    }
+
+    //Unable to  estimate/calculate Specific Time spent in Planning
+    return NOT_AVAILABLE_LABEL;
+  }
+
+  public String getQueuedDuration() {
+    //Check if State is ENQUEUED
+    if (profile.getState() == QueryState.ENQUEUED) {
+      return (new SimpleDurationFormat(profile.getPlanEnd(), System.currentTimeMillis())).verbose();
+    }
+
+    //Check if Queue Wait End is known
+    if (profile.getQueueWaitEnd() > 0L) {
+      return (new SimpleDurationFormat(profile.getPlanEnd(), profile.getQueueWaitEnd())).verbose();
+    }
+
+    //Unable to  estimate/calculate Specific Time spent in Queue
+    return NOT_AVAILABLE_LABEL;
+  }
+
+  public String getExecutionDuration() {
+    //Check if State is STARTING or RUNNING
+    if (profile.getState() == QueryState.STARTING ||
+        profile.getState() == QueryState.ENQUEUED ||
+        profile.getState() == QueryState.RUNNING) {
+      return NOT_AVAILABLE_LABEL;
+    }
+
+    //Check if QueueEnd is known
+    if (profile.getQueueWaitEnd() > 0L) {
+      //Execution time [end(QueueWait) - endTime(Query)]
+      return (new SimpleDurationFormat(profile.getQueueWaitEnd(), profile.getEnd())).verbose();
+    }
+
+    //Check if Plan End is known
+    if (profile.getPlanEnd() > 0L) {
+      //Execution time [end(Planning) - endTime(Query)]
+      return (new SimpleDurationFormat(profile.getPlanEnd(), profile.getEnd())).verbose();
+    }
+
+    //Check if any fragments have started
+    if (profile.getFragmentProfileCount() > 0) {
+      //Providing Invalid Planning End Time (Will update later)
+      long estimatedPlanEnd = Long.MAX_VALUE;
+      //Using Screen MajorFragment as reference
+      MajorFragmentProfile majorFrag0 = profile.getFragmentProfile(0);
+      //Searching for earliest starting fragment
+      for (MinorFragmentProfile fragmentWrapper : majorFrag0.getMinorFragmentProfileList()) {
+        long minorFragmentStart = fragmentWrapper.getStartTime();
+        if (minorFragmentStart > 0 && minorFragmentStart < estimatedPlanEnd) {
+          estimatedPlanEnd = minorFragmentStart;
+        }
+      }
+      //Execution time [start(rootFragment) - endTime(Query)]
+      return (new SimpleDurationFormat(estimatedPlanEnd, profile.getEnd())).verbose() + ESTIMATED_LABEL;
+    }
+
+    //Unable to  estimate/calculate Specific Execution Time
+    return NOT_AVAILABLE_LABEL;
   }
 
   public List<FragmentWrapper> getFragmentProfiles() {
