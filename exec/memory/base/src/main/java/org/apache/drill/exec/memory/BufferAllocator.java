@@ -20,6 +20,10 @@ package org.apache.drill.exec.memory;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.BufferManager;
 
@@ -151,4 +155,29 @@ public interface BufferAllocator extends AutoCloseable {
    * a no-op.
    */
   public void assertOpen();
+
+  /**
+   * Write the contents of a DrillBuf to a stream. Use this method, rather
+   * than calling the DrillBuf.getBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   *
+   * @param buf the Drillbuf to write
+   * @param output the output stream
+   * @throws IOException if a write error occurs
+   */
+
+  public void write(DrillBuf buf, OutputStream out) throws IOException;
+
+  /**
+   * Read the contents of a DrillBuf from a stream. Use this method, rather
+   * than calling the DrillBuf.writeBytes() method, because this method
+   * avoids repeated heap allocation for the intermediate heap buffer.
+   *
+   * @param buf the buffer to read with space already allocated
+   * @param input input stream from which to read data
+   * @param bufLength number of bytes to read
+   * @throws IOException if a read error occurs
+   */
+
+  public void read(DrillBuf buf, InputStream in, int length) throws IOException;
 }
