@@ -33,6 +33,7 @@ import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -62,6 +63,7 @@ public class DrillbitContext implements AutoCloseable {
   private final CodeCompiler compiler;
   private final ScanResult classpathScan;
   private final LogicalPlanPersistence lpPersistence;
+  private final DrillOperatorTable table;
 
 
   public DrillbitContext(
@@ -91,6 +93,7 @@ public class DrillbitContext implements AutoCloseable {
     this.systemOptions = new SystemOptionManager(lpPersistence, provider);
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig(), classpathScan, systemOptions);
     this.compiler = new CodeCompiler(context.getConfig(), systemOptions);
+    this.table = new DrillOperatorTable(functionRegistry, systemOptions);
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -188,6 +191,10 @@ public class DrillbitContext implements AutoCloseable {
   }
 
   public RemoteFunctionRegistry getRemoteFunctionRegistry() { return functionRegistry.getRemoteFunctionRegistry(); }
+
+  public DrillOperatorTable getOperatorTable() {
+    return table;
+  }
 
   @Override
   public void close() throws Exception {
