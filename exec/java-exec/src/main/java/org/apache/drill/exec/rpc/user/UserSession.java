@@ -259,6 +259,7 @@ public class UserSession implements Closeable {
 
   /**
    * Creates and adds session temporary location if absent using schema configuration.
+   * Before any actions, checks if passed table schema is valid default temporary workspace.
    * Generates temporary table name and stores it's original name as key
    * and generated name as value in  session temporary tables cache.
    * Original temporary name is converted to lower case to achieve case-insensitivity.
@@ -268,14 +269,15 @@ public class UserSession implements Closeable {
    *
    * @param schema table schema
    * @param tableName original table name
+   * @param config drill config
    * @return generated temporary table name
    * @throws IOException if error during session temporary location creation
    */
-  public String registerTemporaryTable(AbstractSchema schema, String tableName) throws IOException {
-      addTemporaryLocation((WorkspaceSchemaFactory.WorkspaceSchema) schema);
-      String temporaryTableName = new Path(sessionId, UUID.randomUUID().toString()).toUri().getPath();
-      String oldTemporaryTableName = temporaryTables.putIfAbsent(tableName.toLowerCase(), temporaryTableName);
-      return oldTemporaryTableName == null ? temporaryTableName : oldTemporaryTableName;
+  public String registerTemporaryTable(AbstractSchema schema, String tableName, DrillConfig config) throws IOException {
+    addTemporaryLocation(SchemaUtilites.resolveToValidTemporaryWorkspace(schema, config));
+    String temporaryTableName = new Path(sessionId, UUID.randomUUID().toString()).toUri().getPath();
+    String oldTemporaryTableName = temporaryTables.putIfAbsent(tableName.toLowerCase(), temporaryTableName);
+    return oldTemporaryTableName == null ? temporaryTableName : oldTemporaryTableName;
   }
 
   /**
@@ -305,7 +307,7 @@ public class UserSession implements Closeable {
    * @return true if temporary table exists in schema, false otherwise
    */
   public boolean isTemporaryTable(AbstractSchema drillSchema, DrillConfig config, String tableName) {
-    if (!SchemaUtilites.isTemporaryWorkspace(drillSchema.getFullSchemaName(), config)) {
+    if (drillSchema == null || !SchemaUtilites.isTemporaryWorkspace(drillSchema.getFullSchemaName(), config)) {
       return false;
     }
     String temporaryTableName = resolveTemporaryTableName(tableName);
@@ -321,15 +323,18 @@ public class UserSession implements Closeable {
   /**
    * Removes temporary table name from the list of session temporary tables.
    * Original temporary name is converted to lower case to achieve case-insensitivity.
+   * Before temporary table drop, checks if passed table schema is valid default temporary workspace.
    *
+   * @param schema table schema
    * @param tableName original table name
+   * @param config drill config
    */
-  public void removeTemporaryTable(AbstractSchema drillSchema, String tableName) {
+  public void removeTemporaryTable(AbstractSchema schema, String tableName, DrillConfig config) {
     String temporaryTable = resolveTemporaryTableName(tableName);
     if (temporaryTable == null) {
       return;
     }
-    SqlHandlerUtil.dropTableFromSchema(drillSchema, temporaryTable);
+    SqlHandlerUtil.dropTableFromSchema(SchemaUtilites.resolveToValidTemporaryWorkspace(schema, config), temporaryTable);
     temporaryTables.remove(tableName.toLowerCase());
   }
 

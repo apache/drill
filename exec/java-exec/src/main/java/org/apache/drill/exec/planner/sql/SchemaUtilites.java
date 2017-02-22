@@ -21,9 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -70,10 +68,9 @@ public class SchemaUtilites {
   /**
    * Same utility as {@link #findSchema(SchemaPlus, List)} except the search schema path given here is complete path
    * instead of list. Use "." separator to divided the schema into nested schema names.
-   * @param defaultSchema
-   * @param schemaPath
-   * @return
-   * @throws ValidationException
+   * @param defaultSchema default schema
+   * @param schemaPath current schema path
+   * @return found schema path
    */
   public static SchemaPlus findSchema(final SchemaPlus defaultSchema, final String schemaPath) {
     final List<String> schemaPathAsList = Lists.newArrayList(schemaPath.split("\\."));
@@ -92,9 +89,8 @@ public class SchemaUtilites {
   }
 
   /**
-   * Returns true if the given <i>schema</i> is root schema. False otherwise.
-   * @param schema
-   * @return
+   * @param schema current schema
+   * @return true if the given <i>schema</i> is root schema. False otherwise.
    */
   public static boolean isRootSchema(SchemaPlus schema) {
     return schema.getParentSchema() == null;
@@ -128,7 +124,7 @@ public class SchemaUtilites {
   /** Utility method to get the schema path as list for given schema instance. */
   public static List<String> getSchemaPathAsList(SchemaPlus schema) {
     if (isRootSchema(schema)) {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
 
     List<String> path = Lists.newArrayListWithCapacity(5);
@@ -156,12 +152,13 @@ public class SchemaUtilites {
   /**
    * Given reference to default schema in schema tree, search for schema with given <i>schemaPath</i>. Once a schema is
    * found resolve it into a mutable <i>AbstractDrillSchema</i> instance. A {@link UserException} is throws when:
-   *   1. No schema for given <i>schemaPath</i> is found,
-   *   2. Schema found for given <i>schemaPath</i> is a root schema
-   *   3. Resolved schema is not a mutable schema.
-   * @param defaultSchema
-   * @param schemaPath
-   * @return
+   *   <li>No schema for given <i>schemaPath</i> is found.</li>
+   *   <li>Schema found for given <i>schemaPath</i> is a root schema.</li>
+   *   <li>Resolved schema is not a mutable schema.</li>
+   *
+   * @param defaultSchema default schema
+   * @param schemaPath current schema path
+   * @return mutable schema, exception otherwise
    */
   public static AbstractSchema resolveToMutableDrillSchema(final SchemaPlus defaultSchema, List<String> schemaPath) {
     final SchemaPlus schema = findSchema(defaultSchema, schemaPath);
@@ -171,7 +168,7 @@ public class SchemaUtilites {
     }
 
     if (isRootSchema(schema)) {
-      throw UserException.parseError()
+      throw UserException.validationError()
           .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
               "Select a schema using 'USE schema' command.")
           .build(logger);
@@ -179,7 +176,7 @@ public class SchemaUtilites {
 
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
     if (!drillSchema.isMutable()) {
-      throw UserException.parseError()
+      throw UserException.validationError()
           .message("Unable to create or drop tables/views. Schema [%s] is immutable.", getSchemaPath(schema))
           .build(logger);
     }
@@ -189,21 +186,16 @@ public class SchemaUtilites {
 
   /**
    * Looks in schema tree for default temporary workspace instance.
-   * Makes sure that temporary workspace is mutable and file-based
-   * (instance of {@link WorkspaceSchemaFactory.WorkspaceSchema}).
    *
    * @param defaultSchema default schema
    * @param config drill config
-   * @return default temporary workspace
+   * @return default temporary workspace, null if workspace was not found
    */
   public static AbstractSchema getTemporaryWorkspace(SchemaPlus defaultSchema, DrillConfig config) {
-    List<String> temporarySchemaPath = Lists.newArrayList(config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
-    AbstractSchema temporarySchema = resolveToMutableDrillSchema(defaultSchema, temporarySchemaPath);
-    if (!(temporarySchema instanceof WorkspaceSchemaFactory.WorkspaceSchema)) {
-      DrillRuntimeException.format("Temporary workspace [%s] must be file-based, instance of " +
-          "WorkspaceSchemaFactory.WorkspaceSchema", temporarySchemaPath);
-    }
-    return temporarySchema;
+    String temporarySchema = config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
+    List<String> temporarySchemaPath = Lists.newArrayList(temporarySchema);
+    SchemaPlus schema = findSchema(defaultSchema, temporarySchemaPath);
+    return schema == null ? null : unwrapAsDrillSchemaInstance(schema);
   }
 
   /**
@@ -217,4 +209,46 @@ public class SchemaUtilites {
   public static boolean isTemporaryWorkspace(String schemaPath, DrillConfig config) {
     return schemaPath.equals(config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
   }
+
+  /**
+   * Makes sure that passed workspace exists, is default temporary workspace, mutable and file-based
+   * (instance of {@link WorkspaceSchemaFactory.WorkspaceSchema}).
+   *
+   * @param schema drill schema
+   * @param config drill config
+   * @return mutable & file-based workspace instance, otherwise throws validation error
+   */
+  public static WorkspaceSchemaFactory.WorkspaceSchema resolveToValidTemporaryWorkspace(AbstractSchema schema,
+                                                                                        DrillConfig config) {
+    if (schema == null) {
+      throw UserException.validationError()
+          .message("Default temporary workspace is not found")
+          .build(logger);
+    }
+
+    if (!isTemporaryWorkspace(schema.getFullSchemaName(), config)) {
+      throw UserException
+          .validationError()
+          .message(String.format("Temporary tables are not allowed to be created / dropped " +
+                  "outside of default temporary workspace [%s].",
+              config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE)))
+          .build(logger);
+    }
+
+    if (!schema.isMutable()) {
+      throw UserException.validationError()
+          .message("Unable to create or drop temporary table. Schema [%s] is immutable.", schema.getFullSchemaName())
+          .build(logger);
+    }
+
+    if (schema instanceof WorkspaceSchemaFactory.WorkspaceSchema) {
+      return (WorkspaceSchemaFactory.WorkspaceSchema) schema;
+    } else {
+      throw UserException.validationError()
+          .message("Temporary workspace [%s] must be file-based, instance of " +
+              "WorkspaceSchemaFactory.WorkspaceSchema", schema)
+          .build(logger);
+    }
+  }
+
 }

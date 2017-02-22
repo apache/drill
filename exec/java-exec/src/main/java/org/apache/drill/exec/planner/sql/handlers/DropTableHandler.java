@@ -52,9 +52,6 @@ public class DropTableHandler extends DefaultSqlHandler {
    * @param sqlNode - SqlDropTable (SQL parse tree of drop table [if exists] query)
    * @return - Single row indicating drop succeeded or table is not found while IF EXISTS statement is used,
    * raise exception otherwise
-   * @throws ValidationException
-   * @throws RelConversionException
-   * @throws IOException
    */
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
@@ -69,7 +66,7 @@ public class DropTableHandler extends DefaultSqlHandler {
     boolean isTemporaryTable = session.isTemporaryTable(temporarySchema, drillConfig, originalTableName);
 
     if (isTemporaryTable) {
-      session.removeTemporaryTable(temporarySchema, originalTableName);
+      session.removeTemporaryTable(temporarySchema, originalTableName, drillConfig);
     } else {
       AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
