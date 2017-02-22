@@ -91,7 +91,14 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
-    table = new DrillOperatorTable(getFunctionRegistry(), drillbitContext.getOptionManager());
+
+    // If we do not need to support dynamic UDFs for this query, just use static operator table
+    // built at the startup. Else, build new operator table from latest version of function registry.
+    if (queryOptions.getOption(ExecConstants.USE_DYNAMIC_UDFS)) {
+      this.table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(), drillbitContext.getOptionManager());
+    } else {
+      this.table = drillbitContext.getOperatorTable();
+    }
 
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath(), session.getSessionId());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
