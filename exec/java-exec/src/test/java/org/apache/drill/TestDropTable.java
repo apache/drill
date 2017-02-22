@@ -168,7 +168,7 @@ public class TestDropTable extends PlanTestBase {
     try {
       test("drop table dfs.`/tmp`");
     } catch (UserException e) {
-      Assert.assertTrue(e.getMessage().contains("PARSE ERROR"));
+      Assert.assertTrue(e.getMessage().contains("VALIDATION ERROR"));
       dropFailed = true;
     }
 

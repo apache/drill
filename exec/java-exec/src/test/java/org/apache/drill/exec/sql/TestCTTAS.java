@@ -24,6 +24,7 @@ import mockit.integration.junit4.JMockit;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -43,6 +44,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -65,7 +67,9 @@ public class TestCTTAS extends BaseTestQuery {
   @BeforeClass
   public static void init() throws Exception {
     MockUp<UUID> uuidMockUp = mockRandomUUID(session_id);
-    updateTestCluster(1, DrillConfig.create(cloneDefaultTestConfigProperties()));
+    Properties testConfigurations = cloneDefaultTestConfigProperties();
+    testConfigurations.put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, TEMP_SCHEMA);
+    updateTestCluster(1, DrillConfig.create(testConfigurations));
     uuidMockUp.tearDown();
 
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
@@ -90,7 +94,7 @@ public class TestCTTAS extends BaseTestQuery {
   @Test
   public void testSyntax() throws Exception {
     test("create TEMPORARY table temporary_keyword as select 1 from (values(1))");
-    test("create TEMPORARY table temporary_keyword_with_wk as select 1 from (values(1))", TEMP_SCHEMA);
+    test("create TEMPORARY table %s.temporary_keyword_with_wk as select 1 from (values(1))", TEMP_SCHEMA);
   }
 
   @Test
@@ -172,7 +176,8 @@ public class TestCTTAS extends BaseTestQuery {
       test("create TEMPORARY table %s.%s as select 'A' as c1 from (values(1))", temp2_schema, temporaryTableName);
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString(String.format(
-          "VALIDATION ERROR: Temporary tables are not allowed to be created outside of default temporary workspace [%s].",
+          "VALIDATION ERROR: Temporary tables are not allowed to be created / dropped " +
+              "outside of default temporary workspace [%s].",
           TEMP_SCHEMA)));
       throw e;
     }
