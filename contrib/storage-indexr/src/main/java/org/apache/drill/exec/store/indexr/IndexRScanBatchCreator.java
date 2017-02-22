@@ -162,6 +162,7 @@ public class IndexRScanBatchCreator implements BatchCreator<IndexRSubScan> {
           spec.rsFilter, //
           segmentPool,//
           indexMemCache,//
+          null,
           packMemCache);
 
       List<SchemaPath> columns = subScan.getColumns();
@@ -193,7 +194,7 @@ public class IndexRScanBatchCreator implements BatchCreator<IndexRSubScan> {
     @Override
     public Segment open(String name) throws IOException {
       SegmentFd fd = segmentPool.get(name);
-      return fd.open(indexMemCache, packMemCache);
+      return fd.open(indexMemCache, null, packMemCache);
     }
   }
 }

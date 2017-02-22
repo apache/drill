@@ -50,6 +50,7 @@ import io.indexr.data.FloatSetter;
 import io.indexr.data.IntSetter;
 import io.indexr.data.LongSetter;
 import io.indexr.io.ByteSlice;
+import io.indexr.segment.CachedSegment;
 import io.indexr.segment.ColumnSchema;
 import io.indexr.segment.ColumnType;
 import io.indexr.segment.RSValue;
@@ -144,12 +145,10 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
   /**
    * This method check whether those rows in packId possibly contains any rows we interested.
    *
-   * @return null means we can ignore those rows of packId.
-   * Otherwise an pack array which some packs may have already been loaded into.
+   * @return false when this pack can be ignored.
    */
-  private DataPack[] beforeRead(Segment segment, int packId) throws IOException {
+  private boolean beforeRead(Segment segment, int packId) throws IOException {
     List<ColumnSchema> schemas = segment.schema().getColumns();
-    DataPack[] rowPacks = new DataPack[schemas.size()];
     if (curSegment != segment) {
       curSegment = segment;
 
@@ -170,37 +169,28 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
     }
 
     if (!isLateMaterialization || rsFilter == null) {
-      return rowPacks;
+      return true;
     }
 
     long time = System.currentTimeMillis();
 
-    rsFilter.foreachEX(
-        new RCOperator.OpConsumer() {
-          @Override
-          public void accept(RCOperator op) throws IOException {
-            for (Attr attr : op.attr()) {
-              int columnId = attr.columnId();
-              if (rowPacks[columnId] == null) {
-                rowPacks[columnId] = (DataPack) segment.column(columnId).pack(packId);
-              }
-            }
-          }
-        });
-
     long time2 = System.currentTimeMillis();
     getPackTime += time2 - time;
 
-    byte res = rsFilter.roughCheckOnRow(rowPacks);
+    byte res = rsFilter.roughCheckOnRow(segment, packId);
     lmCheckTime += System.currentTimeMillis() - time2;
 
-    return res == RSValue.None ? null : rowPacks;
+    if (res != RSValue.None) {
+      log.debug("hit segment: {}, packId: {}", segment.name(), packId);
+    }
+
+    return res != RSValue.None;
   }
 
   private int read(Segment segment, int packId) throws IOException {
-    DataPack[] rowPacks = beforeRead(segment, packId);
-    if (rowPacks == null) {
-      log.debug("rsFilter ignore (LM) segment {}, pack: {}", segment.name(), packId);
+    Segment cachedSegment = new CachedSegment(segment);
+    if (!beforeRead(cachedSegment, packId)) {
+      log.debug("rsFilter ignore (LM) segment {}, pack: {}", cachedSegment.name(), packId);
       return 0;
     }
 
@@ -211,11 +201,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
 
       long time = System.currentTimeMillis();
 
-      DataPack dataPack = rowPacks[columnId];
-      if (dataPack == null) {
-        dataPack = (DataPack) segment.column(columnId).pack(packId);
-        rowPacks[columnId] = dataPack;
-      }
+      DataPack dataPack = cachedSegment.column(columnId).pack(packId);
 
       long time2 = System.currentTimeMillis();
       getPackTime += time2 - time;
@@ -223,7 +209,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
       SQLType sqlType = projectInfo.columnSchema.getSqlType();
       int count = dataPack.count();
       if (count == 0) {
-        log.warn("segment[{}]: found empty pack, packId: [{}]", segment.name(), packId);
+        log.warn("segment[{}]: found empty pack, packId: [{}]", cachedSegment.name(), packId);
         return 0;
       }
       if (read == -1) {
