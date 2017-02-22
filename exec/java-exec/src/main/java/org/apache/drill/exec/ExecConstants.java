@@ -437,4 +437,8 @@ public interface ExecConstants {
   String QUERY_PROFILE_DEBUG_OPTION = "exec.query_profile.debug_mode";
   BooleanValidator QUERY_PROFILE_DEBUG_VALIDATOR = new BooleanValidator(
       QUERY_PROFILE_DEBUG_OPTION, false, false);
+
+  String USE_DYNAMIC_UDFS_KEY = "exec.udf.use_dynamic";
+  BooleanValidator USE_DYNAMIC_UDFS = new BooleanValidator(USE_DYNAMIC_UDFS_KEY, true);
+
 }
