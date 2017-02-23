@@ -38,10 +38,8 @@ public class ParquetToDrillTypeConverter {
   }
 
   private static TypeProtos.MinorType getMinorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
-                                                   ConvertedType convertedType, int precision, int scale,
-      OptionManager options) {
-
-
+                                                   ConvertedType convertedType, SchemaElement schemaElement,
+                                                   OptionManager options) {
     switch (primitiveTypeName) {
       case BINARY:
         if (convertedType == null) {
@@ -53,7 +51,7 @@ public class ParquetToDrillTypeConverter {
             return (TypeProtos.MinorType.VARCHAR);
           case DECIMAL:
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            return (getDecimalType(precision));
+            return (getDecimalType(schemaElement));
           default:
             return (TypeProtos.MinorType.VARBINARY);
         }
@@ -120,7 +118,7 @@ public class ParquetToDrillTypeConverter {
           return TypeProtos.MinorType.VARBINARY;
         } else if (convertedType == ConvertedType.DECIMAL) {
           ParquetReaderUtility.checkDecimalTypeEnabled(options);
-          return getDecimalType(precision);
+          return getDecimalType(schemaElement);
         } else if (convertedType == ConvertedType.INTERVAL) {
           return TypeProtos.MinorType.INTERVAL;
         }
@@ -132,14 +130,9 @@ public class ParquetToDrillTypeConverter {
   public static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
                                           TypeProtos.DataMode mode, SchemaElement schemaElement,
                                           OptionManager options) {
-    return toMajorType(primitiveTypeName, length, mode, schemaElement.getConverted_type(),
-        schemaElement.getPrecision(), schemaElement.getScale(), options);
-  }
-
-  public static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
-      TypeProtos.DataMode mode, ConvertedType convertedType, int precision, int scale,
-      OptionManager options) {
-    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, precision, scale, options);
+    int precision = schemaElement.getPrecision();
+    int scale = schemaElement.getScale();
+    MinorType minorType = getMinorType(primitiveTypeName, length, convertedType, schemaElement, options);
     TypeProtos.MajorType.Builder typeBuilder = TypeProtos.MajorType.newBuilder().setMinorType(minorType).setMode(mode);
 
     if (CoreDecimalUtility.isDecimalType(minorType)) {
