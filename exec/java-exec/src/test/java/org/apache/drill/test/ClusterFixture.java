@@ -144,9 +144,10 @@ public class ClusterFixture implements AutoCloseable {
 
   ClusterFixture(FixtureBuilder builder) {
 
-    String zkConnect = configureZk(builder);
+    allocator = RootAllocatorFactory.newRoot(config);
+    configureZk(builder);
     try {
-      createConfig(builder, zkConnect);
+      createConfig(builder);
       startDrillbits(builder);
       applyOptions(builder);
     } catch (Exception e) {
@@ -155,13 +156,9 @@ public class ClusterFixture implements AutoCloseable {
 
       throw new IllegalStateException( "Cluster fixture setup failed", e );
     }
-
-    // Some operations need an allocator.
-
-    allocator = RootAllocatorFactory.newRoot(config);
   }
 
-  private String configureZk(FixtureBuilder builder) {
+  private void configureZk(FixtureBuilder builder) {
 
     // Start ZK if requested.
 
@@ -180,14 +177,25 @@ public class ClusterFixture implements AutoCloseable {
     }
     if (zkHelper != null) {
       zkConnect = zkHelper.getConnectionString();
+
+      // When using ZK, we need to pass in the connection property as
+      // a config property. But, we can only do that if we are passing
+      // in config properties defined at run time. Drill does not allow
+      // combining locally-set properties and a config file: it is one
+      // or the other.
+
+      if (builder.configProps == null) {
+        throw new IllegalArgumentException("Cannot specify a local ZK while using an external config file.");
+      }
+      builder.configProperty(ExecConstants.ZK_CONNECTION, zkConnect);
+
       // Forced to disable this, because currently we leak memory which is a known issue for query cancellations.
-      // Setting this causes unittests to fail.
+      // Setting this causes unit tests to fail.
       builder.configProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, true);
     }
-    return zkConnect;
   }
 
-  private void createConfig(FixtureBuilder builder, String zkConnect) throws Exception {
+  private void createConfig(FixtureBuilder builder) throws Exception {
 
     // Create a config
     // Because of the way DrillConfig works, we can set the ZK
@@ -196,20 +204,12 @@ public class ClusterFixture implements AutoCloseable {
     if (builder.configResource != null) {
       config = DrillConfig.create(builder.configResource);
     } else if (builder.configProps != null) {
-      if (zkConnect != null) {
-        builder.configProperty(ExecConstants.ZK_CONNECTION, zkConnect);
-      }
       config = DrillConfig.create(configProperties(builder.configProps));
     } else {
       throw new IllegalStateException("Configuration was not provided.");
     }
 
-    // Not quite sure what this is, but some tests seem to use it.
-
-    if (builder.enableFullCache || (config.hasPath(ENABLE_FULL_CACHE)
-        && config.getBoolean(ENABLE_FULL_CACHE))) {
-      serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-    } else if (builder.usingZk) {
+    if (builder.usingZk) {
       // Distribute drillbit using ZK (in-process or external)
 
       serviceSet = null;
@@ -393,9 +393,6 @@ public class ClusterFixture implements AutoCloseable {
       }
     }
     zkHelper = null;
-    if (ex != null) {
-      throw ex;
-    }
 
     // Delete any local files, if we wrote to the local
     // persistent store. But, leave the files if the user wants
@@ -419,6 +416,9 @@ public class ClusterFixture implements AutoCloseable {
     } catch (Exception e) {
       ex = ex == null ? e : ex;
     }
+    if (ex != null) {
+      throw ex;
+    }
   }
 
   /**
@@ -437,22 +437,10 @@ public class ClusterFixture implements AutoCloseable {
       return;
     }
 
-    // Don't delete if we did not write.
-
-    if (! config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE)) {
-      return;
-    }
-
     // Remove the local files if they exist.
 
     String localStoreLocation = config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH);
-    File storeDir = new File(localStoreLocation);
-    if (! storeDir.exists()) {
-      return;
-    }
-    if (storeDir.exists()) {
-      FileUtils.deleteDirectory(storeDir);
-    }
+    removeDir(new File(localStoreLocation));
   }
 
   private void removeTempDirs() throws IOException {
@@ -470,10 +458,9 @@ public class ClusterFixture implements AutoCloseable {
   }
 
   public void removeDir(File dir) throws IOException {
-    if (! dir.exists()) {
-      return;
+    if (dir.exists()) {
+      FileUtils.deleteDirectory(dir);
     }
-    FileUtils.deleteDirectory(dir);
   }
 
   /**

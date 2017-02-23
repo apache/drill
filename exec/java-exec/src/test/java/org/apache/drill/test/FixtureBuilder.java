@@ -58,7 +58,6 @@ public class FixtureBuilder {
 
   protected String configResource;
   protected Properties configProps;
-  protected boolean enableFullCache;
   protected List<RuntimeOption> sessionOptions;
   protected List<RuntimeOption> systemOptions;
   protected int bitCount = 1;
@@ -167,11 +166,6 @@ public class FixtureBuilder {
    */
   public FixtureBuilder maxParallelization(int n) {
     return sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, n);
-  }
-
-  public FixtureBuilder enableFullCache() {
-    enableFullCache = true;
-    return this;
   }
 
   /**

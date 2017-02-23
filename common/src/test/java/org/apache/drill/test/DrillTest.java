@@ -82,7 +82,7 @@ public class DrillTest {
   protected static final boolean verbose = Boolean.parseBoolean(System.getProperty(VERBOSE_OUTPUT));
 
   /**
-   * Output destination for verbose tset output. Rather than using
+   * Output destination for verbose test output. Rather than using
    * <tt>System.out</tt>, use <tt>DrillTest.out</tt>. Output will
    * automagically be routed to the bit bucket unless the
    * {@link #VERBOSE_OUTPUT} flag is set.

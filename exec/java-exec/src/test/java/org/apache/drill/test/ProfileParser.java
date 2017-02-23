@@ -50,8 +50,18 @@ public class ProfileParser {
   JsonObject profile;
   String query;
   List<String> plans;
+
+  /**
+   * Operations sorted by operator ID. The Operator ID serves as
+   * an index into the list to get the information for that operator.
+   */
   List<OpDefInfo> operations;
   Map<Integer,FragInfo> fragments = new HashMap<>();
+
+  /**
+   * Operations in the original topological order as shown in the text
+   * version of the query plan in the query profile.
+   */
   private List<OpDefInfo> topoOrder;
 
   public ProfileParser( File file ) throws IOException {
@@ -100,7 +110,7 @@ public class ProfileParser {
       sortList();
     }
 
-    public void sortList() {
+    private void sortList() {
       List<OpDefInfo> raw = new ArrayList<>( );
       raw.addAll( operations );
       Collections.sort( raw, new Comparator<OpDefInfo>() {
@@ -200,13 +210,15 @@ public class ProfileParser {
   private void aggregateOpers() {
     for (FragInfo major : fragments.values()) {
       for (OpDefInfo opDef : major.ops) {
+        int sumPeak = 0;
         for ( OperatorProfile op : opDef.opExecs) {
           Preconditions.checkState( major.id == op.majorFragId );
           Preconditions.checkState( opDef.stepId == op.opId );
           opDef.actualRows += op.records;
           opDef.actualBatches += op.batches;
-          opDef.actualMemory += op.peakMem * 1024 * 1024;
+          sumPeak += op.peakMem;
         }
+        opDef.actualMemory = sumPeak * 1024 * 1024;
       }
     }
   }
@@ -583,7 +595,16 @@ public class ProfileParser {
 
   /**
    * Print out the tree showing a comparison of estimated vs.
-   * actual costs.
+   * actual costs. Example:
+   * <p><pre>
+   * 03-05 HashJoin (HASH JOIN)
+   *                                 Estimate:       2,521,812 rows,      1 MB
+   *                                 Actual:           116,480 rows,     52 MB
+   *         Probe
+   * 03-07 . . Project
+   *                                 Estimate:       2,521,812 rows,      1 MB
+   *                                 Actual:                 0 rows,      0 MB
+   * </pre>
    */
 
   public static class CostPrinter extends TreeVisitor
@@ -613,6 +634,15 @@ public class ProfileParser {
     }
   }
 
+  /**
+   * We often run test queries single threaded to make analysis of the profile
+   * easier. For a single-threaded (single slice) query, get a map from
+   * operator ID to operator information as preparation for additional
+   * analysis.
+   *
+   * @return
+   */
+
   public Map<Integer,OperatorProfile> getOpInfo( ) {
     Map<Integer,String> ops = getOperators( );
     Map<Integer,OperatorProfile> info = new HashMap<>( );
@@ -624,6 +654,14 @@ public class ProfileParser {
     }
     return info;
   }
+
+  /**
+   * For a single-slice query, get all operators of a given numeric operator
+   * type.
+   * @param type the operator type as specified in
+   * {@link org.apache.drill.exec.proto.UserBitShared.CoreOperatorType}
+   * @return a list of operators of the given type
+   */
 
   public List<OperatorProfile> getOpsOfType(int type) {
     List<OperatorProfile> ops = new ArrayList<>();
@@ -646,6 +684,12 @@ public class ProfileParser {
   public void printPlan() {
     new CostPrinter().visit( topoOrder.get(0) );
   }
+
+  /**
+   * For a single-slice query, print a summary of the operator stack
+   * and costs. At present, works for a linear query with on single-input
+   * operators.
+   */
 
   public void print() {
     Map<Integer, OperatorProfile> opInfo = getOpInfo();
