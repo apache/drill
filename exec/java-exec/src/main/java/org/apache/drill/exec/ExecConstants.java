@@ -413,4 +413,8 @@ public interface ExecConstants {
 
   String DYNAMIC_UDF_SUPPORT_ENABLED = "exec.udf.enable_dynamic_support";
   BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED, true, true);
+
+  String ZK_QUERY_STATE_UPDATE_KEY = "drill.exec.zk.query.state.update";
+  BooleanValidator ZK_QUERY_STATE_UPDATE = new BooleanValidator(ZK_QUERY_STATE_UPDATE_KEY, true);
+
 }

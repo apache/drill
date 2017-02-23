@@ -1010,7 +1010,9 @@ public class Foreman implements Runnable {
 
   private void recordNewState(final QueryState newState) {
     state = newState;
-    queryManager.updateEphemeralState(newState);
+    if (queryContext.getOptions().getOption(ExecConstants.ZK_QUERY_STATE_UPDATE)) {
+      queryManager.updateEphemeralState(newState);
+    }
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {
