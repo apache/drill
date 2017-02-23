@@ -71,8 +71,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private static final int NUMBER_OF_VECTORS = 1;
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
-  private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
-  private static final int DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH = 65535;
+  private static final char DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH = 32*1024; // 32K
+  private static final int DEFAULT_RECORDS_TO_READ_IF_FIXED_WIDTH = 64*1024 - 1; // 64K - 1, max SV2 can address
   private static final int NUM_RECORDS_TO_READ_NOT_SPECIFIED = -1;
 
   // When no column is required by the downstrea operator, ask SCAN to return a DEFAULT column. If such column does not exist,
@@ -96,7 +96,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
   private List<ColumnReader<?>> columnStatuses;
   private FileSystem fileSystem;
-  private long batchSize;
+  private final long batchSize;
   private long numRecordsToRead; // number of records to read
 
   Path hadoopPath;
@@ -385,10 +385,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
     if (columnsToScan != 0  && allFieldsFixedLength) {
       recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,
-          footer.getBlocks().get(0).getColumns().get(0).getValueCount()), DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH);
+          footer.getBlocks().get(0).getColumns().get(0).getValueCount()), DEFAULT_RECORDS_TO_READ_IF_FIXED_WIDTH);
     }
     else {
-      recordsPerBatch = DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH;
+      recordsPerBatch = DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH;
     }
 
     try {
@@ -569,7 +569,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
           parquetReaderStats.timeProcess.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
           return 0;
         }
-        recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH, footer.getBlocks().get(rowGroupIndex).getRowCount() - mockRecordsRead);
+        recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH, footer.getBlocks().get(rowGroupIndex).getRowCount() - mockRecordsRead);
 
         // Pick the minimum of recordsToRead calculated above and numRecordsToRead (based on rowCount and limit).
         recordsToRead = Math.min(recordsToRead, numRecordsToRead);
@@ -587,7 +587,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       if (allFieldsFixedLength) {
         recordsToRead = Math.min(recordsPerBatch, firstColumnStatus.columnChunkMetaData.getValueCount() - firstColumnStatus.totalValuesRead);
       } else {
-        recordsToRead = DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH;
+        recordsToRead = DEFAULT_RECORDS_TO_READ_IF_VARIABLE_WIDTH;
 
       }
 

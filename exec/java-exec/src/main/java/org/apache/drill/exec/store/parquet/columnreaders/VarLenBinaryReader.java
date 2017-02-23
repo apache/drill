@@ -33,24 +33,34 @@ public class VarLenBinaryReader {
   ParquetRecordReader parentReader;
   final List<VarLengthColumn<? extends ValueVector>> columns;
   final boolean useAsyncTasks;
+  private final long targetRecordCount;
 
   public VarLenBinaryReader(ParquetRecordReader parentReader, List<VarLengthColumn<? extends ValueVector>> columns) {
     this.parentReader = parentReader;
     this.columns = columns;
     useAsyncTasks = parentReader.useAsyncColReader;
+
+    // Can't read any more records than fixed width fields will fit.
+    // Note: this calculation is very likely wrong; it is a simplified
+    // version of earlier code, but probably needs even more attention.
+
+    int totalFixedFieldWidth = parentReader.getBitWidthAllFixedFields() / 8;
+    if (totalFixedFieldWidth == 0) {
+      targetRecordCount = 0;
+    } else {
+      targetRecordCount = parentReader.getBatchSize() / totalFixedFieldWidth;
+    }
   }
 
   /**
    * Reads as many variable length values as possible.
    *
    * @param recordsToReadInThisPass - the number of records recommended for reading form the reader
-   * @param firstColumnStatus - a reference to the first column status in the parquet file to grab metatdata from
+   * @param firstColumnStatus - a reference to the first column status in the Parquet file to grab metatdata from
    * @return - the number of fixed length fields that will fit in the batch
    * @throws IOException
    */
   public long readFields(long recordsToReadInThisPass, ColumnReader<?> firstColumnStatus) throws IOException {
-
-    long recordsReadInCurrentPass = 0;
 
     // write the first 0 offset
     for (VarLengthColumn<?> columnReader : columns) {
@@ -58,10 +68,17 @@ public class VarLenBinaryReader {
     }
     Stopwatch timer = Stopwatch.createStarted();
 
-    recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
-    if(useAsyncTasks){
+    long recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
+
+    // Can't read any more records than fixed width fields will fit.
+
+    if (targetRecordCount > 0) {
+      recordsToReadInThisPass = Math.min(recordsToReadInThisPass, targetRecordCount);
+    }
+
+    if(useAsyncTasks) {
       readRecordsParallel(recordsReadInCurrentPass);
-    }else{
+    } else {
       readRecordsSerial(recordsReadInCurrentPass);
     }
 
@@ -71,16 +88,6 @@ public class VarLenBinaryReader {
   }
 
   private long determineSizesSerial(long recordsToReadInThisPass) throws IOException {
-
-    // Can't read any more records than fixed width fields will fit.
-    // Note: this calculation is very likely wrong; it is a simplified
-    // version of earlier code, but probably needs even more attention.
-
-    int totalFixedFieldWidth = parentReader.getBitWidthAllFixedFields() / 8;
-    long batchSize = parentReader.getBatchSize();
-    if (totalFixedFieldWidth > 0) {
-      recordsToReadInThisPass = Math.min(recordsToReadInThisPass, batchSize / totalFixedFieldWidth);
-    }
 
     int recordsReadInCurrentPass = 0;
     top: do {
