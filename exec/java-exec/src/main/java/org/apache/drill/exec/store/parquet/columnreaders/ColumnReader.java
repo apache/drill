@@ -126,7 +126,7 @@ public abstract class ColumnReader<V extends ValueVector> {
     reset();
     if(recordsToReadInThisPass>0) {
       do {
-        determineSize(recordsToReadInThisPass, 0);
+        determineSize(recordsToReadInThisPass);
 
       } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReader.hasPage());
     }
@@ -170,7 +170,7 @@ public abstract class ColumnReader<V extends ValueVector> {
    * @return - true if we should stop reading
    * @throws IOException
    */
-  public boolean determineSize(long recordsReadInCurrentPass, Integer lengthVarFieldsInCurrentRecord) throws IOException {
+  public boolean determineSize(long recordsReadInCurrentPass) throws IOException {
 
     if (readPage()) {
       return true;
@@ -179,9 +179,6 @@ public abstract class ColumnReader<V extends ValueVector> {
     if (processPageData((int) recordsReadInCurrentPass)) {
       return true;
     }
-
-    // Never used in this code path. Hard to remove because the method is overidden by subclasses
-    lengthVarFieldsInCurrentRecord = -1;
 
     return checkVectorCapacityReached();
   }
@@ -270,7 +267,7 @@ public abstract class ColumnReader<V extends ValueVector> {
     return valuesReadInCurrentPass > valueVec.getValueCapacity();
   }
 
-  // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
+  // copied out of Parquet library, didn't want to deal with the uneeded throws statement they had declared
   public static int readIntLittleEndian(DrillBuf in, int offset) {
     int ch4 = in.getByte(offset) & 0xff;
     int ch3 = in.getByte(offset + 1) & 0xff;
@@ -281,7 +278,7 @@ public abstract class ColumnReader<V extends ValueVector> {
 
   private class ColumnReaderProcessPagesTask implements Callable<Long> {
 
-    private final ColumnReader parent = ColumnReader.this;
+    private final ColumnReader<V> parent = ColumnReader.this;
     private final long recordsToReadInThisPass;
 
     public ColumnReaderProcessPagesTask(long recordsToReadInThisPass){
@@ -301,12 +298,11 @@ public abstract class ColumnReader<V extends ValueVector> {
         Thread.currentThread().setName(oldname);
       }
     }
-
   }
 
   private class ColumnReaderReadRecordsTask implements Callable<Integer> {
 
-    private final ColumnReader parent = ColumnReader.this;
+    private final ColumnReader<V> parent = ColumnReader.this;
     private final int recordsToRead;
 
     public ColumnReaderReadRecordsTask(int recordsToRead){

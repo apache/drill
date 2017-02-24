@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -53,15 +51,15 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.format.FileMetaData;
 import org.apache.parquet.format.SchemaElement;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.PrimitiveType;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ParquetRecordReader extends AbstractRecordReader {
@@ -91,8 +89,6 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private boolean allFieldsFixedLength;
   private int recordsPerBatch;
   private OperatorContext operatorContext;
-//  private long totalRecords;
-//  private long rowGroupOffset;
 
   private List<ColumnReader<?>> columnStatuses;
   private FileSystem fileSystem;
@@ -343,7 +339,6 @@ public class ParquetRecordReader extends AbstractRecordReader {
       nullFilledVectors = new ArrayList<>();
     }
     columnStatuses = new ArrayList<>();
-//    totalRecords = footer.getBlocks().get(rowGroupIndex).getRowCount();
     List<ColumnDescriptor> columns = footer.getFileMetaData().getSchema().getColumns();
     allFieldsFixedLength = true;
     ColumnDescriptor column;
@@ -352,8 +347,6 @@ public class ParquetRecordReader extends AbstractRecordReader {
     mockRecordsRead = 0;
 
     MaterializedField field;
-//    ParquetMetadataConverter metaConverter = new ParquetMetadataConverter();
-//    FileMetaData fileMetaData;
 
     logger.debug("Reading row group({}) with {} records in file {}.", rowGroupIndex, footer.getBlocks().get(rowGroupIndex).getRowCount(),
         hadoopPath.toUri().getPath());
@@ -376,12 +369,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
       columnsToScan++;
       int dataTypeLength = getDataTypeLength(column, se);
       if (dataTypeLength == -1) {
-          allFieldsFixedLength = false;
-        } else {
-          bitWidthAllFixedFields += dataTypeLength;
-        }
+        allFieldsFixedLength = false;
+      } else {
+        bitWidthAllFixedFields += dataTypeLength;
       }
-//    rowGroupOffset = footer.getBlocks().get(rowGroupIndex).getColumns().get(0).getFirstDataPageOffset();
+    }
 
     if (columnsToScan != 0  && allFieldsFixedLength) {
       recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,
@@ -528,7 +520,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       futures.add(f);
     }
     Exception exception = null;
-    for(Future f: futures){
+    for(Future<Long> f: futures){
       if(exception != null) {
         f.cancel(true);
       } else {
@@ -597,7 +589,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       if (allFieldsFixedLength) {
         readAllFixedFields(recordsToRead);
       } else { // variable length columns
-        long fixedRecordsToRead = varLengthReader.readFields(recordsToRead, firstColumnStatus);
+        long fixedRecordsToRead = varLengthReader.readFields(recordsToRead);
         readAllFixedFields(fixedRecordsToRead);
       }
 
@@ -646,7 +638,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     codecFactory.release();
 
     if (varLengthReader != null) {
-      for (final VarLengthColumn r : varLengthReader.columns) {
+      for (final VarLengthColumn<?> r : varLengthReader.columns) {
         r.clear();
       }
       varLengthReader.columns.clear();

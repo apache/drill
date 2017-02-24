@@ -60,7 +60,7 @@ public class VarLenBinaryReader {
    * @return - the number of fixed length fields that will fit in the batch
    * @throws IOException
    */
-  public long readFields(long recordsToReadInThisPass, ColumnReader<?> firstColumnStatus) throws IOException {
+  public long readFields(long recordsToReadInThisPass) throws IOException {
 
     // write the first 0 offset
     for (VarLengthColumn<?> columnReader : columns) {
@@ -68,13 +68,12 @@ public class VarLenBinaryReader {
     }
     Stopwatch timer = Stopwatch.createStarted();
 
-    long recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
-
     // Can't read any more records than fixed width fields will fit.
 
     if (targetRecordCount > 0) {
       recordsToReadInThisPass = Math.min(recordsToReadInThisPass, targetRecordCount);
     }
+    long recordsReadInCurrentPass = determineSizesSerial(recordsToReadInThisPass);
 
     if(useAsyncTasks) {
       readRecordsParallel(recordsReadInCurrentPass);
@@ -93,7 +92,7 @@ public class VarLenBinaryReader {
     top: do {
       for (VarLengthColumn<?> columnReader : columns) {
         // Return status is "done reading", meaning stop if true.
-        if (columnReader.determineSize(recordsReadInCurrentPass, 0 /* unused */ )) {
+        if (columnReader.determineSize(recordsReadInCurrentPass)) {
           break top;
         }
       }
@@ -123,7 +122,7 @@ public class VarLenBinaryReader {
       futures.add(f);
     }
     Exception exception = null;
-    for(Future f: futures){
+    for(Future<Integer> f: futures){
       if(exception != null) {
         f.cancel(true);
       } else {
