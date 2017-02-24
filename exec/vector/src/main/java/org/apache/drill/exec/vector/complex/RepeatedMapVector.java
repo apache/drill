@@ -584,4 +584,9 @@ public class RepeatedMapVector extends AbstractMapVector
       vector.clear();
     }
   }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return super.getAllocatedByteCount( ) + offsets.getAllocatedByteCount();
+  }
 }

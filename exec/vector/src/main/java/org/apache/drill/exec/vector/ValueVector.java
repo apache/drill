@@ -176,6 +176,18 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   void load(SerializedField metadata, DrillBuf buffer);
 
   /**
+   * Return the total memory consumed by all buffers within this vector.
+   */
+
+  int getAllocatedByteCount();
+
+  /**
+   * Return the number of value bytes consumed by actual data.
+   */
+
+  int getPayloadByteCount();
+
+  /**
    * An abstraction that is used to read from this vector instance.
    */
   interface Accessor {

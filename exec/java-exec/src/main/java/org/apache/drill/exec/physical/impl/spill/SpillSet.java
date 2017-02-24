@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -105,7 +106,7 @@ public class SpillSet {
 
     protected HadoopFileManager(String fsName) {
       Configuration conf = new Configuration();
-      conf.set("fs.default.name", fsName);
+      conf.set(FileSystem.FS_DEFAULT_NAME_KEY, fsName);
       try {
         fs = FileSystem.get(conf);
       } catch (IOException e) {
@@ -169,6 +170,12 @@ public class SpillSet {
     }
   }
 
+  /**
+   * Wrapper around an input stream to collect the total bytes
+   * read through the stream for use in reporting performance
+   * metrics.
+   */
+
   public static class CountingInputStream extends InputStream
   {
     private InputStream in;
@@ -217,6 +224,12 @@ public class SpillSet {
 
     public long getCount() { return count; }
   }
+
+  /**
+   * Wrapper around an output stream to collect the total bytes
+   * written through the stream for use in reporting performance
+   * metrics.
+   */
 
   public static class CountingOutputStream extends OutputStream {
 
@@ -333,6 +346,7 @@ public class SpillSet {
    */
 
   private final String spillDirName;
+  private final String spillFileName;
 
   private int fileCount = 0;
 
@@ -343,8 +357,30 @@ public class SpillSet {
   private long writeBytes;
 
   public SpillSet(FragmentContext context, PhysicalOperator popConfig) {
+    this(context, popConfig, null, "spill");
+  }
+
+  public SpillSet(FragmentContext context, PhysicalOperator popConfig,
+                  String opName, String fileName) {
+    FragmentHandle handle = context.getHandle();
     DrillConfig config = context.getConfig();
-    dirs = Iterators.cycle(config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS));
+    spillFileName = fileName;
+    List<String> dirList = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
+    dirs = Iterators.cycle(dirList);
+
+    // If more than one directory, semi-randomly choose an offset into
+    // the list to avoid overloading the first directory in the list.
+
+    if (dirList.size() > 1) {
+      int hash = handle.getQueryId().hashCode() +
+                 handle.getMajorFragmentId() +
+                 handle.getMinorFragmentId() +
+                 popConfig.getOperatorId();
+      int offset = hash % dirList.size();
+      for (int i = 0; i < offset; i++) {
+        dirs.next();
+      }
+    }
 
     // Use the high-performance local file system if the local file
     // system is selected and impersonation is off. (We use that
@@ -357,9 +393,13 @@ public class SpillSet {
     } else {
       fileManager = new HadoopFileManager(spillFs);
     }
-    FragmentHandle handle = context.getHandle();
-    spillDirName = String.format("%s_major%s_minor%s_op%s", QueryIdHelper.getQueryId(handle.getQueryId()),
-        handle.getMajorFragmentId(), handle.getMinorFragmentId(), popConfig.getOperatorId());
+    spillDirName = String.format(
+        "%s_major%d_minor%d_op%d%s",
+        QueryIdHelper.getQueryId(handle.getQueryId()),
+        handle.getMajorFragmentId(),
+        handle.getMinorFragmentId(),
+        popConfig.getOperatorId(),
+        (opName == null) ? "" : "_" + opName);
   }
 
   public String getNextSpillFile() {
@@ -371,7 +411,7 @@ public class SpillSet {
     String spillDir = dirs.next();
     String currSpillPath = Joiner.on("/").join(spillDir, spillDirName);
     currSpillDirs.add(currSpillPath);
-    String outputFile = Joiner.on("/").join(currSpillPath, "spill" + ++fileCount);
+    String outputFile = Joiner.on("/").join(currSpillPath, spillFileName + ++fileCount);
     try {
         fileManager.deleteOnExit(currSpillPath);
     } catch (IOException e) {

@@ -202,6 +202,22 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
+  public int getAllocatedByteCount() {
+    // Most vectors are held inside the internal map.
+
+    int count = internalMap.getAllocatedByteCount();
+    if (bit != null) {
+      count += bit.getAllocatedByteCount();
+    }
+    return count;
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return internalMap.getPayloadByteCount();
+  }
+
+  @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
     return new TransferImpl(field, allocator);
   }

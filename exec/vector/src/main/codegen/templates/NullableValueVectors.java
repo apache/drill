@@ -45,12 +45,24 @@ package org.apache.drill.exec.vector;
  * NB: this class is automatically generated from ${.template_name} and ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class ${className} extends BaseDataValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector{
+public final class ${className} extends BaseDataValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${className}.class);
 
   private final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
 
   private final MaterializedField bitsField = MaterializedField.create("$bits$", Types.required(MinorType.UINT1));
+
+  /**
+   * Set value flag. Meaning:
+   * <ul>
+   * <li>0: value is not set (value is null).</li>
+   * <li>1: value is set (value is not null).</li>
+   * </ul>
+   * That is, a 1 means that the values vector has a value. 0
+   * means that the vector is null. Thus, all values start as
+   * not set (null) and must be explicitly set (made not null).
+   */
+
   private final UInt1Vector bits = new UInt1Vector(bitsField, allocator);
   private final ${valuesName} values = new ${minor.class}Vector(field, allocator);
 
@@ -108,8 +120,8 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       return 0;
     }
 
-    return values.getBufferSizeFor(valueCount)
-        + bits.getBufferSizeFor(valueCount);
+    return values.getBufferSizeFor(valueCount) +
+           bits.getBufferSizeFor(valueCount);
   }
 
   @Override
@@ -161,6 +173,18 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     mutator.reset();
     accessor.reset();
     return success;
+  }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return bits.getAllocatedByteCount() + values.getAllocatedByteCount();
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    // For nullable, we include all values, null or not, in computing
+    // the value length.
+    return bits.getPayloadByteCount() + values.getPayloadByteCount();
   }
 
   <#if type.major == "VarLen">

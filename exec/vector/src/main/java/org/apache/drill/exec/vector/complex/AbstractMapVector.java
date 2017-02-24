@@ -266,7 +266,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public int getBufferSize() {
-    int actualBufSize = 0 ;
+    int actualBufSize = 0;
 
     for (final ValueVector v : vectors.values()) {
       for (final DrillBuf buf : v.getBuffers(false)) {
@@ -274,5 +274,25 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       }
     }
     return actualBufSize;
+  }
+
+  @Override
+  public int getAllocatedByteCount() {
+    int count = 0;
+
+    for (final ValueVector v : vectors.values()) {
+      count += v.getAllocatedByteCount();
+    }
+    return count;
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    int count = 0;
+
+    for (final ValueVector v : vectors.values()) {
+      count += v.getPayloadByteCount();
+    }
+    return count;
   }
 }
