@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
+import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,6 +36,7 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class TestCustomUserAuthenticator extends BaseTestQuery {
 
@@ -43,11 +45,17 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
     // Create a new DrillConfig which has user authentication enabled and authenticator set to
     // UserAuthenticatorTestImpl.
     final Properties props = cloneDefaultTestConfigProperties();
-    props.setProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, "true");
-    props.setProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE);
-    final DrillConfig newConfig = DrillConfig.create(props);
+    final DrillConfig newConfig = new DrillConfig(DrillConfig.create(props)
+            .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
+                ConfigValueFactory.fromAnyRef("true"))
+            .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
+                ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)),
+        false);
 
-    updateTestCluster(3, newConfig);
+    final Properties connectionProps = new Properties();
+    connectionProps.setProperty(DrillProperties.USER, "anonymous");
+    connectionProps.setProperty(DrillProperties.PASSWORD, "anything works!");
+    updateTestCluster(3, newConfig, connectionProps);
   }
 
   @Test
@@ -56,13 +64,24 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
     runTest(TEST_USER_2, TEST_USER_2_PASSWORD);
   }
 
-
   @Test
   public void negativeUserAuth() throws Exception {
     negativeAuthHelper(TEST_USER_1, "blah.. blah..");
     negativeAuthHelper(TEST_USER_2, "blah.. blah..");
-    negativeAuthHelper(TEST_USER_2, "");
     negativeAuthHelper("invalidUserName", "blah.. blah..");
+  }
+
+  @Test
+  public void emptyPassword() throws Exception {
+    try {
+      runTest(TEST_USER_2, "");
+      fail("Expected an exception.");
+    } catch (RpcException e) {
+      final String exMsg = e.getMessage();
+      assertThat(exMsg, containsString("Insufficient credentials"));
+    } catch (Exception e) {
+      fail("Expected an RpcException.");
+    }
   }
 
   @Test
@@ -81,15 +100,15 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
 
     assertNotNull("Expected RpcException.", negativeAuthEx);
     final String exMsg = negativeAuthEx.getMessage();
-    assertThat(exMsg, containsString("HANDSHAKE_VALIDATION : Status: AUTH_FAILED"));
-    assertThat(exMsg, containsString("Invalid user credentials"));
+    assertThat(exMsg, containsString("Authentication failed"));
+    assertThat(exMsg, containsString("Incorrect credentials"));
   }
 
   private static void runTest(final String user, final String password) throws Exception {
     final Properties connectionProps = new Properties();
 
-    connectionProps.setProperty(UserSession.USER, user);
-    connectionProps.setProperty(UserSession.PASSWORD, password);
+    connectionProps.setProperty(DrillProperties.USER, user);
+    connectionProps.setProperty(DrillProperties.PASSWORD, password);
 
     updateClient(connectionProps);
 

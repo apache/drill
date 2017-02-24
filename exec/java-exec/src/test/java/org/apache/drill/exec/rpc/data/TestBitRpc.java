@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.server;
+package org.apache.drill.exec.rpc.data;
 
 import static org.junit.Assert.assertTrue;
 import io.netty.buffer.ByteBuf;
@@ -31,8 +31,6 @@ import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -52,10 +50,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
-import org.apache.drill.exec.rpc.data.DataConnectionManager;
-import org.apache.drill.exec.rpc.data.DataServer;
-import org.apache.drill.exec.rpc.data.DataTunnel;
-import org.apache.drill.exec.rpc.data.IncomingDataBatch;
+import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
@@ -117,11 +112,13 @@ public class TestBitRpc extends ExecTest {
 
     int port = 1234;
 
-    DataServer server = new DataServer(c, c.getAllocator(), workBus, null);
+    DataConnectionConfig config = new DataConnectionConfig(c.getAllocator(), c,
+        new DataServerRequestHandler(workBus, bee));
+    DataServer server = new DataServer(config);
 
     port = server.bind(port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
-    DataConnectionManager manager = new DataConnectionManager(ep, c2);
+    DataConnectionManager manager = new DataConnectionManager(ep, config);
     DataTunnel tunnel = new DataTunnel(manager);
     AtomicLong max = new AtomicLong(0);
     for (int i = 0; i < 40; i++) {
