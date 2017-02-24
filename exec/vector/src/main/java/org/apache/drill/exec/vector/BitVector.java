@@ -449,4 +449,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     this.valueCount = 0;
     super.clear();
   }
+
+  @Override
+  public int getPayloadByteCount() {
+    // One byte per value
+    return valueCount;
+  }
 }

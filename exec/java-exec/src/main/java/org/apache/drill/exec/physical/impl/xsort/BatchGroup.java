@@ -113,7 +113,7 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     if (schema != null) {
       c = SchemaUtil.coerceContainer(c, schema, context);
     }
-//    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
+    logger.trace("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
     currentContainer.zeroVectors();
     Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();

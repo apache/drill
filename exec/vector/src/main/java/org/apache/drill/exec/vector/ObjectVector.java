@@ -218,4 +218,16 @@ public class ObjectVector extends BaseValueVector {
       holder.obj = getObject(index);
     }
   }
+
+  @Override
+  public int getAllocatedByteCount() {
+    // Values not stored in direct memory?
+    return 0;
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    // Values not stored in direct memory?
+    return 0;
+  }
 }

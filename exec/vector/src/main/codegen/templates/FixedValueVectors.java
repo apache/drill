@@ -69,7 +69,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   @Override
   public int getValueCapacity(){
-    return (int) (data.capacity() *1.0 / ${type.width});
+    return data.capacity() / ${type.width};
   }
 
   @Override
@@ -196,7 +196,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     data = buffer.slice(0, actualLength);
     data.retain(1);
     data.writerIndex(actualLength);
-    }
+  }
 
   public TransferPair getTransferPair(BufferAllocator allocator){
     return new TransferImpl(getField(), allocator);
@@ -225,6 +225,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     target.clear();
     target.data = data.slice(startPoint, sliceLength).transferOwnership(target.allocator).buffer;
     target.data.writerIndex(sliceLength);
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return getAccessor().getValueCount() * ${type.width};
   }
 
   private class TransferImpl implements TransferPair{
@@ -390,7 +395,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return p.plusDays(days).plusMillis(millis);
     }
 
-
     public StringBuilder getAsStringBuilder(int index) {
       final int offsetIndex = index * ${type.width};
 
@@ -539,6 +543,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public ${friendlyType} getObject(int index) {
       return get(index);
     }
+
     public ${minor.javaType!type.javaType} getPrimitiveObject(int index) {
       return get(index);
     }
@@ -557,9 +562,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.isSet = 1;
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
-
-
-   </#if> <#-- type.width -->
+    </#if> <#-- type.width -->
  }
 
  /**
@@ -728,84 +731,84 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    <#else> <#-- type.width <= 8 -->
-   public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
-   }
+    public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
+    }
 
    public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, value);
-   }
+        reAlloc();
+      }
+      set(index, value);
+    }
 
-   protected void set(int index, ${minor.class}Holder holder){
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
-   }
+    protected void set(int index, ${minor.class}Holder holder){
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+    }
 
-   public void setSafe(int index, ${minor.class}Holder holder){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, holder);
-   }
+    public void setSafe(int index, ${minor.class}Holder holder){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, holder);
+    }
 
-   protected void set(int index, Nullable${minor.class}Holder holder){
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
-   }
+    protected void set(int index, Nullable${minor.class}Holder holder){
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+    }
 
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, holder);
-   }
+    public void setSafe(int index, Nullable${minor.class}Holder holder){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, holder);
+    }
 
-   @Override
-   public void generateTestData(int size) {
-     setValueCount(size);
-     boolean even = true;
-     final int valueCount = getAccessor().getValueCount();
-     for(int i = 0; i < valueCount; i++, even = !even) {
-       if(even){
-         set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
-       }else{
-         set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
-       }
-     }
-   }
+    @Override
+    public void generateTestData(int size) {
+      setValueCount(size);
+      boolean even = true;
+      final int valueCount = getAccessor().getValueCount();
+      for(int i = 0; i < valueCount; i++, even = !even) {
+        if(even) {
+          set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
+        } else {
+          set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
+        }
+      }
+    }
 
-   public void generateTestDataAlt(int size) {
-     setValueCount(size);
-     boolean even = true;
-     final int valueCount = getAccessor().getValueCount();
-     for(int i = 0; i < valueCount; i++, even = !even) {
-       if(even){
-         set(i, (${(minor.javaType!type.javaType)}) 1);
-       }else{
-         set(i, (${(minor.javaType!type.javaType)}) 0);
-       }
-     }
-   }
+    public void generateTestDataAlt(int size) {
+      setValueCount(size);
+      boolean even = true;
+      final int valueCount = getAccessor().getValueCount();
+      for(int i = 0; i < valueCount; i++, even = !even) {
+        if(even) {
+          set(i, (${(minor.javaType!type.javaType)}) 1);
+        } else {
+          set(i, (${(minor.javaType!type.javaType)}) 0);
+        }
+      }
+    }
 
   </#if> <#-- type.width -->
 
-   @Override
-   public void setValueCount(int valueCount) {
-     final int currentValueCapacity = getValueCapacity();
-     final int idx = (${type.width} * valueCount);
-     while(valueCount > getValueCapacity()) {
-       reAlloc();
-     }
-     if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
-       incrementAllocationMonitor();
-     } else if (allocationMonitor > 0) {
-       allocationMonitor = 0;
-     }
-     VectorTrimmer.trim(data, idx);
-     data.writerIndex(valueCount * ${type.width});
-   }
- }
+    @Override
+    public void setValueCount(int valueCount) {
+      final int currentValueCapacity = getValueCapacity();
+      final int idx = (${type.width} * valueCount);
+      while(valueCount > getValueCapacity()) {
+        reAlloc();
+      }
+      if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
+        incrementAllocationMonitor();
+      } else if (allocationMonitor > 0) {
+        allocationMonitor = 0;
+      }
+      VectorTrimmer.trim(data, idx);
+      data.writerIndex(valueCount * ${type.width});
+    }
+  }
 }
 
 </#if> <#-- type.major -->

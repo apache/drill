@@ -426,4 +426,14 @@ public class RepeatedListVector extends AbstractContainerVector
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedListVector from) {
     delegate.copyFromSafe(fromIndex, thisIndex, from.delegate);
   }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return delegate.getAllocatedByteCount();
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return delegate.getPayloadByteCount();
+  }
 }

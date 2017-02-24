@@ -87,4 +87,9 @@ public abstract class BaseDataValueVector extends BaseValueVector {
    * the value vector. The purpose is to move the value vector to a "mutate" state
    */
   public void reset() {}
+
+  @Override
+  public int getAllocatedByteCount() {
+    return data.capacity();
+  }
 }

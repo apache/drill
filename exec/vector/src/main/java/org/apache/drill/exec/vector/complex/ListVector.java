@@ -317,4 +317,14 @@ public class ListVector extends BaseRepeatedValueVector {
       bits.getMutator().setValueCount(valueCount);
     }
   }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return offsets.getAllocatedByteCount() + bits.getAllocatedByteCount() + super.getAllocatedByteCount();
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return offsets.getPayloadByteCount() + bits.getPayloadByteCount() + super.getPayloadByteCount();
+  }
 }
