@@ -61,6 +61,7 @@ public class TestTableGenerator implements MongoTestConstants {
         .getDefaultInstance().prepare(mongoImportConfig);
     MongoImportProcess importProcess = importExecutable.start();
 
+    // import is in a separate process, we should wait until the process exit
     while (importProcess.isProcessRunning()) {
         Thread.sleep(1000);
     }

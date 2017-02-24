@@ -46,7 +46,7 @@ public interface MongoTestConstants {
 
   String DATATYPE_DB = "datatype";
   String DATATYPE_COLLECTION = "types";
-  String DATATYPE_DATA = "datatype.json";
+  String DATATYPE_DATA = "datatype-oid.json";
 
   public static final String REPLICA_SET_1_NAME = "shard_1_replicas";
   public static final String REPLICA_SET_2_NAME = "shard_2_replicas";
