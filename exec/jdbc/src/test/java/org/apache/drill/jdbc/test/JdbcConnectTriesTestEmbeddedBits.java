@@ -18,7 +18,7 @@
 
 package org.apache.drill.jdbc.test;
 
-import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
+import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
