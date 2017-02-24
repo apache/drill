@@ -66,12 +66,11 @@ public class DrillConnectionConfig extends ConnectionConfigImpl {
     return TimeZone.getDefault();
   }
 
-  public boolean disableServerPreparedStatement() {
+  public boolean isServerPreparedStatementDisabled() {
     return Boolean.valueOf(props.getProperty("server.preparedstatement.disabled"));
   }
 
-  public boolean disableServerMetadata() {
+  public boolean isServerMetadataDisabled() {
     return Boolean.valueOf(props.getProperty("server.metadata.disabled"));
   }
-
 }

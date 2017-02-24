@@ -18,7 +18,6 @@
 package org.apache.drill.exec.rpc.user;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 
 import org.apache.drill.common.Version;
 import org.apache.drill.common.util.DrillVersionInfo;
@@ -33,6 +32,23 @@ import com.google.common.base.Preconditions;
 public final class UserRpcUtils {
   private UserRpcUtils() {}
 
+  /*
+   * Template for the endpoint infos.
+   *
+   * It speeds up things not to check application JMX for
+   * each connection.
+   */
+  private static final RpcEndpointInfos INFOS_TEMPLATE =
+      RpcEndpointInfos.newBuilder()
+        .setApplication(ManagementFactory.getRuntimeMXBean().getName())
+        .setVersion(DrillVersionInfo.getVersion())
+        .setMajorVersion(DrillVersionInfo.getMajorVersion())
+        .setMinorVersion(DrillVersionInfo.getMinorVersion())
+        .setPatchVersion(DrillVersionInfo.getPatchVersion())
+        .setBuildNumber(DrillVersionInfo.getBuildNumber())
+        .setVersionQualifier(DrillVersionInfo.getQualifier())
+        .buildPartial();
+
   /**
    * Returns a {@code RpcEndpointInfos} instance
    *
@@ -45,16 +61,8 @@ public final class UserRpcUtils {
    * @throws NullPointerException if name is null
    */
   public static RpcEndpointInfos getRpcEndpointInfos(String name) {
-    RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
-    RpcEndpointInfos infos = RpcEndpointInfos.newBuilder()
+    RpcEndpointInfos infos = RpcEndpointInfos.newBuilder(INFOS_TEMPLATE)
         .setName(Preconditions.checkNotNull(name))
-        .setApplication(mxBean.getName())
-        .setVersion(DrillVersionInfo.getVersion())
-        .setMajorVersion(DrillVersionInfo.getMajorVersion())
-        .setMinorVersion(DrillVersionInfo.getMinorVersion())
-        .setPatchVersion(DrillVersionInfo.getPatchVersion())
-        .setBuildNumber(DrillVersionInfo.getBuildNumber())
-        .setVersionQualifier(DrillVersionInfo.getQualifier())
         .build();
 
     return infos;

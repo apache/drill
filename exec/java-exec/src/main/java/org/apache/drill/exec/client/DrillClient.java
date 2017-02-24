@@ -64,6 +64,8 @@ import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaReq;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.LikeFilter;
@@ -509,6 +511,19 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   public Version getServerVersion() {
     return (client != null && client.getServerInfos() != null) ? UserRpcUtils.getVersion(client.getServerInfos()) : null;
   }
+
+  /**
+   * Get server meta information
+   *
+   * Get meta information about the server like the the available functions
+   * or the identifier quoting string used by the current session
+   *
+   * @return a future to the server meta response
+   */
+  public DrillRpcFuture<GetServerMetaResp> getServerMeta() {
+    return client.send(RpcType.GET_SERVER_META, GetServerMetaReq.getDefaultInstance(), GetServerMetaResp.class);
+  }
+
   /**
    * Returns the list of methods supported by the server based on its advertised information.
    *

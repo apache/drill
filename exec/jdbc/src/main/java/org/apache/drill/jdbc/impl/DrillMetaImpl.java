@@ -421,7 +421,7 @@ class DrillMetaImpl extends MetaImpl {
   @Override
   public MetaResultSet getTables(String catalog, final Pat schemaPattern, final Pat tableNamePattern,
       final List<String> typeList) {
-    if (connection.getConfig().disableServerMetadata() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_TABLES)) {
+    if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_TABLES)) {
       return clientGetTables(catalog, schemaPattern, tableNamePattern, typeList);
     }
 
@@ -964,7 +964,7 @@ class DrillMetaImpl extends MetaImpl {
   @Override
   public MetaResultSet getColumns(String catalog, Pat schemaPattern,
                               Pat tableNamePattern, Pat columnNamePattern) {
-    if (connection.getConfig().disableServerMetadata() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_COLUMNS)) {
+    if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_COLUMNS)) {
       return clientGetColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
     }
 
@@ -1023,7 +1023,7 @@ class DrillMetaImpl extends MetaImpl {
    */
   @Override
   public MetaResultSet getSchemas(String catalog, Pat schemaPattern) {
-    if (connection.getConfig().disableServerMetadata() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_SCHEMAS)) {
+    if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_SCHEMAS)) {
       return clientGetSchemas(catalog, schemaPattern);
     }
 
@@ -1070,7 +1070,7 @@ class DrillMetaImpl extends MetaImpl {
    */
   @Override
   public MetaResultSet getCatalogs() {
-    if (connection.getConfig().disableServerMetadata() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_CATALOGS)) {
+    if (connection.getConfig().isServerMetadataDisabled() || ! connection.getClient().getSupportedMethods().contains(ServerMethod.GET_CATALOGS)) {
       return clientGetCatalogs();
     }
 

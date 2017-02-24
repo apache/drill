@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
@@ -27,15 +24,21 @@ import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.rpc.RequestHandler;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.RequestHandler;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.work.user.UserWorker;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 
 /**
  * Should create only one instance of this class per Drillbit service.
@@ -131,6 +134,15 @@ class UserServerRequestHandler implements RequestHandler<BitToUserConnection> {
         final CreatePreparedStatementReq req =
             CreatePreparedStatementReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
         worker.submitPreparedStatementWork(connection, req, responseSender);
+        break;
+      } catch (final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding CreatePreparedStatementReq body.", e);
+      }
+    case RpcType.GET_SERVER_META_VALUE:
+      try {
+        final GetServerMetaReq req =
+            GetServerMetaReq.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        worker.submitServerMetadataWork(connection.getSession(), req, responseSender);
         break;
       } catch (final InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding CreatePreparedStatementReq body.", e);

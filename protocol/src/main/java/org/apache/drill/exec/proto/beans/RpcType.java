@@ -35,6 +35,7 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
     GET_TABLES(16),
     GET_COLUMNS(17),
     CREATE_PREPARED_STATEMENT(22),
+    GET_SERVER_META(8),
     QUERY_DATA(6),
     QUERY_HANDLE(7),
     QUERY_PLAN_FRAGMENTS(13),
@@ -43,8 +44,7 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
     TABLES(20),
     COLUMNS(21),
     PREPARED_STATEMENT(23),
-    REQ_META_FUNCTIONS(8),
-    RESP_FUNCTION_LIST(9),
+    SERVER_META(9),
     QUERY_RESULT(10),
     SASL_MESSAGE(24);
     
@@ -72,8 +72,8 @@ public enum RpcType implements com.dyuproject.protostuff.EnumLite<RpcType>
             case 5: return REQUEST_RESULTS;
             case 6: return QUERY_DATA;
             case 7: return QUERY_HANDLE;
-            case 8: return REQ_META_FUNCTIONS;
-            case 9: return RESP_FUNCTION_LIST;
+            case 8: return GET_SERVER_META;
+            case 9: return SERVER_META;
             case 10: return QUERY_RESULT;
             case 11: return RESUME_PAUSED_QUERY;
             case 12: return GET_QUERY_PLAN_FRAGMENTS;

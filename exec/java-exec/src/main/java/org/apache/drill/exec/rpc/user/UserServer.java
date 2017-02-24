@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.UUID;
 
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
+import javax.security.sasl.SaslException;
+
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -39,19 +39,21 @@ import org.apache.drill.exec.proto.UserProtos.SaslSupport;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.AbstractRemoteConnection;
+import org.apache.drill.exec.rpc.AbstractServerConnection;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.OutboundRpcMessage;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.AbstractServerConnection;
 import org.apache.drill.exec.rpc.security.ServerAuthenticationHandler;
-import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.user.UserWorker;
+import org.apache.hadoop.security.HadoopKerberosName;
+import org.slf4j.Logger;
 
 import com.google.protobuf.MessageLite;
 
@@ -59,10 +61,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import org.apache.hadoop.security.HadoopKerberosName;
-import org.slf4j.Logger;
-
-import javax.security.sasl.SaslException;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);

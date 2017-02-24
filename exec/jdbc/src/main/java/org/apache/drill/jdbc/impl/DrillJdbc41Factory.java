@@ -74,7 +74,7 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   @Override
   public DrillDatabaseMetaDataImpl newDatabaseMetaData(AvaticaConnection connection) {
-    return new DrillDatabaseMetaDataImpl(connection);
+    return new DrillDatabaseMetaDataImpl((DrillConnectionImpl) connection);
   }
 
 
@@ -101,7 +101,7 @@ public class DrillJdbc41Factory extends DrillFactory {
       throws SQLException {
     DrillConnectionImpl drillConnection = (DrillConnectionImpl) connection;
     DrillClient client = drillConnection.getClient();
-    if (drillConnection.getConfig().disableServerPreparedStatement() || !client.getSupportedMethods().contains(ServerMethod.PREPARED_STATEMENT)) {
+    if (drillConnection.getConfig().isServerPreparedStatementDisabled() || !client.getSupportedMethods().contains(ServerMethod.PREPARED_STATEMENT)) {
       // fallback to client side prepared statement
       return new DrillJdbc41PreparedStatement(drillConnection, h, signature, null, resultSetType, resultSetConcurrency, resultSetHoldability);
     }

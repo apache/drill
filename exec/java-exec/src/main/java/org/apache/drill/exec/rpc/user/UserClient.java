@@ -44,6 +44,7 @@ import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
@@ -318,6 +319,8 @@ public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnect
       return CreatePreparedStatementResp.getDefaultInstance();
     case RpcType.SASL_MESSAGE_VALUE:
       return SaslMessage.getDefaultInstance();
+    case RpcType.SERVER_META_VALUE:
+      return GetServerMetaResp.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
