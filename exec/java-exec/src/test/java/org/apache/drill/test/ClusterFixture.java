@@ -40,7 +40,6 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -144,10 +143,10 @@ public class ClusterFixture implements AutoCloseable {
 
   ClusterFixture(FixtureBuilder builder) {
 
-    allocator = RootAllocatorFactory.newRoot(config);
     configureZk(builder);
     try {
       createConfig(builder);
+      allocator = RootAllocatorFactory.newRoot(config);
       startDrillbits(builder);
       applyOptions(builder);
     } catch (Exception e) {
@@ -402,11 +401,11 @@ public class ClusterFixture implements AutoCloseable {
     // will fail.
 
     if (! preserveLocalFiles) {
-        try {
-          removeLocalFiles();
-        } catch (Exception e) {
-          ex = ex == null ? e : ex;
-        }
+      try {
+        removeLocalFiles();
+      } catch (Exception e) {
+        ex = ex == null ? e : ex;
+      }
     }
 
     // Remove temporary directories created for this cluster session.
