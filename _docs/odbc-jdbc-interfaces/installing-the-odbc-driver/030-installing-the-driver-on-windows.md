@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2016-12-24 00:01:41 UTC
+date: 2017-02-24 20:28:56 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32- and 64-bit
@@ -68,10 +68,6 @@ To verify the installation, perform the following steps:
 
 You need to configure and start Drill before [testing]({{site.baseurl}}/docs/testing-the-odbc-connection/) the ODBC Data Source Administrator.
 
-## The Tableau Data-connection Customization (TDC) File
-
-The MapR Drill ODBC Driver includes a file named `MapRDrillODBC.TDC`. The TDC file includes customizations that improve ODBC configuration and performance
-when using Tableau.
 
 ### Next Step 
 [Configuring ODBC on Windows]({{ site.baseurl }}/docs/configuring-odbc-on-windows).
