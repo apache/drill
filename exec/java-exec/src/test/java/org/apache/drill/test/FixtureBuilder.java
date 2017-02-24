@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -55,15 +56,17 @@ public class FixtureBuilder {
     return props;
   }
 
-  String configResource;
-  Properties configProps;
-  boolean enableFullCache;
-  List<RuntimeOption> sessionOptions;
-  List<RuntimeOption> systemOptions;
-  int bitCount = 1;
-  String bitNames[];
-  int zkCount;
-  ZookeeperHelper zkHelper;
+  protected String configResource;
+  protected Properties configProps;
+  protected List<RuntimeOption> sessionOptions;
+  protected List<RuntimeOption> systemOptions;
+  protected int bitCount = 1;
+  protected String bitNames[];
+  protected int localZkCount;
+  protected ZookeeperHelper zkHelper;
+  protected boolean usingZk;
+  protected File tempDir;
+  protected boolean preserveLocalFiles;
 
   /**
    * Use the given configuration properties to start the embedded Drillbit.
@@ -165,11 +168,6 @@ public class FixtureBuilder {
     return sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, n);
   }
 
-  public FixtureBuilder enableFullCache() {
-    enableFullCache = true;
-    return this;
-  }
-
   /**
    * The number of Drillbits to start in the cluster.
    *
@@ -201,17 +199,22 @@ public class FixtureBuilder {
    * Drillbits.
    * @return this builder
    */
-  public FixtureBuilder withZk() {
-    return withZk(1);
+  public FixtureBuilder withLocalZk() {
+    return withLocalZk(1);
   }
 
-  public FixtureBuilder withZk(int count) {
-    zkCount = count;
+  public FixtureBuilder withLocalZk(int count) {
+    localZkCount = count;
+    usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
 
-    configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
-    return this;
+    return configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
+  }
+
+  public FixtureBuilder withRemoteZk(String connStr) {
+    usingZk = true;
+    return configProperty(ExecConstants.ZK_CONNECTION, connStr);
   }
 
   /**
@@ -224,10 +227,55 @@ public class FixtureBuilder {
    */
   public FixtureBuilder withZk(ZookeeperHelper zk) {
     zkHelper = zk;
+    usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
 
     configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
+    return this;
+  }
+
+  public FixtureBuilder tempDir(File path) {
+    this.tempDir = path;
+    return this;
+  }
+
+  /**
+   * Enable saving of query profiles. The only way to save them is
+   * to enable local store provider writes, which also saves the
+   * storage plugin configs. Doing so causes the CTTAS feature to
+   * fail on the next run, so the test fixture deletes all local
+   * files on start and close, unless
+   * {@link #keepLocalFiles()} is set.
+   *
+   * @return this builder
+   */
+
+  public FixtureBuilder saveProfiles() {
+    configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+//  configProperty(ExecConstants.QUERY_PROFILE_OPTION, "sync") // Temporary until DRILL-5257 is available
+    return this;
+  }
+
+  /**
+   * Starting with the addition of the CTTAS feature, a Drillbit will
+   * not restart unless we delete all local storage files before
+   * starting the Drillbit again. In particular, the stored copies
+   * of the storage plugin configs cause the temporary workspace
+   * check to fail. Normally the cluster fixture cleans up files
+   * both before starting and after shutting down the cluster. Set this
+   * option to preserve files after shutdown, perhaps to debug the
+   * contents.
+   * <p>
+   * This clean-up is needed only if we enable local storage writes
+   * (which we must do, unfortunately, to capture and analyze
+   * storage profiles.)
+   *
+   * @return this builder
+   */
+
+  public FixtureBuilder keepLocalFiles() {
+    preserveLocalFiles = true;
     return this;
   }
 
@@ -252,9 +300,9 @@ public class FixtureBuilder {
    * need them.
    *
    * @return
-   * @throws Exception
    */
-  public ClusterFixture build() throws Exception {
+
+  public ClusterFixture build() {
     return new ClusterFixture(this);
   }
 }
