@@ -23,7 +23,7 @@
 #include <boost/thread.hpp>
 #include "drill/drillc.hpp"
 
-int nOptions=13;
+int nOptions=15;
 
 struct Option{
     char name[32];
@@ -43,7 +43,8 @@ struct Option{
     {"queryTimeout", "Query timeout (second).", false},
     {"heartbeatFrequency", "Heartbeat frequency (second). Disabled if set to 0.", false},
     {"user", "Username", false},
-    {"password", "Password", false}
+    {"password", "Password", false},
+    {"saslPluginPath", "Path to where SASL plugins are installed", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -286,6 +287,7 @@ int main(int argc, char* argv[]) {
         std::string heartbeatFrequency=qsOptionValues["heartbeatFrequency"];
         std::string user=qsOptionValues["user"];
         std::string password=qsOptionValues["password"];
+        std::string saslPluginPath=qsOptionValues["saslPluginPath"];
 
         Drill::QueryType type;
 
@@ -347,6 +349,9 @@ int main(int argc, char* argv[]) {
         }
         if(!heartbeatFrequency.empty()) {
             Drill::DrillClientConfig::setHeartbeatFrequency(atoi(heartbeatFrequency.c_str()));
+        }
+        if (!saslPluginPath.empty()){
+            Drill::DrillClientConfig::setSaslPluginPath(saslPluginPath.c_str());
         }
 
         Drill::DrillUserProperties props;
