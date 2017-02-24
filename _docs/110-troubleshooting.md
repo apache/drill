@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-date: 2016-02-06 00:18:11 UTC
+date: 2017-02-24 22:12:36 UTC
 ---
 
 You may experience certain known issues when using Drill. This document lists some known issues and resolutions for each.
@@ -11,7 +11,7 @@ Before you begin troubleshooting issues that you encounter in Drill, make sure y
 You should also know the version of Drill running in the cluster. You can search JIRA for issues related to the version to see if a patch or workaround exists for the issue that you encountered.
 
 ### Identify the Foreman
-Issue the following query to identify the node running as the Foreman:  
+Issue the following query to identify the Foreman node:  
 
 ``SELECT hostname FROM sys.drillbits WHERE `current` = true;``
 
