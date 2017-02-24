@@ -466,7 +466,10 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
       FileUtils.deleteQuietly(tmpDir);
     } else {
       try {
-        FileUtils.cleanDirectory(new File(localUdfDir.toUri().getPath()));
+        File localDir = new File(localUdfDir.toUri().getPath());
+        if (localDir.exists()) {
+          FileUtils.cleanDirectory(localDir);
+        }
       } catch (IOException e) {
         logger.warn("Problems during local udf directory clean up", e);
       }
