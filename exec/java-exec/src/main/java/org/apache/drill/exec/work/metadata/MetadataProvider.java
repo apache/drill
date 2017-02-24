@@ -585,7 +585,7 @@ public class MetadataProvider {
    * @param ex Exception thrown
    * @return
    */
-  private static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
+  static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
     final String errorId = UUID.randomUUID().toString();
     logger.error("Failed to {}. ErrorId: {}", failedFunction, errorId, ex);
 

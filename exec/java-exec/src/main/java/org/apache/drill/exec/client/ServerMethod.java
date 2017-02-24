@@ -80,12 +80,17 @@ public enum ServerMethod {
   /**
    * Get columns metadata
    */
-  GET_COLUMNS(RpcType.GET_COLUMNS, Constants.DRILL_1_8_0);
+  GET_COLUMNS(RpcType.GET_COLUMNS, Constants.DRILL_1_8_0),
+
+  /**
+   * Get server metadata
+   */
+  SERVER_META(RpcType.SERVER_META, Constants.DRILL_1_10_0);
 
   private static class Constants {
     private static final Version DRILL_0_0_0 = new Version("0.0.0", 0, 0, 0, 0, "");
-
     private static final Version DRILL_1_8_0 = new Version("1.8.0", 1, 8, 0, 0, "");
+    private static final Version DRILL_1_10_0 = new Version("1.10.0", 1, 10, 0, 0, "");
   }
 
   private static final Map<RpcType, ServerMethod> REVERSE_MAPPING;

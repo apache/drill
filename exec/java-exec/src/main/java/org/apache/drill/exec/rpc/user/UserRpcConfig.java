@@ -37,6 +37,8 @@ import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaReq;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
@@ -71,6 +73,7 @@ public class UserRpcConfig {
         .add(RpcType.CREATE_PREPARED_STATEMENT, CreatePreparedStatementReq.class,
             RpcType.PREPARED_STATEMENT, CreatePreparedStatementResp.class) // user to bit
         .add(RpcType.SASL_MESSAGE, SaslMessage.class, RpcType.SASL_MESSAGE, SaslMessage.class) // user <-> bit
+        .add(RpcType.GET_SERVER_META, GetServerMetaReq.class, RpcType.SERVER_META, GetServerMetaResp.class) // user to bit
         .build();
   }
 
@@ -88,7 +91,7 @@ public class UserRpcConfig {
         .<RpcType> builder()
         .add(RpcType.RUN_QUERY, RpcType.CANCEL_QUERY, RpcType.GET_QUERY_PLAN_FRAGMENTS, RpcType.RESUME_PAUSED_QUERY,
           RpcType.GET_CATALOGS, RpcType.GET_SCHEMAS, RpcType.GET_TABLES, RpcType.GET_COLUMNS,
-          RpcType.CREATE_PREPARED_STATEMENT)
+          RpcType.CREATE_PREPARED_STATEMENT, RpcType.GET_SERVER_META)
         .build()
         );
 }

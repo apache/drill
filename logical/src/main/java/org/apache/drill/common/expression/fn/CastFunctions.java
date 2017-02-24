@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
@@ -142,7 +143,7 @@ public class CastFunctions {
       return func;
     }
 
-    throw new RuntimeException(
+    throw new IllegalArgumentException(
       String.format("cast function for type %s is not defined", targetMinorType.name()));
   }
 
