@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.rest.profile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +53,8 @@ public class ProfileWrapper {
   private final List<FragmentWrapper> fragmentProfiles;
   private final List<OperatorWrapper> operatorProfiles;
   private OptionList options;
+  private final HashMap<String, Long> majorFragmentTallyMap;
+  private long majorFragmentTallyTotal;
 
   public ProfileWrapper(final QueryProfile profile) {
     this.profile = profile;
@@ -66,6 +69,8 @@ public class ProfileWrapper {
       fragmentProfiles.add(new FragmentWrapper(major, profile.getStart()));
     }
     this.fragmentProfiles = fragmentProfiles;
+    majorFragmentTallyMap = new HashMap<String, Long>(majors.size());
+    this.majorFragmentTallyTotal = tallyMajorFragmentCost(majors);
 
     final List<OperatorWrapper> ows = new ArrayList<>();
     // temporary map to store (major_id, operator_id) -> [(op_profile, minor_id)]
@@ -107,6 +112,22 @@ public class ProfileWrapper {
       logger.error("Unable to deserialize query options", e);
       options = new OptionList();
     }
+  }
+
+  private long tallyMajorFragmentCost(List<MajorFragmentProfile> majorFragments) {
+    long globalProcessNanos = 0L;
+    for (MajorFragmentProfile majorFP : majorFragments) {
+      String majorFragmentId = new OperatorPathBuilder().setMajor(majorFP).build();
+      long processNanos = 0L;
+      for (MinorFragmentProfile minorFP : majorFP.getMinorFragmentProfileList()) {
+        for (OperatorProfile op : minorFP.getOperatorProfileList()) {
+          processNanos += op.getProcessNanos();
+        }
+      }
+      majorFragmentTallyMap.put(majorFragmentId, processNanos);
+      globalProcessNanos += processNanos;
+    }
+    return globalProcessNanos;
   }
 
   public boolean hasError() {
@@ -213,9 +234,18 @@ public class ProfileWrapper {
   }
 
   public String getFragmentsOverview() {
-    TableBuilder tb = new TableBuilder(FragmentWrapper.FRAGMENT_OVERVIEW_COLUMNS);
-    for (final FragmentWrapper fw : fragmentProfiles) {
-      fw.addSummary(tb);
+    TableBuilder tb;
+    if (profile.getState() == QueryState.STARTING
+        || profile.getState() == QueryState.RUNNING) {
+      tb = new TableBuilder(FragmentWrapper.ACTIVE_FRAGMENT_OVERVIEW_COLUMNS, FragmentWrapper.ACTIVE_FRAGMENT_OVERVIEW_COLUMNS_TOOLTIP);
+      for (final FragmentWrapper fw : fragmentProfiles) {
+        fw.addSummary(tb);
+      }
+    } else {
+      tb = new TableBuilder(FragmentWrapper.COMPLETED_FRAGMENT_OVERVIEW_COLUMNS, FragmentWrapper.COMPLETED_FRAGMENT_OVERVIEW_COLUMNS_TOOLTIP);
+      for (final FragmentWrapper fw : fragmentProfiles) {
+        fw.addFinalSummary(tb);
+      }
     }
     return tb.build();
   }
@@ -225,9 +255,11 @@ public class ProfileWrapper {
   }
 
   public String getOperatorsOverview() {
-    final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS);
+    final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS,
+        OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS_TOOLTIP);
+
     for (final OperatorWrapper ow : operatorProfiles) {
-      ow.addSummary(tb);
+      ow.addSummary(tb, this.majorFragmentTallyMap, this.majorFragmentTallyTotal);
     }
     return tb.build();
   }
