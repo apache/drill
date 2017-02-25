@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Implementation of {@link SqlOperatorTable} that contains standard operators and functions provided through
@@ -52,8 +52,8 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithoutInferenceMap = ArrayListMultimap.create();
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithInferenceMap = ArrayListMultimap.create();
-  // indicates local function registry version based on which drill operator were loaded
-  // is used to define if we need to reload operator table in case when function signature was not found
+  // indicates remote function registry version based on which drill operator were loaded
+  // is used to define if we need to reload operator table in case remote function registry version has changed
   private long functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
@@ -65,19 +65,18 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     this.systemOptionManager = systemOptionManager;
   }
 
-  /** Cleans up all operator holders and reloads operators */
-  public void reloadOperators(FunctionImplementationRegistry registry) {
-    drillOperatorsWithoutInference.clear();
-    drillOperatorsWithInference.clear();
-    drillOperatorsWithoutInferenceMap.clear();
-    drillOperatorsWithInferenceMap.clear();
-    registry.register(this);
+  /**
+   * Set function registry version based on which operator table was loaded.
+   *
+   * @param version registry version
+   */
+  public void setFunctionRegistryVersion(long version) {
+    functionRegistryVersion = version;
   }
 
-  public long setFunctionRegistryVersion(long version) {
-    return functionRegistryVersion = version;
-  }
-
+  /**
+   * @return function registry version based on which operator table was loaded
+   */
   public long getFunctionRegistryVersion() {
     return functionRegistryVersion;
   }

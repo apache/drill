@@ -66,7 +66,6 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final UserSession session;
   private final OptionManager queryOptions;
   private final PlannerSettings plannerSettings;
-  private final DrillOperatorTable table;
   private final ExecutionControls executionControls;
 
   private final BufferAllocator allocator;
@@ -83,6 +82,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * time this is set to true and the close method becomes a no-op.
    */
   private boolean closed = false;
+  private DrillOperatorTable table;
 
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId) {
     this.drillbitContext = drillbitContext;
@@ -225,6 +225,15 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public DrillOperatorTable getDrillOperatorTable() {
     return table;
+  }
+
+  /**
+   * Re-creates drill operator table to refresh functions list from local function registry.
+   */
+  public void reloadDrillOperatorTable() {
+    table = new DrillOperatorTable(
+        drillbitContext.getFunctionImplementationRegistry(),
+        drillbitContext.getOptionManager());
   }
 
   public QueryContextInformation getQueryContextInfo() {

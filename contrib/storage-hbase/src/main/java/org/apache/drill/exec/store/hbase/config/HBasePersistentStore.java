@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,6 +64,20 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   @Override
   public PersistentStoreMode getMode() {
     return PersistentStoreMode.PERSISTENT;
+  }
+
+  @Override
+  public boolean contains(String key) {
+    try {
+      Get get = new Get(row(key));
+      get.addColumn(FAMILY, QUALIFIER);
+      return hbaseTable.exists(get);
+    } catch (IOException e) {
+      throw UserException
+          .dataReadError(e)
+          .message("Caught error while checking row existence '%s' for table '%s'", key, hbaseTableName)
+          .build(logger);
+    }
   }
 
   @Override

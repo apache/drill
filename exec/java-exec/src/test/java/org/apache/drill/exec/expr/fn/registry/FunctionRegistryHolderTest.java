@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -60,25 +60,24 @@ public class FunctionRegistryHolderTest {
   @Before
   public void setup() {
     resetRegistry();
-    fillInRegistry();
+    fillInRegistry(1);
   }
 
   @Test
   public void testVersion() {
     resetRegistry();
-    assertEquals("Initial version should be 0", 0, registryHolder.getVersion());
-    registryHolder.addJars(Maps.<String, List<FunctionHolder>>newHashMap());
-    assertEquals("Version should not change if no jars were added.", 0, registryHolder.getVersion());
-    registryHolder.removeJar("unknown.jar");
-    assertEquals("Version should not change if no jars were removed.", 0, registryHolder.getVersion());
-    fillInRegistry();
-    assertEquals("Version should have incremented by 1", 1, registryHolder.getVersion());
+    long expectedVersion = 0;
+    assertEquals("Initial version should be 0", expectedVersion, registryHolder.getVersion());
+    registryHolder.addJars(Maps.<String, List<FunctionHolder>>newHashMap(), ++expectedVersion);
+    assertEquals("Version can change if no jars were added.", expectedVersion, registryHolder.getVersion());
+    fillInRegistry(++expectedVersion);
+    assertEquals("Version should have incremented by 1", expectedVersion, registryHolder.getVersion());
     registryHolder.removeJar(built_in);
-    assertEquals("Version should have incremented by 1", 2, registryHolder.getVersion());
-    fillInRegistry();
-    assertEquals("Version should have incremented by 1", 3, registryHolder.getVersion());
-    fillInRegistry();
-    assertEquals("Version should have incremented by 1", 4, registryHolder.getVersion());
+    assertEquals("Version should have incremented by 1", expectedVersion, registryHolder.getVersion());
+    fillInRegistry(++expectedVersion);
+    assertEquals("Version should have incremented by 1", expectedVersion, registryHolder.getVersion());
+    fillInRegistry(++expectedVersion);
+    assertEquals("Version should have incremented by 1", expectedVersion, registryHolder.getVersion());
   }
 
   @Test
@@ -97,8 +96,9 @@ public class FunctionRegistryHolderTest {
       }
     }
 
-    registryHolder.addJars(newJars);
-    assertEquals("Version number should match", 1, registryHolder.getVersion());
+    long expectedVersion = 0;
+    registryHolder.addJars(newJars, ++expectedVersion);
+    assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
     assertEquals(functionsSize, registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
@@ -120,16 +120,17 @@ public class FunctionRegistryHolderTest {
         functionsSize++;
       }
     }
-    registryHolder.addJars(newJars);
-    assertEquals("Version number should match", 1, registryHolder.getVersion());
+    long expectedVersion = 0;
+    registryHolder.addJars(newJars, ++expectedVersion);
+    assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
     assertEquals(functionsSize, registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
     compareListMultimaps(functionsWithSignatures, registryHolder.getAllFunctionsWithSignatures());
 
     // adding the same jars should not cause adding duplicates, should override existing jars only
-    registryHolder.addJars(newJars);
-    assertEquals("Version number should match", 2, registryHolder.getVersion());
+    registryHolder.addJars(newJars, ++expectedVersion);
+    assertEquals("Version number should match", expectedVersion, registryHolder.getVersion());
     compareTwoLists(jars, registryHolder.getAllJarNames());
     assertEquals(functionsSize, registryHolder.functionsSize());
     compareListMultimaps(functionsWithHolders, registryHolder.getAllFunctionsWithHolders());
@@ -252,8 +253,8 @@ public class FunctionRegistryHolderTest {
     registryHolder = new FunctionRegistryHolder();
   }
 
-  private void fillInRegistry() {
-    registryHolder.addJars(newJars);
+  private void fillInRegistry(long version) {
+    registryHolder.addJars(newJars, version);
   }
 
   private <T> void compareListMultimaps(ListMultimap<String, T> lm1, ListMultimap<String, T> lm2) {
