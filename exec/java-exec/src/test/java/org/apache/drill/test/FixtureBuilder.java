@@ -281,6 +281,24 @@ public class FixtureBuilder {
   }
 
   /**
+   * Enable saving of query profiles. The only way to save them is
+   * to enable local store provider writes, which also saves the
+   * storage plugin configs. Doing so causes the CTTAS feature to
+   * fail on the next run, so the test fixture deletes all local
+   * files on start and close, unless
+   * {@link #keepLocalFiles()} is set.
+   *
+   * @return this builder
+   */
+
+  public FixtureBuilder saveProfiles() {
+    configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+    systemOption(ExecConstants.ENABLE_QUERY_PROFILE_OPTION, true);
+    systemOption(ExecConstants.QUERY_PROFILE_DEBUG_OPTION, true);
+    return this;
+  }
+
+  /**
    * Create the embedded Drillbit and client, applying the options set
    * in the builder. Best to use this in a try-with-resources block:
    * <pre><code>
