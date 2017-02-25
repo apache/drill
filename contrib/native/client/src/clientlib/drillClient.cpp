@@ -47,6 +47,7 @@ DrillClientInitializer::~DrillClientInitializer(){
 
 // Initialize static member of DrillClientConfig
 logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
+const char* DrillClientConfig::s_saslPluginPath = NULL;
 uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
 int32_t DrillClientConfig::s_socketTimeout=0;
 int32_t DrillClientConfig::s_handshakeTimeout=5;
@@ -75,6 +76,16 @@ void DrillClientConfig::setLogLevel(logLevel_t l){
     s_logLevel=l;
     getLogger().m_level=l;
     //boost::log::core::get()->set_filter(boost::log::trivial::severity >= s_logLevel);
+}
+
+void DrillClientConfig::setSaslPluginPath(const char *path){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    s_saslPluginPath = path;
+}
+
+const char* DrillClientConfig::getSaslPluginPath(){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    return s_saslPluginPath;
 }
 
 void DrillClientConfig::setBufferLimit(uint64_t l){
@@ -164,6 +175,9 @@ const std::map<std::string, uint32_t>  DrillUserProperties::USER_PROPERTIES=boos
     ( USERPROP_PASSWORD,    USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_PASSWORD)
     ( USERPROP_SCHEMA,      USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING)
     ( USERPROP_IMPERSONATION_TARGET,   USERPROP_FLAGS_SERVERPROP|USERPROP_FLAGS_STRING)
+    ( USERPROP_AUTH_MECHANISM,         USERPROP_FLAGS_STRING)
+    ( USERPROP_SERVICE_NAME,           USERPROP_FLAGS_STRING)
+    ( USERPROP_SERVICE_HOST,           USERPROP_FLAGS_STRING)
     ( USERPROP_USESSL,      USERPROP_FLAGS_BOOLEAN|USERPROP_FLAGS_SSLPROP)
     ( USERPROP_FILEPATH,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILEPATH)
     ( USERPROP_FILENAME,    USERPROP_FLAGS_STRING|USERPROP_FLAGS_SSLPROP|USERPROP_FLAGS_FILENAME)
@@ -365,7 +379,7 @@ connectionStatus_t DrillClient::connect(const char* connectStr, const char* defa
 
 connectionStatus_t DrillClient::connect(const char* connectStr, DrillUserProperties* properties){
     connectionStatus_t ret=CONN_SUCCESS;
-    ret=this->m_pImpl->connect(connectStr);
+    ret=this->m_pImpl->connect(connectStr, properties);
     if(ret==CONN_SUCCESS){
         ret=this->m_pImpl->validateHandshake(properties);
     }

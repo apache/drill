@@ -33,16 +33,16 @@ import com.google.protobuf.MessageLite;
 /**
  * Manager all connections between two particular bits.
  */
-public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConnection, OUTBOUND_HANDSHAKE extends MessageLite>
+public abstract class ReconnectingConnection<C extends ClientConnection, HS extends MessageLite>
     implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReconnectingConnection.class);
 
-  private final AtomicReference<CONNECTION_TYPE> connectionHolder = new AtomicReference<CONNECTION_TYPE>();
+  private final AtomicReference<C> connectionHolder = new AtomicReference<C>();
   private final String host;
   private final int port;
-  private final OUTBOUND_HANDSHAKE handshake;
+  private final HS handshake;
 
-  public ReconnectingConnection(OUTBOUND_HANDSHAKE handshake, String host, int port) {
+  public ReconnectingConnection(HS handshake, String host, int port) {
     Preconditions.checkNotNull(host);
     Preconditions.checkArgument(port > 0);
     this.host = host;
@@ -50,11 +50,11 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
     this.handshake = handshake;
   }
 
-  protected abstract BasicClient<?, CONNECTION_TYPE, OUTBOUND_HANDSHAKE, ?> getNewClient();
+  protected abstract BasicClient<?, C, HS, ?> getNewClient();
 
-  public <R extends MessageLite, C extends RpcCommand<R, CONNECTION_TYPE>> void runCommand(C cmd) {
+  public <T extends MessageLite, R extends RpcCommand<T, C>> void runCommand(R cmd) {
 //    if(logger.isDebugEnabled()) logger.debug(String.format("Running command %s sending to host %s:%d", cmd, host, port));
-    CONNECTION_TYPE connection = connectionHolder.get();
+    C connection = connectionHolder.get();
     if (connection != null) {
       if (connection.isActive()) {
         cmd.connectionAvailable(connection);
@@ -77,8 +77,8 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
 
       } else {
 //        logger.debug("No connection active, opening client connection.");
-        BasicClient<?, CONNECTION_TYPE, OUTBOUND_HANDSHAKE, ?> client = getNewClient();
-        ConnectionListeningFuture<R, C> future = new ConnectionListeningFuture<R, C>(cmd);
+        BasicClient<?, C, HS, ?> client = getNewClient();
+        ConnectionListeningFuture<T> future = new ConnectionListeningFuture<>(client.getInitialCommand(cmd));
         client.connectAsClient(future, handshake, host, port);
         future.waitAndRun();
 //        logger.debug("Connection available and active, command now being run inline.");
@@ -88,12 +88,13 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
     }
   }
 
-  public class ConnectionListeningFuture<R extends MessageLite, C extends RpcCommand<R, CONNECTION_TYPE>> extends
-      AbstractFuture<CONNECTION_TYPE> implements RpcConnectionHandler<CONNECTION_TYPE> {
+  public class ConnectionListeningFuture<R extends MessageLite>
+      extends AbstractFuture<C>
+      implements RpcConnectionHandler<C> {
 
-    private C cmd;
+    private RpcCommand<R, C> cmd;
 
-    public ConnectionListeningFuture(C cmd) {
+    public ConnectionListeningFuture(RpcCommand<R, C> cmd) {
       super();
       this.cmd = cmd;
     }
@@ -112,7 +113,7 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
       while(true) {
         try {
           //        logger.debug("Waiting for connection.");
-          CONNECTION_TYPE connection = this.get(remainingWaitTimeMills, TimeUnit.MILLISECONDS);
+          C connection = this.get(remainingWaitTimeMills, TimeUnit.MILLISECONDS);
 
           if (connection == null) {
             //          logger.debug("Connection failed.");
@@ -146,14 +147,14 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
     }
 
     @Override
-    public void connectionFailed(org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType type, Throwable t) {
+    public void connectionFailed(FailureType type, Throwable t) {
       set(null);
       cmd.connectionFailed(type, t);
     }
 
     @Override
-    public void connectionSucceeded(CONNECTION_TYPE incoming) {
-      CONNECTION_TYPE connection = connectionHolder.get();
+    public void connectionSucceeded(C incoming) {
+      C connection = connectionHolder.get();
       while (true) {
         boolean setted = connectionHolder.compareAndSet(null, incoming);
         if (setted) {
@@ -179,8 +180,8 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
 
   /** Factory for close handlers **/
   public class CloseHandlerCreator {
-    public GenericFutureListener<ChannelFuture> getHandler(CONNECTION_TYPE connection,
-        GenericFutureListener<ChannelFuture> parent) {
+    public GenericFutureListener<ChannelFuture> getHandler(C connection,
+                                                           GenericFutureListener<ChannelFuture> parent) {
       return new CloseHandler(connection, parent);
     }
   }
@@ -189,10 +190,10 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
    * Listens for connection closes and clears connection holder.
    */
   protected class CloseHandler implements GenericFutureListener<ChannelFuture> {
-    private CONNECTION_TYPE connection;
+    private C connection;
     private GenericFutureListener<ChannelFuture> parent;
 
-    public CloseHandler(CONNECTION_TYPE connection, GenericFutureListener<ChannelFuture> parent) {
+    public CloseHandler(C connection, GenericFutureListener<ChannelFuture> parent) {
       super();
       this.connection = connection;
       this.parent = parent;
@@ -210,59 +211,16 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
     return new CloseHandlerCreator();
   }
 
-  public void addExternalConnection(CONNECTION_TYPE connection) {
+  public void addExternalConnection(C connection) {
     // if the connection holder is not set, set it to this incoming connection. We'll simply ignore if already set.
     this.connectionHolder.compareAndSet(null, connection);
   }
 
   @Override
   public void close() {
-    CONNECTION_TYPE c = connectionHolder.getAndSet(null);
+    C c = connectionHolder.getAndSet(null);
     if (c != null) {
       c.getChannel().close();
-    }
-  }
-
-  /**
-   * Decorate a connection creation so that we capture a success and keep it available for future requests. If we have
-   * raced and another is already available... we return that one and close things down on this one.
-   */
-  private class ConnectionListeningDecorator implements RpcConnectionHandler<CONNECTION_TYPE> {
-
-    private final RpcConnectionHandler<CONNECTION_TYPE> delegate;
-
-    public ConnectionListeningDecorator(RpcConnectionHandler<CONNECTION_TYPE> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void connectionSucceeded(CONNECTION_TYPE incoming) {
-      CONNECTION_TYPE connection = connectionHolder.get();
-      while (true) {
-        boolean setted = connectionHolder.compareAndSet(null, incoming);
-        if (setted) {
-          connection = incoming;
-          break;
-        }
-        connection = connectionHolder.get();
-        if (connection != null) {
-          break;
-        }
-      }
-
-      if (connection == incoming) {
-        delegate.connectionSucceeded(connection);
-      } else {
-        // close the incoming because another channel was created in the mean time (unless this is a self connection).
-        logger.debug("Closing incoming connection because a connection was already set.");
-        incoming.getChannel().close();
-        delegate.connectionSucceeded(connection);
-      }
-    }
-
-    @Override
-    public void connectionFailed(org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType type, Throwable t) {
-      delegate.connectionFailed(type, t);
     }
   }
 

@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -48,6 +50,7 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
 
     
     private int rpcVersion;
+    private List<String> authenticationMechanisms;
 
     public BitServerHandshake()
     {
@@ -66,6 +69,19 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
     public BitServerHandshake setRpcVersion(int rpcVersion)
     {
         this.rpcVersion = rpcVersion;
+        return this;
+    }
+
+    // authenticationMechanisms
+
+    public List<String> getAuthenticationMechanismsList()
+    {
+        return authenticationMechanisms;
+    }
+
+    public BitServerHandshake setAuthenticationMechanismsList(List<String> authenticationMechanisms)
+    {
+        this.authenticationMechanisms = authenticationMechanisms;
         return this;
     }
 
@@ -126,6 +142,11 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
                 case 1:
                     message.rpcVersion = input.readInt32();
                     break;
+                case 2:
+                    if(message.authenticationMechanisms == null)
+                        message.authenticationMechanisms = new ArrayList<String>();
+                    message.authenticationMechanisms.add(input.readString());
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -137,6 +158,15 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
     {
         if(message.rpcVersion != 0)
             output.writeInt32(1, message.rpcVersion, false);
+
+        if(message.authenticationMechanisms != null)
+        {
+            for(String authenticationMechanisms : message.authenticationMechanisms)
+            {
+                if(authenticationMechanisms != null)
+                    output.writeString(2, authenticationMechanisms, true);
+            }
+        }
     }
 
     public String getFieldName(int number)
@@ -144,6 +174,7 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
         switch(number)
         {
             case 1: return "rpcVersion";
+            case 2: return "authenticationMechanisms";
             default: return null;
         }
     }
@@ -158,6 +189,7 @@ public final class BitServerHandshake implements Externalizable, Message<BitServ
     static
     {
         __fieldMap.put("rpcVersion", 1);
+        __fieldMap.put("authenticationMechanisms", 2);
     }
     
 }

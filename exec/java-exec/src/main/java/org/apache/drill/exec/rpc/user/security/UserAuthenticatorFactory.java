@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,23 +29,23 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import com.google.common.base.Strings;
 
 /**
- * Factory class which provides {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} implementation
- * based on the BOOT options.
+ * Factory class which provides {@link UserAuthenticator} implementation based on the BOOT options.
  */
 public class UserAuthenticatorFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserAuthenticatorFactory.class);
 
   /**
-   * Create a {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} implementation based on BOOT settings in
+   * Create a {@link UserAuthenticator} implementation based on BOOT settings in
    * given <i>drillConfig</i>.
    *
    * @param config DrillConfig containing BOOT options.
-   * @return Initialized {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} implementation instance.
+   * @return Initialized {@link UserAuthenticator} implementation instance.
    *         It is responsibility of the caller to close the authenticator when no longer needed.
    *
    * @throws DrillbitStartupException when no implementation found for given BOOT options.
    */
-  public static UserAuthenticator createAuthenticator(final DrillConfig config, ScanResult scan) throws DrillbitStartupException {
+  public static UserAuthenticator createAuthenticator(final DrillConfig config, ScanResult scan)
+      throws DrillbitStartupException {
     final String authImplConfigured = config.getString(USER_AUTHENTICATOR_IMPL);
 
     if (Strings.isNullOrEmpty(authImplConfigured)) {
@@ -55,11 +55,13 @@ public class UserAuthenticatorFactory {
 
     final Collection<Class<? extends UserAuthenticator>> authImpls =
         scan.getImplementations(UserAuthenticator.class);
+    logger.debug("Found UserAuthenticator implementations: {}", authImpls);
 
     for(Class<? extends UserAuthenticator> clazz : authImpls) {
       final UserAuthenticatorTemplate template = clazz.getAnnotation(UserAuthenticatorTemplate.class);
       if (template == null) {
-        logger.warn("{} doesn't have {} annotation. Skipping.", clazz.getCanonicalName(), UserAuthenticatorTemplate.class);
+        logger.warn("{} doesn't have {} annotation. Skipping.", clazz.getCanonicalName(),
+            UserAuthenticatorTemplate.class);
         continue;
       }
 

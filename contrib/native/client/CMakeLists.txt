@@ -125,6 +125,8 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 #Find Zookeeper
 find_package(Zookeeper REQUIRED )
 
+# Find Cyrus SASL
+find_package(SASL REQUIRED)
 
 # Generated sources
 configure_file(
@@ -151,6 +153,8 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib/y2038")
 # Build the Client Library as a shared library
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib")
 include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS})
+
+include_directories(${SASL_INCLUDE_DIRS})
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/test")
 

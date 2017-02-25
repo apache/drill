@@ -23,6 +23,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 
+import com.google.common.base.Strings;
+import io.netty.channel.EventLoopGroup;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -65,22 +69,18 @@ import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.LikeFilter;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
-import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
-import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
 import org.apache.drill.exec.rpc.TransportCheck;
+import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -89,12 +89,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import com.google.common.util.concurrent.AbstractCheckedFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.channel.EventLoopGroup;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms
@@ -108,7 +104,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DrillConfig config;
   private UserClient client;
-  private UserProperties props = null;
+  private DrillProperties properties;
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
   private final BufferAllocator allocator;
@@ -312,12 +308,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     if (connected) {
       return;
     }
+    properties = DrillProperties.createFromProperties(props);
 
     final List<DrillbitEndpoint> endpoints = new ArrayList<>();
 
     if (isDirectConnection) {
       // Populate the endpoints list with all the drillbit information provided in the connection string
-      endpoints.addAll(parseAndVerifyEndpoints(props.getProperty("drillbit"),
+      endpoints.addAll(parseAndVerifyEndpoints(properties.getProperty(DrillProperties.DRILLBIT_CONNECTION),
                                                config.getString(ExecConstants.INITIAL_USER_PORT)));
     } else {
       if (ownsZkConnection) {
@@ -330,20 +327,11 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       }
       endpoints.addAll(clusterCoordinator.getAvailableEndpoints());
       // Make sure we have at least one endpoint in the list
-      checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper");
+      checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper. Check connection parameters?");
     }
 
     // shuffle the collection then get the first endpoint
     Collections.shuffle(endpoints);
-
-    if (props != null) {
-      final UserProperties.Builder upBuilder = UserProperties.newBuilder();
-      for (final String key : props.stringPropertyNames()) {
-        upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
-      }
-
-      this.props = upBuilder.build();
-    }
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
     executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
@@ -358,9 +346,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       }
     };
 
-    // "tries" is max number of unique drillbit to try connecting until successfully connected to one of them
-    final String connectTriesConf = (props != null) ? props.getProperty("tries", "5") : "5";
-
+    final String connectTriesConf = properties.getProperty(DrillProperties.TRIES, "5");
     int connectTriesVal;
     try {
       connectTriesVal = Math.min(endpoints.size(), Integer.parseInt(connectTriesConf));
@@ -381,12 +367,16 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       endpoint = endpoints.get(triedEndpointIndex);
       logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
 
+      if (!properties.containsKey(DrillProperties.SERVICE_HOST)) {
+        properties.setProperty(DrillProperties.SERVICE_HOST, endpoint.getAddress());
+      }
+
       try {
         connect(endpoint);
         connected = true;
         logger.info("Successfully connected to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
         break;
-      } catch (InvalidConnectionInfoException ex) {
+      } catch (NonTransientRpcException ex) {
         logger.error("Connection to {}:{} failed with error {}. Not retrying anymore", endpoint.getAddress(),
                      endpoint.getUserPort(), ex.getMessage());
         throw ex;
@@ -435,9 +425,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
-    final FutureHandler f = new FutureHandler();
-    client.connect(f, endpoint, props, getUserCredentials());
-    f.checkedGet();
+    client.connect(endpoint, properties, getUserCredentials());
   }
 
   public BufferAllocator getAllocator() {
@@ -568,19 +556,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * Helper method to generate the UserCredentials message from the properties.
    */
   private UserBitShared.UserCredentials getUserCredentials() {
-    // If username is not propagated as one of the properties
-    String userName = "anonymous";
-
-    if (props != null) {
-      for (Property property: props.getPropertiesList()) {
-        if (property.getKey().equalsIgnoreCase("user") && !Strings.isNullOrEmpty(property.getValue())) {
-          userName = property.getValue();
-          break;
-        }
-      }
+    String userName = properties.getProperty(DrillProperties.USER);
+    if (Strings.isNullOrEmpty(userName)) {
+      userName = "anonymous"; // if username is not propagated as one of the properties
     }
-
-    return UserBitShared.UserCredentials.newBuilder().setUserName(userName).build();
+    return UserBitShared.UserCredentials.newBuilder()
+      .setUserName(userName)
+      .build();
   }
 
   public DrillRpcFuture<Ack> cancelQuery(QueryId id) {
@@ -825,36 +807,6 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       if (logger.isDebugEnabled()) {
         logger.debug("Query ID arrived: {}", QueryIdHelper.getQueryId(queryId));
       }
-    }
-  }
-
-  private class FutureHandler extends AbstractCheckedFuture<Void, RpcException> implements RpcConnectionHandler<ServerConnection>, DrillRpcFuture<Void>{
-    protected FutureHandler() {
-      super( SettableFuture.<Void>create());
-    }
-
-    @Override
-    public void connectionSucceeded(ServerConnection connection) {
-      getInner().set(null);
-    }
-
-    @Override
-    public void connectionFailed(FailureType type, Throwable t) {
-      getInner().setException(new RpcException(String.format("%s : %s", type.name(), t.getMessage()), t));
-    }
-
-    private SettableFuture<Void> getInner() {
-      return (SettableFuture<Void>) delegate();
-    }
-
-    @Override
-    protected RpcException mapException(Exception e) {
-      return RpcException.mapException(e);
-    }
-
-    @Override
-    public DrillBuf getBuffer() {
-      return null;
     }
   }
 }

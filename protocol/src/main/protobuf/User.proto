@@ -10,8 +10,7 @@ import "BitData.proto";
 import "BitControl.proto";
 import "ExecutionProtos.proto";
 
-
-////// UserToBit RPC ///////
+////// User <-> Bit RPC ///////
 enum RpcType {
   HANDSHAKE = 0;
   ACK = 1;
@@ -43,6 +42,9 @@ enum RpcType {
   RESP_FUNCTION_LIST = 9;
 
   QUERY_RESULT = 10; // drillbit is reporting a query status change, most likely a terminal message, to the user
+
+  // user to bit and bit to user
+  SASL_MESSAGE = 24;
 }
 
 message Property {
@@ -63,6 +65,11 @@ message RpcEndpointInfos {
     optional string application = 6;    // example: Tableau 9.3
 }
 
+enum SaslSupport {
+  UNKNOWN_SASL_SUPPORT = 0;
+  SASL_AUTH = 1;
+}
+
 message UserToBitHandshake {
   optional exec.shared.RpcChannel channel = 1 [default = USER];
   optional bool support_listening = 2;
@@ -72,6 +79,7 @@ message UserToBitHandshake {
   optional bool support_complex_types = 6 [default = false];
   optional bool support_timeout = 7 [default = false];
   optional RpcEndpointInfos client_infos = 8;
+  optional SaslSupport sasl_support = 9;
 }
 
 message RequestResults {
@@ -103,6 +111,7 @@ enum HandshakeStatus {
   RPC_VERSION_MISMATCH = 2; // Client and Server RPC versions are different
   AUTH_FAILED = 3; // User authentication failed
   UNKNOWN_FAILURE = 4; // Unknown failure, refer to the error message for more details
+  AUTH_REQUIRED = 5; // User authentication required
 }
 
 message BitToUserHandshake {
@@ -111,6 +120,7 @@ message BitToUserHandshake {
   optional string errorId = 4;
   optional string errorMessage = 5;
   optional RpcEndpointInfos server_infos = 6;
+  repeated string authenticationMechanisms = 7;
 }
 
 /*

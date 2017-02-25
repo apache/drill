@@ -26,6 +26,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -91,16 +93,18 @@ public class WebServer implements AutoCloseable {
   private final MetricRegistry metrics;
   private final WorkManager workManager;
   private final Server embeddedJetty;
+  private final BootStrapContext context;
 
   /**
    * Create Jetty based web server.
-   * @param config DrillConfig instance.
-   * @param metrics Metrics registry.
+   *
+   * @param context Bootstrap context.
    * @param workManager WorkManager instance.
    */
-  public WebServer(final DrillConfig config, final MetricRegistry metrics, final WorkManager workManager) {
-    this.config = config;
-    this.metrics = metrics;
+  public WebServer(final BootStrapContext context, final WorkManager workManager) {
+    this.context = context;
+    this.config = context.getConfig();
+    this.metrics = context.getMetrics();
     this.workManager = workManager;
 
     if (config.getBoolean(ExecConstants.HTTP_ENABLE)) {
@@ -121,6 +125,13 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty == null) {
       return;
     }
+    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+    if (authEnabled && !context.getAuthProvider()
+        .containsFactory(PlainFactory.SIMPLE_NAME)) {
+      logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
+          "username/password. But PLAIN mechanism is not configured.");
+      return;
+    }
 
     final ServerConnector serverConnector;
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
@@ -138,7 +149,6 @@ public class WebServer implements AutoCloseable {
     final ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
-    embeddedJetty.setHandler(servletContextHandler);
 
     final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager)));
     servletHolder.setInitOrder(1);
@@ -159,9 +169,9 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
-      servletContextHandler.setSecurityHandler(createSecurityHandler());
-      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+    if (authEnabled) {
+        servletContextHandler.setSecurityHandler(createSecurityHandler());
+        servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
@@ -180,6 +190,7 @@ public class WebServer implements AutoCloseable {
       }
     }
 
+    embeddedJetty.setHandler(servletContextHandler);
     embeddedJetty.start();
   }
 

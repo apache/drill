@@ -50,6 +50,14 @@ public final class BitData {
      * </pre>
      */
     REQ_RECORD_BATCH(3, 3),
+    /**
+     * <code>SASL_MESSAGE = 4;</code>
+     *
+     * <pre>
+     * both bit request and response
+     * </pre>
+     */
+    SASL_MESSAGE(4, 4),
     ;
 
     /**
@@ -72,6 +80,14 @@ public final class BitData {
      * </pre>
      */
     public static final int REQ_RECORD_BATCH_VALUE = 3;
+    /**
+     * <code>SASL_MESSAGE = 4;</code>
+     *
+     * <pre>
+     * both bit request and response
+     * </pre>
+     */
+    public static final int SASL_MESSAGE_VALUE = 4;
 
 
     public final int getNumber() { return value; }
@@ -82,6 +98,7 @@ public final class BitData {
         case 1: return ACK;
         case 2: return GOODBYE;
         case 3: return REQ_RECORD_BATCH;
+        case 4: return SASL_MESSAGE;
         default: return null;
       }
     }
@@ -631,6 +648,26 @@ public final class BitData {
      * <code>optional int32 rpc_version = 1;</code>
      */
     int getRpcVersion();
+
+    // repeated string authenticationMechanisms = 2;
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    java.util.List<java.lang.String>
+    getAuthenticationMechanismsList();
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    int getAuthenticationMechanismsCount();
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    java.lang.String getAuthenticationMechanisms(int index);
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index);
   }
   /**
    * Protobuf type {@code exec.bit.data.BitServerHandshake}
@@ -688,6 +725,14 @@ public final class BitData {
               rpcVersion_ = input.readInt32();
               break;
             }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              authenticationMechanisms_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -696,6 +741,9 @@ public final class BitData {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(authenticationMechanisms_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -744,8 +792,39 @@ public final class BitData {
       return rpcVersion_;
     }
 
+    // repeated string authenticationMechanisms = 2;
+    public static final int AUTHENTICATIONMECHANISMS_FIELD_NUMBER = 2;
+    private com.google.protobuf.LazyStringList authenticationMechanisms_;
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    public java.util.List<java.lang.String>
+        getAuthenticationMechanismsList() {
+      return authenticationMechanisms_;
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    public int getAuthenticationMechanismsCount() {
+      return authenticationMechanisms_.size();
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    public java.lang.String getAuthenticationMechanisms(int index) {
+      return authenticationMechanisms_.get(index);
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index) {
+      return authenticationMechanisms_.getByteString(index);
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
+      authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -762,6 +841,9 @@ public final class BitData {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(1, rpcVersion_);
       }
+      for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+        output.writeBytes(2, authenticationMechanisms_.getByteString(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -774,6 +856,15 @@ public final class BitData {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, rpcVersion_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(authenticationMechanisms_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getAuthenticationMechanismsList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -893,6 +984,8 @@ public final class BitData {
         super.clear();
         rpcVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -925,6 +1018,12 @@ public final class BitData {
           to_bitField0_ |= 0x00000001;
         }
         result.rpcVersion_ = rpcVersion_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              authenticationMechanisms_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.authenticationMechanisms_ = authenticationMechanisms_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -943,6 +1042,16 @@ public final class BitData {
         if (other == org.apache.drill.exec.proto.BitData.BitServerHandshake.getDefaultInstance()) return this;
         if (other.hasRpcVersion()) {
           setRpcVersion(other.getRpcVersion());
+        }
+        if (!other.authenticationMechanisms_.isEmpty()) {
+          if (authenticationMechanisms_.isEmpty()) {
+            authenticationMechanisms_ = other.authenticationMechanisms_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureAuthenticationMechanismsIsMutable();
+            authenticationMechanisms_.addAll(other.authenticationMechanisms_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1000,6 +1109,99 @@ public final class BitData {
       public Builder clearRpcVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
         rpcVersion_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // repeated string authenticationMechanisms = 2;
+      private com.google.protobuf.LazyStringList authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureAuthenticationMechanismsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList(authenticationMechanisms_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public java.util.List<java.lang.String>
+          getAuthenticationMechanismsList() {
+        return java.util.Collections.unmodifiableList(authenticationMechanisms_);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public int getAuthenticationMechanismsCount() {
+        return authenticationMechanisms_.size();
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public java.lang.String getAuthenticationMechanisms(int index) {
+        return authenticationMechanisms_.get(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAuthenticationMechanismsBytes(int index) {
+        return authenticationMechanisms_.getByteString(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public Builder setAuthenticationMechanisms(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public Builder addAuthenticationMechanisms(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public Builder addAllAuthenticationMechanisms(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureAuthenticationMechanismsIsMutable();
+        super.addAll(values, authenticationMechanisms_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public Builder clearAuthenticationMechanisms() {
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 2;</code>
+       */
+      public Builder addAuthenticationMechanismsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
         onChanged();
         return this;
       }
@@ -2223,18 +2425,19 @@ public final class BitData {
       "nProtos.proto\032\022Coordination.proto\032\023UserB" +
       "itShared.proto\"]\n\022BitClientHandshake\022\023\n\013" +
       "rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.exe" +
-      "c.shared.RpcChannel:\010BIT_DATA\")\n\022BitServ" +
-      "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\214\002\n\023Fra" +
-      "gmentRecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exe" +
-      "c.shared.QueryId\022#\n\033receiving_major_frag" +
-      "ment_id\030\002 \001(\005\022#\n\033receiving_minor_fragmen" +
-      "t_id\030\003 \003(\005\022!\n\031sending_major_fragment_id\030",
-      "\004 \001(\005\022!\n\031sending_minor_fragment_id\030\005 \001(\005" +
-      "\022(\n\003def\030\006 \001(\0132\033.exec.shared.RecordBatchD" +
-      "ef\022\023\n\013isLastBatch\030\007 \001(\010*D\n\007RpcType\022\r\n\tHA" +
-      "NDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_R" +
-      "ECORD_BATCH\020\003B(\n\033org.apache.drill.exec.p" +
-      "rotoB\007BitDataH\001"
+      "c.shared.RpcChannel:\010BIT_DATA\"K\n\022BitServ" +
+      "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\022 \n\030auth" +
+      "enticationMechanisms\030\002 \003(\t\"\214\002\n\023FragmentR" +
+      "ecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exec.shar" +
+      "ed.QueryId\022#\n\033receiving_major_fragment_i" +
+      "d\030\002 \001(\005\022#\n\033receiving_minor_fragment_id\030\003",
+      " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022" +
+      "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de" +
+      "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013" +
+      "isLastBatch\030\007 \001(\010*V\n\007RpcType\022\r\n\tHANDSHAK" +
+      "E\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_" +
+      "BATCH\020\003\022\020\n\014SASL_MESSAGE\020\004B(\n\033org.apache." +
+      "drill.exec.protoB\007BitDataH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2252,7 +2455,7 @@ public final class BitData {
           internal_static_exec_bit_data_BitServerHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_data_BitServerHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", });
+              new java.lang.String[] { "RpcVersion", "AuthenticationMechanisms", });
           internal_static_exec_bit_data_FragmentRecordBatch_descriptor =
             getDescriptor().getMessageTypes().get(2);
           internal_static_exec_bit_data_FragmentRecordBatch_fieldAccessorTable = new

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,33 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.AbstractCheckedFuture;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
+import io.netty.channel.socket.SocketChannel;
+import org.apache.drill.common.KerberosUtil;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.SaslMessage;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
@@ -34,49 +51,65 @@ import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
-import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
-import org.apache.drill.exec.proto.UserProtos.UserProperties;
+import org.apache.drill.exec.proto.UserProtos.SaslSupport;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
+import org.apache.drill.exec.rpc.AbstractClientConnection;
 import org.apache.drill.exec.rpc.Acks;
-import org.apache.drill.exec.rpc.BasicClientWithConnection;
-import org.apache.drill.exec.rpc.ConnectionThrottle;
+import org.apache.drill.exec.rpc.BasicClient;
+import org.apache.drill.exec.rpc.NonTransientRpcException;
+import org.apache.drill.exec.rpc.security.AuthenticationOutcomeListener;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.InvalidConnectionInfoException;
 
 import com.google.protobuf.MessageLite;
+import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.security.AuthStringUtil;
+import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.rpc.security.ClientAuthenticatorProvider;
+import org.apache.hadoop.security.UserGroupInformation;
 
-import io.netty.buffer.ByteBuf;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslException;
+
 import io.netty.channel.EventLoopGroup;
+import org.slf4j.Logger;
 
-public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHandshake, BitToUserHandshake> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
+public class UserClient extends BasicClient<RpcType, UserClient.UserToBitConnection,
+    UserToBitHandshake, BitToUserHandshake> {
+  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
 
+  private final BufferAllocator allocator;
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
   private final String clientName;
-  private RpcEndpointInfos serverInfos = null;
 
+  private RpcEndpointInfos serverInfos = null;
   private boolean supportComplexTypes = true;
 
+  // these are used for authentication
+  private volatile List<String> serverAuthMechanisms = null;
+  private volatile boolean authComplete = true;
+
   public UserClient(String clientName, DrillConfig config, boolean supportComplexTypes,
-      BufferAllocator alloc, EventLoopGroup eventLoopGroup, Executor eventExecutor) {
+      BufferAllocator allocator, EventLoopGroup eventLoopGroup, Executor eventExecutor) {
     super(
         UserRpcConfig.getMapping(config, eventExecutor),
-        alloc,
+        allocator.getAsByteBufAllocator(),
         eventLoopGroup,
         RpcType.HANDSHAKE,
         BitToUserHandshake.class,
-        BitToUserHandshake.PARSER,
-        "user client");
+        BitToUserHandshake.PARSER);
     this.clientName = clientName;
+    this.allocator = allocator;
     this.supportComplexTypes = supportComplexTypes;
   }
 
@@ -88,22 +121,169 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
-  public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint,
-                      UserProperties props, UserBitShared.UserCredentials credentials) {
-    UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
+  /**
+   * Connects, and if required, authenticates. This method blocks until both operations are complete.
+   *
+   * @param endpoint endpoint to connect to
+   * @param properties properties
+   * @param credentials credentials
+   * @throws RpcException if either connection or authentication fails
+   */
+  public void connect(final DrillbitEndpoint endpoint, final DrillProperties properties,
+                      final UserCredentials credentials) throws RpcException {
+    final UserToBitHandshake handshake = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)
         .setSupportComplexTypes(supportComplexTypes)
         .setSupportTimeout(true)
         .setCredentials(credentials)
-        .setClientInfos(UserRpcUtils.getRpcEndpointInfos(clientName));
+        .setClientInfos(UserRpcUtils.getRpcEndpointInfos(clientName))
+        .setSaslSupport(SaslSupport.SASL_AUTH)
+        .setProperties(properties.serializeForServer())
+        .build();
 
-    if (props != null) {
-      hsBuilder.setProperties(props);
+    connect(handshake, endpoint).checkedGet();
+
+    if (serverAuthMechanisms != null) {
+      try {
+        authenticate(properties).checkedGet();
+      } catch (final SaslException e) {
+        throw new NonTransientRpcException(e);
+      }
+    }
+  }
+
+  private CheckedFuture<Void, RpcException> connect(final UserToBitHandshake handshake,
+                                                    final DrillbitEndpoint endpoint) {
+    final SettableFuture<Void> connectionSettable = SettableFuture.create();
+    final CheckedFuture<Void, RpcException> connectionFuture =
+        new AbstractCheckedFuture<Void, RpcException>(connectionSettable) {
+          @Override
+          protected RpcException mapException(Exception e) {
+            return RpcException.mapException(e);
+          }
+        };
+    final RpcConnectionHandler<UserToBitConnection> connectionHandler =
+        new RpcConnectionHandler<UserToBitConnection>() {
+          @Override
+          public void connectionSucceeded(UserToBitConnection connection) {
+            connectionSettable.set(null);
+          }
+
+          @Override
+          public void connectionFailed(FailureType type, Throwable t) {
+            connectionSettable.setException(new RpcException(String.format("%s : %s",
+                type.name(), t.getMessage()), t));
+          }
+        };
+
+    connectAsClient(queryResultHandler.getWrappedConnectionHandler(connectionHandler),
+        handshake, endpoint.getAddress(), endpoint.getUserPort());
+
+    return connectionFuture;
+  }
+
+  private CheckedFuture<Void, SaslException> authenticate(final DrillProperties properties) {
+    final Map<String, String> propertiesMap = properties.stringPropertiesAsMap();
+
+    final SettableFuture<Void> authSettable = SettableFuture.create(); // use handleAuthFailure to setException
+    final CheckedFuture<Void, SaslException> authFuture =
+        new AbstractCheckedFuture<Void, SaslException>(authSettable) {
+
+          @Override
+          protected SaslException mapException(Exception e) {
+            if (e instanceof ExecutionException) {
+              final Throwable cause = Throwables.getRootCause(e);
+              if (cause instanceof SaslException) {
+                return new SaslException("Authentication failed: " + cause.getMessage(), cause);
+              }
+            }
+            return new SaslException("Authentication failed unexpectedly.", e);
+          }
+        };
+
+    final AuthenticatorFactory factory;
+    final String mechanismName;
+    final UserGroupInformation ugi;
+    final SaslClient saslClient;
+    try {
+      factory = getAuthenticatorFactory(properties);
+      mechanismName = factory.getSimpleName();
+      logger.trace("Will try to authenticate to server using {} mechanism.", mechanismName);
+      ugi = factory.createAndLoginUser(propertiesMap);
+      saslClient = factory.createSaslClient(ugi, propertiesMap);
+      if (saslClient == null) {
+        throw new SaslException("Cannot initiate authentication. Insufficient credentials?");
+      }
+      connection.setSaslClient(saslClient);
+    } catch (final IOException e) {
+      authSettable.setException(e);
+      return authFuture;
     }
 
-    this.connectAsClient(queryResultHandler.getWrappedConnectionHandler(handler),
-        hsBuilder.build(), endpoint.getAddress(), endpoint.getUserPort());
+    logger.trace("Initiating SASL exchange.");
+    new AuthenticationOutcomeListener<>(this, connection, RpcType.SASL_MESSAGE, ugi,
+        new RpcOutcomeListener<Void>() {
+          @Override
+          public void failed(RpcException ex) {
+            authSettable.setException(ex);
+          }
+
+          @Override
+          public void success(Void value, ByteBuf buffer) {
+            authComplete = true;
+            authSettable.set(null);
+          }
+
+          @Override
+          public void interrupted(InterruptedException e) {
+            authSettable.setException(e);
+          }
+        }).initiate(mechanismName);
+    return authFuture;
+  }
+
+  private AuthenticatorFactory getAuthenticatorFactory(final DrillProperties properties) throws SaslException {
+    final Set<String> mechanismSet = AuthStringUtil.asSet(serverAuthMechanisms);
+
+    // first, check if a certain mechanism must be used
+    String authMechanism = properties.getProperty(DrillProperties.AUTH_MECHANISM);
+    if (authMechanism != null) {
+      if (!ClientAuthenticatorProvider.getInstance()
+          .containsFactory(authMechanism)) {
+        throw new SaslException(String.format("Unknown mechanism: %s", authMechanism));
+      }
+      if (!mechanismSet.contains(authMechanism.toUpperCase())) {
+        throw new SaslException(String.format("Server does not support authentication using: %s",
+            authMechanism));
+      }
+      return ClientAuthenticatorProvider.getInstance()
+          .getAuthenticatorFactory(authMechanism);
+    }
+
+    // check if Kerberos is supported, and the service principal is provided
+    if (mechanismSet.contains(KerberosUtil.KERBEROS_SIMPLE_NAME) &&
+        properties.containsKey(DrillProperties.SERVICE_PRINCIPAL)) {
+      return ClientAuthenticatorProvider.getInstance()
+          .getAuthenticatorFactory(KerberosUtil.KERBEROS_SIMPLE_NAME);
+    }
+
+    // check if username/password is supported, and username/password are provided
+    if (mechanismSet.contains(PlainFactory.SIMPLE_NAME) &&
+        properties.containsKey(DrillProperties.USER) &&
+        !Strings.isNullOrEmpty(properties.getProperty(DrillProperties.PASSWORD))) {
+      return ClientAuthenticatorProvider.getInstance()
+          .getAuthenticatorFactory(PlainFactory.SIMPLE_NAME);
+    }
+
+    throw new SaslException(String.format("Server requires authentication using %s. Insufficient credentials?",
+        serverAuthMechanisms));
+  }
+
+  protected <SEND extends MessageLite, RECEIVE extends MessageLite>
+  void send(RpcOutcomeListener<RECEIVE> listener, RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz,
+            boolean allowInEventLoop, ByteBuf... dataBodies) {
+    super.send(listener, connection, rpcType, protobufBody, clazz, allowInEventLoop, dataBodies);
   }
 
   @Override
@@ -131,19 +311,30 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       return GetColumnsResp.getDefaultInstance();
     case RpcType.PREPARED_STATEMENT_VALUE:
       return CreatePreparedStatementResp.getDefaultInstance();
+    case RpcType.SASL_MESSAGE_VALUE:
+      return SaslMessage.getDefaultInstance();
     }
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
 
   @Override
-  protected Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  protected void handle(UserToBitConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
+                        ResponseSender sender) throws RpcException {
+    if (!authComplete) {
+      // Remote should not be making any requests before authenticating, drop connection
+      throw new RpcException(String.format("Request of type %d is not allowed without authentication. " +
+                  "Remote on %s must authenticate before making requests. Connection dropped.",
+              rpcType, connection.getRemoteAddress()));
+    }
     switch (rpcType) {
     case RpcType.QUERY_DATA_VALUE:
-      queryResultHandler.batchArrived(throttle, pBody, dBody);
-      return new Response(RpcType.ACK, Acks.OK);
+      queryResultHandler.batchArrived(connection, pBody, dBody);
+      sender.send(new Response(RpcType.ACK, Acks.OK));
+      break;
     case RpcType.QUERY_RESULT_VALUE:
       queryResultHandler.resultArrived(pBody);
-      return new Response(RpcType.ACK, Acks.OK);
+      sender.send(new Response(RpcType.ACK, Acks.OK));
+      break;
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));
     }
@@ -155,16 +346,46 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     if (inbound.hasServerInfos()) {
       serverInfos = inbound.getServerInfos();
     }
-    if (inbound.getStatus() != HandshakeStatus.SUCCESS) {
+    switch (inbound.getStatus()) {
+    case SUCCESS:
+      break;
+    case AUTH_REQUIRED: {
+      authComplete = false;
+      logger.trace("Server requires authentication before proceeding.");
+      serverAuthMechanisms = ImmutableList.copyOf(inbound.getAuthenticationMechanismsList());
+      break;
+    }
+    case AUTH_FAILED:
+    case RPC_VERSION_MISMATCH:
+    case UNKNOWN_FAILURE:
       final String errMsg = String.format("Status: %s, Error Id: %s, Error message: %s",
           inbound.getStatus(), inbound.getErrorId(), inbound.getErrorMessage());
       logger.error(errMsg);
-      throw new InvalidConnectionInfoException(errMsg);
+      throw new NonTransientRpcException(errMsg);
     }
   }
 
   @Override
-  protected void finalizeConnection(BitToUserHandshake handshake, BasicClientWithConnection.ServerConnection connection) {
+  protected UserToBitConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
+    return new UserToBitConnection(channel);
+  }
+
+  public class UserToBitConnection extends AbstractClientConnection {
+
+    UserToBitConnection(SocketChannel channel) {
+      super(channel, "user client");
+    }
+
+    @Override
+    public BufferAllocator getAllocator() {
+      return allocator;
+    }
+
+    @Override
+    protected Logger getLogger() {
+      return logger;
+    }
   }
 
   @Override

@@ -757,6 +757,115 @@ public final class UserBitShared {
     // @@protoc_insertion_point(enum_scope:exec.shared.CoreOperatorType)
   }
 
+  /**
+   * Protobuf enum {@code exec.shared.SaslStatus}
+   */
+  public enum SaslStatus
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>SASL_UNKNOWN = 0;</code>
+     */
+    SASL_UNKNOWN(0, 0),
+    /**
+     * <code>SASL_START = 1;</code>
+     */
+    SASL_START(1, 1),
+    /**
+     * <code>SASL_IN_PROGRESS = 2;</code>
+     */
+    SASL_IN_PROGRESS(2, 2),
+    /**
+     * <code>SASL_SUCCESS = 3;</code>
+     */
+    SASL_SUCCESS(3, 3),
+    /**
+     * <code>SASL_FAILED = 4;</code>
+     */
+    SASL_FAILED(4, 4),
+    ;
+
+    /**
+     * <code>SASL_UNKNOWN = 0;</code>
+     */
+    public static final int SASL_UNKNOWN_VALUE = 0;
+    /**
+     * <code>SASL_START = 1;</code>
+     */
+    public static final int SASL_START_VALUE = 1;
+    /**
+     * <code>SASL_IN_PROGRESS = 2;</code>
+     */
+    public static final int SASL_IN_PROGRESS_VALUE = 2;
+    /**
+     * <code>SASL_SUCCESS = 3;</code>
+     */
+    public static final int SASL_SUCCESS_VALUE = 3;
+    /**
+     * <code>SASL_FAILED = 4;</code>
+     */
+    public static final int SASL_FAILED_VALUE = 4;
+
+
+    public final int getNumber() { return value; }
+
+    public static SaslStatus valueOf(int value) {
+      switch (value) {
+        case 0: return SASL_UNKNOWN;
+        case 1: return SASL_START;
+        case 2: return SASL_IN_PROGRESS;
+        case 3: return SASL_SUCCESS;
+        case 4: return SASL_FAILED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SaslStatus>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<SaslStatus>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SaslStatus>() {
+            public SaslStatus findValueByNumber(int number) {
+              return SaslStatus.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(4);
+    }
+
+    private static final SaslStatus[] VALUES = values();
+
+    public static SaslStatus valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private SaslStatus(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.shared.SaslStatus)
+  }
+
   public interface UserCredentialsOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -22369,6 +22478,651 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.Jar)
   }
 
+  public interface SaslMessageOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string mechanism = 1;
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    boolean hasMechanism();
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    java.lang.String getMechanism();
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getMechanismBytes();
+
+    // optional bytes data = 2;
+    /**
+     * <code>optional bytes data = 2;</code>
+     */
+    boolean hasData();
+    /**
+     * <code>optional bytes data = 2;</code>
+     */
+    com.google.protobuf.ByteString getData();
+
+    // optional .exec.shared.SaslStatus status = 3;
+    /**
+     * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     */
+    boolean hasStatus();
+    /**
+     * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus();
+  }
+  /**
+   * Protobuf type {@code exec.shared.SaslMessage}
+   */
+  public static final class SaslMessage extends
+      com.google.protobuf.GeneratedMessage
+      implements SaslMessageOrBuilder {
+    // Use SaslMessage.newBuilder() to construct.
+    private SaslMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SaslMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SaslMessage defaultInstance;
+    public static SaslMessage getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SaslMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SaslMessage(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              mechanism_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              data_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserBitShared.SaslStatus value = org.apache.drill.exec.proto.UserBitShared.SaslStatus.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(3, rawValue);
+              } else {
+                bitField0_ |= 0x00000004;
+                status_ = value;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SaslMessage_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SaslMessage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.SaslMessage.class, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SaslMessage> PARSER =
+        new com.google.protobuf.AbstractParser<SaslMessage>() {
+      public SaslMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SaslMessage(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SaslMessage> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string mechanism = 1;
+    public static final int MECHANISM_FIELD_NUMBER = 1;
+    private java.lang.Object mechanism_;
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    public boolean hasMechanism() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    public java.lang.String getMechanism() {
+      java.lang.Object ref = mechanism_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          mechanism_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string mechanism = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMechanismBytes() {
+      java.lang.Object ref = mechanism_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        mechanism_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional bytes data = 2;
+    public static final int DATA_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString data_;
+    /**
+     * <code>optional bytes data = 2;</code>
+     */
+    public boolean hasData() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes data = 2;</code>
+     */
+    public com.google.protobuf.ByteString getData() {
+      return data_;
+    }
+
+    // optional .exec.shared.SaslStatus status = 3;
+    public static final int STATUS_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.SaslStatus status_;
+    /**
+     * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     */
+    public boolean hasStatus() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
+      return status_;
+    }
+
+    private void initFields() {
+      mechanism_ = "";
+      data_ = com.google.protobuf.ByteString.EMPTY;
+      status_ = org.apache.drill.exec.proto.UserBitShared.SaslStatus.SASL_UNKNOWN;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getMechanismBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, data_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeEnum(3, status_.getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getMechanismBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, data_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(3, status_.getNumber());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.SaslMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.SaslMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.SaslMessage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.SaslMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SaslMessage_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SaslMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.SaslMessage.class, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.SaslMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        mechanism_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        data_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        status_ = org.apache.drill.exec.proto.UserBitShared.SaslStatus.SASL_UNKNOWN;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SaslMessage_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.SaslMessage getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.SaslMessage.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.SaslMessage build() {
+        org.apache.drill.exec.proto.UserBitShared.SaslMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.SaslMessage buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.SaslMessage result = new org.apache.drill.exec.proto.UserBitShared.SaslMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.mechanism_ = mechanism_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.data_ = data_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.status_ = status_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.SaslMessage) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.SaslMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.SaslMessage other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.SaslMessage.getDefaultInstance()) return this;
+        if (other.hasMechanism()) {
+          bitField0_ |= 0x00000001;
+          mechanism_ = other.mechanism_;
+          onChanged();
+        }
+        if (other.hasData()) {
+          setData(other.getData());
+        }
+        if (other.hasStatus()) {
+          setStatus(other.getStatus());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.SaslMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.SaslMessage) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string mechanism = 1;
+      private java.lang.Object mechanism_ = "";
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public boolean hasMechanism() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public java.lang.String getMechanism() {
+        java.lang.Object ref = mechanism_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          mechanism_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMechanismBytes() {
+        java.lang.Object ref = mechanism_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          mechanism_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public Builder setMechanism(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        mechanism_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public Builder clearMechanism() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        mechanism_ = getDefaultInstance().getMechanism();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string mechanism = 1;</code>
+       */
+      public Builder setMechanismBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        mechanism_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes data = 2;
+      private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes data = 2;</code>
+       */
+      public boolean hasData() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes data = 2;</code>
+       */
+      public com.google.protobuf.ByteString getData() {
+        return data_;
+      }
+      /**
+       * <code>optional bytes data = 2;</code>
+       */
+      public Builder setData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        data_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes data = 2;</code>
+       */
+      public Builder clearData() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        data_ = getDefaultInstance().getData();
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.shared.SaslStatus status = 3;
+      private org.apache.drill.exec.proto.UserBitShared.SaslStatus status_ = org.apache.drill.exec.proto.UserBitShared.SaslStatus.SASL_UNKNOWN;
+      /**
+       * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       */
+      public boolean hasStatus() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
+        return status_;
+      }
+      /**
+       * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       */
+      public Builder setStatus(org.apache.drill.exec.proto.UserBitShared.SaslStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        status_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        status_ = org.apache.drill.exec.proto.UserBitShared.SaslStatus.SASL_UNKNOWN;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.SaslMessage)
+    }
+
+    static {
+      defaultInstance = new SaslMessage(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.SaslMessage)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_UserCredentials_descriptor;
   private static
@@ -22474,6 +23228,11 @@ public final class UserBitShared {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_Jar_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_SaslMessage_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_SaslMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -22571,34 +23330,39 @@ public final class UserBitShared {
       "id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_v" +
       "alue\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.ex" +
       "ec.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022fu" +
-      "nction_signature\030\002 \003(\t*5\n\nRpcChannel\022\017\n\013" +
-      "BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n",
-      "\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYS" +
-      "ICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEM" +
-      "ENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023" +
-      "AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FI" +
-      "NISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026C" +
-      "ANCELLATION_REQUESTED\020\006*\335\005\n\020CoreOperator" +
-      "Type\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SEN" +
-      "DER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n" +
-      "\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PAR" +
-      "TITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RE",
-      "CEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013" +
-      "\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014R" +
-      "ANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_V" +
-      "ECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017" +
-      "\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005T" +
-      "RACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQU" +
-      "ET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025" +
-      "\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030" +
-      "\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020" +
-      "\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n",
-      "\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN" +
-      "\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONS" +
-      "UMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024" +
-      "\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B" +
-      ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
-      "haredH\001"
+      "nction_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n" +
+      "\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status",
+      "\030\003 \001(\0162\027.exec.shared.SaslStatus*5\n\nRpcCh" +
+      "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004" +
+      "USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020" +
+      "\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPAR" +
+      "ED_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SEND" +
+      "ING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNIN" +
+      "G\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAIL" +
+      "ED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Cor" +
+      "eOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROA" +
+      "DCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGRE",
+      "GATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n" +
+      "\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020M" +
+      "ERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_S" +
+      "ENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIV" +
+      "ER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SE" +
+      "LECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AG" +
+      "GREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SO" +
+      "RT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024" +
+      "\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB" +
+      "_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_S",
+      "UB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_" +
+      "SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_" +
+      "SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA" +
+      "_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PROD" +
+      "UCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006W" +
+      "INDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SU" +
+      "B_SCAN\020$*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000" +
+      "\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020" +
+      "\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org" +
+      ".apache.drill.exec.protoB\rUserBitSharedH",
+      "\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -22731,6 +23495,12 @@ public final class UserBitShared {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_Jar_descriptor,
               new java.lang.String[] { "Name", "FunctionSignature", });
+          internal_static_exec_shared_SaslMessage_descriptor =
+            getDescriptor().getMessageTypes().get(21);
+          internal_static_exec_shared_SaslMessage_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_SaslMessage_descriptor,
+              new java.lang.String[] { "Mechanism", "Data", "Status", });
           return null;
         }
       };

@@ -29,7 +29,7 @@ public final class UserProtos {
    * Protobuf enum {@code exec.user.RpcType}
    *
    * <pre>
-   *&#47;/// UserToBit RPC ///////
+   *&#47;/// User &lt;-&gt; Bit RPC ///////
    * </pre>
    */
   public enum RpcType
@@ -198,6 +198,14 @@ public final class UserProtos {
      * </pre>
      */
     QUERY_RESULT(23, 10),
+    /**
+     * <code>SASL_MESSAGE = 24;</code>
+     *
+     * <pre>
+     * user to bit and bit to user
+     * </pre>
+     */
+    SASL_MESSAGE(24, 24),
     ;
 
     /**
@@ -364,6 +372,14 @@ public final class UserProtos {
      * </pre>
      */
     public static final int QUERY_RESULT_VALUE = 10;
+    /**
+     * <code>SASL_MESSAGE = 24;</code>
+     *
+     * <pre>
+     * user to bit and bit to user
+     * </pre>
+     */
+    public static final int SASL_MESSAGE_VALUE = 24;
 
 
     public final int getNumber() { return value; }
@@ -394,6 +410,7 @@ public final class UserProtos {
         case 8: return REQ_META_FUNCTIONS;
         case 9: return RESP_FUNCTION_LIST;
         case 10: return QUERY_RESULT;
+        case 24: return SASL_MESSAGE;
         default: return null;
       }
     }
@@ -443,6 +460,88 @@ public final class UserProtos {
     }
 
     // @@protoc_insertion_point(enum_scope:exec.user.RpcType)
+  }
+
+  /**
+   * Protobuf enum {@code exec.user.SaslSupport}
+   */
+  public enum SaslSupport
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNKNOWN_SASL_SUPPORT = 0;</code>
+     */
+    UNKNOWN_SASL_SUPPORT(0, 0),
+    /**
+     * <code>SASL_AUTH = 1;</code>
+     */
+    SASL_AUTH(1, 1),
+    ;
+
+    /**
+     * <code>UNKNOWN_SASL_SUPPORT = 0;</code>
+     */
+    public static final int UNKNOWN_SASL_SUPPORT_VALUE = 0;
+    /**
+     * <code>SASL_AUTH = 1;</code>
+     */
+    public static final int SASL_AUTH_VALUE = 1;
+
+
+    public final int getNumber() { return value; }
+
+    public static SaslSupport valueOf(int value) {
+      switch (value) {
+        case 0: return UNKNOWN_SASL_SUPPORT;
+        case 1: return SASL_AUTH;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SaslSupport>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<SaslSupport>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SaslSupport>() {
+            public SaslSupport findValueByNumber(int number) {
+              return SaslSupport.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final SaslSupport[] VALUES = values();
+
+    public static SaslSupport valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private SaslSupport(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.user.SaslSupport)
   }
 
   /**
@@ -501,7 +600,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
     }
 
     private static final QueryResultsMode[] VALUES = values();
@@ -563,6 +662,14 @@ public final class UserProtos {
      * </pre>
      */
     UNKNOWN_FAILURE(3, 4),
+    /**
+     * <code>AUTH_REQUIRED = 5;</code>
+     *
+     * <pre>
+     * User authentication required
+     * </pre>
+     */
+    AUTH_REQUIRED(4, 5),
     ;
 
     /**
@@ -597,6 +704,14 @@ public final class UserProtos {
      * </pre>
      */
     public static final int UNKNOWN_FAILURE_VALUE = 4;
+    /**
+     * <code>AUTH_REQUIRED = 5;</code>
+     *
+     * <pre>
+     * User authentication required
+     * </pre>
+     */
+    public static final int AUTH_REQUIRED_VALUE = 5;
 
 
     public final int getNumber() { return value; }
@@ -607,6 +722,7 @@ public final class UserProtos {
         case 2: return RPC_VERSION_MISMATCH;
         case 3: return AUTH_FAILED;
         case 4: return UNKNOWN_FAILURE;
+        case 5: return AUTH_REQUIRED;
         default: return null;
       }
     }
@@ -633,7 +749,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final HandshakeStatus[] VALUES = values();
@@ -748,7 +864,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(3);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(4);
     }
 
     private static final RequestStatus[] VALUES = values();
@@ -894,7 +1010,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(4);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(5);
     }
 
     private static final ColumnSearchability[] VALUES = values();
@@ -990,7 +1106,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(5);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(6);
     }
 
     private static final ColumnUpdatability[] VALUES = values();
@@ -3704,6 +3820,16 @@ public final class UserProtos {
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder getClientInfosOrBuilder();
+
+    // optional .exec.user.SaslSupport sasl_support = 9;
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    boolean hasSaslSupport();
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport();
   }
   /**
    * Protobuf type {@code exec.user.UserToBitHandshake}
@@ -3824,6 +3950,17 @@ public final class UserProtos {
                 clientInfos_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 72: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserProtos.SaslSupport value = org.apache.drill.exec.proto.UserProtos.SaslSupport.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(9, rawValue);
+              } else {
+                bitField0_ |= 0x00000100;
+                saslSupport_ = value;
+              }
               break;
             }
           }
@@ -4012,6 +4149,22 @@ public final class UserProtos {
       return clientInfos_;
     }
 
+    // optional .exec.user.SaslSupport sasl_support = 9;
+    public static final int SASL_SUPPORT_FIELD_NUMBER = 9;
+    private org.apache.drill.exec.proto.UserProtos.SaslSupport saslSupport_;
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    public boolean hasSaslSupport() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
+      return saslSupport_;
+    }
+
     private void initFields() {
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
@@ -4021,6 +4174,7 @@ public final class UserProtos {
       supportComplexTypes_ = false;
       supportTimeout_ = false;
       clientInfos_ = org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance();
+      saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4064,6 +4218,9 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(8, clientInfos_);
       }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeEnum(9, saslSupport_.getNumber());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -4104,6 +4261,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, clientInfos_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(9, saslSupport_.getNumber());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4252,6 +4413,8 @@ public final class UserProtos {
           clientInfosBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
+        saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -4324,6 +4487,10 @@ public final class UserProtos {
         } else {
           result.clientInfos_ = clientInfosBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.saslSupport_ = saslSupport_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4363,6 +4530,9 @@ public final class UserProtos {
         }
         if (other.hasClientInfos()) {
           mergeClientInfos(other.getClientInfos());
+        }
+        if (other.hasSaslSupport()) {
+          setSaslSupport(other.getSaslSupport());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4914,6 +5084,42 @@ public final class UserProtos {
           clientInfos_ = null;
         }
         return clientInfosBuilder_;
+      }
+
+      // optional .exec.user.SaslSupport sasl_support = 9;
+      private org.apache.drill.exec.proto.UserProtos.SaslSupport saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public boolean hasSaslSupport() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
+        return saslSupport_;
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public Builder setSaslSupport(org.apache.drill.exec.proto.UserProtos.SaslSupport value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000100;
+        saslSupport_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       */
+      public Builder clearSaslSupport() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        saslSupport_ = org.apache.drill.exec.proto.UserProtos.SaslSupport.UNKNOWN_SASL_SUPPORT;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.UserToBitHandshake)
@@ -7390,6 +7596,26 @@ public final class UserProtos {
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder getServerInfosOrBuilder();
+
+    // repeated string authenticationMechanisms = 7;
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    java.util.List<java.lang.String>
+    getAuthenticationMechanismsList();
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    int getAuthenticationMechanismsCount();
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    java.lang.String getAuthenticationMechanisms(int index);
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index);
   }
   /**
    * Protobuf type {@code exec.user.BitToUserHandshake}
@@ -7481,6 +7707,14 @@ public final class UserProtos {
               bitField0_ |= 0x00000010;
               break;
             }
+            case 58: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              authenticationMechanisms_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -7489,6 +7723,9 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(authenticationMechanisms_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -7661,12 +7898,43 @@ public final class UserProtos {
       return serverInfos_;
     }
 
+    // repeated string authenticationMechanisms = 7;
+    public static final int AUTHENTICATIONMECHANISMS_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList authenticationMechanisms_;
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public java.util.List<java.lang.String>
+        getAuthenticationMechanismsList() {
+      return authenticationMechanisms_;
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public int getAuthenticationMechanismsCount() {
+      return authenticationMechanisms_.size();
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public java.lang.String getAuthenticationMechanisms(int index) {
+      return authenticationMechanisms_.get(index);
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index) {
+      return authenticationMechanisms_.getByteString(index);
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
       status_ = org.apache.drill.exec.proto.UserProtos.HandshakeStatus.SUCCESS;
       errorId_ = "";
       errorMessage_ = "";
       serverInfos_ = org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance();
+      authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7694,6 +7962,9 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeMessage(6, serverInfos_);
+      }
+      for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+        output.writeBytes(7, authenticationMechanisms_.getByteString(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -7723,6 +7994,15 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, serverInfos_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(authenticationMechanisms_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getAuthenticationMechanismsList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7855,6 +8135,8 @@ public final class UserProtos {
           serverInfosBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000010);
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -7907,6 +8189,12 @@ public final class UserProtos {
         } else {
           result.serverInfos_ = serverInfosBuilder_.build();
         }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              authenticationMechanisms_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.authenticationMechanisms_ = authenticationMechanisms_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7941,6 +8229,16 @@ public final class UserProtos {
         }
         if (other.hasServerInfos()) {
           mergeServerInfos(other.getServerInfos());
+        }
+        if (!other.authenticationMechanisms_.isEmpty()) {
+          if (authenticationMechanisms_.isEmpty()) {
+            authenticationMechanisms_ = other.authenticationMechanisms_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureAuthenticationMechanismsIsMutable();
+            authenticationMechanisms_.addAll(other.authenticationMechanisms_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -8301,6 +8599,99 @@ public final class UserProtos {
           serverInfos_ = null;
         }
         return serverInfosBuilder_;
+      }
+
+      // repeated string authenticationMechanisms = 7;
+      private com.google.protobuf.LazyStringList authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureAuthenticationMechanismsIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList(authenticationMechanisms_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public java.util.List<java.lang.String>
+          getAuthenticationMechanismsList() {
+        return java.util.Collections.unmodifiableList(authenticationMechanisms_);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public int getAuthenticationMechanismsCount() {
+        return authenticationMechanisms_.size();
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public java.lang.String getAuthenticationMechanisms(int index) {
+        return authenticationMechanisms_.get(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAuthenticationMechanismsBytes(int index) {
+        return authenticationMechanisms_.getByteString(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder setAuthenticationMechanisms(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAuthenticationMechanisms(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAllAuthenticationMechanisms(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureAuthenticationMechanismsIsMutable();
+        super.addAll(values, authenticationMechanisms_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder clearAuthenticationMechanisms() {
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 7;</code>
+       */
+      public Builder addAuthenticationMechanismsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.BitToUserHandshake)
@@ -29190,7 +29581,7 @@ public final class UserProtos {
       "ec.user.Property\"\210\001\n\020RpcEndpointInfos\022\014\n" +
       "\004name\030\001 \001(\t\022\017\n\007version\030\002 \001(\t\022\024\n\014majorVer" +
       "sion\030\003 \001(\r\022\024\n\014minorVersion\030\004 \001(\r\022\024\n\014patc" +
-      "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\317\002\n\022" +
+      "hVersion\030\005 \001(\r\022\023\n\013application\030\006 \001(\t\"\375\002\n\022" +
       "UserToBitHandshake\022.\n\007channel\030\001 \001(\0162\027.ex",
       "ec.shared.RpcChannel:\004USER\022\031\n\021support_li" +
       "stening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\0221\n\013cr" +
@@ -29199,29 +29590,31 @@ public final class UserProtos {
       "erProperties\022$\n\025support_complex_types\030\006 " +
       "\001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010:\005fal" +
       "se\0221\n\014client_infos\030\010 \001(\0132\033.exec.user.Rpc" +
-      "EndpointInfos\"S\n\016RequestResults\022&\n\010query" +
-      "_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021maxim" +
-      "um_responses\030\002 \001(\005\"g\n\025GetQueryPlanFragme",
-      "nts\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026.exec." +
-      "shared.QueryType\022\031\n\nsplit_plan\030\003 \001(\010:\005fa" +
-      "lse\"\316\001\n\022QueryPlanFragments\0223\n\006status\030\001 \002" +
-      "(\0162#.exec.shared.QueryResult.QueryState\022" +
-      "&\n\010query_id\030\002 \001(\0132\024.exec.shared.QueryId\022" +
-      "1\n\tfragments\030\003 \003(\0132\036.exec.bit.control.Pl" +
-      "anFragment\022(\n\005error\030\004 \001(\0132\031.exec.shared." +
-      "DrillPBError\"\257\001\n\022BitToUserHandshake\022\023\n\013r" +
-      "pc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec." +
-      "user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n",
-      "\014errorMessage\030\005 \001(\t\0221\n\014server_infos\030\006 \001(" +
-      "\0132\033.exec.user.RpcEndpointInfos\"-\n\nLikeFi" +
+      "EndpointInfos\022,\n\014sasl_support\030\t \001(\0162\026.ex" +
+      "ec.user.SaslSupport\"S\n\016RequestResults\022&\n" +
+      "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n",
+      "\021maximum_responses\030\002 \001(\005\"g\n\025GetQueryPlan" +
+      "Fragments\022\r\n\005query\030\001 \002(\t\022$\n\004type\030\002 \001(\0162\026" +
+      ".exec.shared.QueryType\022\031\n\nsplit_plan\030\003 \001" +
+      "(\010:\005false\"\316\001\n\022QueryPlanFragments\0223\n\006stat" +
+      "us\030\001 \002(\0162#.exec.shared.QueryResult.Query" +
+      "State\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Qu" +
+      "eryId\0221\n\tfragments\030\003 \003(\0132\036.exec.bit.cont" +
+      "rol.PlanFragment\022(\n\005error\030\004 \001(\0132\031.exec.s" +
+      "hared.DrillPBError\"\321\001\n\022BitToUserHandshak" +
+      "e\022\023\n\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032",
+      ".exec.user.HandshakeStatus\022\017\n\007errorId\030\004 " +
+      "\001(\t\022\024\n\014errorMessage\030\005 \001(\t\0221\n\014server_info" +
+      "s\030\006 \001(\0132\033.exec.user.RpcEndpointInfos\022 \n\030" +
+      "authenticationMechanisms\030\007 \003(\t\"-\n\nLikeFi" +
       "lter\022\017\n\007pattern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n" +
       "\016GetCatalogsReq\0222\n\023catalog_name_filter\030\001" +
       " \001(\0132\025.exec.user.LikeFilter\"M\n\017CatalogMe" +
       "tadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013descript" +
       "ion\030\002 \001(\t\022\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalo" +
-      "gsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Reque" +
+      "gsResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Reque",
       "stStatus\022,\n\010catalogs\030\002 \003(\0132\032.exec.user.C" +
-      "atalogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sha",
+      "atalogMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sha" +
       "red.DrillPBError\"v\n\rGetSchemasReq\0222\n\023cat" +
       "alog_name_filter\030\001 \001(\0132\025.exec.user.LikeF" +
       "ilter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec" +
@@ -29229,9 +29622,9 @@ public final class UserProtos {
       "talog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n" +
       "\005owner\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 " +
       "\001(\t\"\220\001\n\016GetSchemasResp\022(\n\006status\030\001 \001(\0162\030" +
-      ".exec.user.RequestStatus\022*\n\007schemas\030\002 \003(" +
+      ".exec.user.RequestStatus\022*\n\007schemas\030\002 \003(",
       "\0132\031.exec.user.SchemaMetadata\022(\n\005error\030\003 " +
-      "\001(\0132\031.exec.shared.DrillPBError\"\302\001\n\014GetTa",
+      "\001(\0132\031.exec.shared.DrillPBError\"\302\001\n\014GetTa" +
       "blesReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.e" +
       "xec.user.LikeFilter\0221\n\022schema_name_filte" +
       "r\030\002 \001(\0132\025.exec.user.LikeFilter\0220\n\021table_" +
@@ -29239,9 +29632,9 @@ public final class UserProtos {
       "\022\031\n\021table_type_filter\030\004 \003(\t\"\\\n\rTableMeta" +
       "data\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_nam" +
       "e\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(" +
-      "\t\"\215\001\n\rGetTablesResp\022(\n\006status\030\001 \001(\0162\030.ex" +
+      "\t\"\215\001\n\rGetTablesResp\022(\n\006status\030\001 \001(\0162\030.ex",
       "ec.user.RequestStatus\022(\n\006tables\030\002 \003(\0132\030." +
-      "exec.user.TableMetadata\022(\n\005error\030\003 \001(\0132\031",
+      "exec.user.TableMetadata\022(\n\005error\030\003 \001(\0132\031" +
       ".exec.shared.DrillPBError\"\333\001\n\rGetColumns" +
       "Req\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec." +
       "user.LikeFilter\0221\n\022schema_name_filter\030\002 " +
@@ -29249,9 +29642,9 @@ public final class UserProtos {
       "_filter\030\003 \001(\0132\025.exec.user.LikeFilter\0221\n\022" +
       "column_name_filter\030\004 \001(\0132\025.exec.user.Lik" +
       "eFilter\"\251\003\n\016ColumnMetadata\022\024\n\014catalog_na" +
-      "me\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_n" +
+      "me\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\ntable_n",
       "ame\030\003 \001(\t\022\023\n\013column_name\030\004 \001(\t\022\030\n\020ordina" +
-      "l_position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022",
+      "l_position\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022" +
       "\023\n\013is_nullable\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022" +
       "\027\n\017char_max_length\030\t \001(\005\022\031\n\021char_octet_l" +
       "ength\030\n \001(\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037" +
@@ -29259,9 +29652,9 @@ public final class UserProtos {
       "ic_scale\030\r \001(\005\022\033\n\023date_time_precision\030\016 " +
       "\001(\005\022\025\n\rinterval_type\030\017 \001(\t\022\032\n\022interval_p" +
       "recision\030\020 \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016" +
-      "GetColumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.us" +
+      "GetColumnsResp\022(\n\006status\030\001 \001(\0162\030.exec.us",
       "er.RequestStatus\022*\n\007columns\030\002 \003(\0132\031.exec" +
-      ".user.ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.ex",
+      ".user.ColumnMetadata\022(\n\005error\030\003 \001(\0132\031.ex" +
       "ec.shared.DrillPBError\"/\n\032CreatePrepared" +
       "StatementReq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024Resu" +
       "ltColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023" +
@@ -29269,9 +29662,9 @@ public final class UserProtos {
       "\023\n\013column_name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\td" +
       "ata_type\030\006 \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tp" +
       "recision\030\010 \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030" +
-      "\n \001(\010\022\024\n\014display_size\030\013 \001(\005\022\022\n\nis_aliase" +
+      "\n \001(\010\022\024\n\014display_size\030\013 \001(\005\022\022\n\nis_aliase",
       "d\030\014 \001(\010\0225\n\rsearchability\030\r \001(\0162\036.exec.us" +
-      "er.ColumnSearchability\0223\n\014updatability\030\016",
+      "er.ColumnSearchability\0223\n\014updatability\030\016" +
       " \001(\0162\035.exec.user.ColumnUpdatability\022\026\n\016a" +
       "uto_increment\030\017 \001(\010\022\030\n\020case_sensitivity\030" +
       "\020 \001(\010\022\020\n\010sortable\030\021 \001(\010\022\022\n\nclass_name\030\022 " +
@@ -29279,9 +29672,9 @@ public final class UserProtos {
       "ementHandle\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021Pre" +
       "paredStatement\0220\n\007columns\030\001 \003(\0132\037.exec.u" +
       "ser.ResultColumnMetadata\0229\n\rserver_handl" +
-      "e\030\002 \001(\0132\".exec.user.PreparedStatementHan" +
+      "e\030\002 \001(\0132\".exec.user.PreparedStatementHan",
       "dle\"\253\001\n\033CreatePreparedStatementResp\022(\n\006s" +
-      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\0228\n",
+      "tatus\030\001 \001(\0162\030.exec.user.RequestStatus\0228\n" +
       "\022prepared_statement\030\002 \001(\0132\034.exec.user.Pr" +
       "eparedStatement\022(\n\005error\030\003 \001(\0132\031.exec.sh" +
       "ared.DrillPBError\"\353\001\n\010RunQuery\0221\n\014result" +
@@ -29289,9 +29682,9 @@ public final class UserProtos {
       "e\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022" +
       "\014\n\004plan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec." +
       "bit.control.PlanFragment\022E\n\031prepared_sta" +
-      "tement_handle\030\005 \001(\0132\".exec.user.Prepared" +
-      "StatementHandle*\310\003\n\007RpcType\022\r\n\tHANDSHAKE" +
-      "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022",
+      "tement_handle\030\005 \001(\0132\".exec.user.Prepared",
+      "StatementHandle*\332\003\n\007RpcType\022\r\n\tHANDSHAKE" +
+      "\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022" +
       "\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027" +
       "\n\023RESUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLA" +
       "N_FRAGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_S" +
@@ -29299,20 +29692,22 @@ public final class UserProtos {
       "\021\022\035\n\031CREATE_PREPARED_STATEMENT\020\026\022\016\n\nQUER" +
       "Y_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\030\n\024QUERY_PLAN" +
       "_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022\022\013\n\007SCHEMAS\020\023\022" +
-      "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA" +
+      "\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026\n\022PREPARED_STA",
       "TEMENT\020\027\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP" +
-      "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020Qu",
-      "eryResultsMode\022\017\n\013STREAM_FULL\020\001*^\n\017Hands" +
-      "hakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_M" +
-      "ISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FA" +
-      "ILURE\020\004*D\n\rRequestStatus\022\022\n\016UNKNOWN_STAT" +
-      "US\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n" +
-      "\023ColumnSearchability\022\031\n\025UNKNOWN_SEARCHAB" +
-      "ILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022" +
-      "\007\n\003ALL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNOW" +
-      "N_UPDATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITA" +
-      "BLE\020\002B+\n\033org.apache.drill.exec.protoB\nUs",
-      "erProtosH\001"
+      "_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SA" +
+      "SL_MESSAGE\020\030*6\n\013SaslSupport\022\030\n\024UNKNOWN_S" +
+      "ASL_SUPPORT\020\000\022\r\n\tSASL_AUTH\020\001*#\n\020QueryRes" +
+      "ultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017HandshakeSt" +
+      "atus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATC" +
+      "H\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020" +
+      "\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatus\022\022\n" +
+      "\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n" +
+      "\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n\025UNK",
+      "NOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002" +
+      "\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdatabil" +
+      "ity\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREAD_ON" +
+      "LY\020\001\022\014\n\010WRITABLE\020\002B+\n\033org.apache.drill.e" +
+      "xec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -29342,7 +29737,7 @@ public final class UserProtos {
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", "SupportTimeout", "ClientInfos", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", "SupportTimeout", "ClientInfos", "SaslSupport", });
           internal_static_exec_user_RequestResults_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new
@@ -29366,7 +29761,7 @@ public final class UserProtos {
           internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", });
+              new java.lang.String[] { "RpcVersion", "Status", "ErrorId", "ErrorMessage", "ServerInfos", "AuthenticationMechanisms", });
           internal_static_exec_user_LikeFilter_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_exec_user_LikeFilter_fieldAccessorTable = new

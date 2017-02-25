@@ -34,7 +34,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
-import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
+import org.apache.drill.exec.rpc.user.UserClient.UserToBitConnection;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
@@ -73,8 +73,8 @@ public class QueryResultHandler {
     return new SubmissionListener(resultsListener);
   }
 
-  public RpcConnectionHandler<ServerConnection> getWrappedConnectionHandler(
-      final RpcConnectionHandler<ServerConnection> handler) {
+  public RpcConnectionHandler<UserToBitConnection> getWrappedConnectionHandler(
+      final RpcConnectionHandler<UserToBitConnection> handler) {
     return new ChannelClosedHandler(handler);
   }
 
@@ -350,20 +350,20 @@ public class QueryResultHandler {
   }
 
   /**
-   * When a {@link ServerConnection connection} to a server is successfully created, this handler adds a
+   * When a {@link UserToBitConnection connection} to a server is successfully created, this handler adds a
    * listener to that connection that listens to connection closure. If the connection is closed, all active
    * {@link UserResultsListener result listeners} are failed.
    */
-  private class ChannelClosedHandler implements RpcConnectionHandler<ServerConnection> {
+  private class ChannelClosedHandler implements RpcConnectionHandler<UserToBitConnection> {
 
-    private final RpcConnectionHandler<ServerConnection> parentHandler;
+    private final RpcConnectionHandler<UserToBitConnection> parentHandler;
 
-    public ChannelClosedHandler(final RpcConnectionHandler<ServerConnection> parentHandler) {
+    public ChannelClosedHandler(final RpcConnectionHandler<UserToBitConnection> parentHandler) {
       this.parentHandler = parentHandler;
     }
 
     @Override
-    public void connectionSucceeded(final ServerConnection connection) {
+    public void connectionSucceeded(final UserToBitConnection connection) {
       connection.getChannel().closeFuture().addListener(
           new GenericFutureListener<Future<? super Void>>() {
             @Override

@@ -320,3 +320,16 @@ message Jar {
   repeated string function_signature = 2;
 }
 
+enum SaslStatus {
+  SASL_UNKNOWN = 0;
+  SASL_START = 1;
+  SASL_IN_PROGRESS = 2;
+  SASL_SUCCESS = 3;
+  SASL_FAILED = 4;
+}
+
+message SaslMessage {
+  optional string mechanism = 1;
+  optional bytes data = 2;
+  optional SaslStatus status = 3;
+}

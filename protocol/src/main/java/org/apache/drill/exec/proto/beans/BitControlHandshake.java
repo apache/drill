@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -50,6 +52,7 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
     private int rpcVersion;
     private RpcChannel channel;
     private DrillbitEndpoint endpoint;
+    private List<String> authenticationMechanisms;
 
     public BitControlHandshake()
     {
@@ -94,6 +97,19 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
     public BitControlHandshake setEndpoint(DrillbitEndpoint endpoint)
     {
         this.endpoint = endpoint;
+        return this;
+    }
+
+    // authenticationMechanisms
+
+    public List<String> getAuthenticationMechanismsList()
+    {
+        return authenticationMechanisms;
+    }
+
+    public BitControlHandshake setAuthenticationMechanismsList(List<String> authenticationMechanisms)
+    {
+        this.authenticationMechanisms = authenticationMechanisms;
         return this;
     }
 
@@ -161,6 +177,11 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
                     message.endpoint = input.mergeObject(message.endpoint, DrillbitEndpoint.getSchema());
                     break;
 
+                case 4:
+                    if(message.authenticationMechanisms == null)
+                        message.authenticationMechanisms = new ArrayList<String>();
+                    message.authenticationMechanisms.add(input.readString());
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -179,6 +200,15 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
         if(message.endpoint != null)
              output.writeObject(3, message.endpoint, DrillbitEndpoint.getSchema(), false);
 
+
+        if(message.authenticationMechanisms != null)
+        {
+            for(String authenticationMechanisms : message.authenticationMechanisms)
+            {
+                if(authenticationMechanisms != null)
+                    output.writeString(4, authenticationMechanisms, true);
+            }
+        }
     }
 
     public String getFieldName(int number)
@@ -188,6 +218,7 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
             case 1: return "rpcVersion";
             case 2: return "channel";
             case 3: return "endpoint";
+            case 4: return "authenticationMechanisms";
             default: return null;
         }
     }
@@ -204,6 +235,7 @@ public final class BitControlHandshake implements Externalizable, Message<BitCon
         __fieldMap.put("rpcVersion", 1);
         __fieldMap.put("channel", 2);
         __fieldMap.put("endpoint", 3);
+        __fieldMap.put("authenticationMechanisms", 4);
     }
     
 }

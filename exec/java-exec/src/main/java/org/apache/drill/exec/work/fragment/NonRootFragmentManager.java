@@ -18,15 +18,12 @@
 package org.apache.drill.exec.work.fragment;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -46,7 +43,6 @@ public class NonRootFragmentManager implements FragmentManager {
   private final FragmentHandle handle;
   private volatile boolean cancel = false;
   private final FragmentContext context;
-  private final List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
   private volatile boolean runnerRetrieved = false;
 
   public NonRootFragmentManager(final PlanFragment fragment, final DrillbitContext context)
@@ -66,7 +62,7 @@ public class NonRootFragmentManager implements FragmentManager {
   }
 
   /* (non-Javadoc)
-   * @see org.apache.drill.exec.work.fragment.FragmentHandler#handle(org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle, org.apache.drill.exec.record.RawFragmentBatch)
+   * @see org.apache.drill.exec.work.fragment.FragmentHandler#handle(org.apache.drill.exec.rpc.AbstractRemoteConnection.ConnectionThrottle, org.apache.drill.exec.record.RawFragmentBatch)
    */
   @Override
   public boolean handle(final IncomingDataBatch batch) throws FragmentSetupException, IOException {
@@ -126,18 +122,6 @@ public class NonRootFragmentManager implements FragmentManager {
   @Override
   public FragmentContext getFragmentContext() {
     return context;
-  }
-
-  @Override
-  public void addConnection(final RemoteConnection connection) {
-    connections.add(connection);
-  }
-
-  @Override
-  public void setAutoRead(final boolean autoRead) {
-    for (final RemoteConnection c : connections) {
-      c.setAutoRead(autoRead);
-    }
   }
 
 }

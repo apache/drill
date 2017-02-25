@@ -80,6 +80,8 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         ~DrillClientConfig();
         static void initLogging(const char* path);
         static void setLogLevel(logLevel_t l);
+        static void setSaslPluginPath(const char* path);
+        static const char* getSaslPluginPath();
         static void setBufferLimit(uint64_t l);
         static uint64_t getBufferLimit();
         static void setSocketTimeout(int32_t l);
@@ -134,6 +136,8 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         // The total amount of memory to be allocated by an instance of DrillClient.
         // For future use. Currently, not enforced.
         static uint64_t s_bufferLimit;
+
+        static const char* s_saslPluginPath;
 
         /**
          * DrillClient configures timeout (in seconds) in a fine granularity.
