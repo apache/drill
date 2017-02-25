@@ -98,7 +98,8 @@ public class MockStorageEngine extends AbstractStoragePlugin {
    * <p>
    * <tt><name>_<type><size></tt>
    * <p>
-   * Where the name can be anything, the type must be i (integer), d (double)
+   * Where the name can be anything, the type must be i (integer), d (double),
+   * b (boolean)
    * or s (string, AKA VarChar). The length is needed only for string fields.
    * <p>
    * Direct tables are quick, but limited. The other option is to provide the
@@ -121,7 +122,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
     @Override
     public Table getTable(String name) {
-      if (name.toLowerCase().endsWith(".json") ) {
+      if (name.toLowerCase().endsWith(".json")) {
         return getConfigFile(name);
       } else {
         return getDirectTable(name);
@@ -141,17 +142,17 @@ public class MockStorageEngine extends AbstractStoragePlugin {
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         mockTableDefn = mapper.readValue(json, MockTableDef.class);
       } catch (JsonParseException e) {
-        throw new IllegalArgumentException( "Unable to parse mock table definition file: " + name, e );
+        throw new IllegalArgumentException("Unable to parse mock table definition file: " + name, e);
       } catch (JsonMappingException e) {
-        throw new IllegalArgumentException( "Unable to Jackson deserialize mock table definition file: " + name, e );
+        throw new IllegalArgumentException("Unable to Jackson deserialize mock table definition file: " + name, e);
       } catch (IOException e) {
-        throw new IllegalArgumentException( "Unable to read mock table definition file: " + name, e );
+        throw new IllegalArgumentException("Unable to read mock table definition file: " + name, e);
       }
-      return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries() );
+      return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries());
     }
 
     private Table getDirectTable(String name) {
-      Pattern p = Pattern.compile( "(\\w+)_(\\d+)(k|m)?", Pattern.CASE_INSENSITIVE);
+      Pattern p = Pattern.compile("(\\w+)_(\\d+)(k|m)?", Pattern.CASE_INSENSITIVE);
       Matcher m = p.matcher(name);
       if (! m.matches()) {
         return null;
@@ -163,10 +164,10 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       if (unit == null) { }
       else if (unit.equalsIgnoreCase("K")) { n *= 1000; }
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
-      MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, null);
+      MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
       List<MockTableDef.MockScanEntry> list = new ArrayList<>();
-      list.add( entry );
-      return new DynamicDrillTable(engine, this.name, list );
+      list.add(entry);
+      return new DynamicDrillTable(engine, this.name, list);
     }
 
     @Override

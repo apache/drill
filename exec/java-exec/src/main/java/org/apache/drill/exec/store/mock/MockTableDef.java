@@ -51,22 +51,26 @@ public class MockTableDef {
     final int records;
     final boolean extended;
     final int batchSize;
+    final int repeat;
     private final MockColumn[] types;
 
     @JsonCreator
     public MockScanEntry(@JsonProperty("records") int records,
                          @JsonProperty("extended") Boolean extended,
                          @JsonProperty("batchSize") Integer batchSize,
+                         @JsonProperty("repeat") Integer repeat,
                          @JsonProperty("types") MockTableDef.MockColumn[] types) {
       this.records = records;
       this.types = types;
       this.extended = (extended == null) ? false : extended;
       this.batchSize = (batchSize == null) ? 0 : batchSize;
+      this.repeat = (repeat == null) ? 1 : repeat;
     }
 
     public int getRecords() { return records; }
     public boolean isExtended() { return extended; }
     public int getBatchSize() { return batchSize; }
+    public int getRepeat() { return repeat; }
 
     public MockTableDef.MockColumn[] getTypes() {
       return types;
@@ -150,7 +154,7 @@ public class MockTableDef {
     public Integer getWidth() { return width; }
     public Integer getPrecision() { return precision; }
     public Integer getScale() { return scale; }
-    public String getGenerator( ) { return generator; }
+    public String getGenerator() { return generator; }
     public Integer getRepeat() { return repeat; }
     @JsonIgnore
     public int getRepeatCount() { return repeat == null ? 1 : repeat; }
@@ -196,7 +200,7 @@ public class MockTableDef {
    * for the convenience of the author.
    */
 
-  public String getDescrip( ) { return descrip; }
+  public String getDescrip() { return descrip; }
 
   /**
    * The set of entries that define the groups within the file. Each

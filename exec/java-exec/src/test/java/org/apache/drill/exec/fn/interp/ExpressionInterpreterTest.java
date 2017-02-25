@@ -124,9 +124,9 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     final String expressionStr = "now()";
     final BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
     final QueryContextInformation queryContextInfo = planFragment.getContext();
-    final int                        timeZoneIndex = queryContextInfo.getTimeZone();
-    final DateTimeZone timeZone =    DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-    final org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
+    final int timeZoneIndex = queryContextInfo.getTimeZone();
+    final DateTimeZone timeZone = DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    final org.joda.time.DateTime now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
     final long queryStartDate = now.getMillis();
 
@@ -166,7 +166,7 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
       columns[i] = new MockTableDef.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(), 0, 0, 0, null, null, null);
     }
 
-    final MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(10, false, 0, columns);
+    final MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(10, false, 0, 1, columns);
     final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", false, java.util.Collections.singletonList(entry));
 
     @SuppressWarnings("resource")

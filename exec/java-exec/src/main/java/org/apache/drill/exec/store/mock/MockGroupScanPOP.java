@@ -86,29 +86,45 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     this.url = url;
 
     // Compute decent row-count stats for this mock data source so that
-    // the planner is "fooled" into thinking that this operator wil do
+    // the planner is "fooled" into thinking that this operator will do
     // disk I/O.
 
     int rowCount = 0;
     int rowWidth = 0;
+
+    // Can have multiple "read entries" which simulate blocks or
+    // row groups.
+
     for (MockScanEntry entry : readEntries) {
       rowCount += entry.getRecords();
-      int width = 0;
+      int groupRowWidth = 0;
       if (entry.getTypes() == null) {
-        width = 50;
+        // If no columns, assume a row width.
+        groupRowWidth = 50;
       } else {
+        // The normal case: we do have columns. Use them
+        // to compute the row width.
+
         for (MockColumn col : entry.getTypes()) {
           int colWidth = 0;
           if (col.getWidthValue() == 0) {
+            // Fixed width columns
             colWidth = TypeHelper.getSize(col.getMajorType());
           } else {
+            // Variable width columns with a specified column
+            // width
             colWidth = col.getWidthValue();
           }
+
+          // Columns can repeat
           colWidth *= col.getRepeatCount();
-          width += colWidth;
+          groupRowWidth += colWidth;
         }
       }
-      rowWidth = Math.max(rowWidth, width);
+
+      // Overall row width is the greatest group row width.
+
+      rowWidth = Math.max(rowWidth, groupRowWidth);
     }
     int dataSize = rowCount * rowWidth;
     scanStats = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT,
@@ -223,7 +239,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     MockScanEntry entry = readEntries.get(0);
     MockColumn types[] = new MockColumn[mockCols.size()];
     mockCols.toArray(types);
-    MockScanEntry newEntry = new MockScanEntry(entry.records, true, 0, types);
+    MockScanEntry newEntry = new MockScanEntry(entry.records, true, 0, 1, types);
     List<MockScanEntry> newEntries = new ArrayList<>();
     newEntries.add(newEntry);
     return new MockGroupScanPOP(url, newEntries);

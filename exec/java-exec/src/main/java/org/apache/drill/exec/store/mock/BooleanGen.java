@@ -24,17 +24,17 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public class BooleanGen implements FieldGen {
 
-  Random rand = new Random( );
+  private Random rand = new Random();
 
   @Override
   public void setup(ColumnDef colDef) { }
 
-  public int value( ) {
+  public int value() {
     return rand.nextBoolean() ? 1 : 0;
   }
 
   @Override
-  public void setValue( ValueVector v, int index ) {
+  public void setValue(ValueVector v, int index ) {
     BitVector vector = (BitVector) v;
     vector.getMutator().set(index, value());
   }
