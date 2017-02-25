@@ -84,7 +84,7 @@
       </p>
       <p>Failure node: ${model.getProfile().errorNode}</p>
       <p>Error ID: ${model.getProfile().errorId}</p>
-      
+
         <h3 class="panel-title">
           <a data-toggle="collapse" href="#error-verbose">
             Verbose Error Message...
@@ -107,9 +107,9 @@
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
   <p>DURATION: ${model.getProfileDuration()}</p>
-  <p>&nbsp;&nbsp;&nbsp;&nbsp;PLANNING: ${model.getPlanningDuration()}</p>
-  <p>&nbsp;&nbsp;&nbsp;&nbsp;QUEUED: ${model.getQueuedDuration()}</p>
-  <p>&nbsp;&nbsp;&nbsp;&nbsp;EXECUTION: ${model.getExecutionDuration()}</p>
+  <p style="text-indent:5em;">PLANNING: ${model.getPlanningDuration()}</p>
+  <p style="text-indent:5em;">QUEUED: ${model.getQueuedDuration()}</p>
+  <p style="text-indent:5em;">EXECUTION: ${model.getExecutionDuration()}</p>
 
   <#assign options = model.getOptions()>
   <#if (options?keys?size > 0)>
