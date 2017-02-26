@@ -201,7 +201,7 @@ class DrillClientQueryResult: public DrillClientBaseHandle<pfnQueryResultsListen
         m_pSchemaListener(NULL) {
     };
 
-    ~DrillClientQueryResult(){
+    virtual ~DrillClientQueryResult(){
         this->clearAndDestroy();
     };
 
@@ -307,6 +307,18 @@ class DrillClientPrepareHandle: public DrillClientBaseHandle<pfnPreparedStatemen
     ::exec::user::PreparedStatementHandle m_preparedStatementHandle;
 };
 
+typedef status_t (*pfnServerMetaListener)(void* ctx, const exec::user::ServerMeta* serverMeta, DrillClientError* err);
+class DrillClientServerMetaHandle: public DrillClientBaseHandle<pfnServerMetaListener, const exec::user::ServerMeta*> {
+    public:
+	DrillClientServerMetaHandle(DrillClientImpl& client, int32_t coordId, pfnServerMetaListener listener, void* listenerCtx):
+    	DrillClientBaseHandle<pfnServerMetaListener, const exec::user::ServerMeta*>(client, coordId, "server meta", listener, listenerCtx) {
+    };
+
+    private:
+    friend class DrillClientImpl;
+
+};
+
 template<typename Listener, typename MetaType, typename MetaImpl, typename MetadataResult>
 class DrillClientMetadataResult: public DrillClientBaseHandle<Listener, const DrillCollection<MetaType>*> {
 public:
@@ -364,6 +376,7 @@ class DrillClientImpl : public DrillClientImplBase{
             m_handshakeStatus(exec::user::SUCCESS),
             m_bIsConnected(false),
             m_saslAuthenticator(NULL),
+    		m_saslResultCode(SASL_OK),
             m_saslDone(false),
             m_pendingRequests(0),
             m_pError(NULL),
@@ -487,6 +500,7 @@ class DrillClientImpl : public DrillClientImplBase{
         status_t processSchemasResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg );
         status_t processTablesResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg );
         status_t processColumnsResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg );
+        status_t processServerMetaResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg );
         DrillClientQueryResult* findQueryResult(const exec::shared::QueryId& qid);
         status_t processQueryStatusResult( exec::shared::QueryResult* qr,
                 DrillClientQueryResult* pDrillClientQueryResult);
@@ -533,6 +547,7 @@ class DrillClientImpl : public DrillClientImplBase{
         std::string m_handshakeErrorId;
         std::string m_handshakeErrorMsg;
         exec::user::RpcEndpointInfos m_serverInfos;
+        std::vector<exec::user::RpcType> m_supportedMethods;
         bool m_bIsConnected;
 
         std::vector<std::string> m_serverAuthMechanisms;

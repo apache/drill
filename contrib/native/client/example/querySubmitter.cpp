@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include "drill/drillc.hpp"
 
 int nOptions=15;
@@ -32,12 +33,12 @@ struct Option{
 }qsOptions[]= {
     {"plan", "Plan files separated by semicolons", false},
     {"query", "Query strings, separated by semicolons", false},
-    {"type", "Query type [physical|logical|sql]", true},
+    {"type", "Query type [physical|logical|sql|server]", true},
     {"connectStr", "Connect string", true},
     {"schema", "Default schema", false},
-    {"api", "API type [sync|async]", true},
+    {"api", "API type [sync|async|meta]", true},
     {"logLevel", "Logging level [trace|debug|info|warn|error|fatal]", false},
-    {"testCancel", "Cancel the query afterthe first record batch.", false},
+    {"testCancel", "Cancel the query after the first record batch.", false},
     {"syncSend", "Send query only after previous result is received", false},
     {"hshakeTimeout", "Handshake timeout (second).", false},
     {"queryTimeout", "Query timeout (second).", false},
@@ -55,12 +56,12 @@ bool bSyncSend=false;
 
 Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::DrillClientError* err){
     if(!err){
-        printf("SCHEMA CHANGE DETECTED:\n");
+        std::cout<< "SCHEMA CHANGE DETECTED:" << std::endl;
         for(size_t i=0; i<fields->size(); i++){
             std::string name= fields->at(i)->getName();
-            printf("%s\t", name.c_str());
+            std::cout << name << "\t";
         }
-        printf("\n");
+        std::cout << std::endl;
         return Drill::QRY_SUCCESS ;
     }else{
         std::cerr<< "ERROR: " << err->msg << std::endl;
@@ -113,6 +114,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
             switch (mode) {
                 case common::DM_REQUIRED:
                     sprintf((char*)printBuffer, "%lld", *(uint64_t*)buf);
+                    break;
                 case common::DM_OPTIONAL:
                     break;
                 case common::DM_REPEATED:
@@ -123,6 +125,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
             switch (mode) {
                 case common::DM_REQUIRED:
                     memcpy(printBuffer, buf, sz);
+                    break;
                 case common::DM_OPTIONAL:
                     break;
                 case common::DM_REPEATED:
@@ -133,6 +136,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
             switch (mode) {
                 case common::DM_REQUIRED:
                     memcpy(printBuffer, buf, sz);
+                    break;
                 case common::DM_OPTIONAL:
                     break;
                 case common::DM_REPEATED:
@@ -233,6 +237,9 @@ int readQueries(const std::string& queryList, std::vector<std::string>& queries)
 }
 
 bool validate(const std::string& type, const std::string& query, const std::string& plan){
+	if (type != "sync" || type != "async") {
+		return true;
+	}
     if(query.empty() && plan.empty()){
         std::cerr<< "Either query or plan must be specified"<<std::endl;
         return false;    }
@@ -365,14 +372,77 @@ int main(int argc, char* argv[]) {
             props.setProperty(USERPROP_PASSWORD, password);
         }
 
-        props.setProperty("someRandomProperty", "someRandomValue");
-
         if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
             return -1;
         }
         std::cout<< "Connected!\n" << std::endl;
-        if(api=="sync"){
+        if(api=="meta") {
+        	Drill::Metadata* metadata = client.getMetadata();
+        	if (metadata) {
+        		std::cout << "Connector:" << std::endl;
+        		std::cout << "\tname:" << metadata->getConnectorName() << std::endl;
+        		std::cout << "\tversion:" << metadata->getConnectorVersion() << std::endl;
+        		std::cout << std::endl;
+        		std::cout << "Server:" << std::endl;
+        		std::cout << "\tname:" << metadata->getServerName() << std::endl;
+        		std::cout << "\tversion:" << metadata->getServerVersion() << std::endl;
+        		std::cout << std::endl;
+        		std::cout << "Metadata:" << std::endl;
+        		std::cout << "\tall tables are selectable: " << metadata->areAllTableSelectable() << std::endl;
+        		std::cout << "\tcatalog separator: " << metadata->getCatalogSeparator() << std::endl;
+        		std::cout << "\tcatalog term: " << metadata->getCatalogTerm() << std::endl;
+        		std::cout << "\tCOLLATE support: " << metadata->getCollateSupport() << std::endl;
+        		std::cout << "\tcorrelation names: " << metadata->getCorrelationNames() << std::endl;
+        		std::cout << "\tdate time functions: " << boost::algorithm::join(metadata->getDateTimeFunctions(), ", ") << std::endl;
+        		std::cout << "\tdate time literals support: " << metadata->getDateTimeLiteralsSupport() << std::endl;
+        		std::cout << "\tGROUP BY support: " << metadata->getGroupBySupport() << std::endl;
+        		std::cout << "\tidentifier case: " << metadata->getIdentifierCase() << std::endl;
+        		std::cout << "\tidentifier quote string: " << metadata->getIdentifierQuoteString() << std::endl;
+        		std::cout << "\tmax binary literal length: " << metadata->getMaxBinaryLiteralLength() << std::endl;
+        		std::cout << "\tmax catalog name length: " << metadata->getMaxCatalogNameLength() << std::endl;
+        		std::cout << "\tmax char literal length: " << metadata->getMaxCharLiteralLength() << std::endl;
+        		std::cout << "\tmax column name length: " << metadata->getMaxColumnNameLength() << std::endl;
+        		std::cout << "\tmax columns in GROUP BY: " << metadata->getMaxColumnsInGroupBy() << std::endl;
+        		std::cout << "\tmax columns in ORDER BY: " << metadata->getMaxColumnsInOrderBy() << std::endl;
+        		std::cout << "\tmax columns in SELECT: " << metadata->getMaxColumnsInSelect() << std::endl;
+        		std::cout << "\tmax cursor name length: " << metadata->getMaxCursorNameLength() << std::endl;
+        		std::cout << "\tmax logical lob size: " << metadata->getMaxLogicalLobSize() << std::endl;
+        		std::cout << "\tmax row size: " << metadata->getMaxRowSize() << std::endl;
+        		std::cout << "\tmax schema name length: " << metadata->getMaxSchemaNameLength() << std::endl;
+        		std::cout << "\tmax statement length: " << metadata->getMaxStatementLength() << std::endl;
+        		std::cout << "\tmax statements: " << metadata->getMaxStatements() << std::endl;
+        		std::cout << "\tmax table name length: " << metadata->getMaxTableNameLength() << std::endl;
+        		std::cout << "\tmax tables in SELECT: " << metadata->getMaxTablesInSelect() << std::endl;
+        		std::cout << "\tmax user name length: " << metadata->getMaxUserNameLength() << std::endl;
+        		std::cout << "\tNULL collation: " << metadata->getNullCollation() << std::endl;
+        		std::cout << "\tnumeric functions: " << boost::algorithm::join(metadata->getNumericFunctions(), ", ") << std::endl;
+        		std::cout << "\tOUTER JOIN support: " << metadata->getOuterJoinSupport() << std::endl;
+        		std::cout << "\tquoted identifier case: " << metadata->getQuotedIdentifierCase() << std::endl;
+        		std::cout << "\tSQL keywords: " << boost::algorithm::join(metadata->getSQLKeywords(), ",") << std::endl;
+        		std::cout << "\tschema term: " << metadata->getSchemaTerm() << std::endl;
+        		std::cout << "\tsearch escape string: " << metadata->getSearchEscapeString() << std::endl;
+        		std::cout << "\tspecial characters: " << metadata->getSpecialCharacters() << std::endl;
+        		std::cout << "\tstring functions: " << boost::algorithm::join(metadata->getStringFunctions(), ",") << std::endl;
+        		std::cout << "\tsub query support: " << metadata->getSubQuerySupport() << std::endl;
+        		std::cout << "\tsystem functions: " << boost::algorithm::join(metadata->getSystemFunctions(), ",") << std::endl;
+        		std::cout << "\ttable term: " << metadata->getTableTerm() << std::endl;
+        		std::cout << "\tUNION support: " << metadata->getUnionSupport() << std::endl;
+        		std::cout << "\tBLOB included in max row size: " << metadata->isBlobIncludedInMaxRowSize() << std::endl;
+        		std::cout << "\tcatalog at start: " << metadata->isCatalogAtStart() << std::endl;
+        		std::cout << "\tcolumn aliasing supported: " << metadata->isColumnAliasingSupported() << std::endl;
+        		std::cout << "\tLIKE escape clause supported: " << metadata->isLikeEscapeClauseSupported() << std::endl;
+        		std::cout << "\tNULL plus non NULL equals to NULL: " << metadata->isNullPlusNonNullNull() << std::endl;
+        		std::cout << "\tread-only: " << metadata->isReadOnly() << std::endl;
+        		std::cout << "\tSELECT FOR UPDATE supported: " << metadata->isSelectForUpdateSupported() << std::endl;
+        		std::cout << "\ttransaction supported: " << metadata->isTransactionSupported() << std::endl;
+        		std::cout << "\tunrelated columns in ORDER BY supported: " << metadata->isUnrelatedColumnsInOrderBySupported() << std::endl;
+
+        		client.freeMetadata(&metadata);
+        	} else {
+        		std::cerr << "Cannot get metadata:" << client.getError() << std::endl;
+        	}
+        } else if(api=="sync"){
             Drill::DrillClientError* err=NULL;
             Drill::status_t ret;
             int nQueries=0;
