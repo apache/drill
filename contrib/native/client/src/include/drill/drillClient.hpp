@@ -439,24 +439,26 @@ namespace meta {
    * Identified case support
    */
   enum IdentifierCase {
-      IC_STORES_LOWER,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in lower case */
-      IC_STORES_MIXED,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in mixed case */
-      IC_STORES_UPPER,  /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in upper case */
-      IC_SUPPORTS_MIXED /**< Mixed case unquoted SQL identifier are treated as
-	  	  	  	  	  	    case sensitive and stored in mixed case */
+	  IC_UNKNOWN      = -1, /**< Unknown support */
+      IC_STORES_LOWER = 0,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	         case insensitive and stored in lower case */
+      IC_STORES_MIXED = 1,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	    	 case insensitive and stored in mixed case */
+      IC_STORES_UPPER = 2,  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	    	 case insensitive and stored in upper case */
+      IC_SUPPORTS_MIXED =3  /**< Mixed case unquoted SQL identifier are treated as
+	  	  	  	  	  	     	 case sensitive and stored in mixed case */
   };
 
   /**
    * Null collation support
    */
   enum NullCollation {
-      NC_AT_START,/**< NULL values are sorted at the start regardless of the order*/
-      NC_AT_END,  /**< NULL values are sorted at the end regardless of the order*/
-      NC_HIGH,    /**< NULL is the highest value */
-      NC_LOW      /**< NULL is the lowest value */
+	  NC_UNKNOWN = -1,  /**< Unknown support */
+      NC_AT_START = 0,	/**< NULL values are sorted at the start regardless of the order*/
+      NC_AT_END   = 1,  /**< NULL values are sorted at the end regardless of the order*/
+      NC_HIGH     = 2,  /**< NULL is the highest value */
+      NC_LOW      = 3	/**< NULL is the lowest value */
   };
 
 
@@ -516,14 +518,15 @@ namespace meta {
    * Quoted Identified case support
    */
   enum QuotedIdentifierCase {
-      QIC_STORES_LOWER,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in lower case */
-      QIC_STORES_MIXED,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in mixed case */
-      QIC_STORES_UPPER,  /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case insensitive and stored in upper case */
-      QIC_SUPPORTS_MIXED /**< Mixed case quoted SQL identifier are treated as
-	  	  	  	  	  	    case sensitive and stored in mixed case */
+	  QIC_UNKNOWN = -1,		 /**< Unknown support */
+      QIC_STORES_LOWER = 0,	 /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	         case insensitive and stored in lower case */
+      QIC_STORES_MIXED = 1,  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case insensitive and stored in mixed case */
+      QIC_STORES_UPPER = 2,  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case insensitive and stored in upper case */
+      QIC_SUPPORTS_MIXED =3  /**< Mixed case quoted SQL identifier are treated as
+	  	  	  	  	  	          case sensitive and stored in mixed case */
   };
 
   /*
