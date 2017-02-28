@@ -101,17 +101,22 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
 
     if (rsFilter != null) {
       Set<String> predicateColumns = new HashSet<>();
+      boolean[] includeString = new boolean[1];
       rsFilter.foreach(
           new Consumer<RCOperator>() {
             @Override
             public void accept(RCOperator op) {
               for (Attr attr : op.attr()) {
                 predicateColumns.add(attr.name());
+                if (!attr.sqlType().isNumber()) {
+                  includeString[0] = true;
+                }
               }
             }
           });
-      // The late materialization is worthy only when there are columns not included in predicates.
-      isLateMaterialization = predicateColumns.size() < projectColumnInfos.length;
+      // The late materialization is worthy only when there are columns not included in predicates,
+      // or predicates include string feilds.
+      isLateMaterialization = predicateColumns.size() < projectColumnInfos.length || includeString[0];
     }
   }
 
@@ -172,11 +177,7 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
       return true;
     }
 
-    long time = System.currentTimeMillis();
-
     long time2 = System.currentTimeMillis();
-    getPackTime += time2 - time;
-
     byte res = rsFilter.roughCheckOnRow(segment, packId);
     lmCheckTime += System.currentTimeMillis() - time2;
 
