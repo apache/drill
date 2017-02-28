@@ -53,6 +53,8 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
     private int minorVersion;
     private int patchVersion;
     private String application;
+    private int buildNumber;
+    private String versionQualifier;
 
     public RpcEndpointInfos()
     {
@@ -139,6 +141,32 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
         return this;
     }
 
+    // buildNumber
+
+    public int getBuildNumber()
+    {
+        return buildNumber;
+    }
+
+    public RpcEndpointInfos setBuildNumber(int buildNumber)
+    {
+        this.buildNumber = buildNumber;
+        return this;
+    }
+
+    // versionQualifier
+
+    public String getVersionQualifier()
+    {
+        return versionQualifier;
+    }
+
+    public RpcEndpointInfos setVersionQualifier(String versionQualifier)
+    {
+        this.versionQualifier = versionQualifier;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -211,6 +239,12 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
                 case 6:
                     message.application = input.readString();
                     break;
+                case 7:
+                    message.buildNumber = input.readUInt32();
+                    break;
+                case 8:
+                    message.versionQualifier = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -237,6 +271,12 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
 
         if(message.application != null)
             output.writeString(6, message.application, false);
+
+        if(message.buildNumber != 0)
+            output.writeUInt32(7, message.buildNumber, false);
+
+        if(message.versionQualifier != null)
+            output.writeString(8, message.versionQualifier, false);
     }
 
     public String getFieldName(int number)
@@ -249,6 +289,8 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
             case 4: return "minorVersion";
             case 5: return "patchVersion";
             case 6: return "application";
+            case 7: return "buildNumber";
+            case 8: return "versionQualifier";
             default: return null;
         }
     }
@@ -268,6 +310,8 @@ public final class RpcEndpointInfos implements Externalizable, Message<RpcEndpoi
         __fieldMap.put("minorVersion", 4);
         __fieldMap.put("patchVersion", 5);
         __fieldMap.put("application", 6);
+        __fieldMap.put("buildNumber", 7);
+        __fieldMap.put("versionQualifier", 8);
     }
     
 }

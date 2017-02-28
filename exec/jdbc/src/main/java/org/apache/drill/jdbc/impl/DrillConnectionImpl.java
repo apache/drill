@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -43,6 +44,7 @@ import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.ExecuteResult;
+import org.apache.calcite.avatica.Meta.MetaResultSet;
 import org.apache.calcite.avatica.UnregisteredDriver;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -163,6 +165,12 @@ class DrillConnectionImpl extends AvaticaConnection
       // toString() since getMessage() text doesn't always mention error:)
       throw new SQLException("Failure in connecting to Drill: " + e, e);
     }
+  }
+
+
+  @Override
+  protected ResultSet createResultSet(MetaResultSet metaResultSet) throws SQLException {
+    return super.createResultSet(metaResultSet);
   }
 
   @Override

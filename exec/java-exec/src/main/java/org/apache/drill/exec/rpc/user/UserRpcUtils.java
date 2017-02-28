@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.user;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
+import org.apache.drill.common.Version;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 
@@ -52,8 +53,23 @@ public final class UserRpcUtils {
         .setMajorVersion(DrillVersionInfo.getMajorVersion())
         .setMinorVersion(DrillVersionInfo.getMinorVersion())
         .setPatchVersion(DrillVersionInfo.getPatchVersion())
+        .setBuildNumber(DrillVersionInfo.getBuildNumber())
+        .setVersionQualifier(DrillVersionInfo.getQualifier())
         .build();
 
     return infos;
+  }
+
+  /**
+   * Get the version from a {@code RpcEndpointInfos} instance
+   */
+  public static Version getVersion(RpcEndpointInfos infos) {
+    return new Version(
+        infos.getVersion(),
+        infos.getMajorVersion(),
+        infos.getMinorVersion(),
+        infos.getPatchVersion(),
+        infos.getBuildNumber(),
+        infos.getVersionQualifier());
   }
 }
