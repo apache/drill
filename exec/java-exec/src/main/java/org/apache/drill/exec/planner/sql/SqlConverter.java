@@ -56,6 +56,7 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.FunctionNotFoundException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.UdfUtilities;
