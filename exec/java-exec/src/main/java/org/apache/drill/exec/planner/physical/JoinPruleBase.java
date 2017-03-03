@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -74,7 +74,7 @@ public abstract class JoinPruleBase extends Prule {
 
   protected boolean checkBroadcastConditions(RelOptPlanner planner, DrillJoinRel join, RelNode left, RelNode right) {
 
-    double estimatedRightRowCount = RelMetadataQuery.getRowCount(right);
+    double estimatedRightRowCount = RelMetadataQuery.instance().getRowCount(right);
     if (estimatedRightRowCount < PrelUtil.getSettings(join.getCluster()).getBroadcastThreshold()
         && ! left.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.SINGLETON)
         && (join.getJoinType() == JoinRelType.INNER || join.getJoinType() == JoinRelType.LEFT)

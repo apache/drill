@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.type.SqlTypeUtil;
@@ -93,8 +94,8 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
         assert (tuple.size() == rowType.getFieldCount());
 
         for (Pair<RexLiteral, RelDataTypeField> pair : Pair.zip(tuple, rowType.getFieldList())) {
-          RexLiteral literal = (RexLiteral) pair.left;
-          RelDataType fieldType = ((RelDataTypeField) pair.right).getType();
+          RexLiteral literal = pair.left;
+          RelDataType fieldType = pair.right.getType();
 
           if ((!(RexLiteral.isNullLiteral(literal)))
               && (!(SqlTypeUtil.canAssignFrom(fieldType, literal.getType())))) {
@@ -105,7 +106,7 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
 
   }
 
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     return planner.getCostFactory().makeCost(this.rowCount, 1.0d, 0.0d);
   }
 
@@ -126,7 +127,7 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
     return options;
   }
 
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     return rowCount;
   }
 

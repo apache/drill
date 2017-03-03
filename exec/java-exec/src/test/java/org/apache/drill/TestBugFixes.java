@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -230,5 +230,15 @@ public class TestBugFixes extends BaseTestQuery {
         .baselineColumns("cnt")
         .baselineValues(1L)
         .go();
+  }
+
+  @Test // DRILL-4678
+  public void testManyDateCasts() throws Exception {
+    StringBuilder query = new StringBuilder("SELECT DISTINCT dt FROM (VALUES");
+    for (int i = 0; i < 50; i++) {
+      query.append("(CAST('1964-03-07' AS DATE)),");
+    }
+    query.append("(CAST('1951-05-16' AS DATE))) tbl(dt)");
+    test(query.toString());
   }
 }

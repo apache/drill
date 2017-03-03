@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,13 +64,13 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     RelNode child = this.getInput();
-    double inputRows = RelMetadataQuery.getRowCount(child);
-    double cpuCost = estimateCpuCost();
+    double inputRows = mq.getRowCount(child);
+    double cpuCost = estimateCpuCost(mq);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, 0, 0);
   }
@@ -84,9 +84,9 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
   *  #_of_comparison = n + n * Selectivity(C1) + n * Selectivity(C1 and C2) + ... + n * Selecitivity(C1 and C2 ... and C_n)
   *  cpu_cost = #_of_comparison * DrillCostBase_COMPARE_CPU_COST;
   */
-  private double estimateCpuCost() {
+  private double estimateCpuCost(RelMetadataQuery mq) {
     RelNode child = this.getInput();
-    double compNum = RelMetadataQuery.getRowCount(child);
+    double compNum = mq.getRowCount(child);
 
     for (int i = 0; i< numConjuncts; i++) {
       RexNode conjFilter = RexUtil.composeConjunction(this.getCluster().getRexBuilder(), conjunctions.subList(0, i + 1), false);
@@ -97,10 +97,10 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     // override Calcite's default selectivity estimate - cap lower/upper bounds on the
     // selectivity estimate in order to get desired parallelism
-    double selectivity = RelMetadataQuery.getSelectivity(getInput(), condition);
+    double selectivity = mq.getSelectivity(getInput(), condition);
     if (!condition.isAlwaysFalse()) {
       // Cap selectivity at filterMinSelectivityEstimateFactor unless it is always FALSE
       if (selectivity < filterMinSelectivityEstimateFactor) {
@@ -113,6 +113,6 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
         selectivity = filterMaxSelectivityEstimateFactor;
       }
     }
-    return selectivity*RelMetadataQuery.getRowCount(getInput());
+    return selectivity * mq.getRowCount(getInput());
   }
 }

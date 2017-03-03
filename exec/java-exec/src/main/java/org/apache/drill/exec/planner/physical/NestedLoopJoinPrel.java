@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,17 +58,17 @@ public class NestedLoopJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public double getRows() {
-    return this.getLeft().getRows() * this.getRight().getRows();
+  public double estimateRowCount(RelMetadataQuery mq) {
+    return this.getLeft().estimateRowCount(mq) * this.getRight().estimateRowCount(mq);
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
-    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
+    double leftRowCount = mq.getRowCount(this.getLeft());
+    double rightRowCount = mq.getRowCount(this.getRight());
     double nljFactor = PrelUtil.getSettings(getCluster()).getNestedLoopJoinFactor();
 
     // cpu cost of evaluating each leftkey=rightkey join condition

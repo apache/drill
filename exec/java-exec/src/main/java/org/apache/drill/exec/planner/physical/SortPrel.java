@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,14 +49,14 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Prel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
 
     RelNode child = this.getInput();
-    double inputRows = RelMetadataQuery.getRowCount(child);
+    double inputRows = mq.getRowCount(child);
     // int  rowWidth = child.getRowType().getPrecision();
     int numSortFields = this.collation.getFieldCollations().size();
     double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2));

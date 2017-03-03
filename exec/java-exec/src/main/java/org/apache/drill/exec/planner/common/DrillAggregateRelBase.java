@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,9 +33,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.pentaho.aggdes.algorithm.impl.Cost;
 
 
 /**
@@ -52,12 +50,12 @@ public abstract class DrillAggregateRelBase extends Aggregate implements DrillRe
   /**
    * Estimate cost of hash agg. Called by DrillAggregateRel.computeSelfCost() and HashAggPrel.computeSelfCost()
   */
-  protected RelOptCost computeHashAggCost(RelOptPlanner planner) {
+  protected RelOptCost computeHashAggCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     RelNode child = this.getInput();
-    double inputRows = RelMetadataQuery.getRowCount(child);
+    double inputRows = mq.getRowCount(child);
 
     int numGroupByFields = this.getGroupCount();
     int numAggrFields = this.aggCalls.size();
@@ -87,9 +85,9 @@ public abstract class DrillAggregateRelBase extends Aggregate implements DrillRe
 
   }
 
-  protected RelOptCost computeLogicalAggCost(RelOptPlanner planner) {
+  protected RelOptCost computeLogicalAggCost(RelOptPlanner planner, RelMetadataQuery mq) {
     // Similar to Join cost estimation, use HashAgg cost during the logical planning.
-    return computeHashAggCost(planner);
+    return computeHashAggCost(planner, mq);
   }
 
 }

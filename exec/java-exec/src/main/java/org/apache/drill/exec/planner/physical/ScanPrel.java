@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -101,13 +102,13 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     final PlannerSettings settings = PrelUtil.getPlannerSettings(getCluster());
     return this.groupScan.getScanStats(settings).getRecordCount();
   }
 
   @Override
-  public RelOptCost computeSelfCost(final RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final PlannerSettings settings = PrelUtil.getPlannerSettings(planner);
     final ScanStats stats = this.groupScan.getScanStats(settings);
     final int columnCount = this.getRowType().getFieldCount();

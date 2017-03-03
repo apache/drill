@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
@@ -65,14 +66,14 @@ public class HashJoinPrel  extends JoinPrel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     if (joincategory == JoinCategory.CARTESIAN || joincategory == JoinCategory.INEQUALITY) {
-      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+      return planner.getCostFactory().makeInfiniteCost();
     }
-    return computeHashJoinCost(planner);
+    return computeHashJoinCost(planner, mq);
   }
 
   @Override
