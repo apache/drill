@@ -1143,7 +1143,7 @@ uint32_t DrillMetadata::getServerPatchVersion() const {
 }
 
 status_t DrillMetadata::getCatalogs(const std::string& catalogPattern, Metadata::pfnCatalogMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle) {
-	DrillClientCatalogResult* result = m_client.getCatalogs(catalogPattern, listener, listenerCtx);
+	DrillClientCatalogResult* result = m_client.getCatalogs(catalogPattern, m_searchEscapeString, listener, listenerCtx);
 	if(result==NULL){
 		*qHandle=NULL;
 		return static_cast<status_t>(m_client.getError()->status);
@@ -1152,7 +1152,7 @@ status_t DrillMetadata::getCatalogs(const std::string& catalogPattern, Metadata:
 	return QRY_SUCCESS;
 }
 status_t DrillMetadata::getSchemas(const std::string& catalogPattern, const std::string& schemaPattern, Metadata::pfnSchemaMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle) {
-	DrillClientSchemaResult* result = m_client.getSchemas(catalogPattern, schemaPattern, listener, listenerCtx);
+	DrillClientSchemaResult* result = m_client.getSchemas(catalogPattern, schemaPattern, m_searchEscapeString, listener, listenerCtx);
 	if(result==NULL){
 		*qHandle=NULL;
 		return static_cast<status_t>(m_client.getError()->status);
@@ -1161,7 +1161,7 @@ status_t DrillMetadata::getSchemas(const std::string& catalogPattern, const std:
 	return QRY_SUCCESS;
 }
 status_t DrillMetadata::getTables(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::vector<std::string>* tableTypes, Metadata::pfnTableMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle) {
-	DrillClientTableResult* result = m_client.getTables(catalogPattern, schemaPattern, tablePattern, tableTypes, listener, listenerCtx);
+	DrillClientTableResult* result = m_client.getTables(catalogPattern, schemaPattern, tablePattern, tableTypes, m_searchEscapeString, listener, listenerCtx);
 	if(result==NULL){
 		*qHandle=NULL;
 		return static_cast<status_t>(m_client.getError()->status);
@@ -1170,7 +1170,7 @@ status_t DrillMetadata::getTables(const std::string& catalogPattern, const std::
 	return QRY_SUCCESS;
 }
 status_t DrillMetadata::getColumns(const std::string& catalogPattern, const std::string& schemaPattern, const std:: string& tablePattern, const std::string& columnPattern, Metadata::pfnColumnMetadataListener listener, void* listenerCtx, QueryHandle_t* qHandle) {
-	DrillClientColumnResult* result = m_client.getColumns(catalogPattern, schemaPattern, tablePattern, columnPattern, listener, listenerCtx);
+	DrillClientColumnResult* result = m_client.getColumns(catalogPattern, schemaPattern, tablePattern, columnPattern, m_searchEscapeString, listener, listenerCtx);
 	if(result==NULL){
 		*qHandle=NULL;
 		return static_cast<status_t>(m_client.getError()->status);

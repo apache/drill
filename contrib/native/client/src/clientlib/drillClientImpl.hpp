@@ -527,10 +527,10 @@ class DrillClientImpl : public DrillClientImplBase{
         Handle* sendMsg(boost::function<Handle*(int32_t)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& msg);
 
         // metadata requests
-        DrillClientCatalogResult* getCatalogs(const std::string& catalogPattern, Metadata::pfnCatalogMetadataListener listener, void* listenerCtx);
-        DrillClientSchemaResult* getSchemas(const std::string& catalogPattern, const std::string& schemaPattern, Metadata::pfnSchemaMetadataListener listener, void* listenerCtx);
-        DrillClientTableResult* getTables(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::vector<std::string>* tableTypes, Metadata::pfnTableMetadataListener listener, void* listenerCtx);
-        DrillClientColumnResult* getColumns(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::string& columnPattern, Metadata::pfnColumnMetadataListener listener, void* listenerCtx);
+        DrillClientCatalogResult* getCatalogs(const std::string& catalogPattern, const std::string& searchEscapeString, Metadata::pfnCatalogMetadataListener listener, void* listenerCtx);
+        DrillClientSchemaResult* getSchemas(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& searchEscapeString, Metadata::pfnSchemaMetadataListener listener, void* listenerCtx);
+        DrillClientTableResult* getTables(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::vector<std::string>* tableTypes, const std::string& searchEscapeString, Metadata::pfnTableMetadataListener listener, void* listenerCtx);
+        DrillClientColumnResult* getColumns(const std::string& catalogPattern, const std::string& schemaPattern, const std::string& tablePattern, const std::string& columnPattern, const std::string& searchEscapeString, Metadata::pfnColumnMetadataListener listener, void* listenerCtx);
 
         // SASL exchange
         connectionStatus_t handleAuthentication(const DrillUserProperties *userProperties);
