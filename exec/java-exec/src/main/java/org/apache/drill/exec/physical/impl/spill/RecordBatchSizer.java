@@ -107,21 +107,23 @@ public class RecordBatchSizer {
 
     @Override
     public String toString() {
-      StringBuilder buf = new StringBuilder();
-      buf.append(metadata.getName());
-      buf.append("(std col. size: ");
-      buf.append(stdSize);
-      buf.append(", actual col. size: ");
-      buf.append(estSize);
-      buf.append(", total size: ");
-      buf.append(totalSize);
-      buf.append(", data size: ");
-      buf.append(dataSize);
-      buf.append(", row capacity: ");
-      buf.append(capacity);
-      buf.append(", density: ");
-      buf.append(density);
-      buf.append(")");
+      StringBuilder buf = new StringBuilder()
+          .append(metadata.getName())
+          .append("(type: ")
+          .append(metadata.getType().getMinorType().name())
+          .append(", std col. size: ")
+          .append(stdSize)
+          .append(", actual col. size: ")
+          .append(estSize)
+          .append(", total size: ")
+          .append(totalSize)
+          .append(", data size: ")
+          .append(dataSize)
+          .append(", row capacity: ")
+          .append(capacity)
+          .append(", density: ")
+          .append(density)
+          .append(")");
       return buf.toString();
     }
   }

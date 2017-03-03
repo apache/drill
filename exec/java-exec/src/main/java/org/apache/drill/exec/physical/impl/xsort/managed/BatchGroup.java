@@ -150,7 +150,8 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
     private String path;
     private SpillSet spillSet;
     private BufferAllocator allocator;
-    private int spilledBatches = 0;
+    private int spilledBatches;
+    private long batchSize;
 
     public SpilledRun(SpillSet spillSet, String path, OperatorContext context) throws IOException {
       super(null, context);
@@ -177,6 +178,12 @@ public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
       currentContainer = newContainer;
       currentContainer.setRecordCount(0);
     }
+
+    public void setBatchSize(long batchSize) {
+      this.batchSize = batchSize;
+    }
+
+    public long getBatchSize() { return batchSize; }
 
     @Override
     public int getNextIndex() {

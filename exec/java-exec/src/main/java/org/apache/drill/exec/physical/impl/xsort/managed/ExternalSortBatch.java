@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.physical.impl.xsort.MSortTemplate;
 import org.apache.drill.exec.physical.impl.xsort.SingleBatchSorter;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
+import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.SpilledRun;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -180,13 +181,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
    * created even under constrained memory conditions.
    */
   private static final int MIN_MERGED_BATCH_SIZE = 256 * 1024;
-
-  /**
-   * The preferred amount of memory to set aside to output batches
-   * expressed as a ratio of available memory.
-   */
-
-  private static final float MERGE_BATCH_ALLOWANCE = 0.10F;
 
   /**
    * In the bizarre case where the user gave us an unrealistically low
@@ -777,6 +771,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
    * @return the converted batch, or null if the incoming batch is empty
    */
 
+  @SuppressWarnings("resource")
   private VectorContainer convertBatch() {
 
     // Must accept the batch even if no records. Then clear
@@ -787,6 +782,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     if (incoming.getRecordCount() == 0) {
       for (VectorWrapper<?> w : convertedBatch) {
         w.clear();
+      }
+      SelectionVector2 sv2 = incoming.getSelectionVector2();
+      if (sv2 != null) {
+        sv2.clear();
       }
       return null;
     }
@@ -852,7 +851,13 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return;
     }
 
-    SelectionVector2 sv2 = makeSelectionVector();
+    SelectionVector2 sv2;
+    try {
+      sv2 = makeSelectionVector();
+    } catch (Exception e) {
+      convertedBatch.clear();
+      throw e;
+    }
 
     // Compute batch size, including allocation of an sv2.
 
@@ -994,7 +999,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // Maintain an estimate of the incoming batch size: the largest
     // batch yet seen. Used to reserve memory for the next incoming
-    // batch.
+    // batch. Because we are using the actual observed batch size,
+    // the size already includes overhead due to power-of-two rounding.
 
     long origInputBatchSize = estimatedInputBatchSize;
     estimatedInputBatchSize = Math.max(estimatedInputBatchSize, actualBatchSize);
@@ -1013,7 +1019,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return; }
 
     // Estimate the total size of each incoming batch plus sv2. Note that, due
-    // to power-of-two rounding, the allocated size might be twice the data size.
+    // to power-of-two rounding, the allocated sv2 size might be twice the data size.
 
     long estimatedInputSize = estimatedInputBatchSize + 4 * actualRecordCount;
 
@@ -1290,7 +1296,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     logger.trace("Merging {} on-disk runs, Alloc. memory = {}",
         mergeCount, allocator.getAllocatedMemory());
-    mergeAndSpill(spilledRuns, mergeCount);
+    mergeRuns(mergeCount);
     return true;
   }
 
@@ -1333,8 +1339,43 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     mergeAndSpill(bufferedBatches, spillCount);
   }
 
+  private void mergeRuns(int targetCount) {
+
+    // Determine the number of runs to merge. The count should be the
+    // target count. However, to prevent possible memory overrun, we
+    // double-check with actual spill batch size and only spill as much
+    // as fits in the merge memory pool.
+
+    int mergeCount = 0;
+    long mergeSize = 0;
+    for (SpilledRun run : spilledRuns) {
+      long batchSize = run.getBatchSize();
+      if (mergeSize + batchSize > mergeMemoryPool) {
+        break;
+      }
+      mergeSize += batchSize;
+      mergeCount++;
+      if (mergeCount == targetCount) {
+        break;
+      }
+    }
+
+    // Must always spill at least 2, even if this creates an over-size
+    // spill file. But, if this is a final consolidation, we may have only
+    // a single batch.
+
+    mergeCount = Math.max(mergeCount, 2);
+    mergeCount = Math.min(mergeCount, spilledRuns.size());
+
+    // Do the actual spill.
+
+    mergeAndSpill(spilledRuns, mergeCount);
+  }
+
   private void mergeAndSpill(LinkedList<? extends BatchGroup> source, int count) {
     spilledRuns.add(doMergeAndSpill(source, count));
+    logger.trace("Completed spill: memory = {}",
+                 allocator.getAllocatedMemory());
   }
 
   private BatchGroup.SpilledRun doMergeAndSpill(LinkedList<? extends BatchGroup> batchGroups, int spillCount) {
@@ -1354,7 +1395,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     BatchGroup.SpilledRun newGroup = null;
     try (AutoCloseable ignored = AutoCloseables.all(batchesToSpill);
          CopierHolder.BatchMerger merger = copierHolder.startMerge(schema, batchesToSpill, spillBatchRowCount)) {
-      logger.trace("Spilling {} of {} batches, {} rows, memory = {}, write to {}",
+      logger.trace("Spilling {} of {} batches, spill batch size = {} rows, memory = {}, write to {}",
                    batchesToSpill.size(), bufferedBatches.size() + batchesToSpill.size(),
                    spillBatchRowCount,
                    allocator.getAllocatedMemory(), outputFile);
@@ -1375,8 +1416,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
       injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
-      logger.trace("mergeAndSpill: completed, memory = {}, spilled {} records to {}",
-                   allocator.getAllocatedMemory(), merger.getRecordCount(), outputFile);
+      logger.trace("Spilled {} batches, {} records; memory = {} to {}",
+                   merger.getBatchCount(), merger.getRecordCount(),
+                   allocator.getAllocatedMemory(), outputFile);
+      newGroup.setBatchSize(merger.getEstBatchSize());
       return newGroup;
     } catch (Throwable e) {
       // we only need to clean up newGroup if spill failed
