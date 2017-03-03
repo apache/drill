@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -70,16 +70,16 @@ public abstract class DrillProjectRelBase extends Project implements DrillRelNod
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
 
     // cost is proportional to the number of rows and number of columns being projected
-    double rowCount = nonSimpleFieldCount >0 ? RelMetadataQuery.getRowCount(this) : 0;
+    double rowCount = nonSimpleFieldCount > 0 ? mq.getRowCount(this) : 0;
     double cpuCost = DrillCostBase.PROJECT_CPU_COST * rowCount * nonSimpleFieldCount;
 
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
     return costFactory.makeCost(rowCount, cpuCost, 0, 0);
   }
 

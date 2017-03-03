@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,13 +55,13 @@ public class UnionDistinctPrel extends UnionPrel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     double totalInputRowCount = 0;
     for (int i = 0; i < this.getInputs().size(); i++) {
-      totalInputRowCount += RelMetadataQuery.getRowCount(this.getInputs().get(i));
+      totalInputRowCount += mq.getRowCount(this.getInputs().get(i));
     }
 
     double cpuCost = totalInputRowCount * DrillCostBase.BASE_CPU_COST;

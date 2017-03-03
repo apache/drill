@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +21,10 @@ import java.util.List;
 
 import org.apache.calcite.linq4j.Ord;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.planner.cost.DrillRelOptCostFactory;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
@@ -56,9 +55,9 @@ public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     // divide cost by two to ensure cheaper than EnumerableDrillRel
-    return super.computeSelfCost(planner).multiplyBy(.5);
+    return super.computeSelfCost(planner, mq).multiplyBy(.5);
   }
 
   @Override

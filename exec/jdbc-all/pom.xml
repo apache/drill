@@ -143,10 +143,6 @@
           <artifactId>hazelcast</artifactId>
           <groupId>com.hazelcast</groupId>
         </exclusion>
-        <exclusion>
-          <artifactId>commons-compiler-jdk</artifactId>
-          <groupId>org.codehaus.janino</groupId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -163,13 +159,6 @@
           <groupId>net.hydromatic</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.6.1</version>
-      <scope>test</scope>
     </dependency>
 
     <!-- Test Dependencies -->
@@ -306,7 +295,6 @@
               <exclude>org.tukaani:*</exclude>
               <exclude>org.apache.velocity:*</exclude>
               <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.codehaus.janino:*</exclude>
               <exclude>org.mortbay.jetty:*</exclude>
               <exclude>org.slf4j:jul-to-slf4j</exclude>
               <exclude>org.slf4j:log4j-over-slf4j</exclude>

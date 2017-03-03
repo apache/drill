@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,16 +49,17 @@ public class MemoryEstimationVisitor extends BasePrelVisitor<Double, Void, Runti
 
   @Override
   public Double visitPrel(Prel prel, Void value) throws RuntimeException {
-    return ((DrillCostBase) RelMetadataQuery.getCumulativeCost(prel)).getMemory();
-//    return findCost(prel);
+    RelMetadataQuery mq = RelMetadataQuery.instance();
+    return ((DrillCostBase) mq.getCumulativeCost(prel)).getMemory();
+//    return findCost(prel, mq);
   }
 
-  private double findCost(Prel prel) {
-    DrillCostBase cost = (DrillCostBase) RelMetadataQuery.getNonCumulativeCost(prel);
+  private double findCost(Prel prel, RelMetadataQuery mq) {
+    DrillCostBase cost = (DrillCostBase) mq.getNonCumulativeCost(prel);
     double memory = cost.getMemory();
 
     for (Prel child : prel) {
-      memory += findCost(child);
+      memory += findCost(child, mq);
     }
     return memory;
   }

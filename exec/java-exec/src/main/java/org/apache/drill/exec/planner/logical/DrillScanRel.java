@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -147,7 +148,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     return this.groupScan.getScanStats(settings).getRecordCount();
   }
 
@@ -155,7 +156,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /// this and few other methods in a common base class which would be extended
   /// by both logical and physical rels.
   @Override
-  public RelOptCost computeSelfCost(final RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final ScanStats stats = groupScan.getScanStats(settings);
     int columnCount = getRowType().getFieldCount();
     double ioCost = 0;
