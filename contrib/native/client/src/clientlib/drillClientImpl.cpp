@@ -661,16 +661,18 @@ DrillClientQueryResult* DrillClientImpl::ExecuteQuery(const PreparedStatement& p
     return sendMsg(factory, ::exec::user::RUN_QUERY, query);
 }
 
-static void updateLikeFilter(exec::user::LikeFilter& likeFilter, const std::string& pattern) {
+static void updateLikeFilter(exec::user::LikeFilter& likeFilter, const std::string& pattern,
+        const std::string& searchEscapeString) {
 	likeFilter.set_pattern(pattern);
-	likeFilter.set_escape(meta::DrillMetadata::s_searchEscapeString);
+	likeFilter.set_escape(searchEscapeString);
 }
 
 DrillClientCatalogResult* DrillClientImpl::getCatalogs(const std::string& catalogPattern,
+        const std::string& searchEscapeString,
         Metadata::pfnCatalogMetadataListener listener,
         void* listenerCtx) {
     exec::user::GetCatalogsReq query;
-    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern);
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
 
     boost::function<DrillClientCatalogResult*(int32_t)> factory = boost::bind(
             boost::factory<DrillClientCatalogResult*>(),
@@ -683,11 +685,12 @@ DrillClientCatalogResult* DrillClientImpl::getCatalogs(const std::string& catalo
 
 DrillClientSchemaResult* DrillClientImpl::getSchemas(const std::string& catalogPattern,
         const std::string& schemaPattern,
+        const std::string& searchEscapeString,
         Metadata::pfnSchemaMetadataListener listener,
         void* listenerCtx) {
     exec::user::GetSchemasReq query;
-    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern);
-    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern);
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
 
     boost::function<DrillClientSchemaResult*(int32_t)> factory = boost::bind(
             boost::factory<DrillClientSchemaResult*>(),
@@ -702,12 +705,13 @@ DrillClientTableResult* DrillClientImpl::getTables(const std::string& catalogPat
         const std::string& schemaPattern,
         const std::string& tablePattern,
 		const std::vector<std::string>* tableTypes,
+        const std::string& searchEscapeString,
         Metadata::pfnTableMetadataListener listener,
         void* listenerCtx) {
     exec::user::GetTablesReq query;
-    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern);
-    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern);
-    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern);
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern, searchEscapeString);
 
     if (tableTypes) {
     	std::copy(tableTypes->begin(), tableTypes->end(),
@@ -727,13 +731,14 @@ DrillClientColumnResult* DrillClientImpl::getColumns(const std::string& catalogP
         const std::string& schemaPattern,
         const std::string& tablePattern,
         const std::string& columnsPattern,
+        const std::string& searchEscapeString,
         Metadata::pfnColumnMetadataListener listener,
         void* listenerCtx) {
     exec::user::GetColumnsReq query;
-    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern);
-    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern);
-    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern);
-    updateLikeFilter(*query.mutable_column_name_filter(), columnsPattern);
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_column_name_filter(), columnsPattern, searchEscapeString);
 
     boost::function<DrillClientColumnResult*(int32_t)> factory = boost::bind(
             boost::factory<DrillClientColumnResult*>(),
