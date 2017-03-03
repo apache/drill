@@ -253,7 +253,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       // If 1 or more values, then the last value is set to
       // the offset of the next value, which is the same as
       // the length of existing values.
-      return a.get(count-1);
+      return a.get(count-1) + offsetVector.getPayloadByteCount();
     }
   }
 

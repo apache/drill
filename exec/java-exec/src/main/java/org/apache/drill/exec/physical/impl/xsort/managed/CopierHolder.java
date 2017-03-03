@@ -176,6 +176,7 @@ public class CopierHolder {
     private int targetRecordCount;
     private int copyCount;
     private int batchCount;
+    private long batchSize;
 
     /**
      * Creates a merger with an temporary output container.
@@ -229,15 +230,18 @@ public class CopierHolder {
     @Override
     public boolean next() {
       Stopwatch w = Stopwatch.createStarted();
+      long start = holder.allocator.getAllocatedMemory();
       int count = holder.copier.next(targetRecordCount);
       copyCount += count;
       if (count > 0) {
         long t = w.elapsed(TimeUnit.MICROSECONDS);
+        batchCount++;
         logger.trace("Took {} us to merge {} records", t, count);
+        long size = holder.allocator.getAllocatedMemory() - start;
+        batchSize = Math.max(batchSize, size);
       } else {
         logger.trace("copier returned 0 records");
       }
-      batchCount++;
 
       // Identify the schema to be used in the output container. (Since
       // all merged batches have the same schema, the schema we identify
@@ -302,6 +306,10 @@ public class CopierHolder {
     @Override
     public int getBatchCount() {
       return batchCount;
+    }
+
+    public long getBatchSize() {
+      return batchSize;
     }
   }
 }
