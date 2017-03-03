@@ -662,8 +662,9 @@ DrillClientQueryResult* DrillClientImpl::ExecuteQuery(const PreparedStatement& p
 }
 
 static void updateLikeFilter(exec::user::LikeFilter& likeFilter, const std::string& pattern) {
-	likeFilter.set_pattern(pattern);
-	likeFilter.set_escape(meta::DrillMetadata::s_searchEscapeString);
+    likeFilter.set_pattern(pattern);
+    exec::user::ServerMeta srvrMetaData = meta::DrillMetadata::s_defaultServerMeta; 
+    likeFilter.set_escape(srvrMetaData.search_escape_string()); 
 }
 
 DrillClientCatalogResult* DrillClientImpl::getCatalogs(const std::string& catalogPattern,
