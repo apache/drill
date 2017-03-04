@@ -34,5 +34,6 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Neeraja Rentachintala | neerajar |
 | Chris Westin | cwestin |
 | Abhishek Girish | agirish |
-| Rahul Challapalli | rkins |  
+| Rahul Challapalli | rkins |
+| Arina Ielchiieva | arina |  
 
