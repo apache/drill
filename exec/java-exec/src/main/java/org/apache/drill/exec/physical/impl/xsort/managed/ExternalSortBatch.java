@@ -1348,8 +1348,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     int mergeCount = 0;
     long mergeSize = 0;
-    for (SpilledRun batch : spilledRuns) {
-      long batchSize = batch.getBatchSize();
+    for (SpilledRun run : spilledRuns) {
+      long batchSize = run.getBatchSize();
       if (mergeSize + batchSize > mergeMemoryPool) {
         break;
       }
@@ -1419,7 +1419,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       logger.trace("Spilled {} batches, {} records; memory = {} to {}",
                    merger.getBatchCount(), merger.getRecordCount(),
                    allocator.getAllocatedMemory(), outputFile);
-      newGroup.setBatchSize(merger.getBatchSize());
+      newGroup.setBatchSize(merger.getEstBatchSize());
       return newGroup;
     } catch (Throwable e) {
       // we only need to clean up newGroup if spill failed

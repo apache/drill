@@ -176,7 +176,7 @@ public class CopierHolder {
     private int targetRecordCount;
     private int copyCount;
     private int batchCount;
-    private long batchSize;
+    private long estBatchSize;
 
     /**
      * Creates a merger with an temporary output container.
@@ -238,7 +238,7 @@ public class CopierHolder {
         batchCount++;
         logger.trace("Took {} us to merge {} records", t, count);
         long size = holder.allocator.getAllocatedMemory() - start;
-        batchSize = Math.max(batchSize, size);
+        estBatchSize = Math.max(estBatchSize, size);
       } else {
         logger.trace("copier returned 0 records");
       }
@@ -308,8 +308,15 @@ public class CopierHolder {
       return batchCount;
     }
 
-    public long getBatchSize() {
-      return batchSize;
+    /**
+     * Gets the estimated batch size, in bytes. Use for estimating the memory
+     * needed to process the batches that this operator created.
+     * @return the size of the largest batch created by this operation,
+     * in bytes
+     */
+
+    public long getEstBatchSize() {
+      return estBatchSize;
     }
   }
 }
