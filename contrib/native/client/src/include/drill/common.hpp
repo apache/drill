@@ -56,6 +56,7 @@
 
 #define LENGTH_PREFIX_MAX_LENGTH 5
 #define LEN_PREFIX_BUFLEN LENGTH_PREFIX_MAX_LENGTH
+#define ENCRYPT_LEN_PREFIX_BUFLEN 4
 
 #define MAX_CONNECT_STR 4096
 #define MAX_SOCK_RD_BUFSIZE  1024
@@ -169,6 +170,7 @@ typedef enum{
 #define USERPROP_AUTH_MECHANISM "auth"
 #define USERPROP_SERVICE_NAME "service_name"
 #define USERPROP_SERVICE_HOST "service_host"
+#define USERPROP_SASL_ENCRYPT "sasl_encrypt"
 
 // Bitflags to describe user properties
 // Used in DrillUserProperties::USER_PROPERTIES

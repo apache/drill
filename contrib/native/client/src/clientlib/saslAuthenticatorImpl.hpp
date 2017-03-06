@@ -24,6 +24,7 @@
 #include <vector>
 #include "drill/drillClient.hpp"
 #include "UserBitShared.pb.h"
+#include "utils.hpp"
 
 #include "sasl/sasl.h"
 #include "sasl/saslplug.h"
@@ -38,9 +39,16 @@ public:
 
     ~SaslAuthenticatorImpl();
 
-    int init(const std::vector<std::string>& mechanisms, exec::shared::SaslMessage& response);
+    int init(const std::vector<std::string>& mechanisms, exec::shared::SaslMessage& response,
+             EncryptionContext* const encryptCtxt);
 
     int step(const exec::shared::SaslMessage& challenge, exec::shared::SaslMessage& response) const;
+
+    int verifyAndUpdateSaslProps();
+
+    int wrap(const char* dataToWrap, const int& dataToWrapLen, const char** output, uint32_t& wrappedLen);
+
+    int unwrap(const char* dataToUnWrap, const int& dataToUnWrapLen, const char** output, uint32_t& unWrappedLen);
 
 private:
 
@@ -53,11 +61,13 @@ private:
     sasl_conn_t *m_pConnection;
     std::string m_username;
     sasl_secret_t *m_ppwdSecret;
+    EncryptionContext *m_pEncryptCtxt;
 
     static int passwordCallback(sasl_conn_t *conn, void *context, int id, sasl_secret_t **psecret);
 
     static int userNameCallback(void *context, int id, const char **result, unsigned int *len);
 
+    void setSecurityProps() const;
 };
 
 } /* namespace Drill */

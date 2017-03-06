@@ -111,4 +111,53 @@ AllocatedBuffer::~AllocatedBuffer(){
     m_bufSize = 0;
 }
 
+EncryptionContext::EncryptionContext(const bool& encryptionReqd, const int& maxWrappedSize, const int& wrapSizeLimit) {
+    this->m_bEncryptionReqd = encryptionReqd;
+    this->m_maxWrappedSize = maxWrappedSize;
+    this->m_wrapSizeLimit = wrapSizeLimit;
+}
+
+EncryptionContext::EncryptionContext() {
+    this->m_bEncryptionReqd = false;
+    this->m_maxWrappedSize = 65536;
+    this->m_wrapSizeLimit = 0;
+}
+
+void EncryptionContext::setEncryptionReqd(const bool& encryptionReqd) {
+    this->m_bEncryptionReqd = encryptionReqd;
+}
+
+void EncryptionContext::setMaxWrappedSize(const int& maxWrappedSize) {
+    this->m_maxWrappedSize = maxWrappedSize;
+}
+
+void EncryptionContext::setWrapSizeLimit(const int& wrapSizeLimit) {
+    this->m_wrapSizeLimit = wrapSizeLimit;
+}
+
+bool EncryptionContext::isEncryptionReqd() const {
+    return m_bEncryptionReqd;
+}
+
+int EncryptionContext::getMaxWrappedSize() const {
+    return m_maxWrappedSize;
+}
+
+int EncryptionContext::getWrapSizeLimit() const {
+    return m_wrapSizeLimit;
+}
+
+void EncryptionContext::reset() {
+    this->m_bEncryptionReqd = false;
+    this->m_maxWrappedSize = 65536;
+    this->m_wrapSizeLimit = 0;
+}
+
+std::ostream& operator<<(std::ostream &contextStream, const EncryptionContext& context) {
+    contextStream << " Encryption: " << (context.isEncryptionReqd() ? "enabled" : "disabled");
+    contextStream << " ,MaxWrappedSize: " << context.getMaxWrappedSize();
+    contextStream << " ,WrapSizeLimit: " << context.getWrapSizeLimit();
+    return contextStream;
+}
+
 } // namespace 

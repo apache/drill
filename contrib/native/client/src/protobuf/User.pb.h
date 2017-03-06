@@ -117,11 +117,12 @@ inline bool RpcType_Parse(
 }
 enum SaslSupport {
   UNKNOWN_SASL_SUPPORT = 0,
-  SASL_AUTH = 1
+  SASL_AUTH = 1,
+  SASL_PRIVACY = 2
 };
 bool SaslSupport_IsValid(int value);
 const SaslSupport SaslSupport_MIN = UNKNOWN_SASL_SUPPORT;
-const SaslSupport SaslSupport_MAX = SASL_AUTH;
+const SaslSupport SaslSupport_MAX = SASL_PRIVACY;
 const int SaslSupport_ARRAYSIZE = SaslSupport_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* SaslSupport_descriptor();
@@ -1439,6 +1440,20 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedField<int>& supported_methods() const;
   inline ::google::protobuf::RepeatedField<int>* mutable_supported_methods();
 
+  // optional bool encrypted = 9;
+  inline bool has_encrypted() const;
+  inline void clear_encrypted();
+  static const int kEncryptedFieldNumber = 9;
+  inline bool encrypted() const;
+  inline void set_encrypted(bool value);
+
+  // optional int32 maxWrappedSize = 10;
+  inline bool has_maxwrappedsize() const;
+  inline void clear_maxwrappedsize();
+  static const int kMaxWrappedSizeFieldNumber = 10;
+  inline ::google::protobuf::int32 maxwrappedsize() const;
+  inline void set_maxwrappedsize(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:exec.user.BitToUserHandshake)
  private:
   inline void set_has_rpc_version();
@@ -1451,6 +1466,10 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   inline void clear_has_errormessage();
   inline void set_has_server_infos();
   inline void clear_has_server_infos();
+  inline void set_has_encrypted();
+  inline void clear_has_encrypted();
+  inline void set_has_maxwrappedsize();
+  inline void clear_has_maxwrappedsize();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1461,9 +1480,11 @@ class BitToUserHandshake : public ::google::protobuf::Message {
   ::exec::user::RpcEndpointInfos* server_infos_;
   ::google::protobuf::RepeatedPtrField< ::std::string> authenticationmechanisms_;
   ::google::protobuf::RepeatedField<int> supported_methods_;
+  bool encrypted_;
+  ::google::protobuf::int32 maxwrappedsize_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -6224,6 +6245,50 @@ BitToUserHandshake::supported_methods() const {
 inline ::google::protobuf::RepeatedField<int>*
 BitToUserHandshake::mutable_supported_methods() {
   return &supported_methods_;
+}
+
+// optional bool encrypted = 9;
+inline bool BitToUserHandshake::has_encrypted() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void BitToUserHandshake::set_has_encrypted() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void BitToUserHandshake::clear_has_encrypted() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void BitToUserHandshake::clear_encrypted() {
+  encrypted_ = false;
+  clear_has_encrypted();
+}
+inline bool BitToUserHandshake::encrypted() const {
+  return encrypted_;
+}
+inline void BitToUserHandshake::set_encrypted(bool value) {
+  set_has_encrypted();
+  encrypted_ = value;
+}
+
+// optional int32 maxWrappedSize = 10;
+inline bool BitToUserHandshake::has_maxwrappedsize() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void BitToUserHandshake::set_has_maxwrappedsize() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void BitToUserHandshake::clear_has_maxwrappedsize() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void BitToUserHandshake::clear_maxwrappedsize() {
+  maxwrappedsize_ = 0;
+  clear_has_maxwrappedsize();
+}
+inline ::google::protobuf::int32 BitToUserHandshake::maxwrappedsize() const {
+  return maxwrappedsize_;
+}
+inline void BitToUserHandshake::set_maxwrappedsize(::google::protobuf::int32 value) {
+  set_has_maxwrappedsize();
+  maxwrappedsize_ = value;
 }
 
 // -------------------------------------------------------------------
