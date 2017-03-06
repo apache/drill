@@ -35,6 +35,8 @@ Install Prerequisites
   or use brew to install 
   $> brew install cmake
 
+2.0) Install cppunit 
+  $> brew install cppunit 
 
 2.1) Install protobuf 2.5.0 (or higher)
   $> brew install protobuf
@@ -54,7 +56,7 @@ Install Prerequisites
 When changes have been introduced to the protocol module, you might need to refresh the protobuf C++ source files too.
   $> cd DRILL_DIR/contrib/native/client
   $> mkdir build
-  $> cd build && cmake3 -G "XCode" -D CMAKE_BUILD_TYPE=Debug ..
+  $> cd build && cmake -G "Xcode" -D CMAKE_BUILD_TYPE=Debug ..
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target fixProtobufs
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target cpProtobufs
 
@@ -64,7 +66,7 @@ Build drill client
 -------------------
   $> cd DRILL_DIR/contrib/native/client
   $> mkdir build
-  $> cd build && cmake3 -G "XCode" -D CMAKE_BUILD_TYPE=Debug ..
+  $> cd build && cmake -G "Xcode" -D CMAKE_BUILD_TYPE=Debug ..
   $> xcodebuild -project drillclient.xcodeproj -configuration ${BUILDTYPE} -target ALL_BUILD
 
 

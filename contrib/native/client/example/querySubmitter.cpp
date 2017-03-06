@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,7 +25,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include "drill/drillc.hpp"
 
-int nOptions=15;
+int nOptions=19;
 
 struct Option{
     char name[32];
@@ -45,7 +46,11 @@ struct Option{
     {"heartbeatFrequency", "Heartbeat frequency (second). Disabled if set to 0.", false},
     {"user", "Username", false},
     {"password", "Password", false},
-    {"saslPluginPath", "Path to where SASL plugins are installed", false}
+    {"saslPluginPath", "Path to where SASL plugins are installed", false},
+    {"service_host", "Service host for Kerberos", false},
+    {"service_name", "Service name for Kerberos", false},
+    {"auth", "Authentication mechanism to use", false},
+    {"sasl_encrypt", "Negotiate for encrypted connection", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -295,6 +300,10 @@ int main(int argc, char* argv[]) {
         std::string user=qsOptionValues["user"];
         std::string password=qsOptionValues["password"];
         std::string saslPluginPath=qsOptionValues["saslPluginPath"];
+        std::string sasl_encrypt=qsOptionValues["sasl_encrypt"];
+        std::string serviceHost=qsOptionValues["service_host"];
+        std::string serviceName=qsOptionValues["service_name"];
+        std::string auth=qsOptionValues["auth"];
 
         Drill::QueryType type;
 
@@ -370,6 +379,18 @@ int main(int argc, char* argv[]) {
         }
         if(password.length()>0){
             props.setProperty(USERPROP_PASSWORD, password);
+        }
+        if(sasl_encrypt.length()>0){
+            props.setProperty(USERPROP_SASL_ENCRYPT, sasl_encrypt);
+        }
+        if(serviceHost.length()>0){
+            props.setProperty(USERPROP_SERVICE_HOST, serviceHost);
+        }
+        if(serviceName.length()>0){
+            props.setProperty(USERPROP_SERVICE_NAME, serviceName);
+        }
+        if(auth.length()>0){
+            props.setProperty(USERPROP_AUTH_MECHANISM, auth);
         }
 
         if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){

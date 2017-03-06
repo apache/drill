@@ -269,7 +269,7 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryPlanFragments));
   BitToUserHandshake_descriptor_ = file->message_type(7);
-  static const int BitToUserHandshake_offsets_[7] = {
+  static const int BitToUserHandshake_offsets_[9] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, rpc_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, status_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, errorid_),
@@ -277,6 +277,8 @@ void protobuf_AssignDesc_User_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, server_infos_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, authenticationmechanisms_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, supported_methods_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, encrypted_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(BitToUserHandshake, maxwrappedsize_),
   };
   BitToUserHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -952,198 +954,200 @@ void protobuf_AddDesc_User_2eproto() {
     "ed.QueryResult.QueryState\022&\n\010query_id\030\002 "
     "\001(\0132\024.exec.shared.QueryId\0221\n\tfragments\030\003"
     " \003(\0132\036.exec.bit.control.PlanFragment\022(\n\005"
-    "error\030\004 \001(\0132\031.exec.shared.DrillPBError\"\200"
+    "error\030\004 \001(\0132\031.exec.shared.DrillPBError\"\253"
     "\002\n\022BitToUserHandshake\022\023\n\013rpc_version\030\002 \001"
     "(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.Handshake"
     "Status\022\017\n\007errorId\030\004 \001(\t\022\024\n\014errorMessage\030"
     "\005 \001(\t\0221\n\014server_infos\030\006 \001(\0132\033.exec.user."
     "RpcEndpointInfos\022 \n\030authenticationMechan"
     "isms\030\007 \003(\t\022-\n\021supported_methods\030\010 \003(\0162\022."
-    "exec.user.RpcType\"-\n\nLikeFilter\022\017\n\007patte"
-    "rn\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n\016GetCatalogsR"
-    "eq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exec.u"
-    "ser.LikeFilter\"M\n\017CatalogMetadata\022\024\n\014cat"
-    "alog_name\030\001 \001(\t\022\023\n\013description\030\002 \001(\t\022\017\n\007"
-    "connect\030\003 \001(\t\"\223\001\n\017GetCatalogsResp\022(\n\006sta"
-    "tus\030\001 \001(\0162\030.exec.user.RequestStatus\022,\n\010c"
-    "atalogs\030\002 \003(\0132\032.exec.user.CatalogMetadat"
-    "a\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPBEr"
-    "ror\"v\n\rGetSchemasReq\0222\n\023catalog_name_fil"
-    "ter\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022sche"
-    "ma_name_filter\030\002 \001(\0132\025.exec.user.LikeFil"
-    "ter\"i\n\016SchemaMetadata\022\024\n\014catalog_name\030\001 "
-    "\001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n\005owner\030\003 \001(\t\022"
-    "\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 \001(\t\"\220\001\n\016GetSc"
-    "hemasResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re"
-    "questStatus\022*\n\007schemas\030\002 \003(\0132\031.exec.user"
-    ".SchemaMetadata\022(\n\005error\030\003 \001(\0132\031.exec.sh"
-    "ared.DrillPBError\"\302\001\n\014GetTablesReq\0222\n\023ca"
-    "talog_name_filter\030\001 \001(\0132\025.exec.user.Like"
-    "Filter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exe"
-    "c.user.LikeFilter\0220\n\021table_name_filter\030\003"
-    " \001(\0132\025.exec.user.LikeFilter\022\031\n\021table_typ"
-    "e_filter\030\004 \003(\t\"\\\n\rTableMetadata\022\024\n\014catal"
-    "og_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n\nta"
-    "ble_name\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\"\215\001\n\rGetTabl"
-    "esResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Reque"
-    "stStatus\022(\n\006tables\030\002 \003(\0132\030.exec.user.Tab"
-    "leMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shared."
-    "DrillPBError\"\333\001\n\rGetColumnsReq\0222\n\023catalo"
-    "g_name_filter\030\001 \001(\0132\025.exec.user.LikeFilt"
-    "er\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec.us"
-    "er.LikeFilter\0220\n\021table_name_filter\030\003 \001(\013"
-    "2\025.exec.user.LikeFilter\0221\n\022column_name_f"
-    "ilter\030\004 \001(\0132\025.exec.user.LikeFilter\"\251\003\n\016C"
-    "olumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013s"
-    "chema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013"
-    "column_name\030\004 \001(\t\022\030\n\020ordinal_position\030\005 "
-    "\001(\005\022\025\n\rdefault_value\030\006 \001(\t\022\023\n\013is_nullabl"
-    "e\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022\027\n\017char_max_l"
-    "ength\030\t \001(\005\022\031\n\021char_octet_length\030\n \001(\005\022\031"
-    "\n\021numeric_precision\030\013 \001(\005\022\037\n\027numeric_pre"
-    "cision_radix\030\014 \001(\005\022\025\n\rnumeric_scale\030\r \001("
-    "\005\022\033\n\023date_time_precision\030\016 \001(\005\022\025\n\rinterv"
-    "al_type\030\017 \001(\t\022\032\n\022interval_precision\030\020 \001("
-    "\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016GetColumnsRes"
-    "p\022(\n\006status\030\001 \001(\0162\030.exec.user.RequestSta"
-    "tus\022*\n\007columns\030\002 \003(\0132\031.exec.user.ColumnM"
-    "etadata\022(\n\005error\030\003 \001(\0132\031.exec.shared.Dri"
-    "llPBError\"/\n\032CreatePreparedStatementReq\022"
-    "\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024ResultColumnMetad"
-    "ata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_name"
-    "\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_nam"
-    "e\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\tdata_type\030\006 \001("
-    "\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tprecision\030\010 \001("
-    "\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014disp"
-    "lay_size\030\013 \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n\rse"
-    "archability\030\r \001(\0162\036.exec.user.ColumnSear"
-    "chability\0223\n\014updatability\030\016 \001(\0162\035.exec.u"
-    "ser.ColumnUpdatability\022\026\n\016auto_increment"
-    "\030\017 \001(\010\022\030\n\020case_sensitivity\030\020 \001(\010\022\020\n\010sort"
-    "able\030\021 \001(\010\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_cur"
-    "rency\030\024 \001(\010\".\n\027PreparedStatementHandle\022\023"
-    "\n\013server_info\030\001 \001(\014\"\200\001\n\021PreparedStatemen"
-    "t\0220\n\007columns\030\001 \003(\0132\037.exec.user.ResultCol"
-    "umnMetadata\0229\n\rserver_handle\030\002 \001(\0132\".exe"
-    "c.user.PreparedStatementHandle\"\253\001\n\033Creat"
-    "ePreparedStatementResp\022(\n\006status\030\001 \001(\0162\030"
-    ".exec.user.RequestStatus\0228\n\022prepared_sta"
-    "tement\030\002 \001(\0132\034.exec.user.PreparedStateme"
-    "nt\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillPBE"
-    "rror\"\022\n\020GetServerMetaReq\"P\n\016ConvertSuppo"
-    "rt\022\037\n\004from\030\001 \002(\0162\021.common.MinorType\022\035\n\002t"
-    "o\030\002 \002(\0162\021.common.MinorType\"\223\001\n\021GetServer"
-    "MetaResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Req"
-    "uestStatus\022*\n\013server_meta\030\002 \001(\0132\025.exec.u"
-    "ser.ServerMeta\022(\n\005error\030\003 \001(\0132\031.exec.sha"
-    "red.DrillPBError\"\377\r\n\nServerMeta\022\035\n\025all_t"
-    "ables_selectable\030\001 \001(\010\022%\n\035blob_included_"
-    "in_max_row_size\030\002 \001(\010\022\030\n\020catalog_at_star"
-    "t\030\003 \001(\010\022\031\n\021catalog_separator\030\004 \001(\t\022\024\n\014ca"
-    "talog_term\030\005 \001(\t\0222\n\017collate_support\030\006 \003("
-    "\0162\031.exec.user.CollateSupport\022!\n\031column_a"
-    "liasing_supported\030\007 \001(\010\0222\n\017convert_suppo"
-    "rt\030\010 \003(\0132\031.exec.user.ConvertSupport\022E\n\031c"
-    "orrelation_names_support\030\t \001(\0162\".exec.us"
-    "er.CorrelationNamesSupport\022\033\n\023date_time_"
-    "functions\030\n \003(\t\022F\n\032date_time_literals_su"
-    "pport\030\013 \003(\0162\".exec.user.DateTimeLiterals"
-    "Support\0223\n\020group_by_support\030\014 \001(\0162\031.exec"
-    ".user.GroupBySupport\0226\n\021identifier_casin"
-    "g\030\r \001(\0162\033.exec.user.IdentifierCasing\022\037\n\027"
-    "identifier_quote_string\030\016 \001(\t\022$\n\034like_es"
-    "cape_clause_supported\030\017 \001(\010\022!\n\031max_binar"
-    "y_literal_length\030\020 \001(\r\022\037\n\027max_catalog_na"
-    "me_length\030\021 \001(\r\022\037\n\027max_char_literal_leng"
-    "th\030\022 \001(\r\022\036\n\026max_column_name_length\030\023 \001(\r"
-    "\022\037\n\027max_columns_in_group_by\030\024 \001(\r\022\037\n\027max"
-    "_columns_in_order_by\030\025 \001(\r\022\035\n\025max_column"
-    "s_in_select\030\026 \001(\r\022\036\n\026max_cursor_name_len"
-    "gth\030\027 \001(\r\022\034\n\024max_logical_lob_size\030\030 \001(\r\022"
-    "\024\n\014max_row_size\030\031 \001(\r\022\036\n\026max_schema_name"
-    "_length\030\032 \001(\r\022\034\n\024max_statement_length\030\033 "
-    "\001(\r\022\026\n\016max_statements\030\034 \001(\r\022\035\n\025max_table"
-    "_name_length\030\035 \001(\r\022\034\n\024max_tables_in_sele"
-    "ct\030\036 \001(\r\022\034\n\024max_user_name_length\030\037 \001(\r\0220"
-    "\n\016null_collation\030  \001(\0162\030.exec.user.NullC"
-    "ollation\022&\n\036null_plus_non_null_equals_nu"
-    "ll\030! \001(\010\022\031\n\021numeric_functions\030\" \003(\t\0223\n\020o"
-    "rder_by_support\030# \003(\0162\031.exec.user.OrderB"
-    "ySupport\0227\n\022outer_join_support\030$ \003(\0162\033.e"
-    "xec.user.OuterJoinSupport\022=\n\030quoted_iden"
-    "tifier_casing\030% \001(\0162\033.exec.user.Identifi"
-    "erCasing\022\021\n\tread_only\030& \001(\010\022\023\n\013schema_te"
-    "rm\030\' \001(\t\022\034\n\024search_escape_string\030( \001(\t\022#"
-    "\n\033select_for_update_supported\030) \001(\010\022\032\n\022s"
-    "pecial_characters\030* \001(\t\022\024\n\014sql_keywords\030"
-    "+ \003(\t\022\030\n\020string_functions\030, \003(\t\0224\n\020subqu"
-    "ery_support\030- \003(\0162\032.exec.user.SubQuerySu"
-    "pport\022\030\n\020system_functions\030. \003(\t\022\022\n\ntable"
-    "_term\030/ \001(\t\022\035\n\025transaction_supported\0300 \001"
-    "(\010\022.\n\runion_support\0301 \003(\0162\027.exec.user.Un"
-    "ionSupport\"\353\001\n\010RunQuery\0221\n\014results_mode\030"
-    "\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n\004ty"
-    "pe\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004plan"
-    "\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec.bit.con"
-    "trol.PlanFragment\022E\n\031prepared_statement_"
-    "handle\030\005 \001(\0132\".exec.user.PreparedStateme"
-    "ntHandle*\320\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003A"
-    "CK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANC"
-    "EL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023RESUM"
-    "E_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLAN_FRAGM"
-    "ENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_SCHEMAS\020"
-    "\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n\031CR"
-    "EATE_PREPARED_STATEMENT\020\026\022\023\n\017GET_SERVER_"
-    "META\020\010\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007"
-    "\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOGS\020\022"
-    "\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020\025\022\026"
-    "\n\022PREPARED_STATEMENT\020\027\022\017\n\013SERVER_META\020\t\022"
-    "\020\n\014QUERY_RESULT\020\n\022\020\n\014SASL_MESSAGE\020\030*6\n\013S"
-    "aslSupport\022\030\n\024UNKNOWN_SASL_SUPPORT\020\000\022\r\n\t"
-    "SASL_AUTH\020\001*#\n\020QueryResultsMode\022\017\n\013STREA"
-    "M_FULL\020\001*q\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001"
-    "\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_FAILE"
-    "D\020\003\022\023\n\017UNKNOWN_FAILURE\020\004\022\021\n\rAUTH_REQUIRE"
-    "D\020\005*D\n\rRequestStatus\022\022\n\016UNKNOWN_STATUS\020\000"
-    "\022\006\n\002OK\020\001\022\n\n\006FAILED\020\002\022\013\n\007TIMEOUT\020\003*Y\n\023Col"
-    "umnSearchability\022\031\n\025UNKNOWN_SEARCHABILIT"
-    "Y\020\000\022\010\n\004NONE\020\001\022\010\n\004CHAR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003A"
-    "LL\020\004*K\n\022ColumnUpdatability\022\030\n\024UNKNOWN_UP"
-    "DATABILITY\020\000\022\r\n\tREAD_ONLY\020\001\022\014\n\010WRITABLE\020"
-    "\002*1\n\016CollateSupport\022\016\n\nCS_UNKNOWN\020\000\022\017\n\013C"
-    "S_GROUP_BY\020\001*J\n\027CorrelationNamesSupport\022"
-    "\013\n\007CN_NONE\020\001\022\026\n\022CN_DIFFERENT_NAMES\020\002\022\n\n\006"
-    "CN_ANY\020\003*\271\003\n\027DateTimeLiteralsSupport\022\016\n\n"
-    "DL_UNKNOWN\020\000\022\013\n\007DL_DATE\020\001\022\013\n\007DL_TIME\020\002\022\020"
-    "\n\014DL_TIMESTAMP\020\003\022\024\n\020DL_INTERVAL_YEAR\020\004\022\025"
-    "\n\021DL_INTERVAL_MONTH\020\005\022\023\n\017DL_INTERVAL_DAY"
-    "\020\006\022\024\n\020DL_INTERVAL_HOUR\020\007\022\026\n\022DL_INTERVAL_"
-    "MINUTE\020\010\022\026\n\022DL_INTERVAL_SECOND\020\t\022\035\n\031DL_I"
-    "NTERVAL_YEAR_TO_MONTH\020\n\022\033\n\027DL_INTERVAL_D"
-    "AY_TO_HOUR\020\013\022\035\n\031DL_INTERVAL_DAY_TO_MINUT"
-    "E\020\014\022\035\n\031DL_INTERVAL_DAY_TO_SECOND\020\r\022\036\n\032DL"
-    "_INTERVAL_HOUR_TO_MINUTE\020\016\022\036\n\032DL_INTERVA"
-    "L_HOUR_TO_SECOND\020\017\022 \n\034DL_INTERVAL_MINUTE"
-    "_TO_SECOND\020\020*Y\n\016GroupBySupport\022\013\n\007GB_NON"
-    "E\020\001\022\022\n\016GB_SELECT_ONLY\020\002\022\024\n\020GB_BEYOND_SEL"
-    "ECT\020\003\022\020\n\014GB_UNRELATED\020\004*x\n\020IdentifierCas"
-    "ing\022\016\n\nIC_UNKNOWN\020\000\022\023\n\017IC_STORES_LOWER\020\001"
-    "\022\023\n\017IC_STORES_MIXED\020\002\022\023\n\017IC_STORES_UPPER"
-    "\020\003\022\025\n\021IC_SUPPORTS_MIXED\020\004*X\n\rNullCollati"
-    "on\022\016\n\nNC_UNKNOWN\020\000\022\017\n\013NC_AT_START\020\001\022\r\n\tN"
-    "C_AT_END\020\002\022\013\n\007NC_HIGH\020\003\022\n\n\006NC_LOW\020\004*E\n\016O"
-    "rderBySupport\022\016\n\nOB_UNKNOWN\020\000\022\020\n\014OB_UNRE"
-    "LATED\020\001\022\021\n\rOB_EXPRESSION\020\002*\226\001\n\020OuterJoin"
-    "Support\022\016\n\nOJ_UNKNOWN\020\000\022\013\n\007OJ_LEFT\020\001\022\014\n\010"
-    "OJ_RIGHT\020\002\022\013\n\007OJ_FULL\020\003\022\r\n\tOJ_NESTED\020\004\022\022"
-    "\n\016OJ_NOT_ORDERED\020\005\022\014\n\010OJ_INNER\020\006\022\031\n\025OJ_A"
-    "LL_COMPARISON_OPS\020\007*\204\001\n\017SubQuerySupport\022"
-    "\016\n\nSQ_UNKNOWN\020\000\022\021\n\rSQ_CORRELATED\020\001\022\024\n\020SQ"
-    "_IN_COMPARISON\020\002\022\020\n\014SQ_IN_EXISTS\020\003\022\020\n\014SQ"
-    "_IN_INSERT\020\004\022\024\n\020SQ_IN_QUANTIFIED\020\005*;\n\014Un"
-    "ionSupport\022\r\n\tU_UNKNOWN\020\000\022\013\n\007U_UNION\020\001\022\017"
-    "\n\013U_UNION_ALL\020\002B+\n\033org.apache.drill.exec"
-    ".protoB\nUserProtosH\001", 8820);
+    "exec.user.RpcType\022\021\n\tencrypted\030\t \001(\010\022\026\n\016"
+    "maxWrappedSize\030\n \001(\005\"-\n\nLikeFilter\022\017\n\007pa"
+    "ttern\030\001 \001(\t\022\016\n\006escape\030\002 \001(\t\"D\n\016GetCatalo"
+    "gsReq\0222\n\023catalog_name_filter\030\001 \001(\0132\025.exe"
+    "c.user.LikeFilter\"M\n\017CatalogMetadata\022\024\n\014"
+    "catalog_name\030\001 \001(\t\022\023\n\013description\030\002 \001(\t\022"
+    "\017\n\007connect\030\003 \001(\t\"\223\001\n\017GetCatalogsResp\022(\n\006"
+    "status\030\001 \001(\0162\030.exec.user.RequestStatus\022,"
+    "\n\010catalogs\030\002 \003(\0132\032.exec.user.CatalogMeta"
+    "data\022(\n\005error\030\003 \001(\0132\031.exec.shared.DrillP"
+    "BError\"v\n\rGetSchemasReq\0222\n\023catalog_name_"
+    "filter\030\001 \001(\0132\025.exec.user.LikeFilter\0221\n\022s"
+    "chema_name_filter\030\002 \001(\0132\025.exec.user.Like"
+    "Filter\"i\n\016SchemaMetadata\022\024\n\014catalog_name"
+    "\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\r\n\005owner\030\003 \001"
+    "(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007mutable\030\005 \001(\t\"\220\001\n\016Ge"
+    "tSchemasResp\022(\n\006status\030\001 \001(\0162\030.exec.user"
+    ".RequestStatus\022*\n\007schemas\030\002 \003(\0132\031.exec.u"
+    "ser.SchemaMetadata\022(\n\005error\030\003 \001(\0132\031.exec"
+    ".shared.DrillPBError\"\302\001\n\014GetTablesReq\0222\n"
+    "\023catalog_name_filter\030\001 \001(\0132\025.exec.user.L"
+    "ikeFilter\0221\n\022schema_name_filter\030\002 \001(\0132\025."
+    "exec.user.LikeFilter\0220\n\021table_name_filte"
+    "r\030\003 \001(\0132\025.exec.user.LikeFilter\022\031\n\021table_"
+    "type_filter\030\004 \003(\t\"\\\n\rTableMetadata\022\024\n\014ca"
+    "talog_name\030\001 \001(\t\022\023\n\013schema_name\030\002 \001(\t\022\022\n"
+    "\ntable_name\030\003 \001(\t\022\014\n\004type\030\004 \001(\t\"\215\001\n\rGetT"
+    "ablesResp\022(\n\006status\030\001 \001(\0162\030.exec.user.Re"
+    "questStatus\022(\n\006tables\030\002 \003(\0132\030.exec.user."
+    "TableMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shar"
+    "ed.DrillPBError\"\333\001\n\rGetColumnsReq\0222\n\023cat"
+    "alog_name_filter\030\001 \001(\0132\025.exec.user.LikeF"
+    "ilter\0221\n\022schema_name_filter\030\002 \001(\0132\025.exec"
+    ".user.LikeFilter\0220\n\021table_name_filter\030\003 "
+    "\001(\0132\025.exec.user.LikeFilter\0221\n\022column_nam"
+    "e_filter\030\004 \001(\0132\025.exec.user.LikeFilter\"\251\003"
+    "\n\016ColumnMetadata\022\024\n\014catalog_name\030\001 \001(\t\022\023"
+    "\n\013schema_name\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022"
+    "\023\n\013column_name\030\004 \001(\t\022\030\n\020ordinal_position"
+    "\030\005 \001(\005\022\025\n\rdefault_value\030\006 \001(\t\022\023\n\013is_null"
+    "able\030\007 \001(\010\022\021\n\tdata_type\030\010 \001(\t\022\027\n\017char_ma"
+    "x_length\030\t \001(\005\022\031\n\021char_octet_length\030\n \001("
+    "\005\022\031\n\021numeric_precision\030\013 \001(\005\022\037\n\027numeric_"
+    "precision_radix\030\014 \001(\005\022\025\n\rnumeric_scale\030\r"
+    " \001(\005\022\033\n\023date_time_precision\030\016 \001(\005\022\025\n\rint"
+    "erval_type\030\017 \001(\t\022\032\n\022interval_precision\030\020"
+    " \001(\005\022\023\n\013column_size\030\021 \001(\005\"\220\001\n\016GetColumns"
+    "Resp\022(\n\006status\030\001 \001(\0162\030.exec.user.Request"
+    "Status\022*\n\007columns\030\002 \003(\0132\031.exec.user.Colu"
+    "mnMetadata\022(\n\005error\030\003 \001(\0132\031.exec.shared."
+    "DrillPBError\"/\n\032CreatePreparedStatementR"
+    "eq\022\021\n\tsql_query\030\001 \001(\t\"\326\003\n\024ResultColumnMe"
+    "tadata\022\024\n\014catalog_name\030\001 \001(\t\022\023\n\013schema_n"
+    "ame\030\002 \001(\t\022\022\n\ntable_name\030\003 \001(\t\022\023\n\013column_"
+    "name\030\004 \001(\t\022\r\n\005label\030\005 \001(\t\022\021\n\tdata_type\030\006"
+    " \001(\t\022\023\n\013is_nullable\030\007 \001(\010\022\021\n\tprecision\030\010"
+    " \001(\005\022\r\n\005scale\030\t \001(\005\022\016\n\006signed\030\n \001(\010\022\024\n\014d"
+    "isplay_size\030\013 \001(\005\022\022\n\nis_aliased\030\014 \001(\010\0225\n"
+    "\rsearchability\030\r \001(\0162\036.exec.user.ColumnS"
+    "earchability\0223\n\014updatability\030\016 \001(\0162\035.exe"
+    "c.user.ColumnUpdatability\022\026\n\016auto_increm"
+    "ent\030\017 \001(\010\022\030\n\020case_sensitivity\030\020 \001(\010\022\020\n\010s"
+    "ortable\030\021 \001(\010\022\022\n\nclass_name\030\022 \001(\t\022\023\n\013is_"
+    "currency\030\024 \001(\010\".\n\027PreparedStatementHandl"
+    "e\022\023\n\013server_info\030\001 \001(\014\"\200\001\n\021PreparedState"
+    "ment\0220\n\007columns\030\001 \003(\0132\037.exec.user.Result"
+    "ColumnMetadata\0229\n\rserver_handle\030\002 \001(\0132\"."
+    "exec.user.PreparedStatementHandle\"\253\001\n\033Cr"
+    "eatePreparedStatementResp\022(\n\006status\030\001 \001("
+    "\0162\030.exec.user.RequestStatus\0228\n\022prepared_"
+    "statement\030\002 \001(\0132\034.exec.user.PreparedStat"
+    "ement\022(\n\005error\030\003 \001(\0132\031.exec.shared.Drill"
+    "PBError\"\022\n\020GetServerMetaReq\"P\n\016ConvertSu"
+    "pport\022\037\n\004from\030\001 \002(\0162\021.common.MinorType\022\035"
+    "\n\002to\030\002 \002(\0162\021.common.MinorType\"\223\001\n\021GetSer"
+    "verMetaResp\022(\n\006status\030\001 \001(\0162\030.exec.user."
+    "RequestStatus\022*\n\013server_meta\030\002 \001(\0132\025.exe"
+    "c.user.ServerMeta\022(\n\005error\030\003 \001(\0132\031.exec."
+    "shared.DrillPBError\"\377\r\n\nServerMeta\022\035\n\025al"
+    "l_tables_selectable\030\001 \001(\010\022%\n\035blob_includ"
+    "ed_in_max_row_size\030\002 \001(\010\022\030\n\020catalog_at_s"
+    "tart\030\003 \001(\010\022\031\n\021catalog_separator\030\004 \001(\t\022\024\n"
+    "\014catalog_term\030\005 \001(\t\0222\n\017collate_support\030\006"
+    " \003(\0162\031.exec.user.CollateSupport\022!\n\031colum"
+    "n_aliasing_supported\030\007 \001(\010\0222\n\017convert_su"
+    "pport\030\010 \003(\0132\031.exec.user.ConvertSupport\022E"
+    "\n\031correlation_names_support\030\t \001(\0162\".exec"
+    ".user.CorrelationNamesSupport\022\033\n\023date_ti"
+    "me_functions\030\n \003(\t\022F\n\032date_time_literals"
+    "_support\030\013 \003(\0162\".exec.user.DateTimeLiter"
+    "alsSupport\0223\n\020group_by_support\030\014 \001(\0162\031.e"
+    "xec.user.GroupBySupport\0226\n\021identifier_ca"
+    "sing\030\r \001(\0162\033.exec.user.IdentifierCasing\022"
+    "\037\n\027identifier_quote_string\030\016 \001(\t\022$\n\034like"
+    "_escape_clause_supported\030\017 \001(\010\022!\n\031max_bi"
+    "nary_literal_length\030\020 \001(\r\022\037\n\027max_catalog"
+    "_name_length\030\021 \001(\r\022\037\n\027max_char_literal_l"
+    "ength\030\022 \001(\r\022\036\n\026max_column_name_length\030\023 "
+    "\001(\r\022\037\n\027max_columns_in_group_by\030\024 \001(\r\022\037\n\027"
+    "max_columns_in_order_by\030\025 \001(\r\022\035\n\025max_col"
+    "umns_in_select\030\026 \001(\r\022\036\n\026max_cursor_name_"
+    "length\030\027 \001(\r\022\034\n\024max_logical_lob_size\030\030 \001"
+    "(\r\022\024\n\014max_row_size\030\031 \001(\r\022\036\n\026max_schema_n"
+    "ame_length\030\032 \001(\r\022\034\n\024max_statement_length"
+    "\030\033 \001(\r\022\026\n\016max_statements\030\034 \001(\r\022\035\n\025max_ta"
+    "ble_name_length\030\035 \001(\r\022\034\n\024max_tables_in_s"
+    "elect\030\036 \001(\r\022\034\n\024max_user_name_length\030\037 \001("
+    "\r\0220\n\016null_collation\030  \001(\0162\030.exec.user.Nu"
+    "llCollation\022&\n\036null_plus_non_null_equals"
+    "_null\030! \001(\010\022\031\n\021numeric_functions\030\" \003(\t\0223"
+    "\n\020order_by_support\030# \003(\0162\031.exec.user.Ord"
+    "erBySupport\0227\n\022outer_join_support\030$ \003(\0162"
+    "\033.exec.user.OuterJoinSupport\022=\n\030quoted_i"
+    "dentifier_casing\030% \001(\0162\033.exec.user.Ident"
+    "ifierCasing\022\021\n\tread_only\030& \001(\010\022\023\n\013schema"
+    "_term\030\' \001(\t\022\034\n\024search_escape_string\030( \001("
+    "\t\022#\n\033select_for_update_supported\030) \001(\010\022\032"
+    "\n\022special_characters\030* \001(\t\022\024\n\014sql_keywor"
+    "ds\030+ \003(\t\022\030\n\020string_functions\030, \003(\t\0224\n\020su"
+    "bquery_support\030- \003(\0162\032.exec.user.SubQuer"
+    "ySupport\022\030\n\020system_functions\030. \003(\t\022\022\n\nta"
+    "ble_term\030/ \001(\t\022\035\n\025transaction_supported\030"
+    "0 \001(\010\022.\n\runion_support\0301 \003(\0162\027.exec.user"
+    ".UnionSupport\"\353\001\n\010RunQuery\0221\n\014results_mo"
+    "de\030\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n"
+    "\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004p"
+    "lan\030\003 \001(\t\0221\n\tfragments\030\004 \003(\0132\036.exec.bit."
+    "control.PlanFragment\022E\n\031prepared_stateme"
+    "nt_handle\030\005 \001(\0132\".exec.user.PreparedStat"
+    "ementHandle*\320\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007"
+    "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014C"
+    "ANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023RE"
+    "SUME_PAUSED_QUERY\020\013\022\034\n\030GET_QUERY_PLAN_FR"
+    "AGMENTS\020\014\022\020\n\014GET_CATALOGS\020\016\022\017\n\013GET_SCHEM"
+    "AS\020\017\022\016\n\nGET_TABLES\020\020\022\017\n\013GET_COLUMNS\020\021\022\035\n"
+    "\031CREATE_PREPARED_STATEMENT\020\026\022\023\n\017GET_SERV"
+    "ER_META\020\010\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDL"
+    "E\020\007\022\030\n\024QUERY_PLAN_FRAGMENTS\020\r\022\014\n\010CATALOG"
+    "S\020\022\022\013\n\007SCHEMAS\020\023\022\n\n\006TABLES\020\024\022\013\n\007COLUMNS\020"
+    "\025\022\026\n\022PREPARED_STATEMENT\020\027\022\017\n\013SERVER_META"
+    "\020\t\022\020\n\014QUERY_RESULT\020\n\022\020\n\014SASL_MESSAGE\020\030*H"
+    "\n\013SaslSupport\022\030\n\024UNKNOWN_SASL_SUPPORT\020\000\022"
+    "\r\n\tSASL_AUTH\020\001\022\020\n\014SASL_PRIVACY\020\002*#\n\020Quer"
+    "yResultsMode\022\017\n\013STREAM_FULL\020\001*q\n\017Handsha"
+    "keStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MIS"
+    "MATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAIL"
+    "URE\020\004\022\021\n\rAUTH_REQUIRED\020\005*D\n\rRequestStatu"
+    "s\022\022\n\016UNKNOWN_STATUS\020\000\022\006\n\002OK\020\001\022\n\n\006FAILED\020"
+    "\002\022\013\n\007TIMEOUT\020\003*Y\n\023ColumnSearchability\022\031\n"
+    "\025UNKNOWN_SEARCHABILITY\020\000\022\010\n\004NONE\020\001\022\010\n\004CH"
+    "AR\020\002\022\n\n\006NUMBER\020\003\022\007\n\003ALL\020\004*K\n\022ColumnUpdat"
+    "ability\022\030\n\024UNKNOWN_UPDATABILITY\020\000\022\r\n\tREA"
+    "D_ONLY\020\001\022\014\n\010WRITABLE\020\002*1\n\016CollateSupport"
+    "\022\016\n\nCS_UNKNOWN\020\000\022\017\n\013CS_GROUP_BY\020\001*J\n\027Cor"
+    "relationNamesSupport\022\013\n\007CN_NONE\020\001\022\026\n\022CN_"
+    "DIFFERENT_NAMES\020\002\022\n\n\006CN_ANY\020\003*\271\003\n\027DateTi"
+    "meLiteralsSupport\022\016\n\nDL_UNKNOWN\020\000\022\013\n\007DL_"
+    "DATE\020\001\022\013\n\007DL_TIME\020\002\022\020\n\014DL_TIMESTAMP\020\003\022\024\n"
+    "\020DL_INTERVAL_YEAR\020\004\022\025\n\021DL_INTERVAL_MONTH"
+    "\020\005\022\023\n\017DL_INTERVAL_DAY\020\006\022\024\n\020DL_INTERVAL_H"
+    "OUR\020\007\022\026\n\022DL_INTERVAL_MINUTE\020\010\022\026\n\022DL_INTE"
+    "RVAL_SECOND\020\t\022\035\n\031DL_INTERVAL_YEAR_TO_MON"
+    "TH\020\n\022\033\n\027DL_INTERVAL_DAY_TO_HOUR\020\013\022\035\n\031DL_"
+    "INTERVAL_DAY_TO_MINUTE\020\014\022\035\n\031DL_INTERVAL_"
+    "DAY_TO_SECOND\020\r\022\036\n\032DL_INTERVAL_HOUR_TO_M"
+    "INUTE\020\016\022\036\n\032DL_INTERVAL_HOUR_TO_SECOND\020\017\022"
+    " \n\034DL_INTERVAL_MINUTE_TO_SECOND\020\020*Y\n\016Gro"
+    "upBySupport\022\013\n\007GB_NONE\020\001\022\022\n\016GB_SELECT_ON"
+    "LY\020\002\022\024\n\020GB_BEYOND_SELECT\020\003\022\020\n\014GB_UNRELAT"
+    "ED\020\004*x\n\020IdentifierCasing\022\016\n\nIC_UNKNOWN\020\000"
+    "\022\023\n\017IC_STORES_LOWER\020\001\022\023\n\017IC_STORES_MIXED"
+    "\020\002\022\023\n\017IC_STORES_UPPER\020\003\022\025\n\021IC_SUPPORTS_M"
+    "IXED\020\004*X\n\rNullCollation\022\016\n\nNC_UNKNOWN\020\000\022"
+    "\017\n\013NC_AT_START\020\001\022\r\n\tNC_AT_END\020\002\022\013\n\007NC_HI"
+    "GH\020\003\022\n\n\006NC_LOW\020\004*E\n\016OrderBySupport\022\016\n\nOB"
+    "_UNKNOWN\020\000\022\020\n\014OB_UNRELATED\020\001\022\021\n\rOB_EXPRE"
+    "SSION\020\002*\226\001\n\020OuterJoinSupport\022\016\n\nOJ_UNKNO"
+    "WN\020\000\022\013\n\007OJ_LEFT\020\001\022\014\n\010OJ_RIGHT\020\002\022\013\n\007OJ_FU"
+    "LL\020\003\022\r\n\tOJ_NESTED\020\004\022\022\n\016OJ_NOT_ORDERED\020\005\022"
+    "\014\n\010OJ_INNER\020\006\022\031\n\025OJ_ALL_COMPARISON_OPS\020\007"
+    "*\204\001\n\017SubQuerySupport\022\016\n\nSQ_UNKNOWN\020\000\022\021\n\r"
+    "SQ_CORRELATED\020\001\022\024\n\020SQ_IN_COMPARISON\020\002\022\020\n"
+    "\014SQ_IN_EXISTS\020\003\022\020\n\014SQ_IN_INSERT\020\004\022\024\n\020SQ_"
+    "IN_QUANTIFIED\020\005*;\n\014UnionSupport\022\r\n\tU_UNK"
+    "NOWN\020\000\022\013\n\007U_UNION\020\001\022\017\n\013U_UNION_ALL\020\002B+\n\033"
+    "org.apache.drill.exec.protoB\nUserProtosH"
+    "\001", 8881);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -1262,6 +1266,7 @@ bool SaslSupport_IsValid(int value) {
   switch(value) {
     case 0:
     case 1:
+    case 2:
       return true;
     default:
       return false;
@@ -4044,6 +4049,8 @@ const int BitToUserHandshake::kErrorMessageFieldNumber;
 const int BitToUserHandshake::kServerInfosFieldNumber;
 const int BitToUserHandshake::kAuthenticationMechanismsFieldNumber;
 const int BitToUserHandshake::kSupportedMethodsFieldNumber;
+const int BitToUserHandshake::kEncryptedFieldNumber;
+const int BitToUserHandshake::kMaxWrappedSizeFieldNumber;
 #endif  // !_MSC_VER
 
 BitToUserHandshake::BitToUserHandshake()
@@ -4068,6 +4075,8 @@ void BitToUserHandshake::SharedCtor() {
   errorid_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   errormessage_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   server_infos_ = NULL;
+  encrypted_ = false;
+  maxwrappedsize_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -4125,6 +4134,10 @@ void BitToUserHandshake::Clear() {
     if (has_server_infos()) {
       if (server_infos_ != NULL) server_infos_->::exec::user::RpcEndpointInfos::Clear();
     }
+    encrypted_ = false;
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    maxwrappedsize_ = 0;
   }
   authenticationmechanisms_.Clear();
   supported_methods_.Clear();
@@ -4266,6 +4279,38 @@ bool BitToUserHandshake::MergePartialFromCodedStream(
           goto handle_uninterpreted;
         }
         if (input->ExpectTag(64)) goto parse_supported_methods;
+        if (input->ExpectTag(72)) goto parse_encrypted;
+        break;
+      }
+
+      // optional bool encrypted = 9;
+      case 9: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_encrypted:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &encrypted_)));
+          set_has_encrypted();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(80)) goto parse_maxWrappedSize;
+        break;
+      }
+
+      // optional int32 maxWrappedSize = 10;
+      case 10: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_maxWrappedSize:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &maxwrappedsize_)));
+          set_has_maxwrappedsize();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -4338,6 +4383,16 @@ void BitToUserHandshake::SerializeWithCachedSizes(
       8, this->supported_methods(i), output);
   }
 
+  // optional bool encrypted = 9;
+  if (has_encrypted()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(9, this->encrypted(), output);
+  }
+
+  // optional int32 maxWrappedSize = 10;
+  if (has_maxwrappedsize()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(10, this->maxwrappedsize(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -4399,6 +4454,16 @@ void BitToUserHandshake::SerializeWithCachedSizes(
       8, this->supported_methods(i), target);
   }
 
+  // optional bool encrypted = 9;
+  if (has_encrypted()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(9, this->encrypted(), target);
+  }
+
+  // optional int32 maxWrappedSize = 10;
+  if (has_maxwrappedsize()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(10, this->maxwrappedsize(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -4442,6 +4507,20 @@ int BitToUserHandshake::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->server_infos());
+    }
+
+    // optional bool encrypted = 9;
+    if (has_encrypted()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    // optional int32 maxWrappedSize = 10;
+    if (has_maxwrappedsize()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->maxwrappedsize());
     }
 
   }
@@ -4505,6 +4584,14 @@ void BitToUserHandshake::MergeFrom(const BitToUserHandshake& from) {
     if (from.has_server_infos()) {
       mutable_server_infos()->::exec::user::RpcEndpointInfos::MergeFrom(from.server_infos());
     }
+    if (from.has_encrypted()) {
+      set_encrypted(from.encrypted());
+    }
+  }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    if (from.has_maxwrappedsize()) {
+      set_maxwrappedsize(from.maxwrappedsize());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -4535,6 +4622,8 @@ void BitToUserHandshake::Swap(BitToUserHandshake* other) {
     std::swap(server_infos_, other->server_infos_);
     authenticationmechanisms_.Swap(&other->authenticationmechanisms_);
     supported_methods_.Swap(&other->supported_methods_);
+    std::swap(encrypted_, other->encrypted_);
+    std::swap(maxwrappedsize_, other->maxwrappedsize_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
