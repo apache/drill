@@ -1277,7 +1277,7 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          *     useSSL [true|false]
          *     pemLocation
          *     pemFile
-         *     (see drill/common.hpp for friendly defines and the latest list of supported proeprties)
+         *     (see drill/common.hpp for friendly defines and the latest list of supported properties)
          *
          * @param[in] connectStr: connection string
          * @param[in] properties
