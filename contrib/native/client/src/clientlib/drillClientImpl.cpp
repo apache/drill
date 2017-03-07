@@ -86,6 +86,9 @@ connectionStatus_t DrillClientImpl::connect(const char* connStr, DrillUserProper
         std::vector<std::string> drillbits;
         int err = zook.getAllDrillbits(hostPortStr, drillbits);
         if(!err){
+            if (drillbits.empty()){
+                return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_ZKNODBIT));
+            }
             Utils::shuffle(drillbits);
             exec::DrillbitEndpoint endpoint;
             err = zook.getEndPoint(drillbits[drillbits.size() -1], endpoint);// get the last one in the list
@@ -2142,6 +2145,9 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr, DrillUser
         std::vector<std::string> drillbits;
         int err = zook.getAllDrillbits(hostPortStr, drillbits);
         if(!err){
+            if (drillbits.empty()){
+                return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_ZKNODBIT));
+            }
             Utils::shuffle(drillbits);
             // The original shuffled order is maintained if we shuffle first and then add any missing elements
             Utils::add(m_drillbits, drillbits);
