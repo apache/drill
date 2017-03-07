@@ -76,7 +76,7 @@ public class ServerMetaProvider {
       .setReadOnly(false)
       .setGroupBySupport(GroupBySupport.GB_UNRELATED)
       .setLikeEscapeClauseSupported(true)
-      .setNullCollation(NullCollation.NC_AT_END)
+      .setNullCollation(NullCollation.NC_HIGH)
       .setSchemaTerm("schema")
       .setSearchEscapeString("\\")
       .setTableTerm("table")
