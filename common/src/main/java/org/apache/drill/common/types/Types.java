@@ -151,6 +151,7 @@ public class Types {
       case LATE:            return "ANY";
       case NULL:            return "NULL";
       case UNION:           return "UNION";
+      case GENERIC_OBJECT:  return "JAVA_OBJECT";
 
       // Internal types not actually used at level of SQL types(?):
 
@@ -198,6 +199,7 @@ public class Types {
       case "TIMESTAMP":                     return java.sql.Types.TIMESTAMP;
       case "TINYINT":                       return java.sql.Types.TINYINT;
       case "UNION":                         return java.sql.Types.OTHER;
+      case "JAVA_OBJECT":                   return java.sql.Types.JAVA_OBJECT;
       default:
         // TODO:  This isn't really an unsupported-operation/-type case; this
         //   is an unexpected, code-out-of-sync-with-itself case, so use an

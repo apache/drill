@@ -138,7 +138,7 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     DrillConnectionImpl connection = (DrillConnectionImpl) getConnection();
     return
         !connection.getConfig().isServerMetadataDisabled()
-        && connection.getClient().getSupportedMethods().contains(ServerMethod.SERVER_META);
+        && connection.getClient().getSupportedMethods().contains(ServerMethod.GET_SERVER_META);
   }
 
   private String getServerName() throws SQLException {

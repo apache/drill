@@ -85,7 +85,7 @@ public enum ServerMethod {
   /**
    * Get server metadata
    */
-  SERVER_META(RpcType.SERVER_META, Constants.DRILL_1_10_0);
+  GET_SERVER_META(RpcType.GET_SERVER_META, Constants.DRILL_1_10_0);
 
   private static class Constants {
     private static final Version DRILL_0_0_0 = new Version("0.0.0", 0, 0, 0, 0, "");
