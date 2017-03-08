@@ -125,6 +125,15 @@ public class TestLimitWithExchanges extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void TestLimitAllOnParquet() throws Exception {
+    final String query = String.format("select t.n_nationkey from cp.`tpch/nation.parquet` t limit all offset 5", TEST_RES_PATH);
+    final String [] expectedPlan = {};
+    final String [] excludedPlan = {"UnionExchange"};
+
+    testLimitHelper(query, expectedPlan, excludedPlan, 20);
+  }
+
   private void testLimitHelper(final String sql, final String[] expectedPlan, final String[] excludedPattern, int expectedRecordCount) throws Exception {
     // Validate the plan
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPattern);
