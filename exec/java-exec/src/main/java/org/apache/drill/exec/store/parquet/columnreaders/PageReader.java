@@ -254,6 +254,9 @@ class PageReader {
           this.parentColumnReader.parentReader.hadoopPath,
           this.parentColumnReader.columnDescriptor.toString(), start, 0, 0, timeToRead);
       timer.reset();
+      if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
+        readDictionaryPage(pageHeader, parentColumnReader);
+      }
     } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
 
     int compressedSize = pageHeader.getCompressed_page_size();
