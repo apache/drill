@@ -144,6 +144,7 @@ public interface ExecConstants {
   String UDF_DIRECTORY_STAGING = "drill.exec.udf.directory.staging";
   String UDF_DIRECTORY_REGISTRY = "drill.exec.udf.directory.registry";
   String UDF_DIRECTORY_TMP = "drill.exec.udf.directory.tmp";
+  String UDF_DISABLE_DYNAMIC = "drill.exec.udf.disable_dynamic";
 
   /**
    * Local temporary directory is used as base for temporary storage of Dynamic UDF jars.
@@ -264,7 +265,7 @@ public interface ExecConstants {
       SLICE_TARGET_DEFAULT);
 
   String CAST_TO_NULLABLE_NUMERIC = "drill.exec.functions.cast_empty_string_to_null";
-  OptionValidator CAST_TO_NULLABLE_NUMERIC_OPTION = new BooleanValidator(CAST_TO_NULLABLE_NUMERIC, false);
+  BooleanValidator CAST_TO_NULLABLE_NUMERIC_OPTION = new BooleanValidator(CAST_TO_NULLABLE_NUMERIC, false);
 
   /**
    * HashTable runtime settings

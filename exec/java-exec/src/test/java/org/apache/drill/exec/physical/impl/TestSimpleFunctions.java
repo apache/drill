@@ -61,11 +61,10 @@ import com.sun.codemodel.JClassAlreadyExistsException;
 import mockit.Injectable;
 
 public class TestSimpleFunctions extends ExecTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
-  private final DrillConfig c = DrillConfig.create();
 
   @Test
   public void testHashFunctionResolution() throws JClassAlreadyExistsException, IOException {
+    @SuppressWarnings("resource")
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     // test required vs nullable Int input
     resolveHash(c,
@@ -133,7 +132,6 @@ public class TestSimpleFunctions extends ExecTest {
                                     FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
     final List<LogicalExpression> args = new ArrayList<>();
     args.add(arg);
-    final String[] registeredNames = { "hash" };
     FunctionCall call = new FunctionCall(
         "hash",
         args,

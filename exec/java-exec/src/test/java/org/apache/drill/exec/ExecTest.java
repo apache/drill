@@ -52,7 +52,7 @@ public class ExecTest extends DrillTest {
     GuavaPatcher.patch();
   }
 
-  private static final DrillConfig c = DrillConfig.create();
+  protected static final DrillConfig c = DrillConfig.create();
 
   @After
   public void clear(){
