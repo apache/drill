@@ -27,6 +27,6 @@ public interface TransientStoreListener {
    *
    * @param event  event details
    */
-  void onChange(TransientStoreEvent event);
+  void onChange(TransientStoreEvent<?> event);
 
 }

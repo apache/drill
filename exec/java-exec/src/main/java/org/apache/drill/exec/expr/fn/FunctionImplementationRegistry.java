@@ -83,17 +83,30 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private boolean deleteTmpDir = false;
   private File tmpDir;
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
-  private OptionManager optionManager = null;
+  private final OptionManager optionManager;
+  private final boolean useDynamicUdfs;
 
-  @Deprecated @VisibleForTesting
-  public FunctionImplementationRegistry(DrillConfig config){
-    this(config, ClassPathScanner.fromPrescan(config));
+  @VisibleForTesting
+  public FunctionImplementationRegistry(DrillConfig config) {
+    this(config, ClassPathScanner.fromPrescan(config), null);
   }
 
-  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan){
+  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan) {
+    this(config, classpathScan, null);
+  }
+
+  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan, OptionManager optionManager) {
     Stopwatch w = Stopwatch.createStarted();
 
     logger.debug("Generating function registry.");
+    this.optionManager = optionManager;
+
+    // Unit tests fail if dynamic UDFs are turned on AND the test happens
+    // to access an undefined function. Since we want a reasonable failure
+    // rather than a crash, we provide a boot-time option, set only by
+    // tests, to disable DUDF lookup.
+
+    useDynamicUdfs = ! config.getBoolean(ExecConstants.UDF_DISABLE_DYNAMIC);
     localFunctionRegistry = new LocalFunctionRegistry(classpathScan);
 
     Set<Class<? extends PluggableFunctionRegistry>> registryClasses =
@@ -123,11 +136,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     this.localUdfDir = getLocalUdfDir(config);
   }
 
-  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan, OptionManager optionManager) {
-    this(config, classpathScan);
-    this.optionManager = optionManager;
-  }
-
   /**
    * Register functions in given operator table.
    * @param operatorTable operator table
@@ -142,7 +150,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
-   * First attempts to finds the Drill function implementation that matches the name, arg types and return type.
+   * First attempts to find the Drill function implementation that matches the name, arg types and return type.
    * If exact function implementation was not found,
    * syncs local function registry with remote function registry if needed
    * and tries to find function implementation one more time
@@ -156,17 +164,25 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
     AtomicLong version = new AtomicLong();
     String newFunctionName = functionReplacement(functionCall);
-    List<DrillFuncHolder> functions = localFunctionRegistry.getMethods(newFunctionName, version);
-    FunctionResolver exactResolver = FunctionResolverFactory.getExactResolver(functionCall);
-    DrillFuncHolder holder = exactResolver.getBestMatch(functions, functionCall);
 
-    if (holder == null) {
+    // Dynamic UDFS: First try with exact match. If not found, we may need to
+    // update the registry, so sync with remote.
+
+    if (useDynamicUdfs) {
+      List<DrillFuncHolder> functions = localFunctionRegistry.getMethods(newFunctionName, version);
+      FunctionResolver exactResolver = FunctionResolverFactory.getExactResolver(functionCall);
+      DrillFuncHolder holder = exactResolver.getBestMatch(functions, functionCall);
+      if (holder != null) {
+        return holder;
+      }
       syncWithRemoteRegistry(version.get());
-      List<DrillFuncHolder> updatedFunctions = localFunctionRegistry.getMethods(newFunctionName, version);
-      holder = functionResolver.getBestMatch(updatedFunctions, functionCall);
     }
 
-    return holder;
+    // Whether Dynamic UDFs or not: look in the registry for
+    // an inexact match.
+
+    List<DrillFuncHolder> functions = localFunctionRegistry.getMethods(newFunctionName, version);
+    return functionResolver.getBestMatch(functions, functionCall);
   }
 
   /**
@@ -177,16 +193,20 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    */
   private String functionReplacement(FunctionCall functionCall) {
     String funcName = functionCall.getName();
-      if (functionCall.args.size() > 0) {
-          MajorType majorType =  functionCall.args.get(0).getMajorType();
-          DataMode dataMode = majorType.getMode();
-          MinorType minorType = majorType.getMinorType();
-          if (optionManager != null
-              && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val
-              && CastFunctions.isReplacementNeeded(funcName, minorType)) {
-              funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode, minorType);
-          }
-      }
+    if (functionCall.args.size() == 0) {
+      return funcName;
+    }
+    boolean castToNullableNumeric = optionManager != null &&
+                  optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION);
+    if (! castToNullableNumeric) {
+      return funcName;
+    }
+    MajorType majorType =  functionCall.args.get(0).getMajorType();
+    DataMode dataMode = majorType.getMode();
+    MinorType minorType = majorType.getMinorType();
+    if (CastFunctions.isReplacementNeeded(funcName, minorType)) {
+        funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode, minorType);
+    }
 
     return funcName;
   }
@@ -200,7 +220,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return exactly matching function holder
    */
   public DrillFuncHolder findExactMatchingDrillFunction(String name, List<MajorType> argTypes, MajorType returnType) {
-    return findExactMatchingDrillFunction(name, argTypes, returnType, true);
+    return findExactMatchingDrillFunction(name, argTypes, returnType, useDynamicUdfs);
   }
 
   /**
@@ -315,6 +335,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @param version remote function registry local function registry was based on
    * @return true if remote and local function registries were synchronized after given version
    */
+  @SuppressWarnings("resource")
   public boolean syncWithRemoteRegistry(long version) {
     if (isRegistrySyncNeeded(remoteFunctionRegistry.getRegistryVersion(), localFunctionRegistry.getVersion())) {
       synchronized (this) {
@@ -495,6 +516,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return local path to jar that was copied
    * @throws IOException in case of problems during jar coping process
    */
+  @SuppressWarnings("resource")
   private Path copyJarToLocal(String jarName, RemoteFunctionRegistry remoteFunctionRegistry) throws IOException {
     Path registryArea = remoteFunctionRegistry.getRegistryArea();
     FileSystem fs = remoteFunctionRegistry.getFs();
@@ -549,7 +571,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private class UnregistrationListener implements TransientStoreListener {
 
     @Override
-    public void onChange(TransientStoreEvent event) {
+    public void onChange(TransientStoreEvent<?> event) {
       String jarName = (String) event.getValue();
       localFunctionRegistry.unregister(jarName);
       String localDir = localUdfDir.toUri().getPath();
