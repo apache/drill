@@ -57,9 +57,12 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
 
     queueSize = 0;
     for (int i = 0; i < size; i++) {
-      vector4.set(i, i, batchGroups.get(i).getNextIndex());
-      siftUp();
-      queueSize++;
+      int index = batchGroups.get(i).getNextIndex();
+      vector4.set(i, i, index);
+      if (index > -1) {
+        siftUp();
+        queueSize++;
+      }
     }
   }
 
