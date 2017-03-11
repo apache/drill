@@ -14,4 +14,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
+package org.apache.drill.exec.vector.accessor;
+
+import java.math.BigDecimal;
+
+import org.joda.time.Period;
+
+/**
+ * Methods common to the {@link ColumnWriter} and
+ * {@link ArrayWriter} interfaces.
+ */
+
+public interface ScalarWriter {
+  void setInt(int value);
+  void setLong(long value);
+  void setDouble(double value);
+  void setString(String value);
+  void setBytes(byte[] value);
+  void setDecimal(BigDecimal value);
+  void setPeriod(Period value);
+}

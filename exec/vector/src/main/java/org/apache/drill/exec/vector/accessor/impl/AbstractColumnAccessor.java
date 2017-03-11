@@ -14,4 +14,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
+package org.apache.drill.exec.vector.accessor.impl;
+
+import org.apache.drill.exec.vector.ValueVector;
+
+/**
+ * Abstract base class for column readers and writers that
+ * implements the mechanism for binding accessors to a row
+ * index. The row index is implicit: index a row, then
+ * column accessors pull out columns from that row.
+ */
+
+public abstract class AbstractColumnAccessor {
+
+  public interface RowIndex {
+    int batch();
+    int index();
+  }
+
+  protected RowIndex vectorIndex;
+
+  protected void bind(RowIndex rowIndex) {
+    this.vectorIndex = rowIndex;
+  }
+
+  public abstract void bind(RowIndex rowIndex, ValueVector vector);
+}

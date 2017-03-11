@@ -266,5 +266,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       final int childValueCount = valueCount == 0 ? 0 : offsets.getAccessor().get(valueCount);
       vector.getMutator().setValueCount(childValueCount);
     }
+
+    public int getInnerValueCountAt(int index) {
+      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
+    }
   }
 }

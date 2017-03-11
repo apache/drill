@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,7 @@ package org.apache.drill.exec.vector.complex.impl;
  */
 @SuppressWarnings("unused")
 abstract class AbstractFieldReader extends AbstractBaseReader implements FieldReader{
-  
+
   AbstractFieldReader(){
     super();
   }
@@ -44,24 +44,24 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
     return true;
   }
 
-  <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean", 
+  <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean",
           "Character", "DateTime", "Period", "Double", "Float",
           "Text", "String", "Byte", "Short", "byte[]"] as friendlyType>
   <#assign safeType=friendlyType />
   <#if safeType=="byte[]"><#assign safeType="ByteArray" /></#if>
-  
+
   public ${friendlyType} read${safeType}(int arrayIndex){
     fail("read${safeType}(int arrayIndex)");
     return null;
   }
-  
+
   public ${friendlyType} read${safeType}(){
     fail("read${safeType}()");
     return null;
   }
-  
+
   </#list>
-  
+
   public void copyAsValue(MapWriter writer){
     fail("CopyAsValue MapWriter");
   }
@@ -72,7 +72,7 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   public void copyAsField(String name, ListWriter writer){
     fail("CopyAsFieldList");
   }
-  
+
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign boxedType = (minor.boxedType!type.boxedType) />
 
@@ -83,15 +83,15 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   public void read(Nullable${name}Holder holder){
     fail("${name}");
   }
-  
+
   public void read(int arrayIndex, ${name}Holder holder){
     fail("Repeated${name}");
   }
-  
+
   public void read(int arrayIndex, Nullable${name}Holder holder){
     fail("Repeated${name}");
   }
-  
+
   public void copyAsValue(${name}Writer writer){
     fail("CopyAsValue${name}");
   }
@@ -99,7 +99,7 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
     fail("CopyAsField${name}");
   }
   </#list></#list>
-  
+
   public FieldReader reader(String name){
     fail("reader(String name)");
     return null;
@@ -108,19 +108,19 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   public FieldReader reader(){
     fail("reader()");
     return null;
-    
+
   }
-  
+
   public int size(){
     fail("size()");
     return -1;
   }
-  
+
   private void fail(String name){
     throw new IllegalArgumentException(String.format("You tried to read a [%s] type when you are using a field reader of type [%s].", name, this.getClass().getSimpleName()));
   }
-  
-  
+
+
 }
 
 

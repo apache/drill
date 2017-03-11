@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,25 +32,25 @@ import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 
 public class DecimalUtility extends CoreDecimalUtility{
 
-    public final static int MAX_DIGITS = 9;
-    public final static int MAX_DIGITS_INT = 10;
-    public final static int MAX_DIGITS_BIGINT = 19;
-    public final static int DIGITS_BASE = 1000000000;
-    public final static int DIGITS_MAX = 999999999;
-    public final static int INTEGER_SIZE = (Integer.SIZE/8);
+  public final static int MAX_DIGITS = 9;
+  public final static int MAX_DIGITS_INT = 10;
+  public final static int MAX_DIGITS_BIGINT = 19;
+  public final static int DIGITS_BASE = 1000000000;
+  public final static int DIGITS_MAX = 999999999;
+  public final static int INTEGER_SIZE = (Integer.SIZE/8);
 
-    public final static String[] decimalToString = {"",
-            "0",
-            "00",
-            "000",
-            "0000",
-            "00000",
-            "000000",
-            "0000000",
-            "00000000",
-            "000000000"};
+  public final static String[] decimalToString = {"",
+          "0",
+          "00",
+          "000",
+          "0000",
+          "00000",
+          "000000",
+          "0000000",
+          "00000000",
+          "000000000"};
 
-    public final static long[] scale_long_constants = {
+  public final static long[] scale_long_constants = {
         1,
         10,
         100,
@@ -71,99 +71,99 @@ public class DecimalUtility extends CoreDecimalUtility{
         100000000000000000l,
         1000000000000000000l};
 
-    /*
-     * Simple function that returns the static precomputed
-     * power of ten, instead of using Math.pow
-     */
-    public static long getPowerOfTen(int power) {
-      assert power >= 0 && power < scale_long_constants.length;
-      return scale_long_constants[(power)];
+  /*
+   * Simple function that returns the static precomputed
+   * power of ten, instead of using Math.pow
+   */
+  public static long getPowerOfTen(int power) {
+    assert power >= 0 && power < scale_long_constants.length;
+    return scale_long_constants[(power)];
+  }
+
+  /*
+   * Math.pow returns a double and while multiplying with large digits
+   * in the decimal data type we encounter noise. So instead of multiplying
+   * with Math.pow we use the static constants to perform the multiplication
+   */
+  public static long adjustScaleMultiply(long input, int factor) {
+    int index = Math.abs(factor);
+    assert index >= 0 && index < scale_long_constants.length;
+    if (factor >= 0) {
+      return input * scale_long_constants[index];
+    } else {
+      return input / scale_long_constants[index];
     }
+  }
 
-    /*
-     * Math.pow returns a double and while multiplying with large digits
-     * in the decimal data type we encounter noise. So instead of multiplying
-     * with Math.pow we use the static constants to perform the multiplication
-     */
-    public static long adjustScaleMultiply(long input, int factor) {
-      int index = Math.abs(factor);
-      assert index >= 0 && index < scale_long_constants.length;
-      if (factor >= 0) {
-        return input * scale_long_constants[index];
-      } else {
-        return input / scale_long_constants[index];
-      }
+  public static long adjustScaleDivide(long input, int factor) {
+    int index = Math.abs(factor);
+    assert index >= 0 && index < scale_long_constants.length;
+    if (factor >= 0) {
+      return input / scale_long_constants[index];
+    } else {
+      return input * scale_long_constants[index];
     }
+  }
 
-    public static long adjustScaleDivide(long input, int factor) {
-      int index = Math.abs(factor);
-      assert index >= 0 && index < scale_long_constants.length;
-      if (factor >= 0) {
-        return input / scale_long_constants[index];
-      } else {
-        return input * scale_long_constants[index];
-      }
+  /* Given the number of actual digits this function returns the
+   * number of indexes it will occupy in the array of integers
+   * which are stored in base 1 billion
+   */
+  public static int roundUp(int ndigits) {
+      return (ndigits + MAX_DIGITS - 1)/MAX_DIGITS;
+  }
+
+  /** Returns a string representation of the given integer
+   * If the length of the given integer is less than the
+   * passed length, this function will prepend zeroes to the string
+   */
+  public static StringBuilder toStringWithZeroes(int number, int desiredLength) {
+    String value = ((Integer) number).toString();
+    int length = value.length();
+
+    StringBuilder str = new StringBuilder();
+    str.append(decimalToString[desiredLength - length]);
+    str.append(value);
+
+    return str;
+  }
+
+  public static StringBuilder toStringWithZeroes(long number, int desiredLength) {
+    String value = ((Long) number).toString();
+    int length = value.length();
+
+    StringBuilder str = new StringBuilder();
+
+    // Desired length can be > MAX_DIGITS
+    int zeroesLength = desiredLength - length;
+    while (zeroesLength > MAX_DIGITS) {
+        str.append(decimalToString[MAX_DIGITS]);
+        zeroesLength -= MAX_DIGITS;
     }
+    str.append(decimalToString[zeroesLength]);
+    str.append(value);
 
-    /* Given the number of actual digits this function returns the
-     * number of indexes it will occupy in the array of integers
-     * which are stored in base 1 billion
-     */
-    public static int roundUp(int ndigits) {
-        return (ndigits + MAX_DIGITS - 1)/MAX_DIGITS;
-    }
-
-    /* Returns a string representation of the given integer
-     * If the length of the given integer is less than the
-     * passed length, this function will prepend zeroes to the string
-     */
-    public static StringBuilder toStringWithZeroes(int number, int desiredLength) {
-        String value = ((Integer) number).toString();
-        int length = value.length();
-
-        StringBuilder str = new StringBuilder();
-        str.append(decimalToString[desiredLength - length]);
-        str.append(value);
-
-        return str;
-    }
-
-    public static StringBuilder toStringWithZeroes(long number, int desiredLength) {
-        String value = ((Long) number).toString();
-        int length = value.length();
-
-        StringBuilder str = new StringBuilder();
-
-        // Desired length can be > MAX_DIGITS
-        int zeroesLength = desiredLength - length;
-        while (zeroesLength > MAX_DIGITS) {
-            str.append(decimalToString[MAX_DIGITS]);
-            zeroesLength -= MAX_DIGITS;
-        }
-        str.append(decimalToString[zeroesLength]);
-        str.append(value);
-
-        return str;
-    }
+    return str;
+  }
 
   public static BigDecimal getBigDecimalFromIntermediate(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
 
-        // In the intermediate representation we don't pad the scale with zeroes, so set truncate = false
-        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
-    }
+    // In the intermediate representation we don't pad the scale with zeroes, so set truncate = false
+    return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
+  }
 
-    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
+  public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 
-        // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
-        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
-    }
+    // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
+    return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
+  }
 
-    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
-      byte[] value = new byte[length];
-      bytebuf.getBytes(start, value, 0, length);
-      BigInteger unscaledValue = new BigInteger(value);
-      return new BigDecimal(unscaledValue, scale);
-    }
+  public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
+    byte[] value = new byte[length];
+    bytebuf.getBytes(start, value, 0, length);
+    BigInteger unscaledValue = new BigInteger(value);
+    return new BigDecimal(unscaledValue, scale);
+  }
 
   public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
@@ -172,111 +172,111 @@ public class DecimalUtility extends CoreDecimalUtility{
     return new BigDecimal(unscaledValue, scale);
   }
 
-    /* Create a BigDecimal object using the data in the DrillBuf.
-     * This function assumes that data is provided in a non-dense format
-     * It works on both sparse and intermediate representations.
-     */
+  /** Create a BigDecimal object using the data in the DrillBuf.
+   * This function assumes that data is provided in a non-dense format
+   * It works on both sparse and intermediate representations.
+   */
   public static BigDecimal getBigDecimalFromDrillBuf(ByteBuf data, int startIndex, int nDecimalDigits, int scale,
       boolean truncateScale) {
 
-        // For sparse decimal type we have padded zeroes at the end, strip them while converting to BigDecimal.
-        int actualDigits;
+    // For sparse decimal type we have padded zeroes at the end, strip them while converting to BigDecimal.
+    int actualDigits;
 
-        // Initialize the BigDecimal, first digit in the DrillBuf has the sign so mask it out
-        BigInteger decimalDigits = BigInteger.valueOf((data.getInt(startIndex)) & 0x7FFFFFFF);
+    // Initialize the BigDecimal, first digit in the DrillBuf has the sign so mask it out
+    BigInteger decimalDigits = BigInteger.valueOf((data.getInt(startIndex)) & 0x7FFFFFFF);
 
-        BigInteger base = BigInteger.valueOf(DIGITS_BASE);
+    BigInteger base = BigInteger.valueOf(DIGITS_BASE);
 
-        for (int i = 1; i < nDecimalDigits; i++) {
+    for (int i = 1; i < nDecimalDigits; i++) {
 
-            BigInteger temp = BigInteger.valueOf(data.getInt(startIndex + (i * INTEGER_SIZE)));
-            decimalDigits = decimalDigits.multiply(base);
-            decimalDigits = decimalDigits.add(temp);
-        }
-
-        // Truncate any additional padding we might have added
-        if (truncateScale == true && scale > 0 && (actualDigits = scale % MAX_DIGITS) != 0) {
-            BigInteger truncate = BigInteger.valueOf((int)Math.pow(10, (MAX_DIGITS - actualDigits)));
-            decimalDigits = decimalDigits.divide(truncate);
-        }
-
-        // set the sign
-        if ((data.getInt(startIndex) & 0x80000000) != 0) {
-            decimalDigits = decimalDigits.negate();
-        }
-
-        BigDecimal decimal = new BigDecimal(decimalDigits, scale);
-
-        return decimal;
+        BigInteger temp = BigInteger.valueOf(data.getInt(startIndex + (i * INTEGER_SIZE)));
+        decimalDigits = decimalDigits.multiply(base);
+        decimalDigits = decimalDigits.add(temp);
     }
 
-    /* This function returns a BigDecimal object from the dense decimal representation.
-     * First step is to convert the dense representation into an intermediate representation
-     * and then invoke getBigDecimalFromDrillBuf() to get the BigDecimal object
+    // Truncate any additional padding we might have added
+    if (truncateScale == true && scale > 0 && (actualDigits = scale % MAX_DIGITS) != 0) {
+        BigInteger truncate = BigInteger.valueOf((int)Math.pow(10, (MAX_DIGITS - actualDigits)));
+        decimalDigits = decimalDigits.divide(truncate);
+    }
+
+    // set the sign
+    if ((data.getInt(startIndex) & 0x80000000) != 0) {
+        decimalDigits = decimalDigits.negate();
+    }
+
+    BigDecimal decimal = new BigDecimal(decimalDigits, scale);
+
+    return decimal;
+  }
+
+  /* This function returns a BigDecimal object from the dense decimal representation.
+   * First step is to convert the dense representation into an intermediate representation
+   * and then invoke getBigDecimalFromDrillBuf() to get the BigDecimal object
+   */
+  public static BigDecimal getBigDecimalFromDense(DrillBuf data, int startIndex, int nDecimalDigits, int scale, int maxPrecision, int width) {
+
+    /* This method converts the dense representation to
+     * an intermediate representation. The intermediate
+     * representation has one more integer than the dense
+     * representation.
      */
-    public static BigDecimal getBigDecimalFromDense(DrillBuf data, int startIndex, int nDecimalDigits, int scale, int maxPrecision, int width) {
+    byte[] intermediateBytes = new byte[((nDecimalDigits + 1) * INTEGER_SIZE)];
 
-        /* This method converts the dense representation to
-         * an intermediate representation. The intermediate
-         * representation has one more integer than the dense
-         * representation.
-         */
-        byte[] intermediateBytes = new byte[((nDecimalDigits + 1) * INTEGER_SIZE)];
+    // Start storing from the least significant byte of the first integer
+    int intermediateIndex = 3;
 
-        // Start storing from the least significant byte of the first integer
-        int intermediateIndex = 3;
+    int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
+    int[] reverseMask = {0xFC, 0xF0, 0xC0, 0x00};
 
-        int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
-        int[] reverseMask = {0xFC, 0xF0, 0xC0, 0x00};
+    int maskIndex;
+    int shiftOrder;
+    byte shiftBits;
 
-        int maskIndex;
-        int shiftOrder;
-        byte shiftBits;
+    // TODO: Some of the logic here is common with casting from Dense to Sparse types, factor out common code
+    if (maxPrecision == 38) {
+        maskIndex = 0;
+        shiftOrder = 6;
+        shiftBits = 0x00;
+        intermediateBytes[intermediateIndex++] = (byte) (data.getByte(startIndex) & 0x7F);
+    } else if (maxPrecision == 28) {
+        maskIndex = 1;
+        shiftOrder = 4;
+        shiftBits = (byte) ((data.getByte(startIndex) & 0x03) << shiftOrder);
+        intermediateBytes[intermediateIndex++] = (byte) (((data.getByte(startIndex) & 0x3C) & 0xFF) >>> 2);
+    } else {
+        throw new UnsupportedOperationException("Dense types with max precision 38 and 28 are only supported");
+    }
 
-        // TODO: Some of the logic here is common with casting from Dense to Sparse types, factor out common code
-        if (maxPrecision == 38) {
-            maskIndex = 0;
-            shiftOrder = 6;
-            shiftBits = 0x00;
-            intermediateBytes[intermediateIndex++] = (byte) (data.getByte(startIndex) & 0x7F);
-        } else if (maxPrecision == 28) {
-            maskIndex = 1;
-            shiftOrder = 4;
-            shiftBits = (byte) ((data.getByte(startIndex) & 0x03) << shiftOrder);
-            intermediateBytes[intermediateIndex++] = (byte) (((data.getByte(startIndex) & 0x3C) & 0xFF) >>> 2);
-        } else {
-            throw new UnsupportedOperationException("Dense types with max precision 38 and 28 are only supported");
-        }
+    int inputIndex = 1;
+    boolean sign = false;
 
-        int inputIndex = 1;
-        boolean sign = false;
+    if ((data.getByte(startIndex) & 0x80) != 0) {
+        sign = true;
+    }
 
-        if ((data.getByte(startIndex) & 0x80) != 0) {
-            sign = true;
-        }
+    while (inputIndex < width) {
 
-        while (inputIndex < width) {
+      intermediateBytes[intermediateIndex] = (byte) ((shiftBits) | (((data.getByte(startIndex + inputIndex) & reverseMask[maskIndex]) & 0xFF) >>> (8 - shiftOrder)));
 
-            intermediateBytes[intermediateIndex] = (byte) ((shiftBits) | (((data.getByte(startIndex + inputIndex) & reverseMask[maskIndex]) & 0xFF) >>> (8 - shiftOrder)));
+      shiftBits = (byte) ((data.getByte(startIndex + inputIndex) & mask[maskIndex]) << shiftOrder);
 
-            shiftBits = (byte) ((data.getByte(startIndex + inputIndex) & mask[maskIndex]) << shiftOrder);
+      inputIndex++;
+      intermediateIndex++;
 
-            inputIndex++;
-            intermediateIndex++;
+      if (((inputIndex - 1) % INTEGER_SIZE) == 0) {
+          shiftBits = (byte) ((shiftBits & 0xFF) >>> 2);
+          maskIndex++;
+          shiftOrder -= 2;
+      }
 
-            if (((inputIndex - 1) % INTEGER_SIZE) == 0) {
-                shiftBits = (byte) ((shiftBits & 0xFF) >>> 2);
-                maskIndex++;
-                shiftOrder -= 2;
-            }
+    }
+    /* copy the last byte */
+    intermediateBytes[intermediateIndex] = shiftBits;
 
-        }
-        /* copy the last byte */
-        intermediateBytes[intermediateIndex] = shiftBits;
-
-        if (sign == true) {
-            intermediateBytes[0] = (byte) (intermediateBytes[0] | 0x80);
-        }
+    if (sign == true) {
+        intermediateBytes[0] = (byte) (intermediateBytes[0] | 0x80);
+    }
 
     final ByteBuf intermediate = UnpooledByteBufAllocator.DEFAULT.buffer(intermediateBytes.length);
     try {
@@ -288,299 +288,304 @@ public class DecimalUtility extends CoreDecimalUtility{
       intermediate.release();
     }
 
-    }
+  }
 
-    /*
-     * Function converts the BigDecimal and stores it in out internal sparse representation
-     */
+  /**
+   * Function converts the BigDecimal and stores it in out internal sparse representation
+   */
   public static void getSparseFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex, int scale, int precision,
       int nDecimalDigits) {
 
-        // Initialize the buffer
-        for (int i = 0; i < nDecimalDigits; i++) {
-          data.setInt(startIndex + (i * INTEGER_SIZE), 0);
-        }
-
-        boolean sign = false;
-
-        if (input.signum() == -1) {
-            // negative input
-            sign = true;
-            input = input.abs();
-        }
-
-        // Truncate the input as per the scale provided
-        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
-
-        // Separate out the integer part
-        BigDecimal integerPart = input.setScale(0, BigDecimal.ROUND_DOWN);
-
-        int destIndex = nDecimalDigits - roundUp(scale) - 1;
-
-        // we use base 1 billion integer digits for out integernal representation
-        BigDecimal base = new BigDecimal(DIGITS_BASE);
-
-        while (integerPart.compareTo(BigDecimal.ZERO) == 1) {
-            // store the modulo as the integer value
-            data.setInt(startIndex + (destIndex * INTEGER_SIZE), (integerPart.remainder(base)).intValue());
-            destIndex--;
-            // Divide by base 1 billion
-            integerPart = (integerPart.divide(base)).setScale(0, BigDecimal.ROUND_DOWN);
-        }
-
-        /* Sparse representation contains padding of additional zeroes
-         * so each digit contains MAX_DIGITS for ease of arithmetic
-         */
-        int actualDigits;
-        if ((actualDigits = (scale % MAX_DIGITS)) != 0) {
-            // Pad additional zeroes
-            scale = scale + (MAX_DIGITS - actualDigits);
-            input = input.setScale(scale, BigDecimal.ROUND_DOWN);
-        }
-
-        //separate out the fractional part
-        BigDecimal fractionalPart = input.remainder(BigDecimal.ONE).movePointRight(scale);
-
-        destIndex = nDecimalDigits - 1;
-
-        while (scale > 0) {
-            // Get next set of MAX_DIGITS (9) store it in the DrillBuf
-            fractionalPart = fractionalPart.movePointLeft(MAX_DIGITS);
-            BigDecimal temp = fractionalPart.remainder(BigDecimal.ONE);
-
-            data.setInt(startIndex + (destIndex * INTEGER_SIZE), (temp.unscaledValue().intValue()));
-            destIndex--;
-
-            fractionalPart = fractionalPart.setScale(0, BigDecimal.ROUND_DOWN);
-            scale -= MAX_DIGITS;
-        }
-
-        // Set the negative sign
-        if (sign == true) {
-            data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
-        }
-
+    // Initialize the buffer
+    for (int i = 0; i < nDecimalDigits; i++) {
+      data.setInt(startIndex + (i * INTEGER_SIZE), 0);
     }
 
+    boolean sign = false;
 
-    public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
-        // Truncate or pad to set the input to the correct scale
-        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
-
-        return (input.unscaledValue().longValue());
+    if (input.signum() == -1) {
+        // negative input
+        sign = true;
+        input = input.abs();
     }
 
-    public static BigDecimal getBigDecimalFromPrimitiveTypes(int input, int scale, int precision) {
-      return BigDecimal.valueOf(input, scale);
+    // Truncate the input as per the scale provided
+    input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
+
+    // Separate out the integer part
+    BigDecimal integerPart = input.setScale(0, BigDecimal.ROUND_DOWN);
+
+    int destIndex = nDecimalDigits - roundUp(scale) - 1;
+
+    // we use base 1 billion integer digits for out integernal representation
+    BigDecimal base = new BigDecimal(DIGITS_BASE);
+
+    while (integerPart.compareTo(BigDecimal.ZERO) == 1) {
+        // store the modulo as the integer value
+        data.setInt(startIndex + (destIndex * INTEGER_SIZE), (integerPart.remainder(base)).intValue());
+        destIndex--;
+        // Divide by base 1 billion
+        integerPart = (integerPart.divide(base)).setScale(0, BigDecimal.ROUND_DOWN);
     }
 
-    public static BigDecimal getBigDecimalFromPrimitiveTypes(long input, int scale, int precision) {
-      return BigDecimal.valueOf(input, scale);
+    /* Sparse representation contains padding of additional zeroes
+     * so each digit contains MAX_DIGITS for ease of arithmetic
+     */
+    int actualDigits;
+    if ((actualDigits = (scale % MAX_DIGITS)) != 0) {
+        // Pad additional zeroes
+        scale = scale + (MAX_DIGITS - actualDigits);
+        input = input.setScale(scale, BigDecimal.ROUND_DOWN);
     }
 
+    //separate out the fractional part
+    BigDecimal fractionalPart = input.remainder(BigDecimal.ONE).movePointRight(scale);
 
-    public static int compareDenseBytes(DrillBuf left, int leftStart, boolean leftSign, DrillBuf right, int rightStart, boolean rightSign, int width) {
+    destIndex = nDecimalDigits - 1;
 
-      int invert = 1;
+    while (scale > 0) {
+        // Get next set of MAX_DIGITS (9) store it in the DrillBuf
+        fractionalPart = fractionalPart.movePointLeft(MAX_DIGITS);
+        BigDecimal temp = fractionalPart.remainder(BigDecimal.ONE);
 
-      /* If signs are different then simply look at the
-       * sign of the two inputs and determine which is greater
+        data.setInt(startIndex + (destIndex * INTEGER_SIZE), (temp.unscaledValue().intValue()));
+        destIndex--;
+
+        fractionalPart = fractionalPart.setScale(0, BigDecimal.ROUND_DOWN);
+        scale -= MAX_DIGITS;
+    }
+
+    // Set the negative sign
+    if (sign == true) {
+        data.setInt(startIndex, data.getInt(startIndex) | 0x80000000);
+    }
+  }
+
+  public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
+    // Truncate or pad to set the input to the correct scale
+    input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
+
+    return input.unscaledValue().longValue();
+  }
+
+  public static int getDecimal9FromBigDecimal(BigDecimal input, int scale, int precision) {
+    // Truncate or pad to set the input to the correct scale
+    input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
+
+    return input.unscaledValue().intValue();
+  }
+
+  public static BigDecimal getBigDecimalFromPrimitiveTypes(int input, int scale, int precision) {
+    return BigDecimal.valueOf(input, scale);
+  }
+
+  public static BigDecimal getBigDecimalFromPrimitiveTypes(long input, int scale, int precision) {
+    return BigDecimal.valueOf(input, scale);
+  }
+
+  public static int compareDenseBytes(DrillBuf left, int leftStart, boolean leftSign, DrillBuf right, int rightStart, boolean rightSign, int width) {
+
+    int invert = 1;
+
+    /* If signs are different then simply look at the
+     * sign of the two inputs and determine which is greater
+     */
+    if (leftSign != rightSign) {
+
+      return((leftSign == true) ? -1 : 1);
+    } else if(leftSign == true) {
+      /* Both inputs are negative, at the end we will
+       * have to invert the comparison
        */
-      if (leftSign != rightSign) {
+      invert = -1;
+    }
 
-        return((leftSign == true) ? -1 : 1);
-      } else if(leftSign == true) {
-        /* Both inputs are negative, at the end we will
-         * have to invert the comparison
-         */
+    int cmp = 0;
+
+    for (int i = 0; i < width; i++) {
+      byte leftByte  = left.getByte(leftStart + i);
+      byte rightByte = right.getByte(rightStart + i);
+      // Unsigned byte comparison
+      if ((leftByte & 0xFF) > (rightByte & 0xFF)) {
+        cmp = 1;
+        break;
+      } else if ((leftByte & 0xFF) < (rightByte & 0xFF)) {
+        cmp = -1;
+        break;
+      }
+    }
+    cmp *= invert; // invert the comparison if both were negative values
+
+    return cmp;
+  }
+
+  public static int getIntegerFromSparseBuffer(DrillBuf buffer, int start, int index) {
+    int value = buffer.getInt(start + (index * 4));
+
+    if (index == 0) {
+      /* the first byte contains sign bit, return value without it */
+      value = (value & 0x7FFFFFFF);
+    }
+    return value;
+  }
+
+  public static void setInteger(DrillBuf buffer, int start, int index, int value) {
+    buffer.setInt(start + (index * 4), value);
+  }
+
+  public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+
+    int invert = 1;
+
+    if (absCompare == false) {
+      if (leftSign != rightSign) {
+        return (leftSign == true) ? -1 : 1;
+      }
+
+      // Both values are negative invert the outcome of the comparison
+      if (leftSign == true) {
         invert = -1;
       }
-
-      int cmp = 0;
-
-      for (int i = 0; i < width; i++) {
-        byte leftByte  = left.getByte(leftStart + i);
-        byte rightByte = right.getByte(rightStart + i);
-        // Unsigned byte comparison
-        if ((leftByte & 0xFF) > (rightByte & 0xFF)) {
-          cmp = 1;
-          break;
-        } else if ((leftByte & 0xFF) < (rightByte & 0xFF)) {
-          cmp = -1;
-          break;
-        }
-      }
-      cmp *= invert; // invert the comparison if both were negative values
-
-      return cmp;
     }
 
-    public static int getIntegerFromSparseBuffer(DrillBuf buffer, int start, int index) {
-      int value = buffer.getInt(start + (index * 4));
+    int cmp = compareSparseBytesInner(left, leftStart, leftSign, leftScale, leftPrecision, right, rightStart, rightSign, rightPrecision, rightScale, width, nDecimalDigits);
+    return cmp * invert;
+  }
 
-      if (index == 0) {
-        /* the first byte contains sign bit, return value without it */
-        value = (value & 0x7FFFFFFF);
-      }
-      return value;
-    }
+  public static int compareSparseBytesInner(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits) {
+    /* compute the number of integer digits in each decimal */
+    int leftInt  = leftPrecision - leftScale;
+    int rightInt = rightPrecision - rightScale;
 
-    public static void setInteger(DrillBuf buffer, int start, int index, int value) {
-      buffer.setInt(start + (index * 4), value);
-    }
+    /* compute the number of indexes required for storing integer digits */
+    int leftIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftInt);
+    int rightIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightInt);
 
-    public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+    /* compute number of indexes required for storing scale */
+    int leftScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftScale);
+    int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightScale);
 
-      int invert = 1;
+    /* compute index of the most significant integer digits */
+    int leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
+    int rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
 
-      if (absCompare == false) {
-        if (leftSign != rightSign) {
-          return (leftSign == true) ? -1 : 1;
-        }
+    int leftStopIndex = nDecimalDigits - leftScaleRoundedUp;
+    int rightStopIndex = nDecimalDigits - rightScaleRoundedUp;
 
-        // Both values are negative invert the outcome of the comparison
-        if (leftSign == true) {
-          invert = -1;
-        }
-      }
-
-      int cmp = compareSparseBytesInner(left, leftStart, leftSign, leftScale, leftPrecision, right, rightStart, rightSign, rightPrecision, rightScale, width, nDecimalDigits);
-      return cmp * invert;
-    }
-    public static int compareSparseBytesInner(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits) {
-      /* compute the number of integer digits in each decimal */
-      int leftInt  = leftPrecision - leftScale;
-      int rightInt = rightPrecision - rightScale;
-
-      /* compute the number of indexes required for storing integer digits */
-      int leftIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftInt);
-      int rightIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightInt);
-
-      /* compute number of indexes required for storing scale */
-      int leftScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftScale);
-      int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightScale);
-
-      /* compute index of the most significant integer digits */
-      int leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
-      int rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
-
-      int leftStopIndex = nDecimalDigits - leftScaleRoundedUp;
-      int rightStopIndex = nDecimalDigits - rightScaleRoundedUp;
-
-      /* Discard the zeroes in the integer part */
-      while (leftIndex1 < leftStopIndex) {
-        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
-          break;
-        }
-
-        /* Digit in this location is zero, decrement the actual number
-         * of integer digits
-         */
-        leftIntRoundedUp--;
-        leftIndex1++;
+    /* Discard the zeroes in the integer part */
+    while (leftIndex1 < leftStopIndex) {
+      if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
+        break;
       }
 
-      /* If we reached the stop index then the number of integers is zero */
-      if (leftIndex1 == leftStopIndex) {
-        leftIntRoundedUp = 0;
-      }
-
-      while (rightIndex1 < rightStopIndex) {
-        if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
-          break;
-        }
-
-        /* Digit in this location is zero, decrement the actual number
-         * of integer digits
-         */
-        rightIntRoundedUp--;
-        rightIndex1++;
-      }
-
-      if (rightIndex1 == rightStopIndex) {
-        rightIntRoundedUp = 0;
-      }
-
-      /* We have the accurate number of non-zero integer digits,
-       * if the number of integer digits are different then we can determine
-       * which decimal is larger and needn't go down to comparing individual values
+      /* Digit in this location is zero, decrement the actual number
+       * of integer digits
        */
-      if (leftIntRoundedUp > rightIntRoundedUp) {
+      leftIntRoundedUp--;
+      leftIndex1++;
+    }
+
+    /* If we reached the stop index then the number of integers is zero */
+    if (leftIndex1 == leftStopIndex) {
+      leftIntRoundedUp = 0;
+    }
+
+    while (rightIndex1 < rightStopIndex) {
+      if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
+        break;
+      }
+
+      /* Digit in this location is zero, decrement the actual number
+       * of integer digits
+       */
+      rightIntRoundedUp--;
+      rightIndex1++;
+    }
+
+    if (rightIndex1 == rightStopIndex) {
+      rightIntRoundedUp = 0;
+    }
+
+    /* We have the accurate number of non-zero integer digits,
+     * if the number of integer digits are different then we can determine
+     * which decimal is larger and needn't go down to comparing individual values
+     */
+    if (leftIntRoundedUp > rightIntRoundedUp) {
+      return 1;
+    }
+    else if (rightIntRoundedUp > leftIntRoundedUp) {
+      return -1;
+    }
+
+    /* The number of integer digits are the same, set the each index
+     * to the first non-zero integer and compare each digit
+     */
+    leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
+    rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
+
+    while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
+      if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
         return 1;
       }
-      else if (rightIntRoundedUp > leftIntRoundedUp) {
+      else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
         return -1;
       }
 
-      /* The number of integer digits are the same, set the each index
-       * to the first non-zero integer and compare each digit
-       */
-      leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
-      rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
-
-      while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
-        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
-          return 1;
-        }
-        else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
-          return -1;
-        }
-
-        leftIndex1++;
-        rightIndex1++;
-      }
-
-      /* The integer part of both the decimal's are equal, now compare
-       * each individual fractional part. Set the index to be at the
-       * beginning of the fractional part
-       */
-      leftIndex1 = leftStopIndex;
-      rightIndex1 = rightStopIndex;
-
-      /* Stop indexes will be the end of the array */
-      leftStopIndex = nDecimalDigits;
-      rightStopIndex = nDecimalDigits;
-
-      /* compare the two fractional parts of the decimal */
-      while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
-        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
-          return 1;
-        }
-        else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
-          return -1;
-        }
-
-        leftIndex1++;
-        rightIndex1++;
-      }
-
-      /* Till now the fractional part of the decimals are equal, check
-       * if one of the decimal has fractional part that is remaining
-       * and is non-zero
-       */
-      while (leftIndex1 < leftStopIndex) {
-        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
-          return 1;
-        }
-        leftIndex1++;
-      }
-
-      while(rightIndex1 < rightStopIndex) {
-        if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
-          return -1;
-        }
-        rightIndex1++;
-      }
-
-      /* Both decimal values are equal */
-      return 0;
+      leftIndex1++;
+      rightIndex1++;
     }
 
-    public static BigDecimal getBigDecimalFromByteArray(byte[] bytes, int start, int length, int scale) {
-      byte[] value = Arrays.copyOfRange(bytes, start, start + length);
-      BigInteger unscaledValue = new BigInteger(value);
-      return new BigDecimal(unscaledValue, scale);
+    /* The integer part of both the decimal's are equal, now compare
+     * each individual fractional part. Set the index to be at the
+     * beginning of the fractional part
+     */
+    leftIndex1 = leftStopIndex;
+    rightIndex1 = rightStopIndex;
+
+    /* Stop indexes will be the end of the array */
+    leftStopIndex = nDecimalDigits;
+    rightStopIndex = nDecimalDigits;
+
+    /* compare the two fractional parts of the decimal */
+    while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
+      if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
+        return 1;
+      }
+      else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
+        return -1;
+      }
+
+      leftIndex1++;
+      rightIndex1++;
     }
+
+    /* Till now the fractional part of the decimals are equal, check
+     * if one of the decimal has fractional part that is remaining
+     * and is non-zero
+     */
+    while (leftIndex1 < leftStopIndex) {
+      if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
+        return 1;
+      }
+      leftIndex1++;
+    }
+
+    while(rightIndex1 < rightStopIndex) {
+      if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
+        return -1;
+      }
+      rightIndex1++;
+    }
+
+    /* Both decimal values are equal */
+    return 0;
+  }
+
+  public static BigDecimal getBigDecimalFromByteArray(byte[] bytes, int start, int length, int scale) {
+    byte[] value = Arrays.copyOfRange(bytes, start, start + length);
+    BigInteger unscaledValue = new BigInteger(value);
+    return new BigDecimal(unscaledValue, scale);
+  }
 
   public static void roundDecimal(DrillBuf result, int start, int nDecimalDigits, int desiredScale, int currentScale) {
     int newScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(desiredScale);
@@ -724,8 +729,6 @@ public class DecimalUtility extends CoreDecimalUtility{
 
     // compare byte by byte
     int n = 0;
-    int lPos = lStart;
-    int rPos = 0;
     while (n < length/4) {
       int leftInt = Decimal38SparseHolder.getInteger(n, lStart, left);
       int rightInt = ByteFunctionHelpers.getInteger(right, n);
