@@ -143,6 +143,10 @@
           <artifactId>hazelcast</artifactId>
           <groupId>com.hazelcast</groupId>
         </exclusion>
+        <exclusion>
+	      <groupId>nl.basjes.parse.httpdlog</groupId>
+	      <artifactId>httpdlog-parser</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

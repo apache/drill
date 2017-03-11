@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 
@@ -252,7 +253,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
   </#if>
 
-
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
     clear();
@@ -486,7 +486,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     }
 
     <#if type.major == "VarLen">
-
     private void fillEmpties(int index){
       final ${valuesName}.Mutator valuesMutator = values.getMutator();
       for (int i = lastSet; i < index; i++) {
@@ -547,7 +546,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       values.getMutator().set(index, holder);
     }
 
-
     public void set(int index, Nullable${minor.class}Holder holder){
       final ${valuesName}.Mutator valuesMutator = values.getMutator();
       <#if type.major == "VarLen">
@@ -602,9 +600,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
-
     public void setSafe(int index, Nullable${minor.class}Holder value) {
-
       <#if type.major == "VarLen">
       if (index > lastSet + 1) {
         fillEmpties(index);
@@ -617,7 +613,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     }
 
     public void setSafe(int index, ${minor.class}Holder value) {
-
       <#if type.major == "VarLen">
       if (index > lastSet + 1) {
         fillEmpties(index);
@@ -630,19 +625,32 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     }
 
     <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "Interval" || minor.class == "IntervalDay")>
-      public void setSafe(int index, ${minor.javaType!type.javaType} value) {
-        <#if type.major == "VarLen">
-        if (index > lastSet + 1) {
-          fillEmpties(index);
-        }
-        </#if>
-        bits.getMutator().setSafe(index, 1);
-        values.getMutator().setSafe(index, value);
-        setCount++;
+    public void setSafe(int index, ${minor.javaType!type.javaType} value) {
+      <#if type.major == "VarLen">
+      if (index > lastSet + 1) {
+        fillEmpties(index);
       }
+      </#if>
+      bits.getMutator().setSafe(index, 1);
+      values.getMutator().setSafe(index, value);
+      setCount++;
+    }
 
     </#if>
+    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
+    public void set(int index, BigDecimal value) {
+      bits.getMutator().set(index, 1);
+      values.getMutator().set(index, value);
+      setCount++;
+    }
 
+    public void setSafe(int index, BigDecimal value) {
+      bits.getMutator().setSafe(index, 1);
+      values.getMutator().setSafe(index, value);
+      setCount++;
+    }
+
+    </#if>
     @Override
     public void setValueCount(int valueCount) {
       assert valueCount >= 0;

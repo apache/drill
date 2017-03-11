@@ -14,4 +14,29 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
+package org.apache.drill.exec.vector.accessor;
+
+/**
+ * Writer for values into an array. Array writes are write-once,
+ * sequential: each call to a <tt>setFoo()</tt> method writes a
+ * value and advances the array index.
+ * <p>
+ * {@see ArrayReader}
+ */
+
+public interface ArrayWriter extends ColumnAccessor, ScalarWriter {
+
+  int size();
+
+  /**
+   * Determine if the next position is valid for writing. Will be invalid
+   * if the writer hits a size or other limit.
+   *
+   * @return true if another item is available and the reader is positioned
+   * at that item, false if no more items are available and the reader
+   * is no longer valid
+   */
+
+  boolean valid();
+}
