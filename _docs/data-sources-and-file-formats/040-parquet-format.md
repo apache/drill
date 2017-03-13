@@ -1,6 +1,6 @@
 ---
 title: "Parquet Format"
-date:  
+date: 2017-03-13 22:49:07 UTC
 parent: "Data Sources and File Formats"
 ---
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
@@ -22,9 +22,27 @@ Apache Drill includes the following support for Parquet:
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
 ## Writing Parquet Files
-CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
+CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the `session store.format` option as shown in [Configuring the Parquet Storage Format]({{site.baseurl}}/docs/parquet-format/#configuring-the-parquet-storage-format). Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 
-Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
+Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.  
+
+###Date Value Auto-Correction
+As of Drill 1.10, Drill writes standard Parquet date values. Drill also has an automatic correction feature that automatically detects and corrects corrupted date values that Drill wrote into Parquet files prior to Drill 1.10. 
+
+By default, the automatic correction feature is turned on and works for dates up to 5,000 years into the future. In the unlikely event that Drill needs to write dates thousands of years into the future, turn the auto-correction feature off.  
+
+To disable the auto-correction feature, navigate to the storage plugin configuration and change the `autoCorrectCorruptDates` option in the Parquet configuration to “false”, as shown in the example below:  
+
+       "formats": {
+           "parquet": {
+             "type": "parquet",
+             "autoCorrectCorruptDates": false
+           }  
+
+Alternatively, you can set the option to false when you issue a query, as shown in the following example:  
+
+       SELECT l_shipdate, l_commitdate FROM table(dfs.`/drill/testdata/parquet_date/dates_nodrillversion/drillgen2_lineitem` 
+       (type => 'parquet', autoCorrectCorruptDates => false)) LIMIT 1; 
 
 ### Configuring the Parquet Storage Format
 To read or write Parquet data, you need to include the Parquet format in the storage plugin format definitions. The `dfs` plugin definition includes the Parquet format. 
@@ -130,20 +148,30 @@ The first table in this section maps SQL data types to Parquet data types, limit
 | INTEGER           | INT32        | 4-byte signed integer                         |
 | VARBINARY(12)*    | INT96        | 12-byte signed int                            |
 
-\* Drill 1.2 and later supports reading the Parquet INT96 type.
+\* Drill 1.10 and later can implicitly interpret the Parquet INT96 type as TIMESTAMP (with standard 8 byte/millisecond precision) when the `store.parquet.int96_as_timestamp` option is enabled. In earlier versions of Drill (1.2 through 1.9) or when the `store.parquet.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function for Drill to correctly interpret INT96 values as TIMESTAMP values.
 
-## About INT96 Support
-Drill 1.2 and later supports reading the Parquet INT96 type. For example, to decode a timestamp from Hive or Impala, which is of type INT96, use the CONVERT_FROM function and the [TIMESTAMP_IMPALA]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) type argument:
+## About INT96 Support  
+As of Drill 1.10, Drill can implicitly interpret the INT96 timestamp data type in Parquet files when the `store.parquet.int96_as_timestamp` option is enabled. For earlier versions of Drill,  or when the `store.parquet.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function,   
 
-``SELECT CONVERT_FROM(timestamp_field, 'TIMESTAMP_IMPALA') as timestamp_field FROM `dfs.file_with_timestamp.parquet`;``
+The `store.parquet.int96_as_timestamp` option is disabled by default. Use the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command to enable the option. Unnecessarily enabling this option can cause queries to fail because the CONVERT_FROM(col, 'TIMESTAMP_IMPALA') function does not work when `store.parquet.int96_as_timestamp` is enabled.  
 
-Because INT96 is supported for reads only, you cannot use the TIMESTAMP_IMPALA as a data type argument with CONVERT_TO.
+###Using CONVERT_FROM to Interpret INT96
+In earlier versions of Drill (1.2 through 1.9), you must use the CONVERT_FROM function for Drill to interpret the Parquet INT96 type. For example, to decode a timestamp from Hive or Impala, which is of type INT96, use the CONVERT_FROM function and the [TIMESTAMP_IMPALA]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) type argument:  
 
-You can convert a SQL TIMESTAMP to VARBINARY using the CAST function, but the resultant VARBINARY is not the same as the INT96. For example, create a Drill table after reading an INT96 and converting some data to a timestamp.
+``SELECT CONVERT_FROM(timestamp_field, 'TIMESTAMP_IMPALA') as timestamp_field FROM `dfs.file_with_timestamp.parquet`;``  
 
-`CREATE TABLE t2(c1) AS SELECT CONVERT_FROM(created_ts, 'TIMESTAMP_IMPALA') FROM t1 ORDER BY 1 LIMIT 1;`
+Because INT96 is supported for reads only, you cannot use the TIMESTAMP_IMPALA as a data type argument with CONVERT_TO. You can convert a SQL TIMESTAMP to VARBINARY using the CAST function, but the resultant VARBINARY is not the same as INT96. 
 
-t1.created_ts is an INT96 (or Hive/Impala timestamp) , t2.created_ts is a SQL timestamp. These types are not comparable--you cannot use a condition like t1.created_ts = t2.created_ts.
+For example, create a Drill table after reading INT96 and converting some data to a timestamp.
+
+
+    CREATE TABLE t2(c1) AS SELECT CONVERT_FROM(created_ts, 'TIMESTAMP_IMPALA') FROM t1 ORDER BY 1 LIMIT 1;
+
+t1.created_ts is an INT96 (or Hive/Impala timestamp) , t2.created_ts is a SQL timestamp. These types are not comparable. You cannot use a condition like t1.created_ts = t2.created_ts.
+
+###Configuring the Timezone
+By default, INT96 timestamp values represent the local date and time, which is similar to Hive. To get INT96 timestamp values in UTC, configure Drill for [UTC time]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).  
+
 
 ### SQL Types to Parquet Logical Types
 Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:

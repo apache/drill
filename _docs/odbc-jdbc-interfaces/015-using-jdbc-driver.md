@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date:  
+date: 2017-03-13 22:49:08 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -79,14 +79,32 @@ drill.exec: {
 
 ## Using the JDBC URL Format for a Direct Drillbit Connection
 
-If you want to connect directly to a Drillbit instead of using ZooKeeper to choose the Drillbit, replace `zk=<zk name>` with `drillbit=<node>` as shown in the following URL.
+If you want to connect directly to a Drillbit instead of using ZooKeeper to choose the Drillbit, replace `zk=<zk name>` with `drillbit=<node name>` as shown in the following URL:
 
 `jdbc:drill:drillbit=<node name>[:<port>][,<node name2>[:<port>]... `  
   `<directory>/<cluster ID>[schema=<storage plugin>]`
 
 where
 
-`drillbit=<node name>` specifies one or more host names or IP addresses of cluster nodes running Drill. 
+`drillbit=<node name>` specifies one or more host names or IP addresses of cluster nodes running Drill.  
+
+###`tries` Parameter 
+
+As of Drill 1.10, you can include the optional `tries=<value>` parameter in the connection string, as shown in the following URL:  
+
+
+    jdbc:drill:drillbit=<node name>[:<port>][,<node name2>[:<port>]...
+    <directory>/<cluster ID>;[schema=<storage plugin>];tries=5  
+
+The “tries” option represents the maximum number of unique drillbits to which the client can try to establish a successful connection. The default value is 5. This option improves the fault tolerance in the Drill client when first trying to connect with a drillbit, which will then act as the Foreman (the node that drives the query).  
+ 
+The order in which the client tries to connect to the drillbits may not occur in the order listed in the connection string. If the first try results in an authentication failure, the client does not attempt any additional tries. If the number of unique drillbits listed in the `drillbit` parameter is less than the “tries” value, the client tries to connect to each drillbit one time.   
+
+For example, if there are three unique drillbits listed in the connection string, and the “tries” value is set to 5, the client can try to connect to each drillbit once, until a successful connection is made, as shown in the image below: 
+
+![](http://i.imgur.com/MJ9qChJ.png)  
+
+If the client cannot successfully connect to any of the drillbits, Drill returns a failure message. 
 
 For definitions of other URL components, see [Using the JDBC URL for a Random Drillbit Connection]({{site.baseurl}}/docs/using-the-jdbc-driver/#using-the-jdbc-url-for-a-random-drillbit-connection).
 
