@@ -17,54 +17,29 @@
  */
 package org.apache.drill.exec.store.indexr;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.DateVector;
-import org.apache.drill.exec.vector.Float4Vector;
-import org.apache.drill.exec.vector.Float8Vector;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.TimeStampVector;
-import org.apache.drill.exec.vector.TimeVector;
-import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.exec.vector.VarCharVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import io.indexr.data.BytePiece;
-import io.indexr.data.BytePieceSetter;
-import io.indexr.data.DoubleSetter;
-import io.indexr.data.FloatSetter;
-import io.indexr.data.IntSetter;
-import io.indexr.data.LongSetter;
-import io.indexr.io.ByteSlice;
 import io.indexr.segment.CachedSegment;
 import io.indexr.segment.ColumnSchema;
-import io.indexr.segment.ColumnType;
 import io.indexr.segment.RSValue;
-import io.indexr.segment.SQLType;
 import io.indexr.segment.Segment;
 import io.indexr.segment.SegmentSchema;
 import io.indexr.segment.helper.SegmentOpener;
 import io.indexr.segment.helper.SingleWork;
-import io.indexr.segment.pack.DataPack;
-import io.indexr.segment.pack.Version;
 import io.indexr.segment.rc.Attr;
 import io.indexr.segment.rc.RCOperator;
-import io.indexr.util.MemoryUtil;
-import io.netty.buffer.DrillBuf;
+import io.indexr.segment.rc.UnknownOperator;
 
 public class IndexRRecordReaderByPack extends IndexRRecordReader {
   private static final Logger log = LoggerFactory.getLogger(IndexRRecordReaderByPack.class);
@@ -80,6 +55,8 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
   private boolean isLateMaterialization = false;
   private Segment curSegment;
   private int[] projectColumnIds;
+
+  private PackReader packReader = new PackReader();
 
   public IndexRRecordReaderByPack(String tableName,//
                                   SegmentSchema schema,//
@@ -102,10 +79,14 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
     if (rsFilter != null) {
       Set<String> predicateColumns = new HashSet<>();
       boolean[] includeString = new boolean[1];
+      boolean[] includeUnknown = new boolean[1];
       rsFilter.foreach(
           new Consumer<RCOperator>() {
             @Override
             public void accept(RCOperator op) {
+              if (op instanceof UnknownOperator) {
+                includeUnknown[0] = true;
+              }
               for (Attr attr : op.attr()) {
                 predicateColumns.add(attr.name());
                 if (!attr.sqlType().isNumber()) {
@@ -116,7 +97,10 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
           });
       // The late materialization is worthy only when there are columns not included in predicates,
       // or predicates include string feilds.
-      isLateMaterialization = predicateColumns.size() < projectColumnInfos.length || includeString[0];
+      isLateMaterialization = (predicateColumns.size() < projectColumnInfos.length || includeString[0]) && !includeUnknown[0];
+
+      log.debug("isLateMaterialization: {}, predicateColumns.size(): {}, projectColumnInfos.length: {}, includeString[0]: {}, includeUnknown[0]: {}, rsFilter: {}",
+          isLateMaterialization, predicateColumns.size(), projectColumnInfos.length, includeString[0], includeUnknown[0], rsFilter);
     }
   }
 
@@ -124,17 +108,25 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
   public int next() {
     int read = -1;
     while (read <= 0) {
-      if (curStepId >= works.size()) {
-        return 0;
-      }
-
-      SingleWork stepWork = works.get(curStepId);
-      curStepId++;
-
-      Segment segment = segmentMap.get(stepWork.segment());
-      int packId = stepWork.packId();
       try {
-        read = read(segment, packId);
+        if (packReader.hasMore()) {
+          read = packReader.read();
+        } else {
+          if (curStepId >= works.size()) {
+            return 0;
+          }
+          SingleWork stepWork = works.get(curStepId);
+          curStepId++;
+
+          Segment segment = segmentMap.get(stepWork.segment());
+          int packId = stepWork.packId();
+          Segment cachedSegment = new CachedSegment(segment);
+          if (!beforeRead(cachedSegment, packId)) {
+            continue;
+          }
+
+          packReader.setPack(cachedSegment, packId, projectColumnInfos, projectColumnIds);
+        }
       } catch (Throwable t) {
         // No matter or what, don't thrown exception from here.
         // It will break the Drill algorithm and make system unpredictable.
@@ -181,206 +173,13 @@ public class IndexRRecordReaderByPack extends IndexRRecordReader {
     byte res = rsFilter.roughCheckOnRow(segment, packId);
     lmCheckTime += System.currentTimeMillis() - time2;
 
-    if (res != RSValue.None) {
-      log.debug("hit segment: {}, packId: {}", segment.name(), packId);
+    if (res == RSValue.None) {
+      log.debug("ignore (LM) segment: {}, pack: {}", segment.name(), packId);
+    } else {
+      log.debug("hit (LM) segment: {}, packId: {}", segment.name(), packId);
     }
 
     return res != RSValue.None;
-  }
-
-  private int read(Segment segment, int packId) throws IOException {
-    Segment cachedSegment = new CachedSegment(segment);
-    if (!beforeRead(cachedSegment, packId)) {
-      log.debug("rsFilter ignore (LM) segment {}, pack: {}", cachedSegment.name(), packId);
-      return 0;
-    }
-
-    int read = -1;
-    for (int projectId = 0; projectId < projectColumnInfos.length; projectId++) {
-      ProjectedColumnInfo projectInfo = projectColumnInfos[projectId];
-      int columnId = projectColumnIds[projectId];
-
-      long time = System.currentTimeMillis();
-
-      DataPack dataPack = cachedSegment.column(columnId).pack(packId);
-
-      long time2 = System.currentTimeMillis();
-      getPackTime += time2 - time;
-
-      SQLType sqlType = projectInfo.columnSchema.getSqlType();
-      int count = dataPack.count();
-      if (count == 0) {
-        log.warn("segment[{}]: found empty pack, packId: [{}]", cachedSegment.name(), packId);
-        return 0;
-      }
-      if (read == -1) {
-        read = count;
-      }
-      assert read == count;
-
-      if (dataPack.version() == Version.VERSION_0_ID) {
-        switch (sqlType) {
-          case INT: {
-            IntVector.Mutator mutator = (IntVector.Mutator) projectInfo.valueVector.getMutator();
-            // Force the vector to allocate engough space.
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new IntSetter() {
-              @Override
-              public void set(int id, int value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case BIGINT: {
-            BigIntVector.Mutator mutator = (BigIntVector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new LongSetter() {
-              @Override
-              public void set(int id, long value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case FLOAT: {
-            Float4Vector.Mutator mutator = (Float4Vector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new FloatSetter() {
-              @Override
-              public void set(int id, float value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case DOUBLE: {
-            Float8Vector.Mutator mutator = (Float8Vector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new DoubleSetter() {
-              @Override
-              public void set(int id, double value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case DATE: {
-            DateVector.Mutator mutator = (DateVector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new LongSetter() {
-              @Override
-              public void set(int id, long value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case TIME: {
-            TimeVector.Mutator mutator = (TimeVector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new IntSetter() {
-              @Override
-              public void set(int id, int value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case DATETIME: {
-            TimeStampVector.Mutator mutator = (TimeStampVector.Mutator) projectInfo.valueVector.getMutator();
-            mutator.setSafe(count - 1, 0);
-            dataPack.foreach(0, count, new LongSetter() {
-              @Override
-              public void set(int id, long value) {
-                mutator.set(id, value);
-              }
-            });
-            break;
-          }
-          case VARCHAR: {
-            ByteBuffer byteBuffer = MemoryUtil.getHollowDirectByteBuffer();
-            VarCharVector.Mutator mutator = (VarCharVector.Mutator) projectInfo.valueVector.getMutator();
-            dataPack.foreach(0, count,
-                new BytePieceSetter() {
-                  @Override
-                  public void set(int id, BytePiece bytes) {
-                    assert bytes.base == null;
-                    MemoryUtil.setByteBuffer(byteBuffer, bytes.addr, bytes.len, null);
-                    mutator.setSafe(id, byteBuffer, 0, byteBuffer.remaining());
-                  }
-                });
-            break;
-          }
-          default:
-            throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.getSqlType()));
-        }
-      } else {
-        // Start from v1, we directly copy the memory into vector, to avoid the traversing cost.
-
-        if (sqlType == SQLType.VARCHAR) {
-          VarCharVector vector = (VarCharVector) projectInfo.valueVector;
-          UInt4Vector offsetVector = vector.getOffsetVector();
-
-          ByteSlice packData = dataPack.data();
-          int indexSize = (count + 1) << 2;
-          int strDataSize = packData.size() - indexSize;
-
-          // Expand the offset vector if needed.
-          offsetVector.getMutator().setSafe(count, 0);
-          // Expand the data vector if needed.
-          while (vector.getByteCapacity() < strDataSize) {
-            vector.reAlloc();
-          }
-          Preconditions.checkState(vector.getByteCapacity() >= strDataSize, "Illegal drill vector buff capacity");
-
-          DrillBuf offsetBuffer = offsetVector.getBuffer();
-          DrillBuf vectorBuffer = vector.getBuffer();
-
-          MemoryUtil.copyMemory(packData.address(), offsetBuffer.memoryAddress(), indexSize);
-          MemoryUtil.copyMemory(packData.address() + indexSize, vectorBuffer.memoryAddress(), strDataSize);
-        } else {
-          BaseDataValueVector vector = (BaseDataValueVector) projectInfo.valueVector;
-
-          // Expand the vector if needed.
-          switch (sqlType) {
-            case INT:
-              ((IntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case BIGINT:
-              ((BigIntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case FLOAT:
-              ((Float4Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case DOUBLE:
-              ((Float8Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case DATE:
-              ((DateVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case TIME:
-              ((TimeVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            case DATETIME:
-              ((TimeStampVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
-              break;
-            default:
-              throw new IllegalStateException(String.format("Unsupported data type %s", projectInfo.columnSchema.getSqlType()));
-          }
-
-          DrillBuf vectorBuffer = vector.getBuffer();
-          ByteSlice packData = dataPack.data();
-
-          Preconditions.checkState((count << ColumnType.numTypeShift(sqlType.dataType)) == packData.size(), "Illegal pack size");
-          Preconditions.checkState(vectorBuffer.capacity() >= packData.size(), "Illegal drill vector buff capacity");
-
-          MemoryUtil.copyMemory(packData.address(), vectorBuffer.memoryAddress(), packData.size());
-        }
-      }
-      setValueTime += System.currentTimeMillis() - time2;
-    }
-    return read;
   }
 
   @Override

@@ -47,7 +47,6 @@ import io.indexr.segment.pack.DataPack;
 import io.indexr.util.Pair;
 
 public abstract class IndexRRecordReader extends AbstractRecordReader {
-  static final int MAX_ROW_COUNT_PER_STEP = DataPack.MAX_COUNT;
   private static final Logger log = LoggerFactory.getLogger(IndexRRecordReader.class);
 
   final String tableName;
@@ -58,16 +57,6 @@ public abstract class IndexRRecordReader extends AbstractRecordReader {
 
   ProjectedColumnInfo[] projectColumnInfos;
   Map<String, Segment> segmentMap = new HashMap<>();
-
-  static class ProjectedColumnInfo {
-    ColumnSchema columnSchema;
-    ValueVector valueVector;
-
-    public ProjectedColumnInfo(ColumnSchema columnSchema, ValueVector valueVector) {
-      this.columnSchema = columnSchema;
-      this.valueVector = valueVector;
-    }
-  }
 
   IndexRRecordReader(String tableName, //
                      SegmentSchema schema, //
