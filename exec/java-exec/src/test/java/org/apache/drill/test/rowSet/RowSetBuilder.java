@@ -70,6 +70,7 @@ public final class RowSetBuilder {
    *
    * @return this builder
    */
+
   public RowSetBuilder withSv2() {
     withSv2 = true;
     return this;
