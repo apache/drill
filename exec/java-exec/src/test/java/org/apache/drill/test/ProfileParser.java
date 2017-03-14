@@ -64,7 +64,7 @@ public class ProfileParser {
    */
   private List<OpDefInfo> topoOrder;
 
-  public ProfileParser( File file ) throws IOException {
+  public ProfileParser(File file) throws IOException {
     try (FileReader fileReader = new FileReader(file);
          JsonReader reader = Json.createReader(fileReader)) {
       profile = (JsonObject) reader.read();
@@ -100,24 +100,24 @@ public class ProfileParser {
     List<OpDefInfo> sorted = new ArrayList<>();
 
     public void parsePlans(String plan) {
-      plans = new ArrayList<>( );
+      plans = new ArrayList<>();
       String parts[] = plan.split("\n");
       for (String part : parts) {
         plans.add(part);
-        OpDefInfo opDef = new OpDefInfo( part );
+        OpDefInfo opDef = new OpDefInfo(part);
         operations.add(opDef);
       }
       sortList();
     }
 
     private void sortList() {
-      List<OpDefInfo> raw = new ArrayList<>( );
-      raw.addAll( operations );
-      Collections.sort( raw, new Comparator<OpDefInfo>() {
+      List<OpDefInfo> raw = new ArrayList<>();
+      raw.addAll(operations);
+      Collections.sort(raw, new Comparator<OpDefInfo>() {
         @Override
         public int compare(OpDefInfo o1, OpDefInfo o2) {
           int result = Integer.compare(o1.majorId, o2.majorId);
-          if ( result == 0 ) {
+          if (result == 0) {
             result = Integer.compare(o1.stepId, o2.stepId);
           }
           return result;
@@ -125,26 +125,26 @@ public class ProfileParser {
       });
       int currentFrag = 0;
       int currentStep = 0;
-      for ( OpDefInfo opDef : raw ) {
-        if ( currentFrag < opDef.majorId ) {
+      for (OpDefInfo opDef : raw) {
+        if (currentFrag < opDef.majorId) {
           currentFrag++;
-          OpDefInfo sender = new OpDefInfo( currentFrag, 0 );
+          OpDefInfo sender = new OpDefInfo(currentFrag, 0);
           sender.isInferred = true;
           sender.name = "Sender";
           sorted.add(sender);
           currentStep = 1;
           opDef.inferredParent = sender;
-          sender.children.add( opDef );
+          sender.children.add(opDef);
         }
-        if ( opDef.stepId > currentStep ) {
-          OpDefInfo unknown = new OpDefInfo( currentFrag, currentStep );
+        if (opDef.stepId > currentStep) {
+          OpDefInfo unknown = new OpDefInfo(currentFrag, currentStep);
           unknown.isInferred = true;
           unknown.name = "Unknown";
           sorted.add(unknown);
           opDef.inferredParent = unknown;
-          unknown.children.add( opDef );
+          unknown.children.add(opDef);
         }
-        sorted.add( opDef );
+        sorted.add(opDef);
         currentStep = opDef.stepId + 1;
       }
     }
@@ -156,7 +156,7 @@ public class ProfileParser {
 
   private void parsePlans() {
     PlanParser parser = new PlanParser();
-    String plan = getPlan( );
+    String plan = getPlan();
     parser.parsePlans(plan);
     plans = parser.plans;
     topoOrder = parser.operations;
@@ -175,17 +175,17 @@ public class ProfileParser {
   }
 
   private static List<FieldDef> parseCols(String cols) {
-    String parts[] = cols.split( ", " );
-    List<FieldDef> fields = new ArrayList<>( );
-    for ( String part : parts ) {
-      String halves[] = part.split( " " );
-      fields.add( new FieldDef( halves[1], halves[0] ) );
+    String parts[] = cols.split(", ");
+    List<FieldDef> fields = new ArrayList<>();
+    for (String part : parts) {
+      String halves[] = part.split(" ");
+      fields.add(new FieldDef(halves[1], halves[0]));
     }
     return fields;
   }
 
   private void parseFragProfiles() {
-    JsonArray frags = getFragmentProfile( );
+    JsonArray frags = getFragmentProfile();
     for (JsonObject fragProfile : frags.getValuesAs(JsonObject.class)) {
       int mId = fragProfile.getInt("majorFragmentId");
       FragInfo major = fragments.get(mId);
@@ -211,11 +211,14 @@ public class ProfileParser {
     for (FragInfo major : fragments.values()) {
       for (OpDefInfo opDef : major.ops) {
         int sumPeak = 0;
-        for ( OperatorProfile op : opDef.opExecs) {
-          Preconditions.checkState( major.id == op.majorFragId );
-          Preconditions.checkState( opDef.stepId == op.opId );
+        opDef.execCount = opDef.opExecs.size();
+        for (OperatorProfile op : opDef.opExecs) {
+          Preconditions.checkState(major.id == op.majorFragId);
+          Preconditions.checkState(opDef.stepId == op.opId);
           opDef.actualRows += op.records;
           opDef.actualBatches += op.batches;
+          opDef.setupMs += op.setupMs;
+          opDef.processMs += op.processMs;
           sumPeak += op.peakMem;
         }
         opDef.actualMemory = sumPeak * 1024 * 1024;
@@ -233,7 +236,7 @@ public class ProfileParser {
     for (OpDefInfo opDef : topoOrder) {
       currentLevel = opDef.globalLevel;
       opStack[currentLevel] = opDef;
-      if ( opDef.inferredParent == null ) {
+      if (opDef.inferredParent == null) {
         if (currentLevel > 0) {
           opStack[currentLevel-1].children.add(opDef);
         }
@@ -244,7 +247,7 @@ public class ProfileParser {
   }
 
 
-  public String getQuery( ) {
+  public String getQuery() {
     return profile.getString("query");
   }
 
@@ -256,40 +259,40 @@ public class ProfileParser {
     return plans;
   }
 
-  public List<String> getScans( ) {
+  public List<String> getScans() {
     List<String> scans = new ArrayList<>();
-    int n = getPlans( ).size();
-    for ( int i = n-1; i >= 0;  i-- ) {
-      String plan = plans.get( i );
-      if ( plan.contains( " Scan(" ) ) {
-        scans.add( plan );
+    int n = getPlans().size();
+    for (int i = n-1; i >= 0;  i--) {
+      String plan = plans.get(i);
+      if (plan.contains(" Scan(")) {
+        scans.add(plan);
       }
     }
     return scans;
   }
 
-  public List<FieldDef> getColumns( String plan ) {
-    Pattern p = Pattern.compile( "RecordType\\((.*)\\):" );
+  public List<FieldDef> getColumns(String plan) {
+    Pattern p = Pattern.compile("RecordType\\((.*)\\):");
     Matcher m = p.matcher(plan);
-    if ( ! m.find() ) { return null; }
+    if (! m.find()) { return null; }
     String frag = m.group(1);
-    String parts[] = frag.split( ", " );
-    List<FieldDef> fields = new ArrayList<>( );
-    for ( String part : parts ) {
-      String halves[] = part.split( " " );
-      fields.add( new FieldDef( halves[1], halves[0] ) );
+    String parts[] = frag.split(", ");
+    List<FieldDef> fields = new ArrayList<>();
+    for (String part : parts) {
+      String halves[] = part.split(" ");
+      fields.add(new FieldDef(halves[1], halves[0]));
     }
     return fields;
   }
 
-  public Map<Integer,String> getOperators( ) {
+  public Map<Integer,String> getOperators() {
     Map<Integer,String> ops = new HashMap<>();
-    int n = getPlans( ).size();
-    Pattern p = Pattern.compile( "\\d+-(\\d+)\\s+(\\w+)" );
-    for ( int i = n-1; i >= 0;  i-- ) {
-      String plan = plans.get( i );
-      Matcher m = p.matcher( plan );
-      if ( ! m.find() ) { continue; }
+    int n = getPlans().size();
+    Pattern p = Pattern.compile("\\d+-(\\d+)\\s+(\\w+)");
+    for (int i = n-1; i >= 0;  i--) {
+      String plan = plans.get(i);
+      Matcher m = p.matcher(plan);
+      if (! m.find()) { continue; }
       int index = Integer.parseInt(m.group(1));
       String op = m.group(2);
       ops.put(index,op);
@@ -297,7 +300,7 @@ public class ProfileParser {
     return ops;
   }
 
-  public JsonArray getFragmentProfile( ) {
+  public JsonArray getFragmentProfile() {
     return profile.getJsonArray("fragmentProfile");
   }
 
@@ -309,8 +312,8 @@ public class ProfileParser {
   public static class FragInfo {
     public int baseLevel;
     public int id;
-    public List<OpDefInfo> ops = new ArrayList<>( );
-    public List<MinorFragInfo> minors = new ArrayList<>( );
+    public List<OpDefInfo> ops = new ArrayList<>();
+    public List<MinorFragInfo> minors = new ArrayList<>();
 
     public FragInfo(int majorId) {
       this.id = majorId;
@@ -322,8 +325,8 @@ public class ProfileParser {
 
     public void parse(JsonObject fragProfile) {
       JsonArray minorList = fragProfile.getJsonArray("minorFragmentProfile");
-      for ( JsonObject minorProfile : minorList.getValuesAs(JsonObject.class) ) {
-        minors.add( new MinorFragInfo(id, minorProfile) );
+      for (JsonObject minorProfile : minorList.getValuesAs(JsonObject.class)) {
+        minors.add(new MinorFragInfo(id, minorProfile));
       }
     }
   }
@@ -335,26 +338,26 @@ public class ProfileParser {
   public static class MinorFragInfo {
     public final int majorId;
     public final int id;
-    public final List<OperatorProfile> ops = new ArrayList<>( );
+    public final List<OperatorProfile> ops = new ArrayList<>();
 
     public MinorFragInfo(int majorId, JsonObject minorProfile) {
       this.majorId = majorId;
       id = minorProfile.getInt("minorFragmentId");
       JsonArray opList = minorProfile.getJsonArray("operatorProfile");
-      for ( JsonObject opProfile : opList.getValuesAs(JsonObject.class)) {
-        ops.add( new OperatorProfile( majorId, id, opProfile) );
+      for (JsonObject opProfile : opList.getValuesAs(JsonObject.class)) {
+        ops.add(new OperatorProfile(majorId, id, opProfile));
       }
     }
 
     public void mapOpProfiles(FragInfo major) {
       for (OperatorProfile op : ops) {
         OpDefInfo opDef = major.ops.get(op.opId);
-        if ( opDef == null ) {
-          System.out.println( "Can't find operator def: " + major.id + "-" + op.opId);
+        if (opDef == null) {
+          System.out.println("Can't find operator def: " + major.id + "-" + op.opId);
           continue;
         }
         op.opName = CoreOperatorType.valueOf(op.type).name();
-//        System.out.println( major.id + "-" + id + "-" + opDef.stepId + " - Def: " + opDef.name + " / Prof: " + op.opName );
+//        System.out.println(major.id + "-" + id + "-" + opDef.stepId + " - Def: " + opDef.name + " / Prof: " + op.opName);
         op.opName = op.opName.replace("_", " ");
         op.name = opDef.name;
         if (op.name.equalsIgnoreCase(op.opName)) {
@@ -456,9 +459,12 @@ public class ProfileParser {
     public long actualMemory;
     public int actualBatches;
     public long actualRows;
+    public long processMs;
+    public long setupMs;
+    public int execCount;
     public OpDefInfo inferredParent;
-    public List<OperatorProfile> opExecs = new ArrayList<>( );
-    public List<OpDefInfo> children = new ArrayList<>( );
+    public List<OperatorProfile> opExecs = new ArrayList<>();
+    public List<OpDefInfo> children = new ArrayList<>();
 
     // 00-00    Screen : rowType = RecordType(VARCHAR(10) Year, VARCHAR(65536) Month, VARCHAR(100) Devices, VARCHAR(100) Tier, VARCHAR(100) LOB, CHAR(10) Gateway, BIGINT Day, BIGINT Hour, INTEGER Week, VARCHAR(100) Week_end_date, BIGINT Usage_Cnt): \
     // rowcount = 100.0, cumulative cost = {7.42124276972414E9 rows, 7.663067406383167E10 cpu, 0.0 io, 2.24645048816E10 network, 2.692766612982188E8 memory}, id = 129302
@@ -467,10 +473,10 @@ public class ProfileParser {
     // rowType = RecordType(VARCHAR(10) Year, VARCHAR(65536) Month, VARCHAR(100) Devices, VARCHAR(100) Tier, VARCHAR(100) LOB, CHAR(10) Gateway, BIGINT Day, BIGINT Hour, INTEGER Week, VARCHAR(100) Week_end_date, BIGINT Usage_Cnt): rowcount = 100.0, cumulative cost = {7.42124275972414E9 rows, 7.663067405383167E10 cpu, 0.0 io, 2.24645048816E10 network, 2.692766612982188E8 memory}, id = 129301
 
     public OpDefInfo(String plan) {
-      Pattern p = Pattern.compile( "^(\\d+)-(\\d+)(\\s+)(\\w+)(?:\\((.*)\\))?\\s*:\\s*(.*)$" );
+      Pattern p = Pattern.compile("^(\\d+)-(\\d+)(\\s+)(\\w+)(?:\\((.*)\\))?\\s*:\\s*(.*)$");
       Matcher m = p.matcher(plan);
       if (!m.matches()) {
-        throw new IllegalStateException( "Could not parse plan: " + plan );
+        throw new IllegalStateException("Could not parse plan: " + plan);
       }
       majorId = Integer.parseInt(m.group(1));
       stepId = Integer.parseInt(m.group(2));
@@ -482,15 +488,15 @@ public class ProfileParser {
 
       p = Pattern.compile("rowType = RecordType\\((.*)\\): (rowcount .*)");
       m = p.matcher(tail);
-      if ( m.matches() ) {
+      if (m.matches()) {
         columns = parseCols(m.group(1));
         tail = m.group(2);
       }
 
-      p = Pattern.compile( "rowcount = ([\\d.E]+), cumulative cost = \\{([\\d.E]+) rows, ([\\d.E]+) cpu, ([\\d.E]+) io, ([\\d.E]+) network, ([\\d.E]+) memory\\}, id = (\\d+)");
+      p = Pattern.compile("rowcount = ([\\d.E]+), cumulative cost = \\{([\\d.E]+) rows, ([\\d.E]+) cpu, ([\\d.E]+) io, ([\\d.E]+) network, ([\\d.E]+) memory\\}, id = (\\d+)");
       m = p.matcher(tail);
       if (! m.matches()) {
-        throw new IllegalStateException("Could not parse costs: " + tail );
+        throw new IllegalStateException("Could not parse costs: " + tail);
       }
       estRows = Double.parseDouble(m.group(1));
       estRowCost = Double.parseDouble(m.group(2));
@@ -513,7 +519,7 @@ public class ProfileParser {
     @Override
     public String toString() {
       String head = "[OpDefInfo " + majorId + "-" + stepId + ": " + name;
-      if ( isInferred ) {
+      if (isInferred) {
         head += " (" + opName + ")";
       }
       return head + "]";
@@ -530,12 +536,13 @@ public class ProfileParser {
     public void visit(OpDefInfo root) {
       visit(root, 0);
     }
+
     public void visit(OpDefInfo node, int indent) {
-      visitOp( node, indent );
+      visitOp(node, indent);
       if (node.children.isEmpty()) {
         return;
       }
-      if ( node.children.size() == 1) {
+      if (node.children.size() == 1) {
         visit(node.children.get(0), indent);
         return;
       }
@@ -556,7 +563,7 @@ public class ProfileParser {
     public String indentString(int indent, String pad) {
       StringBuilder buf = new StringBuilder();
       for (int i = 0; i < indent; i++) {
-        buf.append( pad );
+        buf.append(pad);
       }
       return buf.toString();
     }
@@ -582,13 +589,13 @@ public class ProfileParser {
   {
     @Override
     protected void visitOp(OpDefInfo node, int indent) {
-      System.out.print( indentString(indent) );
-      System.out.println( node.toString() );
+      System.out.print(indentString(indent));
+      System.out.println(node.toString());
     }
 
     @Override
     protected void visitSubtree(OpDefInfo node, int i, int indent) {
-      System.out.print( indentString(indent) );
+      System.out.print(indentString(indent));
       System.out.println(subtreeLabel(node, i));
     }
   }
@@ -613,23 +620,23 @@ public class ProfileParser {
     protected void visitOp(OpDefInfo node, int indentLevel) {
       System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
       String indent = indentString(indentLevel, ". ");
-      System.out.print( indent + node.name );
+      System.out.print(indent + node.name);
       if (node.opName != null) {
-        System.out.print( " (" + node.opName + ")" );
+        System.out.print(" (" + node.opName + ")");
       }
-      System.out.println( );
+      System.out.println();
       indent = indentString(15);
-      System.out.print( indent );
+      System.out.print(indent);
       System.out.println(String.format("  Estimate: %,15.0f rows, %,7.0f MB",
-                         node.estRows, node.estMemoryCost / 1024 / 1024) );
-      System.out.print( indent );
+                         node.estRows, node.estMemoryCost / 1024 / 1024));
+      System.out.print(indent);
       System.out.println(String.format("  Actual:   %,15d rows, %,7d MB",
                          node.actualRows, node.actualMemory / 1024 / 1024));
     }
 
     @Override
     protected void visitSubtree(OpDefInfo node, int i, int indent) {
-      System.out.print( indentString(indent) + "      " );
+      System.out.print(indentString(indent) + "      ");
       System.out.println(subtreeLabel(node, i));
     }
   }
@@ -643,14 +650,14 @@ public class ProfileParser {
    * @return
    */
 
-  public Map<Integer,OperatorProfile> getOpInfo( ) {
-    Map<Integer,String> ops = getOperators( );
-    Map<Integer,OperatorProfile> info = new HashMap<>( );
-    JsonArray frags = getFragmentProfile( );
+  public Map<Integer,OperatorProfile> getOpInfo() {
+    Map<Integer,String> ops = getOperators();
+    Map<Integer,OperatorProfile> info = new HashMap<>();
+    JsonArray frags = getFragmentProfile();
     JsonObject fragProfile = frags.getJsonObject(0).getJsonArray("minorFragmentProfile").getJsonObject(0);
     JsonArray opList = fragProfile.getJsonArray("operatorProfile");
-    for ( JsonObject opProfile : opList.getValuesAs(JsonObject.class) ) {
-      parseOpProfile( ops, info, opProfile );
+    for (JsonObject opProfile : opList.getValuesAs(JsonObject.class)) {
+      parseOpProfile(ops, info, opProfile);
     }
     return info;
   }
@@ -676,13 +683,115 @@ public class ProfileParser {
 
   private void parseOpProfile(Map<Integer, String> ops,
       Map<Integer, OperatorProfile> info, JsonObject opProfile) {
-    OperatorProfile opInfo = new OperatorProfile( 0, 0, opProfile );
+    OperatorProfile opInfo = new OperatorProfile(0, 0, opProfile);
     opInfo.name = ops.get(opInfo.opId);
     info.put(opInfo.opId, opInfo);
   }
 
   public void printPlan() {
-    new CostPrinter().visit( topoOrder.get(0) );
+    new CostPrinter().visit(topoOrder.get(0));
+  }
+
+  public void printTime() {
+    new TimePrinter().visit(topoOrder.get(0));
+  }
+
+  /**
+   * Computes aggregate totals in preparation for printing
+   * detailed time metrics as a percentage of totals.
+   */
+
+  public static class Aggregator extends TreeVisitor
+  {
+    protected int n;
+    protected long totalSetup;
+    protected long totalProcess;
+    protected long total;
+    protected int maxFrag;
+    protected boolean isTree;
+
+    @Override
+    public void visit(OpDefInfo root) {
+      super.visit(root, 0);
+      total = totalSetup + totalProcess;
+    }
+
+    @Override
+    protected void visitOp(OpDefInfo node, int indentLevel) {
+      n++;
+      totalSetup += node.setupMs;
+      totalProcess += node.processMs;
+      maxFrag = Math.max(maxFrag, node.majorId);
+      isTree |= (node.children.size() > 1);
+    }
+  }
+
+  /**
+   * Prints the setup and process times for each operator in the query. Prints
+   * in the "classic" simple format if the query is a simple list, uses the
+   * "cost printer format" above if the query forms a tree.
+   */
+
+  public static class TimePrinter extends TreeVisitor
+  {
+    private Aggregator totals;
+    private boolean singleThread;
+    private boolean singleFragment;
+
+    @Override
+    public void visit(OpDefInfo root) {
+      totals = new Aggregator();
+      totals.visit(root);
+      singleThread = ! totals.isTree;
+      singleFragment = (totals.maxFrag == 0);
+      super.visit(root, 0);
+    }
+
+    @Override
+    protected void visitOp(OpDefInfo node, int indentLevel) {
+      if (singleThread) {
+        printSimpleFormat(node);
+      } else {
+        printTreeFormat(node, indentLevel);
+      }
+    }
+
+    private void printSimpleFormat(OpDefInfo node) {
+      if (singleFragment) {
+        System.out.print(String.format("%02d ", node.stepId));
+      } else {
+        System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
+      }
+      System.out.print(node.name);
+      if (node.opName != null) {
+        System.out.print(" (" + node.opName + ")");
+      }
+      System.out.println();
+      printTimes(node, "  ");
+    }
+
+    private void printTimes(OpDefInfo node, String indent) {
+      System.out.print(indent);
+      System.out.println(String.format("Setup:   %,6d ms - %3d%%, %3d%%", node.setupMs,
+                         percent(node.setupMs, totals.totalSetup),
+                         percent(node.setupMs, totals.total)));
+      System.out.print(indent);
+      System.out.println(String.format("Process: %,6d ms - %3d%%, %3d%%", node.processMs,
+                         percent(node.processMs, totals.totalSetup),
+                         percent(node.processMs, totals.total)));
+    }
+
+    private void printTreeFormat(OpDefInfo node, int indentLevel) {
+      System.out.print(String.format("%02d-%02d ", node.majorId, node.stepId));
+      String indent = indentString(indentLevel, ". ");
+      System.out.print(indent + node.name);
+      if (node.opName != null) {
+        System.out.print(" (" + node.opName + ")");
+      }
+      System.out.println();
+      indent = indentString(15);
+      printTimes(node, indent);
+    }
   }
 
   /**
@@ -692,56 +801,60 @@ public class ProfileParser {
    */
 
   public void print() {
+    printTime();
+  }
+
+  public void simplePrint() {
     Map<Integer, OperatorProfile> opInfo = getOpInfo();
     int n = opInfo.size();
     long totalSetup = 0;
     long totalProcess = 0;
-    for ( int i = 0;  i <= n;  i++ ) {
+    for (int i = 0;  i <= n;  i++) {
       OperatorProfile op = opInfo.get(i);
-      if ( op == null ) { continue; }
+      if (op == null) { continue; }
       totalSetup += op.setupMs;
       totalProcess += op.processMs;
     }
     long total = totalSetup + totalProcess;
-    for ( int i = 0;  i <= n;  i++ ) {
+    for (int i = 0;  i <= n;  i++) {
       OperatorProfile op = opInfo.get(i);
-      if ( op == null ) { continue; }
-      System.out.print( "Op: " );
-      System.out.print( op.opId );
-      System.out.println( " " + op.name );
-      System.out.print( "  Setup:   " + op.setupMs );
-      System.out.print( " - " + percent(op.setupMs, totalSetup ) + "%" );
-      System.out.println( ", " + percent(op.setupMs, total ) + "%" );
-      System.out.print( "  Process: " + op.processMs );
-      System.out.print( " - " + percent(op.processMs, totalProcess ) + "%" );
-      System.out.println( ", " + percent(op.processMs, total ) + "%" );
+      if (op == null) { continue; }
+      System.out.print("Op: ");
+      System.out.print(op.opId);
+      System.out.println(" " + op.name);
+      System.out.print("  Setup:   " + op.setupMs);
+      System.out.print(" - " + percent(op.setupMs, totalSetup) + "%");
+      System.out.println(", " + percent(op.setupMs, total) + "%");
+      System.out.print("  Process: " + op.processMs);
+      System.out.print(" - " + percent(op.processMs, totalProcess) + "%");
+      System.out.println(", " + percent(op.processMs, total) + "%");
       if (op.type == 17) {
         long value = op.getMetric(0);
-        System.out.println( "  Spills: " + value );
+        System.out.println("  Spills: " + value);
       }
       if (op.waitMs > 0) {
-        System.out.println( "  Wait:    " + op.waitMs );
+        System.out.println("  Wait:    " + op.waitMs);
       }
-      if ( op.peakMem > 0) {
-        System.out.println( "  Memory: " + op.peakMem );
+      if (op.peakMem > 0) {
+        System.out.println("  Memory: " + op.peakMem);
       }
     }
-    System.out.println( "Total:" );
-    System.out.println( "  Setup:   " + totalSetup );
-    System.out.println( "  Process: " + totalProcess );
+    System.out.println("Total:");
+    System.out.println("  Setup:   " + totalSetup);
+    System.out.println("  Process: " + totalProcess);
   }
 
-  public static long percent( long value, long total ) {
-    if ( total == 0 ) {
+  public static long percent(long value, long total) {
+    if (total == 0) {
       return 0; }
-    return Math.round(value * 100 / total );
+    return Math.round(value * 100 / total);
   }
 
   public List<OpDefInfo> getOpDefn(String target) {
-    List<OpDefInfo> ops = new ArrayList<>( );
-    for ( OpDefInfo opDef : operations ) {
-      if ( opDef.name.startsWith( target ) ) {
-        ops.add( opDef );
+    List<OpDefInfo> ops = new ArrayList<>();
+    for (OpDefInfo opDef : operations) {
+      if (opDef.name.startsWith(target)) {
+        ops.add(opDef);
       }
     }
     return ops;
