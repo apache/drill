@@ -1,6 +1,6 @@
 ---
 title: "Operators"
-date: 2016-01-14
+date: 2017-03-14 05:06:04 UTC
 parent: "SQL Reference"
 ---
 You can use various types of operators in your Drill queries to perform
@@ -11,7 +11,7 @@ operations on your data.
 You can use the following logical operators in your Drill queries:
 
   * AND
-  * BETWEEN
+  * BETWEEN (Includes end points. For example, if a query states WHERE age BETWEEN 10 AND 20, Drill returns both 10 and 20 in the result.)
   * IN
   * LIKE
   * NOT
@@ -85,7 +85,7 @@ The following table shows the precedence of operators in decreasing order:
 | IS NOT NULL                          |               | test for not null                                           |
 | (any other)                          | left          | all other native and user-defined operators                 |
 | IN                                   |               | set membership                                              |
-| BETWEEN                              |               | range containment                                           |
+| BETWEEN                              |               | range containment, includes end points                                            |
 | OVERLAPS                             |               | time interval overlap                                       |
 | LIKE ILIKE SIMILAR TO NOT SIMILAR TO |               | string pattern matching                                     |
 | < >                                  |               | less than, greater than                                     |
