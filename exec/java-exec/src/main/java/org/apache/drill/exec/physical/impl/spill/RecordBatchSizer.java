@@ -20,14 +20,17 @@ package org.apache.drill.exec.physical.impl.spill;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
 /**
  * Given a record batch or vector container, determines the actual memory
@@ -66,16 +69,15 @@ public class RecordBatchSizer {
     public int density;
     public int dataSize;
 
-    @SuppressWarnings("resource")
-    public ColumnSize(VectorWrapper<?> vw) {
-      metadata = vw.getField();
+    public ColumnSize(ValueVector v) {
+      metadata = v.getField();
       stdSize = TypeHelper.getSize(metadata.getType());
 
       // Can't get size estimates if this is an empty batch.
 
-      ValueVector v = vw.getValueVector();
       int rowCount = v.getAccessor().getValueCount();
       if (rowCount == 0) {
+        estSize = stdSize;
         return;
       }
 
@@ -128,7 +130,7 @@ public class RecordBatchSizer {
     }
   }
 
-  List<ColumnSize> columnSizes = new ArrayList<>();
+  private List<ColumnSize> columnSizes = new ArrayList<>();
 
   /**
    * Number of records (rows) in the batch.
@@ -159,7 +161,17 @@ public class RecordBatchSizer {
 
   private int netBatchSize;
 
+  public RecordBatchSizer(RecordBatch batch) {
+    this(batch,
+         (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) ?
+         batch.getSelectionVector2() : null);
+  }
+
   public RecordBatchSizer(VectorAccessible va) {
+    this(va, null);
+  }
+
+  public RecordBatchSizer(VectorAccessible va, SelectionVector2 sv2) {
     rowCount = va.getRecordCount();
     for (VectorWrapper<?> vw : va) {
       measureColumn(vw);
@@ -169,12 +181,9 @@ public class RecordBatchSizer {
       grossRowWidth = roundUp(totalBatchSize, rowCount);
     }
 
-    hasSv2 = va.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE;
-    if (hasSv2) {
-      @SuppressWarnings("resource")
-      SelectionVector2 sv2 = va.getSelectionVector2();
+    if (sv2 != null) {
       sv2Size = sv2.getBuffer(false).capacity();
-      grossRowWidth += sv2Size / rowCount;
+      grossRowWidth += roundUp(sv2Size, rowCount);
       netRowWidth += 2;
     }
 
@@ -200,13 +209,31 @@ public class RecordBatchSizer {
   }
 
   private void measureColumn(VectorWrapper<?> vw) {
-    ColumnSize colSize = new ColumnSize(vw);
+    measureColumn(vw.getValueVector());
+  }
+
+  private void measureColumn(ValueVector v) {
+
+    // Maps consume no size themselves. However, their contained
+    // vectors do consume space, so visit columns recursively.
+
+    if (v.getField().getType().getMinorType() == MinorType.MAP) {
+      expandMap((AbstractMapVector) v);
+      return;
+    }
+    ColumnSize colSize = new ColumnSize(v);
     columnSizes.add(colSize);
 
     stdRowWidth += colSize.stdSize;
     totalBatchSize += colSize.totalSize;
     netBatchSize += colSize.dataSize;
     netRowWidth += colSize.estSize;
+  }
+
+  private void expandMap(AbstractMapVector mapVector) {
+    for (ValueVector vector : mapVector) {
+      measureColumn(vector);
+    }
   }
 
   public static int roundUp(int num, int denom) {
@@ -240,8 +267,10 @@ public class RecordBatchSizer {
     buf.append(rowCount);
     buf.append(", Total size: ");
     buf.append(totalBatchSize);
-    buf.append(", Row width:");
+    buf.append(", Gross row width:");
     buf.append(grossRowWidth);
+    buf.append(", Net row width:");
+    buf.append(netRowWidth);
     buf.append(", Density:");
     buf.append(avgDensity);
     buf.append("}");
