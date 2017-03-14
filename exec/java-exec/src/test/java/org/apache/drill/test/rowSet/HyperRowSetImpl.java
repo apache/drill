@@ -228,12 +228,15 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
   /**
    * Selection vector that indexes into the hyper vectors.
    */
+
   private final SelectionVector4 sv4;
+
   /**
    * Collection of hyper vectors in flattened order: a left-to-right,
    * depth first ordering of vectors in maps. Order here corresponds to
    * the order used for column indexes in the row set reader.
    */
+
   private final HyperVectorWrapper<ValueVector> hvw[];
 
   public HyperRowSetImpl(BufferAllocator allocator, VectorContainer container, SelectionVector4 sv4) {
