@@ -101,6 +101,7 @@ public class JsonReader extends BaseJsonProcessor {
     this.readNumbersAsDouble = readNumbersAsDouble;
   }
 
+  @SuppressWarnings("resource")
   @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
     List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
@@ -192,6 +193,7 @@ public class JsonReader extends BaseJsonProcessor {
     setSource(data.getBytes(Charsets.UTF_8));
   }
 
+  @SuppressWarnings("resource")
   public void setSource(byte[] bytes) throws IOException {
     setSource(new SeekableBAIS(bytes));
   }

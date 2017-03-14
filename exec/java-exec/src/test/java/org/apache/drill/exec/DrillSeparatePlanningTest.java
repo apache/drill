@@ -186,6 +186,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
     //AwaitableUserResultsListener listener =
     //    new AwaitableUserResultsListener(new SilentListener());
     client.runQuery(QueryType.SQL, query, listener);
+    @SuppressWarnings("unused")
     int rows = listener.await();
   }
 
@@ -211,6 +212,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
   private void getResultsHelper(final QueryPlanFragments planFragments) throws Exception {
     for (PlanFragment fragment : planFragments.getFragmentsList()) {
       DrillbitEndpoint assignedNode = fragment.getAssignment();
+      @SuppressWarnings("resource")
       DrillClient fragmentClient = new DrillClient(true);
       Properties props = new Properties();
       props.setProperty("drillbit", assignedNode.getAddress() + ":" + assignedNode.getUserPort());
@@ -250,6 +252,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
       AwaitableUserResultsListener listener =
           new AwaitableUserResultsListener(new SilentListener());
       fragmentClient.runQuery(QueryType.EXECUTION, fragmentList, listener);
+      @SuppressWarnings("unused")
       int rows = listener.await();
       fragmentClient.close();
     }
@@ -257,6 +260,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
 
   private void getCombinedResultsHelper(final QueryPlanFragments planFragments) throws Exception {
       ShowResultsUserResultsListener myListener = new ShowResultsUserResultsListener(getAllocator());
+      @SuppressWarnings("unused")
       AwaitableUserResultsListener listenerBits =
           new AwaitableUserResultsListener(myListener);
 
@@ -265,6 +269,7 @@ public class DrillSeparatePlanningTest extends BaseTestQuery {
       AwaitableUserResultsListener listener =
           new AwaitableUserResultsListener(new SilentListener());
       client.runQuery(QueryType.EXECUTION, planFragments.getFragmentsList(), listener);
+      @SuppressWarnings("unused")
       int rows = listener.await();
   }
 

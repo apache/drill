@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -68,6 +68,15 @@ public class FieldReference extends SchemaPath {
     checkSimpleString(value);
   }
 
+  /**
+   * Create a {@link FieldReference} given an unquoted name. (Note: the
+   * name here is a misnomer: the name may have been quoted in SQL, but
+   * must be unquoted when passed in here.)
+   *
+   * @param safeString the unquoted field reference
+   * @return the field reference expression
+   */
+
   public static FieldReference getWithQuotedRef(CharSequence safeString) {
     return new FieldReference(safeString, ExpressionPosition.UNKNOWN, false);
   }
@@ -100,6 +109,7 @@ public class FieldReference extends SchemaPath {
     }
   }
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<FieldReference> {
 
     public De() {
@@ -116,6 +126,7 @@ public class FieldReference extends SchemaPath {
 
   }
 
+  @SuppressWarnings("serial")
   public static class Se extends StdSerializer<FieldReference> {
 
     public Se() {

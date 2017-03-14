@@ -32,6 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -84,6 +85,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private Map<String, ValueVector> implicitVectors;
   private Iterator<Map<String, String>> implicitColumns;
   private Map<String, String> implicitValues;
+  private final BufferAllocator allocator;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    OperatorContext oContext, Iterator<RecordReader> readers,
@@ -95,6 +97,7 @@ public class ScanBatch implements CloseableRecordBatch {
     }
     currentReader = readers.next();
     this.oContext = oContext;
+    allocator = oContext.getAllocator();
 
     boolean setup = false;
     try {
@@ -234,7 +237,6 @@ public class ScanBatch implements CloseableRecordBatch {
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
 
-
       // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.
       final boolean isNewSchema = mutator.isNewSchema();
       oContext.getStats().batchReceived(0, getRecordCount(), isNewSchema);
@@ -335,7 +337,7 @@ public class ScanBatch implements CloseableRecordBatch {
       ValueVector v = fieldVectorMap.get(field.getPath());
       if (v == null || v.getClass() != clazz) {
         // Field does not exist--add it to the map and the output container.
-        v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
+        v = TypeHelper.getNewVector(field, allocator, callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
           throw new SchemaChangeException(
               String.format(
