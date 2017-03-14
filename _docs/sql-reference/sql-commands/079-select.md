@@ -1,6 +1,6 @@
 ---
 title: "SELECT"
-date:  
+date: 2017-03-14 22:11:02 UTC
 parent: "SQL Commands"
 ---
 Drill supports the following ANSI standard clauses in the SELECT statement:
@@ -19,6 +19,7 @@ Drill supports the following ANSI standard clauses in the SELECT statement:
 You can use the same SELECT syntax in the following commands:
 
   * CREATE TABLE AS (CTAS)
+  * CREATE TEMPORARY TABLES AS (CTTAS)
   * CREATE VIEW
 
 INSERT INTO SELECT is not yet supported.
