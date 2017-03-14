@@ -95,6 +95,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
   private static boolean kdcStarted;
 
+  @SuppressWarnings("restriction")
   @BeforeClass
   public static void setupKdc() throws Exception {
     kdc = new SimpleKdcServer();
@@ -159,6 +160,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
   }
 
   private static int getFreePort() throws IOException {
+    @SuppressWarnings("resource")
     ServerSocket s = null;
     try {
       s = new ServerSocket(0);
@@ -209,10 +211,13 @@ public class TestBitBitKerberos extends BaseTestQuery {
   public void success(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus) throws Exception {
 
     ScanResult result = ClassPathScanner.fromPrescan(newConfig);
+    @SuppressWarnings("resource")
     final BootStrapContext c1 = new BootStrapContext(newConfig, result);
+    @SuppressWarnings({ "unused", "resource" })
     final BootStrapContext c2 = new BootStrapContext(newConfig, result);
 
     final FragmentContext fcontext = new MockUp<FragmentContext>(){
+      @SuppressWarnings("unused")
       BufferAllocator getAllocator(){
         return c1.getAllocator();
       }
@@ -239,6 +244,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
         return true;
       }
 
+      @SuppressWarnings("unused")
       public FragmentContext getFragmentContext(){
         return fcontext;
       }
@@ -255,10 +261,12 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     DataConnectionConfig config = new DataConnectionConfig(c1.getAllocator(), c1,
         new DataServerRequestHandler(workBus, bee));
+    @SuppressWarnings("resource")
     DataServer server = new DataServer(config);
 
     port = server.bind(port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
+    @SuppressWarnings("resource")
     DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
     DataTunnel tunnel = new DataTunnel(connectionManager);
     AtomicLong max = new AtomicLong(0);
@@ -277,6 +285,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
     List<ValueVector> vectors = Lists.newArrayList();
     for (int i = 0; i < 5; i++) {
+      @SuppressWarnings("resource")
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
           MaterializedField.create("a", Types.required(MinorType.FLOAT8)),
           allocator);

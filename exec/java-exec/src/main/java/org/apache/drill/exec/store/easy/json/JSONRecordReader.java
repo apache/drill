@@ -149,6 +149,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
   }
 
+  @Override
   protected List<SchemaPath> getDefaultColumnsToRead() {
     return ImmutableList.of();
   }

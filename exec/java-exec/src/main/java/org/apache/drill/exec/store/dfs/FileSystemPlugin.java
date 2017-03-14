@@ -53,8 +53,7 @@ import com.google.common.collect.Maps;
  * Tables are file names, directories and path patterns. This storage engine delegates to FSFormatEngines but shares
  * references to the FileSystem configuration and path management.
  */
-public class FileSystemPlugin extends AbstractStoragePlugin{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
+public class FileSystemPlugin extends AbstractStoragePlugin {
 
   private final FileSystemSchemaFactory schemaFactory;
   private final FormatCreator formatCreator;

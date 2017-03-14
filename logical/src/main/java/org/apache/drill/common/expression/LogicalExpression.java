@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,6 +55,7 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
   public int getSelfCost();
   public int getCumulativeCost();
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<LogicalExpression> {
     DrillConfig config;
 
@@ -90,6 +91,7 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
 
   }
 
+  @SuppressWarnings("serial")
   public static class Se extends StdSerializer<LogicalExpression> {
 
     protected Se() {

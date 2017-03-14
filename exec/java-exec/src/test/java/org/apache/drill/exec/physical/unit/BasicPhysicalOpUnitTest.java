@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.physical.unit;
 
-import com.google.common.collect.Lists;
+import static org.apache.drill.TestBuilder.mapOf;
+
+import java.util.List;
+
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.config.ComplexToJson;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.config.Filter;
@@ -37,12 +37,7 @@ import org.apache.drill.exec.physical.config.TopN;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.lang.reflect.Constructor;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Set;
-
-import static org.apache.drill.TestBuilder.mapOf;
+import com.google.common.collect.Lists;
 
 public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
 

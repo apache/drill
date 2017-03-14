@@ -126,6 +126,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public abstract RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
       List<SchemaPath> columns, String userName) throws ExecutionSetupException;
 
+  @SuppressWarnings("resource")
   CloseableRecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(context, scan.getColumns());
 

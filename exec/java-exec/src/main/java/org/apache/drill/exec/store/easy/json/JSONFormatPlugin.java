@@ -133,8 +133,6 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       }
       return true;
     }
-
-
   }
 
   @Override
@@ -151,5 +149,4 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public boolean supportsPushDown() {
     return true;
   }
-
 }

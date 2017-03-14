@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,6 +82,7 @@ public class PlanningBase extends ExecTest{
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
     final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider);
     systemOptions.init();
+    @SuppressWarnings("resource")
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
     final SessionOptionManager sessionOptions = (SessionOptionManager) userSession.getOptions();
     final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
@@ -150,6 +151,7 @@ public class PlanningBase extends ExecTest{
       if (sql.trim().isEmpty()) {
         continue;
       }
+      @SuppressWarnings("unused")
       final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }

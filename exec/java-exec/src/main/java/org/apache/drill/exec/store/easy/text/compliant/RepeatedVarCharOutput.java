@@ -172,6 +172,7 @@ class RepeatedVarCharOutput extends TextOutput {
    * Start a new record batch. Resets all the offsets and pointers that
    * store buffer addresses
    */
+  @Override
   public void startBatch() {
     this.recordStart = characterDataOriginal;
     this.fieldOpen = false;
@@ -185,6 +186,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadRepeatedOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getOffsetVector().getBuffer();
     checkBuf(buf);
     this.repeatedOffset = buf.memoryAddress() + 4;
@@ -193,6 +195,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharDataAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getBuffer();
     checkBuf(buf);
     this.characterData = buf.memoryAddress();
@@ -201,6 +204,7 @@ class RepeatedVarCharOutput extends TextOutput {
   }
 
   private void loadVarCharOffsetAddress(){
+    @SuppressWarnings("resource")
     DrillBuf buf = vector.getDataVector().getOffsetVector().getBuffer();
     checkBuf(buf);
     this.charLengthOffset = buf.memoryAddress() + 4;

@@ -368,6 +368,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         final MaterializedField outputField;
         if (expr instanceof ValueVectorReadExpression) {
           final TypedFieldId id = ValueVectorReadExpression.class.cast(expr).getFieldId();
+          @SuppressWarnings("resource")
           final ValueVector incomingVector = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
           // outputField is taken from the incoming schema to avoid the loss of nested fields
           // when the first batch will be empty.
@@ -379,6 +380,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         } else {
           outputField = MaterializedField.create(outputName, expr.getMajorType());
         }
+        @SuppressWarnings("resource")
         final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);
