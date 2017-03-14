@@ -274,11 +274,13 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
     if(m_rbuf!=NULL){
         Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
     }
-#ifdef WIN32_SHUTDOWN_ON_TIMEOUT
+
     if (m_pError != NULL) {
+        DRILL_MT_LOG(DRILL_LOG(LOG_ERROR) << "DrillClientImpl::recvHandshake: failed to complete handshake with server."
+        		<< m_pError->msg << "\n";)
         return static_cast<connectionStatus_t>(m_pError->status);
     }
-#endif // WIN32_SHUTDOWN_ON_TIMEOUT
+
     startHeartbeatTimer();
 
     return CONN_SUCCESS;
