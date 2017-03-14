@@ -20,27 +20,28 @@ package org.apache.drill.test;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValueFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper.TestServices;
 import org.apache.drill.QueryTestUtil;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -57,7 +58,6 @@ import org.apache.drill.exec.util.TestUtilities;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 /**
@@ -67,7 +67,7 @@ import com.google.common.io.Resources;
  * creates the requested Drillbit and client.
  */
 
-public class ClusterFixture implements AutoCloseable {
+public class ClusterFixture extends BaseFixture implements AutoCloseable {
   // private static final org.slf4j.Logger logger =
   // org.slf4j.LoggerFactory.getLogger(ClientFixture.class);
   public static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
@@ -123,10 +123,8 @@ public class ClusterFixture implements AutoCloseable {
 
   public static final String DEFAULT_BIT_NAME = "drillbit";
 
-  private DrillConfig config;
   private Map<String, Drillbit> bits = new HashMap<>();
   private Drillbit defaultDrillbit;
-  private BufferAllocator allocator;
   private boolean ownsZK;
   private ZookeeperHelper zkHelper;
   private RemoteServiceSet serviceSet;
@@ -199,7 +197,7 @@ public class ClusterFixture implements AutoCloseable {
       // combining locally-set properties and a config file: it is one
       // or the other.
 
-      if (builder.configProps == null) {
+      if (builder.configBuilder().hasResource()) {
         throw new IllegalArgumentException("Cannot specify a local ZK while using an external config file.");
       }
       builder.configProperty(ExecConstants.ZK_CONNECTION, zkConnect);
@@ -216,13 +214,7 @@ public class ClusterFixture implements AutoCloseable {
     // Because of the way DrillConfig works, we can set the ZK
     // connection string only if a property set is provided.
 
-    if (builder.configResource != null) {
-      config = DrillConfig.create(builder.configResource);
-    } else if (builder.configProps != null) {
-      config = configProperties(builder.configProps);
-    } else {
-      throw new IllegalStateException("Configuration was not provided.");
-    }
+    config = builder.configBuilder.build();
 
     if (builder.usingZk) {
       // Distribute drillbit using ZK (in-process or external)
@@ -341,39 +333,10 @@ public class ClusterFixture implements AutoCloseable {
     }
   }
 
-  private DrillConfig configProperties(Properties configProps) {
-    Properties stringProps = new Properties();
-    Properties collectionProps = new Properties();
-
-    // Filter out the collection type configs and other configs which can be converted to string.
-    for(Entry<Object, Object> entry : configProps.entrySet()) {
-      if(entry.getValue() instanceof Collection<?>) {
-        collectionProps.put(entry.getKey(), entry.getValue());
-      } else {
-        stringProps.setProperty(entry.getKey().toString(), entry.getValue().toString());
-      }
-    }
-
-    // First create a DrillConfig based on string properties.
-    Config drillConfig = DrillConfig.create(stringProps);
-
-    // Then add the collection properties inside the DrillConfig. Below call to withValue returns
-    // a new reference. Considering mostly properties will be of string type, doing this
-    // later will be less expensive as compared to doing it for all the properties.
-    for(Entry<Object, Object> entry : collectionProps.entrySet()) {
-      drillConfig = drillConfig.withValue(entry.getKey().toString(),
-        ConfigValueFactory.fromAnyRef(entry.getValue()));
-    }
-
-    return new DrillConfig(drillConfig, true);
-  }
-
   public Drillbit drillbit() { return defaultDrillbit; }
   public Drillbit drillbit(String name) { return bits.get(name); }
   public Collection<Drillbit> drillbits() { return bits.values(); }
   public RemoteServiceSet serviceSet() { return serviceSet; }
-  public BufferAllocator allocator() { return allocator; }
-  public DrillConfig config() { return config; }
   public File getDfsTestTmpDir() { return dfsTestTempDir; }
 
   public ClientFixture.ClientBuilder clientBuilder() {
@@ -389,6 +352,39 @@ public class ClusterFixture implements AutoCloseable {
 
   public DrillClient client() {
     return clientFixture().client();
+  }
+
+  /**
+   * Return a JDBC connection to the default (first) Drillbit.
+   * Note that this code requires special setup of the test code.
+   * Tests in the "exec" package do not normally have visibility
+   * to the Drill JDBC driver. So, the test must put that code
+   * on the class path manually in order for this code to load the
+   * JDBC classes. The caller is responsible for closing the JDBC
+   * connection before closing the cluster. (An enhancement is to
+   * do the close automatically as is done for clients.)
+   *
+   * @return a JDBC connection to the default Drillbit
+   */
+
+  public Connection jdbcConnection() {
+    try {
+      Class.forName("org.apache.drill.jdbc.Driver");
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
+    }
+    String connStr = "jdbc:drill:";
+    if (usesZK()) {
+      connStr += "zk=" + zkHelper.getConnectionString();
+    } else {
+      DrillbitEndpoint ep = drillbit().getContext().getEndpoint();
+      connStr += "drillbit=" + ep.getAddress() + ":" + ep.getUserPort();
+    }
+    try {
+      return DriverManager.getConnection(connStr);
+    } catch (SQLException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   /**
@@ -562,10 +558,13 @@ public class ClusterFixture implements AutoCloseable {
   public static final String EXPLAIN_PLAN_JSON = "json";
 
   public static FixtureBuilder builder() {
-     return new FixtureBuilder()
-         .configProps(FixtureBuilder.defaultProps())
+    FixtureBuilder builder = new FixtureBuilder()
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE)
          ;
+    Properties props = new Properties();
+    props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
+    builder.configBuilder.configProps(props);
+    return builder;
   }
 
   /**
@@ -686,27 +685,6 @@ public class ClusterFixture implements AutoCloseable {
     } else {
       return path;
     }
-  }
-
-  /**
-   * Create a temp directory to store the given <i>dirName</i>. Directory will
-   * be deleted on exit. Directory is created if it does not exist.
-   *
-   * @param dirName directory name
-   * @return Full path including temp parent directory and given directory name.
-   */
-
-  public static File getTempDir(final String dirName) {
-    final File dir = Files.createTempDir();
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        FileUtils.deleteQuietly(dir);
-      }
-    });
-    File tempDir = new File(dir, dirName);
-    tempDir.mkdirs();
-    return tempDir;
   }
 
   /**

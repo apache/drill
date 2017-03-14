@@ -34,6 +34,13 @@ import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.apache.drill.test.ClusterFixture.FixtureTestServices;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 
+/**
+ * Represents a Drill client. Provides many useful test-specific operations such
+ * as setting system options, running queries, and using the @{link TestBuilder}
+ * class.
+ * @see ExampleTest ExampleTest for usage examples
+ */
+
 public class ClientFixture implements AutoCloseable {
 
   public static class ClientBuilder {
@@ -45,21 +52,23 @@ public class ClientFixture implements AutoCloseable {
       this.cluster = cluster;
       clientProps = cluster.getClientProps();
     }
+
     /**
      * Specify an optional client property.
      * @param key property name
      * @param value property value
      * @return this builder
      */
-    public ClientBuilder property( String key, Object value ) {
-      if ( clientProps == null ) {
-        clientProps = new Properties( );
+
+    public ClientBuilder property(String key, Object value) {
+      if (clientProps == null) {
+        clientProps = new Properties();
       }
       clientProps.put(key, value);
       return this;
     }
 
-    public ClientFixture build( ) {
+    public ClientFixture build() {
       try {
         return new ClientFixture(this);
       } catch (RpcException e) {
@@ -81,17 +90,17 @@ public class ClientFixture implements AutoCloseable {
     // Create a client.
 
     if (cluster.usesZK()) {
-      client = new DrillClient(cluster.config( ));
+      client = new DrillClient(cluster.config());
     } else {
-      client = new DrillClient(cluster.config( ), cluster.serviceSet( ).getCoordinator());
+      client = new DrillClient(cluster.config(), cluster.serviceSet().getCoordinator());
     }
     client.connect(builder.clientProps);
     cluster.clients.add(this);
   }
 
   public DrillClient client() { return client; }
-  public ClusterFixture cluster( ) { return cluster; }
-  public BufferAllocator allocator( ) { return cluster.allocator( ); }
+  public ClusterFixture cluster() { return cluster; }
+  public BufferAllocator allocator() { return client.getAllocator(); }
 
   /**
    * Set a runtime option.
@@ -101,14 +110,14 @@ public class ClientFixture implements AutoCloseable {
    * @throws RpcException
    */
 
-  public void alterSession(String key, Object value ) {
-    String sql = "ALTER SESSION SET `" + key + "` = " + ClusterFixture.stringify( value );
-    runSqlSilently( sql );
+  public void alterSession(String key, Object value) {
+    String sql = "ALTER SESSION SET `" + key + "` = " + ClusterFixture.stringify(value);
+    runSqlSilently(sql);
   }
 
-  public void alterSystem(String key, Object value ) {
-    String sql = "ALTER SYSTEM SET `" + key + "` = " + ClusterFixture.stringify( value );
-    runSqlSilently( sql );
+  public void alterSystem(String key, Object value) {
+    String sql = "ALTER SYSTEM SET `" + key + "` = " + ClusterFixture.stringify(value);
+    runSqlSilently(sql);
   }
 
   /**
@@ -160,17 +169,17 @@ public class ClientFixture implements AutoCloseable {
       if (trimmedQuery.isEmpty()) {
         continue;
       }
-      queryBuilder( ).sql(trimmedQuery).print();
+      queryBuilder().sql(trimmedQuery).print();
     }
   }
 
   @Override
-  public void close( ) {
+  public void close() {
     if (client == null) {
       return;
     }
     try {
-      client.close( );
+      client.close();
     } finally {
       client = null;
       cluster.clients.remove(this);
@@ -198,7 +207,7 @@ public class ClientFixture implements AutoCloseable {
    */
 
   public ProfileParser parseProfile(String queryId) throws IOException {
-    File file = new File(cluster.getProfileDir(), queryId + ".sys.drill" );
+    File file = new File(cluster.getProfileDir(), queryId + ".sys.drill");
     return new ProfileParser(file);
   }
 

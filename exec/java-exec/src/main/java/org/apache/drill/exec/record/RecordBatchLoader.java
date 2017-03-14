@@ -70,6 +70,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * @throws SchemaChangeException
    *   TODO:  Clean:  DRILL-2933  load(...) never actually throws SchemaChangeException.
    */
+  @SuppressWarnings("resource")
   public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
     if (logger.isTraceEnabled()) {
       logger.trace("Loading record batch with def {} and data {}", def, buf);
@@ -169,9 +170,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 //  }
 
   @Override
-  public int getRecordCount() {
-    return valueCount;
-  }
+  public int getRecordCount() { return valueCount; }
+
+  public VectorContainer getContainer() { return container; }
 
   @Override
   public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids){
@@ -199,13 +200,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   }
 
   @Override
-  public BatchSchema getSchema() {
-    return schema;
-  }
+  public BatchSchema getSchema() { return schema; }
 
-  public void resetRecordCount() {
-    valueCount = 0;
-  }
+  public void resetRecordCount() { valueCount = 0; }
 
   /**
    * Clears this loader, which clears the internal vector container (see
