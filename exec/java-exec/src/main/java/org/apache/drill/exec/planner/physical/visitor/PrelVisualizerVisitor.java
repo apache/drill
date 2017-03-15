@@ -30,6 +30,17 @@ import org.apache.drill.exec.planner.physical.WriterPrel;
  * inspection. Insert this into code during development to see
  * the state of the tree at various points of interest during
  * the planning process.
+ * <p>
+ * Use this by inserting lines into our prel transforms to see
+ * what is happening. This is useful if you must understand the transforms,
+ * or change them. For example:
+ * <p>
+ * In file: {@link DefaultSqlHandler#convertToPrel()}:
+ * <pre><code>
+ * PrelVisualizerVisitor.print("Before EER", phyRelNode); // Debug only
+ * phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
+ * PrelVisualizerVisitor.print("After EER", phyRelNode); // Debug only
+ * <code></pre>
  */
 
 public class PrelVisualizerVisitor
