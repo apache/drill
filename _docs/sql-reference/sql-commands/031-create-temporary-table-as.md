@@ -1,6 +1,6 @@
 ---
-title: "CREATE TEMPORARY TABLE AS"
-date:  
+title: "CREATE TEMPORARY TABLE AS (CTTAS)"
+date: 2017-03-15 19:35:02 UTC
 parent: "SQL Commands"
 ---
 As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to store the results of a query in a temporary table. You can reference the temporary table in subsequent queries within the same session, thereby improving query performance. Data written to the temporary table is not permanently stored on the filesystem. Drill automatically drops the temporary table once the session ends or the Drillbit process fails. Therefore, you do not have to manually drop the table.

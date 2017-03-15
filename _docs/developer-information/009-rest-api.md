@@ -1,6 +1,6 @@
 ---
 title: "REST API"
-date: 2017-03-13 22:49:08 UTC
+date: 2017-03-15 19:34:58 UTC
 parent: "Developer Information"
 ---
 
@@ -308,7 +308,7 @@ Gets metric information.
 
 ### GET /cluster.json
 
-Get Drillbit information, such as ports numbers.
+Get Drillbit information, such as port numbers.
 
 **Example**
 

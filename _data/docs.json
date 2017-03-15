@@ -428,6 +428,23 @@
             "title": "Apache Drill 1.1.0 Release Notes", 
             "url": "/docs/apache-drill-1-1-0-release-notes/"
         }, 
+        "Apache Drill 1.10.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.9.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/001-1.10.0-rn.md", 
+            "title": "Apache Drill 1.10.0 Release Notes", 
+            "url": "/docs/apache-drill-1-10-0-release-notes/"
+        }, 
         "Apache Drill 1.2.0 Release Notes": {
             "breadcrumbs": [
                 {
@@ -558,8 +575,8 @@
             "next_title": "Apache Drill 1.8.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
+            "previous_title": "Apache Drill 1.10.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
             "relative_path": "_docs/rn/002-1.9.0-rn.md", 
             "title": "Apache Drill 1.9.0 Release Notes", 
             "url": "/docs/apache-drill-1-9-0-release-notes/"
@@ -795,8 +812,8 @@
             "next_title": "PARTITION BY Clause", 
             "next_url": "/docs/partition-by-clause/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TABLE AS (CTAS)", 
-            "previous_url": "/docs/create-table-as-ctas/", 
+            "previous_title": "CREATE TEMPORARY TABLE AS", 
+            "previous_url": "/docs/create-temporary-table-as/", 
             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
             "title": "CREATE FUNCTION USING JAR", 
             "url": "/docs/create-function-using-jar/"
@@ -813,14 +830,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE FUNCTION USING JAR", 
-            "next_url": "/docs/create-function-using-jar/", 
+            "next_title": "CREATE TEMPORARY TABLE AS", 
+            "next_url": "/docs/create-temporary-table-as/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM", 
             "previous_url": "/docs/alter-system/", 
             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
             "title": "CREATE TABLE AS (CTAS)", 
             "url": "/docs/create-table-as-ctas/"
+        }, 
+        "CREATE TEMPORARY TABLE AS": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "CREATE FUNCTION USING JAR", 
+            "next_url": "/docs/create-function-using-jar/", 
+            "parent": "SQL Commands", 
+            "previous_title": "CREATE TABLE AS (CTAS)", 
+            "previous_url": "/docs/create-table-as-ctas/", 
+            "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
+            "title": "CREATE TEMPORARY TABLE AS", 
+            "url": "/docs/create-temporary-table-as/"
         }, 
         "CREATE VIEW": {
             "breadcrumbs": [
@@ -977,8 +1015,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Web Console and REST API Security", 
-            "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+            "previous_title": "Configuring Drill to Read Web Server Logs", 
+            "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -1198,14 +1236,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring Drill to Read Web Server Logs", 
+                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
                     "title": "Configuring Web Console and REST API Security", 
                     "url": "/docs/configuring-web-console-and-rest-api-security/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Web Console and REST API Security", 
+                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
+                    "title": "Configuring Drill to Read Web Server Logs", 
+                    "url": "/docs/configuring-drill-to-read-web-server-logs/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1303,8 +1358,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web Console and REST API Security", 
-                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "previous_title": "Configuring Drill to Read Web Server Logs", 
+                    "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1347,8 +1402,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting the Web Console", 
-            "previous_url": "/docs/starting-the-web-console/", 
+            "previous_title": "Identifying Multiple Drill Versions in a Cluster", 
+            "previous_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -1386,6 +1441,23 @@
             "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
             "title": "Configuring Drill Memory", 
             "url": "/docs/configuring-drill-memory/"
+        }, 
+        "Configuring Drill to Read Web Server Logs": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring Web Console and REST API Security", 
+            "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+            "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
+            "title": "Configuring Drill to Read Web Server Logs", 
+            "url": "/docs/configuring-drill-to-read-web-server-logs/"
         }, 
         "Configuring Inbound Impersonation": {
             "breadcrumbs": [
@@ -1733,8 +1805,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
+            "next_title": "Configuring Drill to Read Web Server Logs", 
+            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Impersonation with Hive Authorization", 
             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
@@ -3890,6 +3962,23 @@
             "title": "How to Partition Data", 
             "url": "/docs/how-to-partition-data/"
         }, 
+        "Identifying Multiple Drill Versions in a Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configure Drill", 
+            "next_url": "/docs/configure-drill/", 
+            "parent": "Install Drill", 
+            "previous_title": "Starting the Web Console", 
+            "previous_url": "/docs/starting-the-web-console/", 
+            "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
+            "title": "Identifying Multiple Drill Versions in a Cluster", 
+            "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"
+        }, 
         "Identifying Performance Issues": {
             "breadcrumbs": [
                 {
@@ -4199,14 +4288,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configure Drill", 
-                    "next_url": "/docs/configure-drill/", 
+                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
                     "relative_path": "_docs/install/060-starting-the-web-ui.md", 
                     "title": "Starting the Web Console", 
                     "url": "/docs/starting-the-web-console/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Starting the Web Console", 
+                    "previous_url": "/docs/starting-the-web-console/", 
+                    "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
+                    "title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -8367,11 +8473,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.8.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+                    "next_title": "Apache Drill 1.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/001-1.10.0-rn.md", 
+                    "title": "Apache Drill 1.10.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-10-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.8.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.10.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
                     "relative_path": "_docs/rn/002-1.9.0-rn.md", 
                     "title": "Apache Drill 1.9.0 Release Notes", 
                     "url": "/docs/apache-drill-1-9-0-release-notes/"
@@ -8666,8 +8789,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.9.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
+            "next_title": "Apache Drill 1.10.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -8956,8 +9079,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE FUNCTION USING JAR", 
-                    "next_url": "/docs/create-function-using-jar/", 
+                    "next_title": "CREATE TEMPORARY TABLE AS", 
+                    "next_url": "/docs/create-temporary-table-as/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM", 
                     "previous_url": "/docs/alter-system/", 
@@ -8977,11 +9100,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "PARTITION BY Clause", 
-                    "next_url": "/docs/partition-by-clause/", 
+                    "next_title": "CREATE FUNCTION USING JAR", 
+                    "next_url": "/docs/create-function-using-jar/", 
                     "parent": "SQL Commands", 
                     "previous_title": "CREATE TABLE AS (CTAS)", 
                     "previous_url": "/docs/create-table-as-ctas/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
+                    "title": "CREATE TEMPORARY TABLE AS", 
+                    "url": "/docs/create-temporary-table-as/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "PARTITION BY Clause", 
+                    "next_url": "/docs/partition-by-clause/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "CREATE TEMPORARY TABLE AS", 
+                    "previous_url": "/docs/create-temporary-table-as/", 
                     "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                     "title": "CREATE FUNCTION USING JAR", 
                     "url": "/docs/create-function-using-jar/"
@@ -10346,8 +10490,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE FUNCTION USING JAR", 
-                            "next_url": "/docs/create-function-using-jar/", 
+                            "next_title": "CREATE TEMPORARY TABLE AS", 
+                            "next_url": "/docs/create-temporary-table-as/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -10367,11 +10511,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "PARTITION BY Clause", 
-                            "next_url": "/docs/partition-by-clause/", 
+                            "next_title": "CREATE FUNCTION USING JAR", 
+                            "next_url": "/docs/create-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
+                            "title": "CREATE TEMPORARY TABLE AS", 
+                            "url": "/docs/create-temporary-table-as/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE TEMPORARY TABLE AS", 
+                            "previous_url": "/docs/create-temporary-table-as/", 
                             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                             "title": "CREATE FUNCTION USING JAR", 
                             "url": "/docs/create-function-using-jar/"
@@ -11391,8 +11556,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configure Drill", 
-            "next_url": "/docs/configure-drill/", 
+            "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+            "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
             "parent": "Install Drill", 
             "previous_title": "Starting Drill in Distributed Mode", 
             "previous_url": "/docs/starting-drill-in-distributed-mode/", 
@@ -13356,14 +13521,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configure Drill", 
-                    "next_url": "/docs/configure-drill/", 
+                    "next_title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "next_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
                     "parent": "Install Drill", 
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
                     "relative_path": "_docs/install/060-starting-the-web-ui.md", 
                     "title": "Starting the Web Console", 
                     "url": "/docs/starting-the-web-console/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Starting the Web Console", 
+                    "previous_url": "/docs/starting-the-web-console/", 
+                    "relative_path": "_docs/install/070-identifying-multiple-drill-versions-in-a-cluster.md", 
+                    "title": "Identifying Multiple Drill Versions in a Cluster", 
+                    "url": "/docs/identifying-multiple-drill-versions-in-a-cluster/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -13569,14 +13751,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring Drill to Read Web Server Logs", 
+                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
                     "title": "Configuring Web Console and REST API Security", 
                     "url": "/docs/configuring-web-console-and-rest-api-security/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Web Console and REST API Security", 
+                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
+                    "title": "Configuring Drill to Read Web Server Logs", 
+                    "url": "/docs/configuring-drill-to-read-web-server-logs/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -13674,8 +13873,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web Console and REST API Security", 
-                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "previous_title": "Configuring Drill to Read Web Server Logs", 
+                    "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -13718,8 +13917,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting the Web Console", 
-            "previous_url": "/docs/starting-the-web-console/", 
+            "previous_title": "Identifying Multiple Drill Versions in a Cluster", 
+            "previous_url": "/docs/identifying-multiple-drill-versions-in-a-cluster/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -16214,8 +16413,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE FUNCTION USING JAR", 
-                            "next_url": "/docs/create-function-using-jar/", 
+                            "next_title": "CREATE TEMPORARY TABLE AS", 
+                            "next_url": "/docs/create-temporary-table-as/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -16235,11 +16434,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "PARTITION BY Clause", 
-                            "next_url": "/docs/partition-by-clause/", 
+                            "next_title": "CREATE FUNCTION USING JAR", 
+                            "next_url": "/docs/create-function-using-jar/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
+                            "title": "CREATE TEMPORARY TABLE AS", 
+                            "url": "/docs/create-temporary-table-as/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE TEMPORARY TABLE AS", 
+                            "previous_url": "/docs/create-temporary-table-as/", 
                             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                             "title": "CREATE FUNCTION USING JAR", 
                             "url": "/docs/create-function-using-jar/"
@@ -17402,11 +17622,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.8.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+                    "next_title": "Apache Drill 1.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/001-1.10.0-rn.md", 
+                    "title": "Apache Drill 1.10.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-10-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.8.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-8-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.10.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-10-0-release-notes/", 
                     "relative_path": "_docs/rn/002-1.9.0-rn.md", 
                     "title": "Apache Drill 1.9.0 Release Notes", 
                     "url": "/docs/apache-drill-1-9-0-release-notes/"
@@ -17701,8 +17938,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.9.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-9-0-release-notes/", 
+            "next_title": "Apache Drill 1.10.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-10-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 

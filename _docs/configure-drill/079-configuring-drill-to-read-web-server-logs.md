@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to Read Web Server Logs"
-date:
+date: 2017-03-15 19:34:55 UTC
 parent: "Configure Drill"
 ---
 
@@ -12,7 +12,7 @@ As of version 1.9, Drill can natively ingest and query web server logs. To confi
       "timestampFormat": null
     }  
 
-{% include startnote.html %}The `logFormat` section must match the format of the log files, otherwise Drill cannot correctly parse the logs.{% include endnote.html %}
+{% include startnote.html %}The logFormat section must match the format of the log files, otherwise Drill cannot correctly parse the logs.{% include endnote.html %}
 
 ## HTTPD Format Strings  
 The following table lists the fields that log files can include. The `timestampformat` is optional, but you can include a format for the time stamp and Drill will parse the times in the log files into Drill dates.
