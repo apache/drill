@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -101,11 +101,9 @@ public abstract class ColumnReader<V extends ValueVector> {
     }
     if (columnDescriptor.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
       if (columnDescriptor.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
-        // Here "bits" means "bytes"
         dataTypeLengthInBits = columnDescriptor.getTypeLength() * 8;
       } else {
-        // While here, "bits" means "bits"
-        dataTypeLengthInBits = ParquetRecordReader.getTypeLengthInBits(columnDescriptor.getType());
+        dataTypeLengthInBits = ParquetColumnMetadata.getTypeLengthInBits(columnDescriptor.getType());
       }
     }
     if(threadPool == null) {
