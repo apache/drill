@@ -812,8 +812,8 @@
             "next_title": "PARTITION BY Clause", 
             "next_url": "/docs/partition-by-clause/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TEMPORARY TABLE AS", 
-            "previous_url": "/docs/create-temporary-table-as/", 
+            "previous_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+            "previous_url": "/docs/create-temporary-table-as-cttas/", 
             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
             "title": "CREATE FUNCTION USING JAR", 
             "url": "/docs/create-function-using-jar/"
@@ -830,8 +830,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE TEMPORARY TABLE AS", 
-            "next_url": "/docs/create-temporary-table-as/", 
+            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+            "next_url": "/docs/create-temporary-table-as-cttas/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM", 
             "previous_url": "/docs/alter-system/", 
@@ -839,7 +839,7 @@
             "title": "CREATE TABLE AS (CTAS)", 
             "url": "/docs/create-table-as-ctas/"
         }, 
-        "CREATE TEMPORARY TABLE AS": {
+        "CREATE TEMPORARY TABLE AS (CTTAS)": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -857,8 +857,8 @@
             "previous_title": "CREATE TABLE AS (CTAS)", 
             "previous_url": "/docs/create-table-as-ctas/", 
             "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
-            "title": "CREATE TEMPORARY TABLE AS", 
-            "url": "/docs/create-temporary-table-as/"
+            "title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+            "url": "/docs/create-temporary-table-as-cttas/"
         }, 
         "CREATE VIEW": {
             "breadcrumbs": [
@@ -9079,8 +9079,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE TEMPORARY TABLE AS", 
-                    "next_url": "/docs/create-temporary-table-as/", 
+                    "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                    "next_url": "/docs/create-temporary-table-as-cttas/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM", 
                     "previous_url": "/docs/alter-system/", 
@@ -9106,8 +9106,8 @@
                     "previous_title": "CREATE TABLE AS (CTAS)", 
                     "previous_url": "/docs/create-table-as-ctas/", 
                     "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
-                    "title": "CREATE TEMPORARY TABLE AS", 
-                    "url": "/docs/create-temporary-table-as/"
+                    "title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                    "url": "/docs/create-temporary-table-as-cttas/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -9124,8 +9124,8 @@
                     "next_title": "PARTITION BY Clause", 
                     "next_url": "/docs/partition-by-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "CREATE TEMPORARY TABLE AS", 
-                    "previous_url": "/docs/create-temporary-table-as/", 
+                    "previous_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                    "previous_url": "/docs/create-temporary-table-as-cttas/", 
                     "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                     "title": "CREATE FUNCTION USING JAR", 
                     "url": "/docs/create-function-using-jar/"
@@ -10490,8 +10490,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TEMPORARY TABLE AS", 
-                            "next_url": "/docs/create-temporary-table-as/", 
+                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "next_url": "/docs/create-temporary-table-as-cttas/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -10517,8 +10517,8 @@
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
-                            "title": "CREATE TEMPORARY TABLE AS", 
-                            "url": "/docs/create-temporary-table-as/"
+                            "title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "url": "/docs/create-temporary-table-as-cttas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -10535,8 +10535,8 @@
                             "next_title": "PARTITION BY Clause", 
                             "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TEMPORARY TABLE AS", 
-                            "previous_url": "/docs/create-temporary-table-as/", 
+                            "previous_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "previous_url": "/docs/create-temporary-table-as-cttas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                             "title": "CREATE FUNCTION USING JAR", 
                             "url": "/docs/create-function-using-jar/"
@@ -16413,8 +16413,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TEMPORARY TABLE AS", 
-                            "next_url": "/docs/create-temporary-table-as/", 
+                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "next_url": "/docs/create-temporary-table-as-cttas/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -16440,8 +16440,8 @@
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/031-create-temporary-table-as.md", 
-                            "title": "CREATE TEMPORARY TABLE AS", 
-                            "url": "/docs/create-temporary-table-as/"
+                            "title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "url": "/docs/create-temporary-table-as-cttas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -16458,8 +16458,8 @@
                             "next_title": "PARTITION BY Clause", 
                             "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TEMPORARY TABLE AS", 
-                            "previous_url": "/docs/create-temporary-table-as/", 
+                            "previous_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "previous_url": "/docs/create-temporary-table-as-cttas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/034-create-function-using-jar.md", 
                             "title": "CREATE FUNCTION USING JAR", 
                             "url": "/docs/create-function-using-jar/"
