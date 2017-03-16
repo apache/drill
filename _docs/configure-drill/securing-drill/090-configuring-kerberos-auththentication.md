@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-16 02:40:10 UTC
+date: 2017-03-16 03:01:56 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -35,14 +35,14 @@ This section shows a high-level overview of the client authentication process in
 1. The drillbit service has access to the keytab, a file that contains a list of keys for principals.  The key allows the service to decrypt the client’s ticket granting service ticket, identify the principal, and grant access.
 
 
-![Kerberos Auth Process Overview](http://i.imgur.com/U6e8FR5.png)
+![]({{ site.baseurl }}/docs/img/kerberosauthprocess.png)  
 
 ## Server Authentication Process
 For Kerberos server authentication information, see the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") administration documentation. 
 
 
 ## Enabling Authentication
-During startup, a drillbit service must authenticate. At runtime, Drill uses the keytab file. Trust is based on the keytab file; it’s secrets are shared with the KDC. The drillbit service also uses this keytab credential to validate service tickets from clients. Based on this information, the drillbit determines whether the client’s identity can be verified to use its service. 
+During startup, a drillbit service must authenticate. At runtime, Drill uses the keytab file. Trust is based on the keytab file; its secrets are shared with the KDC. The drillbit service also uses this keytab credential to validate service tickets from clients. Based on this information, the drillbit determines whether the client’s identity can be verified to use its service. 
 
 ---
 **NOTE**
@@ -52,16 +52,20 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 ---
 
 
-![Kerberos Client-Server Connection](http://i.imgur.com/04S0vss.png)  
+![]({{ site.baseurl }}/docs/img/kerberclientserver.png)  
+ 
 
-1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user. 
-       * For a single principal per node in cluster:
+1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user.  
+ 
+   * For a single principal per node in cluster:
        
 
             # kadmin  
 			: addprinc -randkey <username>/<FQDN>@<REALM>.COM  
-			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
-       * For a single principal per cluster, use `<clustername>` instead of `<FQDN>`:
+			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM  
+
+
+   * For a single principal per cluster, use `<clustername>` instead of `<FQDN>`: 
        
 
             # kadmin  
@@ -70,6 +74,7 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
        
 
 2. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.  
+  
  * The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`. 
  
    
@@ -81,8 +86,8 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
  			      auth.keytab:“/etc/drill/conf/drill.keytab”  
 				}  
 			}  
-  
-   * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See Installing and Configuring Plain Authentication for PAM configuration instructions. 
+    
+ * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See Installing and Configuring Plain Authentication for PAM configuration instructions. 
    
  
              drill.exec: {  
@@ -94,7 +99,8 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
               	   auth.principal:"drill/<clustername>@<REALM>.COM",  
               	   auth.keytab:"/etc/drill/conf/drill.keytab"  
               		}  
-              	}    
+              	}  
+   
 3. Restart the drillbit process on each Drill node.  
    
         <DRILLINSTALL_HOME>/bin/drillbit.sh restart 
