@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-15 00:30:47 UTC
+date: 2017-03-16 01:22:54 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -58,8 +58,7 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 
 
 1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user.
-
-	- For a single principal per node in cluster:
+  - For a single principal per node in cluster:
 
 			# kadmin  
 			: addprinc -randkey <username>/<FQDN>@<REALM>.COM  
@@ -72,7 +71,7 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 			# kadmin  
 			: addprinc -randkey <username>/<clustername>@<REALM>.COM  
 			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
-1. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.
+2. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.
 
 	- The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`.  
 
@@ -95,7 +94,10 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 					auth.principal:"drill/<clustername>@<REALM>.COM",  
 					auth.keytab:"/etc/drill/conf/drill.keytab"  
 				}  
-			}  
+			}   
+
+	
+
 
 3 . Restart the drillbit process on each Drill node.
 

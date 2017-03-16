@@ -1,6 +1,6 @@
 ---
 title: "Configuring Plain Authentication"
-date: 2017-03-15 00:30:47 UTC
+date: 2017-03-16 01:22:52 UTC
 parent: "Securing Drill"
 ---
 Linux PAM provides a Plain (or username and password) authentication module that interface with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
@@ -11,8 +11,8 @@ If you use PAM with `/etc/passwd` for authentication, verify that the users with
 This section includes the following topics:
 
 - [Authentication Process]({{site.baseurl}}/docs/configuring-plain-authentication/#authentication-process)
-- [Connecting with SQLLine]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-sqline)
-- [Connecting with BI Tools]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-bitools)
+- [Connecting with SQLLine]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-sqlline)
+- [Connecting with BI Tools]({{site.baseurl}}/docs/configuring-plain-authentication/#connecting-with-bi-tools)
 - [Installing and Configuring Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/#installing-and-configuring-plain-authentication)
 
 ## Authentication Process
@@ -55,7 +55,7 @@ Alternatively, a user can launch SQLLine and then issue the !connect command to 
 
 ## Connecting with BI Tools
 
-To connect to a Drill from a BI tool, such as Tableau, the ODBC driver prompts you for the authentication type, username, and password. For PAM, select **Basic Authenticatio**n in the Authentication Type drop-down menu.
+To connect to a Drill from a BI tool, such as Tableau, the ODBC driver prompts you for the authentication type, username, and password. For PAM, select **Basic Authentication** in the Authentication Type drop-down menu.
 
 ![User Auth BI Tools](http://i.imgur.com/J5X1Tds.png)
 
