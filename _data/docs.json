@@ -121,8 +121,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Dynamic UDFs", 
-                    "next_url": "/docs/dynamic-udfs/", 
+                    "next_title": "Creating Custom Authenticators", 
+                    "next_url": "/docs/creating-custom-authenticators/", 
                     "parent": "Adding Custom Functions to Drill", 
                     "previous_title": "Adding Custom Functions to Drill Introduction", 
                     "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
@@ -142,11 +142,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Custom Functions in Queries", 
-                    "next_url": "/docs/using-custom-functions-in-queries/", 
+                    "next_title": "Dynamic UDFs", 
+                    "next_url": "/docs/dynamic-udfs/", 
                     "parent": "Adding Custom Functions to Drill", 
                     "previous_title": "Manually Adding Custom Functions to Drill", 
                     "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                    "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/015-creating-custom-authenticators.md", 
+                    "title": "Creating Custom Authenticators", 
+                    "url": "/docs/creating-custom-authenticators/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Adding Custom Functions to Drill", 
+                            "url": "/docs/adding-custom-functions-to-drill/"
+                        }, 
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Custom Functions in Queries", 
+                    "next_url": "/docs/using-custom-functions-in-queries/", 
+                    "parent": "Adding Custom Functions to Drill", 
+                    "previous_title": "Creating Custom Authenticators", 
+                    "previous_url": "/docs/creating-custom-authenticators/", 
                     "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
                     "title": "Dynamic UDFs", 
                     "url": "/docs/dynamic-udfs/"
@@ -1369,8 +1390,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Impersonation", 
-                            "next_url": "/docs/configuring-user-impersonation/", 
+                            "next_title": "Configuring User Authentication", 
+                            "next_url": "/docs/configuring-user-authentication/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -1396,45 +1417,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Inbound Impersonation", 
-                    "next_url": "/docs/configuring-inbound-impersonation/", 
+                    "next_title": "Configuring Drill to Read Web Server Logs", 
+                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/configure-drill/071-configure-inbound-impersonation.md", 
-                    "title": "Configuring Inbound Impersonation", 
-                    "url": "/docs/configuring-inbound-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authorization", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Inbound Impersonation", 
-                    "previous_url": "/docs/configuring-inbound-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
@@ -1447,45 +1434,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web Console and REST API Security", 
-                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
-                    "title": "Configuring User Impersonation with Hive Authorization", 
-                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Drill to Read Web Server Logs", 
-                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                    "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
-                    "title": "Configuring Web Console and REST API Security", 
-                    "url": "/docs/configuring-web-console-and-rest-api-security/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web Console and REST API Security", 
-                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
                     "title": "Configuring Drill to Read Web Server Logs", 
                     "url": "/docs/configuring-drill-to-read-web-server-logs/"
@@ -1681,8 +1634,8 @@
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Web Console and REST API Security", 
-            "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+            "previous_title": "Configuring User Authentication", 
+            "previous_url": "/docs/configuring-user-authentication/", 
             "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
             "title": "Configuring Drill to Read Web Server Logs", 
             "url": "/docs/configuring-drill-to-read-web-server-logs/"
@@ -1990,8 +1943,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Impersonation", 
-            "next_url": "/docs/configuring-user-impersonation/", 
+            "next_title": "Configuring User Authentication", 
+            "next_url": "/docs/configuring-user-authentication/", 
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring Multitenant Resources", 
             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -2166,8 +2119,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation", 
-                    "next_url": "/docs/configuring-user-impersonation/", 
+                    "next_title": "Configuring User Authentication", 
+                    "next_url": "/docs/configuring-user-authentication/", 
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring Multitenant Resources", 
                     "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -2605,6 +2558,27 @@
             "relative_path": "_docs/architecture/020-core-modules.md", 
             "title": "Core Modules", 
             "url": "/docs/core-modules/"
+        }, 
+        "Creating Custom Authenticators": {
+            "breadcrumbs": [
+                {
+                    "title": "Adding Custom Functions to Drill", 
+                    "url": "/docs/adding-custom-functions-to-drill/"
+                }, 
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Dynamic UDFs", 
+            "next_url": "/docs/dynamic-udfs/", 
+            "parent": "Adding Custom Functions to Drill", 
+            "previous_title": "Manually Adding Custom Functions to Drill", 
+            "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/015-creating-custom-authenticators.md", 
+            "title": "Creating Custom Authenticators", 
+            "url": "/docs/creating-custom-authenticators/"
         }, 
         "Custom Function Interfaces": {
             "breadcrumbs": [
@@ -3252,8 +3226,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Dynamic UDFs", 
-                            "next_url": "/docs/dynamic-udfs/", 
+                            "next_title": "Creating Custom Authenticators", 
+                            "next_url": "/docs/creating-custom-authenticators/", 
                             "parent": "Adding Custom Functions to Drill", 
                             "previous_title": "Adding Custom Functions to Drill Introduction", 
                             "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
@@ -3273,11 +3247,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Custom Functions in Queries", 
-                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "next_title": "Dynamic UDFs", 
+                            "next_url": "/docs/dynamic-udfs/", 
                             "parent": "Adding Custom Functions to Drill", 
                             "previous_title": "Manually Adding Custom Functions to Drill", 
                             "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/015-creating-custom-authenticators.md", 
+                            "title": "Creating Custom Authenticators", 
+                            "url": "/docs/creating-custom-authenticators/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Custom Functions in Queries", 
+                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Creating Custom Authenticators", 
+                            "previous_url": "/docs/creating-custom-authenticators/", 
                             "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
                             "title": "Dynamic UDFs", 
                             "url": "/docs/dynamic-udfs/"
@@ -3828,8 +3823,8 @@
             "next_title": "Using Custom Functions in Queries", 
             "next_url": "/docs/using-custom-functions-in-queries/", 
             "parent": "Adding Custom Functions to Drill", 
-            "previous_title": "Manually Adding Custom Functions to Drill", 
-            "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+            "previous_title": "Creating Custom Authenticators", 
+            "previous_url": "/docs/creating-custom-authenticators/", 
             "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
             "title": "Dynamic UDFs", 
             "url": "/docs/dynamic-udfs/"
@@ -5532,8 +5527,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Dynamic UDFs", 
-            "next_url": "/docs/dynamic-udfs/", 
+            "next_title": "Creating Custom Authenticators", 
+            "next_url": "/docs/creating-custom-authenticators/", 
             "parent": "Adding Custom Functions to Drill", 
             "previous_title": "Adding Custom Functions to Drill Introduction", 
             "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
@@ -14465,8 +14460,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Impersonation", 
-                            "next_url": "/docs/configuring-user-impersonation/", 
+                            "next_title": "Configuring User Authentication", 
+                            "next_url": "/docs/configuring-user-authentication/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -14492,45 +14487,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Inbound Impersonation", 
-                    "next_url": "/docs/configuring-inbound-impersonation/", 
+                    "next_title": "Configuring Drill to Read Web Server Logs", 
+                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/configure-drill/071-configure-inbound-impersonation.md", 
-                    "title": "Configuring Inbound Impersonation", 
-                    "url": "/docs/configuring-inbound-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authorization", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Inbound Impersonation", 
-                    "previous_url": "/docs/configuring-inbound-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
@@ -14543,45 +14504,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web Console and REST API Security", 
-                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
-                    "title": "Configuring User Impersonation with Hive Authorization", 
-                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Drill to Read Web Server Logs", 
-                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
-                    "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
-                    "title": "Configuring Web Console and REST API Security", 
-                    "url": "/docs/configuring-web-console-and-rest-api-security/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web Console and REST API Security", 
-                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
                     "title": "Configuring Drill to Read Web Server Logs", 
                     "url": "/docs/configuring-drill-to-read-web-server-logs/"
@@ -18072,8 +17999,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Dynamic UDFs", 
-                            "next_url": "/docs/dynamic-udfs/", 
+                            "next_title": "Creating Custom Authenticators", 
+                            "next_url": "/docs/creating-custom-authenticators/", 
                             "parent": "Adding Custom Functions to Drill", 
                             "previous_title": "Adding Custom Functions to Drill Introduction", 
                             "previous_url": "/docs/adding-custom-functions-to-drill-introduction/", 
@@ -18093,11 +18020,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Custom Functions in Queries", 
-                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "next_title": "Dynamic UDFs", 
+                            "next_url": "/docs/dynamic-udfs/", 
                             "parent": "Adding Custom Functions to Drill", 
                             "previous_title": "Manually Adding Custom Functions to Drill", 
                             "previous_url": "/docs/manually-adding-custom-functions-to-drill/", 
+                            "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/015-creating-custom-authenticators.md", 
+                            "title": "Creating Custom Authenticators", 
+                            "url": "/docs/creating-custom-authenticators/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Adding Custom Functions to Drill", 
+                                    "url": "/docs/adding-custom-functions-to-drill/"
+                                }, 
+                                {
+                                    "title": "Develop Custom Functions", 
+                                    "url": "/docs/develop-custom-functions/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Custom Functions in Queries", 
+                            "next_url": "/docs/using-custom-functions-in-queries/", 
+                            "parent": "Adding Custom Functions to Drill", 
+                            "previous_title": "Creating Custom Authenticators", 
+                            "previous_url": "/docs/creating-custom-authenticators/", 
                             "relative_path": "_docs/develop-custom-functions/adding-custom-functions-to-drill/020-dynamic-udfs.md", 
                             "title": "Dynamic UDFs", 
                             "url": "/docs/dynamic-udfs/"

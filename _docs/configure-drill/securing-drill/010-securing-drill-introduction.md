@@ -1,6 +1,6 @@
 ---
 title: "Securing Drill Introduction"
-date: 2017-03-16 01:22:49 UTC
+date: 2017-03-16 01:47:58 UTC
 parent: "Securing Drill"
 ---
 
@@ -8,9 +8,9 @@ Before connecting to a data source, you can configure Drill security features an
 
 - **Authentication** - Drill supports user authentication to secure clusters with:
 	- Kerberos. 
-		See [Kerberos Authentication]({{site.baseurl}}/docs/configuring-kerberos-authentication/).
+		See [Configuring Kerberos Authentication]({{site.baseurl}}/docs/configuring-kerberos-authentication/).
 	- Username and password (with the Plain mechanism or a Custom Authenticator). See: 
-		- [Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/)  
+		- [Configuring Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/)  
 		- [Creating Custom Authenticators]({{site.baseurl}}/docs/creating-custom-authenticators)
 	- Digest 
 - **Authorization** - Drill supports restricting an authenticated user's capabilities.

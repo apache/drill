@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-16 01:22:54 UTC
+date: 2017-03-16 01:48:02 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -52,56 +52,53 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 ---
 
 
-![Kerberos Client-Server Connection](http://i.imgur.com/04S0vss.png)
+![Kerberos Client-Server Connection](http://i.imgur.com/04S0vss.png)  
 
+1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user. 
+       * For a single principal per node in cluster:
+       
 
-
-
-1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user.
-  - For a single principal per node in cluster:
-
-			# kadmin  
+            # kadmin  
 			: addprinc -randkey <username>/<FQDN>@<REALM>.COM  
 			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
+       * For a single principal per cluster, use `<clustername>` instead of `<FQDN>`:
+       
 
-		(where FQDN is the hostname of the drillbit server. If you have multiple servers, you must create a principal and keytab for each server.)
-	
-	- For a single principal per cluster, use `<clustername>` instead of `<FQDN>`:
-
-			# kadmin  
+            # kadmin  
 			: addprinc -randkey <username>/<clustername>@<REALM>.COM  
 			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
-2. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.
+       
 
-	- The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`.  
-
-		    drill.exec {  
-   				security: {  
- 					user.auth.enabled:true,  
- 					auth.mechanisms:[“KERBEROS”],  
- 					auth.principal:“drill/<clustername>@<REALM>.COM”,  
- 					auth.keytab:“/etc/drill/conf/drill.keytab”  
+2. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.  
+ * The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`. 
+ 
+   
+             drill.exec {  
+   			    security: {  
+ 			      user.auth.enabled:true,  
+ 			      auth.mechanisms:[“KERBEROS”],  
+ 			      auth.principal:“drill/<clustername>@<REALM>.COM”,  
+ 			      auth.keytab:“/etc/drill/conf/drill.keytab”  
 				}  
-			}   
-	- To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See Installing and Configuring Plain Authentication for PAM configuration instructions.  
+			}  
+  
+   * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See Installing and Configuring Plain Authentication for PAM configuration instructions. 
+   * 
+             drill.exec: {  
+              	security: {  
+              	   user.auth.enabled:true,  
+              	   user.auth.impl:"pam",  
+              	   user.auth.pam_profile:["sudo", "login"],  
+              	   auth.mechanisms:["KERBEROS","PLAIN"],  
+              	   auth.principal:"drill/<clustername>@<REALM>.COM",  
+              	   auth.keytab:"/etc/drill/conf/drill.keytab"  
+              		}  
+              	}    
+   
+ 
+3. Restart the drillbit process on each Drill node.  
+`<DRILLINSTALL_HOME>/bin/drillbit.sh restart`
 
-			drill.exec: {  
-				security: {  
-					user.auth.enabled:true,  
-					user.auth.impl:"pam",  
-					user.auth.pam_profile:["sudo", "login"],  
-					auth.mechanisms:["KERBEROS","PLAIN"],  
-					auth.principal:"drill/<clustername>@<REALM>.COM",  
-					auth.keytab:"/etc/drill/conf/drill.keytab"  
-				}  
-			}   
-
-	
-
-
-3 . Restart the drillbit process on each Drill node.
-
-	`<DRILLINSTALL_HOME>/bin/drillbit.sh restart`
 
 ## Using Connection URLs
 
