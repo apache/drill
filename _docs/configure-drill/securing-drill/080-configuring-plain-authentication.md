@@ -1,6 +1,6 @@
 ---
 title: "Configuring Plain Authentication"
-date: 2017-03-16 03:01:55 UTC
+date: 2017-03-16 03:28:11 UTC
 parent: "Securing Drill"
 ---
 Linux PAM provides a Plain (or username and password) authentication module that interface with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
@@ -19,7 +19,7 @@ This section includes the following topics:
 
 The following image illustrates the PAM user authentication process in Drill.  The client passes a username and password to the drillbit as part of the connection request, which then passes the credentials to PAM.  If PAM authenticates the user, the connection request passes the authentication phase and the connection is established. The user will be authorized to access Drill and issue queries against the file system or other storage plugins, such as Hive or HBase.  
 
-![]({{ site.baseurl }}/docs/img/plainauthprocess.png)
+![]({{site.baseurl}}/docs/img/plainauthprocess.png)  
 
 If PAM cannot authenticate the user, the connection request will not pass the authentication phase, and the user will not be authorized to access Drill. The connection is terminated as `AUTH_FAILED`.
 
