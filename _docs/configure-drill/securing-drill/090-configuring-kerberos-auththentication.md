@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-16 01:48:02 UTC
+date: 2017-03-16 02:18:28 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -83,7 +83,8 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 			}  
   
    * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See Installing and Configuring Plain Authentication for PAM configuration instructions. 
-   * 
+   
+ 
              drill.exec: {  
               	security: {  
               	   user.auth.enabled:true,  

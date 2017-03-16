@@ -1390,8 +1390,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Authentication", 
-                            "next_url": "/docs/configuring-user-authentication/", 
+                            "next_title": "Configuring Drill to Read Web Server Logs", 
+                            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -1417,28 +1417,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill to Read Web Server Logs", 
-                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
-                    "title": "Configuring User Authentication", 
-                    "url": "/docs/configuring-user-authentication/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
                     "title": "Configuring Drill to Read Web Server Logs", 
                     "url": "/docs/configuring-drill-to-read-web-server-logs/"
@@ -1634,8 +1617,8 @@
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Authentication", 
-            "previous_url": "/docs/configuring-user-authentication/", 
+            "previous_title": "Configuring Resources for a Shared Drillbit", 
+            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
             "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
             "title": "Configuring Drill to Read Web Server Logs", 
             "url": "/docs/configuring-drill-to-read-web-server-logs/"
@@ -1943,8 +1926,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Authentication", 
-            "next_url": "/docs/configuring-user-authentication/", 
+            "next_title": "Configuring Drill to Read Web Server Logs", 
+            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring Multitenant Resources", 
             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -2119,8 +2102,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Authentication", 
-                    "next_url": "/docs/configuring-user-authentication/", 
+                    "next_title": "Configuring Drill to Read Web Server Logs", 
+                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring Multitenant Resources", 
                     "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -14460,8 +14443,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring User Authentication", 
-                            "next_url": "/docs/configuring-user-authentication/", 
+                            "next_title": "Configuring Drill to Read Web Server Logs", 
+                            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -14487,28 +14470,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill to Read Web Server Logs", 
-                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
-                    "title": "Configuring User Authentication", 
-                    "url": "/docs/configuring-user-authentication/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
                     "title": "Configuring Drill to Read Web Server Logs", 
                     "url": "/docs/configuring-drill-to-read-web-server-logs/"
