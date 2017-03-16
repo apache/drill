@@ -89,6 +89,15 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
     init();
   }
 
+  public BinaryTableGroupScan(String userName, FileSystemPlugin storagePlugin,
+                              MapRDBFormatPlugin formatPlugin, HBaseScanSpec scanSpec,
+                              List<SchemaPath> columns, MapRDBTableStats tableStats) {
+    super(storagePlugin, formatPlugin, columns, userName);
+    this.hbaseScanSpec = scanSpec;
+    this.tableStats = tableStats;
+    init();
+  }
+
   /**
    * Private constructor, used for cloning.
    * @param that The HBaseGroupScan to clone
@@ -115,8 +124,10 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
     try (Admin admin = formatPlugin.getConnection().getAdmin();
          RegionLocator locator = formatPlugin.getConnection().getRegionLocator(tableName)) {
       hTableDesc = admin.getTableDescriptor(tableName);
-      tableStats = new MapRDBTableStats(getHBaseConf(), hbaseScanSpec.getTableName());
-
+      // Fetch tableStats only once and cache it.
+      if (tableStats == null) {
+        tableStats = new MapRDBTableStats(getHBaseConf(), hbaseScanSpec.getTableName());
+      }
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<TabletFragmentInfo, String>();
       List<HRegionLocation> regionLocations = locator.getAllRegionLocations();
@@ -195,6 +206,11 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
   @JsonIgnore
   public String getTableName() {
     return getHBaseScanSpec().getTableName();
+  }
+
+  @JsonIgnore
+  public MapRDBTableStats getTableStats() {
+    return tableStats;
   }
 
   @Override
