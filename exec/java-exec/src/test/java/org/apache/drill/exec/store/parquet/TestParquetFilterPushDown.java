@@ -366,6 +366,20 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetFilterPD(query3, 49, 2, false);
   }
 
+  @Test // DRILL-5359
+  public void testFilterWithItemFlatten() throws  Exception {
+    final String sql = "select n_regionkey\n"
+        + "from (select n_regionkey, \n"
+        + "            flatten(nation.cities) as cities \n"
+        + "      from cp.`tpch/nation.parquet` nation) as flattenedCities \n"
+        + "where flattenedCities.cities.`zip` = '12345'";
+
+    final String[] expectedPlan = {"(?s)Filter.*Flatten"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
