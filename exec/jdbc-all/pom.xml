@@ -279,7 +279,6 @@
               <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>dom4j:*</exclude>
               <exclude>org.hibernate:*</exclude>
-              <exclude>javax.validation:*</exclude>
               <exclude>antlr:*</exclude>
               <exclude>org.ow2.asm:*</exclude>
               <exclude>com.univocity:*</exclude>
@@ -391,7 +390,13 @@
                <exclude>**/*.SF</exclude>
                <exclude>**/*.RSA</exclude>
                <exclude>**/*.DSA</exclude>
-               <exclude>javax/**</exclude>
+               <exclude>javax/*</exclude>
+               <exclude>javax/activation/**</exclude>
+               <exclude>javax/annotation-api/**</exclude>
+               <exclude>javax/inject/**</exclude>
+               <exclude>javax/servlet-api/**</exclude>
+               <exclude>javax/json/**</exclude>
+               <exclude>javax/ws/**</exclude>
                <exclude>rest/**</exclude>
                <exclude>*.tokens</exclude>
                <exclude>codegen/**</exclude>
