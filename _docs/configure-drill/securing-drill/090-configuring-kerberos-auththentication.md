@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-16 02:18:28 UTC
+date: 2017-03-16 02:40:10 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -95,10 +95,10 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
               	   auth.keytab:"/etc/drill/conf/drill.keytab"  
               		}  
               	}    
-   
- 
 3. Restart the drillbit process on each Drill node.  
-`<DRILLINSTALL_HOME>/bin/drillbit.sh restart`
+   
+        <DRILLINSTALL_HOME>/bin/drillbit.sh restart 
+ 
 
 
 ## Using Connection URLs
