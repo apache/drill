@@ -1,6 +1,6 @@
 ---
 title: "Secure Communication Paths"
-date: 2017-03-16 03:28:10 UTC
+date: 2017-03-16 23:46:05 UTC
 parent: "Securing Drill"
 ---
 As illustrated in the following figure, Drill 1.10 features five secure communication paths. Security features for each communication path are described their respective  sections.
@@ -10,10 +10,9 @@ As illustrated in the following figure, Drill 1.10 features five secure communic
 1. C++ client to drillbit
 1. Java client to drillbit
 1. Java client and drillbit to ZooKeeper
-1. Drillbit to storage plugin
+1. Drillbit to storage plugin  
 
-![]({{site.baseurl}}/docs/img/securecommunicationpaths.png)
-
+![secure comm paths]({{ site.baseurl }}/docs/img/secure-communication-paths.png)
 
 ## Web Client to Drillbit
 

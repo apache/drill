@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-16 03:28:12 UTC
+date: 2017-03-16 23:46:06 UTC
 parent: "Securing Drill"
 ---
 As of version 1.10, Drill supports Kerberos v5 network security authentication.  Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos realm is unique authentication domain. A centralized key distribution center (KDC) coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special keytab file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create principal (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
@@ -34,8 +34,7 @@ This section shows a high-level overview of the client authentication process in
 
 1. The drillbit service has access to the keytab, a file that contains a list of keys for principals.  The key allows the service to decrypt the client’s ticket granting service ticket, identify the principal, and grant access.  
 
-![]({{site.baseurl}}/docs/img/kerberauthprocess.png)
-
+![kerberos auth process]({{ site.baseurl }}/docs/img/kerberos-auth-process.png)
 
 ## Server Authentication Process
 For Kerberos server authentication information, see the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") administration documentation. 
@@ -49,10 +48,9 @@ During startup, a drillbit service must authenticate. At runtime, Drill uses the
 
 Drill must  run as a user capable of impersonation. The Kerberos provider in the SASL framework maps from the Kerberos identity to an OS user name. Drill impersonates the OS username when running queries. 
 
----  
+---    
 
-![]({{site.baseurl}}/docs/img/kerberclientserver.png)
- 
+![kerberos client server]({{ site.baseurl }}/docs/img/kerberos-client-server.png)  
 
 1. Create a Kerberos principal identity and a keytab file.  You can create one principal for each drillbit or one principal for all drillbits in a cluster. The drill.keytab file must be owned by and readable by the administrator user.  
  
@@ -69,8 +67,7 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
 
             # kadmin  
 			: addprinc -randkey <username>/<clustername>@<REALM>.COM  
-			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
-       
+			: ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM  
 
 2. Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.  
   
@@ -99,10 +96,10 @@ Drill must  run as a user capable of impersonation. The Kerberos provider in the
               	   auth.keytab:"/etc/drill/conf/drill.keytab"  
               		}  
               	}  
-   
+
 3. Restart the drillbit process on each Drill node.  
    
-        <DRILLINSTALL_HOME>/bin/drillbit.sh restart 
+              <DRILLINSTALL_HOME>/bin/drillbit.sh restart 
  
 
 
