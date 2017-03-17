@@ -1,6 +1,6 @@
 ---
 title: "Secure Communication Paths"
-date: 2017-03-17 21:06:15 UTC
+date: 2017-03-17 22:19:49 UTC
 parent: "Securing Drill"
 ---
 As illustrated in the following figure, Drill 1.10 features five secure communication paths. Security features for each communication path are described their respective  sections.
@@ -10,7 +10,7 @@ As illustrated in the following figure, Drill 1.10 features five secure communic
 1. C++ client to drillbit
 1. Java client to drillbit
 1. Java client and drillbit to ZooKeeper
-1. Drillbit to storage plugin  
+1. Drillbit to storage plugin
 
 ![secure comm paths]({{ site.baseurl }}/docs/img/secure-communication-paths.png)
 
@@ -62,6 +62,6 @@ The planner accesses the Hive Metastore for metadata. During execution, query fr
 | Security Capability 	| Description 	| Reference 	|
 |---------------------	|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
 | Authentication 	| Drillbit is a client to the Hive Metastore. Authentication options   include Kerberos and DIGEST. By default, authentication is disabled. 	| Kerberos (if Hive impersonation is disabled and Kerberos principal is   mentioned) and DIGEST (the only supported mechanism when Hive impersonation   is enabled and SASL is enabled). 	|
-| Impersonation 	| While accessing Hive Metastore, Hive impersonation setting in the storage   plugin configuration overrides Drill’s impersonation setting. While scanning   data in Hive, Drill impersonation is applied. 	| Configuring User Impersonation 	|
+| Impersonation 	| While accessing Hive Metastore, Hive impersonation setting in the storage   plugin configuration overrides Drill’s impersonation setting. While scanning   data in Hive, Drill impersonation is applied. 	| [Configuring User Impersonation]({{site.baseurl}}/docs/configuring-user-impersonation) 	|
 | Authorization 	| Drill supports SQL standard-based authorization and storage-based   authorization. 	| [Configuring User Impersonation with Hive Authorization]({{site.baseurl}}/docs/configuring-user-impersonation-with-hive-authorization) 	|
 
