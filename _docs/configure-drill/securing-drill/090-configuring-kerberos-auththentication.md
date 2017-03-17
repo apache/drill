@@ -1,6 +1,6 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-17 22:19:49 UTC
+date: 2017-03-17 22:31:37 UTC
 parent: "Securing Drill"
 ---
 In release 1.10 Drill supports Kerberos v5 network security authentication.  To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill 1.10.
@@ -120,7 +120,7 @@ A client can provide its credentials in two ways:
 - With a keytab file and the client principal provided in the user property of the connection URL.
 
 ### Configuration Options
-The following table lists configuration options for connection URLs. See the [Connection URL Examples]({{site.baseurl}}/docs/configuring-kerberos-authentication/#connection-url-examples) section for sample URLs.
+The following table lists configuration options for connection URLs. See the Connection URL Examples section for sample URLs.
 
 | Connection Parameter | Description                                                                                                                                                                                                                                                                                                                                                                                                                         | Mandatory/Optional | Default Value                                                                                                                                                                                             |
 |----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -134,17 +134,13 @@ The following table lists configuration options for connection URLs. See the [Co
 
 ### Connection URL Examples
 
-Five examples in this section show the JDBC connection URL that the embedded JDBC client uses for Kerberos authentication. The first section, [Example of a Simple Connection URL]({{site.baseurl}}/docs/configuring-kerberos-authentication/#example-of-a-simple-connection-url), includes a simple connection string and the second section, [Examples of Connection URLs Used with Previously Generated TGTs]({{site.baseurl}}/docs/configuring-kerberos-authentication/#examples-of-connection-urls-used-with-previously-generated-tgts), includes examples to use with previously generated TGTs.
+The following five examples show the JDBC connection URL that the embedded JDBC client uses for Kerberos authentication. The first section, Example of a Simple Connection URL, includes a simple connection string and the second section, Examples of Connection URLs Used with Previously Generated TGTs, includes examples to use with previously generated TGTs.
 
-- [Example 1:  TGT for Client Credentials]({{site.baseurl}}/docs/configuring-kerberos-authentication/#example-1:-tgt-for-client-credentials)
-
-- [Example 2:  Drillbit Provided by Direct Connection String and Configured with a Unique Service Principal]({{site.baseurl}}/docs/configuring-kerberos-authentication/#example-2:-drillbit-provided-by-direct-connection-string-and-configured-with-a-unique-service-principal)
-
-- [Example 3:  Drillbit Selected by ZooKeeper and Configured with a Unique Service Principal]({{site.baseurl}}/docs/configuring-kerberos-authentication/#example-3:-drillbit-selected-by-zooKeeper-and-configured-with-a-unique-service-principal)
-
-- [Example 4:  Drillbit Selected by Zookeeper and Configured with a Common Service Principal]({{site.baseurl}}/docs/example-4:-drillbit-selected-by-zookeeper-and-configured-with-a-common-service-principal)
-
-- [Example 5:  Keytab for Client Credentials]({{site.baseurl}}/docs/configuring-plain-authentication/#example-5:-keytab-for-client-credentials)
+- Example 1:  TGT for Client Credentials  
+- Example 2:  Drillbit Provided by Direct Connection String and Configured with a Unique Service Principal  
+- Example 3:  Drillbit Selected by ZooKeeper and Configured with a Unique Service Principal  
+- Example 4:  Drillbit Selected by Zookeeper and Configured with a Common Service Principal  
+- Example 5:  Keytab for Client Credentials
 
 #### Example of a Simple Connection URL
 
