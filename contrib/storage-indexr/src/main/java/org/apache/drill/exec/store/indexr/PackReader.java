@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.indexr;
 
 import com.google.common.base.Preconditions;
 
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Float4Vector;
@@ -26,6 +27,7 @@ import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.TimeVector;
+import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +41,16 @@ import io.indexr.data.DoubleSetter;
 import io.indexr.data.FloatSetter;
 import io.indexr.data.IntSetter;
 import io.indexr.data.LongSetter;
+import io.indexr.io.ByteSlice;
 import io.indexr.segment.Column;
 import io.indexr.segment.ColumnSchema;
+import io.indexr.segment.ColumnType;
 import io.indexr.segment.SQLType;
 import io.indexr.segment.Segment;
 import io.indexr.segment.pack.DataPack;
+import io.indexr.segment.pack.Version;
 import io.indexr.util.MemoryUtil;
+import io.netty.buffer.DrillBuf;
 
 class PackReader {
   private static final int MAX_ROW_COUNT_PER_STEP = DataPack.MAX_COUNT >> 1;
@@ -129,101 +135,173 @@ class PackReader {
       int columnId = columnIds[projectId];
       DataPack dataPack = segment.column(columnId).pack(packId);
       SQLType sqlType = projectInfo.columnSchema.getSqlType();
-      switch (sqlType) {
-        case INT: {
-          IntVector.Mutator mutator = (IntVector.Mutator) projectInfo.valueVector.getMutator();
-          // Force the vector to allocate engough space.
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new IntSetter() {
-            @Override
-            public void set(int id, int value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
+      if (dataPack.version() == Version.VERSION_0_ID) {
+        switch (sqlType) {
+          case INT: {
+            IntVector.Mutator mutator = (IntVector.Mutator) projectInfo.valueVector.getMutator();
+            // Force the vector to allocate engough space.
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new IntSetter() {
+              @Override
+              public void set(int id, int value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case BIGINT: {
+            BigIntVector.Mutator mutator = (BigIntVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case FLOAT: {
+            Float4Vector.Mutator mutator = (Float4Vector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new FloatSetter() {
+              @Override
+              public void set(int id, float value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case DOUBLE: {
+            Float8Vector.Mutator mutator = (Float8Vector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new DoubleSetter() {
+              @Override
+              public void set(int id, double value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case DATE: {
+            DateVector.Mutator mutator = (DateVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case TIME: {
+            TimeVector.Mutator mutator = (TimeVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new IntSetter() {
+              @Override
+              public void set(int id, int value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case DATETIME: {
+            TimeStampVector.Mutator mutator = (TimeStampVector.Mutator) projectInfo.valueVector.getMutator();
+            mutator.setSafe(count - 1, 0);
+            dataPack.foreach(offset, count, new LongSetter() {
+              @Override
+              public void set(int id, long value) {
+                mutator.set(id - offset, value);
+              }
+            });
+            break;
+          }
+          case VARCHAR: {
+            ByteBuffer byteBuffer = MemoryUtil.getHollowDirectByteBuffer();
+            VarCharVector.Mutator mutator = (VarCharVector.Mutator) projectInfo.valueVector.getMutator();
+            dataPack.foreach(offset, count,
+                new BytePieceSetter() {
+                  @Override
+                  public void set(int id, BytePiece bytes) {
+                    assert bytes.base == null;
+                    MemoryUtil.setByteBuffer(byteBuffer, bytes.addr, bytes.len, null);
+                    mutator.setSafe(id - offset, byteBuffer, 0, byteBuffer.remaining());
+                  }
+                });
+            break;
+          }
+          default:
+            throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.getSqlType()));
         }
-        case BIGINT: {
-          BigIntVector.Mutator mutator = (BigIntVector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new LongSetter() {
-            @Override
-            public void set(int id, long value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
+      } else {
+        // Start from v1, we directly copy the memory into vector, to avoid the traversing cost.
+
+        if (sqlType == SQLType.VARCHAR) {
+          VarCharVector vector = (VarCharVector) projectInfo.valueVector;
+          UInt4Vector offsetVector = vector.getOffsetVector();
+          ByteSlice packData = dataPack.data();
+
+          // Expand the offset vector if needed.
+          offsetVector.getMutator().setSafe(count, 0);
+          DrillBuf offsetBuffer = offsetVector.getBuffer();
+
+          long offsetBufferAddr = offsetBuffer.memoryAddress();
+
+          long packDataAddr = packData.address();
+          int firstStrOffset = MemoryUtil.getInt(packDataAddr + (offset << 2));
+          int totalStrSize = 0;
+          for (int i = 0; i <= count; i++) {
+            int strOffset = MemoryUtil.getInt(packDataAddr + ((i + offset) << 2)) - firstStrOffset;
+            MemoryUtil.setInt(offsetBufferAddr + (i << 2), strOffset);
+            totalStrSize = strOffset;
+          }
+
+          // Expand the data vector if needed.
+          while (vector.getByteCapacity() < totalStrSize) {
+            vector.reAlloc();
+          }
+          Preconditions.checkState(vector.getByteCapacity() >= totalStrSize, "Illegal drill vector buff capacity");
+          DrillBuf vectorBuffer = vector.getBuffer();
+
+          int totalIndexSize = (packRowCount + 1) << 2;
+          long strDataAddr = packData.address() + totalIndexSize;
+          MemoryUtil.copyMemory(strDataAddr + firstStrOffset, vectorBuffer.memoryAddress(), totalStrSize);
+        } else {
+          BaseDataValueVector vector = (BaseDataValueVector) projectInfo.valueVector;
+          // Expand the vector if needed.
+          switch (sqlType) {
+            case INT:
+              ((IntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case BIGINT:
+              ((BigIntVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case FLOAT:
+              ((Float4Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case DOUBLE:
+              ((Float8Vector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case DATE:
+              ((DateVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case TIME:
+              ((TimeVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            case DATETIME:
+              ((TimeStampVector.Mutator) vector.getMutator()).setSafe(count - 1, 0);
+              break;
+            default:
+              throw new IllegalStateException(String.format("Unsupported data type %s", projectInfo.columnSchema.getSqlType()));
+          }
+
+          DrillBuf vectorBuffer = vector.getBuffer();
+          ByteSlice packData = dataPack.data();
+
+          int byteOffset = offset << ColumnType.numTypeShift(sqlType.dataType);
+          int byteCount = count << ColumnType.numTypeShift(sqlType.dataType);
+
+          MemoryUtil.copyMemory(packData.address() + byteOffset, vectorBuffer.memoryAddress(), byteCount);
         }
-        case FLOAT: {
-          Float4Vector.Mutator mutator = (Float4Vector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new FloatSetter() {
-            @Override
-            public void set(int id, float value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
-        }
-        case DOUBLE: {
-          Float8Vector.Mutator mutator = (Float8Vector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new DoubleSetter() {
-            @Override
-            public void set(int id, double value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
-        }
-        case DATE: {
-          DateVector.Mutator mutator = (DateVector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new LongSetter() {
-            @Override
-            public void set(int id, long value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
-        }
-        case TIME: {
-          TimeVector.Mutator mutator = (TimeVector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new IntSetter() {
-            @Override
-            public void set(int id, int value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
-        }
-        case DATETIME: {
-          TimeStampVector.Mutator mutator = (TimeStampVector.Mutator) projectInfo.valueVector.getMutator();
-          mutator.setSafe(count - 1, 0);
-          dataPack.foreach(offset, count, new LongSetter() {
-            @Override
-            public void set(int id, long value) {
-              mutator.set(id - offset, value);
-            }
-          });
-          break;
-        }
-        case VARCHAR: {
-          ByteBuffer byteBuffer = MemoryUtil.getHollowDirectByteBuffer();
-          VarCharVector.Mutator mutator = (VarCharVector.Mutator) projectInfo.valueVector.getMutator();
-          dataPack.foreach(offset, count,
-              new BytePieceSetter() {
-                @Override
-                public void set(int id, BytePiece bytes) {
-                  assert bytes.base == null;
-                  MemoryUtil.setByteBuffer(byteBuffer, bytes.addr, bytes.len, null);
-                  mutator.setSafe(id - offset, byteBuffer, 0, byteBuffer.remaining());
-                }
-              });
-          break;
-        }
-        default:
-          throw new IllegalStateException(String.format("Unsupported date type %s", projectInfo.columnSchema.getSqlType()));
       }
     }
 
