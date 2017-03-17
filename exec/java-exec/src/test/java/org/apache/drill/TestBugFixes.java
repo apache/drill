@@ -241,4 +241,35 @@ public class TestBugFixes extends BaseTestQuery {
     query.append("(CAST('1951-05-16' AS DATE))) tbl(dt)");
     test(query.toString());
   }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanOrWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT\n" +
+        "CASE WHEN employee_id IN (1) THEN 1 ELSE 0 END `first`\n" +
+        ", CASE WHEN employee_id IN (2) THEN 1 ELSE 0 END `second`\n" +
+        ", CASE WHEN employee_id IN (1, 2) THEN 1 ELSE 0 END `any`\n" +
+        "FROM cp.`employee.json` ORDER BY employee_id limit 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("first", "second", "any")
+        .baselineValues(1, 0, 1)
+        .baselineValues(0, 1, 1)
+        .go();
+  }
+
+  @Test // DRILL-4971
+  public void testVisitBooleanAndWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT employee_id FROM cp.`employee.json` WHERE\n" +
+        "((employee_id > 1 AND employee_id < 3) OR (employee_id > 9 AND employee_id < 11))\n" +
+        "AND (employee_id > 1 AND employee_id < 3)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("employee_id")
+        .baselineValues((long) 2)
+        .go();
+  }
 }
