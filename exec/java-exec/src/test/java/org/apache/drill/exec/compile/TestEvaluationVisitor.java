@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.drill.exec.compile;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
+import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,7 +37,7 @@ import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.junit.Test;
 
-public class TestEvaluationVisitor {
+public class TestEvaluationVisitor extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestEvaluationVisitor.class);
 
 
@@ -70,6 +71,37 @@ public class TestEvaluationVisitor {
 
     v.addExpr(e2,  g.getRoot());
     logger.debug(g.generateAndGet());
+  }
+
+  @Test
+  public void testVisitBooleanOrWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT\n" +
+        "CASE WHEN employee_id IN (1) THEN 1 ELSE 0 END `first`\n" +
+        ", CASE WHEN employee_id IN (2) THEN 1 ELSE 0 END `second`\n" +
+        ", CASE WHEN employee_id IN (1, 2) THEN 1 ELSE 0 END `any`\n" +
+        "FROM cp.`employee.json` ORDER BY employee_id limit 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("first", "second", "any")
+        .baselineValues(1, 0, 1)
+        .baselineValues(0, 1, 1)
+        .go();
+  }
+
+  @Test
+  public void testVisitBooleanAndWithoutFunctionsEvaluation() throws Exception {
+    String query = "SELECT employee_id FROM cp.`employee.json` WHERE\n" +
+        "((employee_id > 1 AND employee_id < 3) OR (employee_id > 9 AND employee_id < 11))\n" +
+        "AND (employee_id > 1 AND employee_id < 3)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("employee_id")
+        .baselineValues((long) 2)
+        .go();
   }
 
   private LogicalExpression getExpr(String expr) throws Exception{
