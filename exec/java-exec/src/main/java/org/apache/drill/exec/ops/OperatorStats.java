@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import com.carrotsearch.hppc.cursors.IntLongCursor;
 import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
 import com.carrotsearch.hppc.procedures.IntLongProcedure;
 
-public class OperatorStats {
+public class OperatorStats implements OperatorStatReceiver {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
 
   protected final int operatorId;
@@ -60,7 +60,7 @@ public class OperatorStats {
   private long setupMark;
   private long waitMark;
 
-  private long schemas;
+//  private long schemas;
   private int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
@@ -74,6 +74,7 @@ public class OperatorStats {
    * @param original - OperatorStats object to create a copy from
    * @param isClean - flag to indicate whether to start with clean state indicators or inherit those from original object
    */
+
   public OperatorStats(OperatorStats original, boolean isClean) {
     this(original.operatorId, original.operatorType, original.inputCount, original.allocator);
 
@@ -102,6 +103,7 @@ public class OperatorStats {
   private String assertionError(String msg){
     return String.format("Failure while %s for operator id %d. Currently have states of processing:%s, setup:%s, waiting:%s.", msg, operatorId, inProcessing, inSetup, inWait);
   }
+
   /**
    * OperatorStats merger - to merge stats from other OperatorStats
    * this is needed in case some processing is multithreaded that needs to have
@@ -110,6 +112,7 @@ public class OperatorStats {
    * @param from - OperatorStats from where to merge to "this"
    * @return OperatorStats - for convenience so one can merge multiple stats in one go
    */
+
   public OperatorStats mergeMetrics(OperatorStats from) {
     final IntLongHashMap fromMetrics = from.longMetrics;
 
@@ -265,26 +268,30 @@ public class OperatorStats {
     public void apply(int key, double value) {
       builder.addMetric(MetricValue.newBuilder().setMetricId(key).setDoubleValue(value));
     }
-
   }
+
   public void addDoubleMetrics(OperatorProfile.Builder builder) {
     if (doubleMetrics.size() > 0) {
       doubleMetrics.forEach(new DoubleProc(builder));
     }
   }
 
+  @Override
   public void addLongStat(MetricDef metric, long value){
     longMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
+  @Override
   public void addDoubleStat(MetricDef metric, double value){
     doubleMetrics.putOrAdd(metric.metricId(), value, value);
   }
 
+  @Override
   public void setLongStat(MetricDef metric, long value){
     longMetrics.put(metric.metricId(), value);
   }
 
+  @Override
   public void setDoubleStat(MetricDef metric, double value){
     doubleMetrics.put(metric.metricId(), value);
   }

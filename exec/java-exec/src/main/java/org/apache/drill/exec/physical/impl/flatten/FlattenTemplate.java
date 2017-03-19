@@ -284,7 +284,7 @@ public abstract class FlattenTemplate implements Flattener {
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
     }
     this.transfers = ImmutableList.copyOf(transfers);
-    outputAllocator = outgoing.getOutgoingContainer().getOperatorContext().getAllocator();
+    outputAllocator = outgoing.getOutgoingContainer().getAllocator();
     doSetup(context, incoming, outgoing);
   }
 

@@ -23,7 +23,7 @@ import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -90,12 +90,12 @@ public class CodeGenerator<T> {
   private String generatedCode;
   private String generifiedCode;
 
-  CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+  CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     this(ClassGenerator.getDefaultMapping(), definition, funcRegistry, optionManager);
   }
 
   CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-     FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+     FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     Preconditions.checkNotNull(definition.getSignature(),
         "The signature for defintion %s was incorrectly initialized.", definition);
     this.definition = definition;
@@ -224,22 +224,22 @@ public class CodeGenerator<T> {
   }
 
   public static <T> CodeGenerator<T> get(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     return new CodeGenerator<T>(definition, funcRegistry, optionManager);
   }
 
   public static <T> ClassGenerator<T> getRoot(TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     return get(definition, funcRegistry, optionManager).getRoot();
   }
 
   public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     return get(mappingSet, definition, funcRegistry, optionManager).getRoot();
   }
 
   public static <T> CodeGenerator<T> get(MappingSet mappingSet, TemplateClassDefinition<T> definition,
-      FunctionImplementationRegistry funcRegistry, OptionManager optionManager) {
+      FunctionImplementationRegistry funcRegistry, OptionSet optionManager) {
     return new CodeGenerator<T>(mappingSet, definition, funcRegistry, optionManager);
   }
 

@@ -23,6 +23,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -51,7 +52,7 @@ public class CodeCompiler {
     private final ClassTransformer transformer;
     private final ClassBuilder classBuilder;
 
-    public CodeGenCompiler(final DrillConfig config, final OptionManager optionManager) {
+    public CodeGenCompiler(final DrillConfig config, final OptionSet optionManager) {
       transformer = new ClassTransformer(config, optionManager);
       classBuilder = new ClassBuilder(config, optionManager);
     }
@@ -134,7 +135,7 @@ public class CodeCompiler {
   private final LoadingCache<CodeGenerator<?>, GeneratedClassEntry> cache;
   private final boolean preferPlainJava;
 
-  public CodeCompiler(final DrillConfig config, final OptionManager optionManager) {
+  public CodeCompiler(final DrillConfig config, final OptionSet optionManager) {
     codeGenCompiler = new CodeGenCompiler(config, optionManager);
     useCache = ! config.getBoolean(DISABLE_CACHE_CONFIG);
     cache = CacheBuilder.newBuilder()

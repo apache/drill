@@ -27,6 +27,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -96,10 +97,10 @@ public class SchemaUtil {
 
   @SuppressWarnings("resource")
   private static  ValueVector coerceVector(ValueVector v, VectorContainer c, MaterializedField field,
-                                           int recordCount, OperatorContext context) {
+                                           int recordCount, BufferAllocator allocator) {
     if (v != null) {
       int valueCount = v.getAccessor().getValueCount();
-      TransferPair tp = v.getTransferPair(context.getAllocator());
+      TransferPair tp = v.getTransferPair(allocator);
       tp.transfer();
       if (v.getField().getType().getMinorType().equals(field.getType().getMinorType())) {
         if (field.getType().getMinorType() == MinorType.UNION) {
@@ -113,7 +114,7 @@ public class SchemaUtil {
         }
         return tp.getTo();
       } else {
-        ValueVector newVector = TypeHelper.getNewVector(field, context.getAllocator());
+        ValueVector newVector = TypeHelper.getNewVector(field, allocator);
         Preconditions.checkState(field.getType().getMinorType() == MinorType.UNION, "Can only convert vector to Union vector");
         UnionVector u = (UnionVector) newVector;
         final ValueVector vv = u.addVector(tp.getTo());
@@ -135,7 +136,7 @@ public class SchemaUtil {
         return u;
       }
     } else {
-      v = TypeHelper.getNewVector(field, context.getAllocator());
+      v = TypeHelper.getNewVector(field, allocator);
       v.allocateNew();
       v.getMutator().setValueCount(recordCount);
       return v;
@@ -150,6 +151,10 @@ public class SchemaUtil {
    * @return
    */
   public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, OperatorContext context) {
+    return coerceContainer(in, toSchema, context.getAllocator());
+  }
+
+  public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, BufferAllocator allocator) {
     int recordCount = in.getRecordCount();
     boolean isHyper = false;
     Map<String, Object> vectorMap = Maps.newHashMap();
@@ -166,7 +171,7 @@ public class SchemaUtil {
       }
     }
 
-    VectorContainer c = new VectorContainer(context);
+    VectorContainer c = new VectorContainer(allocator);
 
     for (MaterializedField field : toSchema) {
       if (isHyper) {
@@ -174,18 +179,18 @@ public class SchemaUtil {
         final ValueVector[] vvsOut;
         if (vvs == null) {
           vvsOut = new ValueVector[1];
-          vvsOut[0] = coerceVector(null, c, field, recordCount, context);
+          vvsOut[0] = coerceVector(null, c, field, recordCount, allocator);
         } else {
           vvsOut = new ValueVector[vvs.length];
           for (int i = 0; i < vvs.length; ++i) {
-            vvsOut[i] = coerceVector(vvs[i], c, field, recordCount, context);
+            vvsOut[i] = coerceVector(vvs[i], c, field, recordCount, allocator);
           }
         }
         c.add(vvsOut);
       } else {
         @SuppressWarnings("resource")
         final ValueVector v = (ValueVector) vectorMap.remove(field.getPath());
-        c.add(coerceVector(v, c, field, recordCount, context));
+        c.add(coerceVector(v, c, field, recordCount, allocator));
       }
     }
     c.buildSchema(in.getSchema().getSelectionVectorMode());
