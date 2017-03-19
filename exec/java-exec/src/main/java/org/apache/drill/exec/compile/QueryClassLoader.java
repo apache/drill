@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.codehaus.commons.compiler.CompileException;
 
 import com.google.common.collect.MapMaker;
@@ -44,7 +44,7 @@ public class QueryClassLoader extends URLClassLoader {
 
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
-  public QueryClassLoader(DrillConfig config, OptionManager sessionOptions) {
+  public QueryClassLoader(DrillConfig config, OptionSet sessionOptions) {
     super(new URL[0], Thread.currentThread().getContextClassLoader());
     compilerSelector = new ClassCompilerSelector(this, config, sessionOptions);
   }

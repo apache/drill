@@ -76,8 +76,9 @@ public class OptionValue implements Comparable<OptionValue> {
         return createString(type, name, val);
       case DOUBLE:
         return createDouble(type, name, Double.valueOf(val));
+      default:
+        return null;
     }
-    return null;
   }
 
   @JsonCreator
@@ -114,8 +115,9 @@ public class OptionValue implements Comparable<OptionValue> {
         return string_val;
       case DOUBLE:
         return float_val;
+      default:
+        return null;
     }
-    return null;
   }
 
   @Override

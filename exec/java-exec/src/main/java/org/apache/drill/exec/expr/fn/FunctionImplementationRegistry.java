@@ -60,6 +60,7 @@ import org.apache.drill.exec.proto.UserBitShared.Jar;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
@@ -83,12 +84,12 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   private boolean deleteTmpDir = false;
   private File tmpDir;
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
-  private final OptionManager optionManager;
+  private OptionSet optionManager;
   private final boolean useDynamicUdfs;
 
   @VisibleForTesting
-  public FunctionImplementationRegistry(DrillConfig config) {
-    this(config, ClassPathScanner.fromPrescan(config), null);
+  public FunctionImplementationRegistry(DrillConfig config){
+    this(config, ClassPathScanner.fromPrescan(config));
   }
 
   public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan) {
@@ -134,6 +135,11 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     logger.info("Function registry loaded.  {} functions loaded in {} ms.", localFunctionRegistry.size(), w.elapsed(TimeUnit.MILLISECONDS));
     this.remoteFunctionRegistry = new RemoteFunctionRegistry(new UnregistrationListener());
     this.localUdfDir = getLocalUdfDir(config);
+  }
+
+  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan, OptionSet optionManager) {
+    this(config, classpathScan);
+    this.optionManager = optionManager;
   }
 
   /**

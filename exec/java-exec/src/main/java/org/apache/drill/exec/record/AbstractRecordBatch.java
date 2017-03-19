@@ -59,7 +59,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.popConfig = popConfig;
     this.oContext = oContext;
     stats = oContext.getStats();
-    container = new VectorContainer(this.oContext);
+    container = new VectorContainer(this.oContext.getAllocator());
     if (buildSchema) {
       state = BatchState.BUILD_SCHEMA;
     } else {

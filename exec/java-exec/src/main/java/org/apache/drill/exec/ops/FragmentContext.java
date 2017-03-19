@@ -53,6 +53,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
@@ -67,7 +68,7 @@ import com.google.common.collect.Maps;
 /**
  * Contextual objects required for execution of a particular fragment.
  */
-public class FragmentContext implements AutoCloseable, UdfUtilities {
+public class FragmentContext implements AutoCloseable, UdfUtilities, FragmentExecContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
   private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = Maps.newHashMap();
@@ -194,6 +195,11 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return fragmentOptions;
   }
 
+  @Override
+  public OptionSet getOptionSet() {
+    return fragmentOptions;
+  }
+
   public void setBuffers(final IncomingBuffers buffers) {
     Preconditions.checkArgument(this.buffers == null, "Can only set buffers once.");
     this.buffers = buffers;
@@ -215,6 +221,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
    *
    * @return false if the action should terminate immediately, true if everything is okay.
    */
+  @Override
   public boolean shouldContinue() {
     return executorState.shouldContinue();
   }
@@ -306,20 +313,24 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return allocator.isOverLimit();
   }
 
+  @Override
   public <T> T getImplementationClass(final ClassGenerator<T> cg)
       throws ClassTransformationException, IOException {
     return getImplementationClass(cg.getCodeGenerator());
   }
 
+  @Override
   public <T> T getImplementationClass(final CodeGenerator<T> cg)
       throws ClassTransformationException, IOException {
     return context.getCompiler().createInstance(cg);
   }
 
+  @Override
   public <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
     return getImplementationClass(cg.getCodeGenerator(), instanceCount);
   }
 
+  @Override
   public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
     return context.getCompiler().createInstances(cg, instanceCount);
   }
@@ -372,10 +383,12 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return executorState.isFailed();
   }
 
+  @Override
   public FunctionImplementationRegistry getFunctionRegistry() {
     return funcRegistry;
   }
 
+  @Override
   public DrillConfig getConfig() {
     return context.getConfig();
   }
@@ -384,6 +397,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     allocator.setLimit(limit);
   }
 
+  @Override
   public ExecutionControls getExecutionControls() {
     return executionControls;
   }
