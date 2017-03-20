@@ -1794,6 +1794,8 @@ struct ServerMetaContext {
 	boost::mutex m_mutex;
 	boost::condition_variable m_cv;
 
+    ServerMetaContext(): m_done(false), m_status(QRY_SUCCESS), m_serverMeta(), m_mutex(), m_cv() {};
+
 	static status_t listener(void* ctx, const exec::user::ServerMeta* serverMeta, DrillClientError* err) {
 		ServerMetaContext* context = static_cast<ServerMetaContext*>(ctx);
 			if (err) {
