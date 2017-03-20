@@ -1359,15 +1359,15 @@ status_t DrillClientImpl::processServerMetaResult(AllocatedBufferPtr allocatedBu
     std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
     if(it!=this->m_queryHandles.end()){
         DrillClientServerMetaHandle* pHandle=static_cast<DrillClientServerMetaHandle*>((*it).second);
-        exec::user::GetServerMetaResp* resp = new exec::user::GetServerMetaResp();
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GetServerMetaResp result Handle " << msg.m_pbody.size() << std::endl;)
-        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+        exec::user::GetServerMetaResp resp;
+        if (!(resp.ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
             return handleQryError(QRY_COMM_ERROR, "Cannot decode GetServerMetaResp results", pHandle);
         }
-        if (resp->status() != exec::user::OK) {
-            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        if (resp.status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp.error(), pHandle);
         }
-        pHandle->notifyListener(&(resp->server_meta()), NULL);
+        pHandle->notifyListener(&(resp.server_meta()), NULL);
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetServerMetaResp result " << std::endl;)
     }else{
         return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
