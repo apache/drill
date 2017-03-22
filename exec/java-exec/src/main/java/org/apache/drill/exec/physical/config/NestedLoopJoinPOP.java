@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,7 @@ package org.apache.drill.exec.physical.config;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 @JsonTypeName("nested-loop-join")
 public class NestedLoopJoinPOP extends AbstractBase {
@@ -42,27 +41,20 @@ public class NestedLoopJoinPOP extends AbstractBase {
 
   private final PhysicalOperator left;
   private final PhysicalOperator right;
-
-  /*
-   * Conditions and jointype are currently not used, since the condition is always true
-   * and we don't perform any special execution operation based on join type either. However
-   * when we enhance NLJ this would be used.
-   */
-  private final List<JoinCondition> conditions;
   private final JoinRelType joinType;
+  private final LogicalExpression condition;
 
   @JsonCreator
   public NestedLoopJoinPOP(
       @JsonProperty("left") PhysicalOperator left,
       @JsonProperty("right") PhysicalOperator right,
-      @JsonProperty("conditions") List<JoinCondition> conditions,
-      @JsonProperty("joinType") JoinRelType joinType
+      @JsonProperty("joinType") JoinRelType joinType,
+      @JsonProperty("condition") LogicalExpression condition
   ) {
     this.left = left;
     this.right = right;
-    this.conditions = conditions;
-    Preconditions.checkArgument(joinType != null, "Join type is missing!");
     this.joinType = joinType;
+    this.condition = condition;
   }
 
   @Override
@@ -72,8 +64,8 @@ public class NestedLoopJoinPOP extends AbstractBase {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    Preconditions.checkArgument(children.size() == 2);
-    return new NestedLoopJoinPOP(children.get(0), children.get(1), conditions, joinType);
+    Preconditions.checkArgument(children.size() == 2, "Nested loop join should have two physical operators");
+    return new NestedLoopJoinPOP(children.get(0), children.get(1), joinType, condition);
   }
 
   @Override
@@ -93,9 +85,7 @@ public class NestedLoopJoinPOP extends AbstractBase {
     return joinType;
   }
 
-  public List<JoinCondition> getConditions() {
-    return conditions;
-  }
+  public LogicalExpression getCondition() { return condition; }
 
   @Override
   public int getOperatorType() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -40,35 +41,32 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   // Record count of the left batch currently being processed
   private int leftRecordCount = 0;
 
-  // List of record counts  per batch in the hyper container
+  // List of record counts per batch in the hyper container
   private List<Integer> rightCounts = null;
 
   // Output batch
   private NestedLoopJoinBatch outgoing = null;
 
-  // Next right batch to process
-  private int nextRightBatchToProcess = 0;
-
-  // Next record in the current right batch to process
-  private int nextRightRecordToProcess = 0;
-
-  // Next record in the left batch to process
-  private int nextLeftRecordToProcess = 0;
+  // Iteration status tracker
+  private IterationStatusTracker tracker = new IterationStatusTracker();
 
   /**
    * Method initializes necessary state and invokes the doSetup() to set the
-   * input and output value vector references
+   * input and output value vector references.
+   *
    * @param context Fragment context
    * @param left Current left input batch being processed
    * @param rightContainer Hyper container
+   * @param rightCounts Counts for each right container
    * @param outgoing Output batch
    */
-  public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
+  public void setupNestedLoopJoin(FragmentContext context,
+                                  RecordBatch left,
                                   ExpandableHyperContainer rightContainer,
                                   LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing) {
     this.left = left;
-    leftRecordCount = left.getRecordCount();
+    this.leftRecordCount = left.getRecordCount();
     this.rightCounts = rightCounts;
     this.outgoing = outgoing;
 
@@ -76,76 +74,16 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   }
 
   /**
-   * This method is the core of the nested loop join. For every record on the right we go over
-   * the left batch and produce the cross product output
-   * @param outputIndex index to start emitting records at
-   * @return final outputIndex after producing records in the output batch
-   */
-  private int populateOutgoingBatch(int outputIndex) {
-
-    // Total number of batches on the right side
-    int totalRightBatches = rightCounts.size();
-
-    // Total number of records on the left
-    int localLeftRecordCount = leftRecordCount;
-
-    /*
-     * The below logic is the core of the NLJ. To have better performance we copy the instance members into local
-     * method variables, once we are done with the loop we need to update the instance variables to reflect the new
-     * state. To avoid code duplication of resetting the instance members at every exit point in the loop we are using
-     * 'goto'
-     */
-    int localNextRightBatchToProcess = nextRightBatchToProcess;
-    int localNextRightRecordToProcess = nextRightRecordToProcess;
-    int localNextLeftRecordToProcess = nextLeftRecordToProcess;
-
-    outer: {
-
-      for (; localNextRightBatchToProcess< totalRightBatches; localNextRightBatchToProcess++) { // for every batch on the right
-        int compositeIndexPart = localNextRightBatchToProcess << 16;
-        int rightRecordCount = rightCounts.get(localNextRightBatchToProcess);
-
-        for (; localNextRightRecordToProcess < rightRecordCount; localNextRightRecordToProcess++) { // for every record in this right batch
-          for (; localNextLeftRecordToProcess < localLeftRecordCount; localNextLeftRecordToProcess++) { // for every record in the left batch
-
-            // project records from the left and right batches
-            emitLeft(localNextLeftRecordToProcess, outputIndex);
-            emitRight(localNextRightBatchToProcess, localNextRightRecordToProcess, outputIndex);
-            outputIndex++;
-
-            // TODO: Optimization; We can eliminate this check and compute the limits before the loop
-            if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
-              localNextLeftRecordToProcess++;
-
-              // no more space left in the batch, stop processing
-              break outer;
-            }
-          }
-          localNextLeftRecordToProcess = 0;
-        }
-        localNextRightRecordToProcess = 0;
-      }
-    }
-
-    // update the instance members
-    nextRightBatchToProcess = localNextRightBatchToProcess;
-    nextRightRecordToProcess = localNextRightRecordToProcess;
-    nextLeftRecordToProcess = localNextLeftRecordToProcess;
-
-    // done with the current left batch and there is space in the output batch continue processing
-    return outputIndex;
-  }
-
-  /**
    * Main entry point for producing the output records. Thin wrapper around populateOutgoingBatch(), this method
-   * controls which left batch we are processing and fetches the next left input batch one we exhaust
-   * the current one.
+   * controls which left batch we are processing and fetches the next left input batch once we exhaust the current one.
+   *
+   * @param joinType join type (INNER ot LEFT)
    * @return the number of records produced in the output batch
    */
-  public int outputRecords() {
+  public int outputRecords(JoinRelType joinType) {
     int outputIndex = 0;
     while (leftRecordCount != 0) {
-      outputIndex = populateOutgoingBatch(outputIndex);
+      outputIndex = populateOutgoingBatch(joinType, outputIndex);
       if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
         break;
       }
@@ -156,16 +94,80 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   }
 
   /**
-   * Utility method to clear the memory in the left input batch once we have completed processing it. Resets some
-   * internal state which indicate the next records to process in the left and right batches. Also fetches the next
-   * left input batch.
+   * This method is the core of the nested loop join.For each left batch record looks for matching record
+   * from the list of right batches. Match is checked by calling {@link #doEval(int, int, int)} method.
+   * If matching record is found both left and right records are written into output batch,
+   * otherwise if join type is LEFT, than only left record is written, right batch record values will be null.
+   *
+   * @param joinType join type (INNER or LEFT)
+   * @param outputIndex index to start emitting records at
+   * @return final outputIndex after producing records in the output batch
+   */
+  private int populateOutgoingBatch(JoinRelType joinType, int outputIndex) {
+    // copy index and match counters as local variables to speed up processing
+    int nextRightBatchToProcess = tracker.getNextRightBatchToProcess();
+    int nextRightRecordToProcess = tracker.getNextRightRecordToProcess();
+    int nextLeftRecordToProcess = tracker.getNextLeftRecordToProcess();
+    boolean rightRecordMatched = tracker.isRightRecordMatched();
+
+    outer:
+    // for every record in the left batch
+    for (; nextLeftRecordToProcess < leftRecordCount; nextLeftRecordToProcess++) {
+      // for every batch on the right
+      for (; nextRightBatchToProcess < rightCounts.size(); nextRightBatchToProcess++) {
+        int rightRecordCount = rightCounts.get(nextRightBatchToProcess);
+        // for every record in right batch
+        for (; nextRightRecordToProcess < rightRecordCount; nextRightRecordToProcess++) {
+
+          if (doEval(nextLeftRecordToProcess, nextRightBatchToProcess, nextRightRecordToProcess)) {
+            // project records from the left and right batches
+            emitLeft(nextLeftRecordToProcess, outputIndex);
+            emitRight(nextRightBatchToProcess, nextRightRecordToProcess, outputIndex);
+            outputIndex++;
+            rightRecordMatched = true;
+
+            if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
+              nextRightRecordToProcess++;
+
+              // no more space left in the batch, stop processing
+              break outer;
+            }
+          }
+        }
+        nextRightRecordToProcess = 0;
+      }
+      nextRightBatchToProcess = 0;
+      if (joinType == JoinRelType.LEFT && !rightRecordMatched) {
+        // project records from the left side only, records from right will be null
+        emitLeft(nextLeftRecordToProcess, outputIndex);
+        outputIndex++;
+        if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
+          nextLeftRecordToProcess++;
+
+          // no more space left in the batch, stop processing
+          break;
+        }
+      } else {
+        // reset match indicator if matching record was found
+        rightRecordMatched = false;
+      }
+    }
+
+    // update iteration status tracker with actual index and match counters
+    tracker.update(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, rightRecordMatched);
+    return outputIndex;
+  }
+
+  /**
+   * Utility method to clear the memory in the left input batch once we have completed processing it.
+   * Resets some internal state which indicates the next records to process in the left and right batches,
+   * also fetches the next left input batch.
    */
   private void resetAndGetNextLeft() {
-
     for (VectorWrapper<?> vw : left) {
       vw.getValueVector().clear();
     }
-    nextRightBatchToProcess = nextRightRecordToProcess = nextLeftRecordToProcess = 0;
+    tracker.reset();
     RecordBatch.IterOutcome leftOutcome = outgoing.next(NestedLoopJoinBatch.LEFT_INPUT, left);
     switch (leftOutcome) {
       case OK_NEW_SCHEMA:
@@ -191,5 +193,57 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
                                  @Named("recordIndexWithinBatch") int recordIndexWithinBatch,
                                  @Named("outIndex") int outIndex);
 
-  public abstract void emitLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
+  public abstract void emitLeft(@Named("leftIndex") int leftIndex,
+                                @Named("outIndex") int outIndex);
+
+  protected abstract boolean doEval(@Named("leftIndex") int leftIndex,
+                                    @Named("rightBatchIndex") int batchIndex,
+                                    @Named("rightRecordIndexWithinBatch") int recordIndexWithinBatch);
+
+  /**
+   * Helper class to track position of left and record batches during iteration
+   * and match status of record from the right batch.
+   */
+  private static class IterationStatusTracker {
+    // Next right batch to process
+    private int nextRightBatchToProcess;
+    // Next record in the current right batch to process
+    private int nextRightRecordToProcess;
+    // Next record in the left batch to process
+    private int nextLeftRecordToProcess;
+    // Flag to indicate if record from the left found matching record from the right, applicable during left join
+    private boolean rightRecordMatched;
+
+    int getNextRightBatchToProcess() {
+      return nextRightBatchToProcess;
+    }
+
+    boolean isRightRecordMatched() {
+      return rightRecordMatched;
+    }
+
+    int getNextLeftRecordToProcess() {
+      return nextLeftRecordToProcess;
+    }
+
+    int getNextRightRecordToProcess() {
+      return nextRightRecordToProcess;
+    }
+
+    void update(int nextRightBatchToProcess,
+                int nextRightRecordToProcess,
+                int nextLeftRecordToProcess,
+                boolean rightRecordMatchFound) {
+      this.nextRightBatchToProcess = nextRightBatchToProcess;
+      this.nextRightRecordToProcess = nextRightRecordToProcess;
+      this.nextLeftRecordToProcess = nextLeftRecordToProcess;
+      this.rightRecordMatched = rightRecordMatchFound;
+    }
+
+    void reset() {
+      nextRightBatchToProcess = nextRightRecordToProcess = nextLeftRecordToProcess = 0;
+      rightRecordMatched = false;
+    }
+
+  }
 }
