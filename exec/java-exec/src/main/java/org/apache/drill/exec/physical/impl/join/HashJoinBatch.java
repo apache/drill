@@ -299,7 +299,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       leftExpr = null;
     } else {
       if (left.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-        throw new SchemaChangeException("Hash join does not support probe batch with selection vectors");
+        final String errorMsg = new StringBuilder()
+            .append("Hash join does not support probe batch with selection vectors. ")
+            .append("Probe batch has selection mode = ")
+            .append(left.getSchema().getSelectionVectorMode())
+            .toString();
+        throw new SchemaChangeException(errorMsg);
       }
     }
 
@@ -340,12 +345,18 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           rightSchema = right.getSchema();
 
           if (rightSchema.getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-            throw new SchemaChangeException("Hash join does not support build batch with selection vectors");
+            final String errorMsg = new StringBuilder()
+                .append("Hash join does not support build batch with selection vectors. ")
+                .append("Build batch has selection mode = ")
+                .append(left.getSchema().getSelectionVectorMode())
+                .toString();
+
+            throw new SchemaChangeException(errorMsg);
           }
           setupHashTable();
         } else {
           if (!rightSchema.equals(right.getSchema())) {
-            throw new SchemaChangeException("Hash join does not support schema changes");
+            throw SchemaChangeException.schemaChanged("Hash join does not support schema changes in build side.", rightSchema, right.getSchema());
           }
           hashTable.updateBatches();
         }

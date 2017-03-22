@@ -44,6 +44,7 @@ import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -67,6 +68,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private TypedFieldId[] groupByOutFieldIds;
   private TypedFieldId[] aggrOutFieldIds;      // field ids for the outgoing batch
   private final List<Comparator> comparators;
+  private BatchSchema incomingSchema;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
       GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */,
@@ -118,6 +120,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         return;
     }
 
+    this.incomingSchema = incoming.getSchema();
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
@@ -152,7 +155,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       return aggregator.getOutcome();
     case UPDATE_AGGREGATOR:
       context.fail(UserException.unsupportedError()
-        .message("Hash aggregate does not support schema changes").build(logger));
+          .message(SchemaChangeException.schemaChanged(
+              "Hash aggregate does not support schema change",
+              incomingSchema,
+              incoming.getSchema()).getMessage())
+          .build(logger));
       close();
       killIncoming(false);
       return IterOutcome.STOP;
