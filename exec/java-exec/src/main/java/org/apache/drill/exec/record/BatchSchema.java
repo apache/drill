@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -132,6 +133,44 @@ public class BatchSchema implements Iterable<MaterializedField> {
       return false;
     }
     return true;
+  }
+
+  public List<String> diff(Object obj) {
+
+    List<String> difference = new LinkedList<>();
+
+    if (this == obj || obj == null || getClass() != obj.getClass()) {
+      difference.add("Comparison is impossible - incomparable objects");
+      return difference;
+    }
+
+    BatchSchema other = (BatchSchema) obj;
+    if (fields == null) {
+      if (other.fields != null) {
+        difference.add("Comparison is impossible - field information is missing");
+        return difference;
+      }
+    } else if (!fields.equals(other.fields)) {
+      difference.add("Comparison is impossible - field information is missing");
+      return difference;
+    }
+    for (int i = 0; i < fields.size(); i++) {
+      MajorType t1 = fields.get(i).getType();
+      MajorType t2 = other.fields.get(i).getType();
+      if (t1 == null) {
+        if (t2 != null) {
+          difference.add("Field does not exist: " + t2);
+        }
+      } else {
+        if (!majorTypeEqual(t1, t2)) {
+          difference.add("Field `" + fields.get(i).getLastName() + "` (" + t1.getMinorType() + ") is not compatible with (" + t2.getMinorType() + ")");
+        }
+      }
+    }
+    if (selectionVectorMode != other.selectionVectorMode) {
+      difference.add("Vector modes are not compatible: " + selectionVectorMode + " and " + other.selectionVectorMode);
+    }
+    return difference;
   }
 
   /**

@@ -345,7 +345,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           setupHashTable();
         } else {
           if (!rightSchema.equals(right.getSchema())) {
-            throw new SchemaChangeException("Hash join does not support schema changes");
+            String message = "Hash join does not support schema changes: ";
+            for (String fieldDiscrepency : rightSchema.diff(right.getSchema())) {
+              message += "\n" + fieldDiscrepency;
+            }
+            throw new SchemaChangeException(message);
           }
           hashTable.updateBatches();
         }
