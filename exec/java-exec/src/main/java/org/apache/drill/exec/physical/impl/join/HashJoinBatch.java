@@ -37,6 +37,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
@@ -110,6 +111,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   // Schema of the build side
   private BatchSchema rightSchema = null;
 
+  private BufferAllocator outputAllocator = null;
+
 
   // Generator mapping for the build side
   // Generator mapping for the build side : scalar
@@ -129,7 +132,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   private static final GeneratorMapping PROJECT_PROBE_CONSTANT = GeneratorMapping.create("doSetup" /* setup method */,
       "doSetup" /* eval method */,
       null /* reset */, null /* cleanup */);
-
 
   // Mapping set for the build side
   private final MappingSet projectBuildMapping =
@@ -170,6 +172,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     return outputRecords;
   }
 
+  public long getMemoryUsed() {
+    return outputAllocator.getAllocatedMemory();
+  }
+
   @Override
   protected void buildSchema() throws SchemaChangeException {
     leftUpstream = next(left);
@@ -186,7 +192,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     // Initialize the hash join helper context
-    hjHelper = new HashJoinHelper(context, oContext.getAllocator());
+    // Use a suballocator to keep track of how big our output is becoming!
+    BufferAllocator parentAllocator = this.oContext.getAllocator();
+    outputAllocator = parentAllocator.newChildAllocator("HashJoinOutputAllocator", 0, parentAllocator.getLimit());
+    container.setAllocator(outputAllocator);
+    hjHelper = new HashJoinHelper(context, outputAllocator);
     try {
       rightSchema = right.getSchema();
       final VectorContainer vectors = new VectorContainer(oContext);
@@ -537,6 +547,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     if (hashTable != null) {
       hashTable.clear();
     }
+
+    container.clear();
+
+    if (outputAllocator != null) {
+      outputAllocator.close();
+    }
+
     super.close();
   }
 }

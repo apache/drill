@@ -47,7 +47,17 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   private HashJoinBatch outgoingJoinBatch = null;
 
-  private static final int TARGET_RECORDS_PER_BATCH = 4000;
+  // As long as the batch size is less than targetBatchSizeInBytes AND the number of records is less than
+  // targetRecordsPerBatch, we can still add records to this batch. If we exceed the number of records before hitting
+  // the targetBatchSizeInBytes (e.g. we accumulate 4000 records and the batch is smaller than 10 MB), then nothing
+  // special happens.  However, if we exceed the targetBatchSizeInBytes, that means that the rows are pretty big and
+  // we make the following adjustments.
+  // 1)  Set targetRecordsPerBatch = MAX(1, currentNumRecords/2)
+  // 2)  Set targetBatchSizeInBytes = current allocator size.  Let's say, with the latest record added, the allocator
+  // is 12 MB in size (> 10MB, which is the current targetBatchSizeInBytes).  Then, when we start the next batch, the
+  // allocator automatically allocates 12 MB (not the default value, which would have been smaller than 10 MB).
+  private int targetRecordsPerBatch = 4000;
+  private long targetBatchSizeInBytes = 10*1024*1024;
 
   /* Helper class
    * Maintains linked list of build side records with the same key
@@ -98,7 +108,9 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   }
 
   public void executeProjectRightPhase() {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsProcessed < recordsToProcess) {
+    while (outputRecords < targetRecordsPerBatch
+            && recordsProcessed < recordsToProcess
+            && outgoingJoinBatch.getMemoryUsed() < targetBatchSizeInBytes) {
       projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed), outputRecords);
       recordsProcessed++;
       outputRecords++;
@@ -106,7 +118,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   }
 
   public void executeProbePhase() throws SchemaChangeException {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeState != ProbeState.DONE && probeState != ProbeState.PROJECT_RIGHT) {
+    while (outputRecords < targetRecordsPerBatch
+            && outgoingJoinBatch.getMemoryUsed() < targetBatchSizeInBytes
+            && probeState != ProbeState.DONE
+            && probeState != ProbeState.PROJECT_RIGHT) {
 
       // Check if we have processed all records in this batch we need to invoke next
       if (recordsProcessed == recordsToProcess) {
@@ -237,6 +252,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       executeProjectRightPhase();
     }
 
+    if (outgoingJoinBatch.getMemoryUsed() >= targetBatchSizeInBytes) {
+      targetRecordsPerBatch = Math.max(1, outputRecords/2);
+      targetBatchSizeInBytes = outgoingJoinBatch.getMemoryUsed()+1;
+    }
     return outputRecords;
   }
 
