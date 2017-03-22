@@ -346,7 +346,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
               if (unionTypeEnabled) {
                 this.schema = SchemaUtil.mergeSchemas(schema, incoming.getSchema());
               } else {
-                throw new SchemaChangeException("Schema changes not supported in External Sort. Please enable Union type");
+                throw SchemaChangeException.schemaChanged("Schema changes not supported in External Sort. Please enable Union type",
+                    schema,
+                    incoming.getSchema());
               }
             } else {
               schema = incoming.getSchema();
