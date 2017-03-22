@@ -110,6 +110,30 @@ public class PlannerSettings implements Context{
   public static final EnumeratedStringValidator QUOTING_IDENTIFIERS = new EnumeratedStringValidator(
       QUOTING_IDENTIFIERS_KEY, Quoting.BACK_TICK.string, Quoting.DOUBLE_QUOTE.string, Quoting.BRACKET.string);
 
+  /*
+     Enables rules that re-write query joins in the most optimal way.
+     Though its turned on be default and its value in query optimization is undeniable, user may want turn off such
+     optimization to leave join order indicated in sql query unchanged.
+
+     For example:
+     Currently only nested loop join allows non-equi join conditions usage.
+     During planning stage nested loop join will be chosen when non-equi join is detected
+     and {@link #NLJOIN_FOR_SCALAR} set to false. Though query performance may not be the most optimal in such case,
+     user may use such workaround to execute queries with non-equi joins.
+
+     Nested loop join allows only INNER and LEFT join usage and implies that right input is smaller that left input.
+     During LEFT join when join optimization is enabled and detected that right input is larger that left,
+     join will be optimized: left and right inputs will be flipped and LEFT join type will be changed to RIGHT one.
+     If query contains non-equi joins, after such optimization it will fail, since nested loop does not allow
+     RIGHT join. In this case if user accepts probability of non optimal performance, he may turn off join optimization.
+     Turning off join optimization, makes sense only if user are not sure that right output is less or equal to left,
+     otherwise join optimization can be left turned on.
+
+     Note: once hash and merge joins will allow non-equi join conditions,
+     the need to turn off join optimization may go away.
+   */
+  public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", true);
+
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
 
@@ -280,6 +304,10 @@ public class PlannerSettings implements Context{
     throw UserException.validationError()
         .message("Unknown quoting identifier character '%s'", quotingIdentifiersCharacter)
         .build(logger);
+  }
+
+  public boolean isJoinOptimizationEnabled() {
+    return options.getOption(JOIN_OPTIMIZATION);
   }
 
   @Override

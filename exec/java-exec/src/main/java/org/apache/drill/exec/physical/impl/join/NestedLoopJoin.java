@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -36,8 +37,8 @@ public interface NestedLoopJoin {
                                   ExpandableHyperContainer rightContainer,
                                   LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing);
-  // Produce output records
-  public int outputRecords();
+  // Produce output records taking into account join type
+  public int outputRecords(JoinRelType joinType);
 
   // Project the record at offset 'leftIndex' in the left input batch into the output container at offset 'outIndex'
   public void emitLeft(int leftIndex, int outIndex);

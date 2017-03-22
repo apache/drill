@@ -34,8 +34,6 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 
 import com.google.common.collect.ImmutableList;
@@ -44,7 +42,7 @@ import com.google.common.collect.Lists;
 // abstract base class for the join physical rules
 public abstract class JoinPruleBase extends Prule {
 
-  protected static enum PhysicalJoinType {HASH_JOIN, MERGE_JOIN, NESTEDLOOP_JOIN};
+  protected enum PhysicalJoinType {HASH_JOIN, MERGE_JOIN, NESTEDLOOP_JOIN}
 
   protected JoinPruleBase(RelOptRuleOperand operand, String description) {
     super(operand, description);
@@ -56,10 +54,7 @@ public abstract class JoinPruleBase extends Prule {
     List<Integer> rightKeys = Lists.newArrayList();
     List<Boolean> filterNulls = Lists.newArrayList();
     JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys, filterNulls);
-    if (category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY) {
-      return false;
-    }
-    return true;
+    return !(category == JoinCategory.CARTESIAN || category == JoinCategory.INEQUALITY);
   }
 
   protected List<DistributionField> getDistributionField(List<Integer> keys) {
@@ -238,26 +233,14 @@ public abstract class JoinPruleBase extends Prule {
 
     } else {
       if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
-        call.transformTo(new MergeJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight, joinCondition,
-            join.getJoinType()));
-
+        call.transformTo(new MergeJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
+            convertedRight, joinCondition, join.getJoinType()));
       } else if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
-        call.transformTo(new HashJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight, joinCondition,
-            join.getJoinType()));
+        call.transformTo(new HashJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
+            convertedRight, joinCondition, join.getJoinType()));
       } else if (physicalJoinType == PhysicalJoinType.NESTEDLOOP_JOIN) {
-        if (joinCondition.isAlwaysTrue()) {
-          call.transformTo(new NestedLoopJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight, joinCondition,
-            join.getJoinType()));
-        } else {
-          RexBuilder builder = join.getCluster().getRexBuilder();
-          RexLiteral condition = builder.makeLiteral(true); // TRUE condition for the NLJ
-
-          FilterPrel newFilterRel = new FilterPrel(join.getCluster(), convertedLeft.getTraitSet(),
-              new NestedLoopJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft, convertedRight,
-                  condition, join.getJoinType()),
-              joinCondition);
-          call.transformTo(newFilterRel);
-        }
+        call.transformTo(new NestedLoopJoinPrel(join.getCluster(), convertedLeft.getTraitSet(), convertedLeft,
+            convertedRight, joinCondition, join.getJoinType()));
       }
     }
 

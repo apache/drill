@@ -49,7 +49,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       PlannerSettings settings) {
     JoinRelType type = join.getJoinType();
 
-    if (!(type == JoinRelType.INNER || (type == JoinRelType.LEFT && JoinUtils.hasScalarSubqueryInput(left, right)))) {
+    if (!(type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
       return false;
     }
 
@@ -63,11 +63,7 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
     }
 
     if (settings.isNlJoinForScalarOnly()) {
-      if (JoinUtils.hasScalarSubqueryInput(left, right)) {
-        return true;
-      } else {
-        return false;
-      }
+      return JoinUtils.hasScalarSubqueryInput(left, right);
     }
 
     return true;
