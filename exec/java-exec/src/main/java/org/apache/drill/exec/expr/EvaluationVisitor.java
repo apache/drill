@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -144,6 +144,9 @@ public class EvaluationVisitor {
     previousExpressions = mapStack.pop();
   }
 
+  /**
+   * Get a HoldingContainer for the expression if it had been already evaluated
+   */
   private HoldingContainer getPrevious(LogicalExpression expression, MappingSet mappingSet) {
     HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mappingSet));
     if (previous != null) {
@@ -671,8 +674,8 @@ public class EvaluationVisitor {
       HoldingContainer out = generator.declare(op.getMajorType());
 
       JLabel label = generator.getEvalBlockLabel("AndOP");
-      JBlock eval = generator.getEvalBlock().block();  // enter into nested block
-      generator.nestEvalBlock(eval);
+      JBlock eval = generator.createInnerEvalBlock();
+      generator.nestEvalBlock(eval);  // enter into nested block
 
       HoldingContainer arg = null;
 
@@ -733,7 +736,7 @@ public class EvaluationVisitor {
       HoldingContainer out = generator.declare(op.getMajorType());
 
       JLabel label = generator.getEvalBlockLabel("OrOP");
-      JBlock eval = generator.getEvalBlock().block();
+      JBlock eval = generator.createInnerEvalBlock();
       generator.nestEvalBlock(eval);   // enter into nested block.
 
       HoldingContainer arg = null;

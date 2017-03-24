@@ -186,6 +186,26 @@ public class ClassGenerator<T>{
     return getEvalBlock().label(prefix + labelIndex ++);
   }
 
+  /**
+   * Creates an inner braced and indented block
+   * @param type type of the created block
+   * @return a newly created inner block
+   */
+  private JBlock createInnerBlock(BlockType type) {
+    final JBlock currBlock = getBlock(type);
+    final JBlock innerBlock = new JBlock();
+    currBlock.add(innerBlock);
+    return innerBlock;
+  }
+
+  /**
+   * Creates an inner braced and indented block for evaluation of the expression.
+   * @return a newly created inner eval block
+   */
+  protected JBlock createInnerEvalBlock() {
+    return createInnerBlock(BlockType.EVAL);
+  }
+
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId) {
     return declareVectorValueSetupAndMember(DirectExpression.direct(batchName), fieldId);
   }
