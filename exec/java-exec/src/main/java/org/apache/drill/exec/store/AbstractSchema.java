@@ -38,6 +38,8 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
+import static java.lang.Math.abs;
+
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
@@ -198,6 +200,10 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
 
   @Override
   public boolean contentsHaveChangedSince(long lastCheck, long now) {
+    //use cached schema for 1 second, it will be helpful if it is highly concurrent scenario
+    if( abs(now - lastCheck) < 1000 ) {
+      return false;
+    }
     return true;
   }
 

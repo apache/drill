@@ -70,7 +70,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) {
     SqlIdentifier schema = ((SqlDescribeSchema) sqlNode).getSchema();
-    SchemaPlus drillSchema = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schema.names);
+    SchemaPlus drillSchema = config.getConverter().getExpandedDefaultSchema(schema.names);
 
     if (drillSchema != null) {
       StoragePlugin storagePlugin;

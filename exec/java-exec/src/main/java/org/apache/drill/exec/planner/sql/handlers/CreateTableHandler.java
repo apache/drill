@@ -80,10 +80,9 @@ public class CreateTableHandler extends DefaultSqlHandler {
     final RelNode newTblRelNode =
         SqlHandlerUtil.resolveNewTableRel(false, sqlCreateTable.getFieldNames(), validatedRowType, queryRelNode);
 
-    final DrillConfig drillConfig = context.getConfig();
-    final AbstractSchema drillSchema = resolveSchema(sqlCreateTable, config.getConverter().getDefaultSchema(), drillConfig);
+    final AbstractSchema drillSchema = resolveSchema(sqlCreateTable);
 
-    checkDuplicatedObjectExistence(drillSchema, originalTableName, drillConfig, context.getSession());
+    checkDuplicatedObjectExistence(drillSchema, originalTableName, context.getConfig(), context.getSession());
 
     final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode,
         sqlCreateTable.getPartitionColumns());
@@ -97,7 +96,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
     // Generated table name is unique, UUID.randomUUID() is used for its generation.
     // Original table name is stored in temporary tables cache, so it can be substituted to generated one during querying.
     String newTableName = sqlCreateTable.isTemporary() ?
-        context.getSession().registerTemporaryTable(drillSchema, originalTableName, drillConfig) : originalTableName;
+        context.getSession().registerTemporaryTable(drillSchema, originalTableName, context.getConfig()) : originalTableName;
 
     DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTableName,
         sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType(), storageStrategy);
@@ -266,22 +265,32 @@ public class CreateTableHandler extends DefaultSqlHandler {
    * Though if table to be created is temporary table, checks if resolved schema is valid default temporary workspace.
    *
    * @param sqlCreateTable create table call
-   * @param defaultSchema default schema
-   * @param config drill config
    * @return resolved schema
    * @throws UserException if attempted to create temporary table outside of temporary workspace
    */
-  private AbstractSchema resolveSchema(SqlCreateTable sqlCreateTable, SchemaPlus defaultSchema, DrillConfig config) {
+  private AbstractSchema resolveSchema(SqlCreateTable sqlCreateTable) {
+
     AbstractSchema resolvedSchema;
+
+    //with DRILL-5089's fix, schema tree is now dynamically expanded, the getExpandedDefaultSchema function is to return the
+    //direct schema for the parameter schemapath. e.g. for schemapath dfs.tmp.table1, the direct schema means
+    //the schema pointing to dfs.tmp, so no searching in schema tree needed,
+    SchemaPlus targetSchema = config.getConverter().getExpandedDefaultSchema(sqlCreateTable.getSchemaPath());
+    SchemaPlus temporarySchema = null;
+    if(sqlCreateTable.isTemporary()) {
+      List<String> tempSchemaPath = Lists.newArrayList(context.getConfig().
+          getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE));
+      temporarySchema = config.getConverter().getExpandedDefaultSchema(tempSchemaPath);
+    }
+
     if (sqlCreateTable.isTemporary() && sqlCreateTable.getSchemaPath().size() == 0) {
-      resolvedSchema = SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+      return SchemaUtilites.getTemporaryWorkspace(temporarySchema, context.getConfig());
     } else {
-      resolvedSchema = SchemaUtilites.resolveToMutableDrillSchema(
-          defaultSchema, sqlCreateTable.getSchemaPath());
+      resolvedSchema = SchemaUtilites.toMutableDrillSchema(targetSchema);
     }
 
     if (sqlCreateTable.isTemporary()) {
-      return SchemaUtilites.resolveToValidTemporaryWorkspace(resolvedSchema, config);
+      return SchemaUtilites.resolveToValidTemporaryWorkspace(resolvedSchema, context.getConfig());
     }
 
     return resolvedSchema;

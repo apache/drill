@@ -54,17 +54,16 @@ public class ShowFileHandler extends DefaultSqlHandler {
     String defaultLocation = null;
     String fromDir = "./";
 
-    SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
-    SchemaPlus drillSchema = defaultSchema;
+    SchemaPlus drillSchema = config.getConverter().getDefaultSchema();
 
     // Show files can be used without from clause, in which case we display the files in the default schema
     if (from != null) {
       // We are not sure if the full from clause is just the schema or includes table name,
       // first try to see if the full path specified is a schema
-      drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names);
+      drillSchema = config.getConverter().getExpandedDefaultSchema(from.names);
       if (drillSchema == null) {
         // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
-        drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names.subList(0, from.names.size() - 1));
+        drillSchema = config.getConverter().getExpandedDefaultSchema(from.names.subList(0, from.names.size() - 1));
         fromDir = fromDir + from.names.get((from.names.size() - 1));
       }
 

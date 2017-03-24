@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
-
 import java.io.IOException;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -62,8 +60,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
     try {
 
-      final SchemaPlus schema = findSchema(config.getConverter().getDefaultSchema(),
-          refreshTable.getSchemaPath());
+      final SchemaPlus schema = config.getConverter().getExpandedDefaultSchema(refreshTable.getSchemaPath());
 
       if (schema == null) {
         return direct(false, "Storage plugin or workspace does not exist [%s]",
