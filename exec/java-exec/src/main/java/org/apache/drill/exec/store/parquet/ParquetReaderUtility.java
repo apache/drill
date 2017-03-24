@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.google.common.collect.Sets;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -38,6 +40,7 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnPath;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.joda.time.Chronology;
 import org.joda.time.DateTimeConstants;
 import org.apache.parquet.example.data.simple.NanoTime;
@@ -48,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class where we can capture common logic between the two parquet readers
@@ -157,11 +161,12 @@ public class ParquetReaderUtility {
         // Drill has only ever written a single row group per file, only need to correct the statistics
         // on the first row group
         Metadata.RowGroupMetadata rowGroupMetadata = file.getRowGroups().get(0);
+        Long rowCount = rowGroupMetadata.getRowCount();
         for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
           // Setting Min/Max values for ParquetTableMetadata_v1
           if (new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
             OriginalType originalType = columnMetadata.getOriginalType();
-            if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue() &&
+            if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue(rowCount) &&
                 (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
               int newMinMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) columnMetadata.getMaxValue());
               columnMetadata.setMax(newMinMax);
@@ -171,12 +176,115 @@ public class ParquetReaderUtility {
           // Setting Max values for ParquetTableMetadata_v2
           else if (new MetadataVersion(2, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion())) &&
               columnMetadata.getName() != null && Arrays.equals(columnMetadata.getName(), names) &&
-              columnMetadata.hasSingleValue() && (Integer) columnMetadata.getMaxValue() >
+              columnMetadata.hasSingleValue(rowCount) && (Integer) columnMetadata.getMaxValue() >
               ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
             int newMax = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) columnMetadata.getMaxValue());
             columnMetadata.setMax(newMax);
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Checks assigns byte arrays to min/max values obtained from the deserialized string
+   * for BINARY.
+   *
+   * @param parquetTableMetadata table metadata that should be corrected
+   */
+  public static void correctBinaryInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
+    // Looking for the names of the columns with BINARY data type
+    // in the metadata cache file for V2 and all v3 versions
+    Set<List<String>> columnsNames = getBinaryColumnsNames(parquetTableMetadata);
+
+    for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
+      for (Metadata.RowGroupMetadata rowGroupMetadata : file.getRowGroups()) {
+        Long rowCount = rowGroupMetadata.getRowCount();
+        for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
+          // Setting Min/Max values for ParquetTableMetadata_v1
+          if (new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
+            if (columnMetadata.getPrimitiveType() == PrimitiveTypeName.BINARY
+                || columnMetadata.getPrimitiveType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+              setMinMaxValues(columnMetadata, rowCount);
+            }
+          }
+          // Setting Min/Max values for V2 and all V3 versions before V3_3
+          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) < 0
+                    && columnsNames.contains(Arrays.asList(columnMetadata.getName()))) {
+            setMinMaxValues(columnMetadata, rowCount);
+          }
+          // Setting Min/Max values for V3_3 and all younger versions
+          else if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) >= 0
+                      && columnsNames.contains(Arrays.asList(columnMetadata.getName()))) {
+            convertMinMaxValues(columnMetadata, rowCount);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns the set of the lists with names of the columns with BINARY or
+   * FIXED_LEN_BYTE_ARRAY data type from {@code ParquetTableMetadataBase columnTypeMetadataCollection}
+   * if parquetTableMetadata has version v2 or v3 (including minor versions).
+   *
+   * @param parquetTableMetadata table metadata the source of the columns to check
+   * @return set of the lists with column names
+   */
+  private static Set<List<String>> getBinaryColumnsNames(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
+    Set<List<String>> names = Sets.newHashSet();
+    if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v2) {
+      for (Metadata.ColumnTypeMetadata_v2 columnTypeMetadata :
+        ((Metadata.ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
+        if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
+            || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+          names.add(Arrays.asList(columnTypeMetadata.name));
+        }
+      }
+    } else if (parquetTableMetadata instanceof Metadata.ParquetTableMetadata_v3) {
+      for (Metadata.ColumnTypeMetadata_v3 columnTypeMetadata :
+        ((Metadata.ParquetTableMetadata_v3) parquetTableMetadata).columnTypeInfo.values()) {
+        if (columnTypeMetadata.primitiveType == PrimitiveTypeName.BINARY
+            || columnTypeMetadata.primitiveType == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+          names.add(Arrays.asList(columnTypeMetadata.name));
+        }
+      }
+    }
+    return names;
+  }
+
+  /**
+   * Checks that column has single value and replaces Min and Max by their byte values
+   * in {@code Metadata.ColumnMetadata columnMetadata} if their values were stored as strings.
+   *
+   * @param columnMetadata column metadata that should be changed
+   * @param rowCount       rows count in column chunk
+   */
+  private static void setMinMaxValues(Metadata.ColumnMetadata columnMetadata, long rowCount) {
+    if (columnMetadata.hasSingleValue(rowCount)) {
+      Object minValue = columnMetadata.getMinValue();
+      if (minValue != null && minValue instanceof String) {
+        byte[] bytes = ((String) minValue).getBytes();
+        columnMetadata.setMax(bytes);
+        columnMetadata.setMin(bytes);
+      }
+    }
+  }
+
+  /**
+   * Checks that column has single value and replaces Min and Max by their byte values from Base64 data
+   * in Metadata.ColumnMetadata columnMetadata if their values were stored as strings.
+   *
+   * @param columnMetadata column metadata that should be changed
+   * @param rowCount       rows count in column chunk
+   */
+  private static void convertMinMaxValues(Metadata.ColumnMetadata columnMetadata, long rowCount) {
+    if (columnMetadata.hasSingleValue(rowCount)) {
+      Object minValue = columnMetadata.getMinValue();
+      if (minValue != null && minValue instanceof String) {
+        byte[] bytes = Base64.decodeBase64(((String) minValue).getBytes());
+        columnMetadata.setMax(bytes);
+        columnMetadata.setMin(bytes);
       }
     }
   }
