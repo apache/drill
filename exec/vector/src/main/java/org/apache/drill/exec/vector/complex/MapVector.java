@@ -277,7 +277,10 @@ public class MapVector extends AbstractMapVector {
       bufOffset += child.getBufferLength();
     }
 
-    assert bufOffset == buf.capacity();
+    // We should have consumed all bytes written into the buffer
+    // during deserialization.
+
+    assert bufOffset == buf.writerIndex();
   }
 
   @Override
