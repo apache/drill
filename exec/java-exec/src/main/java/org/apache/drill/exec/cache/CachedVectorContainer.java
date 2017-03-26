@@ -61,9 +61,7 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
-
   }
-
 
   @Override
   public void read(DataInput input) throws IOException {
@@ -95,5 +93,4 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
   public byte[] getData() {
     return data;
   }
-
 }
