@@ -68,6 +68,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private final IdentityHashMap<Reservation, Object> reservations;
   private final HistoricalLog historicalLog;
 
+  /**
+   * Disk I/O buffer used for all reads and writes of DrillBufs.
+   * The buffer is allocated when first needed, then reused by all
+   * subsequent I/O operations for the same operator. Since very few
+   * operators do I/O, the number of allocated buffers should be
+   * low. Better would be to hold the buffer at the fragment level
+   * since all operators within a fragment run within a single thread.
+   */
+
+  private byte ioBuffer[];
+
   protected BaseAllocator(
       final BaseAllocator parentAllocator,
       final String name,
@@ -350,6 +361,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         return;
       }
 
+      if (ioBuffer != null) {
+        ioBuffer = null;
+      }
       if (DEBUG) {
         if (!isClosed()) {
           final Object object;
@@ -513,12 +527,8 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
     if (DEBUG) {
       historicalLog.recordEvent("closed");
-      logger.debug(String.format(
-          "closed allocator[%s].",
-          name));
+      logger.debug(String.format("closed allocator[%s].", name));
     }
-
-
   }
 
   @Override
@@ -793,20 +803,20 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     return DEBUG;
   }
 
-  /**
-   * Disk I/O buffer used for all reads and writes of DrillBufs.
-   */
-
-  private byte ioBuffer[];
-
   public byte[] getIOBuffer() {
     if (ioBuffer == null) {
+      // Length chosen to the smallest size that maximizes
+      // disk I/O performance. Smaller sizes slow I/O. Larger
+      // sizes provide no increase in performance.
+      // Revisit from time to time.
+
       ioBuffer = new byte[32*1024];
     }
     return ioBuffer;
   }
 
-  public void read(DrillBuf buf, InputStream in, int length) throws IOException {
+  @Override
+  public void read(DrillBuf buf, int length, InputStream in) throws IOException {
     buf.clear();
 
     byte[] buffer = getIOBuffer();
@@ -817,11 +827,27 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     }
   }
 
+  public DrillBuf read(int length, InputStream in) throws IOException {
+    DrillBuf buf = buffer(length);
+    try {
+      read(buf, length, in);
+      return buf;
+    } catch (IOException e) {
+      buf.release();
+      throw e;
+    }
+  }
+
+  @Override
   public void write(DrillBuf buf, OutputStream out) throws IOException {
+    write(buf, buf.readableBytes(), out);
+  }
+
+  @Override
+  public void write(DrillBuf buf, int length, OutputStream out) throws IOException {
     byte[] buffer = getIOBuffer();
-    int bufLength = buf.readableBytes();
-    for (int posn = 0; posn < bufLength; posn += buffer.length) {
-      int len = Math.min(buffer.length, bufLength - posn);
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
       buf.getBytes(posn, buffer, 0, len);
       out.write(buffer, 0, len);
     }

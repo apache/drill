@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,6 +37,12 @@ public class SelectionVector2 implements AutoCloseable {
 
   public SelectionVector2(BufferAllocator allocator) {
     this.allocator = allocator;
+  }
+
+  public SelectionVector2(BufferAllocator allocator, DrillBuf buf, int count) {
+    this.allocator = allocator;
+    buffer = buf;
+    recordCount = count;
   }
 
   public int getCount() {
