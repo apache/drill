@@ -39,6 +39,12 @@ public class SelectionVector2 implements AutoCloseable {
     this.allocator = allocator;
   }
 
+  public SelectionVector2(BufferAllocator allocator, DrillBuf buf, int count) {
+    this.allocator = allocator;
+    buffer = buf;
+    recordCount = count;
+  }
+
   public int getCount() {
     return recordCount;
   }
