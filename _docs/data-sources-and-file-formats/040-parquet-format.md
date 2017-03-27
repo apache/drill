@@ -1,6 +1,6 @@
 ---
 title: "Parquet Format"
-date: 2017-03-27 18:12:49 UTC
+date: 2017-03-27 18:38:33 UTC
 parent: "Data Sources and File Formats"
 ---
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
@@ -148,7 +148,7 @@ The first table in this section maps SQL data types to Parquet data types, limit
 | INTEGER           | INT32        | 4-byte signed integer                         |
 | VARBINARY(12)*    | INT96        | 12-byte signed int                            |
 
-\* Drill 1.10 and later can implicitly interpret the Parquet INT96 type as TIMESTAMP (with standard 8 byte/millisecond precision) when the `store.parquet.int96_as_timestamp` option is enabled. In earlier versions of Drill (1.2 through 1.9) or when the `store.parquet.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function for Drill to correctly interpret INT96 values as TIMESTAMP values.
+\* Drill 1.10 and later can implicitly interpret the Parquet INT96 type as TIMESTAMP (with standard 8 byte/millisecond precision) when the `store.parquet.reader.int96_as_timestamp` option is enabled. In earlier versions of Drill (1.2 through 1.9) or when the `store.parquet.reader.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function for Drill to correctly interpret INT96 values as TIMESTAMP values.
 
 ## About INT96 Support  
 As of Drill 1.10, Drill can implicitly interpret the INT96 timestamp data type in Parquet files when the `store.parquet.reader.int96_as_timestamp` option is enabled. For earlier versions of Drill,  or when the `store.parquet.reader.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function,   
