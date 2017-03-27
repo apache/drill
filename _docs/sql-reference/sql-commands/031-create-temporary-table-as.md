@@ -1,6 +1,6 @@
 ---
 title: "CREATE TEMPORARY TABLE AS (CTTAS)"
-date: 2017-03-15 19:35:02 UTC
+date: 2017-03-27 18:12:49 UTC
 parent: "SQL Commands"
 ---
 As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to store the results of a query in a temporary table. You can reference the temporary table in subsequent queries within the same session, thereby improving query performance. Data written to the temporary table is not permanently stored on the filesystem. Drill automatically drops the temporary table once the session ends or the Drillbit process fails. Therefore, you do not have to manually drop the table.
@@ -24,9 +24,7 @@ As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to s
 
 ###Workspace for Temporary Tables
 
-By default, Drill creates temporary tables within the default temporary workspace, `dfs.tmp`. The default temporary workspace must be writable, file-based, and point to a location that
-
-already exists, otherwise temporary tables creation will fail. You cannot create a temporary table outside of the default temporary workspace.
+By default, Drill creates temporary tables within the default temporary workspace, `dfs.tmp`. The default temporary workspace must be writable, file-based, and point to a location that already exists, otherwise temporary table creation fails. You cannot create a temporary table outside of the default temporary workspace.
 
 Example dfs.tmp workspace in the dfs storage plugin:
 
@@ -87,9 +85,11 @@ When you mention a table name in a SELECT statement, any temporary table with th
 
 For example, when you issue a SELECT statement on a table name that is common among the default temporary tables workspace and the current workspace, the temporary table is returned:
 
-	USE dfs.json;
+       USE dfs.json;
 
-	SELECT * FROM donuts; //returns table from dfs.tmp SELECT* FROM dfs.json.donuts; //returns table from dfs.json
+       SELECT * FROM donuts; //returns table from dfs.tmp  
+         
+       SELECT* FROM dfs.json.donuts; //returns table from dfs.json
 
 ###Drop a Temporary Table
 

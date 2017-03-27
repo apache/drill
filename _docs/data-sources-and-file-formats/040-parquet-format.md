@@ -1,6 +1,6 @@
 ---
 title: "Parquet Format"
-date: 2017-03-13 22:49:07 UTC
+date: 2017-03-27 18:12:49 UTC
 parent: "Data Sources and File Formats"
 ---
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
@@ -151,9 +151,9 @@ The first table in this section maps SQL data types to Parquet data types, limit
 \* Drill 1.10 and later can implicitly interpret the Parquet INT96 type as TIMESTAMP (with standard 8 byte/millisecond precision) when the `store.parquet.int96_as_timestamp` option is enabled. In earlier versions of Drill (1.2 through 1.9) or when the `store.parquet.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function for Drill to correctly interpret INT96 values as TIMESTAMP values.
 
 ## About INT96 Support  
-As of Drill 1.10, Drill can implicitly interpret the INT96 timestamp data type in Parquet files when the `store.parquet.int96_as_timestamp` option is enabled. For earlier versions of Drill,  or when the `store.parquet.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function,   
+As of Drill 1.10, Drill can implicitly interpret the INT96 timestamp data type in Parquet files when the `store.parquet.reader.int96_as_timestamp` option is enabled. For earlier versions of Drill,  or when the `store.parquet.reader.int96_as_timestamp` option is disabled, you must use the CONVERT_FROM function,   
 
-The `store.parquet.int96_as_timestamp` option is disabled by default. Use the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command to enable the option. Unnecessarily enabling this option can cause queries to fail because the CONVERT_FROM(col, 'TIMESTAMP_IMPALA') function does not work when `store.parquet.int96_as_timestamp` is enabled.  
+The `store.parquet.reader.int96_as_timestamp` option is disabled by default. Use the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command to enable the option. Unnecessarily enabling this option can cause queries to fail because the CONVERT_FROM(col, 'TIMESTAMP_IMPALA') function does not work when `store.parquet.reader.int96_as_timestamp` is enabled.  
 
 ###Using CONVERT_FROM to Interpret INT96
 In earlier versions of Drill (1.2 through 1.9), you must use the CONVERT_FROM function for Drill to interpret the Parquet INT96 type. For example, to decode a timestamp from Hive or Impala, which is of type INT96, use the CONVERT_FROM function and the [TIMESTAMP_IMPALA]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) type argument:  
