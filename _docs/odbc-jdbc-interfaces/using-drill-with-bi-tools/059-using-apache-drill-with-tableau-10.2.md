@@ -1,6 +1,6 @@
 ---
 title: "Using Apache Drill with Tableau 10.2"
-date: 2017-03-30 23:49:58 UTC
+date: 2017-03-31 00:05:13 UTC
 parent: "Using Drill with BI Tools"
 ---  
 
@@ -32,9 +32,9 @@ Your system must meet the following prerequisites before you can complete the st
 ###Required Steps  
  
 Complete the following steps to use Apache Drill with Tableau 10.2:  
-1.	[Install and Configure the MapR Drill ODBC Driver.]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10.2)  
-2.	[Connect Tableau to Drill (using the Apache Drill Data Connector).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10.2)  
-3.	[Query and Analyze the Data (various data formats with Tableau and Drill).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10.2)  
+1.	[Install and Configure the MapR Drill ODBC Driver.]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-1:-install-and-configure-the-mapr-drill-odbc-driver)  
+2.	[Connect Tableau to Drill (using the Apache Drill Data Connector).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-2:-connect-tableau-to-drill)  
+3.	[Query and Analyze the Data (various data formats with Tableau and Drill).]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-3:-query-and-analyze-the-data)  
 
 ---------- 
 
@@ -79,7 +79,7 @@ To connect Tableau to Drill, complete the following steps:
 
 Tableau can now use Drill to query various data sources and visualize the information, as shown in the following example.  
 
-####Example  
+**Example**  
   
 A retailer has order data in CSV files on the distributed file system, product data in HBase, and customer data in Hive. The retailer wants to see the average order total by customer for each state (Tableau LoD), as well as the total number of orders and average revenue by customer for the top 5 states by revenue (Tableau Set).
 
@@ -92,8 +92,7 @@ To find this information, the retail business analyst completes the following st
 5. Enters a name for the set. ![set name]({{ site.baseurl }}/docs/img/T10.2_IMG_6.png)
 6. Creates a table showing the total number of orders and average revenue by customer for the top 5 states by revenue and also shows the number for the states not in the top 5. ![avg rev]({{ site.baseurl }}/docs/img/T10.2_IMG_7.png)  
 
-You have completed the tutorial for configuring Tableau 10.2 to work with Apache Drill. For additional support, see  
-[https://www.tableau.com/support/drivers](https://www.tableau.com/support/drivers).
+You have completed the tutorial for configuring Tableau 10.2 to work with Apache Drill. For additional support, see [https://www.tableau.com/support/drivers](https://www.tableau.com/support/drivers).
 
 
 
