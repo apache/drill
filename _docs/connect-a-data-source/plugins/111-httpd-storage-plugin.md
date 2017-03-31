@@ -1,5 +1,5 @@
 ---
-title: "Configuring Drill to Read Web Server Logs"
+title: "HTTPD Storage Plugin"
 date: 2017-03-15 19:34:55 UTC
 parent: "Configure Drill"
 ---
