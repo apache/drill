@@ -1036,8 +1036,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Drill to Read Web Server Logs", 
-            "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+            "previous_title": "Configuring Resources for a Shared Drillbit", 
+            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -1390,8 +1390,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Drill to Read Web Server Logs", 
-                            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+                            "next_title": "Configuration Options", 
+                            "next_url": "/docs/configuration-options/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -1408,23 +1408,6 @@
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
-                    "title": "Configuring Drill to Read Web Server Logs", 
-                    "url": "/docs/configuring-drill-to-read-web-server-logs/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1522,8 +1505,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Drill to Read Web Server Logs", 
-                    "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1553,14 +1536,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "next_title": "HTTPD Storage Plugin", 
+                    "next_url": "/docs/httpd-storage-plugin/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
                     "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
                     "title": "Configuring the Drill Shell", 
                     "url": "/docs/configuring-the-drill-shell/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring the Drill Shell", 
+                    "previous_url": "/docs/configuring-the-drill-shell/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
+                    "title": "HTTPD Storage Plugin", 
+                    "url": "/docs/httpd-storage-plugin/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -1605,23 +1605,6 @@
             "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
             "title": "Configuring Drill Memory", 
             "url": "/docs/configuring-drill-memory/"
-        }, 
-        "Configuring Drill to Read Web Server Logs": {
-            "breadcrumbs": [
-                {
-                    "title": "Configure Drill", 
-                    "url": "/docs/configure-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
-            "parent": "Configure Drill", 
-            "previous_title": "Configuring Resources for a Shared Drillbit", 
-            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-            "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
-            "title": "Configuring Drill to Read Web Server Logs", 
-            "url": "/docs/configuring-drill-to-read-web-server-logs/"
         }, 
         "Configuring Inbound Impersonation": {
             "breadcrumbs": [
@@ -1926,8 +1909,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Drill to Read Web Server Logs", 
-            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring Multitenant Resources", 
             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -2102,8 +2085,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill to Read Web Server Logs", 
-                    "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring Multitenant Resources", 
                     "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -2150,8 +2133,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Connect a Data Source", 
-            "next_url": "/docs/connect-a-data-source/", 
+            "next_title": "HTTPD Storage Plugin", 
+            "next_url": "/docs/httpd-storage-plugin/", 
             "parent": "Configure Drill", 
             "previous_title": "Ports Used by Drill", 
             "previous_url": "/docs/ports-used-by-drill/", 
@@ -2400,8 +2383,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Configuring the Drill Shell", 
-            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "previous_title": "HTTPD Storage Plugin", 
+            "previous_url": "/docs/httpd-storage-plugin/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -4136,6 +4119,23 @@
             "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
+        }, 
+        "HTTPD Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Connect a Data Source", 
+            "next_url": "/docs/connect-a-data-source/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring the Drill Shell", 
+            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
+            "title": "HTTPD Storage Plugin", 
+            "url": "/docs/httpd-storage-plugin/"
         }, 
         "Handling Different Data Types": {
             "breadcrumbs": [
@@ -14506,8 +14506,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Drill to Read Web Server Logs", 
-                            "next_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+                            "next_title": "Configuration Options", 
+                            "next_url": "/docs/configuration-options/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
@@ -14524,23 +14524,6 @@
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configure Drill", 
-                            "url": "/docs/configure-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Configure Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/configure-drill/079-configuring-drill-to-read-web-server-logs.md", 
-                    "title": "Configuring Drill to Read Web Server Logs", 
-                    "url": "/docs/configuring-drill-to-read-web-server-logs/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -14638,8 +14621,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Drill to Read Web Server Logs", 
-                    "previous_url": "/docs/configuring-drill-to-read-web-server-logs/", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -14669,14 +14652,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "next_title": "HTTPD Storage Plugin", 
+                    "next_url": "/docs/httpd-storage-plugin/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
                     "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
                     "title": "Configuring the Drill Shell", 
                     "url": "/docs/configuring-the-drill-shell/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring the Drill Shell", 
+                    "previous_url": "/docs/configuring-the-drill-shell/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/111-httpd-storage-plugin.md", 
+                    "title": "HTTPD Storage Plugin", 
+                    "url": "/docs/httpd-storage-plugin/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -14929,8 +14929,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Configuring the Drill Shell", 
-            "previous_url": "/docs/configuring-the-drill-shell/", 
+            "previous_title": "HTTPD Storage Plugin", 
+            "previous_url": "/docs/httpd-storage-plugin/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
