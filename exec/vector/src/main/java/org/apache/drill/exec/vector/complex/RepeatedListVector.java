@@ -218,6 +218,10 @@ public class RepeatedListVector extends AbstractContainerVector
       ephPair.copyValueSafe(fromIndex, thisIndex);
     }
 
+    @Override
+    public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+      copyFromSafe(fromIndex, toIndex, (DelegateRepeatedVector) from);
+    }
   }
 
   protected class RepeatedListTransferPair implements TransferPair {
@@ -425,6 +429,10 @@ public class RepeatedListVector extends AbstractContainerVector
 
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedListVector from) {
     delegate.copyFromSafe(fromIndex, thisIndex, from.delegate);
+  }
+
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
   }
 
   @Override

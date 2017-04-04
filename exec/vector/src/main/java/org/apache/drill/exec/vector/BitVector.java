@@ -183,6 +183,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFrom(fromIndex, toIndex, (BitVector) from);
+  }
+
+  @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
     Preconditions.checkArgument(this.field.getPath().equals(metadata.getNamePart().getName()), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int valueCount = metadata.getValueCount();

@@ -239,6 +239,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (${minor.class}Vector) from);
+  }
+
+  @Override
   public int getAllocatedByteCount() {
     return offsetVector.getAllocatedByteCount() + super.getAllocatedByteCount();
   }

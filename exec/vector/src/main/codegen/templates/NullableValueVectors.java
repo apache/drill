@@ -374,6 +374,19 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     values.copyFromSafe(fromIndex, thisIndex, from.values);
   }
 
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    Nullable${minor.class}Vector fromVector = (Nullable${minor.class}Vector) from;
+    <#if type.major == "VarLen">
+
+    // This method is to be called only for loading the vector
+    // sequentially, so there should be no empties to fill.
+
+    </#if>
+    bits.copyFromSafe(fromIndex, toIndex, fromVector.bits);
+    values.copyFromSafe(fromIndex, toIndex, fromVector.values);
+  }
+
   public final class Accessor extends BaseDataValueVector.BaseAccessor <#if type.major = "VarLen">implements VariableWidthVector.VariableWidthAccessor</#if> {
     final UInt1Vector.Accessor bAccessor = bits.getAccessor();
     final ${valuesName}.Accessor vAccessor = values.getAccessor();

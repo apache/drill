@@ -80,6 +80,7 @@ public class UnionVector implements ValueVector {
     this.callBack = callBack;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -246,6 +247,11 @@ public class UnionVector implements ValueVector {
 
   public void copyFromSafe(int inIndex, int outIndex, UnionVector from) {
     copyFrom(inIndex, outIndex, from);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (UnionVector) from);
   }
 
   public ValueVector addVector(ValueVector v) {

@@ -90,6 +90,11 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedMapVector) from);
+  }
+
+  @Override
   protected boolean supportsDirectRead() {
     return true;
   }
