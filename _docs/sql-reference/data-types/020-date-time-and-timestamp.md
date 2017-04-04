@@ -1,6 +1,6 @@
 ---
 title: "Date, Time, and Timestamp"
-date:  
+date: 2017-04-04 00:05:30 UTC
 parent: "Data Types"
 ---
 Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. Drill supports date, time, timestamp, and interval literals shown in the following example:
@@ -20,11 +20,11 @@ Using familiar date and time formats, listed in the [SQL data types table]({{ si
 
 ## INTERVAL
 
-The INTERVALYEAR and INTERVALDAY internal types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
+The INTERVAL YEAR and INTERVAL DAY internal types represent a period of time. The INTERVAL YEAR type specifies values from a year to a month. The INTERVAL DAY type specifies values from a day to seconds.
 
 ### Interval in Data Source
 
-If your interval data is in the data source, you need to cast the data to an SQL interval type to query the data using Drill. For example, to use interval data in a JSON file, cast the JSON data, which is of the VARCHAR type, to INTERVALYEAR and INTERVALDAY using the following ISO 8601 syntax:
+If your interval data is in the data source, you need to cast the data to an SQL interval type to query the data using Drill. For example, to use interval data in a JSON file, cast the JSON data, which is of the VARCHAR type, to INTERVAL YEAR and INTERVAL DAY using the following ISO 8601 syntax:
 
     P [qty] Y [qty] M [qty] D T [qty] H [qty] M [qty] S
 
@@ -76,7 +76,7 @@ In the following example, the INTERVAL keyword followed by 200 adds 200 years to
     +--------------------------+
     1 row selected (0.096 seconds)
 
-The following examples show the input and output format of INTERVALYEAR (Year, Month) and INTERVALDAY (Day, Hours, Minutes, Seconds, Milliseconds). The following SELECT statements show how to format the query input. The output shows how to format the data in the data source.
+The following examples show the input and output format of INTERVAL YEAR (Year, Month) and INTERVAL DAY (Day, Hours, Minutes, Seconds, Milliseconds). The following SELECT statements show how to format the query input. The output shows how to format the data in the data source.
 
     SELECT INTERVAL '1 10:20:30.123' day to second FROM sys.version;
     +------------+
