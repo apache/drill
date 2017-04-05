@@ -19,6 +19,7 @@ package org.apache.drill.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -67,6 +68,7 @@ public class FixtureBuilder {
   protected boolean usingZk;
   protected File tempDir;
   protected boolean preserveLocalFiles;
+  protected Properties clientProps;
 
   /**
    * Use the given configuration properties to start the embedded Drillbit.
@@ -117,7 +119,22 @@ public class FixtureBuilder {
     if (configProps == null) {
       configProps = defaultProps();
     }
-    configProps.put(key, value.toString());
+    configProps.put(key, value);
+    return this;
+  }
+
+  /**
+   * Add an additional property for the client connection URL. Convert all the values into
+   * String type.
+   * @param key config property name
+   * @param value property value
+   * @return this builder
+   */
+  public FixtureBuilder configClientProperty(String key, Object value) {
+    if(clientProps == null) {
+      clientProps = new Properties();
+    }
+    clientProps.put(key, value.toString());
     return this;
   }
 
