@@ -19,6 +19,7 @@ package org.apache.drill.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -58,6 +59,7 @@ public class FixtureBuilder {
 
   protected String configResource;
   protected Properties configProps;
+  protected Properties complexConfigProps = new Properties();
   protected List<RuntimeOption> sessionOptions;
   protected List<RuntimeOption> systemOptions;
   protected int bitCount = 1;
@@ -67,6 +69,7 @@ public class FixtureBuilder {
   protected boolean usingZk;
   protected File tempDir;
   protected boolean preserveLocalFiles;
+  protected Properties clientProps;
 
   /**
    * Use the given configuration properties to start the embedded Drillbit.
@@ -107,7 +110,9 @@ public class FixtureBuilder {
   }
 
   /**
-   * Add an additional boot-time property for the embedded Drillbit.
+   * Add an additional boot-time property for the embedded Drillbit. Convert all the values other than
+   * {@link Collection} types into string and store in {@link FixtureBuilder#configProps}. Collection
+   * types values are stored into {@link FixtureBuilder#complexConfigProps}
    * @param key config property name
    * @param value property value
    * @return this builder
@@ -117,7 +122,27 @@ public class FixtureBuilder {
     if (configProps == null) {
       configProps = defaultProps();
     }
-    configProps.put(key, value.toString());
+
+    if(value instanceof Collection<?>) {
+      complexConfigProps.put(key, value);
+    } else {
+      configProps.put(key, value.toString());
+    }
+    return this;
+  }
+
+  /**
+   * Add an additional property for the client connection URL. Convert all the values into
+   * String type.
+   * @param key config property name
+   * @param value property value
+   * @return this builder
+   */
+  public FixtureBuilder configClientProperty(String key, Object value) {
+    if(clientProps == null) {
+      clientProps = new Properties();
+    }
+    clientProps.put(key, value.toString());
     return this;
   }
 

@@ -43,6 +43,7 @@ public class ClientFixture implements AutoCloseable {
 
     protected ClientBuilder(ClusterFixture cluster) {
       this.cluster = cluster;
+      clientProps = cluster.getClientProps();
     }
     /**
      * Specify an optional client property.

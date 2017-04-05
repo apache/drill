@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValueFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper.TestServices;
@@ -133,6 +135,7 @@ public class ClusterFixture implements AutoCloseable {
   private boolean usesZk;
   private boolean preserveLocalFiles;
   private boolean isLocal;
+  private Properties clientProps;
 
   /**
    * Temporary directories created for this test cluster.
@@ -143,6 +146,7 @@ public class ClusterFixture implements AutoCloseable {
 
   ClusterFixture(FixtureBuilder builder) {
 
+    setClientProps(builder);
     configureZk(builder);
     try {
       createConfig(builder);
@@ -155,6 +159,18 @@ public class ClusterFixture implements AutoCloseable {
 
       throw new IllegalStateException( "Cluster fixture setup failed", e );
     }
+  }
+
+  /**
+   * Set the client properties to be used by client fixture.
+   * @param builder {@link FixtureBuilder#clientProps}
+   */
+  private void setClientProps(FixtureBuilder builder) {
+      clientProps = builder.clientProps;
+  }
+
+  public Properties getClientProps() {
+    return clientProps;
   }
 
   private void configureZk(FixtureBuilder builder) {
@@ -203,7 +219,15 @@ public class ClusterFixture implements AutoCloseable {
     if (builder.configResource != null) {
       config = DrillConfig.create(builder.configResource);
     } else if (builder.configProps != null) {
-      config = DrillConfig.create(configProperties(builder.configProps));
+      // Create Config object out of all the String type configuration.
+      Config drillConfig = DrillConfig.create(configProperties(builder.configProps));
+
+      // Add the configs which are non-string type into the DrillConfig
+      for(Entry<Object, Object> entry : builder.complexConfigProps.entrySet()) {
+        drillConfig = drillConfig.withValue(entry.getKey().toString(),
+          ConfigValueFactory.fromAnyRef(entry.getValue()));
+      }
+      config = new DrillConfig(drillConfig, true);
     } else {
       throw new IllegalStateException("Configuration was not provided.");
     }
