@@ -93,8 +93,9 @@ class DrillConnectionImpl extends AvaticaConnection
     super(driver, factory, url, info);
 
     // Initialize transaction-related settings per Drill behavior.
-    super.setTransactionIsolation( TRANSACTION_NONE );
-    super.setAutoCommit( true );
+    super.setTransactionIsolation(TRANSACTION_NONE);
+    super.setAutoCommit(true);
+    super.setReadOnly(false);
 
     this.config = new DrillConnectionConfig(info);
 

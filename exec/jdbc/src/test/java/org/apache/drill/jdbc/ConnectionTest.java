@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,9 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.jdbc.Driver;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +42,7 @@ import java.util.concurrent.Executors;
 /**
  * Test for Drill's implementation of Connection's methods (other than
  * main transaction-related methods in {@link ConnectionTransactionMethodsTest}).
+ * TODO: When here will be more tests, they should be sorted according to the {@link Connection} methods order
  */
 public class ConnectionTest extends JdbcTestBase {
 
@@ -330,6 +331,11 @@ public class ConnectionTest extends JdbcTestBase {
                                          containsString( "Executor" ) ) );
       throw e;
     }
+  }
+
+  @Test
+  public void testIsReadOnly() throws Exception {
+    assertFalse(connection.isReadOnly());
   }
 
 }
