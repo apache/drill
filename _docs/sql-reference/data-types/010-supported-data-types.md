@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date:  
+date: 2017-04-05 00:09:57 UTC
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
@@ -22,10 +22,10 @@ Drill reads from and writes to data sources having a wide variety of types.
 | CHARACTER VARYING, CHARACTER, CHAR,**** or VARCHAR   | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.   | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
-\* In this release, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.  
+\* In the 1.0 release, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.  
 \*\* Internally, INTERVAL is represented as INTERVALDAY or INTERVALYEAR.  
 \*\*\* SMALLINT is not currently supported.  
-\*\*\*\* Currently, Drill supports only variable-length strings.  
+\*\*\*\* The CHAR data type is internally represented as VARCHAR by Drill.  
 
 ## Enabling the DECIMAL Type
 

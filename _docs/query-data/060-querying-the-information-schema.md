@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date:  
+date: 2017-04-05 00:09:56 UTC
 parent: "Query Data"
 ---
 When you are using Drill to connect to multiple data sources, you need a
@@ -108,4 +108,4 @@ of those columns:
     | OrderTotal  | Decimal    |
     +-------------+------------+
 
-In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
+In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type]({{ site.baseurl }}/docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.

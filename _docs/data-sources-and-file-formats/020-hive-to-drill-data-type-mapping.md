@@ -1,6 +1,6 @@
 ---
 title: "Hive-to-Drill Data Type Mapping"
-date: 2016-08-04 00:23:08 UTC
+date: 2017-04-05 00:09:55 UTC
 parent: "Data Sources and File Formats"
 ---
 Using Drill you can read tables created in Hive that use data types compatible with Drill. Drill currently does not support writing Hive tables. The map of SQL types and Hive types shows that several Hive types need to be cast to the supported SQL type in a Drill query:
@@ -8,7 +8,10 @@ Using Drill you can read tables created in Hive that use data types compatible w
 * TINYINT and SMALLINT  
    Cast these types to INTEGER.  
 * BINARY  
-  Cast the Hive BINARY type to VARCHAR.
+  Cast the Hive BINARY type to VARCHAR.  
+
+{% include startnote.html %}In the 1.7 release, Drill automatically converts the Hive CHAR data type to VARCHAR. You no longer need to cast the Hive CHAR data type to VARCHAR when querying Hive tables.{% include endnote.html %}
+
 
 ## Map of SQL and Hive Types
 <!-- See DRILL-1570 -->

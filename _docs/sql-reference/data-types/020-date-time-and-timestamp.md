@@ -1,6 +1,6 @@
 ---
 title: "Date, Time, and Timestamp"
-date: 2017-04-04 00:05:30 UTC
+date: 2017-04-05 00:09:57 UTC
 parent: "Data Types"
 ---
 Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. Drill supports date, time, timestamp, and interval literals shown in the following example:
@@ -115,7 +115,7 @@ The following examples show the input and output format of INTERVAL YEAR (Year, 
 
 DATE, TIME, and TIMESTAMP literals. Drill stores values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
 
-Drill does not support TIMESTAMP with time zone; however, if your data includes the time zone, use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types/#to_timestamp) and [Joda format specifiers]({{site.baseurl}}/docs/data-type-conversion/#format-specifiers-for-date/time-conversions) as shown the examples in section, ["Time Zone Limitation"]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).
+Drill does not support TIMESTAMP with time zone; however, if your data includes the time zone, use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions) and [Joda format specifiers]({{site.baseurl}}/docs/data-type-conversion/#format-specifiers-for-date/time-conversions) as shown the examples in section, ["Time Zone Limitation"]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).
 
 Next, use the following literals in a SELECT statement. 
 

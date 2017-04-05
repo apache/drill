@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW"
-date: 2016-05-05 21:44:33 UTC
+date: 2017-04-05 00:09:58 UTC
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a
@@ -28,7 +28,7 @@ generate the same set of columns with the same column names and data types.
 _workspace_  
 The location where you want the view to exist. By default, the view is created
 in the current workspace. See
-[Workspaces]({{ site.baseurl }}/docs/Workspaces).
+[Workspaces]({{ site.baseurl }}/docs/workspaces/).
 
 _view_name_  
 The name that you give the view. The view must have a unique name. It cannot

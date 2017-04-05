@@ -1,6 +1,6 @@
 ---
 title: "Using Apache Drill with Tableau 9 Desktop"
-date:  
+date: 2017-04-05 00:09:55 UTC
 parent: "Using Drill with BI Tools"
 ---
 This document describes how to connect Tableau 9 Desktop to Apache Drill and explore multiple data formats instantly on Hadoop. Use the combined power of these tools to get direct access to semi-structured data, without having to rely on IT teams for schema creation.
@@ -66,9 +66,13 @@ Tableau is now connected to Drill, and you can select various tables and views. 
 
 You can select tables and views to build a Tableau Visualization. You can also use custom SQL by clicking the **New Custom SQL** option. 
 
-Tableau can natively work with Hive tables and Drill views. For Drill data sources, including directly accessible  file systems or HBase/MapR-DB tables, you can either use the Custom SQL option, or you can create a view in Drill to easily represent the complex data to Tableau. For more information, see the following links:
-http://drill.apache.org/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool/
-http://drill.apache.org/docs/tableau-examples/
+Tableau can natively work with Hive tables and Drill views. For Drill data sources, including directly accessible  file systems or HBase/MapR-DB tables, you can either use the Custom SQL option, or you can create a view in Drill to easily represent the complex data to Tableau. For more information, refer to the following pages:  
+
+
+- [https://drill.apache.org/docs/using-drill-with-bi-tools/](https://drill.apache.org/docs/using-drill-with-bi-tools/)  
+- [http://drill.apache.org/docs/tableau-examples/](http://drill.apache.org/docs/tableau-examples/)
+
+
 
 Note: If Drill authentication and impersonation is enabled, only the views that the user has access to will be displayed in the Table dialog box. Also, if custom SQL is being used to try and access data sources that the user does not have access to, an error message will be displayed. ![drill query flow]({{ site.baseurl }}/docs/img/tableau-error.png)
 

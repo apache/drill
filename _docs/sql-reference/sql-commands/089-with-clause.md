@@ -1,6 +1,6 @@
 ---
 title: "WITH Clause"
-date:  
+date: 2017-04-05 00:09:58 UTC
 parent: "SQL Commands"
 ---
 The WITH clause is an optional clause used to contain one or more common table
@@ -32,7 +32,7 @@ less than the number of columns defined by the subquery.
 
 *query*  
 Any SELECT query that Drill supports. See
-[SELECT]({{ site.baseurl }}/docs/SELECT+Statements).
+[SELECT]({{ site.baseurl }}/docs/select/).
 
 ## Usage Notes
 
