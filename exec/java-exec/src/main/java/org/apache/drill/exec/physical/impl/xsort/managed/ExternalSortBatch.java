@@ -24,6 +24,7 @@ import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.ops.OperExecContextImpl;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
+import org.apache.drill.exec.physical.impl.validate.IteratorValidatorBatchIterator;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -156,12 +158,18 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
 public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
-  protected static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ExternalSortBatch.class);
+
+  // For backward compatibility, masquerade as the original
+  // external sort. Else, some tests don't pass.
+
+  protected static final ControlsInjector injector =
+      ControlsInjectorFactory.getInjector(org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch.class);
 
   public static final String INTERRUPTION_AFTER_SORT = "after-sort";
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
   public static final String INTERRUPTION_WHILE_SPILLING = "spilling";
   public static final String INTERRUPTION_WHILE_MERGING = "merging";
+  private boolean retainInMemoryBatchesOnNone;
 
   private final RecordBatch incoming;
 
@@ -210,7 +218,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     SortConfig sortConfig = new SortConfig(context.getConfig());
     SpillSet spillSet = new SpillSet(context.getConfig(), context.getHandle(),
-                                     popConfig);
+                                     popConfig, context.getIdentity());
     OperExecContext opContext = new OperExecContextImpl(context, oContext, popConfig, injector);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
     SpilledRuns spilledRuns = new SpilledRuns(opContext, spillSet, copierHolder);
@@ -231,6 +239,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   @Override
   public SelectionVector4 getSelectionVector4() {
     return resultsIterator.getSv4();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    return resultsIterator.getSv2();
   }
 
   /**
@@ -307,11 +320,18 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       // Close the iterator here to release any remaining resources such
       // as spill files. This is important when a query has a join: the
       // first branch sort may complete before the second branch starts;
-      // it may be quite a while after returning the last row before the
-      // fragment executor calls this opeator's close method.
+      // it may be quite a while after returning the last batch before the
+      // fragment executor calls this operator's close method.
+      //
+      // Note however, that the StreamingAgg operator REQUIRES that the sort
+      // retain the batches behind an SV4 when doing an in-memory sort because
+      // the StreamingAgg retains a reference to that data that it will use
+      // after receiving a NONE result code. See DRILL-5656.
 
-      resultsIterator.close();
-      resultsIterator = null;
+      if (! this.retainInMemoryBatchesOnNone) {
+        resultsIterator.close();
+        resultsIterator = null;
+      }
       return IterOutcome.NONE;
     }
   }
@@ -356,7 +376,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return IterOutcome.NONE;
     }
 
-    // sort may have prematurely exited due to should continue returning false.
+    // sort may have prematurely exited due to shouldContinue() returning false.
 
     if (! context.shouldContinue()) {
       sortState = SortState.DONE;
@@ -410,7 +430,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
       logger.error("received OUT_OF_MEMORY, trying to spill");
       if (! sortImpl.forceSpill()) {
-        throw UserException.memoryError("Received OUT_OF_MEMORY, but enough batches to spill")
+        throw UserException.memoryError("Received OUT_OF_MEMORY, but not enough batches to spill")
           .build(logger);
       }
       break;
@@ -499,6 +519,42 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     // Note: allocator is closed by the FragmentManager
     if (ex != null) {
       throw ex;
+    }
+  }
+
+  /**
+   * Workaround for DRILL-5656. We wish to release the batches for an
+   * in-memory sort once data is delivered. Normally, we can release them
+   * just before returning NONE. But, the StreamingAggBatch requires that
+   * the batches still be present on NONE. This method "sniffs" the input
+   * provided, and if the external sort, sets a mode that retains the
+   * batches. Yes, it is a horrible hack. But, necessary until the Drill
+   * iterator protocol can be revised.
+   *
+   * @param incoming the incoming batch for some operator which may
+   * (or may not) be an external sort (or, an external sort wrapped
+   * in a batch iterator validator.)
+   */
+
+  public static void retainSv4OnNone(RecordBatch incoming) {
+    if (incoming instanceof IteratorValidatorBatchIterator) {
+      incoming = ((IteratorValidatorBatchIterator) incoming).getIncoming();
+    }
+    if (incoming instanceof ExternalSortBatch) {
+      ((ExternalSortBatch) incoming).retainInMemoryBatchesOnNone = true;
+    }
+  }
+
+  public static void releaseBatches(RecordBatch incoming) {
+    if (incoming instanceof IteratorValidatorBatchIterator) {
+      incoming = ((IteratorValidatorBatchIterator) incoming).getIncoming();
+    }
+    if (incoming instanceof ExternalSortBatch) {
+      ExternalSortBatch esb = (ExternalSortBatch) incoming;
+      if (esb.resultsIterator != null) {
+        esb.resultsIterator.close();
+        esb.resultsIterator = null;
+      }
     }
   }
 }

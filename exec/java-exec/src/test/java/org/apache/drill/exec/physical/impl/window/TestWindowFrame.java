@@ -440,6 +440,11 @@ public class TestWindowFrame extends BaseTestQuery {
       .go();
   }
 
+  // Note: This test is unstable. It works when forcing the merge/sort batch
+  // size to 20, but not for other sizes. The problem is either that the results
+  // are not ordered (and so subject to sort instability), or there is some bug
+  // somewhere in the window functions.
+
   @Test
   public void test4657() throws Exception {
     testBuilder()

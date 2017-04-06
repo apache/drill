@@ -528,8 +528,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public int getPayloadByteCount() {
-    // One byte per value
-    return valueCount;
+  public int getPayloadByteCount(int valueCount) {
+    return getSizeFromCount(valueCount);
   }
 }

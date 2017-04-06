@@ -128,6 +128,14 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     }
   }
 
+  /**
+   * Report whether a remote registry exists. During some unit tests,
+   * no remote registry exists, so the other methods should not be called.
+   * @return true if a remote registry exists, false if this a local-only
+   * instance and no such registry exists
+   */
+  public boolean hasRegistry() { return registry != null; }
+
   public Registry getRegistry(DataChangeVersion version) {
     return registry.get(registry_path, version);
   }

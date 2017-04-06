@@ -33,6 +33,7 @@ import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.BatchSchema;
@@ -90,8 +91,15 @@ public class TestSortImpl extends DrillTest {
           .setQueryId(queryId)
           .build();
     SortConfig sortConfig = new SortConfig(opContext.getConfig());
+    DrillbitEndpoint ep = DrillbitEndpoint.newBuilder()
+        .setAddress("foo.bar.com")
+        .setUserPort(1234)
+        .setControlPort(1235)
+        .setDataPort(1236)
+        .setVersion("1.11")
+        .build();
     SpillSet spillSet = new SpillSet(opContext.getConfig(), handle,
-                                     popConfig);
+                                     popConfig, ep);
     PriorityQueueCopierWrapper copierHolder = new PriorityQueueCopierWrapper(opContext);
     SpilledRuns spilledRuns = new SpilledRuns(opContext, spillSet, copierHolder);
     return new SortImpl(opContext, sortConfig, spilledRuns, outputBatch);

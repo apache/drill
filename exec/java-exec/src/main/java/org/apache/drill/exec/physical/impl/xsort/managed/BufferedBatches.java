@@ -106,6 +106,7 @@ public class BufferedBatches {
     sorterWrapper.sortBatch(convertedBatch, sv2);
     bufferBatch(convertedBatch, sv2, batchSize);
   }
+
   /**
    * Convert an incoming batch into the agree-upon format.
    * @param incoming
