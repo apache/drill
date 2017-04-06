@@ -21,5 +21,5 @@ package org.apache.drill.exec.physical.base;
 /**
  * Describes the root operation within a particular Fragment. This includes things Sender nodes.
  */
-public interface FragmentRoot extends FragmentLeaf{
+public interface FragmentRoot extends FragmentLeaf {
 }

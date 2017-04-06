@@ -367,7 +367,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
 
-    spillSet = new SpillSet(context,hashAggrConfig, UserBitShared.CoreOperatorType.HASH_AGGREGATE);
+    spillSet = new SpillSet(context, hashAggrConfig);
     baseHashTable =
         new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing);
     this.groupByOutFieldIds = groupByOutFieldIds; // retain these for delayedSetup, and to allow recreating hash tables (after a spill)

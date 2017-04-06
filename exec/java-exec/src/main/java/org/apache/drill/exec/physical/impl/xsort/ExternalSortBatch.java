@@ -346,9 +346,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
               if (unionTypeEnabled) {
                 this.schema = SchemaUtil.mergeSchemas(schema, incoming.getSchema());
               } else {
-                throw SchemaChangeException.schemaChanged("Schema changes not supported in External Sort. Please enable Union type",
-                    schema,
-                    incoming.getSchema());
+                throw new SchemaChangeException("Schema changes not supported in External Sort. Please enable Union type");
               }
             } else {
               schema = incoming.getSchema();
@@ -475,7 +473,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           builder.add(rbd);
         }
 
-        builder.build(context, container);
+        builder.build(container);
         sv4 = builder.getSv4();
         mSorter = createNewMSorter();
         mSorter.setup(context, oAllocator, getSelectionVector4(), this.container);

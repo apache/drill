@@ -24,7 +24,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractBase implements PhysicalOperator{
+public abstract class AbstractBase implements PhysicalOperator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
   public static long INIT_ALLOCATION = 1_000_000L;

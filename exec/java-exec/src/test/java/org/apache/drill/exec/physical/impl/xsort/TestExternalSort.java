@@ -20,13 +20,16 @@ package org.apache.drill.exec.physical.impl.xsort;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.SecondaryTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 
+@Category(SecondaryTest.class)
 public class TestExternalSort extends BaseTestQuery {
 
   @Test

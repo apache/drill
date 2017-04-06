@@ -532,6 +532,7 @@
                   <includes>
                     <include>**/TestLargeFileCompilation.java</include>
                   </includes>
+                  <groups>org.apache.drill.test.SecondaryTest</groups>
                 </configuration>
               </execution>
             </executions>
@@ -732,9 +733,13 @@
             <phase>test</phase>
             <goals><goal>test</goal></goals>
             <configuration>
+              <!--  Legacy: exclude by file name -->
               <excludes>
                 <exclude>**/TestLargeFileCompilation.java</exclude>
               </excludes>
+              <!-- Modern: include using the @Category annotation.
+                   See the Javadoc for SecondaryTest for details. -->
+              <excludedGroups>org.apache.drill.test.SecondaryTest</excludedGroups>
             </configuration>
           </execution>
         </executions>

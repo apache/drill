@@ -31,10 +31,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class ExternalSort extends Sort {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSort.class);
 
+  public static final long DEFAULT_SORT_ALLOCATION = 20_000_000;
+
   @JsonCreator
   public ExternalSort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
     super(child, orderings, reverse);
-    initialAllocation = 20_000_000;
+    initialAllocation = DEFAULT_SORT_ALLOCATION;
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,6 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.FixtureBuilder;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -44,6 +43,11 @@ public class TestSimpleExternalSort extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80000);
+
+  @Test
+  public void mergeSortWithSv2Managed() throws Exception {
+    mergeSortWithSv2(false);
+  }
 
   @Test
   public void mergeSortWithSv2Legacy() throws Exception {
@@ -62,26 +66,37 @@ public class TestSimpleExternalSort extends DrillTest {
    */
 
   private void mergeSortWithSv2(boolean testLegacy) throws Exception {
-    try (ClusterFixture cluster = ClusterFixture.standardCluster( );
+    FixtureBuilder builder = ClusterFixture.builder()
+        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
+         ;
+    try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       chooseImpl(client, testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("xsort/one_key_sort_descending_sv2.json").results();
-      assertEquals(500000, client.countResults( results ));
+      assertEquals(500_000, client.countResults(results));
       validateResults(client.allocator(), results);
     }
   }
 
   private void chooseImpl(ClientFixture client, boolean testLegacy) throws Exception {
+    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), testLegacy);
   }
 
   @Test
-  @Ignore
+  public void sortOneKeyDescendingMergeSortManaged() throws Throwable {
+    sortOneKeyDescendingMergeSort(false);
+  }
+
+  @Test
   public void sortOneKeyDescendingMergeSortLegacy() throws Throwable {
     sortOneKeyDescendingMergeSort(true);
   }
 
   private void sortOneKeyDescendingMergeSort(boolean testLegacy) throws Throwable {
-    try (ClusterFixture cluster = ClusterFixture.standardCluster( );
+    FixtureBuilder builder = ClusterFixture.builder()
+        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
+         ;
+    try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
       chooseImpl(client, testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("xsort/one_key_sort_descending.json").results();
@@ -101,7 +116,7 @@ public class TestSimpleExternalSort extends DrillTest {
       if (b.getHeader().getRowCount() > 0) {
         batchCount++;
         loader.load(b.getHeader().getDef(),b.getData());
-        @SuppressWarnings("resource")
+        @SuppressWarnings({ "deprecation", "resource" })
         BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
         BigIntVector.Accessor a1 = c1.getAccessor();
 
@@ -118,44 +133,56 @@ public class TestSimpleExternalSort extends DrillTest {
     System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
   }
 
+  @Test
+  public void sortOneKeyDescendingExternalSortManaged() throws Throwable {
+    sortOneKeyDescendingExternalSort(false);
+  }
 
   @Test
-  @Ignore
   public void sortOneKeyDescendingExternalSortLegacy() throws Throwable {
     sortOneKeyDescendingExternalSort(true);
   }
 
   private void sortOneKeyDescendingExternalSort(boolean testLegacy) throws Throwable {
-    FixtureBuilder builder = ClusterFixture.builder( )
-        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 4 )
-        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 4);
+    FixtureBuilder builder = ClusterFixture.builder()
+        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 4)
+        .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 4)
+        .configProperty(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 4)
+        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
+        ;
     try (ClusterFixture cluster = builder.build();
-        ClientFixture client = cluster.clientFixture()) {
+         ClientFixture client = cluster.clientFixture()) {
       chooseImpl(client,testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("/xsort/one_key_sort_descending.json").results();
-      assertEquals(1000000, client.countResults( results ));
+      assertEquals(1_000_000, client.countResults(results));
       validateResults(client.allocator(), results);
     }
   }
 
-  @Ignore
+  @Test
+  public void outOfMemoryExternalSortManaged() throws Throwable{
+    outOfMemoryExternalSort(false);
+  }
+
   @Test
   public void outOfMemoryExternalSortLegacy() throws Throwable{
     outOfMemoryExternalSort(true);
   }
 
   private void outOfMemoryExternalSort(boolean testLegacy) throws Throwable{
-    FixtureBuilder builder = ClusterFixture.builder( )
+    FixtureBuilder builder = ClusterFixture.builder()
         // Probably do nothing in modern Drill
-        .configProperty( "drill.memory.fragment.max", 50000000 )
-        .configProperty( "drill.memory.fragment.initial", 2000000 )
-        .configProperty( "drill.memory.operator.max", 30000000 )
-        .configProperty( "drill.memory.operator.initial", 2000000 );
+        .configProperty("drill.memory.fragment.max", 50_000_000)
+        .configProperty("drill.memory.fragment.initial", 2_000_000)
+        .configProperty("drill.memory.operator.max", 30_000_000)
+        .configProperty("drill.memory.operator.initial", 2_000_000)
+        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, testLegacy)
+        ;
     try (ClusterFixture cluster = builder.build();
-        ClientFixture client = cluster.clientFixture()) {
+         ClientFixture client = cluster.clientFixture()) {
       chooseImpl(client,testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("/xsort/oom_sort_test.json").results();
-      assertEquals(10000000, client.countResults( results ));
+      assertEquals(10_000_000, client.countResults(results));
 
       long previousBigInt = Long.MAX_VALUE;
 
