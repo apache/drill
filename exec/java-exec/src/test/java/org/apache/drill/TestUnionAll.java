@@ -31,7 +31,6 @@ import org.junit.Test;
 import java.util.List;
 
 public class TestUnionAll extends BaseTestQuery{
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
 
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";

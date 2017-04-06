@@ -83,10 +83,9 @@ public class SorterWrapper extends BaseSortWrapper {
     ClassGenerator<SingleBatchSorter> g = cg.getRoot();
     cg.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-  cg.saveCodeForDebugging(true);
+//    cg.saveCodeForDebugging(true);
 
     generateComparisons(g, batch, logger);
     return getInstance(cg, logger);
   }
-
 }

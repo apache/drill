@@ -841,6 +841,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   @Override
   public void write(DrillBuf buf, OutputStream out) throws IOException {
+    assert(buf.readerIndex() == 0);
     write(buf, buf.readableBytes(), out);
   }
 
