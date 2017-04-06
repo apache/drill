@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -1154,7 +1154,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
-    assertThat(getIntOrNull(mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH"), equalTo(65536));
+    assertThat(getIntOrNull(mdrOptVARCHAR, "CHARACTER_MAXIMUM_LENGTH"), equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH));
   }
 
   @Test
@@ -1318,7 +1318,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
     assertThat( getIntOrNull( mdrOptVARCHAR, "CHARACTER_OCTET_LENGTH" ),
-        equalTo(65536 /* chars. (default of 65536) */
+        equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH /* chars. (default of 65535) */
                          * 4  /* max. UTF-8 bytes per char. */ ) );
   }
 

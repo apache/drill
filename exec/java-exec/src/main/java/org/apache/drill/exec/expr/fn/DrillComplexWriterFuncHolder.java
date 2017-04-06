@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,7 +32,7 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
 
-public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
+public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
 
   private FieldReference ref;
 
@@ -51,7 +51,7 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
   @Override
   protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
 
-    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", registeredNames[0]));
+    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);
     JBlock topSub = sub;
@@ -75,7 +75,7 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
 
     g.getEvalBlock().add(complexWriter.invoke("setPosition").arg(g.getMappingSet().getValueWriteIndex()));
 
-    sub.decl(g.getModel()._ref(ComplexWriter.class), returnValue.name, complexWriter);
+    sub.decl(g.getModel()._ref(ComplexWriter.class), getReturnValue().getName(), complexWriter);
 
     // add the subblock after the out declaration.
     g.getEvalBlock().add(topSub);
@@ -91,7 +91,7 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
 
     //jc._else().directStatement("System.out.println(\"debug : write successful, inIndex = \" + inIndex);");
 
-    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", registeredNames[0]));
+    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     return null;
   }

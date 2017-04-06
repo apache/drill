@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
+import org.apache.drill.common.types.Types;
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
@@ -38,11 +39,6 @@ public class BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicTypeHelper.class);
 
   private static final int WIDTH_ESTIMATE = 50;
-
-  // Default length when casting to varchar : 65536 = 2^16
-  // This only defines an absolute maximum for values, setting
-  // a high value like this will not inflate the size for small values
-  public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
 
   protected static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
     return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
@@ -62,9 +58,9 @@ public class BasicTypeHelper {
                                minor.class?substring(0, 3) == "MSG"> + WIDTH_ESTIMATE</#if>;
   </#list>
 </#list>
-      case FIXEDCHAR: return major.getWidth();
-      case FIXED16CHAR: return major.getWidth();
-      case FIXEDBINARY: return major.getWidth();
+      case FIXEDCHAR: return major.getPrecision();
+      case FIXED16CHAR: return major.getPrecision();
+      case FIXEDBINARY: return major.getPrecision();
     }
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }

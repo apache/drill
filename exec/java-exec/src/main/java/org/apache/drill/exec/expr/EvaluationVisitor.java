@@ -572,7 +572,7 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitQuotedStringConstant(QuotedString e, ClassGenerator<?> generator)
         throws RuntimeException {
-      MajorType majorType = Types.required(MinorType.VARCHAR);
+      MajorType majorType = e.getMajorType();
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("string", holderType);

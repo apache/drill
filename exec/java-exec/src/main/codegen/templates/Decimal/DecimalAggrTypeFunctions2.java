@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -59,7 +59,9 @@ import io.netty.buffer.ByteBuf;
 public class Decimal${aggrtype.className}Functions {
 <#list aggrtype.types as type>
 
-@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_AGGREGATE)
+@FunctionTemplate(name = "${aggrtype.funcName}",
+    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_SUM_AGGREGATE)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;

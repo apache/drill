@@ -29,13 +29,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
@@ -198,16 +198,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       // transfer directly,
       // rename columns or
       // cast data types (Minortype or DataMode)
-      if(hasSameTypeAndMode(outputFields.get(index), vw.getValueVector().getField())) {
+      if (hasSameTypeAndMode(outputFields.get(index), vw.getValueVector().getField())) {
         // Transfer column
-        if(outputFields.get(index).getPath().equals(inputPath)) {
-          final LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, current, collector, context.getFunctionRegistry());
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
 
-          ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-          ValueVector vvOut = container.addOrGet(MaterializedField.create(outputPath.getAsUnescapedPath(), vectorRead.getMajorType()));
+        MajorType outputFieldType = outputFields.get(index).getType();
+        MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), outputFieldType);
+
+        if (outputFields.get(index).getPath().equals(inputPath.getAsUnescapedPath())) {
+          ValueVector vvOut = container.addOrGet(outputField);
           TransferPair tp = vvIn.makeTransferPair(vvOut);
           transfers.add(tp);
         // Copy data in order to rename the column
@@ -217,7 +215,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
           }
 
-          MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), expr.getMajorType());
           ValueVector vv = container.addOrGet(outputField, callBack);
           allocationVectors.add(vv);
           TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
@@ -571,39 +568,40 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
       int index = 1;
-      while(leftIter.hasNext() && rightIter.hasNext()) {
+      while (leftIter.hasNext() && rightIter.hasNext()) {
         MaterializedField leftField  = leftIter.next();
         MaterializedField rightField = rightIter.next();
 
-        if(hasSameTypeAndMode(leftField, rightField)) {
-          outputFields.add(MaterializedField.create(leftField.getPath(), leftField.getType()));
+        if (hasSameTypeAndMode(leftField, rightField)) {
+          MajorType.Builder builder = MajorType.newBuilder().setMinorType(leftField.getType().getMinorType()).setMode(leftField.getDataMode());
+          builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
+          outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
         } else {
           // If the output type is not the same,
           // cast the column of one of the table to a data type which is the Least Restrictive
-          MinorType outputMinorType;
-          if(leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
-            outputMinorType = leftField.getType().getMinorType();
+          MajorType.Builder builder = MajorType.newBuilder();
+          if (leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
+            builder.setMinorType(leftField.getType().getMinorType());
+            builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
           } else {
             List<MinorType> types = Lists.newLinkedList();
             types.add(leftField.getType().getMinorType());
             types.add(rightField.getType().getMinorType());
-            outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
-            if(outputMinorType == null) {
+            MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
+            if (outputMinorType == null) {
               throw new DrillRuntimeException("Type mismatch between " + leftField.getType().getMinorType().toString() +
                   " on the left side and " + rightField.getType().getMinorType().toString() +
                   " on the right side in column " + index + " of UNION ALL");
             }
+            builder.setMinorType(outputMinorType);
           }
 
           // The output data mode should be as flexible as the more flexible one from the two input tables
           List<DataMode> dataModes = Lists.newLinkedList();
           dataModes.add(leftField.getType().getMode());
           dataModes.add(rightField.getType().getMode());
-          DataMode dataMode = TypeCastRules.getLeastRestrictiveDataMode(dataModes);
+          builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(dataModes));
 
-          MajorType.Builder builder = MajorType.newBuilder();
-          builder.setMinorType(outputMinorType);
-          builder.setMode(dataMode);
           outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
         }
         ++index;

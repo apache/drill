@@ -55,6 +55,7 @@ import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
@@ -226,7 +227,7 @@ public class SqlConverter {
       case BINARY:
       case VARCHAR:
       case VARBINARY:
-        return 65536;
+        return Types.MAX_VARCHAR_LENGTH;
       default:
         return super.getDefaultPrecision(typeName);
       }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -99,6 +99,7 @@ public class PreparedStatementProvider {
       .put(MinorType.TIME, Time.class.getName())
       .put(MinorType.TIMESTAMP, Timestamp.class.getName())
       .put(MinorType.VARBINARY, byte[].class.getName())
+      .put(MinorType.INTERVAL, Period.class.getName())
       .put(MinorType.INTERVALYEAR, Period.class.getName())
       .put(MinorType.INTERVALDAY, Period.class.getName())
       .put(MinorType.MAP, Object.class.getName())
@@ -354,7 +355,7 @@ public class PreparedStatementProvider {
     /**
      * For numeric data, this is the maximum precision.
      * For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation
+     * For datetime data types, this is the length in characters of the String representation
      *    (assuming the maximum allowed precision of the fractional seconds component).
      * For binary data, this is the length in bytes.
      * For all other types 0 is returned where the column size is not applicable.

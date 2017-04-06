@@ -216,7 +216,7 @@ public class ExpressionTreeMaterializer {
        * using an arbitrary value. We trim down the size of the stored bytes
        * to the actual size so this size doesn't really matter.
        */
-      castArgs.add(new ValueExpressions.LongExpression(TypeHelper.VARCHAR_DEFAULT_CAST_LEN, null));
+      castArgs.add(new ValueExpressions.LongExpression(Types.MAX_VARCHAR_LENGTH, null));
     }
     else if (CoreDecimalUtility.isDecimalType(toType)) {
       // Add the scale and precision to the arguments of the implicit cast
@@ -573,7 +573,7 @@ public class ExpressionTreeMaterializer {
      * @return
      */
     private LogicalExpression getExceptionFunction(String message) {
-      QuotedString msg = new QuotedString(message, ExpressionPosition.UNKNOWN);
+      QuotedString msg = new QuotedString(message, message.length(), ExpressionPosition.UNKNOWN);
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(msg);
       FunctionCall call = new FunctionCall(ExceptionFunction.EXCEPTION_FUNCTION_NAME, args, ExpressionPosition.UNKNOWN);
@@ -855,8 +855,9 @@ public class ExpressionTreeMaterializer {
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
       } else if (newMinor == MinorType.NULL) {
-        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly.
-        return new TypedNullConstant(Types.optional(e.getMajorType().getMinorType()));
+        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly
+        // preserve original precision and scale if present
+        return new TypedNullConstant(e.getMajorType().toBuilder().setMode(DataMode.OPTIONAL).build());
       } else {
         // if the type is fully bound, convert to functioncall and materialze the function.
         MajorType type = e.getMajorType();
@@ -869,11 +870,12 @@ public class ExpressionTreeMaterializer {
 
         //VarLen type
         if (!Types.isFixedWidthType(type)) {
-          newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+          newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
         }  if (CoreDecimalUtility.isDecimalType(type)) {
             newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
             newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }
+
         FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
         return fc.accept(this, functionLookupContext);
       }
@@ -930,11 +932,7 @@ public class ExpressionTreeMaterializer {
         // 2) or "to" length is unknown (0 means unknown length?).
         // Case 1 and case 2 mean that cast will do nothing.
         // In other cases, cast is required to trim the "from" according to "to" length.
-        if ( (to.getWidth() >= from.getWidth() && from.getWidth() > 0) || to.getWidth() == 0) {
-          return true;
-        } else {
-          return false;
-        }
+        return (to.getPrecision() >= from.getPrecision() && from.getPrecision() > 0) || to.getPrecision() == 0;
 
       default:
         errorCollector.addGeneralError(pos, String.format("Casting rules are unknown for type %s.", from));
