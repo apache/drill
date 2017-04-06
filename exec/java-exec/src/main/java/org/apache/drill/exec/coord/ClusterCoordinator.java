@@ -38,8 +38,12 @@ public abstract class ClusterCoordinator implements AutoCloseable {
       16, 0.75f, 16);
 
   /**
-   * Start the cluster coordinator.  Millis to wait is
-   * @param millisToWait The maximum time to wait before throwing an exception if the cluster coordination service has not successfully started.  Use 0 to wait indefinitely.
+   * Start the cluster coordinator. Millis to wait is
+   *
+   * @param millisToWait
+   *          The maximum time to wait before throwing an exception if the
+   *          cluster coordination service has not successfully started. Use 0
+   *          to wait indefinitely.
    * @throws Exception
    */
   public abstract void start(long millisToWait) throws Exception;
@@ -49,7 +53,7 @@ public abstract class ClusterCoordinator implements AutoCloseable {
   public abstract void unregister(RegistrationHandle handle);
 
   /**
-   * Get a collection of avialable Drillbit endpoints, Thread-safe.
+   * Get a collection of available Drillbit endpoints, Thread-safe.
    * Could be slightly out of date depending on refresh policy.
    *
    * @return A collection of available endpoints.

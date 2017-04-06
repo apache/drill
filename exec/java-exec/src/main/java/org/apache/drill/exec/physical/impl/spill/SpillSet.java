@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.directory.api.util.Strings;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.hadoop.conf.Configuration;
@@ -358,10 +360,17 @@ public class SpillSet {
   private long writeBytes;
 
   public SpillSet(FragmentContext context, PhysicalOperator popConfig) {
-    this(context.getConfig(), context.getHandle(), popConfig);
+    this(context.getConfig(), context.getHandle(), popConfig,
+         // Endpoint appears to be null in some tests.
+         context.getDrillbitContext() == null ? null :
+         context.getDrillbitContext().getEndpoint());
   }
 
-  public SpillSet(DrillConfig config, FragmentHandle handle, PhysicalOperator popConfig) {
+  public SpillSet(FragmentContext context, PhysicalOperator popConfig, DrillbitEndpoint ep) {
+    this(context.getConfig(), context.getHandle(), popConfig, ep);
+  }
+
+  public SpillSet(DrillConfig config, FragmentHandle handle, PhysicalOperator popConfig, DrillbitEndpoint ep) {
     String operName;
 
     // Set the spill options from the configuration
@@ -413,7 +422,16 @@ public class SpillSet {
       fileManager = new HadoopFileManager(spillFs);
     }
 
-    spillDirName = String.format("%s_%s_%s-%s_minor%s", QueryIdHelper.getQueryId(handle.getQueryId()),
+    // If provided with a prefix to identify the Drillbit, prepend that to the
+    // spill directory.
+
+    String nodeDir = "";
+    if (ep != null  &&  ep.getAddress() != null) {
+      nodeDir = ep.getAddress() + "-" + ep.getUserPort() + "/";
+    }
+    spillDirName = String.format("%s%s_%s_%s-%s-%s",
+        nodeDir,
+        QueryIdHelper.getQueryId(handle.getQueryId()),
         operName, handle.getMajorFragmentId(), popConfig.getOperatorId(), handle.getMinorFragmentId());
   }
 

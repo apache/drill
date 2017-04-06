@@ -293,6 +293,7 @@ public class Drillbit implements AutoCloseable {
     return start(config, null);
   }
 
+  @SuppressWarnings("resource")
   public static Drillbit start(final DrillConfig config, final RemoteServiceSet remoteServiceSet)
       throws DrillbitStartupException {
     logger.debug("Starting new Drillbit.");

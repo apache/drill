@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -100,7 +102,7 @@ public class RepeatedMapVector extends AbstractMapVector
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
     try {
-      offsets.allocateNew(groupCount + 1);
+      allocateOffsetsNew(groupCount);
       for (ValueVector v : getChildren()) {
         AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
       }
@@ -108,8 +110,12 @@ public class RepeatedMapVector extends AbstractMapVector
       clear();
       throw e;
     }
-    offsets.zeroVector();
     mutator.reset();
+  }
+
+  public void allocateOffsetsNew(int groupCount) {
+    offsets.allocateNew(groupCount + 1);
+    offsets.zeroVector();
   }
 
   public Iterator<String> fieldNameIterator() {
@@ -128,11 +134,7 @@ public class RepeatedMapVector extends AbstractMapVector
     if (getAccessor().getValueCount() == 0) {
       return 0;
     }
-    long bufferSize = offsets.getBufferSize();
-    for (final ValueVector v : (Iterable<ValueVector>) this) {
-      bufferSize += v.getBufferSize();
-    }
-    return (int) bufferSize;
+    return offsets.getBufferSize() + super.getBufferSize();
   }
 
   @Override
@@ -141,7 +143,7 @@ public class RepeatedMapVector extends AbstractMapVector
       return 0;
     }
 
-    long bufferSize = 0;
+    long bufferSize = offsets.getBufferSizeFor(valueCount);
     for (final ValueVector v : (Iterable<ValueVector>) this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
@@ -451,7 +453,7 @@ public class RepeatedMapVector extends AbstractMapVector
       bufOffset += vectorLength;
     }
 
-    assert bufOffset == buffer.capacity();
+    assert bufOffset == buffer.writerIndex();
   }
 
 
@@ -598,7 +600,8 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    return super.getAllocatedByteCount( ) + offsets.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    super.collectLedgers(ledgers);
+    offsets.collectLedgers(ledgers);
   }
 }

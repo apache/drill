@@ -34,6 +34,7 @@ import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.BufferManager;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
@@ -246,7 +247,6 @@ public class AllocationManager {
         owningLedger = target;
         return overlimit;
       }
-
     }
 
     /**
@@ -387,11 +387,10 @@ public class AllocationManager {
       }
 
       return buf;
-
     }
 
     /**
-     * What is the total size (in bytes) of memory underlying this ledger.
+     * The total size (in bytes) of memory underlying this ledger.
      *
      * @return Size in bytes
      */
@@ -400,7 +399,7 @@ public class AllocationManager {
     }
 
     /**
-     * How much memory is accounted for by this ledger. This is either getSize() if this is the owning ledger for the
+     * Amount of memory accounted for by this ledger. This is either getSize() if this is the owning ledger for the
      * memory or zero in the case that this is not the owning ledger associated with this memory.
      *
      * @return Amount of accounted(owned) memory associated with this ledger.
@@ -418,17 +417,17 @@ public class AllocationManager {
     /**
      * Package visible for debugging/verification only.
      */
-    UnsafeDirectLittleEndian getUnderlying() {
+    @VisibleForTesting
+    protected UnsafeDirectLittleEndian getUnderlying() {
       return underlying;
     }
 
     /**
      * Package visible for debugging/verification only.
      */
-    boolean isOwningLedger() {
+    @VisibleForTesting
+    protected boolean isOwningLedger() {
       return this == owningLedger;
     }
-
   }
-
 }

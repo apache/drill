@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 
 import java.lang.Override;
 import java.lang.UnsupportedOperationException;
+import java.util.Set;
 
 <@pp.dropOutputFile />
 <#list vv.types as type>
@@ -177,15 +179,16 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
-  public int getAllocatedByteCount() {
-    return bits.getAllocatedByteCount() + values.getAllocatedByteCount();
+  public void collectLedgers(Set<BufferLedger> ledgers) {
+    bits.collectLedgers(ledgers);
+    values.collectLedgers(ledgers);
   }
 
   @Override
-  public int getPayloadByteCount() {
+  public int getPayloadByteCount(int valueCount) {
     // For nullable, we include all values, null or not, in computing
     // the value length.
-    return bits.getPayloadByteCount() + values.getPayloadByteCount();
+    return bits.getPayloadByteCount(valueCount) + values.getPayloadByteCount(valueCount);
   }
 
   <#if type.major == "VarLen">
@@ -225,7 +228,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   public void allocateNew(int valueCount) {
     try {
       values.allocateNew(valueCount);
-      bits.allocateNew(valueCount+1);
+      bits.allocateNew(valueCount);
     } catch(OutOfMemoryException e) {
       clear();
       throw e;

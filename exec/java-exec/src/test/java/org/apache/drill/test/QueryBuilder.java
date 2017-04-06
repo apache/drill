@@ -17,6 +17,11 @@
  */
 package org.apache.drill.test;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -48,6 +53,7 @@ import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.BufferingQueryEventListener.QueryEvent;
+import org.apache.drill.test.ClientFixture.StatementParser;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.RowSetReader;
@@ -228,6 +234,25 @@ public class QueryBuilder {
 
   public QueryBuilder sql(String query, Object... args) {
     return sql(String.format(query, args));
+  }
+
+  /**
+   * Parse a single SQL statement (with optional ending semi-colon) from
+   * the file provided.
+   * @param file the file containing exactly one SQL statement, with
+   * optional ending semi-colon
+   * @return this builder
+   */
+
+  public QueryBuilder sql(File file) throws FileNotFoundException, IOException {
+    try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+      StatementParser parser = new StatementParser(in);
+      String sql = parser.parseNext();
+      if (sql == null) {
+        throw new IllegalArgumentException("No query found");
+      }
+      return sql(sql);
+    }
   }
 
   public QueryBuilder physical(String plan) {

@@ -17,8 +17,13 @@
  */
 package org.apache.drill.test;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
 
@@ -230,5 +235,120 @@ public class ClientFixture implements AutoCloseable {
 
   public RowSetBuilder rowSetBuilder(BatchSchema schema) {
     return new RowSetBuilder(allocator(), schema);
+  }
+
+  /**
+   * Very simple parser for semi-colon separated lists of SQL statements which
+   * handles quoted semicolons. Drill can execute only one statement at a time
+   * (without a trailing semi-colon.) This parser breaks up a statement list
+   * into single statements. Input:<code><pre>
+   * USE a.b;
+   * ALTER SESSION SET `foo` = ";";
+   * SELECT * FROM bar WHERE x = "\";";
+   * </pre><code>Output:
+   * <ul>
+   * <li><tt>USE a.b</tt></li>
+   * <li><tt>ALTER SESSION SET `foo` = ";"</tt></li>
+   * <li><tt>SELECT * FROM bar WHERE x = "\";"</tt></li>
+   */
+
+  public static class StatementParser {
+    private final Reader in;
+    private StringBuilder buf;
+
+    public StatementParser(Reader in) {
+      this.in = in;
+    }
+
+    public String parseNext() throws IOException {
+      boolean eof = false;
+      buf = new StringBuilder();
+      for (;;) {
+        int c = in.read();
+        if (c == -1) {
+          eof = true;
+          break;
+        }
+        if (c == ';') {
+          break;
+        }
+        buf.append((char) c);
+        if (c == '"' || c == '\'' || c == '`') {
+          int quote = c;
+          boolean escape = false;
+          for (;;) {
+            c = in.read();
+            if (c == -1) {
+              throw new IllegalArgumentException("Mismatched quote: " + (char) c);
+            }
+            buf.append((char) c);
+            if (! escape && c == quote) {
+              break;
+            }
+            escape = c == '\\';
+          }
+        }
+      }
+      String stmt = buf.toString().trim();
+      if (stmt.isEmpty() && eof) {
+        return null;
+      }
+      return stmt;
+    }
+  }
+
+  private boolean trace = false;
+
+  public void enableTrace(boolean flag) {
+    this.trace = flag;
+  }
+
+  public int exec(Reader in) throws IOException {
+    StatementParser parser = new StatementParser(in);
+    int count = 0;
+    for (;;) {
+      String stmt = parser.parseNext();
+      if (stmt == null) {
+        if (trace) {
+          System.out.println("----");
+        }
+        return count;
+      }
+      if (stmt.isEmpty()) {
+        continue;
+      }
+      if (trace) {
+        System.out.println("----");
+        System.out.println(stmt);
+      }
+      runSqlSilently(stmt);
+      count++;
+    }
+  }
+
+  /**
+   * Execute a set of statements from a file.
+   * @param stmts the set of statements, separated by semicolons
+   * @return the number of statements executed
+   */
+
+  public int exec(File source) throws FileNotFoundException, IOException {
+    try (Reader in = new BufferedReader(new FileReader(source))) {
+      return exec(in);
+    }
+  }
+
+  /**
+   * Execute a set of statements from a string.
+   * @param stmts the set of statements, separated by semicolons
+   * @return the number of statements executed
+   */
+
+  public int exec(String stmts) {
+    try (Reader in = new StringReader(stmts)) {
+      return exec(in);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }
