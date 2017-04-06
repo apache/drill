@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -1024,7 +1024,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptVARCHAR() throws SQLException {
-    assertThat(getIntOrNull(mdrOptVARCHAR, "COLUMN_SIZE"), equalTo(65536));
+    assertThat(getIntOrNull(mdrOptVARCHAR, "COLUMN_SIZE"), equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH));
   }
 
   @Test
@@ -2168,7 +2168,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptVARCHAR() throws SQLException {
     assertThat( getIntOrNull( mdrOptVARCHAR, "CHAR_OCTET_LENGTH" ),
-        equalTo(65536 /* chars. (default of 65536) */
+        equalTo(org.apache.drill.common.types.Types.MAX_VARCHAR_LENGTH /* chars. (default of 65535) */
                          * 4  /* max. UTF-8 bytes per char. */ ) );
   }
 

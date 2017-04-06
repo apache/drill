@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,8 +34,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -174,54 +172,24 @@ public class FunctionConverter {
     }
 
     FunctionInitializer initializer = new FunctionInitializer(func.getClassName(), classLoader);
-    try{
+    try {
       // return holder
       ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
       WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
 
+      FunctionAttributes functionAttributes = new FunctionAttributes(template, ps, outputField, works);
 
-      String[] registeredNames = ((template.name().isEmpty()) ? template.names() : new String[] {template.name()} );
-      boolean isDeteministic = ! template.isRandom();
-      FunctionAttributes functionAttributes = new FunctionAttributes(
-          template.scope(),
-          template.nulls(),
-          template.isBinaryCommutative(),
-          isDeteministic, registeredNames, ps, outputField, works, template.costCategory(), template.isNiladic());
       switch (template.scope()) {
-      case POINT_AGGREGATE:
-        return new DrillAggFuncHolder(functionAttributes, initializer);
-      case DECIMAL_AGGREGATE:
-        return new DrillDecimalAggFuncHolder(functionAttributes, initializer);
-      case DECIMAL_SUM_AGGREGATE:
-        return new DrillDecimalSumAggFuncHolder(functionAttributes, initializer);
-      case SIMPLE:
-        if (outputField.isComplexWriter) {
-          return new DrillComplexWriterFuncHolder(functionAttributes, initializer);
-        } else {
-          return new DrillSimpleFuncHolder(functionAttributes, initializer);
-        }
-      case SC_BOOLEAN_OPERATOR:
-        return new DrillBooleanOPHolder(functionAttributes, initializer);
-      case DECIMAL_MAX_SCALE:
-          return new DrillDecimalMaxScaleFuncHolder(functionAttributes, initializer);
-      case DECIMAL_MUL_SCALE:
-          return new DrillDecimalSumScaleFuncHolder(functionAttributes, initializer);
-      case DECIMAL_ADD_SCALE:
-          return new DrillDecimalAddFuncHolder(functionAttributes, initializer);
-      case DECIMAL_CAST:
-          return new DrillDecimalCastFuncHolder(functionAttributes, initializer);
-      case DECIMAL_DIV_SCALE:
-          return new DrillDecimalDivScaleFuncHolder(functionAttributes, initializer);
-      case DECIMAL_MOD_SCALE:
-          return new DrillDecimalModScaleFuncHolder(functionAttributes, initializer);
-      case DECIMAL_SET_SCALE:
-          return new DrillDecimalSetScaleFuncHolder(functionAttributes, initializer);
-      case DECIMAL_ZERO_SCALE:
-          return new DrillDecimalZeroScaleFuncHolder(functionAttributes, initializer);
-      case HOLISTIC_AGGREGATE:
-      case RANGE_AGGREGATE:
-      default:
-        return failure("Unsupported Function Type.", func);
+        case POINT_AGGREGATE:
+          return new DrillAggFuncHolder(functionAttributes, initializer);
+        case SIMPLE:
+          return outputField.isComplexWriter() ?
+              new DrillComplexWriterFuncHolder(functionAttributes, initializer) :
+              new DrillSimpleFuncHolder(functionAttributes, initializer);
+        case HOLISTIC_AGGREGATE:
+        case RANGE_AGGREGATE:
+        default:
+          return failure("Unsupported Function Type.", func);
       }
     } catch (Exception | NoSuchFieldError | AbstractMethodError ex) {
       return failure("Failure while creating function holder.", ex, func);

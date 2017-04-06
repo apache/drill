@@ -37,9 +37,8 @@ public class ColumnDef {
   public ColumnDef(MockColumn mockCol) {
     this.mockCol = mockCol;
     name = mockCol.getName();
-    if (mockCol.getMinorType() == MinorType.VARCHAR &&
-        mockCol.getWidth() > 0) {
-      width = mockCol.getWidth();
+    if (mockCol.getMinorType() == MinorType.VARCHAR && mockCol.getPrecision() > 0) {
+      width = mockCol.getPrecision();
     } else {
       width = TypeHelper.getSize(mockCol.getMajorType());
     }

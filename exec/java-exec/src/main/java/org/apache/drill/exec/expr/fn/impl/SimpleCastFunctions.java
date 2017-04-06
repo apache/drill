@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,7 +51,10 @@ public class SimpleCastFunctions {
     }
   }
 
-  @FunctionTemplate(name = "castVARCHAR", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "castVARCHAR",
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.STRING_CAST,
+      nulls = NullHandling.NULL_IF_NULL)
   public static class CastBooleanVarChar implements DrillSimpleFunc {
 
     @Param BitHolder in;

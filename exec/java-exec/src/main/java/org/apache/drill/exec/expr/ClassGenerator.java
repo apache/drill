@@ -36,7 +36,7 @@ import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
+import org.apache.drill.exec.expr.fn.WorkspaceReference;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.base.Preconditions;

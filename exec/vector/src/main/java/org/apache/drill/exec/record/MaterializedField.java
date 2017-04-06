@@ -157,7 +157,7 @@ public class MaterializedField {
 
   public MaterializedField getOtherNullableVersion() {
     MajorType mt = type;
-    DataMode newDataMode = null;
+    DataMode newDataMode;
     switch (mt.getMode()){
     case OPTIONAL:
       newDataMode = DataMode.REQUIRED;
@@ -199,16 +199,48 @@ public class MaterializedField {
             Objects.equals(this.type, other.type);
   }
 
+  /**
+   * <p>Creates materialized field string representation.
+   * Includes field name, its type with precision and scale if any and data mode.
+   * Nested fields if any are included. Number of nested fields to include is limited to 10.</p>
+   *
+   * <b>FIELD_NAME(TYPE(PRECISION,SCALE):DATA_MODE)[NESTED_FIELD_1, NESTED_FIELD_2]</b>
+   * <p>Example: ok(BIT:REQUIRED), col(VARCHAR(3):OPTIONAL), emp_id(DECIMAL28SPARSE(6,0):REQUIRED)</p>
+   *
+   * @return materialized field string representation
+   */
   @Override
   public String toString() {
     final int maxLen = 10;
-    String childStr = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
-    return name + "(" + type.getMinorType().name() + ":" + type.getMode().name() + ")" + childStr;
-  }
+    String childString = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
+    StringBuilder builder = new StringBuilder();
+    builder
+        .append(name)
+        .append("(")
+        .append(type.getMinorType().name());
+
+    if (type.hasPrecision()) {
+      builder.append("(");
+      builder.append(type.getPrecision());
+      if (type.hasScale()) {
+        builder.append(",");
+        builder.append(type.getScale());
+      }
+      builder.append(")");
+    }
+
+    builder
+        .append(":")
+        .append(type.getMode().name())
+        .append(")")
+        .append(childString);
+
+    return builder.toString();
+}
 
   private String toString(Collection<?> collection, int maxLen) {
     StringBuilder builder = new StringBuilder();
-    builder.append("[");
+    builder.append(" [");
     int i = 0;
     for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
       if (i > 0){

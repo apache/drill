@@ -247,12 +247,12 @@ static uint32_t getColumnSize(const std::string& type, uint32_t precision) {
 	else if (type == SQLIntervalYearMonth) {
 		return (precision > 0)
 				? 5 + precision // P..M31
-				: 0; // if precision is not set, return 0 because there's not enough info
+				: 9; // we assume max is P9999Y12M
 	}
 	else if (type == SQLIntervalDaySecond) {
 		return (precision > 0)
 			? 12 + precision // P..DT12H60M60....S
-			: 0; // if precision is not set, return 0 because there's not enough info
+			: 22; // the first 4 bytes give the number of days, so we assume max is P2147483648DT12H60M60S
 	}
 	else {
 		return 0;
@@ -267,7 +267,7 @@ static uint32_t getPrecision(const ::common::MajorType& type) {
 	}
 
 	if (minor_type == ::common::VARBINARY || minor_type == ::common::VARCHAR) {
-		return 65536;
+		return 65535;
 	}
 
 	return 0;
@@ -336,12 +336,12 @@ static uint32_t getDisplaySize(const ::common::MajorType& type) {
     case ::common::INTERVALYEAR:
       return precision > 0
           ? 5 + precision // P..Y12M
-          : 0; // if precision is not set, return 0 because there's not enough info
+          : 9; // we assume max is P9999Y12M
 
     case ::common::INTERVALDAY:
       return precision > 0
           ? 12 + precision // P..DT12H60M60S assuming fractional seconds precision is not supported
-          : 0; // if precision is not set, return 0 because there's not enough info
+          : 22; // the first 4 bytes give the number of days, so we assume max is P2147483648DT12H60M60S
 
     default:
     	// We don't know how to compute a display size, let's return 0 (unknown)

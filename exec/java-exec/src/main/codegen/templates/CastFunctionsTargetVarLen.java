@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,10 @@ import io.netty.buffer.DrillBuf;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    <#if type.to == 'VarChar'>returnType = FunctionTemplate.ReturnType.STRING_CAST,</#if>
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   @Param ${type.from}Holder in;
@@ -58,11 +61,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
   }
 
   public void eval() {
-    buffer = buffer.reallocIfNeeded((int) len.value);
+    buffer = buffer.reallocIfNeeded((int)len.value);
     String istr = (new ${type.javaType}(in.value)).toString();
     out.buffer = buffer;
     out.start = 0;
-    out.end = Math.min((int)len.value, istr.length()); // truncate if target type has length smaller than that of input's string     
+    out.end = Math.min((int)len.value, istr.length()); // truncate if target type has length smaller than that of input's string
     out.buffer.setBytes(0, istr.substring(0,out.end).getBytes());      
   }
 }
