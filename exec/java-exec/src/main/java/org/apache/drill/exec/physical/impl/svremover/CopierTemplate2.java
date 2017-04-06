@@ -65,9 +65,7 @@ public abstract class CopierTemplate2 implements Copier{
                                @Named("incoming") RecordBatch incoming,
                                @Named("outgoing") RecordBatch outgoing)
                        throws SchemaChangeException;
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex)
+  public abstract void doEval(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex)
                        throws SchemaChangeException;
-
-
-
 }

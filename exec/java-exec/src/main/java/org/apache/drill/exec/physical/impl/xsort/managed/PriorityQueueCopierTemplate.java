@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -26,11 +24,11 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.AllocationHelper;
+
+import io.netty.buffer.DrillBuf;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
@@ -43,7 +41,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   private int queueSize = 0;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
+  public void setup(BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
                     VectorAccessible outgoing) throws SchemaChangeException {
     this.hyperBatch = hyperBatch;
     this.batchGroups = batchGroups;
@@ -53,7 +51,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * size);
     vector4 = new SelectionVector4(drillBuf, size, Character.MAX_VALUE);
-    doSetup(context, hyperBatch, outgoing);
+    doSetup(hyperBatch, outgoing);
 
     queueSize = 0;
     for (int i = 0; i < size; i++) {
@@ -68,7 +66,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
 
   @Override
   public int next(int targetRecordCount) {
-    allocateVectors(targetRecordCount);
+    VectorAccessibleUtilities.allocateVectors(outgoing, targetRecordCount);
     for (int outgoingIndex = 0; outgoingIndex < targetRecordCount; outgoingIndex++) {
       if (queueSize == 0) {
         return 0;
@@ -76,7 +74,11 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
       int compoundIndex = vector4.get(0);
       int batch = compoundIndex >>> 16;
       assert batch < batchGroups.size() : String.format("batch: %d batchGroups: %d", batch, batchGroups.size());
-      doCopy(compoundIndex, outgoingIndex);
+      try {
+        doCopy(compoundIndex, outgoingIndex);
+      } catch (SchemaChangeException e) {
+        throw new IllegalStateException(e);
+      }
       int nextIndex = batchGroups.get(batch).getNextIndex();
       if (nextIndex < 0) {
         vector4.set(0, vector4.get(--queueSize));
@@ -84,37 +86,28 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
         vector4.set(0, batch, nextIndex);
       }
       if (queueSize == 0) {
-        setValueCount(++outgoingIndex);
+        VectorAccessibleUtilities.setValueCount(outgoing, ++outgoingIndex);
         return outgoingIndex;
       }
-      siftDown();
+      try {
+        siftDown();
+      } catch (SchemaChangeException e) {
+        throw new IllegalStateException(e);
+      }
     }
-    setValueCount(targetRecordCount);
+    VectorAccessibleUtilities.setValueCount(outgoing, targetRecordCount);
     return targetRecordCount;
-  }
-
-  private void setValueCount(int count) {
-    for (VectorWrapper<?> w: outgoing) {
-      w.getValueVector().getMutator().setValueCount(count);
-    }
   }
 
   @Override
   public void close() throws IOException {
     vector4.clear();
-    for (final VectorWrapper<?> w: outgoing) {
-      w.getValueVector().clear();
-    }
-    for (final VectorWrapper<?> w : hyperBatch) {
-      w.clear();
-    }
-
-    for (BatchGroup batchGroup : batchGroups) {
-      batchGroup.close();
-    }
+    VectorAccessibleUtilities.clear(outgoing);
+    VectorAccessibleUtilities.clear(hyperBatch);
+    BatchGroup.closeAll(batchGroups);
   }
 
-  private void siftUp() {
+  private void siftUp() throws SchemaChangeException {
     int p = queueSize;
     while (p > 0) {
       if (compare(p, (p - 1) / 2) < 0) {
@@ -126,13 +119,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     }
   }
 
-  private void allocateVectors(int targetRecordCount) {
-    for (VectorWrapper<?> w: outgoing) {
-      AllocationHelper.allocateNew(w.getValueVector(), targetRecordCount);
-    }
-  }
-
-  private void siftDown() {
+  private void siftDown() throws SchemaChangeException {
     int p = 0;
     int next;
     while (p * 2 + 1 < queueSize) { // While the current node has at least one child
@@ -160,14 +147,19 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     vector4.set(sv1, tmp);
   }
 
-  public int compare(int leftIndex, int rightIndex) {
+  public int compare(int leftIndex, int rightIndex) throws SchemaChangeException {
     int sv1 = vector4.get(leftIndex);
     int sv2 = vector4.get(rightIndex);
     return doEval(sv1, sv2);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
-  public abstract void doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
+  public abstract void doSetup(@Named("incoming") VectorAccessible incoming,
+                               @Named("outgoing") VectorAccessible outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
+  public abstract void doCopy(@Named("inIndex") int inIndex,
+                              @Named("outIndex") int outIndex)
+                       throws SchemaChangeException;
 }

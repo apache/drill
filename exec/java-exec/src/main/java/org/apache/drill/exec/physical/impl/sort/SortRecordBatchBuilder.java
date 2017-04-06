@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -98,6 +98,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return true;
   }
 
+  @SuppressWarnings("resource")
   public void add(RecordBatchData rbd) {
     long batchBytes = getSize(rbd.getContainer());
     if (batchBytes == 0 && batches.size() > 0) {
@@ -140,7 +141,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return batches.isEmpty();
   }
 
-  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
+  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException {
+    build(outputContainer);
+  }
+
+  @SuppressWarnings("resource")
+  public void build(VectorContainer outputContainer) throws SchemaChangeException {
     outputContainer.clear();
     if (batches.keySet().size() > 1) {
       throw new SchemaChangeException("Sort currently only supports a single schema.");
@@ -177,7 +183,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       int index = 0;
       int recordBatchId = 0;
       for (RecordBatchData d : data) {
-        for (int i =0; i < d.getRecordCount(); i++, index++) {
+        for (int i = 0; i < d.getRecordCount(); i++, index++) {
           sv4.set(index, recordBatchId, (int) d.getSv2().getIndex(i));
         }
         // might as well drop the selection vector since we'll stop using it now.

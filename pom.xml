@@ -447,7 +447,8 @@
             <systemPropertyVariables>
               <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
-          </configuration>
+			<excludedGroups>org.apache.drill.test.SecondaryTest</excludedGroups>
+		  </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

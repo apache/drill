@@ -30,13 +30,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -283,7 +283,7 @@ public class SpillSet {
     private File baseDir;
 
     public LocalFileManager(String fsName) {
-      baseDir = new File(fsName.replace("file://", ""));
+      baseDir = new File(fsName.replace(FileSystem.DEFAULT_FS, ""));
     }
 
     @Override
@@ -357,30 +357,31 @@ public class SpillSet {
 
   private long writeBytes;
 
-  public SpillSet(FragmentContext context, PhysicalOperator popConfig, UserBitShared.CoreOperatorType optype) {
-    FragmentHandle handle = context.getHandle();
-    String operName = "Unknown";
+  public SpillSet(FragmentContext context, PhysicalOperator popConfig) {
+    this(context.getConfig(), context.getHandle(), popConfig);
+  }
+
+  public SpillSet(DrillConfig config, FragmentHandle handle, PhysicalOperator popConfig) {
+    String operName;
 
     // Set the spill options from the configuration
-    DrillConfig config = context.getConfig();
     String spillFs;
     List<String> dirList;
 
     // Set the operator name (used as part of the spill file name),
     // and set oper. specific options (the config file defaults to using the
     // common options; users may override those - per operator)
-    switch (optype) {
-      case EXTERNAL_SORT:
+    if (popConfig instanceof Sort) {
         operName = "Sort";
         spillFs = config.getString(ExecConstants.EXTERNAL_SORT_SPILL_FILESYSTEM);
         dirList = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
-        break;
-      case HASH_AGGREGATE:
+    } else if (popConfig instanceof HashAggregate) {
         operName = "HashAgg";
         spillFs = config.getString(ExecConstants.HASHAGG_SPILL_FILESYSTEM);
         dirList = config.getStringList(ExecConstants.HASHAGG_SPILL_DIRS);
-        break;
-      default: // just use the common ones
+    } else {
+        // just use the common ones
+        operName = "Unknown";
         spillFs = config.getString(ExecConstants.SPILL_FILESYSTEM);
         dirList = config.getStringList(ExecConstants.SPILL_DIRS);
     }
@@ -406,7 +407,7 @@ public class SpillSet {
     // as a proxy for a non-production Drill setup.)
 
     boolean impersonationEnabled = config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
-    if (spillFs.startsWith("file:///") && ! impersonationEnabled) {
+    if (spillFs.startsWith(FileSystem.DEFAULT_FS) && ! impersonationEnabled) {
       fileManager = new LocalFileManager(spillFs);
     } else {
       fileManager = new HadoopFileManager(spillFs);
@@ -414,6 +415,10 @@ public class SpillSet {
 
     spillDirName = String.format("%s_%s_%s-%s_minor%s", QueryIdHelper.getQueryId(handle.getQueryId()),
         operName, handle.getMajorFragmentId(), popConfig.getOperatorId(), handle.getMinorFragmentId());
+  }
+
+  public String getNextSpillFile() {
+    return getNextSpillFile(null);
   }
 
   public String getNextSpillFile(String extraName) {
@@ -427,7 +432,7 @@ public class SpillSet {
     currSpillDirs.add(currSpillPath);
 
     String outputFile = Joiner.on("/").join(currSpillPath, "spill" + ++fileCount);
-    if ( extraName != null ) {
+    if (extraName != null) {
       outputFile += "_" + extraName;
     }
 

@@ -24,7 +24,7 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentExecContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -49,7 +49,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    */
 
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
-  private FragmentContext context;
+  private FragmentExecContext context;
 
   /**
    * Controls the maximum size of batches exposed to downstream
@@ -57,7 +57,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   private int desiredRecordBatchCount;
 
   @Override
-  public void setup(final FragmentContext context, final BufferAllocator allocator, final SelectionVector4 vector4,
+  public void setup(final FragmentExecContext context, final BufferAllocator allocator, final SelectionVector4 vector4,
                     final VectorContainer hyperBatch, int outputBatchSize) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
@@ -147,7 +147,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
   }
 
   /**
-   * Sort (really, merge) a set of pre-sorted runs to produce a combined
+   * Merge a set of pre-sorted runs to produce a combined
    * result set. Merging is done in the selection vector, record data does
    * not move.
    * <p>
@@ -157,7 +157,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
    */
 
   @Override
-  public void sort(final VectorContainer container) {
+  public void sort() {
     while (runStarts.size() > 1) {
       final int totalCount = this.vector4.getTotalCount();
 
@@ -223,15 +223,21 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   @Override
   public void clear() {
-    if(vector4 != null) {
+    if (vector4 != null) {
       vector4.clear();
+      vector4 = null;
     }
-
-    if(aux != null) {
+    if (aux != null) {
       aux.clear();
+      aux = null;
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
-  public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex) throws SchemaChangeException;
+  public abstract void doSetup(@Named("context") FragmentExecContext context,
+                               @Named("incoming") VectorContainer incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                             @Named("rightIndex") int rightIndex)
+                      throws SchemaChangeException;
 }

@@ -23,11 +23,10 @@ import java.util.List;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 
 public interface PriorityQueueCopier extends AutoCloseable {
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch,
+  public void setup(BufferAllocator allocator, VectorAccessible hyperBatch,
       List<BatchGroup> batchGroups, VectorAccessible outgoing) throws SchemaChangeException;
 
   public int next(int targetRecordCount);
