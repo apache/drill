@@ -33,6 +33,7 @@ import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.security.auth.Subject;
@@ -44,6 +45,7 @@ import java.nio.file.Files;
 import java.security.PrivilegedExceptionAction;
 import java.util.Properties;
 
+@Ignore("See DRILL-5387")
 public class TestUserBitKerberos extends BaseTestQuery {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(TestUserBitKerberos.class);
