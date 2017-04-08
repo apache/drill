@@ -59,7 +59,6 @@ public class FixtureBuilder {
 
   protected String configResource;
   protected Properties configProps;
-  protected Properties complexConfigProps = new Properties();
   protected List<RuntimeOption> sessionOptions;
   protected List<RuntimeOption> systemOptions;
   protected int bitCount = 1;
@@ -110,9 +109,7 @@ public class FixtureBuilder {
   }
 
   /**
-   * Add an additional boot-time property for the embedded Drillbit. Convert all the values other than
-   * {@link Collection} types into string and store in {@link FixtureBuilder#configProps}. Collection
-   * types values are stored into {@link FixtureBuilder#complexConfigProps}
+   * Add an additional boot-time property for the embedded Drillbit.
    * @param key config property name
    * @param value property value
    * @return this builder
@@ -122,12 +119,7 @@ public class FixtureBuilder {
     if (configProps == null) {
       configProps = defaultProps();
     }
-
-    if(value instanceof Collection<?>) {
-      complexConfigProps.put(key, value);
-    } else {
-      configProps.put(key, value.toString());
-    }
+    configProps.put(key, value);
     return this;
   }
 

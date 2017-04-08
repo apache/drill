@@ -219,15 +219,7 @@ public class ClusterFixture implements AutoCloseable {
     if (builder.configResource != null) {
       config = DrillConfig.create(builder.configResource);
     } else if (builder.configProps != null) {
-      // Create Config object out of all the String type configuration.
-      Config drillConfig = DrillConfig.create(configProperties(builder.configProps));
-
-      // Add the configs which are non-string type into the DrillConfig
-      for(Entry<Object, Object> entry : builder.complexConfigProps.entrySet()) {
-        drillConfig = drillConfig.withValue(entry.getKey().toString(),
-          ConfigValueFactory.fromAnyRef(entry.getValue()));
-      }
-      config = new DrillConfig(drillConfig, true);
+      config = configProperties(builder.configProps);
     } else {
       throw new IllegalStateException("Configuration was not provided.");
     }
@@ -349,12 +341,31 @@ public class ClusterFixture implements AutoCloseable {
     }
   }
 
-  private Properties configProperties(Properties configProps) {
-    Properties effectiveProps = new Properties();
-    for (Entry<Object, Object> entry : configProps.entrySet()) {
-      effectiveProps.put(entry.getKey(), entry.getValue().toString());
+  private DrillConfig configProperties(Properties configProps) {
+    Properties stringProps = new Properties();
+    Properties collectionProps = new Properties();
+
+    // Filter out the collection type configs and other configs which can be converted to string.
+    for(Entry<Object, Object> entry : configProps.entrySet()) {
+      if(entry.getValue() instanceof Collection<?>) {
+        collectionProps.put(entry.getKey(), entry.getValue());
+      } else {
+        stringProps.setProperty(entry.getKey().toString(), entry.getValue().toString());
+      }
     }
-    return effectiveProps;
+
+    // First create a DrillConfig based on string properties.
+    Config drillConfig = DrillConfig.create(stringProps);
+
+    // Then add the collection properties inside the DrillConfig. Below call to withValue returns
+    // a new reference. Considering mostly properties will be of string type, doing this
+    // later will be less expensive as compared to doing it for all the properties.
+    for(Entry<Object, Object> entry : collectionProps.entrySet()) {
+      drillConfig = drillConfig.withValue(entry.getKey().toString(),
+        ConfigValueFactory.fromAnyRef(entry.getValue()));
+    }
+
+    return new DrillConfig(drillConfig, true);
   }
 
   public Drillbit drillbit() { return defaultDrillbit; }
