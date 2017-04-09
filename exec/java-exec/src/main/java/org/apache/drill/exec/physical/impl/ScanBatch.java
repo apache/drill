@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,6 +35,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorExecContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -56,6 +57,7 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 /**
@@ -68,19 +70,14 @@ public class ScanBatch implements CloseableRecordBatch {
   /** Main collection of fields' value vectors. */
   private final VectorContainer container = new VectorContainer();
 
-  /** Fields' value vectors indexed by fields' keys. */
-  private final CaseInsensitiveMap<ValueVector> fieldVectorMap =
-          CaseInsensitiveMap.newHashMap();
-
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
   private RecordReader currentReader;
   private BatchSchema schema;
-  private final Mutator mutator = new Mutator();
+  private final Mutator mutator;
   private boolean done = false;
-  private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private boolean hasReadNonEmptyFile = false;
   private Map<String, ValueVector> implicitVectors;
   private Iterator<Map<String, String>> implicitColumns;
@@ -98,6 +95,7 @@ public class ScanBatch implements CloseableRecordBatch {
     currentReader = readers.next();
     this.oContext = oContext;
     allocator = oContext.getAllocator();
+    mutator = new Mutator(oContext, allocator, container);
 
     boolean setup = false;
     try {
@@ -158,7 +156,7 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void clearFieldVectorMap() {
-    for (final ValueVector v : fieldVectorMap.values()) {
+    for (final ValueVector v : mutator.fieldVectorMap().values()) {
       v.clear();
     }
   }
@@ -173,7 +171,7 @@ public class ScanBatch implements CloseableRecordBatch {
       try {
         injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
 
-        currentReader.allocate(fieldVectorMap);
+        currentReader.allocate(mutator.fieldVectorMap());
       } catch (OutOfMemoryException e) {
         logger.debug("Caught Out of Memory Exception", e);
         clearFieldVectorMap();
@@ -204,10 +202,8 @@ public class ScanBatch implements CloseableRecordBatch {
           // If all the files we have read so far are just empty, the schema is not useful
           if (! hasReadNonEmptyFile) {
             container.clear();
-            for (ValueVector v : fieldVectorMap.values()) {
-              v.clear();
-            }
-            fieldVectorMap.clear();
+            clearFieldVectorMap();
+            mutator.clear();
           }
 
           currentReader.close();
@@ -215,7 +211,7 @@ public class ScanBatch implements CloseableRecordBatch {
           implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
           currentReader.setup(oContext, mutator);
           try {
-            currentReader.allocate(fieldVectorMap);
+            currentReader.allocate(mutator.fieldVectorMap());
           } catch (OutOfMemoryException e) {
             logger.debug("Caught OutOfMemoryException");
             clearFieldVectorMap();
@@ -323,11 +319,41 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
-  private class Mutator implements OutputMutator {
+  /**
+   * Row set mutator implementation provided to record readers created by
+   * this scan batch. Made visible so that tests can create this mutator
+   * without also needing a ScanBatch instance. (This class is really independent
+   * of the ScanBatch, but resides here for historical reasons. This is,
+   * in turn, the only use of the genereated vector readers in the vector
+   * package.)
+   */
+
+  @VisibleForTesting
+  public static class Mutator implements OutputMutator {
     /** Whether schema has changed since last inquiry (via #isNewSchema}).  Is
      *  true before first inquiry. */
     private boolean schemaChanged = true;
 
+    /** Fields' value vectors indexed by fields' keys. */
+    private final CaseInsensitiveMap<ValueVector> fieldVectorMap =
+            CaseInsensitiveMap.newHashMap();
+
+    private final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
+    private final BufferAllocator allocator;
+
+    private final VectorContainer container;
+
+    private final OperatorExecContext oContext;
+
+    public Mutator(OperatorExecContext oContext, BufferAllocator allocator, VectorContainer container) {
+      this.oContext = oContext;
+      this.allocator = allocator;
+      this.container = container;
+    }
+
+    public Map<String, ValueVector> fieldVectorMap() {
+      return fieldVectorMap;
+    }
 
     @SuppressWarnings("resource")
     @Override
@@ -396,6 +422,10 @@ public class ScanBatch implements CloseableRecordBatch {
     public CallBack getCallBack() {
       return callBack;
     }
+
+    public void clear() {
+      fieldVectorMap.clear();
+    }
   }
 
   @Override
@@ -414,7 +444,7 @@ public class ScanBatch implements CloseableRecordBatch {
     for (final ValueVector v : implicitVectors.values()) {
       v.clear();
     }
-    fieldVectorMap.clear();
+    mutator.clear();
     currentReader.close();
   }
 

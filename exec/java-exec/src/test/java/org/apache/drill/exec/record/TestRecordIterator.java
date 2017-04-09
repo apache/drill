@@ -31,6 +31,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.OperatorUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -73,7 +74,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-      OperatorContext.getChildCount(dummyPop));
+      OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, false);
     int totalRecords = 0;
@@ -130,7 +131,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-      OperatorContext.getChildCount(dummyPop));
+        OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0);
     List<ValueVector> vectors = null;

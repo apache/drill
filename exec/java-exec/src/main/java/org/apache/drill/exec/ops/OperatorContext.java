@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,44 +18,28 @@
 package org.apache.drill.exec.ops;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import io.netty.buffer.DrillBuf;
+public interface OperatorContext extends OperatorExecContext {
 
-public abstract class OperatorContext {
+  OperatorStats getStats();
 
-  public abstract DrillBuf replace(DrillBuf old, int newSize);
+  ExecutorService getExecutor();
 
-  public abstract DrillBuf getManagedBuffer();
+  ExecutorService getScanExecutor();
 
-  public abstract DrillBuf getManagedBuffer(int size);
+  ExecutorService getScanDecodeExecutor();
 
-  public abstract BufferAllocator getAllocator();
+  DrillFileSystem newFileSystem(Configuration conf) throws IOException;
 
-  public abstract OperatorStats getStats();
-
-  public abstract ExecutorService getExecutor();
-
-  public abstract ExecutorService getScanExecutor();
-
-  public abstract ExecutorService getScanDecodeExecutor();
-
-  public abstract ExecutionControls getExecutionControls();
-
-  public abstract DrillFileSystem newFileSystem(Configuration conf) throws IOException;
-
-  public abstract DrillFileSystem newNonTrackingFileSystem(Configuration conf) throws IOException;
+  DrillFileSystem newNonTrackingFileSystem(Configuration conf) throws IOException;
 
   /**
    * Run the callable as the given proxy user.
@@ -65,21 +49,6 @@ public abstract class OperatorContext {
    * @param <RESULT> result type
    * @return Future<RESULT> future with the result of calling the callable
    */
-  public abstract <RESULT> ListenableFuture<RESULT> runCallableAs(UserGroupInformation proxyUgi,
+  <RESULT> ListenableFuture<RESULT> runCallableAs(UserGroupInformation proxyUgi,
                                                                   Callable<RESULT> callable);
-
-  public static int getChildCount(PhysicalOperator popConfig) {
-    Iterator<PhysicalOperator> iter = popConfig.iterator();
-    int i = 0;
-    while (iter.hasNext()) {
-      iter.next();
-      i++;
-    }
-
-    if (i == 0) {
-      i = 1;
-    }
-    return i;
-  }
-
-}
+ }
