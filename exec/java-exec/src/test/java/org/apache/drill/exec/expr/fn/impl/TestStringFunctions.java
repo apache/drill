@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +19,16 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.util.Text;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 public class TestStringFunctions extends BaseTestQuery {
 
@@ -273,4 +278,34 @@ public class TestStringFunctions extends BaseTestQuery {
         .run();
   }
 
+  @Test
+  public void testReverse() throws Exception {
+    testBuilder()
+      .sqlQuery("select reverse('qwerty') words from (values(1))")
+      .unOrdered()
+      .baselineColumns("words")
+      .baselineValues("ytrewq")
+      .build()
+      .run();
+  }
+
+  @Test // DRILL-5424
+  public void testReverseLongVarChars() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("input"));
+    try {
+      path.mkdirs();
+      String pathString = path.toPath().toString();
+
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "table_with_long_varchars.json")))) {
+        for (int i = 0; i < 10; i++) {
+          writer.write("{ \"a\": \"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz\"}");
+        }
+      }
+
+      test("select reverse(a) from dfs_test.`%s/table_with_long_varchars.json` t", pathString);
+
+    } finally {
+      FileUtils.deleteQuietly(path);
+    }
+  }
 }
