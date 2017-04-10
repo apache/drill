@@ -38,6 +38,7 @@
               <td style="border:none;">
                 <a class="btn btn-primary" href="/storage/${plugin.getName()}">Update</a>
                 <a class="btn btn-default" onclick="doEnable('${plugin.getName()}', false)">Disable</a>
+                <a class="btn btn-default" href="/storage/${plugin.getName()}/export"">Export</a>
               </td>
             </tr>
           </#if>

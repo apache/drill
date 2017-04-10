@@ -48,6 +48,7 @@
       <#else>
         <a id="enabled" class="btn btn-primary">Enable</a>
       </#if>
+      <a class="btn btn-default" href="/storage/${model.getName()}/export"">Export</a>
       <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
     </#if>
   </form>
