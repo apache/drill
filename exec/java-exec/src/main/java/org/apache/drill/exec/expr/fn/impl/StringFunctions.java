@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -1698,20 +1698,20 @@ public class StringFunctions{
       out.start = 0;
       out.end = len;
       out.buffer = buffer = buffer.reallocIfNeeded(len);
-      int charlen = 0;
+      int charLen;
 
-      int index = in.end;
-      int innerindex = 0;
+      int index = out.end;
+      int innerIndex;
 
-      for (int id = in.start; id < in.end; id += charlen) {
-        innerindex = charlen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
+      for (int id = in.start; id < in.end; id += charLen) {
+        innerIndex = charLen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
 
-        while (innerindex > 0) {
-          out.buffer.setByte(index - innerindex, in.buffer.getByte(id + (charlen - innerindex)));
-          innerindex-- ;
+        while (innerIndex > 0) {
+          out.buffer.setByte(index - innerIndex, in.buffer.getByte(id + (charLen - innerIndex)));
+          innerIndex--;
         }
 
-        index -= charlen;
+        index -= charLen;
       }
     }
   }
