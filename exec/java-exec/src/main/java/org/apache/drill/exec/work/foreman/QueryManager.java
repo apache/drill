@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.drill.exec.work.foreman;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 
 import java.util.List;
@@ -329,14 +328,19 @@ public class QueryManager implements AutoCloseable {
   }
 
   private QueryInfo getQueryInfo() {
-    return QueryInfo.newBuilder()
-        .setQuery(runQuery.getPlan())
+    final String queryText = foreman.getQueryText();
+    QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder()
         .setState(foreman.getState())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
-        .setOptionsJson(getQueryOptionsAsJson())
-        .build();
+        .setOptionsJson(getQueryOptionsAsJson());
+
+    if (queryText != null) {
+      queryInfoBuilder.setQuery(queryText);
+    }
+
+    return queryInfoBuilder.build();
   }
 
   public QueryProfile getQueryProfile() {
@@ -344,8 +348,8 @@ public class QueryManager implements AutoCloseable {
   }
 
   private QueryProfile getQueryProfile(UserException ex) {
+    final String queryText = foreman.getQueryText();
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
-        .setQuery(runQuery.getPlan())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
@@ -370,6 +374,10 @@ public class QueryManager implements AutoCloseable {
 
     if (planText != null) {
       profileBuilder.setPlan(planText);
+    }
+
+    if (queryText != null) {
+      profileBuilder.setQuery(queryText);
     }
 
     fragmentDataMap.forEach(new OuterIter(profileBuilder));

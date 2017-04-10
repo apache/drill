@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -226,6 +226,8 @@ public class ProfileResources {
           logger.error("Error getting finished query profile.", e);
         }
       }
+
+      Collections.sort(finishedQueries, Collections.reverseOrder());
 
       return new QProfiles(runningQueries, finishedQueries, errors);
     } catch (Exception e) {
