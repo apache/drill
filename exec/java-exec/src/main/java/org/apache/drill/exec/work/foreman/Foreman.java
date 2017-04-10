@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -537,9 +536,10 @@ public class Foreman implements Runnable {
           .build(logger);
     }
 
-    final String sql = serverState.getSqlQuery();
-    logger.info("Prepared statement query for QueryId {} : {}", queryId, sql);
-    runSQL(sql);
+    queryText = serverState.getSqlQuery();
+    logger.info("Prepared statement query for QueryId {} : {}", queryId, queryText);
+    runSQL(queryText);
+
   }
 
   private static void validatePlan(final PhysicalPlan plan) throws ForemanSetupException {
@@ -1219,6 +1219,13 @@ public class Foreman implements Runnable {
 
   public QueryState getState() {
     return state;
+  }
+
+  /**
+   * @return sql query text of the query request
+   */
+  public String getQueryText() {
+    return queryText;
   }
 
   /**
