@@ -12,6 +12,8 @@ To open the Drill Web Console, launch a web browser, and go to one of the follow
   Use this URL when [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is disabled (the default).
 * `https://<IP address or host name>:8047`  
   Use this URL when HTTPS support is enabled.
+* http://localhost:8047
+  Use this URL when running ./drill-embedded
 
 <!-- ## Drill 1.2 and Later
 
