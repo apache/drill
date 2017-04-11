@@ -137,11 +137,8 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return; //no filter pushdown ==> No transformation.
     }
 
-    final JsonTableGroupScan newGroupsScan = new JsonTableGroupScan(groupScan.getUserName(),
-                                                                    groupScan.getStoragePlugin(),
-                                                                    groupScan.getFormatPlugin(),
-                                                                    newScanSpec,
-                                                                    groupScan.getColumns());
+    // clone the groupScan with the newScanSpec.
+    final JsonTableGroupScan newGroupsScan = groupScan.clone(newScanSpec);
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
