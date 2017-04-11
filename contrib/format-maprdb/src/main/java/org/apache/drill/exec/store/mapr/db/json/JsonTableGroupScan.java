@@ -58,7 +58,9 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
 
   public static final String TABLE_JSON = "json";
 
-  private MapRDBTableStats tableStats;
+  private long totalRowCount;
+  private Table table;
+  private TabletInfo[] tabletInfos;
 
   private JsonScanSpec scanSpec;
 
@@ -90,7 +92,12 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
     super(that);
     this.scanSpec = that.scanSpec;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
-    this.tableStats = that.tableStats;
+
+    // Reusing the table handle, tabletInfos and totalRowCount saves expensive
+    // calls to MapR DB client to get them again.
+    this.table = that.table;
+    this.tabletInfos = that.tabletInfos;
+    this.totalRowCount = that.totalRowCount;
   }
 
   @Override
@@ -100,30 +107,57 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
     return newScan;
   }
 
+  /**
+   * Create a new groupScan, which is a clone of this.
+   * Initialize scanSpec.
+   * We should recompute regionsToScan as it depends upon scanSpec.
+   * @param scanSpec
+   */
+  public JsonTableGroupScan clone(JsonScanSpec scanSpec) {
+    JsonTableGroupScan newScan = new JsonTableGroupScan(this);
+    newScan.scanSpec = scanSpec;
+    newScan.computeRegionsToScan();
+    return newScan;
+  }
+
+  /**
+   * Compute regions to scan based on the scanSpec
+   */
+  private void computeRegionsToScan() {
+    boolean foundStartRegion = false;
+
+    regionsToScan = new TreeMap<TabletFragmentInfo, String>();
+    for (TabletInfo tabletInfo : tabletInfos) {
+      TabletInfoImpl tabletInfoImpl = (TabletInfoImpl) tabletInfo;
+      if (!foundStartRegion && !isNullOrEmpty(scanSpec.getStartRow()) && !tabletInfoImpl.containsRow(scanSpec.getStartRow())) {
+        continue;
+      }
+      foundStartRegion = true;
+      regionsToScan.put(new TabletFragmentInfo(tabletInfoImpl), tabletInfo.getLocations()[0]);
+      if (!isNullOrEmpty(scanSpec.getStopRow()) && tabletInfoImpl.containsRow(scanSpec.getStopRow())) {
+        break;
+      }
+    }
+  }
+
   private void init() {
     logger.debug("Getting tablet locations");
     try {
       Configuration conf = new Configuration();
-      Table t = MapRDB.getTable(scanSpec.getTableName());
-      TabletInfo[] tabletInfos = t.getTabletInfos(scanSpec.getCondition());
-      tableStats = new MapRDBTableStats(conf, scanSpec.getTableName());
 
-      boolean foundStartRegion = false;
-      regionsToScan = new TreeMap<TabletFragmentInfo, String>();
+      // Fetch table and tabletInfo only once and cache.
+      table = MapRDB.getTable(scanSpec.getTableName());
+      tabletInfos = table.getTabletInfos(scanSpec.getCondition());
+
+      // Calculate totalRowCount for the table from tabletInfos estimatedRowCount.
+      // This will avoid calling expensive MapRDBTableStats API to get total rowCount, avoiding
+      // duplicate work and RPCs to MapR DB server.
       for (TabletInfo tabletInfo : tabletInfos) {
-        TabletInfoImpl tabletInfoImpl = (TabletInfoImpl) tabletInfo;
-        if (!foundStartRegion
-            && !isNullOrEmpty(scanSpec.getStartRow())
-            && !tabletInfoImpl.containsRow(scanSpec.getStartRow())) {
-          continue;
-        }
-        foundStartRegion = true;
-        regionsToScan.put(new TabletFragmentInfo(tabletInfoImpl), tabletInfo.getLocations()[0]);
-        if (!isNullOrEmpty(scanSpec.getStopRow())
-            && tabletInfoImpl.containsRow(scanSpec.getStopRow())) {
-          break;
-        }
+        totalRowCount += tabletInfo.getEstimatedNumRows();
       }
+
+      computeRegionsToScan();
+
     } catch (Exception e) {
       throw new DrillRuntimeException("Error getting region info for table: " + scanSpec.getTableName(), e);
     }
@@ -153,7 +187,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
   @Override
   public ScanStats getScanStats() {
     //TODO: look at stats for this.
-    long rowCount = (long) ((scanSpec.getSerializedFilter() != null ? .5 : 1) * tableStats.getNumRows());
+    long rowCount = (long) ((scanSpec.getSerializedFilter() != null ? .5 : 1) * totalRowCount);
     int avgColumnSize = 10;
     int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
