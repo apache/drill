@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestLargeFileCompilation.iteration", "1"));
 
-  private static final int NUM_PROJECT_COLUMNS = 2000;
+  private static final int NUM_PROJECT_COLUMNS = 5000;
 
   private static final int NUM_ORDERBY_COLUMNS = 500;
 

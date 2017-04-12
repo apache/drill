@@ -21,10 +21,12 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -66,7 +68,17 @@ public class ClassGenerator<T>{
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
-  public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
+
+  /**
+   * Field has 2 indexes within the constant pull: field item + name and type item.
+   * Additionally should be taken into account literal, class and
+   * method (class reference + name + specially encoded type descriptor = 3 indexes) references
+   * within the constant pool, fields and methods from the template,
+   * so subtracts 6000 to reserve constant pool for them.
+   */
+  private static final int MAX_CLASS_MEMBERS_COUNT = 26767;  // = 0xFFFF / 2 - 6000
+
+  public enum BlockType {SETUP, EVAL, RESET, CLEANUP}
 
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
@@ -77,9 +89,14 @@ public class ClassGenerator<T>{
   private final CodeGenerator<T> codeGenerator;
 
   public final JDefinedClass clazz;
-  private final LinkedList<SizedJBlock>[] blocks;
+
   private final JCodeModel model;
   private final OptionSet optionManager;
+
+  private ClassGenerator<T> innerClassGenerator;
+  private LinkedList<SizedJBlock>[] blocks;
+  private LinkedList<SizedJBlock>[] oldBlocks;
+  private int maxFieldsIndex = MAX_CLASS_MEMBERS_COUNT;
 
   private int index = 0;
   private int labelIndex = 0;
@@ -136,6 +153,9 @@ public class ClassGenerator<T>{
   }
 
   public void setMappingSet(MappingSet mappings) {
+    if (innerClassGenerator != null) {
+      innerClassGenerator.setMappingSet(mappings);
+    }
     this.mappings = mappings;
   }
 
@@ -210,7 +230,19 @@ public class ClassGenerator<T>{
     return declareVectorValueSetupAndMember(DirectExpression.direct(batchName), fieldId);
   }
 
+  /**
+   * Creates class variable for the value vector using metadata from {@code fieldId}
+   * and initializes it using setup blocks.
+   *
+   * @param batchName expression for invoking {@code getValueAccessorById} method
+   * @param fieldId   metadata of the field that should be declared
+   * @return a newly generated class field
+   */
   public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId) {
+    // declares field in the inner class if innerClassGenerator has been created
+    if (innerClassGenerator != null) {
+      return innerClassGenerator.declareVectorValueSetupAndMember(batchName, fieldId);
+    }
     final ValueVectorSetup setup = new ValueVectorSetup(batchName, fieldId);
 //    JVar var = this.vvDeclaration.get(setup);
 //    if(var != null) return var;
@@ -287,6 +319,58 @@ public class ClassGenerator<T>{
   }
 
   /**
+   * Assigns {@code blocks} from the last nested {@code innerClassGenerator} to {@code this.blocks}
+   * recursively if {@code innerClassGenerator} has been created.
+   *
+   */
+  private void setupValidBlocks() {
+    if (createNestedClass()) {
+      // blocks from the last inner class should be used
+      setupInnerClassBlocks();
+    }
+  }
+
+  /**
+   * Creates {@link ClassGenerator innerClassGenerator} with inner class
+   * if {@code index} is greater than {@code maxFieldsIndex}.
+   *
+   * @return true if splitting happened.
+   */
+  private boolean createNestedClass() {
+    if (index > maxFieldsIndex) {
+      // all new fields will be declared in the class from innerClassGenerator
+      // if fields count will be greater than maxFieldsIndex
+      if (innerClassGenerator == null) {
+        try {
+          JDefinedClass innerClazz = clazz._class(JMod.PRIVATE, clazz.name() + "0");
+          innerClassGenerator = new ClassGenerator<>(codeGenerator, mappings, sig, evaluationVisitor, innerClazz, model, optionManager);
+        } catch (JClassAlreadyExistsException e) {
+          throw new DrillRuntimeException(e);
+        }
+        oldBlocks = blocks;
+        innerClassGenerator.index = index;
+        innerClassGenerator.maxFieldsIndex += index;
+        // blocks from the inner class should be used
+        setupInnerClassBlocks();
+        return true;
+      }
+      return innerClassGenerator.createNestedClass();
+    }
+    return false;
+  }
+
+  /**
+   * Gets blocks from the last inner {@link ClassGenerator innerClassGenerator}
+   * and assigns it to the {@link this.blocks} recursively.
+   */
+  private void setupInnerClassBlocks() {
+    if (innerClassGenerator != null) {
+      innerClassGenerator.setupInnerClassBlocks();
+      blocks = innerClassGenerator.blocks;
+    }
+  }
+
+  /**
    * Create a new code block, closing the current block.
    *
    * @param mode the {@link BlkCreateMode block create mode}
@@ -306,17 +390,27 @@ public class ClassGenerator<T>{
     }
     if (blockRotated) {
       evaluationVisitor.previousExpressions.clear();
+      setupValidBlocks();
     }
   }
 
+  /**
+   * Creates methods from the signature {@code sig} with body from the appropriate {@code blocks}.
+   */
   void flushCode() {
+    JVar innerClassField = null;
+    if (innerClassGenerator != null) {
+      blocks = oldBlocks;
+      innerClassField = clazz.field(JMod.NONE, model.ref(innerClassGenerator.clazz.name()), "innerClassField");
+      innerClassGenerator.flushCode();
+    }
     int i = 0;
-    for(CodeGeneratorMethod method : sig) {
+    for (CodeGeneratorMethod method : sig) {
       JMethod outer = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
-      for(CodeGeneratorArgument arg : method) {
+      for (CodeGeneratorArgument arg : method) {
         outer.param(arg.getType(), arg.getName());
       }
-      for(Class<?> c : method.getThrowsIterable()) {
+      for (Class<?> c : method.getThrowsIterable()) {
         outer._throws(model.ref(c));
       }
       outer._throws(SchemaChangeException.class);
@@ -353,6 +447,38 @@ public class ClassGenerator<T>{
           exprsInMethod += sb.getCount();
         }
       }
+      if (innerClassField != null) {
+        // creates inner class instance and initializes innerClassField
+        if (method.getMethodName().equals("__DRILL_INIT__")) {
+          JInvocation rhs = JExpr._new(innerClassGenerator.clazz);
+          JBlock block = new JBlock().assign(innerClassField, rhs);
+          outer.body().add(block);
+        }
+
+        List<JType> argTypes = new ArrayList<>();
+        for (CodeGeneratorArgument arg : method) {
+          argTypes.add(model._ref(arg.getType()));
+        }
+        JMethod inner = innerClassGenerator.clazz.getMethod(method.getMethodName(), argTypes.toArray(new JType[0]));
+
+        if (inner != null) {
+          // removes empty method from the inner class
+          if (inner.body().isEmpty()) {
+            innerClassGenerator.clazz.methods().remove(inner);
+            continue;
+          }
+
+          JInvocation methodCall = innerClassField.invoke(inner);
+          for (CodeGeneratorArgument arg : method) {
+            methodCall.arg(JExpr.direct(arg.getName()));
+          }
+          if (isVoidMethod) {
+            outer.body().add(methodCall);
+          } else {
+            outer.body()._return(methodCall);
+          }
+        }
+      }
     }
 
     for(ClassGenerator<T> child : innerClasses.values()) {
@@ -373,10 +499,13 @@ public class ClassGenerator<T>{
   }
 
   public JVar declareClassField(String prefix, JType t) {
-    return clazz.field(JMod.NONE, t, prefix + index++);
+    return declareClassField(prefix, t, null);
   }
 
   public JVar declareClassField(String prefix, JType t, JExpression init) {
+    if (innerClassGenerator != null && index > maxFieldsIndex) {
+      return innerClassGenerator.clazz.field(JMod.NONE, t, prefix + index++, init);
+    }
     return clazz.field(JMod.NONE, t, prefix + index++, init);
   }
 
