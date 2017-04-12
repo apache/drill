@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
@@ -242,14 +243,14 @@ public class ClassTransformer {
       final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
 
       long totalBytecodeSize = 0;
-      Map<String, ClassNode> classesToMerge = Maps.newHashMap();
+      Map<String, Pair<byte[], ClassNode>> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
         final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
         if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }
-        classesToMerge.put(node.name, node);
+        classesToMerge.put(node.name, Pair.of(clazz, node));
       }
 
       final LinkedList<ClassSet> names = Lists.newLinkedList();
@@ -264,7 +265,14 @@ public class ClassTransformer {
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         final ClassNames nextGenerated = nextSet.generated;
-        final ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
+        // keeps only classes that have not be merged
+        Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
+        final ClassNode generatedNode;
+        if (classNodePair != null) {
+          generatedNode = classNodePair.getValue();
+        } else {
+          generatedNode = null;
+        }
 
         /*
          * TODO
@@ -309,6 +317,10 @@ public class ClassTransformer {
         namesCompleted.add(nextSet);
       }
 
+      // adds byte code of the classes that have not been merged to make them accessible for outer class
+      for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
+        classLoader.injectByteCode(clazz.getKey().replace(FileUtils.separatorChar, '.'), clazz.getValue().getKey());
+      }
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
         logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
