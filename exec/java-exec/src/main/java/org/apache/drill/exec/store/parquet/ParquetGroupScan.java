@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -44,12 +43,10 @@ import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.ParquetFilterPredicate;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
-import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
@@ -58,7 +55,6 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ImplicitColumnExplorer;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
@@ -677,15 +673,16 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     } else {
       // we need to expand the files from fileStatuses
       for (FileStatus status : fileStatuses) {
+        Path cacheFileRoot = status.getPath();
         if (status.isDirectory()) {
           //TODO [DRILL-4496] read the metadata cache files in parallel
-          final Path metaPath = new Path(status.getPath(), Metadata.METADATA_FILENAME);
+          final Path metaPath = new Path(cacheFileRoot, Metadata.METADATA_FILENAME);
           final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString(), selection.getMetaContext(), formatConfig);
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
             fileSet.add(file.getPath());
           }
         } else {
-          final Path path = Path.getPathWithoutSchemeAndAuthority(status.getPath());
+          final Path path = Path.getPathWithoutSchemeAndAuthority(cacheFileRoot);
           fileSet.add(path.toString());
         }
       }
@@ -718,9 +715,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   }
 
   private void init(MetadataContext metaContext) throws IOException {
+    Path metaPath = null;
     if (entries.size() == 1 && parquetTableMetadata == null) {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
-      Path metaPath = null;
       if (fs.isDirectory(p)) {
         // Using the metadata file makes sense when querying a directory; otherwise
         // if querying a single file we can look up the metadata directly from the file
@@ -734,7 +731,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
-      Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
+      metaPath = new Path(p, Metadata.METADATA_FILENAME);
       if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
         usedMetadataCache = true;
         if (parquetTableMetadata == null) {

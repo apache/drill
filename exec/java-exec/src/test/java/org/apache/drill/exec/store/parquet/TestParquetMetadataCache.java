@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -396,6 +396,23 @@ public class TestParquetMetadataCache extends PlanTestBase {
     PlanTestBase.testPlanMatchingPatterns(query1, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
         new String[] {});
 
+  }
+
+  @Test // DRILL-3867
+  public void testMoveCache() throws Exception {
+    String tableName = "nation_move";
+    String newTableName = "nation_moved";
+    test("use dfs_test.tmp");
+    test("create table `%s/t1` as select * from cp.`tpch/nation.parquet`", tableName);
+    test("create table `%s/t2` as select * from cp.`tpch/nation.parquet`", tableName);
+    test("refresh table metadata %s", tableName);
+    checkForMetadataFile(tableName);
+    File srcFile = new File(getDfsTestTmpSchemaLocation(), tableName);
+    File dstFile = new File(getDfsTestTmpSchemaLocation(), newTableName);
+    FileUtils.moveDirectory(srcFile, dstFile);
+    Assert.assertFalse("Cache file was not moved successfully", srcFile.exists());
+    int rowCount = testSql(String.format("select * from %s", newTableName));
+    Assert.assertEquals(50, rowCount);
   }
 
   private void checkForMetadataFile(String table) throws Exception {
