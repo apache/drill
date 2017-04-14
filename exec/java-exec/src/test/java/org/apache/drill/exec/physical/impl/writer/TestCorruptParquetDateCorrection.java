@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,19 +21,12 @@ import static java.lang.String.format;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.TestBuilder;
-import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.drill.exec.store.parquet.Metadata;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Tests for compatibility reading old parquet files after date corruption
@@ -106,21 +99,13 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   private static final String PARTITIONED_1_2_FOLDER = "partitioned_with_corruption_4203_1_2";
   private static final String MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER = "mixed_partitioned";
 
-  private static FileSystem fs;
-  private static Path path;
 
   @BeforeClass
   public static void initFs() throws Exception {
-    Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    fs = FileSystem.get(conf);
-    path = new Path(getDfsTestTmpSchemaLocation());
-
-    // Move files into temp directory, rewrite the metadata cache file to contain the appropriate absolute
-    // path
+    // Move files into temp directory, rewrite the metadata cache file to contain the appropriate absolute path
     copyDirectoryIntoTempSpace(CORRUPTED_PARTITIONED_DATES_1_2_PATH);
     copyMetaDataCacheToTempReplacingInternalPaths("parquet/4203_corrupt_dates/drill.parquet.metadata_1_2.requires_replace.txt",
-        PARTITIONED_1_2_FOLDER);
+        PARTITIONED_1_2_FOLDER, Metadata.METADATA_FILENAME);
     copyDirectoryIntoTempSpace(CORRUPTED_PARTITIONED_DATES_1_2_PATH, MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER);
     copyDirectoryIntoTempSpace(CORRECT_PARTITIONED_DATES_1_9_PATH, MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER);
     copyDirectoryIntoTempSpace(CORRUPTED_PARTITIONED_DATES_1_4_0_PATH, MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER);
@@ -334,7 +319,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   @Test
   public void testReadOldMetadataCacheFile() throws Exception {
     // for sanity, try reading all partitions without a filter
-    String query = format("select date_col from dfs.`%s`", new Path(path, PARTITIONED_1_2_FOLDER));
+    String query = format("select date_col from dfs.`%s`", new Path(getDfsTestTmpSchemaLocation(), PARTITIONED_1_2_FOLDER));
     TestBuilder builder = testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -347,7 +332,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
   @Test
   public void testReadOldMetadataCacheFileWithPruning() throws Exception {
     String query = format("select date_col from dfs.`%s` where date_col = date '1970-01-01'",
-        new Path(path, PARTITIONED_1_2_FOLDER));
+        new Path(getDfsTestTmpSchemaLocation(), PARTITIONED_1_2_FOLDER));
     // verify that pruning is actually taking place
     testPlanMatchingPatterns(query, new String[]{"numFiles=1", "usedMetadataFile=true"}, null);
 
@@ -365,7 +350,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
     // for sanity, try reading all partitions without a filter
     TestBuilder builder = testBuilder()
         .sqlQuery("select date_col from table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false))",
-            new Path(path, PARTITIONED_1_2_FOLDER))
+            new Path(getDfsTestTmpSchemaLocation(), PARTITIONED_1_2_FOLDER))
         .unOrdered()
         .baselineColumns("date_col");
     addCorruptedDateBaselineValues(builder);
@@ -373,7 +358,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
     String query = format("select date_col from table(dfs.`%s` (type => 'parquet', " +
         "autoCorrectCorruptDates => false)) where date_col = cast('15334-03-17' as date)",
-        new Path(path, PARTITIONED_1_2_FOLDER));
+        new Path(getDfsTestTmpSchemaLocation(), PARTITIONED_1_2_FOLDER));
     // verify that pruning is actually taking place
     testPlanMatchingPatterns(query, new String[]{"numFiles=1", "usedMetadataFile=true"}, null);
 
@@ -388,9 +373,10 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
 
   @Test
   public void testReadNewMetadataCacheFileOverOldAndNewFiles() throws Exception {
-    String table = format("dfs.`%s`", new Path(path, MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER));
-    copyMetaDataCacheToTempReplacingInternalPaths("parquet/4203_corrupt_dates/" +
-        "mixed_version_partitioned_metadata.requires_replace.txt", MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER);
+    String table = format("dfs.`%s`", new Path(getDfsTestTmpSchemaLocation(), MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER));
+    copyMetaDataCacheToTempReplacingInternalPaths(
+        "parquet/4203_corrupt_dates/mixed_version_partitioned_metadata.requires_replace.txt",
+        MIXED_CORRUPTED_AND_CORRECT_PARTITIONED_FOLDER, Metadata.METADATA_FILENAME);
     // for sanity, try reading all partitions without a filter
     TestBuilder builder = testBuilder()
         .sqlQuery("select date_col from " + table)
@@ -486,50 +472,6 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
       addCorruptedDateBaselineValues(builder);
       builder.go();
     }
-  }
-
-  private static String replaceWorkingPathInString(String orig) {
-    return orig.replaceAll(Pattern.quote("[WORKING_PATH]"), Matcher.quoteReplacement(TestTools.getWorkingPath()));
-  }
-
-  private static void copyDirectoryIntoTempSpace(String resourcesDir) throws IOException {
-    copyDirectoryIntoTempSpace(resourcesDir, null);
-  }
-
-  private static void copyDirectoryIntoTempSpace(String resourcesDir, String destinationSubDir) throws IOException {
-    Path destination = path;
-    if (destinationSubDir != null) {
-      destination = new Path(path, destinationSubDir);
-    }
-    fs.copyFromLocalFile(
-        new Path(replaceWorkingPathInString(resourcesDir)),
-        destination);
-  }
-
-  /**
-   * Metadata cache files include full paths to the files that have been scanned.
-   *
-   * There is no way to generate a metadata cache file with absolute paths that
-   * will be guaranteed to be available on an arbitrary test machine.
-   *
-   * To enable testing older metadata cache files, they were generated manually
-   * using older drill versions, and the absolute path up to the folder where
-   * the metadata cache file appeared was manually replaced with the string
-   * REPLACED_IN_TEST. Here the file is re-written into the given temporary
-   * location after the REPLACED_IN_TEST string has been replaced by the actual
-   * location generated during this run of the tests.
-   *
-   * @param srcFileOnClassPath
-   * @param destFolderInTmp
-   * @throws IOException
-   */
-  private static void copyMetaDataCacheToTempReplacingInternalPaths(String srcFileOnClassPath, String destFolderInTmp)
-      throws IOException {
-    String metadataFileContents = getFile(srcFileOnClassPath);
-    Path newMetaCache = new Path(new Path(path, destFolderInTmp), ".drill.parquet_metadata");
-    FSDataOutputStream outSteam = fs.create(newMetaCache);
-    outSteam.writeBytes(metadataFileContents.replace("REPLACED_IN_TEST", path.toString()));
-    outSteam.close();
   }
 
 }

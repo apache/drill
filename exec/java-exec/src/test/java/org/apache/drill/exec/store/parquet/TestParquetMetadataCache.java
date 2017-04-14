@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,12 +30,15 @@ import java.io.File;
 import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TestParquetMetadataCache extends PlanTestBase {
   private static final String WORKING_PATH = TestTools.getWorkingPath();
   private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
   private static final String tableName1 = "parquetTable1";
   private static final String tableName2 = "parquetTable2";
+  private static final String RELATIVE_PATHS_METADATA = "relative_paths_metadata";
 
 
   @BeforeClass
@@ -398,10 +401,56 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   }
 
+  @Test // DRILL-3867
+  public void testMoveCache() throws Exception {
+    final String tableName = "nation_move";
+    final String newTableName = "nation_moved";
+    try {
+      test("use dfs_test.tmp");
+      test("create table `%s/t1` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("create table `%s/t2` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("refresh table metadata %s", tableName);
+      checkForMetadataFile(tableName);
+      File srcFile = new File(getDfsTestTmpSchemaLocation(), tableName);
+      File dstFile = new File(getDfsTestTmpSchemaLocation(), newTableName);
+      FileUtils.moveDirectory(srcFile, dstFile);
+      assertFalse("Cache file was not moved successfully", srcFile.exists());
+      int rowCount = testSql(String.format("select * from %s", newTableName));
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files", 50, rowCount);
+    } finally {
+      test("drop table if exists %s", newTableName);
+    }
+  }
+
+  @Test
+  public void testMetadataCacheAbsolutePaths() throws Exception {
+    try {
+      test("use dfs_test.tmp");
+      final String relative_path_metadata_t1 = RELATIVE_PATHS_METADATA + "/t1";
+      final String relative_path_metadata_t2 = RELATIVE_PATHS_METADATA + "/t2";
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", relative_path_metadata_t1);
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", relative_path_metadata_t2);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
+          "metadata_directories_with_absolute_paths.requires_replace.txt", RELATIVE_PATHS_METADATA, Metadata.METADATA_DIRECTORIES_FILENAME);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
+          "metadata_table_with_absolute_paths.requires_replace.txt", RELATIVE_PATHS_METADATA, Metadata.METADATA_FILENAME);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
+          "metadata_table_with_absolute_paths_t1.requires_replace.txt", relative_path_metadata_t1, Metadata.METADATA_FILENAME);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
+          "metadata_table_with_absolute_paths_t2.requires_replace.txt", relative_path_metadata_t2, Metadata.METADATA_FILENAME);
+
+      int rowCount = testSql(String.format("select * from %s", RELATIVE_PATHS_METADATA));
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files", 50, rowCount);
+    } finally {
+      test("drop table if exists %s", RELATIVE_PATHS_METADATA);
+    }
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
-    Assert.assertTrue(Files.exists(new File(metaFile).toPath()));
+    assertTrue(String.format("There is no metadata cache file for the %s table", table),
+        Files.exists(new File(metaFile).toPath()));
   }
 
 }
