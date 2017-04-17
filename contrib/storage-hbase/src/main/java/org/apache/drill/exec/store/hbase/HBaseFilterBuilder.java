@@ -61,6 +61,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
        * remove it since its effect is also achieved through startRow and stopRow.
        */
       if (parsedSpec.filter instanceof RowFilter &&
+          ((RowFilter)parsedSpec.filter).getOperator() != CompareOp.NOT_EQUAL &&
           ((RowFilter)parsedSpec.filter).getComparator() instanceof BinaryComparator) {
         parsedSpec.filter = null;
       }
