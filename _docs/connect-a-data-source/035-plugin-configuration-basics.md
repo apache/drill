@@ -159,6 +159,21 @@ fieldDelimiter => ',', extractHeader => true))``
 
 For more information about format plugin configuration see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).  
 
+## Using the Formats Attributes as table function parameters.
+
+You can also set the formats attributes defined above on a per query basis.
+
+To pass parameters to the format plugin you can use the table function syntax:
+`select a, b from table({table function name}(parameters))`
+
+The table function name is your table name, the type parameter is the format name and the other parameters are the fields that the configuration of the format plugin accepts as defined in the table above (except for `extensions` that does not apply in this context).
+
+For example to read a CSV file and parse its header: `select a, b from table(dfs.``path/to/data.csv``(type => 'text',
+fieldDelimiter => ',', extractHeader => true))`
+
+For more information about format plugin configuration see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).
+
+
 ## Using Other Attributes
 
 The configuration of other attributes, such as `size.calculator.enabled` in the `hbase` plugin and `configProps` in the `hive` plugin, are implementation-dependent and beyond the scope of this document.
