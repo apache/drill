@@ -179,6 +179,42 @@ public class EndpointAffinity {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    long temp;
+    temp = Double.doubleToLongBits(affinity);
+    result = prime * result + (int) (temp ^ (temp >>> 32));
+    result = prime * result + ((endpoint == null) ? 0 : endpoint.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof EndpointAffinity)) {
+      return false;
+    }
+    EndpointAffinity other = (EndpointAffinity) obj;
+    if (Double.doubleToLongBits(affinity) != Double.doubleToLongBits(other.affinity)) {
+      return false;
+    }
+    if (endpoint == null) {
+      if (other.endpoint != null) {
+        return false;
+      }
+    } else if (!endpoint.equals(other.endpoint)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public String toString() {
     return "EndpointAffinity [endpoint=" + TextFormat.shortDebugString(endpoint) + ", affinity=" + affinity +
         ", mandatory=" + mandatory + ", maxWidth=" + maxWidth + "]";
