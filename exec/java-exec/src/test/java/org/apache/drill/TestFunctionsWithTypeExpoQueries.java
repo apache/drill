@@ -719,4 +719,25 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
   }
+
+  @Test // DRILL-4507
+  public void testCreateViewWithToTimestamp() throws Exception {
+    final String createView = "CREATE VIEW testCreateViewWithToTimestamp_timestamp_test AS \n" +
+        "SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') as col FROM (VALUES(1))";
+    final String query = "DESCRIBE testCreateViewWithToTimestamp_timestamp_test";
+    test("use dfs_test.tmp");
+
+    try {
+    test(createView);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+        .baselineValues("col", "TIMESTAMP", "NO")
+        .build()
+        .run();
+    } finally {
+      test("drop view testCreateViewWithToTimestamp_timestamp_test");
+    }
+  }
 }
