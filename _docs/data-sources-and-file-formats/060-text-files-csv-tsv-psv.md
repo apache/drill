@@ -12,7 +12,7 @@ Best practices for reading text files are:
 
 ### Select Data from Particular Columns
 
-Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text files have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
+Converting text files to another format, such as Parquet, using the CAST command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text files have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
 
     CREATE TABLE parquet_users AS SELECT CAST(COLUMNS[0] AS INT) AS user_id,
     COLUMNS[1] AS username, CAST(COLUMNS[2] AS TIMESTAMP) AS registration_date
