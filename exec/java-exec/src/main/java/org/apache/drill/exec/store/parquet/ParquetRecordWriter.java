@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -77,6 +78,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final int MINIMUM_BUFFER_SIZE = 64 * 1024;
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
   private static final int MAXIMUM_RECORD_COUNT_FOR_CHECK = 10000;
+  private static final int BLOCKSIZE_MULTIPLE = 64 * 1024;
 
   public static final String DRILL_VERSION_PROPERTY = "drill.version";
   public static final String WRITER_VERSION_PROPERTY = "drill-writer.version";
@@ -89,6 +91,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private int pageSize;
   private int dictionaryPageSize;
   private boolean enableDictionary = false;
+  private boolean useSingleFSBlock = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
   private CodecFactory codecFactory;
@@ -156,6 +159,12 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
 
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
+    useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
+
+    if (useSingleFSBlock) {
+      // Round up blockSize to multiple of 64K.
+      blockSize = (int)ceil((double)blockSize/BLOCKSIZE_MULTIPLE) * BLOCKSIZE_MULTIPLE;
+    }
   }
 
   private boolean containsComplexVectors(BatchSchema schema) {
@@ -380,14 +389,19 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
       // since ParquetFileWriter will overwrite empty output file (append is not supported)
       // we need to re-apply file permission
-      parquetFileWriter = new ParquetFileWriter(conf, schema, path, ParquetFileWriter.Mode.OVERWRITE);
+      if (useSingleFSBlock) {
+        // Passing blockSize creates files with this blockSize instead of filesystem default blockSize.
+        // Currently, this is supported only by filesystems included in
+        // BLOCK_FS_SCHEMES (ParquetFileWriter.java in parquet-mr), which includes HDFS.
+        // For other filesystems, it uses default blockSize configured for the file system.
+        parquetFileWriter = new ParquetFileWriter(conf, schema, path, ParquetFileWriter.Mode.OVERWRITE, blockSize, 0);
+      } else {
+        parquetFileWriter = new ParquetFileWriter(conf, schema, path, ParquetFileWriter.Mode.OVERWRITE);
+      }
       storageStrategy.applyToFile(fs, path);
-
       parquetFileWriter.start();
     }
-
     recordCount++;
-
     checkBlockSizeReached();
   }
 

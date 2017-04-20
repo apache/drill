@@ -96,6 +96,7 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
+      ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK_VALIDATOR,
       ExecConstants.PARQUET_PAGE_SIZE_VALIDATOR,
       ExecConstants.PARQUET_DICT_PAGE_SIZE_VALIDATOR,
       ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR,
