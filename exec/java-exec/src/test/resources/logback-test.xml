@@ -32,12 +32,13 @@
   </appender>
 
   <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
+    <level value="error" />
     <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
   </logger>
 
   <logger name="query.logger" additivity="false">
-    <level value="info" />
+    <level value="error" />
     <appender-ref ref="SOCKET" />
   </logger>
 
