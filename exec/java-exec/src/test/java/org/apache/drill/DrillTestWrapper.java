@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -117,9 +118,9 @@ public class DrillTestWrapper {
   private int expectedNumBatches;
 
   public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
-                          String baselineOptionSettingQueries, String testOptionSettingQueries,
-                          QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
-                          List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
+      String baselineOptionSettingQueries, String testOptionSettingQueries,
+      QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
+      List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
     this.services = services;
     this.query = query;
@@ -150,7 +151,7 @@ public class DrillTestWrapper {
   }
 
   private void compareHyperVectors(Map<String, HyperVectorValueIterator> expectedRecords,
-                                         Map<String, HyperVectorValueIterator> actualRecords) throws Exception {
+      Map<String, HyperVectorValueIterator> actualRecords) throws Exception {
     for (String s : expectedRecords.keySet()) {
       assertNotNull("Expected column '" + s + "' not found.", actualRecords.get(s));
       assertEquals(expectedRecords.get(s).getTotalRecords(), actualRecords.get(s).getTotalRecords());
@@ -224,7 +225,7 @@ public class DrillTestWrapper {
   }
 
   private Map<String, HyperVectorValueIterator> addToHyperVectorMap(final List<QueryDataBatch> records,
-                                                                    final RecordBatchLoader loader)
+      final RecordBatchLoader loader)
       throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, HyperVectorValueIterator> combinedVectors = new TreeMap<>();
@@ -307,12 +308,28 @@ public class DrillTestWrapper {
   }
 
   /**
+   * Iterate over batches, and combine the batches into a map, where key is schema path, and value is
+   * the list of column values across all the batches.
    * @param batches
    * @return
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
   public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches)
+      throws SchemaChangeException, UnsupportedEncodingException {
+    return addToCombinedVectorResults(batches, null);
+  }
+
+  /**
+   * Add to result vectors and compare batch schema against expected schema while iterating batches.
+   * @param batches
+   * @param  expectedSchema: the expected schema the batches should contain. Through SchemaChangeException
+   *                       if encounter different batch schema.
+   * @return
+   * @throws SchemaChangeException
+   * @throws UnsupportedEncodingException
+   */
+  public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema)
        throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, List<Object>> combinedVectors = new TreeMap<>();
@@ -320,6 +337,14 @@ public class DrillTestWrapper {
     long totalRecords = 0;
     BatchSchema schema = null;
     for (VectorAccessible loader : batches)  {
+      if (expectedSchema != null) {
+        if (! expectedSchema.equals(loader.getSchema())) {
+          throw new SchemaChangeException(String.format("Batch schema does not match expected schema\n" +
+                  "Actual schema: %s.  Expected schema : %s",
+              loader.getSchema(), expectedSchema));
+        }
+      }
+
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
       // SchemaChangeException, so check/clean throws clause above.
       if (schema == null) {
