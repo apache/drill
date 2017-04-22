@@ -84,9 +84,15 @@ public class SchemaBuilder {
       parent.finishMap(col);
       return parent;
     }
+
+    @Override
+    public SchemaBuilder withSVMode(SelectionVectorMode svMode) {
+      throw new IllegalStateException("Cannot set SVMode for a nested schema");
+    }
   }
 
   protected List<MaterializedField> columns = new ArrayList<>( );
+  private SelectionVectorMode svMode = SelectionVectorMode.NONE;
 
   public SchemaBuilder() { }
 
@@ -128,8 +134,13 @@ public class SchemaBuilder {
     return new MapBuilder(this, pathName);
   }
 
+  public SchemaBuilder withSVMode(SelectionVectorMode svMode) {
+    this.svMode = svMode;
+    return this;
+  }
+
   public BatchSchema build() {
-    return new BatchSchema(SelectionVectorMode.NONE, columns);
+    return new BatchSchema(svMode, columns);
   }
 
   void finishMap(MaterializedField map) {

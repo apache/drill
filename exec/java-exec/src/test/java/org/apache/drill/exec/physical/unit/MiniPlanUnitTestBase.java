@@ -1,0 +1,442 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.drill.exec.physical.unit;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import mockit.NonStrictExpectations;
+import org.apache.drill.DrillTestWrapper;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.AbstractBase;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.util.TestUtilities;
+import org.apache.hadoop.fs.Path;
+import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
+import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
+import static org.apache.drill.exec.physical.unit.TestMiniPlan.fs;
+
+/**
+ * A MiniPlanUnitTestBase extends PhysicalOpUnitTestBase, to construct MiniPlan (aka plan fragment).
+ * in the form of physical operator tree, and verify both the expected schema and output row results.
+ * Steps to construct a unit:
+ * 1. Call PopBuilder / ScanPopBuilder to construct the MiniPlan
+ * 2. Create a MiniPlanTestBuilder, and specify the expected schema and base line values, or if there
+ * is no batch expected.
+ */
+
+public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
+
+  private final ExecutorService scanExecutor =  Executors.newFixedThreadPool(2, new NamedThreadFactory("scan-"));
+
+  public static class MiniPlanTestBuilder {
+    protected List<Map<String, Object>> baselineRecords;
+    protected RecordBatch root;
+    protected boolean expectedZeroBatch;
+    protected BatchSchema expectedSchema;
+
+    /**
+     * Specify the root operator for a MiniPlan.
+     * @param root
+     * @return
+     */
+    public MiniPlanTestBuilder root(RecordBatch root) {
+      this.root = root;
+      return this;
+    }
+
+    /**
+     * Specify the expected batch schema.
+     * @param batchSchema
+     * @return
+     */
+    public MiniPlanTestBuilder expectedSchema(BatchSchema batchSchema) {
+      this.expectedSchema = batchSchema;
+      return this;
+    }
+
+    /**
+     * Specify one row of expected values. The number of values have to be same as # of fields in expected batch schema.
+     * @param baselineValues
+     * @return
+     */
+    public MiniPlanTestBuilder baselineValues(Object ... baselineValues) {
+      if (baselineRecords == null) {
+        baselineRecords = new ArrayList<>();
+      }
+
+      Map<String, Object> ret = new HashMap<>();
+      int i = 0;
+      Preconditions.checkArgument(expectedSchema != null , "Expected schema should be set before specify baseline values.");
+      Preconditions.checkArgument(baselineValues.length == expectedSchema.getFieldCount(),
+          "Must supply the same number of baseline values as columns in expected schema.");
+
+      for (MaterializedField field : expectedSchema) {
+        ret.put(SchemaPath.getSimplePath(field.getPath()).toExpr(), baselineValues[i]);
+        i++;
+      }
+
+      this.baselineRecords.add(ret);
+      return this;
+    }
+
+    /**
+     * Specify one special case, where the operator tree should return 0 batch.
+     * @param expectedZeroBatch
+     * @return
+     */
+    public MiniPlanTestBuilder expectZeroBatch(boolean expectedZeroBatch) {
+      this.expectedZeroBatch = expectedZeroBatch;
+      return this;
+    }
+
+    public void go() throws Exception {
+      final BatchIterator batchIterator = new BatchIterator(root);
+
+      // verify case of zero batch.
+      if (expectedZeroBatch) {
+        if (batchIterator.iterator().hasNext()) {
+          throw new AssertionError("Expected zero batches from scan. But scan return at least 1 batch!");
+        } else {
+          return; // successful
+        }
+      }
+
+      Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(batchIterator, expectedSchema);
+      Map<String, List<Object>> expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(baselineRecords);
+      DrillTestWrapper.compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+    }
+  }
+
+  /**
+   * Similar to {@link OperatorTestBuilder}, build a physical operator (RecordBatch) and specify its input record batches.
+   * The input record batch could be a non-scan operator by calling {@link PopBuilder#addInputAsChild},
+   * or a scan operator by calling {@link PopBuilder#addJsonScanAsChild()} if it's SCAN operator.
+   *
+   * A miniplan rooted as join operator like following could be constructed in either the following way:
+   *
+   * <pre><code>
+   *                 Join
+   *                /    \
+   *          JSON_T1    Filter
+   *                       \
+   *                     JSON_T2
+   * </code></pre>
+   *
+   * <pre><code>
+   * new PopBuilder()
+   *  .physicalOperator(joinPopConfig)
+   *  .addScanAsChild()
+   *      .fileSystem(..)
+   *      .columnsToRead(...)
+   *      .inputPath(...)
+   *      .buildAddAsInput()
+   *  .addInputAsChild()
+   *      .physicalOperator(filterPopConfig)
+   *      .addScanAsChild()
+   *          .fileSystem(...)
+   *          .columnsToRead(...)
+   *          .inputPath(...)
+   *          .buildAddAsInput()
+   *      .buildAddAsInput()
+   *  .build();
+   * </code></pre>
+   *
+   * <pre><code>
+   *   RecordBatch scan1 = new ScanPopBuilder()
+   *                          .fileSystem(...)
+   *                          .columnsToRead(..)
+   *                          .inputPath(...)
+   *                          .build();
+   *   RecordBatch scan2 = ... ;
+   *
+   *   RecordBatch filter = new PopBuilder()
+   *                          .physicalOperator(filterPopConfig)
+   *                          .addInput(scan2);
+   *   RecordBatch join = new PopBuilder()
+   *                          .physicalOperator(joinPopConfig)
+   *                          .addInput(scan1)
+   *                          .addInput(filter)
+   *                          .build();
+   *
+   * </pre></code>
+   */
+
+  public class PopBuilder  {
+    private PhysicalOperator popConfig;
+    protected long initReservation = INIT_ALLOCATION;
+    protected long maxAllocation = MAX_ALLOCATION;
+
+    final private List<RecordBatch> inputs = Lists.newArrayList();
+    final PopBuilder parent ;
+
+    public PopBuilder() {
+      this.parent = null;
+    }
+
+    public PopBuilder(PopBuilder parent) {
+      this.parent = parent;
+    }
+
+    public PopBuilder physicalOperator(PhysicalOperator popConfig) {
+      this.popConfig = popConfig;
+      return this;
+    }
+
+    /**
+     * Set initial memory reservation used by this operator's allocator. Default is {@link PhysicalOpUnitTestBase#INIT_ALLOCATION}
+     * @param initReservation
+     * @return
+     */
+    public PopBuilder initReservation(long initReservation) {
+      this.initReservation = initReservation;
+      return this;
+    }
+
+    /**
+     * Set max memory reservation used by this operator's allocator. Default is {@link PhysicalOpUnitTestBase#MAX_ALLOCATION}
+     * @param maxAllocation
+     * @return
+     */
+    public PopBuilder maxAllocation(long maxAllocation) {
+      this.maxAllocation = maxAllocation;
+      return this;
+    }
+
+    /**
+     * Return a ScanPopBuilder to build a Scan recordBatch, which will be added as input batch after
+     * call {@link PopBuilder#buildAddAsInput()}
+     * @return  ScanPopBuilder
+     */
+    public JsonScanBuilder addJsonScanAsChild() {
+      return  new JsonScanBuilder(this);
+    }
+
+    /**
+     * Return a ScanPopBuilder to build a Scan recordBatch, which will be added as input batch after
+     * call {@link PopBuilder#buildAddAsInput()}
+     * @return  ScanPopBuilder
+     */
+    public ParquetScanBuilder addParquetScanAsChild() {
+      return  new ParquetScanBuilder(this);
+    }
+
+    /**
+     * Return a nested PopBuilder to build a non-scan recordBatch, which will be added as input batch after
+     * call {@link PopBuilder#buildAddAsInput()}
+     * @return a nested PopBuild for non-scan recordbatch.
+     */
+    public PopBuilder addInputAsChild() {
+      return  new PopBuilder(this) {
+      };
+    }
+
+    public PopBuilder addInput(RecordBatch batch) {
+      inputs.add(batch);
+      return this;
+    }
+
+    public PopBuilder buildAddAsInput() throws Exception {
+      mockOpContext(initReservation, maxAllocation);
+      BatchCreator<PhysicalOperator> opCreator =  (BatchCreator<PhysicalOperator>) getOpCreatorReg().getOperatorCreator(popConfig.getClass());
+      RecordBatch batch= opCreator.getBatch(fragContext, popConfig, inputs);
+      return parent.addInput(batch);
+    }
+
+    public RecordBatch build() throws Exception {
+      mockOpContext(initReservation, maxAllocation);
+      BatchCreator<PhysicalOperator> opCreator =  (BatchCreator<PhysicalOperator>) getOpCreatorReg().getOperatorCreator(popConfig.getClass());
+      return opCreator.getBatch(fragContext, popConfig, inputs);
+    }
+  }
+
+  public abstract class ScanPopBuider<T extends ScanPopBuider> extends PopBuilder {
+    List<SchemaPath> columnsToRead = Collections.singletonList(SchemaPath.getSimplePath("*"));
+    DrillFileSystem fs = null;
+
+    public ScanPopBuider() {
+      super(null); // Scan is root operator.
+    }
+
+    public ScanPopBuider(PopBuilder parent) {
+      super(parent);
+    }
+
+    public T fileSystem(DrillFileSystem fs) {
+      this.fs = fs;
+      return (T) this;
+    }
+
+    public T columnsToRead(SchemaPath ... columnsToRead) {
+      this.columnsToRead = Lists.newArrayList(columnsToRead);
+      return (T) this;
+    }
+
+    public T columnsToRead(String ... columnsToRead) {
+      this.columnsToRead = Lists.newArrayList();
+
+      for (String column : columnsToRead) {
+
+        this.columnsToRead.add(SchemaPath.getSimplePath(column));
+      }
+      return (T) this;
+    }
+
+  }
+
+  /**
+   * Builder for Json Scan RecordBatch.
+   */
+  public class JsonScanBuilder extends ScanPopBuider<JsonScanBuilder> {
+    List<String> jsonBatches = null;
+    List<String> inputPaths = Collections.EMPTY_LIST;
+
+    public JsonScanBuilder(PopBuilder parent) {
+      super(parent);
+    }
+
+    public JsonScanBuilder() {
+      super();
+    }
+
+    public JsonScanBuilder jsonBatches(List<String> jsonBatches) {
+      this.jsonBatches = jsonBatches;
+      return this;
+    }
+
+    public JsonScanBuilder inputPaths(List<String> inputPaths) {
+      this.inputPaths = inputPaths;
+      return this;
+    }
+
+    public PopBuilder buildAddAsInput() throws Exception {
+      mockOpContext(this.initReservation, this.maxAllocation);
+      RecordBatch scanBatch = getScanBatch();
+      return parent.addInput(scanBatch);
+    }
+
+    public RecordBatch build() throws Exception {
+      mockOpContext(this.initReservation, this.maxAllocation);
+      return getScanBatch();
+    }
+
+    private RecordBatch getScanBatch() throws Exception {
+      Iterator<RecordReader> readers = null;
+
+      if (jsonBatches != null) {
+        readers = TestUtilities.getJsonReadersFromBatchString(jsonBatches, fragContext, columnsToRead);
+      } else {
+        readers = TestUtilities.getJsonReadersFromInputFiles(fs, inputPaths, fragContext, columnsToRead);
+      }
+
+      RecordBatch scanBatch = new ScanBatch(null, fragContext, readers);
+      return scanBatch;
+    }
+  }
+
+  /**
+   * Builder for parquet Scan RecordBatch.
+   */
+  public class ParquetScanBuilder extends ScanPopBuider<ParquetScanBuilder> {
+    List<String> inputPaths = Collections.EMPTY_LIST;
+
+    public ParquetScanBuilder() {
+      super();
+    }
+
+    public ParquetScanBuilder(PopBuilder parent) {
+      super(parent);
+    }
+
+    public ParquetScanBuilder inputPaths(List<String> inputPaths) {
+      this.inputPaths = inputPaths;
+      return this;
+    }
+
+    public PopBuilder buildAddAsInput() throws Exception {
+      mockOpContext(this.initReservation, this.maxAllocation);
+      RecordBatch scanBatch = getScanBatch();
+      return parent.addInput(scanBatch);
+    }
+
+    public RecordBatch build() throws Exception {
+      mockOpContext(this.initReservation, this.maxAllocation);
+      return getScanBatch();
+    }
+
+    private RecordBatch getScanBatch() throws Exception {
+      List<RecordReader> readers = Lists.newArrayList();
+
+      for (String path : inputPaths) {
+        ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), new Path(path));
+
+        for (int i = 0; i < footer.getBlocks().size(); i++) {
+          readers.add(new ParquetRecordReader(fragContext,
+              path,
+              i,
+              fs,
+              CodecFactory.createDirectCodecFactory(fs.getConf(),
+                  new ParquetDirectByteBufferAllocator(opContext.getAllocator()), 0),
+              footer,
+              columnsToRead,
+              ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_NO_CORRUPTION));
+        }
+      }
+
+      RecordBatch scanBatch = new ScanBatch(null, fragContext, readers.iterator());
+      return scanBatch;
+    }
+  } // end of ParquetScanBuilder
+
+  @Override
+  protected void mockOpContext(long initReservation, long maxAllocation) throws Exception {
+    super.mockOpContext(initReservation, maxAllocation);
+
+    // mock ScanExecutor used by parquet reader.
+    new NonStrictExpectations() {
+      {
+        opContext.getScanExecutor();result = scanExecutor;
+      }
+    };
+  }
+}
