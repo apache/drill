@@ -31,7 +31,7 @@ import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -45,7 +45,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
 
   @Test
   public void twoWayCast(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                         @Injectable UserClientConnection connection) throws Throwable {
 
     // Function checks for casting from Float, Double to Decimal data types
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();

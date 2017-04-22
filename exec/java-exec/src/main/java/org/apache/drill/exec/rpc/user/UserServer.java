@@ -47,6 +47,7 @@ import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RpcConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.security.ServerAuthenticationHandler;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
@@ -93,47 +94,6 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     default:
       throw new UnsupportedOperationException();
     }
-  }
-
-  /**
-   * Interface for getting user session properties and interacting with user connection. Separating this interface from
-   * {@link AbstractRemoteConnection} implementation for user connection:
-   * <p><ul>
-   *   <li> Connection is passed to Foreman and Screen operators. Instead passing this interface exposes few details.
-   *   <li> Makes it easy to have wrappers around user connection which can be helpful to tap the messages and data
-   *        going to the actual client.
-   * </ul>
-   */
-  public interface UserClientConnection {
-    /**
-     * @return User session object.
-     */
-    UserSession getSession();
-
-    /**
-     * Send query result outcome to client. Outcome is returned through <code>listener</code>
-     * @param listener
-     * @param result
-     */
-    void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result);
-
-    /**
-     * Send query data to client. Outcome is returned through <code>listener</code>
-     * @param listener
-     * @param result
-     */
-    void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result);
-
-    /**
-     * Returns the {@link ChannelFuture} which will be notified when this
-     * channel is closed.  This method always returns the same future instance.
-     */
-    ChannelFuture getChannelClosureFuture();
-
-    /**
-     * @return Return the client node address.
-     */
-    SocketAddress getRemoteAddress();
   }
 
   /**

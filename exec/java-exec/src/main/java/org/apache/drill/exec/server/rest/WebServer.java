@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,9 +90,13 @@ public class WebServer implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
 
   private final DrillConfig config;
+
   private final MetricRegistry metrics;
+
   private final WorkManager workManager;
+
   private final Server embeddedJetty;
+
   private final BootStrapContext context;
 
   /**
@@ -115,6 +119,7 @@ public class WebServer implements AutoCloseable {
   }
 
   private static final String BASE_STATIC_PATH = "/rest/static/";
+
   private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   /**
@@ -126,8 +131,7 @@ public class WebServer implements AutoCloseable {
       return;
     }
     final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider()
-        .containsFactory(PlainFactory.SIMPLE_NAME)) {
+    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
       logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
           "username/password. But PLAIN mechanism is not configured.");
       return;
@@ -154,8 +158,7 @@ public class WebServer implements AutoCloseable {
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    servletContextHandler.addServlet(
-        new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
+    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
@@ -170,8 +173,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
-        servletContextHandler.setSecurityHandler(createSecurityHandler());
-        servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
@@ -185,7 +188,7 @@ public class WebServer implements AutoCloseable {
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
               String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
-      for (String path: new String[] { "*.json", "/storage/*/enable/*", "/status*" }) {
+      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
       }
     }
@@ -203,7 +206,7 @@ public class WebServer implements AutoCloseable {
     sessionManager.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
-        // No-op
+
       }
 
       @Override
@@ -218,6 +221,15 @@ public class WebServer implements AutoCloseable {
           final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
           securityHandler.logout(sessionAuth);
           session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        }
+
+        // Clear all the resources allocated for this session
+        final WebSessionResources webSessionResources =
+            (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
+
+        if (webSessionResources != null) {
+          webSessionResources.close();
+          session.removeAttribute(WebSessionResources.class.getSimpleName());
         }
       }
     });

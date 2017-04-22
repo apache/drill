@@ -17,23 +17,9 @@
  */
 package org.apache.drill.exec.work.prepare;
 
-import static org.apache.drill.exec.ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS;
-import static org.apache.drill.exec.proto.UserProtos.RequestStatus.FAILED;
-import static org.apache.drill.exec.proto.UserProtos.RequestStatus.OK;
-import static org.apache.drill.exec.proto.UserProtos.RequestStatus.TIMEOUT;
-
-import java.math.BigDecimal;
-import java.net.SocketAddress;
-import java.sql.Date;
-import java.sql.ResultSetMetaData;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.collect.ImmutableMap;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -45,8 +31,6 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.proto.UserProtos.ColumnSearchability;
@@ -59,20 +43,31 @@ import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.rpc.AbstractDisposableUserClientConnection;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.user.UserWorker;
 import org.joda.time.Period;
 
-import com.google.common.collect.ImmutableMap;
+import java.math.BigDecimal;
+import java.net.SocketAddress;
+import java.sql.Date;
+import java.sql.ResultSetMetaData;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
+import static org.apache.drill.exec.ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.FAILED;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.OK;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.TIMEOUT;
 
 /**
  * Contains worker {@link Runnable} for creating a prepared statement and helper methods.
@@ -230,11 +225,9 @@ public class PreparedStatementProvider {
   /**
    * Decorator around {@link UserClientConnection} to tap the query results for LIMIT 0 query.
    */
-  private static class UserClientConnectionWrapper implements UserClientConnection {
+  private static class UserClientConnectionWrapper extends AbstractDisposableUserClientConnection {
     private final UserClientConnection inner;
-    private final CountDownLatch latch = new CountDownLatch(1);
 
-    private volatile DrillPBError error;
     private volatile List<SerializedField> fields;
 
     UserClientConnectionWrapper(UserClientConnection inner) {
@@ -257,27 +250,13 @@ public class PreparedStatementProvider {
     }
 
     @Override
-    public void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result) {
-      // Release the wait latch if the query is terminated.
-      final QueryState state = result.getQueryState();
-      if (state == QueryState.FAILED || state  == QueryState.CANCELED || state == QueryState.COMPLETED) {
-        if (state == QueryState.FAILED) {
-          error = result.getError(0);
-        }
-        latch.countDown();
-      }
-
-      listener.success(Acks.OK, null);
-    }
-
-    @Override
     public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result) {
       // Save the query results schema and release the buffers.
       if (fields == null) {
         fields = result.getHeader().getDef().getFieldList();
       }
 
-      for(ByteBuf buf : result.getBuffers()) {
+      for (ByteBuf buf : result.getBuffers()) {
         buf.release();
       }
 
@@ -285,24 +264,9 @@ public class PreparedStatementProvider {
     }
 
     /**
-     * Wait until the query has completed.
-     * @throws InterruptedException
-     */
-    boolean await(final long timeoutMillis) throws InterruptedException {
-      return latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * @return Any error returned in query execution.
-     */
-    DrillPBError getError() {
-      return error;
-    }
-
-    /**
      * @return Schema returned in query result batch.
      */
-    List<SerializedField> getFields() {
+    public List<SerializedField> getFields() {
       return fields;
     }
   }

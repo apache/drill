@@ -17,12 +17,8 @@
  */
 package org.apache.drill.exec.server;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
-
-import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -38,12 +34,16 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
+import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
-import com.codahale.metrics.MetricRegistry;
+import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -230,6 +230,10 @@ public class DrillbitContext implements AutoCloseable {
    */
   public DrillOperatorTable getOperatorTable() {
     return table;
+  }
+
+  public AuthenticatorProvider getAuthProvider() {
+    return context.getAuthProvider();
   }
 
   @Override

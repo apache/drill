@@ -50,7 +50,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
@@ -603,7 +603,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   @Test
   @Ignore
   public void testPerformance(@Injectable final DrillbitContext bitContext,
-                              @Injectable UserServer.UserClientConnection connection) throws Exception {
+                              @Injectable UserClientConnection connection) throws Exception {
     final DrillConfig c = DrillConfig.create();
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
