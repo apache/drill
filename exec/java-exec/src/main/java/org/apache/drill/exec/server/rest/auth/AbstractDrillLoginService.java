@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
-
-import java.util.Properties;
 
 /**
  * LoginService implementation which abstracts common functionality needed when user authentication is enabled or
@@ -37,28 +33,8 @@ public abstract class AbstractDrillLoginService implements LoginService {
   protected final DrillbitContext drillbitContext;
   protected IdentityService identityService = new DefaultIdentityService();
 
-  public AbstractDrillLoginService(final DrillbitContext drillbitContext) {
+  protected AbstractDrillLoginService(final DrillbitContext drillbitContext) {
     this.drillbitContext = drillbitContext;
-  }
-
-  protected DrillClient createDrillClient(final String userName, final String password) throws Exception {
-    DrillClient drillClient = null;
-
-    try {
-      // Create a DrillClient
-      drillClient = new DrillClient(drillbitContext.getConfig(),
-          drillbitContext.getClusterCoordinator(), drillbitContext.getAllocator());
-      final Properties props = new Properties();
-      props.setProperty("user", userName);
-      if (password != null) {
-        props.setProperty("password", password);
-      }
-      drillClient.connect(props);
-      return  drillClient;
-    } catch (final Exception e) {
-      AutoCloseables.close(e, drillClient);
-      throw e;
-    }
   }
 
   @Override
@@ -81,7 +57,7 @@ public abstract class AbstractDrillLoginService implements LoginService {
 
   /**
    * This gets called whenever a session is invalidated (because of user logout) or timed out.
-   * @param user
+   * @param user - logged in UserIdentity
    */
   @Override
   public void logout(UserIdentity user) {

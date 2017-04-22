@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
+import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -51,18 +54,35 @@ public class DrillRestLoginService extends AbstractDrillLoginService {
       return null;
     }
 
-    DrillClient drillClient = null;
-
     try {
-      // Create a DrillClient
-      drillClient = createDrillClient(username, (String)credentials);
+      // Authenticate WebUser locally using UserAuthenticator. If WebServer is started that guarantees the PLAIN
+      // mechanism is configured and authenticator is also available
+      final AuthenticatorFactory plainFactory = drillbitContext.getAuthProvider()
+          .getAuthenticatorFactory(PlainFactory.SIMPLE_NAME);
+      final UserAuthenticator userAuthenticator = ((PlainFactory) plainFactory).getAuthenticator();
+
+      // Authenticate the user with configured Authenticator
+      userAuthenticator.authenticate(username, credentials.toString());
+
+      logger.debug("WebUser {} is successfully authenticated", username);
 
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
+
+      // Create a native UserSession for the authenticated user.
+      final UserSession webSession = UserSession.Builder.newBuilder()
+          .withCredentials(UserBitShared.UserCredentials.newBuilder()
+              .setUserName(username)
+              .build())
+          .withOptionManager(sysOptions)
+          .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
+          .build();
+
       final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(username,
           sysOptions.getOption(ExecConstants.ADMIN_USERS_KEY).string_val,
           sysOptions.getOption(ExecConstants.ADMIN_USER_GROUPS_KEY).string_val);
 
-      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin, drillClient);
+      // Create the UserPrincipal corresponding to logged in user.
+      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin, webSession);
 
       final Subject subject = new Subject();
       subject.getPrincipals().add(userPrincipal);
@@ -76,11 +96,10 @@ public class DrillRestLoginService extends AbstractDrillLoginService {
         return identityService.newUserIdentity(subject, userPrincipal, DrillUserPrincipal.NON_ADMIN_USER_ROLES);
       }
     } catch (final Exception e) {
-      AutoCloseables.close(e, drillClient);
-      if (e.getMessage().contains(HandshakeStatus.AUTH_FAILED.toString())) {
-        logger.trace("Authentication failed for user '{}'", username, e);
+      if (e instanceof UserAuthenticationException) {
+        logger.debug("Authentication failed for WebUser '{}'", username, e);
       } else {
-        logger.error("Error while creating the DrillClient: user '{}'", username, e);
+        logger.error("UnExpected failure occurred for WebUser {} during login.", username, e);
       }
       return null;
     }

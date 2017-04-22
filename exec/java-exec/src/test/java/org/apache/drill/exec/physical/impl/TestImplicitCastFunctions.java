@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class TestImplicitCastFunctions extends ExecTest {
  }
 
   public void runTest(@Injectable final DrillbitContext bitContext,
-                      @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
+                      @Injectable UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
 
     mockDrillbitContext(bitContext);
 
@@ -99,7 +99,7 @@ public class TestImplicitCastFunctions extends ExecTest {
 
   @Test
   public void testImplicitCastWithConstant(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                           @Injectable UserClientConnection connection) throws Throwable{
     final Object [] expected = new Object[21];
     expected [0] = new Double (30.1);
     expected [1] = new Double (30.1);
@@ -131,7 +131,7 @@ public class TestImplicitCastFunctions extends ExecTest {
 
   @Test
   public void testImplicitCastWithMockColumn(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                           @Injectable UserClientConnection connection) throws Throwable{
     final Object [] expected = new Object[5];
     expected [0] = new Integer (0);
     expected [1] = new Integer (0);
@@ -144,7 +144,7 @@ public class TestImplicitCastFunctions extends ExecTest {
 
   @Test
   public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+                           @Injectable UserClientConnection connection) throws Throwable{
     final Object [] expected = new Object[10];
 
     expected [0] = Boolean.TRUE;

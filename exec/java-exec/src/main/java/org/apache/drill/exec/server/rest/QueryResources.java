@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,14 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.work.WorkManager;
+import org.eclipse.jetty.server.ServerConnector;
+import org.glassfish.jersey.server.mvc.Viewable;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -30,16 +36,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
-import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.apache.drill.exec.work.WorkManager;
-import org.glassfish.jersey.server.mvc.Viewable;
+import java.util.List;
+import java.util.Map;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
@@ -50,6 +48,7 @@ public class QueryResources {
   @Inject WorkManager work;
   @Inject SecurityContext sc;
   @Inject DrillUserPrincipal principal;
+  @Inject ServerConnector serverConnector;
 
   @GET
   @Path("/query")
@@ -63,14 +62,10 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public QueryWrapper.QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
-    DrillClient drillClient = null;
-
     try {
-      final BufferAllocator allocator = work.getContext().getAllocator();
-      drillClient = principal.getDrillClient();
-      return query.run(drillClient, allocator);
+      return query.run(work, principal, serverConnector);
     } finally {
-      principal.recycleDrillClient(drillClient);
+      principal.recycleUserSession();
     }
   }
 
@@ -78,12 +73,14 @@ public class QueryResources {
   @Path("/query")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
+  public Viewable submitQuery(@FormParam("query") String query,
+                              @FormParam("queryType") String queryType) throws Exception {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
       final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
+
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result));
-    } catch(Exception | Error e) {
+    } catch (Exception | Error e) {
       logger.error("Query from Web UI Failed", e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/errorMessage.ftl", sc, e);
     }
@@ -119,4 +116,6 @@ public class QueryResources {
       return rows;
     }
   }
+
+
 }
