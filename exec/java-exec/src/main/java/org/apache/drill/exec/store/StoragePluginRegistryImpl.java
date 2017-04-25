@@ -392,8 +392,13 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         }
 
         // finally register schemas with the refreshed plugins
-        for (StoragePlugin plugin : plugins.plugins()) {
-          plugin.registerSchemas(schemaConfig, parent);
+        for (Entry<String, StoragePlugin> pluginEntry : plugins) {
+          try {
+            pluginEntry.getValue().registerSchemas(schemaConfig, parent);
+          } catch (final Exception e) {
+            logger.error("Failed to register schemas in plugin [ " + pluginEntry.getKey() +" ]. " +
+                "Continuing without the schemas in plugin.", e);
+          }
         }
       } catch (ExecutionSetupException e) {
         throw new DrillRuntimeException("Failure while updating storage plugins", e);
