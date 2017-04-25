@@ -37,6 +37,7 @@
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
+    <module>storage-xml</module>
     <module>storage-kudu</module>
     <module>sqlline</module>
     <module>data</module>

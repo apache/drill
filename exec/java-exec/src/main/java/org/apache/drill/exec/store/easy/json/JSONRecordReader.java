@@ -56,7 +56,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private JsonNode embeddedContent;
   private InputStream stream;
   private final DrillFileSystem fileSystem;
-  private JsonProcessor jsonReader;
+  protected JsonProcessor jsonReader;
   private int recordCount;
   private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;
@@ -94,7 +94,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this(fragmentContext, null, embeddedContent, fileSystem, columns);
   }
 
-  private JSONRecordReader(final FragmentContext fragmentContext, final String inputPath,
+  public JSONRecordReader(final FragmentContext fragmentContext, final String inputPath,
       final JsonNode embeddedContent, final DrillFileSystem fileSystem,
       final List<SchemaPath> columns) {
 
@@ -163,7 +163,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     jsonReader.setIgnoreJSONParseErrors(skipMalformedJSONRecords);
   }
 
-  protected void handleAndRaise(String suffix, Exception e) throws UserException {
+  public void handleAndRaise(String suffix, Exception e) throws UserException {
 
     String message = e.getMessage();
     int columnNr = -1;
