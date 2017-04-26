@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,12 +32,11 @@ import java.util.List;
 public class StorageStrategy {
 
   /**
-   * Primary is used for persistent tables.
    * For directories: drwxrwxr-x (owner and group have full access, others can read and execute).
-   * For files: -rw-r--r-- (owner can read and write, group and others can read).
+   * For files: -rw-rw--r-- (owner and group can read and write, others can read).
    * Folders and files are not deleted on file system close.
    */
-  public static final StorageStrategy PERSISTENT = new StorageStrategy("775", "644", false);
+  public static final StorageStrategy DEFAULT = new StorageStrategy("002", false);
 
   /**
    * Primary is used for temporary tables.
@@ -44,29 +44,42 @@ public class StorageStrategy {
    * For files: -rw------- (owner can read and write, group and others have no access).
    * Folders and files are deleted on file system close.
    */
-  public static final StorageStrategy TEMPORARY = new StorageStrategy("700", "600", true);
+  public static final StorageStrategy TEMPORARY = new StorageStrategy("077", true);
 
-  private final String folderPermission;
-  private final String filePermission;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageStrategy.class);
+
+  private final String umask;
   private final boolean deleteOnExit;
 
   @JsonCreator
-  public StorageStrategy(@JsonProperty("folderPermission") String folderPermission,
-                         @JsonProperty("filePermission") String filePermission,
+  public StorageStrategy(@JsonProperty("umask") String umask,
                          @JsonProperty("deleteOnExit") boolean deleteOnExit) {
-    this.folderPermission = folderPermission;
-    this.filePermission = filePermission;
+    this.umask = validateUmask(umask);
     this.deleteOnExit = deleteOnExit;
   }
 
-  public String getFolderPermission() {
-    return folderPermission;
+  public String getUmask() {
+    return umask;
   }
-
-  public String getFilePermission() { return filePermission; }
 
   public boolean isDeleteOnExit() {
     return deleteOnExit;
+  }
+
+  /**
+   * @return folder permission after applying umask
+   */
+  @JsonIgnore
+  public FsPermission getFolderPermission() {
+    return FsPermission.getDirDefault().applyUMask(new FsPermission(umask));
+  }
+
+  /**
+   * @return file permission after applying umask
+   */
+  @JsonIgnore
+  public FsPermission getFilePermission() {
+    return FsPermission.getFileDefault().applyUMask(new FsPermission(umask));
   }
 
   /**
@@ -94,7 +107,7 @@ public class StorageStrategy {
     }
     fs.mkdirs(path);
     for (Path location : locations) {
-      applyStrategy(fs, location, folderPermission, deleteOnExit);
+      applyStrategy(fs, location, getFolderPermission(), deleteOnExit);
     }
     return locations.get(locations.size() - 1);
   }
@@ -130,7 +143,7 @@ public class StorageStrategy {
     }
 
     for (Path location : locations) {
-      applyStrategy(fs, location, folderPermission, deleteOnExit);
+      applyStrategy(fs, location, getFolderPermission(), deleteOnExit);
     }
     return locations.get(locations.size() - 1);
   }
@@ -145,7 +158,25 @@ public class StorageStrategy {
    *         or adding file to delete on exit list
    */
   public void applyToFile(FileSystem fs, Path file) throws IOException {
-    applyStrategy(fs, file, filePermission, deleteOnExit);
+    applyStrategy(fs, file, getFilePermission(), deleteOnExit);
+  }
+
+  /**
+   * Validates if passed umask is valid.
+   * If umask is valid, returns given umask.
+   * If umask is invalid, returns default umask and logs error.
+   *
+   * @param umask umask string representation
+   * @return valid umask value
+   */
+  private String validateUmask(String umask) {
+    try {
+      new FsPermission(umask);
+      return umask;
+    } catch (IllegalArgumentException | NullPointerException e) {
+      logger.error("Invalid umask value [{}]. Using default [{}].", umask, DEFAULT.getUmask(), e);
+      return DEFAULT.getUmask();
+    }
   }
 
   /**
@@ -185,8 +216,8 @@ public class StorageStrategy {
    * @throws IOException is thrown in case of problems while setting permission
    *         or adding path to delete on exit list
    */
-  private void applyStrategy(FileSystem fs, Path path, String permission, boolean deleteOnExit) throws IOException {
-    fs.setPermission(path, new FsPermission(permission));
+  private void applyStrategy(FileSystem fs, Path path, FsPermission permission, boolean deleteOnExit) throws IOException {
+    fs.setPermission(path, permission);
     if (deleteOnExit) {
       fs.deleteOnExit(path);
     }

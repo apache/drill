@@ -65,7 +65,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
 
   public JsonRecordWriter(StorageStrategy storageStrategy){
-    this.storageStrategy = storageStrategy == null ? StorageStrategy.PERSISTENT : storageStrategy;
+    this.storageStrategy = storageStrategy == null ? StorageStrategy.DEFAULT : storageStrategy;
   }
 
   @Override
