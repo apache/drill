@@ -58,7 +58,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   public DrillTextRecordWriter(BufferAllocator allocator, StorageStrategy storageStrategy) {
     super(allocator);
-    this.storageStrategy = storageStrategy == null ? StorageStrategy.PERSISTENT : storageStrategy;
+    this.storageStrategy = storageStrategy == null ? StorageStrategy.DEFAULT : storageStrategy;
   }
 
   @Override
