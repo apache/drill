@@ -446,4 +446,7 @@ public interface ExecConstants {
   String QUERY_TRANSIENT_STATE_UPDATE_KEY = "exec.query.progress.update";
   BooleanValidator QUERY_TRANSIENT_STATE_UPDATE = new BooleanValidator(QUERY_TRANSIENT_STATE_UPDATE_KEY, true);
 
+  String PERSISTENT_TABLE_UMASK = "exec.persistent_table.umask";
+  StringValidator PERSISTENT_TABLE_UMASK_VALIDATOR = new StringValidator(PERSISTENT_TABLE_UMASK, "002");
+
 }

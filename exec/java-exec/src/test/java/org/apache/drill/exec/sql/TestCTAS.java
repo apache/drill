@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,12 +20,19 @@ package org.apache.drill.exec.sql;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestCTAS extends BaseTestQuery {
   @Test // DRILL-2589
@@ -273,6 +280,25 @@ public class TestCTAS extends BaseTestQuery {
       result.release();
     } finally {
       FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), location));
+    }
+  }
+
+  @Test
+  public void createTableWithCustomUmask() throws Exception {
+    test("use %s", TEMP_SCHEMA);
+    String tableName = "with_custom_permission";
+    StorageStrategy storageStrategy = new StorageStrategy("000", false);
+    try (FileSystem fs = FileSystem.get(new Configuration())) {
+      test("alter session set `%s` = '%s'", ExecConstants.PERSISTENT_TABLE_UMASK, storageStrategy.getUmask());
+      test("create table %s as select 'A' from (values(1))", tableName);
+      Path tableLocation = new Path(getDfsTestTmpSchemaLocation(), tableName);
+      assertEquals("Directory permission should match",
+          storageStrategy.getFolderPermission(), fs.getFileStatus(tableLocation).getPermission());
+      assertEquals("File permission should match",
+          storageStrategy.getFilePermission(), fs.listLocatedStatus(tableLocation).next().getPermission());
+    } finally {
+      test("alter session reset `%s`", ExecConstants.PERSISTENT_TABLE_UMASK);
+      test("drop table if exists %s", tableName);
     }
   }
 

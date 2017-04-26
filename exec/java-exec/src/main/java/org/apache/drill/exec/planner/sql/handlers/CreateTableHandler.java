@@ -91,7 +91,8 @@ public class CreateTableHandler extends DefaultSqlHandler {
     log("Calcite", newTblRelNodeWithPCol, logger, null);
     // Convert the query to Drill Logical plan and insert a writer operator on top.
     StorageStrategy storageStrategy = sqlCreateTable.isTemporary() ?
-        StorageStrategy.TEMPORARY : StorageStrategy.PERSISTENT;
+        StorageStrategy.TEMPORARY :
+        new StorageStrategy(context.getOption(ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
 
     // If we are creating temporary table, initial table name will be replaced with generated table name.
     // Generated table name is unique, UUID.randomUUID() is used for its generation.

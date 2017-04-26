@@ -140,7 +140,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * @return create table entry
    */
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
-    return createNewTable(tableName, partitionColumns, StorageStrategy.PERSISTENT);
+    return createNewTable(tableName, partitionColumns, StorageStrategy.DEFAULT);
   }
 
   /**
