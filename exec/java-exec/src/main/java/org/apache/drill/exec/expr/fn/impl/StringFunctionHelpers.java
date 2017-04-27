@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -15,7 +15,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+*/
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.DrillBuf;
@@ -144,41 +144,28 @@ public class StringFunctionHelpers {
     return result;
   }
 
-  // Assumes Alpha as [A-Za-z0-9]
-  // white space is treated as everything else.
+  /**
+   * Capitalizes first letter in each word.
+   * Any symbol except digits and letters is considered as word delimiter.
+   *
+   * @param start start position in input buffer
+   * @param end end position in input buffer
+   * @param inBuf buffer with input characters
+   * @param outBuf buffer with output characters
+   */
   public static void initCap(int start, int end, DrillBuf inBuf, DrillBuf outBuf) {
-    boolean capNext = true;
+    boolean capitalizeNext = true;
     int out = 0;
     for (int id = start; id < end; id++, out++) {
-      byte currentByte = inBuf.getByte(id);
-
-      // 'A - Z' : 0x41 - 0x5A
-      // 'a - z' : 0x61 - 0x7A
-      // '0-9' : 0x30 - 0x39
-      if (capNext) { // curCh is whitespace or first character of word.
-        if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-          capNext = false;
-        } else if (currentByte >= 0x41 && currentByte <= 0x5A) { // A-Z
-          capNext = false;
-        } else if (currentByte >= 0x61 && currentByte <= 0x7A) { // a-z
-          capNext = false;
-          currentByte -= 0x20; // Uppercase this character
-        }
-        // else {} whitespace
-      } else { // Inside of a word or white space after end of word.
-        if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-          // noop
-        } else if (currentByte >= 0x41 && currentByte <= 0x5A) { // A-Z
-          currentByte -= 0x20; // Lowercase this character
-        } else if (currentByte >= 0x61 && currentByte <= 0x7A) { // a-z
-          // noop
-        } else { // whitespace
-          capNext = true;
-        }
+      int currentByte = inBuf.getByte(id);
+      if (Character.isLetterOrDigit(currentByte)) {
+        currentByte = capitalizeNext ? Character.toUpperCase(currentByte) : Character.toLowerCase(currentByte);
+        capitalizeNext = false;
+      } else {
+        capitalizeNext = true;
       }
-
       outBuf.setByte(out, currentByte);
-    } // end of for_loop
+    }
   }
 
   /**
