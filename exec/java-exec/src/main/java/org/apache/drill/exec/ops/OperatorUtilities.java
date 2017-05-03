@@ -21,21 +21,28 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
+/**
+ * Utility methods, formerly on the OperatorContext class, that work with
+ * operators. The utilities here are available to operators at unit test
+ * time, while methods in OperatorContext are available only in production
+ * code.
+ */
+
 public class OperatorUtilities {
 
   private OperatorUtilities() { }
 
   public static int getChildCount(PhysicalOperator popConfig) {
     Iterator<PhysicalOperator> iter = popConfig.iterator();
-    int i = 0;
+    int count = 0;
     while (iter.hasNext()) {
       iter.next();
-      i++;
+      count++;
     }
 
-    if (i == 0) {
-      i = 1;
+    if (count == 0) {
+      count = 1;
     }
-    return i;
+    return count;
   }
 }
