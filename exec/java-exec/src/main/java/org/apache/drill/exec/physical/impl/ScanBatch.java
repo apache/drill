@@ -57,6 +57,7 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 /**
@@ -318,6 +319,16 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
+  /**
+   * Row set mutator implementation provided to record readers created by
+   * this scan batch. Made visible so that tests can create this mutator
+   * without also needing a ScanBatch instance. (This class is really independent
+   * of the ScanBatch, but resides here for historical reasons. This is,
+   * in turn, the only use of the genereated vector readers in the vector
+   * package.)
+   */
+
+  @VisibleForTesting
   public static class Mutator implements OutputMutator {
     /** Whether schema has changed since last inquiry (via #isNewSchema}).  Is
      *  true before first inquiry. */

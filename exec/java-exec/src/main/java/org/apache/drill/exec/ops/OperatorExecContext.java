@@ -23,7 +23,7 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import io.netty.buffer.DrillBuf;
 
 /**
- * Narrowed version of the {@link OpeartorContext} used to create an
+ * Narrowed version of the {@link OperatorContext} used to create an
  * easy-to-test version of the operator context that excludes services
  * that require a full Drillbit server.
  */

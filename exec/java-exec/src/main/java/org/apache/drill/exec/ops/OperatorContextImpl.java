@@ -111,6 +111,7 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
       if (fs != null) {
         try {
           fs.close();
+          fs = null;
         } catch (IOException e) {
           throw new DrillRuntimeException(e);
         }

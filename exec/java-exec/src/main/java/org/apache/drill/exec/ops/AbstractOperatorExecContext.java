@@ -36,16 +36,15 @@ public class AbstractOperatorExecContext implements OperatorExecContext {
   protected final ExecutionControls executionControls;
   protected final PhysicalOperator popConfig;
   protected final BufferManager manager;
-  protected OperatorStatReceiver statsWriter;
+  protected final OperatorStatReceiver statsWriter;
 
   public AbstractOperatorExecContext(BufferAllocator allocator, PhysicalOperator popConfig,
                                      ExecutionControls executionControls,
                                      OperatorStatReceiver stats) {
     this.allocator = allocator;
     this.popConfig = popConfig;
-    this.manager = new BufferManagerImpl(allocator);
+    manager = new BufferManagerImpl(allocator);
     statsWriter = stats;
-
     this.executionControls = executionControls;
   }
 
@@ -65,9 +64,10 @@ public class AbstractOperatorExecContext implements OperatorExecContext {
   }
 
   @Override
-  public ExecutionControls getExecutionControls() {
-    return executionControls;
-  }
+  public ExecutionControls getExecutionControls() { return executionControls; }
+
+  @Override
+  public OperatorStatReceiver getStatsWriter() { return statsWriter; }
 
   @Override
   public BufferAllocator getAllocator() {
@@ -77,6 +77,7 @@ public class AbstractOperatorExecContext implements OperatorExecContext {
     return allocator;
   }
 
+  @Override
   public void close() {
     try {
       manager.close();
@@ -85,10 +86,5 @@ public class AbstractOperatorExecContext implements OperatorExecContext {
         allocator.close();
       }
     }
-  }
-
-  @Override
-  public OperatorStatReceiver getStatsWriter() {
-    return statsWriter;
   }
 }
