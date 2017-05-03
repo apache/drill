@@ -61,7 +61,7 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
       throws OutOfMemoryException {
     super(context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
           popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation()),
-          popConfig, context.getExecutionControls(), null);
+          popConfig, context.getExecutionControls(), stats);
     if (stats != null) {
       this.stats = stats;
     } else {
@@ -70,7 +70,6 @@ class OperatorContextImpl extends AbstractOperatorExecContext implements Operato
                            OperatorUtilities.getChildCount(popConfig));
       this.stats = context.getStats().newOperatorStats(def, allocator);
     }
-    statsWriter = stats;
     executor = context.getDrillbitContext().getExecutor();
     scanExecutor = context.getDrillbitContext().getScanExecutor();
     scanDecodeExecutor = context.getDrillbitContext().getScanDecodeExecutor();
