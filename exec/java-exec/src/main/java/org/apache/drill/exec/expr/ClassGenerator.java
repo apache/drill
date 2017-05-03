@@ -61,6 +61,7 @@ import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.objectweb.asm.Label;
 
 public class ClassGenerator<T>{
 
@@ -68,15 +69,6 @@ public class ClassGenerator<T>{
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
-
-  /**
-   * Field has 2 indexes within the constant pull: field item + name and type item.
-   * Additionally should be taken into account literal, class and
-   * method (class reference + name + specially encoded type descriptor = 3 indexes) references
-   * within the constant pool, fields and methods from the template,
-   * so subtracts 6000 to reserve constant pool for them.
-   */
-  private static final int MAX_CLASS_MEMBERS_COUNT = 26767;  // = 0xFFFF / 2 - 6000
 
   public enum BlockType {SETUP, EVAL, RESET, CLEANUP}
 
@@ -96,7 +88,35 @@ public class ClassGenerator<T>{
   private ClassGenerator<T> innerClassGenerator;
   private LinkedList<SizedJBlock>[] blocks;
   private LinkedList<SizedJBlock>[] oldBlocks;
-  private int maxFieldsIndex = MAX_CLASS_MEMBERS_COUNT;
+
+  /**
+   * Assumed that field has 3 indexes within the constant pull: index of the CONSTANT_Fieldref_info +
+   * CONSTANT_Fieldref_info.name_and_type_index + CONSTANT_NameAndType_info.name_index.
+   * CONSTANT_NameAndType_info.descriptor_index has limited range of values, CONSTANT_Fieldref_info.class_index is
+   * the same for a single class, they will be taken into account later.
+   * <p>
+   * Local variable has 1 index within the constant pool.
+   * {@link org.objectweb.asm.MethodWriter#visitLocalVariable(String, String, String, Label, Label, int)}
+   * <p>
+   * For upper estimation of max index value, suppose that each field and local variable uses different literal
+   * values that have two indexes, then the number of occupied indexes within the constant pull is
+   * fieldCount * 3 + fieldCount * 2 + (index - fieldCount) * 3 => fieldCount * 2 + index * 3
+   * <p>
+   * Assumed that method has 3 indexes within the constant pull: index of the CONSTANT_Methodref_info +
+   * CONSTANT_Methodref_info.name_and_type_index + CONSTANT_NameAndType_info.name_index.
+   * <p>
+   * For the upper estimation of number of split methods suppose that each expression in the method uses single variable.
+   * Suppose that the max number of indexes within the constant pull occupied by fields and local variables is M,
+   * the number of split methods is N, number of abstract methods in the template is A, then splitted methods count is
+   * N = (M - A * N * 3) / 50 => N = M / (50 + A * 3)
+   * <p>
+   * Additionally should be taken into account class references; fields and methods from the template,
+   * so reserves 1000 for them.
+   * <p>
+   * Then the size of the occupied part in the constant pull is
+   * (fieldCount * 2 + index * 3 + 1000) * (1 + 3 / (50 + A * 3))
+   */
+  private long maxIndex;
 
   private int index = 0;
   private int labelIndex = 0;
@@ -140,6 +160,8 @@ public class ClassGenerator<T>{
       JDefinedClass innerClazz = clazz._class(mods, innerClassName);
       innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model, optionManager));
     }
+    long maxExprsNumber = optionManager != null ? optionManager.getOption(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR) : 50;
+    maxIndex = Math.round((0xFFFF / (1 + 3. / (3 * sig.size() + maxExprsNumber)) - 1000) / 3);
   }
 
   public ClassGenerator<T> getInnerGenerator(String name) {
@@ -319,9 +341,8 @@ public class ClassGenerator<T>{
   }
 
   /**
-   * Assigns {@code blocks} from the last nested {@code innerClassGenerator} to {@code this.blocks}
-   * recursively if {@code innerClassGenerator} has been created.
-   *
+   * Assigns {@link #blocks} from the last nested {@link #innerClassGenerator} to {@link this#blocks}
+   * recursively if {@link #innerClassGenerator} has been created.
    */
   private void setupValidBlocks() {
     if (createNestedClass()) {
@@ -331,15 +352,14 @@ public class ClassGenerator<T>{
   }
 
   /**
-   * Creates {@link ClassGenerator innerClassGenerator} with inner class
-   * if {@code index} is greater than {@code maxFieldsIndex}.
+   * Creates {@link #innerClassGenerator} with inner class
+   * if {@link #hasMaxIndexValue()} returns {@code true}.
    *
    * @return true if splitting happened.
    */
   private boolean createNestedClass() {
-    if (index > maxFieldsIndex) {
+    if (hasMaxIndexValue()) {
       // all new fields will be declared in the class from innerClassGenerator
-      // if fields count will be greater than maxFieldsIndex
       if (innerClassGenerator == null) {
         try {
           JDefinedClass innerClazz = clazz._class(JMod.PRIVATE, clazz.name() + "0");
@@ -349,7 +369,7 @@ public class ClassGenerator<T>{
         }
         oldBlocks = blocks;
         innerClassGenerator.index = index;
-        innerClassGenerator.maxFieldsIndex += index;
+        innerClassGenerator.maxIndex += index;
         // blocks from the inner class should be used
         setupInnerClassBlocks();
         return true;
@@ -360,8 +380,17 @@ public class ClassGenerator<T>{
   }
 
   /**
+   * Checks that {@link #index} has reached its max value.
+   *
+   * @return true if {@code index + clazz.fields().size() * 2 / 3} is greater than {@code maxIndex}
+   */
+  private boolean hasMaxIndexValue() {
+    return index + clazz.fields().size() * 2 / 3 > maxIndex;
+  }
+
+  /**
    * Gets blocks from the last inner {@link ClassGenerator innerClassGenerator}
-   * and assigns it to the {@link this.blocks} recursively.
+   * and assigns it to the {@link this#blocks} recursively.
    */
   private void setupInnerClassBlocks() {
     if (innerClassGenerator != null) {
@@ -503,7 +532,7 @@ public class ClassGenerator<T>{
   }
 
   public JVar declareClassField(String prefix, JType t, JExpression init) {
-    if (innerClassGenerator != null && index > maxFieldsIndex) {
+    if (innerClassGenerator != null && hasMaxIndexValue()) {
       return innerClassGenerator.clazz.field(JMod.NONE, t, prefix + index++, init);
     }
     return clazz.field(JMod.NONE, t, prefix + index++, init);

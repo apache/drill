@@ -265,6 +265,7 @@ public class ClassTransformer {
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         final ClassNames nextGenerated = nextSet.generated;
+        // keeps only classes that have not be merged
         Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
         final ClassNode generatedNode;
         if (classNodePair != null) {
@@ -316,6 +317,7 @@ public class ClassTransformer {
         namesCompleted.add(nextSet);
       }
 
+      // adds byte code of the classes that have not been merged to make them accessible for outer class
       for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
         classLoader.injectByteCode(clazz.getKey().replace(FileUtils.separatorChar, '.'), clazz.getValue().getKey());
       }
