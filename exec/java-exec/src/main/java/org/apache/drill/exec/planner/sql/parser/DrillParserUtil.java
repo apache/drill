@@ -24,6 +24,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.SqlParserUtil;
+import org.apache.calcite.util.Util;
 
 import com.google.common.collect.Lists;
 
@@ -32,7 +33,7 @@ import com.google.common.collect.Lists;
  */
 public class DrillParserUtil {
 
-  public static final String CHARSET = "ISO-8859-1";
+  public static final String CHARSET = Util.getDefaultCharset().name();
 
   public static SqlNode createCondition(SqlNode left, SqlOperator op, SqlNode right) {
 

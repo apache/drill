@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import java.nio.charset.Charset;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class DrillHiveTable extends DrillTable{
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
           typeFactory.createSqlType(SqlTypeName.VARCHAR, maxLen), /*input type*/
-          Charset.forName("ISO-8859-1"), /*unicode char set*/
+          Charset.forName(DrillParserUtil.CHARSET),
           SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
         );
       }
@@ -126,7 +127,7 @@ public class DrillHiveTable extends DrillTable{
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
             typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
-            Charset.forName("ISO-8859-1"), /*unicode char set*/
+            Charset.forName(DrillParserUtil.CHARSET),
             SqlCollation.IMPLICIT
         );
       }
