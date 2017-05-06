@@ -31,9 +31,9 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.kududb.Schema;
-import org.kududb.client.KuduTable;
-import org.kududb.client.ListTablesResponse;
+import org.apache.kudu.Schema;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.ListTablesResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
