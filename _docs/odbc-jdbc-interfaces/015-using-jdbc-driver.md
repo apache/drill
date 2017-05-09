@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: 2017-03-13 22:49:08 UTC
+date: 2017-05-09 01:40:52 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -28,8 +28,7 @@ The Drill JDBC Driver `JAR` file must exist on a client machine so you can confi
 
    Or
 
-* Download the following TAR file to a location on your client machine: [apache-
-drill-1.0.0.tar.gz](http://apache.osuosl.org/drill/drill-1.0.0/apache-drill-1.0.0-src.tar.gz). Extract the file. On Windows, you may need to use a decompression utility, such as [7-zip](http://www.7-zip.org/). The driver is extracted to the following directory:  
+* Download a [TAR file for the latest Drill release](http://apache.osuosl.org/drill/) to a location on your client machine, and extract the file. On Windows, you may need to use a decompression utility, such as [7-zip](http://www.7-zip.org/). The driver is extracted to the following directory:  
    `<drill-installation_directory>/jars/jdbc-driver/drill-jdbc-all-<version>.jar`
 
 ## Using the JDBC URL for a Random Drillbit Connection 

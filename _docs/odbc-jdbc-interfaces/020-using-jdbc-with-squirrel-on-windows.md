@@ -1,6 +1,6 @@
 ---
 title: "Using JDBC with SQuirreL on Windows"
-date:  
+date: 2017-05-09 01:40:53 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 To use the JDBC Driver to access Drill through SQuirreL, ensure that you meet the prerequisites and follow the steps in this section.
@@ -30,11 +30,7 @@ machine:
 
     <drill_installation_directory>/jars/jdbc-driver/drill-jdbc-all-<version>.jar
 
-Or, you can download the [apache-
-drill-1.0.0.tar.gz](http://apache.osuosl.org/drill/drill-1.0.0/apache-drill-1.0.0.tar.gz) file to a location on your Windows machine, and
-extract the contents of the file. You may need to use a decompression utility,
-such as [7-zip](http://www.7-zip.org/) to extract the archive. Once extracted,
-you can locate the driver in the following directory:
+Or, download a [TAR file for the latest Drill release](http://apache.osuosl.org/drill/) to a location on your Windows machine, and extract the contents of the file. You may need to use a decompression utility, such as [7-zip](http://www.7-zip.org/) to extract the archive. Once extracted, you can locate the driver in the following directory:
 
     <windows_directory>\apache-drill-<version>\jars\jdbc-driver\drill-jdbc-all-<version>.jar
 

@@ -8,7 +8,7 @@ excerpt: The Apache Software Foundation announced today the availability of Apac
 ---
 **Thousands of users adopt Open Source, enterprise-grade, schema-free SQL query engine for Apache Hadoop®, NoSQL and Cloud storage**
 
-Forest Hill, MD --19 May 2015-- The Apache Software Foundation (ASF), the all-volunteer developers, stewards, and incubators of more than 350 Open Source projects and initiatives, announced today the availability of Apache™ Drill™ 1.0, the schema-free SQL query engine for Apache Hadoop®, NoSQL and Cloud storage.
+Forest Hill, MD --19 May 2015-- The [Apache Software Foundation (ASF)](https://www.apache.org/), the all-volunteer developers, stewards, and incubators of more than 350 Open Source projects and initiatives, announced today the availability of Apache™ Drill™ 1.0, the schema-free SQL query engine for Apache Hadoop®, NoSQL and Cloud storage.
 
 "The production-ready 1.0 release represents a significant milestone for the Drill project," said Tomer Shiran, member of the Apache Drill Project Management Committee. "It is the outcome of almost three years of development involving dozens of engineers from numerous companies. Apache Drill's flexibility and ease-of-use have attracted thousands of users, and the enterprise-grade reliability, security and performance in the 1.0 release will further accelerate adoption."
 
