@@ -179,11 +179,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     // don't skip header in case skipFirstLine is set true
     settings.setSkipFirstLine(false);
 
-    // setup Output using OutputMutator
-    // we should use a separate output mutator to avoid reshaping query output with header data
-    HeaderOutputMutator hOutputMutator = new HeaderOutputMutator();
-    TextOutput hOutput = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
-    this.allocate(hOutputMutator.fieldVectorMap);
+    HeaderBuilder hOutput = new HeaderBuilder();
 
     // setup Input using InputStream
     // we should read file header irrespective of split given given to this reader
@@ -198,11 +194,10 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     reader.parseNext();
 
     // grab the field names from output
-    String [] fieldNames = ((RepeatedVarCharOutput)hOutput).getTextOutput();
+    String [] fieldNames = hOutput.getHeaders();
 
     // cleanup and set to skip the first line next time we read input
     reader.close();
-    hOutputMutator.close();
     settings.setSkipFirstLine(true);
 
     return fieldNames;
