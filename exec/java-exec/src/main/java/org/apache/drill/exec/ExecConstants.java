@@ -105,8 +105,10 @@ public interface ExecConstants {
   String HTTP_TRUSTSTORE_PATH = "javax.net.ssl.trustStore";
   String HTTP_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword";
   String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
+  String SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
   String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
-  String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
+  String SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE = "drill.exec.sys.store.provider.local.inmemory.write";
+  String SYS_STORE_CAPACITY_PROFILES = "drill.exec.sys.store.capacity.profiles";
   String IMPERSONATION_ENABLED = "drill.exec.impersonation.enabled";
   String IMPERSONATION_MAX_CHAINED_USER_HOPS = "drill.exec.impersonation.max_chained_user_hops";
   String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";

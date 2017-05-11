@@ -22,6 +22,7 @@ import java.io.IOException;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -35,8 +36,6 @@ import org.apache.hadoop.fs.Path;
 public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvider {
 //  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
 
-  public static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
-
   private final CuratorFramework curator;
   private final DrillFileSystem fs;
   private final Path blobRoot;
@@ -49,8 +48,8 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public ZookeeperPersistentStoreProvider(final DrillConfig config, final CuratorFramework curator) throws StoreException {
     this.curator = curator;
 
-    if (config.hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
-      blobRoot = new Path(config.getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
+    if (config.hasPath(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
+      blobRoot = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT));
     }else{
       blobRoot = LocalPersistentStore.getLogDir();
     }

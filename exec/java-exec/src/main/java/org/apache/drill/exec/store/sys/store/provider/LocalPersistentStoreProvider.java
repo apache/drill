@@ -27,20 +27,20 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
-import org.apache.drill.exec.testing.store.NoWriteLocalStore;
+import org.apache.drill.exec.store.sys.store.InMemoryPersistentStore;
 import org.apache.hadoop.fs.Path;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
  */
 public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
-//  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
 
   private final Path path;
   private final DrillFileSystem fs;
   // This flag is used in testing. Ideally, tests should use a specific PersistentStoreProvider that knows
   // how to handle this flag.
-  private final boolean enableWrite;
+  private final boolean writeInMemory;
 
   public LocalPersistentStoreProvider(final PersistentStoreRegistry<?> registry) throws StoreException {
     this(registry.getConfig());
@@ -48,7 +48,7 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
 
   public LocalPersistentStoreProvider(final DrillConfig config) throws StoreException {
     this.path = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
-    this.enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
+    this.writeInMemory = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE);
     try {
       this.fs = LocalPersistentStore.getFileSystem(config, path);
     } catch (IOException e) {
@@ -57,14 +57,15 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
   }
 
   @Override
-  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> storeConfig) {
+  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> storeConfig) throws StoreException {
     switch(storeConfig.getMode()){
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      if (enableWrite) {
+      if (!writeInMemory) {
         return new LocalPersistentStore<>(fs, path, storeConfig);
       }
-      return new NoWriteLocalStore<>();
+      int maxInMemoryCapacity = storeConfig.getMaxCapacity();
+      return new InMemoryPersistentStore<V>(maxInMemoryCapacity);
     default:
       throw new IllegalStateException();
     }

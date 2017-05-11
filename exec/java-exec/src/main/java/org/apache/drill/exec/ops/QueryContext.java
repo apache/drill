@@ -39,6 +39,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.QueryOptionManager;
@@ -209,6 +210,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return drillbitContext.getConfig();
   }
 
+  public QueryProfileStoreContext getProfileStoreContext() {
+    return drillbitContext.getProfileStoreContext();
+  }
+
   @Override
   public FunctionImplementationRegistry getFunctionRegistry() {
     return drillbitContext.getFunctionImplementationRegistry();
@@ -225,7 +230,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   public boolean isImpersonationEnabled() {
-     return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   public boolean isUserAuthenticationEnabled() {

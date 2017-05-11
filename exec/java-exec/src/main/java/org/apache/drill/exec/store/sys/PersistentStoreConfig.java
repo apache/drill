@@ -38,11 +38,17 @@ public class PersistentStoreConfig<V> {
   private final String name;
   private final InstanceSerializer<V> valueSerializer;
   private final PersistentStoreMode mode;
+  private final int maxCapacity;
 
-  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode) {
+  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode, int maxCapacity) {
     this.name = name;
     this.valueSerializer = valueSerializer;
     this.mode = mode;
+    this.maxCapacity = maxCapacity;
+  }
+
+  public int getMaxCapacity() {
+    return maxCapacity;
   }
 
   public PersistentStoreMode getMode() {
@@ -85,6 +91,7 @@ public class PersistentStoreConfig<V> {
     private String name;
     private InstanceSerializer<V> serializer;
     private PersistentStoreMode mode = PersistentStoreMode.PERSISTENT;
+    private int maxCapacity = Integer.MAX_VALUE;
 
     protected StoreConfigBuilder(InstanceSerializer<V> serializer) {
       super();
@@ -106,9 +113,14 @@ public class PersistentStoreConfig<V> {
       return this;
     }
 
+    public StoreConfigBuilder<V> setMaxCapacity(int maxCapacity) {
+      this.maxCapacity = maxCapacity;
+      return this;
+    }
+
     public PersistentStoreConfig<V> build(){
       Preconditions.checkNotNull(name);
-      return new PersistentStoreConfig<>(name, serializer, mode);
+      return new PersistentStoreConfig<>(name, serializer, mode, maxCapacity);
     }
   }
 

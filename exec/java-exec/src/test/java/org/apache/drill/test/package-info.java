@@ -53,7 +53,7 @@
     // Configure the cluster. One Drillbit by default.
     FixtureBuilder builder = ClusterFixture.builder()
         // Set up per-test specialized config and session options.
-        .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true)
+        .configProperty(ExecConstants.SYS_STORE_PROVIDER_EPHEMERAL_WRITE, false)
         .configProperty(ExecConstants.REMOVER_ENABLE_GENERIC_COPIER, true)
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3L * 1024 * 1024 * 1024)
         .maxParallelization(1)
