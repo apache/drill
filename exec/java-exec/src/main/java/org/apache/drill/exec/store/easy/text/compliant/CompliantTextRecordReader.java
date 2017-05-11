@@ -151,6 +151,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       }
 
       // setup Input using InputStream
+      logger.trace("Opening file {}", split.getPath());
       stream = dfs.openPossiblyCompressedStream(split.getPath());
       input = new TextInput(settings, stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
 

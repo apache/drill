@@ -170,7 +170,9 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
       ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR,
       ExecConstants.USE_DYNAMIC_UDFS,
       ExecConstants.QUERY_TRANSIENT_STATE_UPDATE,
-      ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR
+      ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR,
+      ExecConstants.ENABLE_ITERATOR_VALIDATOR,
+      ExecConstants.ENABLE_VECTOR_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {
