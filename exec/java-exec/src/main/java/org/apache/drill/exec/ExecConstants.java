@@ -447,11 +447,40 @@ public interface ExecConstants {
   String USE_DYNAMIC_UDFS_KEY = "exec.udf.use_dynamic";
   BooleanValidator USE_DYNAMIC_UDFS = new BooleanValidator(USE_DYNAMIC_UDFS_KEY, true);
 
-
   String QUERY_TRANSIENT_STATE_UPDATE_KEY = "exec.query.progress.update";
   BooleanValidator QUERY_TRANSIENT_STATE_UPDATE = new BooleanValidator(QUERY_TRANSIENT_STATE_UPDATE_KEY, true);
 
   String PERSISTENT_TABLE_UMASK = "exec.persistent_table.umask";
   StringValidator PERSISTENT_TABLE_UMASK_VALIDATOR = new StringValidator(PERSISTENT_TABLE_UMASK, "002");
 
+  /**
+   * Enables batch iterator (operator) validation. Validation is normally enabled
+   * only when assertions are enabled. This option enables iterator validation even
+   * if assertions are not enabled. That is, it allows iterator validation even on
+   * a "production" Drill instance.
+   */
+  String ENABLE_ITERATOR_VALIDATION_OPTION = "debug.validate_iterators";
+  BooleanValidator ENABLE_ITERATOR_VALIDATOR = new BooleanValidator(ENABLE_ITERATOR_VALIDATION_OPTION, false);
+
+  /**
+   * Boot-time config option to enable validation. Primarily used for tests.
+   * If true, overrrides the above. (That is validation is done if assertions are on,
+   * if the above session option is set to true, or if this config option is set to true.
+   */
+
+  String ENABLE_ITERATOR_VALIDATION = "drill.exec.debug.validate_iterators";
+
+  /**
+   * When iterator validation is enabled, additionally validates the vectors in
+   * each batch passed to each iterator.
+   */
+  String ENABLE_VECTOR_VALIDATION_OPTION = "debug.validate_vectors";
+  BooleanValidator ENABLE_VECTOR_VALIDATOR = new BooleanValidator(ENABLE_VECTOR_VALIDATION_OPTION, false);
+
+  /**
+   * Boot-time config option to enable vector validation. Primarily used for
+   * tests. Add the following to the command line to enable:<br>
+   * <tt>-ea -Ddrill.exec.debug.validate_vectors=true</tt>
+   */
+  String ENABLE_VECTOR_VALIDATION = "drill.exec.debug.validate_vectors";
 }

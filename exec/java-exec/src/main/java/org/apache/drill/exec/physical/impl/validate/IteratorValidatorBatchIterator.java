@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -94,6 +94,11 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   /** High-level IterOutcome sequence state. */
   private ValidationState validationState = ValidationState.INITIAL_NO_SCHEMA;
 
+  /**
+   * Enable/disable per-batch vector validation. Enable only to debug vector
+   * corruption issues.
+   */
+  private boolean validateBatches;
 
   public IteratorValidatorBatchIterator(RecordBatch incoming) {
     this.incoming = incoming;
@@ -101,6 +106,11 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
     // (Log construction and close() at same level to bracket instance's activity.)
     logger.trace( "[#{}; on {}]: Being constructed.", instNum, batchTypeName);
+  }
+
+
+  public void enableBatchValidation(boolean option) {
+    validateBatches = option;
   }
 
   @Override
@@ -224,6 +234,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
           // above).
           // OK_NEW_SCHEMA moves to have-seen-schema state.
           validationState = ValidationState.HAVE_SCHEMA;
+          validateBatch();
           break;
         case OK:
           // OK is allowed as long as OK_NEW_SCHEMA was seen, except if terminated
@@ -234,6 +245,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                     "next() returned %s without first returning %s [#%d, %s]",
                     batchState, OK_NEW_SCHEMA, instNum, batchTypeName));
           }
+          validateBatch();
           // OK doesn't change high-level state.
           break;
         case NONE:
@@ -323,6 +335,12 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                    instNum, batchTypeName, prevBatchState, exceptionState,
                    exceptionState);
       throw e;
+    }
+  }
+
+  private void validateBatch() {
+    if (validateBatches) {
+      new BatchValidator(incoming).validate();
     }
   }
 
