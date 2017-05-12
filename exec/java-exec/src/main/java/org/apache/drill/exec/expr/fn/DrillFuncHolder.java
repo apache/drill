@@ -85,17 +85,6 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   @Override
-  public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[] workspaceJVars) {
-  }
-
-  @Override
-  public abstract HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables,
-      JVar[] workspaceJVars);
-
-  @Override
-  public abstract boolean isNested();
-
-  @Override
   public FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     return new DrillFuncHolderExpr(name, this, args, pos);
   }

@@ -202,7 +202,7 @@ public class EvaluationVisitor {
         generator.getMappingSet().exitChild();
       }
 
-      return holder.renderEnd(generator, args, workspaceVars);
+      return holder.renderEnd(generator, args, workspaceVars, holderExpr.getFieldReference());
     }
 
     @Override

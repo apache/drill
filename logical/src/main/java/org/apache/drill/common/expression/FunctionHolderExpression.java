@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,6 +28,12 @@ import com.google.common.collect.Lists;
 public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;
   public final String nameUsed;
+
+  /**
+   * A field reference identifies the output field and
+   * is used to reference that field in the generated classes.
+   */
+  private FieldReference fieldReference;
 
   public FunctionHolderExpression(String nameUsed, ExpressionPosition pos, List<LogicalExpression> args) {
     super(pos);
@@ -80,4 +86,16 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   /** Return the underlying function implementation holder. */
   public abstract FuncHolder getHolder();
 
+  public FieldReference getFieldReference() {
+    return fieldReference;
+  }
+
+  /**
+   * Set the FieldReference to be used during generating code.
+   *
+   * @param fieldReference FieldReference to set.
+   */
+  public void getFieldReference(FieldReference fieldReference) {
+    this.fieldReference = fieldReference;
+  }
 }

@@ -38,7 +38,6 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.FlattenPOP;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -353,7 +352,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
       if (expr instanceof DrillFuncHolderExpr &&
-          ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {
+          ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
         // Need to process ComplexWriter function evaluation.
         // Lazy initialization of the list of complex writers, if not done yet.
         if (complexWriters == null) {
@@ -361,7 +360,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
+        ((DrillFuncHolderExpr) expr).getFieldReference(namedExpression.getRef());
         cg.addExpr(expr);
       } else {
         // need to do evaluation.
