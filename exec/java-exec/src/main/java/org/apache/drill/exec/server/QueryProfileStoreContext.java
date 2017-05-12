@@ -47,14 +47,19 @@ public class QueryProfileStoreContext {
 
   public QueryProfileStoreContext(DrillConfig config, PersistentStoreProvider storeProvider,
                                   ClusterCoordinator coordinator) {
-    profileStoreConfig = PersistentStoreConfig.newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE,
+    StoreConfigBuilder profileStoreConfigBuilder = PersistentStoreConfig.newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE,
         SchemaUserBitShared.QueryProfile.MERGE)
         .name(PROFILES)
         .blob()
-        .isInMemory()
         //This will only take effect if the store enforces it
-        .setMaxCapacity(config.getInt(ExecConstants.SYS_STORE_PROFILES_CAPACITY))
-        .build();
+        .setMaxCapacity(config.getInt(ExecConstants.SYS_STORE_PROFILES_CAPACITY));
+
+    //In Memory
+    if (config.getBoolean(ExecConstants.SYS_STORE_PROFILES_INMEMORY)) {
+      profileStoreConfigBuilder = profileStoreConfigBuilder.setInMemory();
+    }
+
+    profileStoreConfig = profileStoreConfigBuilder.build();
 
     try {
       completedProfiles = storeProvider.getOrCreateStore(profileStoreConfig);
