@@ -36,6 +36,12 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * This class contains examples to show how to use MiniPlanTestBuilder to test a
+ * specific plan fragment (MiniPlan). Each testcase requires 1) a RecordBatch,
+ * built from PopBuilder/ScanBuilder, 2)an expected schema and base line values,
+ * or 3) indicating no batch is expected.
+ */
 public class TestMiniPlan extends MiniPlanUnitTestBase {
 
   protected static DrillFileSystem fs;
@@ -43,13 +49,13 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
   @BeforeClass
   public static void initFS() throws Exception {
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     fs = new DrillFileSystem(conf);
   }
 
   @Test
-  @Ignore("A bug in JsonRecordReader handling empty file")
-  public void testEmptyInput() throws Exception {
+  @Ignore("DRILL-5464: A bug in JsonRecordReader handling empty file")
+  public void testEmptyJsonInput() throws Exception {
     String emptyFile = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
 
     RecordBatch scanBatch = new JsonScanBuilder()
@@ -151,7 +157,7 @@ public class TestMiniPlan extends MiniPlanUnitTestBase {
   }
 
   @Test
-  @Ignore ("A bug in UnionAll handling empty inputs from both sides")
+  @Ignore ("DRILL-5327: A bug in UnionAll handling empty inputs from both sides")
   public void testUnionFilterAll() throws Exception {
     List<String> leftJsonBatches = Lists.newArrayList(
         "[{\"a\": 5, \"b\" : 1 }]");

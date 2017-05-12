@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import mockit.NonStrictExpectations;
 import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -51,6 +52,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
+import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
 import static org.apache.drill.exec.physical.unit.TestMiniPlan.fs;
 
 /**
@@ -66,7 +69,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
 
   private final ExecutorService scanExecutor =  Executors.newFixedThreadPool(2, new NamedThreadFactory("scan-"));
 
-  public class MiniPlanTestBuilder {
+  public static class MiniPlanTestBuilder {
     protected List<Map<String, Object>> baselineRecords;
     protected RecordBatch root;
     protected boolean expectedZeroBatch;

@@ -195,6 +195,7 @@ public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
         "[{\"a\": 40, \"b\" : 3},{\"a\": 13, \"b\" : 100}]");
     opTestBuilder()
         .physicalOperator(sortConf)
+        .maxAllocation(15_000_000L)
         .inputDataStreamJson(inputJsonBatches)
         .baselineColumns("a", "b")
         .baselineValues(5l, 1l)

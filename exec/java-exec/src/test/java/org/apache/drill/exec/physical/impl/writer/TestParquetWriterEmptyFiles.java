@@ -33,7 +33,7 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
   @BeforeClass
   public static void initFs() throws Exception {
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
     fs = FileSystem.get(conf);
 

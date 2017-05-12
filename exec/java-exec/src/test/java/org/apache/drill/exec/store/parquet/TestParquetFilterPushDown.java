@@ -52,7 +52,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
         BitControl.PlanFragment.getDefaultInstance(), null, bits[0].getContext().getFunctionImplementationRegistry());
 
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
     fs = FileSystem.get(conf);
   }

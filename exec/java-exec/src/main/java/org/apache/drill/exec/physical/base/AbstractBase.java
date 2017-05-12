@@ -25,10 +25,13 @@ import com.google.common.base.Preconditions;
 public abstract class AbstractBase implements PhysicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
-  private final String userName;
+  public static long INIT_ALLOCATION = 1_000_000L;
+  public static long MAX_ALLOCATION = 10_000_000_000L;
 
-  protected long initialAllocation = 1_000_000L;
-  protected long maxAllocation = 10_000_000_000L;
+  protected long initialAllocation = INIT_ALLOCATION;
+  protected long maxAllocation = MAX_ALLOCATION;
+
+  private final String userName;
   private int id;
   private double cost;
 

@@ -120,7 +120,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @BeforeClass
   public static void initFs() throws Exception {
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
     fs = FileSystem.get(conf);
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));

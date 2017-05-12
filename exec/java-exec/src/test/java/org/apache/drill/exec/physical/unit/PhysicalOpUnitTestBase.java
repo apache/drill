@@ -54,6 +54,7 @@ import org.apache.drill.exec.ops.BufferManagerImpl;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
@@ -77,12 +78,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
+
 /**
  * Look! Doesn't extend BaseTestQuery!!
  */
 public class PhysicalOpUnitTestBase extends ExecTest {
-  public static long INIT_ALLOCATION = 10_000_000l;
-  public static long MAX_ALLOCATION = 15_000_000L;
+//  public static long INIT_ALLOCATION = 1_000_000l;
+//  public static long MAX_ALLOCATION = 10_000_000L;
 
   @Injectable FragmentContext fragContext;
   @Injectable OperatorContext opContext;
@@ -189,8 +192,8 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     private String[] baselineColumns;
     private List<Map<String, Object>> baselineRecords;
     private List<List<String>> inputStreamsJSON;
-    private long initReservation = INIT_ALLOCATION;
-    private long maxAllocation = MAX_ALLOCATION;
+    private long initReservation = AbstractBase.INIT_ALLOCATION;
+    private long maxAllocation = AbstractBase.MAX_ALLOCATION;
 
     public void go() {
       BatchCreator<PhysicalOperator> opCreator;

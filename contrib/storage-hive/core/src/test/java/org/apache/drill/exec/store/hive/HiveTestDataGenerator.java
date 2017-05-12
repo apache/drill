@@ -70,7 +70,7 @@ public class HiveTestDataGenerator {
     config.put("hive.metastore.uris", "");
     config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
     config.put("hive.metastore.warehouse.dir", whDir);
-    config.put(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    config.put(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
   }
 
   /**
@@ -115,7 +115,7 @@ public class HiveTestDataGenerator {
     HiveConf conf = new HiveConf(SessionState.class);
 
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     conf.set("hive.metastore.warehouse.dir", whDir);
     conf.set("mapred.job.tracker", "local");
     conf.set(ConfVars.SCRATCHDIR.varname,  getTempDir("scratch_dir"));
