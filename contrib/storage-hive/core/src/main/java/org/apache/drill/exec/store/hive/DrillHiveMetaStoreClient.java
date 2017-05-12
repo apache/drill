@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -214,7 +214,19 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       } catch (Exception ex) {
         logger.warn("Failure while attempting to close existing hive metastore connection. May leak connection.", ex);
       }
-      mClient.reconnect();
+
+      // Attempt to reconnect. If this is a secure connection, this will fail due
+      // to the invalidation of the security token. In that case, throw the original
+      // exception and let a higher level clean up. Ideally we'd get a new token
+      // here, but doing so requires the use of a different connection, and that
+      // one has also become invalid. This code needs a rework; this is just a
+      // work-around.
+
+      try {
+        mClient.reconnect();
+      } catch (Exception e1) {
+        throw e;
+      }
       return mClient.getAllDatabases();
     }
   }
