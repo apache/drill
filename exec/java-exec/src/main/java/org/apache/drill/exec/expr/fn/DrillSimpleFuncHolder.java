@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.codemodel.JOp;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -73,22 +74,24 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   }
 
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.
-    for (int i =0; i < inputVariables.length; i++) {
+    for (int i = 0; i < inputVariables.length; i++) {
       if (getParameters()[i].isConstant() && !inputVariables[i].isConstant()) {
         throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", getParameters()[i].getName(), this.getRegisteredNames()[0]));
       }
     }
-    generateBody(g, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
-    HoldingContainer c = generateEvalBody(g, inputVariables, evalBody(), workspaceJVars);
-    generateBody(g, BlockType.RESET, resetBody(), null, workspaceJVars, false);
-    generateBody(g, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
+    generateBody(classGenerator, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
+    HoldingContainer c = generateEvalBody(classGenerator, inputVariables, evalBody(), workspaceJVars, fieldReference);
+    generateBody(classGenerator, BlockType.RESET, resetBody(), null, workspaceJVars, false);
+    generateBody(classGenerator, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
     return c;
   }
 
-  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
+  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body,
+                                              JVar[] workspaceJVars, FieldReference ref) {
 
     g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 

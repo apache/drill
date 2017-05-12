@@ -47,7 +47,6 @@ import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.StarColumnHelper;
@@ -76,7 +75,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private Projector projector;
   private List<ValueVector> allocationVectors;
   private List<ComplexWriter> complexWriters;
-  private List<DrillComplexWriterFuncHolder> complexExprList;
+  private List<FieldReference> complexFieldReferencesList;
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
@@ -165,8 +164,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
             // Only need to add the schema for the complex exprs because others should already have
             // been setup during setupNewSchema
-            for (DrillComplexWriterFuncHolder f : complexExprList) {
-              container.addOrGet(f.getReference().getRootSegment().getPath(),
+            for (FieldReference fieldReference : complexFieldReferencesList) {
+              container.addOrGet(fieldReference.getRootSegment().getPath(),
                   Types.required(MinorType.MAP), MapVector.class);
             }
             container.buildSchema(SelectionVectorMode.NONE);
@@ -443,7 +442,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
       } else if (expr instanceof DrillFuncHolderExpr &&
-          ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {
+          ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
         // Need to process ComplexWriter function evaluation.
         // Lazy initialization of the list of complex writers, if not done yet.
         if (complexWriters == null) {
@@ -453,13 +452,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
+        ((DrillFuncHolderExpr) expr).getFieldReference(namedExpression.getRef());
         cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
-        if (complexExprList == null) {
-          complexExprList = Lists.newArrayList();
+        if (complexFieldReferencesList == null) {
+          complexFieldReferencesList = Lists.newArrayList();
         }
-        // save the expr for later for getting schema when input is empty
-        complexExprList.add((DrillComplexWriterFuncHolder)((DrillFuncHolderExpr)expr).getHolder());
+        // save the field reference for later for getting schema when input is empty
+        complexFieldReferencesList.add(namedExpression.getRef());
       } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);

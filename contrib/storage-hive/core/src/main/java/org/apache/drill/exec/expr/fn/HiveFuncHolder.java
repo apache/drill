@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -142,17 +143,11 @@ public class HiveFuncHolder extends AbstractFuncHolder {
     return workspaceJVars;
   }
 
-  /**
-   * Complete code generation
-   * @param g
-   * @param inputVariables
-   * @param workspaceJVars
-   * @return HoldingContainer for return value
-   */
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
-    generateSetup(g, workspaceJVars);
-    return generateEval(g, inputVariables, workspaceJVars);
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+    generateSetup(classGenerator, workspaceJVars);
+    return generateEval(classGenerator, inputVariables, workspaceJVars);
   }
 
   private JInvocation getUDFInstance(JCodeModel m) {

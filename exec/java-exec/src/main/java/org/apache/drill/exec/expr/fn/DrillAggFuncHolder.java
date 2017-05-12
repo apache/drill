@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
@@ -125,18 +126,19 @@ class DrillAggFuncHolder extends DrillFuncHolder {
 
 
   @Override
-  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
-    HoldingContainer out = g.declare(getReturnType(), false);
+  public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
+                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+    HoldingContainer out = classGenerator.declare(getReturnType(), false);
     JBlock sub = new JBlock();
-    g.getEvalBlock().add(sub);
-    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(getReturnType()), getReturnValue().getName(), JExpr._new(g.getHolderType(getReturnType())));
-    addProtectedBlock(g, sub, output(), null, workspaceJVars, false);
+    classGenerator.getEvalBlock().add(sub);
+    JVar internalOutput = sub.decl(JMod.FINAL, classGenerator.getHolderType(getReturnType()), getReturnValue().getName(), JExpr._new(classGenerator.getHolderType(getReturnType())));
+    addProtectedBlock(classGenerator, sub, output(), null, workspaceJVars, false);
     sub.assign(out.getHolder(), internalOutput);
-        //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
-        if (!g.getMappingSet().isHashAggMapping()) {
-          generateBody(g, BlockType.RESET, reset(), null, workspaceJVars, false);
-        }
-       generateBody(g, BlockType.CLEANUP, cleanup(), null, workspaceJVars, false);
+    //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
+    if (!classGenerator.getMappingSet().isHashAggMapping()) {
+      generateBody(classGenerator, BlockType.RESET, reset(), null, workspaceJVars, false);
+    }
+    generateBody(classGenerator, BlockType.CLEANUP, cleanup(), null, workspaceJVars, false);
 
     return out;
   }
