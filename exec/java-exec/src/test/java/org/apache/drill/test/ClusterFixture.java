@@ -79,7 +79,7 @@ public class ClusterFixture implements AutoCloseable {
       // Properties here mimic those in drill-root/pom.xml, Surefire plugin
       // configuration. They allow tests to run successfully in Eclipse.
 
-      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE, true);
+      put(ExecConstants.SYS_STORE_PROFILES_INMEMORY, true);
 
       // The CTTAS function requires that the default temporary workspace be
       // writable. By default, the default temporary workspace points to

@@ -51,8 +51,9 @@ public class QueryProfileStoreContext {
         SchemaUserBitShared.QueryProfile.MERGE)
         .name(PROFILES)
         .blob()
+        .inMemory()
         //This will only take effect if the store enforces it
-        .setMaxCapacity(config.getInt(ExecConstants.SYS_STORE_CAPACITY_PROFILES))
+        .setMaxCapacity(config.getInt(ExecConstants.SYS_STORE_PROFILES_CAPACITY))
         .build();
 
     try {

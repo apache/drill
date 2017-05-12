@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
+import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
 import com.google.common.collect.Iterables;
@@ -42,8 +43,8 @@ public class InMemoryPersistentStore<V> extends BasePersistentStore<V> {
   private final int maxCapacity;
   private final AtomicInteger currentSize = new AtomicInteger();
 
-  public InMemoryPersistentStore(int maximumCapacity) {
-    this.maxCapacity = maximumCapacity;
+  public InMemoryPersistentStore(PersistentStoreConfig<V> config) {
+    this.maxCapacity = config.getMaxCapacity();
     //Allows us to trim out the oldest elements to maintain finite max size
     this.store = new ConcurrentSkipListMap<String, V>();
   }

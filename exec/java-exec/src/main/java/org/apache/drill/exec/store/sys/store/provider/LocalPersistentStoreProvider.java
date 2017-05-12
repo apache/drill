@@ -34,13 +34,13 @@ import org.apache.hadoop.fs.Path;
  * A really simple provider that stores data in the local file system, one value per file.
  */
 public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
+  //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
 
   private final Path path;
   private final DrillFileSystem fs;
   // This flag is used in testing. Ideally, tests should use a specific PersistentStoreProvider that knows
   // how to handle this flag.
-  private final boolean writeInMemory;
+  //TODO  private final boolean writeInMemory;
 
   public LocalPersistentStoreProvider(final PersistentStoreRegistry<?> registry) throws StoreException {
     this(registry.getConfig());
@@ -48,7 +48,6 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
 
   public LocalPersistentStoreProvider(final DrillConfig config) throws StoreException {
     this.path = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
-    this.writeInMemory = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE);
     try {
       this.fs = LocalPersistentStore.getFileSystem(config, path);
     } catch (IOException e) {
@@ -58,14 +57,15 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
 
   @Override
   public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> storeConfig) throws StoreException {
-    switch(storeConfig.getMode()){
+    switch(storeConfig.getMode()) {
     case BLOB_PERSISTENT:
-    case PERSISTENT:
-      if (!writeInMemory) {
+      if (storeConfig.isInMemory()) {
+        return new InMemoryPersistentStore<V>(storeConfig);
+      } else {
         return new LocalPersistentStore<>(fs, path, storeConfig);
       }
-      int maxInMemoryCapacity = storeConfig.getMaxCapacity();
-      return new InMemoryPersistentStore<V>(maxInMemoryCapacity);
+    case PERSISTENT:
+      return new LocalPersistentStore<>(fs, path, storeConfig);
     default:
       throw new IllegalStateException();
     }

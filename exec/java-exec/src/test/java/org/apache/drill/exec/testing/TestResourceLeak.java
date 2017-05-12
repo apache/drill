@@ -74,7 +74,7 @@ public class TestResourceLeak extends DrillTest {
   @SuppressWarnings("serial")
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
     {
-      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE, "true");
+      put(ExecConstants.SYS_STORE_PROFILES_INMEMORY, "true");
       put(ExecConstants.HTTP_ENABLE, "false");
     }
   };

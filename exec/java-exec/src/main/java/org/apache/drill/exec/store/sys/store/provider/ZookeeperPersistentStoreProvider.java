@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.store.InMemoryPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.hadoop.fs.Path;
@@ -65,7 +66,12 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
-      return new LocalPersistentStore<>(fs, blobRoot, config);
+      //Check for InMemory requirement
+      if (config.isInMemory()) {
+        return new InMemoryPersistentStore<>(config);
+      } else {
+        return new LocalPersistentStore<>(fs, blobRoot, config);
+      }
     case PERSISTENT:
       final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
       try {

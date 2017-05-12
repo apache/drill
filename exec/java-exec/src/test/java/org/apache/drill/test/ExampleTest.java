@@ -205,7 +205,7 @@ public class ExampleTest {
   public void fifthTest() throws Exception {
     FixtureBuilder builder = ClusterFixture.builder()
         .maxParallelization(1)
-        .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_INMEMORY_WRITE, false)
+        .configProperty(ExecConstants.SYS_STORE_PROFILES_INMEMORY, false)
         ;
 
     try (ClusterFixture cluster = builder.build();
