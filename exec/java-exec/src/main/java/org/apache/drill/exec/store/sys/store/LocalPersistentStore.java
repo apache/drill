@@ -68,6 +68,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   public LocalPersistentStore(DrillFileSystem fs, Path base, PersistentStoreConfig<V> config) {
     super();
+    logger.info("Config:{} \t FS:{}", config.getName(), fs.getName());
     this.basePath = new Path(base, config.getName());
     this.config = config;
     this.fs = fs;
