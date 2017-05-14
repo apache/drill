@@ -236,13 +236,13 @@ public class KuduRecordReader extends AbstractRecordReader {
         break;
       }
       case STRING: {
-        String value = result.getString(pci.index);
+        ByteBuffer value = ByteBuffer.wrap(result.getString(pci.index).getBytes());
         if (pci.kuduColumn.isNullable()) {
           ((NullableVarCharVector.Mutator) pci.vv.getMutator())
-              .setSafe(rowIndex, value.getBytes(), 0, value.length());
+              .setSafe(rowIndex, value, 0, value.remaining());
         } else {
           ((VarCharVector.Mutator) pci.vv.getMutator())
-              .setSafe(rowIndex, value.getBytes(), 0, value.length());
+              .setSafe(rowIndex, value, 0, value.remaining());
         }
         break;
       }
