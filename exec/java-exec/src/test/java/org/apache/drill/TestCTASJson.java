@@ -19,10 +19,7 @@ package org.apache.drill;
 
 
 import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestCTASJson extends PlanTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCTASJson.class);
@@ -38,6 +35,8 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_map() throws Exception {
     String testName = "ctas_alltypes_map";
     test("use dfs_test.tmp");
+    test("alter session set store.json.writer.skip_null_fields = true");
+    test("alter session set store.format = 'json' ");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -47,8 +46,6 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + ".json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
-          .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = true") // DEFAULT
           .build()
           .run();
     } finally {
@@ -66,6 +63,8 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_map_noskip() throws Exception {
     String testName = "ctas_alltypes_map";
     test("use dfs_test.tmp");
+    test("alter session set store.json.writer.skip_null_fields = false");
+    test("alter session set store.format = 'json' ");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -75,8 +74,6 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + "_out.json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
-          .optionSettingQueriesForTestQuery("alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
           .build()
           .run();
     } finally{
@@ -95,6 +92,8 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_repeatedmap() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
     test("use dfs_test.tmp");
+    test("alter session set store.json.writer.skip_null_fields = true");
+    test("alter session set store.format = 'json' ");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -104,9 +103,6 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + ".json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
-          .optionSettingQueriesForTestQuery(
-              "alter session set store.json.writer.skip_null_fields = true") // DEFAULT
           .build()
           .run();
     }finally{
@@ -125,6 +121,8 @@ public class TestCTASJson extends PlanTestBase {
   public void testctas_alltypes_repeated_map_noskip() throws Exception {
     String testName = "ctas_alltypes_repeated_map";
     test("use dfs_test.tmp");
+    test("alter session set store.json.writer.skip_null_fields = false");
+    test("alter session set store.format = 'json' ");
     test("create table " + testName + "_json as select * from cp.`json/" + testName + ".json`");
 
     final String query = "select * from `" + testName + "_json` t1 ";
@@ -134,9 +132,6 @@ public class TestCTASJson extends PlanTestBase {
           .sqlQuery(query)
           .ordered()
           .jsonBaselineFile("json/" + testName + "_out.json")
-          .optionSettingQueriesForTestQuery("alter session set store.format = 'json' ")
-          .optionSettingQueriesForTestQuery(
-              "alter session set store.json.writer.skip_null_fields = false") // change from DEFAULT
           .build()
           .run();
     } finally {
