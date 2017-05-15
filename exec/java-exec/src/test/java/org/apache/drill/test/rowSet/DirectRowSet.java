@@ -233,4 +233,9 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
 
   @Override
   public SelectionVector2 getSv2() { return null; }
+
+  @Override
+  public RowSet merge(RowSet other) {
+    return new DirectRowSet(allocator, container().merge(other.container()));
+  }
 }

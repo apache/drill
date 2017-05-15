@@ -292,4 +292,9 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
   @Override
   public int rowCount() { return sv4.getCount(); }
+
+  @Override
+  public RowSet merge(RowSet other) {
+    return new HyperRowSetImpl(allocator, container().merge(other.container()), sv4);
+  }
 }

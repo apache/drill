@@ -122,4 +122,9 @@ public class IndirectRowSet extends AbstractSingleRowSet {
     RecordBatchSizer sizer = new RecordBatchSizer(container, sv2);
     return sizer.actualSize();
   }
+
+  @Override
+  public RowSet merge(RowSet other) {
+    return new IndirectRowSet(allocator, container().merge(other.container()), sv2);
+  }
 }
