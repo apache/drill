@@ -170,7 +170,7 @@ public final class TypeProtos {
      * <code>FLOAT4 = 18;</code>
      *
      * <pre>
-     *  4 byte ieee 754 
+     *  4 byte ieee 754
      * </pre>
      */
     FLOAT4(17, 18),
@@ -463,7 +463,7 @@ public final class TypeProtos {
      * <code>FLOAT4 = 18;</code>
      *
      * <pre>
-     *  4 byte ieee 754 
+     *  4 byte ieee 754
      * </pre>
      */
     public static final int FLOAT4_VALUE = 18;

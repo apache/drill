@@ -47,7 +47,10 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
         RESOURCE(7),
         SYSTEM(8),
         UNSUPPORTED_OPERATION(9),
-        VALIDATION(10);
+        VALIDATION(10),
+        EXECUTION_ERROR(11),
+        INTERNAL_ERROR(12),
+        UNSPECIFIED_ERROR(13);
         
         public final int number;
         
@@ -76,6 +79,9 @@ public final class DrillPBError implements Externalizable, Message<DrillPBError>
                 case 8: return SYSTEM;
                 case 9: return UNSUPPORTED_OPERATION;
                 case 10: return VALIDATION;
+                case 11: return EXECUTION_ERROR;
+                case 12: return INTERNAL_ERROR;
+                case 13: return UNSPECIFIED_ERROR;
                 default: return null;
             }
         }

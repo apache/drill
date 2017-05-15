@@ -2201,6 +2201,36 @@ public final class UserBitShared {
        * </pre>
        */
       VALIDATION(10, 10),
+      /**
+       * <code>EXECUTION_ERROR = 11;</code>
+       *
+       * <pre>
+       * Execution exception
+       *  - Internal errors not related to bad code
+       * </pre>
+       */
+      EXECUTION_ERROR(11, 11),
+      /**
+       * <code>INTERNAL_ERROR = 12;</code>
+       *
+       * <pre>
+       * Internal exception
+       *  - Failed assertions
+       *  - Other "this should not happen" cases
+       * </pre>
+       */
+      INTERNAL_ERROR(12, 12),
+      /**
+       * <code>UNSPECIFIED_ERROR = 13;</code>
+       *
+       * <pre>
+       * Unspecified exception
+       *  - Exception caught but cause is unknown
+       * Indicates code that needs revisiting to move error reporting
+       * closer to the cause.
+       * </pre>
+       */
+      UNSPECIFIED_ERROR(13, 13),
       ;
 
       /**
@@ -2309,6 +2339,36 @@ public final class UserBitShared {
        * </pre>
        */
       public static final int VALIDATION_VALUE = 10;
+      /**
+       * <code>EXECUTION_ERROR = 11;</code>
+       *
+       * <pre>
+       * Execution exception
+       *  - Internal errors not related to bad code
+       * </pre>
+       */
+      public static final int EXECUTION_ERROR_VALUE = 11;
+      /**
+       * <code>INTERNAL_ERROR = 12;</code>
+       *
+       * <pre>
+       * Internal exception
+       *  - Failed assertions
+       *  - Other "this should not happen" cases
+       * </pre>
+       */
+      public static final int INTERNAL_ERROR_VALUE = 12;
+      /**
+       * <code>UNSPECIFIED_ERROR = 13;</code>
+       *
+       * <pre>
+       * Unspecified exception
+       *  - Exception caught but cause is unknown
+       * Indicates code that needs revisiting to move error reporting
+       * closer to the cause.
+       * </pre>
+       */
+      public static final int UNSPECIFIED_ERROR_VALUE = 13;
 
 
       public final int getNumber() { return value; }
@@ -2326,6 +2386,9 @@ public final class UserBitShared {
           case 8: return SYSTEM;
           case 9: return UNSUPPORTED_OPERATION;
           case 10: return VALIDATION;
+          case 11: return EXECUTION_ERROR;
+          case 12: return INTERNAL_ERROR;
+          case 13: return UNSPECIFIED_ERROR;
           default: return null;
         }
       }
@@ -23408,123 +23471,125 @@ public final class UserBitShared {
       "s.proto\032\022Coordination.proto\032\017SchemaDef.p" +
       "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001" +
       "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
-      "\001(\020\"\255\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
+      "\001(\020\"\355\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
       "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint" +
       "\0227\n\nerror_type\030\003 \001(\0162#.exec.shared.Drill" +
       "PBError.ErrorType\022\017\n\007message\030\004 \001(\t\0220\n\tex" +
       "ception\030\005 \001(\0132\035.exec.shared.ExceptionWra" +
       "pper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.share",
-      "d.ParsingError\"\262\001\n\tErrorType\022\016\n\nCONNECTI" +
+      "d.ParsingError\"\362\001\n\tErrorType\022\016\n\nCONNECTI" +
       "ON\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDATA_WRITE\020\002\022\014\n\010F" +
       "UNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPERMISSION\020\005\022\010\n\004" +
       "PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SYSTEM\020\010\022\031\n\025UNSU" +
-      "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\"\246\001\n\020" +
-      "ExceptionWrapper\022\027\n\017exception_class\030\001 \001(" +
-      "\t\022\017\n\007message\030\002 \001(\t\022:\n\013stack_trace\030\003 \003(\0132" +
-      "%.exec.shared.StackTraceElementWrapper\022," +
-      "\n\005cause\030\004 \001(\0132\035.exec.shared.ExceptionWra" +
-      "pper\"\205\001\n\030StackTraceElementWrapper\022\022\n\ncla",
-      "ss_name\030\001 \001(\t\022\021\n\tfile_name\030\002 \001(\t\022\023\n\013line" +
-      "_number\030\003 \001(\005\022\023\n\013method_name\030\004 \001(\t\022\030\n\020is" +
-      "_native_method\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014" +
-      "start_column\030\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n" +
-      "\nend_column\030\004 \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016Re" +
-      "cordBatchDef\022\024\n\014record_count\030\001 \001(\005\022+\n\005fi" +
-      "eld\030\002 \003(\0132\034.exec.shared.SerializedField\022" +
-      ")\n!carries_two_byte_selection_vector\030\003 \001" +
-      "(\010\"\205\001\n\010NamePart\022(\n\004type\030\001 \001(\0162\032.exec.sha" +
-      "red.NamePart.Type\022\014\n\004name\030\002 \001(\t\022$\n\005child",
-      "\030\003 \001(\0132\025.exec.shared.NamePart\"\033\n\004Type\022\010\n" +
-      "\004NAME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017SerializedField\022%" +
-      "\n\nmajor_type\030\001 \001(\0132\021.common.MajorType\022(\n" +
-      "\tname_part\030\002 \001(\0132\025.exec.shared.NamePart\022" +
-      "+\n\005child\030\003 \003(\0132\034.exec.shared.SerializedF" +
-      "ield\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_le" +
-      "ngth\030\005 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\nNod" +
-      "eStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footp" +
-      "rint\030\002 \001(\003\"\225\002\n\013QueryResult\0228\n\013query_stat" +
-      "e\030\001 \001(\0162#.exec.shared.QueryResult.QueryS",
-      "tate\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Que" +
-      "ryId\022(\n\005error\030\003 \003(\0132\031.exec.shared.DrillP" +
-      "BError\"z\n\nQueryState\022\014\n\010STARTING\020\000\022\013\n\007RU" +
-      "NNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006" +
-      "FAILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005\022\014\n\010" +
-      "ENQUEUED\020\006\"p\n\tQueryData\022&\n\010query_id\030\001 \001(" +
-      "\0132\024.exec.shared.QueryId\022\021\n\trow_count\030\002 \001" +
-      "(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.RecordBatc" +
-      "hDef\"\255\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005sta" +
-      "rt\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.shared.Qu",
-      "eryResult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n" +
-      "\007foreman\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024" +
-      "\n\014options_json\030\006 \001(\t\"\367\003\n\014QueryProfile\022 \n" +
-      "\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030" +
-      "\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003" +
-      " \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan" +
-      "\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitE" +
-      "ndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared.Que" +
-      "ryResult.QueryState\022\027\n\017total_fragments\030\t" +
-      " \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020frag",
-      "ment_profile\030\013 \003(\0132!.exec.shared.MajorFr" +
-      "agmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030" +
-      "\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030" +
-      "\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_jso" +
-      "n\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd" +
-      "\030\023 \001(\003\"t\n\024MajorFragmentProfile\022\031\n\021major_" +
-      "fragment_id\030\001 \001(\005\022A\n\026minor_fragment_prof" +
-      "ile\030\002 \003(\0132!.exec.shared.MinorFragmentPro" +
-      "file\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001" +
-      " \001(\0162\032.exec.shared.FragmentState\022(\n\005erro",
-      "r\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021mi" +
-      "nor_fragment_id\030\003 \001(\005\0226\n\020operator_profil" +
-      "e\030\004 \003(\0132\034.exec.shared.OperatorProfile\022\022\n" +
-      "\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013m" +
-      "emory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(" +
-      "\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpo" +
-      "int\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progres" +
-      "s\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_pro" +
-      "file\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023" +
-      "\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001",
-      "(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos" +
-      "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 " +
-      "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric" +
-      "Value\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfi" +
-      "le\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007" +
-      "schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_i" +
-      "d\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_va" +
-      "lue\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exe" +
-      "c.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022fun" +
-      "ction_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\t",
-      "mechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030" +
-      "\003 \001(\0162\027.exec.shared.SaslStatus*5\n\nRpcCha" +
-      "nnel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004U" +
-      "SER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002" +
-      "\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARE" +
-      "D_STATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDI" +
-      "NG\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING" +
-      "\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILE" +
-      "D\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Core" +
-      "OperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROAD",
-      "CAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREG" +
-      "ATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025" +
-      "HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020ME" +
-      "RGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SE" +
-      "NDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVE" +
-      "R\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SEL" +
-      "ECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGG" +
-      "REGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SOR" +
-      "T\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022" +
-      "\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_",
-      "SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SU" +
-      "B_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_S" +
-      "UB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_S" +
-      "CAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_" +
-      "SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODU" +
-      "CER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WI" +
-      "NDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB" +
-      "_SCAN\020$*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022" +
-      "\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n" +
-      "\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.",
-      "apache.drill.exec.protoB\rUserBitSharedH\001"
+      "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\022\023\n\017E" +
+      "XECUTION_ERROR\020\013\022\022\n\016INTERNAL_ERROR\020\014\022\025\n\021" +
+      "UNSPECIFIED_ERROR\020\r\"\246\001\n\020ExceptionWrapper" +
+      "\022\027\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001" +
+      "(\t\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.St" +
+      "ackTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035.",
+      "exec.shared.ExceptionWrapper\"\205\001\n\030StackTr" +
+      "aceElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n" +
+      "\tfile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n" +
+      "\013method_name\030\004 \001(\t\022\030\n\020is_native_method\030\005" +
+      " \001(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001" +
+      "(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(" +
+      "\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014" +
+      "record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec" +
+      ".shared.SerializedField\022)\n!carries_two_b" +
+      "yte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022",
+      "(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart.Typ" +
+      "e\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.sh" +
+      "ared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY" +
+      "\020\001\"\324\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001" +
+      "(\0132\021.common.MajorType\022(\n\tname_part\030\002 \001(\013" +
+      "2\025.exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034" +
+      ".exec.shared.SerializedField\022\023\n\013value_co" +
+      "unt\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\025\n\rbu" +
+      "ffer_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_" +
+      "id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\225\002\n\013Q",
+      "ueryResult\0228\n\013query_state\030\001 \001(\0162#.exec.s" +
+      "hared.QueryResult.QueryState\022&\n\010query_id" +
+      "\030\002 \001(\0132\024.exec.shared.QueryId\022(\n\005error\030\003 " +
+      "\003(\0132\031.exec.shared.DrillPBError\"z\n\nQueryS" +
+      "tate\022\014\n\010STARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPL" +
+      "ETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CANC" +
+      "ELLATION_REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\"p\n\tQu" +
+      "eryData\022&\n\010query_id\030\001 \001(\0132\024.exec.shared." +
+      "QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\0132" +
+      "\033.exec.shared.RecordBatchDef\"\255\001\n\tQueryIn",
+      "fo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005stat" +
+      "e\030\003 \001(\0162#.exec.shared.QueryResult.QueryS" +
+      "tate\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132\026" +
+      ".exec.DrillbitEndpoint\022\024\n\014options_json\030\006" +
+      " \001(\t\"\367\003\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec" +
+      ".shared.QueryId\022$\n\004type\030\002 \001(\0162\026.exec.sha" +
+      "red.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(" +
+      "\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007forema" +
+      "n\030\007 \001(\0132\026.exec.DrillbitEndpoint\0222\n\005state" +
+      "\030\010 \001(\0162#.exec.shared.QueryResult.QuerySt",
+      "ate\022\027\n\017total_fragments\030\t \001(\005\022\032\n\022finished" +
+      "_fragments\030\n \001(\005\022;\n\020fragment_profile\030\013 \003" +
+      "(\0132!.exec.shared.MajorFragmentProfile\022\017\n" +
+      "\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014verbose" +
+      "Error\030\016 \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\nerror_n" +
+      "ode\030\020 \001(\t\022\024\n\014options_json\030\021 \001(\t\022\017\n\007planE" +
+      "nd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 \001(\003\"t\n\024MajorF" +
+      "ragmentProfile\022\031\n\021major_fragment_id\030\001 \001(" +
+      "\005\022A\n\026minor_fragment_profile\030\002 \003(\0132!.exec" +
+      ".shared.MinorFragmentProfile\"\350\002\n\024MinorFr",
+      "agmentProfile\022)\n\005state\030\001 \001(\0162\032.exec.shar" +
+      "ed.FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.s" +
+      "hared.DrillPBError\022\031\n\021minor_fragment_id\030" +
+      "\003 \001(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.s" +
+      "hared.OperatorProfile\022\022\n\nstart_time\030\005 \001(" +
+      "\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003" +
+      "\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t " +
+      "\001(\0132\026.exec.DrillbitEndpoint\022\023\n\013last_upda" +
+      "te\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017Oper" +
+      "atorProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exe",
+      "c.shared.StreamProfile\022\023\n\013operator_id\030\003 " +
+      "\001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_nano" +
+      "s\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_l" +
+      "ocal_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 " +
+      "\003(\0132\030.exec.shared.MetricValue\022\022\n\nwait_na" +
+      "nos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 " +
+      "\001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n" +
+      "\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_" +
+      "value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Reg" +
+      "istry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003",
+      "Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signature\030" +
+      "\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t\022" +
+      "\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.sha" +
+      "red.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_CONT" +
+      "ROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryTy" +
+      "pe\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r" +
+      "\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001" +
+      "\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING" +
+      "_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003" +
+      "\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLAT",
+      "ION_REQUESTED\020\006*\335\005\n\020CoreOperatorType\022\021\n\r" +
+      "SINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n" +
+      "\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JO" +
+      "IN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_S" +
+      "ENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010" +
+      "\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJEC" +
+      "T\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SEN" +
+      "DER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_RE" +
+      "MOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_" +
+      "N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t",
+      "\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_G" +
+      "ROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM" +
+      "_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQ" +
+      "UET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEX" +
+      "T_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SU" +
+      "B_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017CO" +
+      "MPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022" +
+      "\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED" +
+      "_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$*g\n\nSaslS" +
+      "tatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022",
+      "\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022" +
+      "\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.exe" +
+      "c.protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
