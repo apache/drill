@@ -86,31 +86,32 @@ public class ScanBatch implements CloseableRecordBatch {
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    OperatorContext oContext, Iterator<RecordReader> readers,
-                   List<Map<String, String>> implicitColumns) throws ExecutionSetupException {
+                   List<Map<String, String>> implicitColumns) {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
-      throw new ExecutionSetupException("A scan batch must contain at least one reader.");
+      throw UserException.systemError(
+          new ExecutionSetupException("A scan batch must contain at least one reader."))
+        .build(logger);
     }
     currentReader = readers.next();
     this.oContext = oContext;
     allocator = oContext.getAllocator();
     mutator = new Mutator(oContext, allocator, container);
 
-    boolean setup = false;
     try {
       oContext.getStats().startProcessing();
       currentReader.setup(oContext, mutator);
-      setup = true;
-    } finally {
-      // if we had an exception during setup, make sure to release existing data.
-      if (!setup) {
-        try {
-          currentReader.close();
-        } catch(final Exception e) {
-          throw new ExecutionSetupException(e);
-        }
+    } catch (ExecutionSetupException e) {
+      try {
+        currentReader.close();
+      } catch(final Exception e2) {
+        logger.error("Close failed for reader " + currentReader.getClass().getSimpleName(), e2);
       }
+      throw UserException.systemError(e)
+            .addContext("Setup failed for", currentReader.getClass().getSimpleName())
+            .build(logger);
+    } finally {
       oContext.getStats().stopProcessing();
     }
     this.implicitColumns = implicitColumns.iterator();
@@ -173,9 +174,8 @@ public class ScanBatch implements CloseableRecordBatch {
 
         currentReader.allocate(mutator.fieldVectorMap());
       } catch (OutOfMemoryException e) {
-        logger.debug("Caught Out of Memory Exception", e);
         clearFieldVectorMap();
-        return IterOutcome.OUT_OF_MEMORY;
+        throw UserException.memoryError(e).build(logger);
       }
       while ((recordCount = currentReader.next()) == 0) {
         try {
@@ -213,17 +213,16 @@ public class ScanBatch implements CloseableRecordBatch {
           try {
             currentReader.allocate(mutator.fieldVectorMap());
           } catch (OutOfMemoryException e) {
-            logger.debug("Caught OutOfMemoryException");
             clearFieldVectorMap();
-            return IterOutcome.OUT_OF_MEMORY;
+            throw UserException.memoryError(e).build(logger);
           }
           addImplicitVectors();
         } catch (ExecutionSetupException e) {
-          this.context.fail(e);
           releaseAssets();
-          return IterOutcome.STOP;
+          throw UserException.systemError(e).build(logger);
         }
       }
+
       // At this point, the current reader has read 1 or more rows.
 
       hasReadNonEmptyFile = true;
@@ -245,18 +244,15 @@ public class ScanBatch implements CloseableRecordBatch {
         return IterOutcome.OK;
       }
     } catch (OutOfMemoryException ex) {
-      context.fail(UserException.memoryError(ex).build(logger));
-      return IterOutcome.STOP;
+      throw UserException.memoryError(ex).build(logger);
     } catch (Exception ex) {
-      logger.debug("Failed to read the batch. Stopping...", ex);
-      context.fail(ex);
-      return IterOutcome.STOP;
+      throw UserException.systemError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
   }
 
-  private void addImplicitVectors() throws ExecutionSetupException {
+  private void addImplicitVectors() {
     try {
       if (implicitVectors != null) {
         for (ValueVector v : implicitVectors.values()) {
@@ -274,7 +270,10 @@ public class ScanBatch implements CloseableRecordBatch {
         }
       }
     } catch(SchemaChangeException e) {
-      throw new ExecutionSetupException(e);
+      // No exception should be thrown here.
+      throw UserException.systemError(e)
+        .addContext("Failure while allocating implicit vectors")
+        .build(logger);
     }
   }
 
@@ -324,7 +323,7 @@ public class ScanBatch implements CloseableRecordBatch {
    * this scan batch. Made visible so that tests can create this mutator
    * without also needing a ScanBatch instance. (This class is really independent
    * of the ScanBatch, but resides here for historical reasons. This is,
-   * in turn, the only use of the genereated vector readers in the vector
+   * in turn, the only use of the generated vector readers in the vector
    * package.)
    */
 
