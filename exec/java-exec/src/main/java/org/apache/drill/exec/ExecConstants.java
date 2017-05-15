@@ -107,6 +107,8 @@ public interface ExecConstants {
   String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
+  String PROFILES_STORE_INMEMORY = "drill.exec.profiles.store.inmemory";
+  String PROFILES_STORE_CAPACITY = "drill.exec.profiles.store.capacity";
   String IMPERSONATION_ENABLED = "drill.exec.impersonation.enabled";
   String IMPERSONATION_MAX_CHAINED_USER_HOPS = "drill.exec.impersonation.max_chained_user_hops";
   String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";
