@@ -102,8 +102,9 @@ public class WorkManager implements AutoCloseable {
       final Controller controller,
       final DataConnectionCreator data,
       final ClusterCoordinator coord,
-      final PersistentStoreProvider provider) {
-    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
+      final PersistentStoreProvider provider,
+      final PersistentStoreProvider profilesProvider) {
+    dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, profilesProvider);
     statusThread.start();
 
     DrillMetrics.register("drill.fragments.running",

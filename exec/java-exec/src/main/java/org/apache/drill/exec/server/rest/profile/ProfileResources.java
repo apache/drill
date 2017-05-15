@@ -48,6 +48,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.rest.ViewableWithPermissions;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -180,8 +181,9 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
     try {
-      final PersistentStore<QueryProfile> completed = getProvider().getOrCreateStore(QueryManager.QUERY_PROFILE);
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
+      final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
+      final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
 
       final List<String> errors = Lists.newArrayList();
 
@@ -258,7 +260,7 @@ public class ProfileResources {
 
     // then check remote running
     try {
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final TransientStore<QueryInfo> running = work.getContext().getProfileStoreContext().getRunningProfileStore();
       final QueryInfo info = running.get(queryId);
       if (info != null) {
         QueryProfile queryProfile = work.getContext()
@@ -275,7 +277,7 @@ public class ProfileResources {
 
     // then check blob store
     try {
-      final PersistentStore<QueryProfile> profiles = getProvider().getOrCreateStore(QueryManager.QUERY_PROFILE);
+      final PersistentStore<QueryProfile> profiles = work.getContext().getProfileStoreContext().getCompletedProfileStore();
       final QueryProfile queryProfile = profiles.get(queryId);
       if (queryProfile != null) {
         checkOrThrowProfileViewAuthorization(queryProfile);
@@ -296,7 +298,7 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public String getProfileJSON(@PathParam("queryid") String queryId) {
     try {
-      return new String(QueryManager.QUERY_PROFILE.getSerializer().serialize(getQueryProfile(queryId)));
+      return new String(work.getContext().getProfileStoreContext().getProfileStoreConfig().getSerializer().serialize(getQueryProfile(queryId)));
     } catch (Exception e) {
       logger.debug("Failed to serialize profile for: " + queryId);
       return ("{ 'message' : 'error (unable to serialize profile)' }");
@@ -329,7 +331,7 @@ public class ProfileResources {
 
     // then check remote running
     try {
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final TransientStore<QueryInfo> running = work.getContext().getProfileStoreContext().getRunningProfileStore();
       final QueryInfo info = running.get(queryId);
       checkOrThrowQueryCancelAuthorization(info.getUser(), queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);

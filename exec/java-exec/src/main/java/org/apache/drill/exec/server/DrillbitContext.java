@@ -65,7 +65,7 @@ public class DrillbitContext implements AutoCloseable {
   private final LogicalPlanPersistence lpPersistence;
   // operator table for standard SQL operators and functions, Drill built-in UDFs
   private final DrillOperatorTable table;
-
+  private final QueryProfileStoreContext profileStoreContext;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -75,6 +75,19 @@ public class DrillbitContext implements AutoCloseable {
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
       PersistentStoreProvider provider) {
+    //PersistentStoreProvider is re-used for providing Query Profile Store as well
+    this(endpoint, context, coord, controller, connectionsPool, workBus, provider, provider);
+  }
+
+  public DrillbitContext(
+      DrillbitEndpoint endpoint,
+      BootStrapContext context,
+      ClusterCoordinator coord,
+      Controller controller,
+      DataConnectionCreator connectionsPool,
+      WorkEventBus workBus,
+      PersistentStoreProvider provider,
+      PersistentStoreProvider profileStoreProvider) {
     this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
@@ -97,6 +110,13 @@ public class DrillbitContext implements AutoCloseable {
 
     // This operator table is built once and used for all queries which do not need dynamic UDF support.
     this.table = new DrillOperatorTable(functionRegistry, systemOptions);
+
+    //This profile store context is built from the profileStoreProvider
+    this.profileStoreContext = new QueryProfileStoreContext(context.getConfig(), profileStoreProvider, coord);
+  }
+
+  public QueryProfileStoreContext getProfileStoreContext() {
+    return profileStoreContext;
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
