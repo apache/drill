@@ -17,8 +17,13 @@
  */
 package org.apache.drill.exec.hive;
 
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.calcite.util.Util;
+import org.apache.calcite.util.ConversionUtil;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -29,8 +34,10 @@ import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
@@ -43,6 +50,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(JMockit.class)
 public class TestHiveStorage extends HiveTestBase {
   @BeforeClass
   public static void setupOptions() throws Exception {
@@ -536,6 +544,23 @@ public class TestHiveStorage extends HiveTestBase {
     } finally {
       test("alter session reset `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
     }
+  }
+
+  @Test // DRILL-3250
+  public void testNonAsciiStringLiterals() throws Exception {
+    // mock calcite util method to return utf charset
+    // instead of setting saffron.default.charset at system level
+    new MockUp<Util>() {
+      @Mock
+      Charset getDefaultCharset() {
+        return Charset.forName(ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
+      }
+    };
+
+    testBuilder()
+        .sqlQuery("select * from hive.empty_table where b = 'Абвгде谢谢'")
+        .expectsEmptyResultSet()
+        .go();
   }
 
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {

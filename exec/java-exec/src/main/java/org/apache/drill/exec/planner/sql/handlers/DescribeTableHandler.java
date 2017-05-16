@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_DATA_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_IS_NULLABLE;
@@ -70,6 +69,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
       final SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
       final List<String> schemaPathGivenInCmd = Util.skipLast(table.names);
       final SchemaPlus schema = SchemaUtilites.findSchema(defaultSchema, schemaPathGivenInCmd);
+      final String charset = Util.getDefaultCharset().name();
 
       if (schema == null) {
         SchemaUtilites.throwSchemaNotFoundException(defaultSchema,
@@ -98,14 +98,14 @@ public class DescribeTableHandler extends DefaultSqlHandler {
         schemaCondition = DrillParserUtil.createCondition(
             new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),
             SqlStdOperatorTable.EQUALS,
-            SqlLiteral.createCharString(schemaPath, CHARSET, SqlParserPos.ZERO)
+            SqlLiteral.createCharString(schemaPath, charset, SqlParserPos.ZERO)
         );
       }
 
       SqlNode where = DrillParserUtil.createCondition(
           new SqlIdentifier(SHRD_COL_TABLE_NAME, SqlParserPos.ZERO),
           SqlStdOperatorTable.EQUALS,
-          SqlLiteral.createCharString(tableName, CHARSET, SqlParserPos.ZERO));
+          SqlLiteral.createCharString(tableName, charset, SqlParserPos.ZERO));
 
       where = DrillParserUtil.createCondition(schemaCondition, SqlStdOperatorTable.AND, where);
 
@@ -115,7 +115,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
             DrillParserUtil.createCondition(
                 new SqlIdentifier(COLS_COL_COLUMN_NAME, SqlParserPos.ZERO),
                 SqlStdOperatorTable.EQUALS,
-                SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
+                SqlLiteral.createCharString(node.getColumn().toString(), charset, SqlParserPos.ZERO));
       } else if (node.getColumnQualifier() != null) {
         columnFilter =
             DrillParserUtil.createCondition(
