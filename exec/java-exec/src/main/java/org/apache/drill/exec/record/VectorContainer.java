@@ -41,7 +41,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class VectorContainer implements VectorAccessible {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
@@ -148,7 +147,6 @@ public class VectorContainer implements VectorAccessible {
         return (T) newVector;
       }
     } else {
-
       vector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
       add(vector);
     }

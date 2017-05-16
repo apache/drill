@@ -58,6 +58,7 @@ public interface ColumnReader extends ColumnAccessor {
   byte[] getBytes();
   BigDecimal getDecimal();
   Period getPeriod();
+  Object getObject();
   TupleReader map();
   ArrayReader array();
 }
