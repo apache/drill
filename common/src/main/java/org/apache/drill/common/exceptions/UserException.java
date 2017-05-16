@@ -77,6 +77,14 @@ public class UserException extends DrillRuntimeException {
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
    * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
    * instead of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>
+   * This exception, previously deprecated, has been repurposed to indicate unspecified
+   * errors. In particular, the case in which a lower level bit of code throws an
+   * exception other than UserException. The catching code then only knows "something went
+   * wrong", but not enough information to categorize the error.
+   * <p>
+   * System errors also indicate illegal internal states, missing functionality, and other
+   * code-related errors -- all of which "should never occur."
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#SYSTEM
    *
@@ -84,10 +92,8 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    *
-   * @deprecated This method should never need to be used explicitly, unless you are passing the exception to the
-   *             Rpc layer or UserResultListener.submitFailed()
    */
-  @Deprecated
+
   public static Builder systemError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.SYSTEM, cause);
   }

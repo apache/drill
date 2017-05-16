@@ -2178,6 +2178,8 @@ public final class UserBitShared {
        *
        * <pre>
        * equivalent to SQLNonTransientException.
+       * - out of memory
+       * - out of disk space
        * </pre>
        */
       SYSTEM(8, 8),
@@ -2186,8 +2188,11 @@ public final class UserBitShared {
        *
        * <pre>
        * equivalent to SQLFeatureNotSupportedException
-       * - type change
-       * - schema change
+       * - unsupported operation
+       * - unexpected internal state
+       * - uncategorized operation
+       * general user action is to contact the Drill team for
+       * assiatance
        * </pre>
        */
       UNSUPPORTED_OPERATION(9, 9),
@@ -2198,6 +2203,7 @@ public final class UserBitShared {
        * SQL validation exception
        * - invalid schema path
        * - invalid entries in SQL tree
+       * - unimplemented feature, option, or execution path
        * </pre>
        */
       VALIDATION(10, 10),
@@ -2286,6 +2292,8 @@ public final class UserBitShared {
        *
        * <pre>
        * equivalent to SQLNonTransientException.
+       * - out of memory
+       * - out of disk space
        * </pre>
        */
       public static final int SYSTEM_VALUE = 8;
@@ -2294,8 +2302,11 @@ public final class UserBitShared {
        *
        * <pre>
        * equivalent to SQLFeatureNotSupportedException
-       * - type change
-       * - schema change
+       * - unsupported operation
+       * - unexpected internal state
+       * - uncategorized operation
+       * general user action is to contact the Drill team for
+       * assiatance
        * </pre>
        */
       public static final int UNSUPPORTED_OPERATION_VALUE = 9;
@@ -2306,6 +2317,7 @@ public final class UserBitShared {
        * SQL validation exception
        * - invalid schema path
        * - invalid entries in SQL tree
+       * - unimplemented feature, option, or execution path
        * </pre>
        */
       public static final int VALIDATION_VALUE = 10;

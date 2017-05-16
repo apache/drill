@@ -74,16 +74,22 @@ message DrillPBError{
      */
     RESOURCE = 7;
     /* equivalent to SQLNonTransientException.
+     * - out of memory
+     * - out of disk space
      */
     SYSTEM = 8;
     /* equivalent to SQLFeatureNotSupportedException
-     * - type change
-     * - schema change
+     * - unsupported operation
+     * - unexpected internal state
+     * - uncategorized operation
+     * general user action is to contact the Drill team for
+     * assiatance
      */
     UNSUPPORTED_OPERATION = 9;
     /* SQL validation exception
      * - invalid schema path
      * - invalid entries in SQL tree
+     * - unimplemented feature, option, or execution path
      */
     VALIDATION = 10;
   }

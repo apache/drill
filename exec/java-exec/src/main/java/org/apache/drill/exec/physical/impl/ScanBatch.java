@@ -90,7 +90,7 @@ public class ScanBatch implements CloseableRecordBatch {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
-      throw UserException.executionError(
+      throw UserException.systemError(
           new ExecutionSetupException("A scan batch must contain at least one reader."))
         .build(logger);
     }
@@ -108,7 +108,7 @@ public class ScanBatch implements CloseableRecordBatch {
       } catch(final Exception e2) {
         logger.error("Close failed for reader " + currentReader.getClass().getSimpleName(), e2);
       }
-      throw UserException.executionError(e)
+      throw UserException.systemError(e)
             .addContext("Setup failed for", currentReader.getClass().getSimpleName())
             .build(logger);
     } finally {
@@ -219,7 +219,7 @@ public class ScanBatch implements CloseableRecordBatch {
           addImplicitVectors();
         } catch (ExecutionSetupException e) {
           releaseAssets();
-          throw UserException.executionError(e).build(logger);
+          throw UserException.systemError(e).build(logger);
         }
       }
 
@@ -246,7 +246,7 @@ public class ScanBatch implements CloseableRecordBatch {
     } catch (OutOfMemoryException ex) {
       throw UserException.memoryError(ex).build(logger);
     } catch (Exception ex) {
-      throw UserException.unspecifiedError(ex).build(logger);
+      throw UserException.systemError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
@@ -271,7 +271,7 @@ public class ScanBatch implements CloseableRecordBatch {
       }
     } catch(SchemaChangeException e) {
       // No exception should be thrown here.
-      throw UserException.internalError(e)
+      throw UserException.systemError(e)
         .addContext("Failure while allocating implicit vectors")
         .build(logger);
     }
@@ -323,7 +323,7 @@ public class ScanBatch implements CloseableRecordBatch {
    * this scan batch. Made visible so that tests can create this mutator
    * without also needing a ScanBatch instance. (This class is really independent
    * of the ScanBatch, but resides here for historical reasons. This is,
-   * in turn, the only use of the genereated vector readers in the vector
+   * in turn, the only use of the generated vector readers in the vector
    * package.)
    */
 
