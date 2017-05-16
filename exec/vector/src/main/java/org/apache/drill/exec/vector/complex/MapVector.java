@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -87,6 +87,11 @@ public class MapVector extends AbstractMapVector {
       ephPair2 = from.makeSingularCopier(this);
     }
     ephPair2.copySafe(fromSubIndex, thisIndex);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (MapVector) from);
   }
 
   @Override
@@ -300,6 +305,13 @@ public class MapVector extends AbstractMapVector {
   @Override
   public Mutator getMutator() {
     return mutator;
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    // Exchange is used for look-ahead writers, but writers manage
+    // map member vectors directly.
+    throw new UnsupportedOperationException("Exchange() not supported for maps");
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {

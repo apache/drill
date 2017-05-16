@@ -15,20 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
-
-
-public interface FixedWidthVector extends ValueVector {
-
-  /**
-   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
-   *
-   * @param valueCount   Number of values in the vector.
-   */
-  void allocateNew(int valueCount);
-
 /**
- * Zero out the underlying buffer backing this vector.
+ * Tests for value vectors. Is in this module to allow use of
+ * the test tools which are available only in this module.
  */
-  void zeroVector();
-}
+package org.apache.drill.vector;
