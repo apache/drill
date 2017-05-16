@@ -455,7 +455,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return "";
     }
 
-    return ByteBufUtil.decodeString(nioBuffer(index, length), charset);
+    return ByteBufUtil.decodeString(this, index, length, charset);
   }
 
   @Override
