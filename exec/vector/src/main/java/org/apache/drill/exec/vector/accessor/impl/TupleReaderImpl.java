@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector.accessor.impl;
 
+import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 
@@ -76,21 +77,7 @@ public class TupleReaderImpl extends AbstractTupleAccessor implements TupleReade
     }
     switch (colReader.valueType()) {
     case BYTES:
-      StringBuilder buf = new StringBuilder()
-          .append("[");
-      byte value[] = colReader.getBytes();
-      int len = Math.min(value.length, 20);
-      for (int i = 0; i < len;  i++) {
-        if (i > 0) {
-          buf.append(", ");
-        }
-        buf.append((int) value[i]);
-      }
-      if (value.length > len) {
-        buf.append("...");
-      }
-      buf.append("]");
-      return buf.toString();
+      return bytesToString(colReader.getBytes());
     case DOUBLE:
       return Double.toString(colReader.getDouble());
     case INTEGER:
@@ -101,8 +88,64 @@ public class TupleReaderImpl extends AbstractTupleAccessor implements TupleReade
       return "\"" + colReader.getString() + "\"";
     case DECIMAL:
       return colReader.getDecimal().toPlainString();
+    case ARRAY:
+      return getArrayAsString(colReader.array());
     default:
       throw new IllegalArgumentException("Unsupported type " + colReader.valueType());
     }
+  }
+
+  private String bytesToString(byte[] value) {
+    StringBuilder buf = new StringBuilder()
+        .append("[");
+    int len = Math.min(value.length, 20);
+    for (int i = 0; i < len;  i++) {
+      if (i > 0) {
+        buf.append(", ");
+      }
+      buf.append((int) value[i]);
+    }
+    if (value.length > len) {
+      buf.append("...");
+    }
+    buf.append("]");
+    return buf.toString();
+  }
+
+  private String getArrayAsString(ArrayReader array) {
+    StringBuilder buf = new StringBuilder();
+    buf.append("[");
+    for (int i = 0; i < array.size(); i++) {
+      if (i > 0) {
+        buf.append( ", " );
+      }
+      switch (array.valueType()) {
+      case BYTES:
+        buf.append(bytesToString(array.getBytes(i)));
+        break;
+      case DOUBLE:
+        buf.append(Double.toString(array.getDouble(i)));
+        break;
+      case INTEGER:
+        buf.append(Integer.toString(array.getInt(i)));
+        break;
+      case LONG:
+        buf.append(Long.toString(array.getLong(i)));
+        break;
+      case STRING:
+        buf.append("\"" + array.getString(i) + "\"");
+        break;
+      case DECIMAL:
+        buf.append(array.getDecimal(i).toPlainString());
+        break;
+      case MAP:
+      case ARRAY:
+        throw new UnsupportedOperationException("Unsupported type " + array.valueType());
+      default:
+        throw new IllegalArgumentException("Unexpected type " + array.valueType());
+      }
+    }
+    buf.append("]");
+    return buf.toString();
   }
 }
