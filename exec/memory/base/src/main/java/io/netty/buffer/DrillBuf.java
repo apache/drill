@@ -748,6 +748,25 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     return this;
   }
 
+  // Clone of UDLE's setBytes(), but with bounds checking done as a boolean,
+  // not assertion.
+
+  public boolean setBytesBounded(int index, byte[] src, int srcIndex, int length) {
+    // Must do here because Drill's UDLE is not ref counted.
+    // Done as an assert to avoid production overhead: if this is going
+    // to fail, it will do so spectacularly in tests, due to a programming error.
+    assert refCnt() > 0;
+    return udle.setBytesBounded(index, src, srcIndex, length);
+  }
+
+  // As above, but for direct memory.
+
+  public boolean setBytesBounded(int index, DrillBuf src, int srcIndex, int length) {
+    // See above.
+    assert refCnt() > 0;
+    return udle.setBytesBounded(index, src.udle, srcIndex, length);
+  }
+
   @Override
   public ByteBuf setBytes(int index, byte[] src, int srcIndex, int length) {
     udle.setBytes(index + offset, src, srcIndex, length);

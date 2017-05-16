@@ -38,18 +38,12 @@ abstract class AbstractBaseReader implements FieldReader{
     super();
   }
 
-  public void setPosition(int index){
-    this.index = index;
-  }
+  public void setPosition(int index) { this.index = index; }
 
-  int idx(){
-    return index;
-  }
+  int idx() { return index; }
 
   @Override
-  public void reset() {
-    index = 0;
-  }
+  public void reset() { index = 0; }
 
   @Override
   public Iterator<String> iterator() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,6 +80,7 @@ public class UnionVector implements ValueVector {
     this.callBack = callBack;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -246,6 +247,11 @@ public class UnionVector implements ValueVector {
 
   public void copyFromSafe(int inIndex, int outIndex, UnionVector from) {
     copyFrom(inIndex, outIndex, from);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (UnionVector) from);
   }
 
   public ValueVector addVector(ValueVector v) {
@@ -484,5 +490,10 @@ public class UnionVector implements ValueVector {
 
     @Override
     public void generateTestData(int values) { }
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    throw new UnsupportedOperationException("Union vector does not yet support exchange()");
   }
 }
