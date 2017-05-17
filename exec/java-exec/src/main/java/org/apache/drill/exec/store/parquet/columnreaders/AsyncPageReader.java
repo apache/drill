@@ -39,6 +39,7 @@ import org.apache.parquet.format.Util;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.xerial.snappy.Snappy;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
@@ -86,17 +87,16 @@ class AsyncPageReader extends PageReader {
   private LinkedBlockingQueue<ReadStatus> pageQueue;
   private ConcurrentLinkedQueue<Future<Void>> asyncPageRead;
   private long totalPageValuesRead = 0;
+  private Object pageQueueSyncronize = new Object(); // Object to use to synchronize access to the page Queue.
+                                                     // FindBugs complains if we synchronize on a Concurrent Queue
 
   AsyncPageReader(ColumnReader<?> parentStatus, FileSystem fs, Path path,
       ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException {
     super(parentStatus, fs, path, columnChunkMetaData);
-    if (threadPool == null && asyncPageRead == null) {
-      threadPool = parentColumnReader.parentReader.getOperatorContext().getScanExecutor();
-      queueSize  = parentColumnReader.parentReader.readQueueSize;
-      pageQueue = new LinkedBlockingQueue<>((int)queueSize);
-      asyncPageRead = new ConcurrentLinkedQueue<>();
-      asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
-    }
+    threadPool = parentColumnReader.parentReader.getOperatorContext().getScanExecutor();
+    queueSize = parentColumnReader.parentReader.readQueueSize;
+    pageQueue = new LinkedBlockingQueue<>((int) queueSize);
+    asyncPageRead = new ConcurrentLinkedQueue<>();
   }
 
   @Override
@@ -105,20 +105,32 @@ class AsyncPageReader extends PageReader {
     if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
       try {
         assert(columnChunkMetaData.getDictionaryPageOffset() >= dataReader.getPos() );
-        dataReader.skip(columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos());
+        long bytesToSkip = columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos();
+        while (bytesToSkip > 0) {
+          long skipped = dataReader.skip(bytesToSkip);
+          if (skipped > 0) {
+            bytesToSkip -= skipped;
+          } else {
+            // no good way to handle this. Guava uses InputStream.available to check
+            // if EOF is reached and because available is not reliable,
+            // tries to read the rest of the data.
+            DrillBuf skipBuf = dataReader.getNext((int) bytesToSkip);
+            if (skipBuf != null) {
+              skipBuf.release();
+            } else {
+              throw new EOFException("End of File reached.");
+            }
+          }
+        }
       } catch (IOException e) {
         handleAndThrowException(e, "Error Reading dictionary page.");
       }
-      // parent constructor may call this method before the thread pool is set.
-      if (threadPool == null && asyncPageRead == null) {
-        threadPool = parentColumnReader.parentReader.getOperatorContext().getScanExecutor();
-        queueSize  = parentColumnReader.parentReader.getFragmentContext().getOptions()
-            .getOption(ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE).num_val;
-        pageQueue = new LinkedBlockingQueue<ReadStatus>((int)queueSize);
-        asyncPageRead = new ConcurrentLinkedQueue<>();
-        asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
-      }
     }
+  }
+
+  @Override protected void init() throws IOException {
+    super.init();
+    asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
   }
 
   private DrillBuf getDecompressedPageData(ReadStatus readStatus) {
@@ -144,35 +156,6 @@ class AsyncPageReader extends PageReader {
       }
     }
     return data;
-  }
-
-  // Read and decode the dictionary and the header
-  private void readDictionaryPage( final ColumnReader<?> parentStatus) throws UserException {
-    try {
-      Stopwatch timer = Stopwatch.createStarted();
-      ReadStatus readStatus = null;
-      synchronized(pageQueue) {
-        boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
-        asyncPageRead.poll().get(); // get the result of execution
-        readStatus = pageQueue.take(); // get the data if no exception has been thrown
-        assert (readStatus.pageData != null);
-        //if the queue was full before we took a page out, then there would
-        // have been no new read tasks scheduled. In that case, schedule a new read.
-        if (pageQueueFull) {
-          asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
-        }
-      }
-      long timeBlocked = timer.elapsed(TimeUnit.NANOSECONDS);
-      stats.timeDiskScanWait.addAndGet(timeBlocked);
-      stats.timeDiskScan.addAndGet(readStatus.getDiskScanTime());
-      stats.numDictPageLoads.incrementAndGet();
-      stats.timeDictPageLoads.addAndGet(timeBlocked + readStatus.getDiskScanTime());
-      readDictionaryPageData(readStatus, parentStatus);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (Exception e) {
-      handleAndThrowException(e, "Error reading dictionary page.");
-    }
   }
 
   // Read and decode the dictionary data
@@ -229,12 +212,11 @@ class AsyncPageReader extends PageReader {
   @Override
   protected void nextInternal() throws IOException {
     ReadStatus readStatus = null;
-    String name = parentColumnReader.columnChunkMetaData.toString();
     try {
       Stopwatch timer = Stopwatch.createStarted();
       parentColumnReader.parentReader.getOperatorContext().getStats().startWait();
       asyncPageRead.poll().get(); // get the result of execution
-      synchronized(pageQueue) {
+      synchronized (pageQueueSyncronize) {
         boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
         readStatus = pageQueue.take(); // get the data if no exception has been thrown
         if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
@@ -259,14 +241,14 @@ class AsyncPageReader extends PageReader {
       }
       pageHeader = readStatus.getPageHeader();
 
-    // TODO - figure out if we need multiple dictionary pages, I believe it may be limited to one
-    // I think we are clobbering parts of the dictionary if there can be multiple pages of dictionary
+      // TODO - figure out if we need multiple dictionary pages, I believe it may be limited to one
+      // I think we are clobbering parts of the dictionary if there can be multiple pages of dictionary
 
       do {
         if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
           readDictionaryPageData(readStatus, parentColumnReader);
           asyncPageRead.poll().get(); // get the result of execution
-          synchronized (pageQueue) {
+          synchronized (pageQueueSyncronize) {
             boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
             readStatus = pageQueue.take(); // get the data if no exception has been thrown
             if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
@@ -278,17 +260,18 @@ class AsyncPageReader extends PageReader {
               asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
             }
           }
-          assert (readStatus.pageData != null);
           pageHeader = readStatus.getPageHeader();
         }
       } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
 
-    pageHeader = readStatus.getPageHeader();
-    pageData = getDecompressedPageData(readStatus);
-    assert(pageData != null);
+      pageHeader = readStatus.getPageHeader();
+      pageData = getDecompressedPageData(readStatus);
+      assert (pageData != null);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-    } catch (Exception e){
+    } catch (RuntimeException e) { // Catch this explicitly to satisfy findbugs
+      handleAndThrowException(e, "Error reading page data");
+    } catch (Exception e) {
       handleAndThrowException(e, "Error reading page data");
     }
 
@@ -303,13 +286,14 @@ class AsyncPageReader extends PageReader {
         } else {
           f.get(1, TimeUnit.MILLISECONDS);
         }
+      } catch (RuntimeException e) {
+        // Do Nothing
       } catch (Exception e) {
         // Do nothing.
       }
     }
 
     //Empty the page queue
-    String name = parentColumnReader.columnChunkMetaData.toString();
     ReadStatus r;
     while (!pageQueue.isEmpty()) {
       r = null;
@@ -426,25 +410,10 @@ class AsyncPageReader extends PageReader {
       DrillBuf pageData = null;
       timer.reset();
       try {
-        long s = parent.dataReader.getPos();
         PageHeader pageHeader = Util.readPageHeader(parent.dataReader);
-        //long e = parent.dataReader.getPos();
-        //if (logger.isTraceEnabled()) {
-        //  logger.trace("[{}]: Read Page Header : ReadPos = {} : Bytes Read = {} ", name, s, e - s);
-        //}
         int compressedSize = pageHeader.getCompressed_page_size();
-        s = parent.dataReader.getPos();
         pageData = parent.dataReader.getNext(compressedSize);
         bytesRead = compressedSize;
-        //e = parent.dataReader.getPos();
-        //if (logger.isTraceEnabled()) {
-        //  DrillBuf bufStart = pageData.slice(0, compressedSize>100?100:compressedSize);
-        //  int endOffset = compressedSize>100?compressedSize-100:0;
-        //  DrillBuf bufEnd = pageData.slice(endOffset, compressedSize-endOffset);
-        //  logger
-        //      .trace("[{}]: Read Page Data : ReadPos = {} : Bytes Read = {} : Buf Start = {} : Buf End = {} ",
-        //          name, s, e - s, ByteBufUtil.hexDump(bufStart), ByteBufUtil.hexDump(bufEnd));
-        //}
 
         synchronized (parent) {
           if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
@@ -462,7 +431,10 @@ class AsyncPageReader extends PageReader {
           readStatus.setDiskScanTime(timeToRead);
           assert (totalValuesRead <= totalValuesCount);
         }
-        synchronized (queue) {
+        // You do need the synchronized block
+        // because you want the check to see if there is remaining capacity in the queue, to be
+        // synchronized
+        synchronized (parent.pageQueueSyncronize) {
           queue.put(readStatus);
           // if the queue is not full, schedule another read task immediately. If it is then the consumer
           // will schedule a new read task as soon as it removes a page from the queue.

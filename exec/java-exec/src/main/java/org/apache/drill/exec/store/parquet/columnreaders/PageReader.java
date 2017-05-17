@@ -46,6 +46,7 @@ import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.PrimitiveType;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -143,10 +144,6 @@ class PageReader {
             columnChunkMetaData.getStartingPos(), columnChunkMetaData.getTotalSize(), enforceTotalSize,
             useFadvise);
       }
-      dataReader.init();
-
-      loadDictionaryIfExists(parentStatus, columnChunkMetaData, dataReader);
-
     } catch (IOException e) {
       throw new ExecutionSetupException("Error opening or reading metadata for parquet file at location: "
           + path.getName(), e);
@@ -154,11 +151,33 @@ class PageReader {
 
   }
 
+  protected void init() throws IOException{
+    dataReader.init();
+    loadDictionaryIfExists(parentColumnReader, parentColumnReader.columnChunkMetaData, dataReader);
+  }
+
   protected void loadDictionaryIfExists(final org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus,
       final ColumnChunkMetaData columnChunkMetaData, final DirectBufInputStream f) throws IOException {
     Stopwatch timer = Stopwatch.createUnstarted();
     if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
-      dataReader.skip(columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos());
+      long bytesToSkip = columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos();
+      while (bytesToSkip > 0) {
+        long skipped = dataReader.skip(bytesToSkip);
+        if (skipped > 0) {
+          bytesToSkip -= skipped;
+        } else {
+          // no good way to handle this. Guava uses InputStream.available to check
+          // if EOF is reached and because available is not reliable,
+          // tries to read the rest of the data.
+          DrillBuf skipBuf = dataReader.getNext((int) bytesToSkip);
+          if (skipBuf != null) {
+            skipBuf.release();
+          } else {
+            throw new EOFException("End of File reachecd.");
+          }
+        }
+      }
+
       long start=dataReader.getPos();
       timer.start();
       final PageHeader pageHeader = Util.readPageHeader(f);
@@ -366,7 +385,7 @@ class PageReader {
     if (pageHeader.type == PageType.DICTIONARY_PAGE) {
       pageType = "Dictionary Page";
     }
-    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType.toString(),
+    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType,
         this.parentColumnReader.parentReader.hadoopPath,
         this.parentColumnReader.columnDescriptor.toString(), start, bytesin, bytesout, time);
 
