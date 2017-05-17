@@ -35,9 +35,7 @@ package org.apache.drill.exec.expr.holders;
 public final class ${className} implements ValueHolder{
   
   public static final MajorType TYPE = Types.${mode.name?lower_case}(MinorType.${minor.class?upper_case});
-  
-  public MajorType getType() {return TYPE;}
-  
+
     <#if mode.name == "Repeated">
     
     /** The first index (inclusive) into the Vector. **/
@@ -93,7 +91,9 @@ public final class ${className} implements ValueHolder{
       return ((buffer.getInt(start) & 0x80000000) != 0);
     }
     </#if></#if>
-    
+
+    public MajorType getType() {return TYPE;}
+
     @Deprecated
     public int hashCode(){
       throw new UnsupportedOperationException();

@@ -316,7 +316,9 @@ public class DrillTestWrapper {
    */
   public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches)
       throws SchemaChangeException, UnsupportedEncodingException {
-    return addToCombinedVectorResults(batches, null);
+    Map<String, List<Object>> combinedVectors = new TreeMap<>();
+    addToCombinedVectorResults(batches, null, combinedVectors);
+    return combinedVectors;
   }
 
   /**
@@ -324,18 +326,20 @@ public class DrillTestWrapper {
    * @param batches
    * @param  expectedSchema: the expected schema the batches should contain. Through SchemaChangeException
    *                       if encounter different batch schema.
-   * @return
+   * @param combinedVectors: the vectors to hold the values when iterate the batches.
+   *
+   * @return number of batches
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
-  public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema)
+  public static int addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema, Map<String, List<Object>> combinedVectors)
        throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, List<Object>> combinedVectors = new TreeMap<>();
-
+    int numBatch = 0;
     long totalRecords = 0;
     BatchSchema schema = null;
     for (VectorAccessible loader : batches)  {
+      numBatch++;
       if (expectedSchema != null) {
         if (! expectedSchema.equals(loader.getSchema())) {
           throw new SchemaChangeException(String.format("Batch schema does not match expected schema\n" +
@@ -412,12 +416,12 @@ public class DrillTestWrapper {
         }
       }
     }
-    return combinedVectors;
+    return numBatch;
   }
 
   protected void compareSchemaOnly() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    List<QueryDataBatch> actual;
+    List<QueryDataBatch> actual = null;
     QueryDataBatch batch = null;
     try {
       test(testOptionSettingQueries);
@@ -448,8 +452,10 @@ public class DrillTestWrapper {
       }
 
     } finally {
-      if (batch != null) {
-        batch.release();
+      if (actual != null) {
+        for (QueryDataBatch b : actual) {
+          b.release();
+        }
       }
       loader.clear();
     }

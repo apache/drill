@@ -55,7 +55,7 @@ public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
         throw new ExecutionSetupException(e);
       }
     }
-    return new ScanBatch(subScan, context, readers.iterator());
+    return new ScanBatch(subScan, context, readers);
   }
 
   private HBaseSubScanSpec getHBaseSubScanSpec(MapRDBSubScanSpec scanSpec) {

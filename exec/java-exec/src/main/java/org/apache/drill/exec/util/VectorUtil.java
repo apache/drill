@@ -27,6 +27,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
@@ -178,9 +180,20 @@ public class VectorUtil {
     }
   }
 
+  public static void allocateVectors(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      AllocationHelper.allocateNew(v, count);
+    }
+  }
+
+  public static void setValueCount(Iterable<ValueVector> valueVectors, int count) {
+    for (final ValueVector v : valueVectors) {
+      v.getMutator().setValueCount(count);
+    }
+  }
+
   private static int getColumnWidth(int[] columnWidths, int columnIndex) {
     return (columnWidths == null) ? DEFAULT_COLUMN_WIDTH
         : (columnWidths.length > columnIndex) ? columnWidths[columnIndex] : columnWidths[0];
   }
-
 }

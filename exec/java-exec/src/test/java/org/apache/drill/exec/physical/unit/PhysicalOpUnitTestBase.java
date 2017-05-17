@@ -207,7 +207,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         if (inputStreamsJSON != null) {
           for (List<String> batchesJson : inputStreamsJSON) {
             incomingStreams.add(new ScanBatch(null, fragContext,
-                getRecordReadersForJsonBatches(batchesJson, fragContext)));
+                getReaderListForJsonBatches(batchesJson, fragContext)));
           }
         }
 
@@ -351,5 +351,13 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     return TestUtilities.getJsonReadersFromBatchString(jsonBatches, fragContext, Collections.singletonList(SchemaPath.getSimplePath("*")));
   }
 
+  private List<RecordReader> getReaderListForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
+    Iterator<RecordReader> readers = getRecordReadersForJsonBatches(jsonBatches, fragContext);
+    List<RecordReader> readerList = new ArrayList<>();
+    while(readers.hasNext()) {
+      readerList.add(readers.next());
+    }
+    return readerList;
+  }
 
 }

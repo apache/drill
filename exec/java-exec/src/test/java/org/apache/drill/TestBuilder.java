@@ -39,6 +39,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
@@ -259,6 +261,14 @@ public class TestBuilder {
     return new CSVTestBuilder(filePath, services, query, queryType, ordered, approximateEquality,
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison,
         expectedNumBatches);
+  }
+
+  public SchemaTestBuilder schemaBaseLine(BatchSchema batchSchema) {
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = new ArrayList<>();
+    for (final MaterializedField field : batchSchema) {
+      expectedSchema.add(Pair.of(SchemaPath.getSimplePath(field.getName()), field.getType()));
+    }
+    return schemaBaseLine(expectedSchema);
   }
 
   public SchemaTestBuilder schemaBaseLine(List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {

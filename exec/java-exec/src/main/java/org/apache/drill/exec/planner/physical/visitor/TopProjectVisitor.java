@@ -133,9 +133,23 @@ public class TopProjectVisitor extends BasePrelVisitor<Prel, Void, RuntimeExcept
         prel.getCluster().getTypeFactory().getTypeSystem().isSchemaCaseSensitive());
 
     RelDataType newRowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), projections, fieldNames, null);
-    ProjectPrel topProject = new ProjectPrel(prel.getCluster(), prel.getTraitSet(), prel, projections, newRowType);
+    ProjectPrel topProject = new ProjectPrel(prel.getCluster(),
+        prel.getTraitSet(),
+        prel,
+        projections,
+        newRowType,
+        true);  //outputProj = true : NONE -> OK_NEW_SCHEMA, also handle expression with NULL type.
 
-    return prel instanceof Project && DrillRelOptUtil.isTrivialProject(topProject, true) ? prel : topProject;
+    if (prel instanceof Project && DrillRelOptUtil.isTrivialProject(topProject, true)) {
+      return new ProjectPrel(prel.getCluster(),
+          prel.getTraitSet(),
+          ((Project) prel).getInput(),
+          ((Project) prel).getProjects(),
+          prel.getRowType(),
+          true); //outputProj = true : NONE -> OK_NEW_SCHEMA, also handle expression with NULL type.
+    } else {
+      return topProject;
+    }
   }
 
 

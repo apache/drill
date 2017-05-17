@@ -480,6 +480,10 @@ public class Types {
     return type.getMinorType() == MinorType.LATE;
   }
 
+  public static boolean isUntypedNull(final MajorType type) {
+    return type.getMinorType() == MinorType.NULL;
+  }
+
   public static MajorType withMode(final MinorType type, final DataMode mode) {
     return MajorType.newBuilder().setMode(mode).setMinorType(type).build();
   }
@@ -719,4 +723,9 @@ public class Types {
     }
     return typeBuilder;
   }
+
+  public static boolean isLaterType(MajorType type) {
+    return type.getMinorType() == MinorType.LATE;
+  }
+
 }

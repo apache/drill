@@ -150,7 +150,7 @@ public class TestPartitionSender extends PlanTestBase {
       Mockito.when(sv.get(i)).thenReturn(i);
     }
 
-    final TopNBatch.SimpleRecordBatch incoming = new TopNBatch.SimpleRecordBatch(container, sv, null);
+    final TopNBatch.SimpleSV4RecordBatch incoming = new TopNBatch.SimpleSV4RecordBatch(container, sv, null);
 
     updateTestCluster(DRILLBITS_COUNT, null);
 

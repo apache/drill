@@ -151,6 +151,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       state = BatchState.OUT_OF_MEMORY;
       return;
     }
+
+    if (leftOutcome == IterOutcome.NONE && rightOutcome == IterOutcome.NONE) {
+      state = BatchState.DONE;
+      return;
+    }
+
     allocateBatch(true);
   }
 

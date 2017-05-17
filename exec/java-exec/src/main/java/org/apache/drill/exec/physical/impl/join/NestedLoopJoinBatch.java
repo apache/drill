@@ -42,6 +42,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
+import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -62,7 +63,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 /*
  * RecordBatch implementation for the nested loop join operator
  */
-public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> {
+public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoinPOP> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
 
   // Maximum number records in the outgoing batch
@@ -72,23 +73,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   protected static final int LEFT_INPUT = 0;
   protected static final int RIGHT_INPUT = 1;
 
-  // Left input to the nested loop join operator
-  private final RecordBatch left;
-
   // Schema on the left side
   private BatchSchema leftSchema = null;
 
-  // state (IterOutcome) of the left input
-  private IterOutcome leftUpstream = IterOutcome.NONE;
-
-  // Right input to the nested loop join operator.
-  private final RecordBatch right;
-
   // Schema on the right side
   private BatchSchema rightSchema = null;
-
-  // state (IterOutcome) of the right input
-  private IterOutcome rightUpstream = IterOutcome.NONE;
 
   // Runtime generated class implementing the NestedLoopJoin interface
   private NestedLoopJoin nljWorker = null;
@@ -134,11 +123,9 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       EMIT_LEFT_CONSTANT, EMIT_LEFT);
 
   protected NestedLoopJoinBatch(NestedLoopJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
-    super(popConfig, context);
+    super(popConfig, context, left, right);
     Preconditions.checkNotNull(left);
     Preconditions.checkNotNull(right);
-    this.left = left;
-    this.right = right;
   }
 
   /**
@@ -352,18 +339,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
    */
   @Override
   protected void buildSchema() throws SchemaChangeException {
-
     try {
-      leftUpstream = next(LEFT_INPUT, left);
-      rightUpstream = next(RIGHT_INPUT, right);
-
-      if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
-        state = BatchState.STOP;
-        return;
-      }
-
-      if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
-        state = BatchState.OUT_OF_MEMORY;
+      if (! prefetchFirstBatchFromBothSides()) {
         return;
       }
 

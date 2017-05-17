@@ -26,18 +26,13 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractRecordReader.class);
-
-  private static final String COL_NULL_ERROR = "Columns cannot be null. Use star column to select all fields.";
-  public static final SchemaPath STAR_COLUMN = SchemaPath.getSimplePath("*");
 
   // For text reader, the default columns to read is "columns[0]".
   protected static final List<SchemaPath> DEFAULT_TEXT_COLS_TO_READ = ImmutableList.of(new SchemaPath(new PathSegment.NameSegment("columns", new PathSegment.ArraySegment(0))));
@@ -62,7 +57,7 @@ public abstract class AbstractRecordReader implements RecordReader {
    *                  2) NULL : is NOT allowed. It requires the planner's rule, or GroupScan or ScanBatchCreator to handle NULL.
    */
   protected final void setColumns(Collection<SchemaPath> projected) {
-    Preconditions.checkNotNull(projected, COL_NULL_ERROR);
+    Preconditions.checkNotNull(projected, Utilities.COL_NULL_ERROR);
     isSkipQuery = projected.isEmpty();
     Collection<SchemaPath> columnsToRead = projected;
 
@@ -73,7 +68,7 @@ public abstract class AbstractRecordReader implements RecordReader {
       columnsToRead = getDefaultColumnsToRead();
     }
 
-    isStarQuery = isStarQuery(columnsToRead);
+    isStarQuery = Utilities.isStarQuery(columnsToRead);
     columns = transformColumns(columnsToRead);
 
     logger.debug("columns to read : {}", columns);
@@ -97,15 +92,6 @@ public abstract class AbstractRecordReader implements RecordReader {
    */
   protected boolean isSkipQuery() {
     return isSkipQuery;
-  }
-
-  public static boolean isStarQuery(Collection<SchemaPath> projected) {
-    return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {
-      @Override
-      public boolean apply(SchemaPath path) {
-        return Preconditions.checkNotNull(path).equals(STAR_COLUMN);
-      }
-    }).isPresent();
   }
 
   @Override

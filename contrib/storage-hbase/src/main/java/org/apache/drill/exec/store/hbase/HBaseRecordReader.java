@@ -126,8 +126,9 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
             HBaseUtils.andFilterAtIndex(hbaseScan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter()));
       }
     } else {
-      rowKeyOnly = false;
-      transformed.add(ROW_KEY_PATH);
+      throw new IllegalArgumentException("HBaseRecordReader does not allow column *. Column * should have been converted to list of <row_key, column family1, column family2, ..., column family_n");
+//      rowKeyOnly = false;
+//      transformed.add(ROW_KEY_PATH);
     }
 
 

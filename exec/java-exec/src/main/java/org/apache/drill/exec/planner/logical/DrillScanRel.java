@@ -42,8 +42,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.apache.drill.exec.util.Utilities;
 
 /**
  * GroupScan of a Drill table.
@@ -160,12 +159,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     final ScanStats stats = groupScan.getScanStats(settings);
     int columnCount = getRowType().getFieldCount();
     double ioCost = 0;
-    boolean isStarQuery = Iterables.tryFind(getRowType().getFieldNames(), new Predicate<String>() {
-      @Override
-      public boolean apply(String input) {
-        return Preconditions.checkNotNull(input).equals("*");
-      }
-    }).isPresent();
+    boolean isStarQuery = Utilities.isStarQuery(columns);
 
     if (isStarQuery) {
       columnCount = STAR_COLUMN_COST;

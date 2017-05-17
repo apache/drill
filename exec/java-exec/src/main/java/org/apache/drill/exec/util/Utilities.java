@@ -17,13 +17,22 @@
  */
 package org.apache.drill.exec.util;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
+import java.util.Collection;
+
 public class Utilities {
+
+  public static final SchemaPath STAR_COLUMN = SchemaPath.getSimplePath("*");
+  public static final String COL_NULL_ERROR = "Columns cannot be null. Use star column to select all fields.";
 
   public static String getFileNameForQueryFragment(FragmentContext context, String location, String tag) {
      /*
@@ -67,5 +76,19 @@ public class Utilities {
   public static String getDrillVersion() {
       String v = Utilities.class.getPackage().getImplementationVersion();
       return v;
+  }
+
+  /**
+   * Return true if list of schema path has star column.
+   * @param projected
+   * @return
+   */
+  public static boolean isStarQuery(Collection<SchemaPath> projected) {
+    return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {
+      @Override
+      public boolean apply(SchemaPath path) {
+        return Preconditions.checkNotNull(path).equals(STAR_COLUMN);
+      }
+    }).isPresent();
   }
 }

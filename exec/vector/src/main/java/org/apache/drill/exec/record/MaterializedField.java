@@ -207,6 +207,16 @@ public class MaterializedField {
     return builder.toString();
 }
 
+  /**
+   * Return true if two fields have identical MinorType and Mode.
+   * @param that
+   * @return
+   */
+  public boolean hasSameTypeAndMode(MaterializedField that) {
+    return (getType().getMinorType() == that.getType().getMinorType())
+        && (getType().getMode() == that.getType().getMode());
+  }
+
   private String toString(Collection<?> collection, int maxLen) {
     StringBuilder builder = new StringBuilder();
     builder.append(" [");

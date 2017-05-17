@@ -89,6 +89,8 @@ public class TypeHelper extends BasicTypeHelper {
 </#list>
       case GENERIC_OBJECT:
         return model._ref(ObjectHolder.class);
+    case NULL:
+      return model._ref(UntypedNullHolder.class);
       default:
         break;
       }

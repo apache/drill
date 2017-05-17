@@ -47,6 +47,6 @@ public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
         readers.add(new MockRecordReader(context, e));
       }
     }
-    return new ScanBatch(config, context, readers.iterator());
+    return new ScanBatch(config, context, readers);
   }
 }

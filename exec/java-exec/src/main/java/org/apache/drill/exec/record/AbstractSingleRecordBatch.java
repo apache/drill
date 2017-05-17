@@ -61,6 +61,10 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     }
     switch (upstream) {
     case NONE:
+      if (state == BatchState.FIRST) {
+        return handleNullInput();
+      }
+      return upstream;
     case NOT_YET:
     case STOP:
       if (state == BatchState.FIRST) {
@@ -125,4 +129,26 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
 
   protected abstract boolean setupNewSchema() throws SchemaChangeException;
   protected abstract IterOutcome doWork();
+
+  /**
+   * Default behavior to handle NULL input (aka FAST NONE): incoming return NONE before return a OK_NEW_SCHEMA:
+   * This could happen when the underneath Scan operators do not produce any batch with schema.
+   *
+   * <p>
+   * Notice that NULL input is different from input with an empty batch. In the later case, input provides
+   * at least a batch, thought it's empty.
+   *</p>
+   *
+   * <p>
+   * This behavior could be override in each individual operator, if the operator's semantics is to
+   * inject a batch with schema.
+   *</p>
+   *
+   * @return IterOutcome.NONE.
+   */
+  protected IterOutcome handleNullInput() {
+    container.buildSchema(SelectionVectorMode.NONE);
+    return IterOutcome.NONE;
+  }
+
 }
