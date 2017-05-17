@@ -1,6 +1,6 @@
 ---
 title: "Configuring Plain Authentication"
-date: 2017-03-16 23:46:05 UTC
+date: 2017-05-17 01:11:30 UTC
 parent: "Securing Drill"
 ---
 Linux PAM provides a Plain (or username and password) authentication module that interface with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
@@ -90,14 +90,23 @@ Complete the following steps to install and configure PAM for Drill:
 
 1. Add the following configuration to the drill.exec block in `<DRILL_HOME>/conf/drill-override.conf`: 
 		
-		  drill.exec {
-		   security.user.auth {
-		         enabled: true,
-		         packages += "org.apache.drill.exec.rpc.user.security",
-		         impl: "pam",
-		         pam_profiles: [ "sudo", "login" ]
-		   } 
-		  }
+              drill.exec: {
+                cluster-id: "drillbits1",
+                zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5181",
+                impersonation: {
+                  enabled: true,
+                  max_chained_user_hops: 3
+                },
+                security: {          
+                        auth.mechanisms : ["PLAIN"],
+                         },
+                security.user.auth: {
+                        enabled: true,
+                        packages += "org.apache.drill.exec.rpc.user.security",
+                        impl: "pam",
+                        pam_profiles: [ "sudo", "login" ]
+                 }
+               }
 
 1. (Optional) To add or remove different PAM profiles, add or delete the profile names in the “pam_profiles” array shown above. 
 

@@ -1,18 +1,14 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-03-17 22:31:37 UTC
+date: 2017-05-17 01:11:31 UTC
 parent: "Securing Drill"
 ---
 In release 1.10 Drill supports Kerberos v5 network security authentication.  To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill 1.10.
 
-Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos *realm* is unique authentication domain. A centralized *key distribution center (KDC)* coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special *keytab* file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create *principal* (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit. 
+Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos *realm* is unique authentication domain. A centralized *key distribution center (KDC)* coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special *keytab* file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create *principal* (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit.   
 
----
-**NOTE**
+{% include startnote.html %}Proper setup, configuration, administration, and usage of a Kerberos environment is beyond the scope of this documentation.  See the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") documentation for information about Kerberos.{% include endnote.html %}  
 
-Proper setup, configuration, administration, and usage of a Kerberos environment is beyond the scope of this documentation.  See the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") documentation for information about Kerberos.
-
----
 
 ## Prerequisites
 
@@ -66,30 +62,46 @@ During startup, a drillbit service must authenticate. At runtime, Drill uses the
 &nbsp;
 2.  Add the Kerberos principal identity and keytab file to the `drill-override.conf` file.  
 
- * The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`. 
+ * The instance name must be lowercase. Also, if \_HOST is set as the instance name in the principal, it is replaced with the fully qualified domain name of that host for the instance name. For example, if a drillbit running on `host01.aws.lab` uses `drill/_HOST@<EXAMPLE>.COM` as the principal, the canonicalized principal is `drill/host01.aws.lab@<EXAMPLE>.COM`.  
 
-             drill.exec {  
-   			    security: {  
- 			      user.auth.enabled:true,  
- 			      auth.mechanisms:[“KERBEROS”],  
- 			      auth.principal:“drill/<clustername>@<REALM>.COM”,  
- 			      auth.keytab:“/etc/drill/conf/drill.keytab”  
-				}  
-			}  
+              drill.exec: {
+                cluster-id: "drillbits1",
+                zk.connect: "qa102-81.qa.lab:2181,qa102-82.qa.lab:2181,qa102-83.qa.lab:2181",
+                impersonation: {
+                  enabled: true,
+                  max_chained_user_hops: 3
+                },
+                security: {  
+                        user.auth.enabled:true,  
+                        auth.mechanisms:[“KERBEROS”],  
+                        auth.principal:“drill/<clustername>@<REALM>.COM”,  
+                        auth.keytab:“/etc/drill/conf/drill.keytab”  
+                }
+                
+              }
 
- * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See [Installing and Connfiguring Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/#installing-and-configuring-plain-authentication) for Plain PAM configuration instructions. 
-   
-             drill.exec: {  
-              	security: {  
-              	   user.auth.enabled:true,  
-              	   user.auth.impl:"pam",  
-              	   user.auth.pam_profile:["sudo", "login"],  
-              	   auth.mechanisms:["KERBEROS","PLAIN"],  
-              	   auth.principal:"drill/<clustername>@<REALM>.COM",  
-              	   auth.keytab:"/etc/drill/conf/drill.keytab"  
-              		}  
-              	}  
+ * To configure multiple mechanisms, extend the mechanisms list and provide additional configuration parameters. For example, the following configuration enables Kerberos and Plain (username and password) mechanisms. See [Installing and Connfiguring Plain Authentication]({{site.baseurl}}/docs/configuring-plain-authentication/#installing-and-configuring-plain-authentication) for Plain PAM configuration instructions.  
 
+              drill.exec: {
+                cluster-id: "drillbits1",
+                zk.connect: "qa102-81.qa.lab:2181,qa102-82.qa.lab:2181,qa102-83.qa.lab:2181",
+                impersonation: {
+                  enabled: true,
+                  max_chained_user_hops: 3
+                },
+                security: {  
+                        user.auth.enabled:true,  
+                        auth.mechanisms:["KERBEROS","PLAIN"],  
+                        auth.principal:“drill/<clustername>@<REALM>.COM”,  
+                        auth.keytab:“/etc/drill/conf/drill.keytab”  
+                      }  
+                security.user.auth: {
+                        enabled: true,
+                        packages += "org.apache.drill.exec.rpc.user.security",
+                        impl: "pam",
+                        pam_profiles: ["sudo", "login"]
+                       }   
+                }
 
 
 &nbsp;
