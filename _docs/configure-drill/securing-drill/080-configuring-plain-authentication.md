@@ -1,6 +1,6 @@
 ---
 title: "Configuring Plain Authentication"
-date: 2017-05-17 01:11:30 UTC
+date: 2017-05-17 01:38:50 UTC
 parent: "Securing Drill"
 ---
 Linux PAM provides a Plain (or username and password) authentication module that interface with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 
@@ -61,15 +61,10 @@ To connect to a Drill from a BI tool, such as Tableau, the ODBC driver prompts y
 
 ##Installing and Configuring Plain Authentication
 
-Install and configure the provided Drill PAM for Plain (or username and password) authentication. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator.
+Install and configure the provided Drill PAM for Plain (or username and password) authentication. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator.  
 
----
+{% include startnote.html %}Do not point to an existing directory where other Hadoop components are installed. Other file system libraries can conflict with the Drill libraries and cause system errors.{% include endnote.html %}
 
-**Note**
-
-Do not point to an existing directory where other Hadoop components are installed. Other file system libraries can conflict with the Drill libraries and cause system errors. 
-
----
 
 Complete the following steps to install and configure PAM for Drill:
 

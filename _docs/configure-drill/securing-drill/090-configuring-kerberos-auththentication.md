@@ -1,13 +1,15 @@
 ---
 title: "Configuring Kerberos Authentication"
-date: 2017-05-17 01:11:31 UTC
+date: 2017-05-17 01:38:52 UTC
 parent: "Securing Drill"
 ---
 In release 1.10 Drill supports Kerberos v5 network security authentication.  To use Kerberos with Drill and establish connectivity, use the JDBC driver packaged with Drill 1.10.
 
 Kerberos allows trusted hosts to prove their identity over a network to an information system.  A Kerberos *realm* is unique authentication domain. A centralized *key distribution center (KDC)* coordinates authentication between a clients and servers. Clients and servers obtain and use tickets from the KDC using a special *keytab* file to communicate with the KDC and prove their identity to gain access to a drillbit.  Administrators must create *principal* (user or server) identities and passwords to ensure the secure exchange of mutual authentication information passed to and from the drillbit.   
 
-{% include startnote.html %}Proper setup, configuration, administration, and usage of a Kerberos environment is beyond the scope of this documentation.  See the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") documentation for information about Kerberos.{% include endnote.html %}  
+{% include startnote.html %}Proper setup, configuration, administration, and usage of a Kerberos environment is beyond the scope of this documentation.{% include endnote.html %}  
+
+See the [MIT Kerberos](http://web.mit.edu/kerberos/ "MIT Kerberos") documentation for information about Kerberos.  
 
 
 ## Prerequisites
@@ -172,15 +174,10 @@ The service principal format is `<primary>/<instance>@<realm from TGT>`. The ser
 #### Examples of Connection URLs Used with Previously Generated TGTs
 If you do not provide a service principal in the connection string when using Kerberos authentication, then use the `service_name` or `service_host` parameters. Since these parameters are optional, their default values will be used internally (if not provided) to create a valid principal.
 
-Examples 2 through 4 show a valid connection string for Kerberos authentication if a client has previously generated a TGT.  Realm information will be extracted from the TGT if it is not provided. 
+Examples 2 through 4 show a valid connection string for Kerberos authentication if a client has previously generated a TGT.  Realm information will be extracted from the TGT if it is not provided.  
 
----
+{% include startnote.html %}For end-to-end authentication to function, it is assumed that the proper principal for the drillbit service is configured in the KDC.{% include endnote.html %}
 
-**Note**
-
-For end-to-end authentication to function, it is assumed that the proper principal for the drillbit service is configured in the KDC.
-
----
 
 ##### Example 2: Drillbit Provided by Direct Connection String and Configured with a Unique Service Principal
 
