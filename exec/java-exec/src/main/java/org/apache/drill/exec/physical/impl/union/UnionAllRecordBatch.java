@@ -204,7 +204,17 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         MajorType outputFieldType = outputFields.get(index).getType();
         MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), outputFieldType);
 
-        if (outputFields.get(index).getPath().equals(inputPath.getAsUnescapedPath())) {
+        /*
+          todo: Fix if condition when DRILL-4824 is merged
+          If condition should be changed to:
+          `if (outputFields.get(index).getPath().equals(inputPath.getAsUnescapedPath())) {`
+          DRILL-5419 has changed condition to correct one but this caused regression (DRILL-5521).
+          Root cause is missing indication of child column in map types when it is null.
+          DRILL-4824 is re-working json reader implementation, including map types and will fix this problem.
+          Reverting condition to previous one to avoid regression till DRILL-4824 is merged.
+          Unit test - TestJsonReader.testKvgenWithUnionAll().
+         */
+        if (outputFields.get(index).getPath().equals(inputPath)) {
           ValueVector vvOut = container.addOrGet(outputField);
           TransferPair tp = vvIn.makeTransferPair(vvOut);
           transfers.add(tp);

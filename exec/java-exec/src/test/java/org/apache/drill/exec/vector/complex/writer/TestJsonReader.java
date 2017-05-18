@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -719,6 +719,25 @@ public class TestJsonReader extends BaseTestQuery {
     } finally {
       testNoResult("alter session reset `store.json.all_text_mode`");
       testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
+
+  @Test // DRILL-5521
+  public void testKvgenWithUnionAll() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "map.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk\": \"a\", \"m\": {\"a\":\"1\"}}");
+      }
+
+      String query = String.format("select kvgen(m) as res from (select m from dfs_test.`%s/%s` union all " +
+          "select convert_from('{\"a\" : null}' ,'json') as m from (values(1)))", directory.toPath().toString(), fileName);
+      assertEquals("Row count should match", 2, testSql(query));
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
     }
   }
 }
