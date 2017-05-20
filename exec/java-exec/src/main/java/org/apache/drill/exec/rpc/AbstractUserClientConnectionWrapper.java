@@ -30,15 +30,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractUserClientConnectionWrapper implements UserClientConnection {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractUserClientConnectionWrapper.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(AbstractUserClientConnectionWrapper.class);
 
   protected final CountDownLatch latch = new CountDownLatch(1);
 
   protected volatile DrillPBError error;
+
   protected volatile UserException exception;
 
   /**
    * Wait until the query has completed or timeout is passed.
+   *
    * @throws InterruptedException
    */
   public boolean await(final long timeoutMillis) throws InterruptedException {
@@ -47,6 +50,7 @@ public abstract class AbstractUserClientConnectionWrapper implements UserClientC
 
   /**
    * Wait indefinitely until the query is completed. Used only in case of WebUser
+   *
    * @throws Exception
    */
   public void await() throws Exception {

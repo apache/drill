@@ -18,15 +18,7 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import com.google.common.collect.ImmutableList;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.rpc.ChannelClosedException;
-import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.eclipse.jetty.security.MappedLoginService.RolePrincipal;
-import org.eclipse.jetty.server.UserIdentity;
 
 import java.security.Principal;
 import java.util.List;
@@ -50,50 +42,18 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
 
   public static final List<RolePrincipal> NON_ADMIN_PRINCIPALS = ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
 
-  protected UserSession webUserSession;
-
-  // Create a DefaultChannelPromise for each WebUserSession with null channel since there is no physical
-  // channel opened for any WebUser with the local Drillbit.
-  private final ChannelPromise sessionCloseFuture = new DefaultChannelPromise(null);
-
-
   private final String userName;
 
   private final boolean isAdmin;
 
-  public DrillUserPrincipal(final String userName, final boolean isAdmin, final UserSession userSession) {
+  public DrillUserPrincipal(final String userName, final boolean isAdmin) {
     this.userName = userName;
     this.isAdmin = isAdmin;
-    this.webUserSession = userSession;
   }
 
   @Override
   public String getName() {
     return userName;
-  }
-
-  /**
-   * Get the native WebUser Session created for a user after successful authentication.
-   *
-   * @return UserSession
-   */
-
-  public UserSession getWebUserSession() {
-    return webUserSession;
-  }
-
-  /**
-   * Dummy session close future created for each WebUserSession. Which when set will help to perform cleanup
-   * related to this WebUser session.
-   *
-   * @return ChannelPromise
-   */
-  public ChannelPromise getSessionCloseFuture() {
-    return sessionCloseFuture;
-  }
-
-  public void recycleUserSession() {
-    // default is no-op. we reuse the session for logged in user
   }
 
   /**
@@ -116,55 +76,18 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
     return isAdmin || userName.equals(queryUser);
   }
 
-  /**
-   * Get's called when {@link AbstractDrillLoginService#logout(UserIdentity)} is triggered by the WebServer
-   * SecurityHandler. It means the user session is timed out or user actually logged out of the session.
-   */
   @Override
   public void close() throws Exception {
-    // Clean up the logged user session
-    if (webUserSession != null) {
-      webUserSession.close();
-      webUserSession = null;
-    }
-
-    // Set the channel close future so that the resources related to this WebUserSession is cleaned up properly.
-    sessionCloseFuture.setFailure(new ChannelClosedException("WebUser Session is logged out"));
+    // no-op
   }
 
   /**
    * {@link DrillUserPrincipal} for anonymous (auth disabled) mode.
    */
   public static class AnonDrillUserPrincipal extends DrillUserPrincipal {
-    private final DrillbitContext drillbitContext;
 
-    public AnonDrillUserPrincipal(final DrillbitContext drillbitContext) {
-      super(ANONYMOUS_USER, true /* in anonymous (auth disabled) mode all users are admins */, null);
-      this.drillbitContext = drillbitContext;
-    }
-
-    @Override
-    public UserSession getWebUserSession() {
-      webUserSession = UserSession.Builder.newBuilder()
-          .withCredentials(UserBitShared.UserCredentials.newBuilder()
-              .setUserName(ANONYMOUS_USER)
-              .build())
-          .withOptionManager(drillbitContext.getOptionManager())
-          .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
-          .build();
-
-      return webUserSession;
-    }
-
-    /**
-     * For anonymous user we recycle the session after each query is completed.
-     */
-    @Override
-    public void recycleUserSession() {
-      if (webUserSession != null) {
-        webUserSession.close();
-        webUserSession = null;
-      }
+    public AnonDrillUserPrincipal() {
+      super(ANONYMOUS_USER, true /* in anonymous (auth disabled) mode all users are admins */);
     }
   }
 }

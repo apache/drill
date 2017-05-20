@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
-import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import javax.annotation.security.RolesAllowed;
@@ -47,8 +46,8 @@ public class QueryResources {
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject SecurityContext sc;
-  @Inject DrillUserPrincipal principal;
-  @Inject ServerConnector serverConnector;
+  @Inject WebUserConnection webUserConnection;
+
 
   @GET
   @Path("/query")
@@ -63,9 +62,11 @@ public class QueryResources {
   @Produces(MediaType.APPLICATION_JSON)
   public QueryWrapper.QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
     try {
-      return query.run(work, principal, serverConnector);
+      // Run the query
+      return query.run(work, webUserConnection);
     } finally {
-      principal.recycleUserSession();
+      // no-op for authenticated user
+      webUserConnection.cleanupSession();
     }
   }
 

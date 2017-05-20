@@ -22,14 +22,19 @@ import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import io.netty.channel.ChannelPromise;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -203,7 +208,15 @@ public class WebServer implements AutoCloseable {
     sessionManager.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
-        // No-op
+
+        // Create per session BufferAllocator and set it in session
+        final HttpSession session = se.getSession();
+        final String sessionAllocatorName = String.format("WebServer:AuthUserSession:%s", session.getId());
+        final BufferAllocator sessionAllocator = workManager.getContext().getAllocator().newChildAllocator(
+            sessionAllocatorName,
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
+        session.setAttribute(BufferAllocator.class.getSimpleName(), sessionAllocator);
       }
 
       @Override
@@ -219,10 +232,41 @@ public class WebServer implements AutoCloseable {
           securityHandler.logout(sessionAuth);
           session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
         }
+
+        // Clear all the custom attributes set as part of session
+        clearSessionCustomAttributes(session);
       }
     });
 
     return new SessionHandler(sessionManager);
+  }
+
+  private void clearSessionCustomAttributes(HttpSession session) {
+
+    // Clean up the UserSession
+    final UserSession drillUserSession = (UserSession) session.getAttribute(UserSession.class.getSimpleName());
+    if (drillUserSession != null) {
+      drillUserSession.close();
+      session.removeAttribute(UserSession.class.getSimpleName());
+    }
+
+    // Set Failure in sessionCloseFuture which will notify listeners for all in-flight queries associated with this
+    // session.
+    final ChannelPromise sessionCloseFuture =
+        (ChannelPromise) session.getAttribute(ChannelPromise.class.getSimpleName());
+
+    if (sessionCloseFuture != null) {
+      sessionCloseFuture.setFailure(new ChannelClosedException("Logged in user Http Session is closed."));
+      session.removeAttribute(ChannelPromise.class.getSimpleName());
+    }
+
+    // Clean up the BufferAllocator set for this session
+    final BufferAllocator allocator = (BufferAllocator) session.getAttribute(BufferAllocator.class.getSimpleName());
+
+    if(allocator != null) {
+      allocator.close();
+      session.removeAttribute(BufferAllocator.class.getSimpleName());
+    }
   }
 
   /**

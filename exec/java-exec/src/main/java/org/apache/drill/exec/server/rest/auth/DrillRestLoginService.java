@@ -18,10 +18,8 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -68,21 +66,12 @@ public class DrillRestLoginService extends AbstractDrillLoginService {
 
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
 
-      // Create a native UserSession for the authenticated user.
-      final UserSession webSession = UserSession.Builder.newBuilder()
-          .withCredentials(UserBitShared.UserCredentials.newBuilder()
-              .setUserName(username)
-              .build())
-          .withOptionManager(sysOptions)
-          .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
-          .build();
-
       final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(username,
           sysOptions.getOption(ExecConstants.ADMIN_USERS_KEY).string_val,
           sysOptions.getOption(ExecConstants.ADMIN_USER_GROUPS_KEY).string_val);
 
       // Create the UserPrincipal corresponding to logged in user.
-      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin, webSession);
+      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin);
 
       final Subject subject = new Subject();
       subject.getPrincipals().add(userPrincipal);
