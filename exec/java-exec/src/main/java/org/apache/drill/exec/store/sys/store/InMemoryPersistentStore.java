@@ -15,28 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.testing.store;
+package org.apache.drill.exec.store.sys.store;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
+import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
-import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 
-public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
+import com.google.common.collect.Iterables;
+
+public class InMemoryPersistentStore<V> extends BasePersistentStore<V> {
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryPersistentStore.class);
+
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(readWriteLock.writeLock());
-  private final ConcurrentMap<String, V> store = Maps.newConcurrentMap();
+  private final ConcurrentSkipListMap<String, V> store;
   private int version = -1;
+  private final int maxCapacity;
+  private final AtomicInteger currentSize = new AtomicInteger();
+
+  public InMemoryPersistentStore(PersistentStoreConfig<V> config) {
+    this.maxCapacity = config.getMaxCapacity();
+    //Allows us to trim out the oldest elements to maintain finite max size
+    this.store = new ConcurrentSkipListMap<String, V>();
+  }
 
   @Override
   public void delete(final String key) {
@@ -48,7 +59,7 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
 
   @Override
   public PersistentStoreMode getMode() {
-    return PersistentStoreMode.PERSISTENT;
+    return PersistentStoreMode.BLOB_PERSISTENT;
   }
 
   @Override
@@ -93,6 +104,12 @@ public class NoWriteLocalStore<V> extends BasePersistentStore<V> {
         throw new VersionMismatchException("Version mismatch detected", dataChangeVersion.getVersion());
       }
       store.put(key, value);
+      if (currentSize.incrementAndGet() > maxCapacity) {
+        //Pop Out Oldest
+        store.pollLastEntry();
+        currentSize.decrementAndGet();
+      }
+
       version++;
     }
   }

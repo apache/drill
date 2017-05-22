@@ -38,11 +38,23 @@ public class PersistentStoreConfig<V> {
   private final String name;
   private final InstanceSerializer<V> valueSerializer;
   private final PersistentStoreMode mode;
+  private final boolean inMemory;
+  private final int maxCapacity;
 
-  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode) {
+  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode, boolean inMemory, int maxCapacity) {
     this.name = name;
     this.valueSerializer = valueSerializer;
     this.mode = mode;
+    this.inMemory = inMemory;
+    this.maxCapacity = maxCapacity;
+  }
+
+  public boolean isInMemory() {
+    return inMemory;
+  }
+
+  public int getMaxCapacity() {
+    return maxCapacity;
   }
 
   public PersistentStoreMode getMode() {
@@ -85,6 +97,8 @@ public class PersistentStoreConfig<V> {
     private String name;
     private InstanceSerializer<V> serializer;
     private PersistentStoreMode mode = PersistentStoreMode.PERSISTENT;
+    private boolean inMemory = false;
+    private int maxCapacity = Integer.MAX_VALUE;
 
     protected StoreConfigBuilder(InstanceSerializer<V> serializer) {
       super();
@@ -106,9 +120,19 @@ public class PersistentStoreConfig<V> {
       return this;
     }
 
+    public StoreConfigBuilder<V> setInMemory() {
+      this.inMemory = true;
+      return this;
+    }
+
+    public StoreConfigBuilder<V> setMaxCapacity(int maxCapacity) {
+      this.maxCapacity = maxCapacity;
+      return this;
+    }
+
     public PersistentStoreConfig<V> build(){
       Preconditions.checkNotNull(name);
-      return new PersistentStoreConfig<>(name, serializer, mode);
+      return new PersistentStoreConfig<>(name, serializer, mode, inMemory, maxCapacity);
     }
   }
 

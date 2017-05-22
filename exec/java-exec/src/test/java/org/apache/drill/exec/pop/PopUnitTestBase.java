@@ -51,7 +51,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
     // Properties here mimic those in drill-root/pom.xml, Surefire plugin
     // configuration. They allow tests to run successfully in Eclipse.
 
-    props.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+    props.put(ExecConstants.SYS_STORE_PROFILES_INMEMORY, "true");
     props.put(ExecConstants.HTTP_ENABLE, "false");
     props.put(Drillbit.SYSTEM_OPTIONS_NAME, "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on");
     props.put(QueryTestUtil.TEST_QUERY_PRINTING_SILENT, "true");

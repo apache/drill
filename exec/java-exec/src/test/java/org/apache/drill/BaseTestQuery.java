@@ -82,7 +82,7 @@ public class BaseTestQuery extends ExecTest {
   @SuppressWarnings("serial")
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
     {
-      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+      put(ExecConstants.SYS_STORE_PROFILES_INMEMORY, "true");
       put(ExecConstants.HTTP_ENABLE, "false");
     }
   };

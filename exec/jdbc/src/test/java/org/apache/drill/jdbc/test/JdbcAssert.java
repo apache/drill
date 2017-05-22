@@ -70,7 +70,7 @@ public class JdbcAssert {
     // Must set this to false to ensure that the tests ignore any existing
     // plugin configurations stored in /tmp/drill.
 
-    properties.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
+    properties.setProperty(ExecConstants.SYS_STORE_PROFILES_INMEMORY, "true");
     properties.setProperty(ExecConstants.HTTP_ENABLE, "false");
     return properties;
   }

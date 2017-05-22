@@ -276,7 +276,7 @@ public class FixtureBuilder {
    */
 
   public FixtureBuilder saveProfiles() {
-    configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, true);
+    configProperty(ExecConstants.SYS_STORE_PROFILES_INMEMORY, false);
     systemOption(ExecConstants.ENABLE_QUERY_PROFILE_OPTION, true);
     systemOption(ExecConstants.QUERY_PROFILE_DEBUG_OPTION, true);
     return this;

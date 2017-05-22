@@ -80,7 +80,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // Properties here mimic those in drill-root/pom.xml, Surefire plugin
       // configuration. They allow tests to run successfully in Eclipse.
 
-      put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false);
+      put(ExecConstants.SYS_STORE_PROFILES_INMEMORY, true);
 
       // The CTTAS function requires that the default temporary workspace be
       // writable. By default, the default temporary workspace points to
@@ -118,7 +118,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // storage. Profiles will go here when running in distributed
       // mode.
 
-      put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/log");
+      put(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/log");
     }
   };
 
@@ -747,7 +747,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public File getProfileDir() {
     File baseDir;
     if (usesZk) {
-      baseDir = new File(config.getString(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
+      baseDir = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT));
     } else {
       baseDir = getDrillTempDir();
     }

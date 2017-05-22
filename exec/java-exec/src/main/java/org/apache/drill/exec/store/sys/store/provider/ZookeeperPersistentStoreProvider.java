@@ -22,20 +22,20 @@ import java.io.IOException;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.store.InMemoryPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.hadoop.fs.Path;
 
 public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvider {
 //  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
-
-  public static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
 
   private final CuratorFramework curator;
   private final DrillFileSystem fs;
@@ -49,8 +49,8 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public ZookeeperPersistentStoreProvider(final DrillConfig config, final CuratorFramework curator) throws StoreException {
     this.curator = curator;
 
-    if (config.hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
-      blobRoot = new Path(config.getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
+    if (config.hasPath(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
+      blobRoot = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_ZK_BLOBROOT));
     }else{
       blobRoot = LocalPersistentStore.getLogDir();
     }
@@ -66,7 +66,12 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
-      return new LocalPersistentStore<>(fs, blobRoot, config);
+      //Check for InMemory requirement
+      if (config.isInMemory()) {
+        return new InMemoryPersistentStore<>(config);
+      } else {
+        return new LocalPersistentStore<>(fs, blobRoot, config);
+      }
     case PERSISTENT:
       final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
       try {
