@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,16 +29,15 @@ import org.codehaus.janino.util.Traverser;
 import com.google.common.collect.Lists;
 
 
-public class ImportGrabber{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImportGrabber.class);
+public class ImportGrabber {
 
-  private List<String> imports = Lists.newArrayList();
+  private final List<String> imports = Lists.newArrayList();
   private final ImportFinder finder = new ImportFinder();
 
   private ImportGrabber() {
   }
 
-  public class ImportFinder extends Traverser{
+  public class ImportFinder extends Traverser {
 
     @Override
     public void traverseSingleTypeImportDeclaration(SingleTypeImportDeclaration stid) {
@@ -63,9 +62,21 @@ public class ImportGrabber{
 
   }
 
-  public static List<String> getMethods(Java.CompilationUnit cu){
-    ImportGrabber visitor = new ImportGrabber();
-    cu.getPackageMemberTypeDeclarations()[0].accept(visitor.finder.comprehensiveVisitor());
+  /**
+   * Creates list of imports that are present in compilation unit.
+   * For example:
+   * [import io.netty.buffer.DrillBuf;, import org.apache.drill.exec.expr.DrillSimpleFunc;]
+   *
+   * @param compilationUnit compilation unit
+   * @return list of imports
+   */
+  public static List<String> getImports(Java.CompilationUnit compilationUnit){
+    final ImportGrabber visitor = new ImportGrabber();
+
+    for (Java.CompilationUnit.ImportDeclaration importDeclaration : compilationUnit.importDeclarations) {
+      importDeclaration.accept(visitor.finder.comprehensiveVisitor());
+    }
+
     return visitor.imports;
   }
 
