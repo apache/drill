@@ -42,6 +42,7 @@
     <mapr.release.version>5.2.1-mapr</mapr.release.version>
     <ojai.version>1.1</ojai.version>
     <kerby.version>1.0.0-RC2</kerby.version>
+    <findbugs.version>3.0.0</findbugs.version>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
@@ -299,7 +300,6 @@
         </executions>
       </plugin>
 
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -459,6 +459,16 @@
             <goals>deploy</goals>
             <arguments>-Papache-release ${arguments}</arguments>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>xml-maven-plugin</artifactId>
+          <version>1.0</version>
         </plugin>
 
         <!--This plugin's configuration is used to store Eclipse m2e settings
@@ -2218,6 +2228,88 @@
       <modules>
         <module>contrib</module>
       </modules>
+    </profile>
+    <profile>
+      <id>findbugs</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <configuration>
+              <!--
+               Enables analysis which takes more memory but finds more bugs.
+               If you run out of memory, changes the value of the effort element
+               to 'Low'.
+               -->
+              <effort>Normal</effort>
+              <!-- Reports all bugs (other values are medium and max) -->
+              <threshold>Low</threshold>
+              <!-- Build doesn't fail if problems are found -->
+              <failOnError>false</failOnError>
+              <!-- Produces XML report -->
+              <xmlOutput>true</xmlOutput>
+              <!-- Configures the directory in which the XML report is created -->
+              <findbugsXmlOutputDirectory>${project.build.directory}/findbugs
+              </findbugsXmlOutputDirectory>
+            </configuration>
+            <executions>
+              <!--
+                Ensures that FindBugs inspects source code when project is compiled.
+              -->
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>xml-maven-plugin</artifactId>
+            <version>1.0</version>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>transform</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <transformationSets>
+                <transformationSet>
+                  <dir>${project.build.directory}/findbugs</dir>
+                  <outputDir>${project.build.directory}/findbugs</outputDir>
+                  <stylesheet>fancy-hist.xsl</stylesheet>
+                  <!--<stylesheet>default.xsl</stylesheet>-->
+                  <!--<stylesheet>plain.xsl</stylesheet>-->
+                  <!--<stylesheet>fancy.xsl</stylesheet>-->
+                  <!--<stylesheet>summary.xsl</stylesheet>-->
+                  <fileMappers>
+                    <fileMapper
+                            implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                      <targetExtension>.html</targetExtension>
+                    </fileMapper>
+                  </fileMappers>
+                </transformationSet>
+              </transformationSets>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>findbugs</artifactId>
+                <version>2.0.0</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
   <modules>
