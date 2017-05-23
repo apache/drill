@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-01-24 22:24:26 UTC
+date: 2017-05-23 23:46:31 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -56,7 +56,7 @@ To install the driver, complete the following steps:
 
 To check the version of the driver you installed, use the following command on the terminal command line:
 
-    $ pkgutil -pkg-info mapr.drillodbc  
+    $ pkgutil --pkg-info mapr.drillodbc  
 
     package-id: mapr.drillodbc
     version: 1.3.0 (You may see 3.52.12.)
