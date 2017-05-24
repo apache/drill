@@ -33,6 +33,7 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AnonDrillUserPrincipal;
 import org.apache.drill.exec.server.rest.profile.ProfileResources;
+import org.apache.drill.exec.server.rest.WebUserConnection.AnonWebUserConnection;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
@@ -227,7 +228,7 @@ public class DrillRestServer extends ResourceConfig {
       session.setAttribute(ChannelPromise.class.getSimpleName(), closeFuture);
 
       // Create a AnonWenUserConnection for this request
-      return new WebUserConnection.AnonWebUserConnection(sessionAllocator, drillUserSession, remoteAddress, closeFuture);
+      return new AnonWebUserConnection(sessionAllocator, drillUserSession, remoteAddress, closeFuture);
     }
 
     @Override

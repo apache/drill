@@ -34,7 +34,6 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -131,8 +130,7 @@ public class WebServer implements AutoCloseable {
       return;
     }
     final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
-    if (authEnabled && !context.getAuthProvider()
-        .containsFactory(PlainFactory.SIMPLE_NAME)) {
+    if (authEnabled && !context.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
       logger.warn("Not starting web server. Currently Drill supports web authentication only through " +
           "username/password. But PLAIN mechanism is not configured.");
       return;
@@ -241,6 +239,10 @@ public class WebServer implements AutoCloseable {
     return new SessionHandler(sessionManager);
   }
 
+  /**
+   * Cleanup all the resources held as part of the input {@link HttpSession}
+   * @param session
+   */
   private void clearSessionCustomAttributes(HttpSession session) {
 
     // Clean up the UserSession
@@ -263,7 +265,7 @@ public class WebServer implements AutoCloseable {
     // Clean up the BufferAllocator set for this session
     final BufferAllocator allocator = (BufferAllocator) session.getAttribute(BufferAllocator.class.getSimpleName());
 
-    if(allocator != null) {
+    if (allocator != null) {
       allocator.close();
       session.removeAttribute(BufferAllocator.class.getSimpleName());
     }

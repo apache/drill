@@ -23,7 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.work.WorkManager;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -54,27 +55,14 @@ public class QueryWrapper {
   }
 
   public QueryType getType() {
-    QueryType type = QueryType.SQL;
-    switch (queryType) {
-      case "SQL":
-        type = QueryType.SQL;
-        break;
-      case "LOGICAL":
-        type = QueryType.LOGICAL;
-        break;
-      case "PHYSICAL":
-        type = QueryType.PHYSICAL;
-        break;
-    }
-    return type;
+    return QueryType.valueOf(queryType);
   }
 
   public QueryResult run(final WorkManager workManager, final WebUserConnection webUserConnection) throws Exception {
 
-    final UserProtos.RunQuery runQuery = UserProtos.RunQuery.getDefaultInstance().newBuilderForType()
-        .setType(getType())
+    final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
         .setPlan(getQuery())
-        .setResultsMode(UserProtos.QueryResultsMode.STREAM_FULL)
+        .setResultsMode(QueryResultsMode.STREAM_FULL)
         .build();
 
     // Submit user query to Drillbit work queue.
@@ -83,7 +71,9 @@ public class QueryWrapper {
     // Wait until the query execution is complete or there is error submitting the query
     webUserConnection.await();
 
-    logger.trace("Query {} is completed ", queryId);
+    if (logger.isTraceEnabled()) {
+      logger.trace("Query {} is completed ", queryId);
+    }
 
     if (webUserConnection.results.isEmpty()) {
       webUserConnection.results.add(Maps.<String, String>newHashMap());

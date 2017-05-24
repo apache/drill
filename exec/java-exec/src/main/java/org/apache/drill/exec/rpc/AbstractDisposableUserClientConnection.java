@@ -20,18 +20,24 @@ package org.apache.drill.exec.rpc;
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.proto.GeneralRPCProtos;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractUserClientConnectionWrapper implements UserClientConnection {
+/**
+ * Helps to run a query and await on the results. All the inheriting sub-class manages the session/connection
+ * state and submits query with respect to that state. The subclass instance lifetime is per query lifetime
+ * and is not re-used.
+ */
+public abstract class AbstractDisposableUserClientConnection implements UserClientConnection {
   private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(AbstractUserClientConnectionWrapper.class);
+      org.slf4j.LoggerFactory.getLogger(AbstractDisposableUserClientConnection.class);
 
   protected final CountDownLatch latch = new CountDownLatch(1);
 
@@ -61,12 +67,12 @@ public abstract class AbstractUserClientConnectionWrapper implements UserClientC
   }
 
   @Override
-  public void sendResult(RpcOutcomeListener<GeneralRPCProtos.Ack> listener, QueryResult result) {
+  public void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result) {
 
     Preconditions.checkState(result.hasQueryState());
 
     // Release the wait latch if the query is terminated.
-    final QueryResult.QueryState state = result.getQueryState();
+    final QueryState state = result.getQueryState();
     final QueryId queryId = result.getQueryId();
 
     if (logger.isDebugEnabled()) {

@@ -24,34 +24,32 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
-import org.apache.drill.exec.proto.GeneralRPCProtos;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.AbstractUserClientConnectionWrapper;
+import org.apache.drill.exec.rpc.AbstractDisposableUserClientConnection;
 import org.apache.drill.exec.rpc.Acks;
-import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector.Accessor;
 
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class WebUserConnection extends AbstractUserClientConnectionWrapper implements ConnectionThrottle {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebUserConnection.class);
+/**
+ * WebUserConnectionWrapper which represents the UserClientConnection for the WebUser submitting the query. It provides
+ * access to the UserSession executing the query. There is no actual physical channel corresponding to this connection
+ * wrapper.
+ */
 
-  /**
-   * WebUserConnectionWrapper which represents the UserClientConnection for the WebUser submitting the query. It provides
-   * access to the UserSession executing the query. There is no actual physical channel corresponding to this connection
-   * wrapper.
-   */
+public class WebUserConnection extends AbstractDisposableUserClientConnection implements ConnectionThrottle {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebUserConnection.class);
 
   protected BufferAllocator allocator;
 
@@ -79,7 +77,7 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
   }
 
   @Override
-  public void sendData(RpcOutcomeListener<GeneralRPCProtos.Ack> listener, QueryWritableBatch result) {
+  public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result) {
 
     // Check if there is any data or not. There can be overflow here but DrillBuf doesn't support allocating with
     // bytes in long. Hence we are just preserving the earlier behavior and logging debug log for the case.
@@ -87,10 +85,9 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
 
     if (dataByteCount <= 0) {
       if (logger.isDebugEnabled()) {
-        logger.debug("Either no data received for this query or there is BufferOverflow in dataByteCount: {}",
+        logger.debug("Either no data received in this batch or there is BufferOverflow in dataByteCount: {}",
             dataByteCount);
       }
-      latch.countDown();
       listener.success(Acks.OK, null);
       return;
     }
@@ -118,7 +115,7 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
           final Map<String, String> record = Maps.newHashMap();
           for (VectorWrapper<?> vw : loader) {
             final String field = vw.getValueVector().getMetadata().getNamePart().getName();
-            final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
+            final Accessor accessor = vw.getValueVector().getAccessor();
             final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
             final String display = value == null ? null : value.toString();
             record.put(field, display);
@@ -128,16 +125,13 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
       } finally {
         loader.clear();
       }
-    } catch (Exception e) { // not catching OOM here
+    } catch (Exception e) {
       exception = UserException.systemError(e).build(logger);
-      latch.countDown();
     } finally {
+      // Notify the listener with ACK.OK both in error/success case because data was send successfully from Drillbit.
       bufferWithData.release();
+      listener.success(Acks.OK, null);
     }
-
-    // Notify the listener with ACK.OK because data is send successfully from Drillbit even though there is error found
-    // during processing.
-    listener.success(Acks.OK, null);
   }
 
   @Override
@@ -156,8 +150,8 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
   }
 
   /**
-   * For anonymous WebUserSession it is called after each query request whereas for Authenticated WebUserSession
-   * it is never called.
+   * For authenticated WebUser no cleanup of {@link UserSession} or {@link BufferAllocator} is done since it's re-used
+   * for all the queries until lifetime of the web session.
    */
   public void cleanupSession() {
     // no-op
@@ -171,8 +165,8 @@ public class WebUserConnection extends AbstractUserClientConnectionWrapper imple
     }
 
     /**
-     * For anonymous WebUserSession it is called after each query request whereas for Authenticated WebUserSession
-     * it is never called.
+     * For anonymous WebUser after each query request is completed the resources for {@link UserSession} and
+     * {@link BufferAllocator} is cleaned up.
      */
     @Override
     public void cleanupSession() {

@@ -43,7 +43,7 @@ import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
-import org.apache.drill.exec.rpc.AbstractUserClientConnectionWrapper;
+import org.apache.drill.exec.rpc.AbstractDisposableUserClientConnection;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
@@ -65,7 +65,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.drill.exec.ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS;
-import static org.apache.drill.exec.proto.UserProtos.RequestStatus.*;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.FAILED;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.OK;
+import static org.apache.drill.exec.proto.UserProtos.RequestStatus.TIMEOUT;
 
 /**
  * Contains worker {@link Runnable} for creating a prepared statement and helper methods.
@@ -223,7 +225,7 @@ public class PreparedStatementProvider {
   /**
    * Decorator around {@link UserClientConnection} to tap the query results for LIMIT 0 query.
    */
-  private static class UserClientConnectionWrapper extends AbstractUserClientConnectionWrapper {
+  private static class UserClientConnectionWrapper extends AbstractDisposableUserClientConnection {
     private final UserClientConnection inner;
 
     private volatile List<SerializedField> fields;

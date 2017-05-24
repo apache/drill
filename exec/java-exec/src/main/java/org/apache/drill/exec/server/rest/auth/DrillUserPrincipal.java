@@ -25,9 +25,9 @@ import java.util.List;
 
 
 /**
- * Captures Drill user credentials and resources in a session.
+ * Captures Drill user credentials and privilege's of the session user.
  */
-public class DrillUserPrincipal implements Principal, AutoCloseable {
+public class DrillUserPrincipal implements Principal {
   public static final String ANONYMOUS_USER = "anonymous";
 
   public static final String AUTHENTICATED_ROLE = "authenticated";
@@ -74,11 +74,6 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
    */
   public boolean canManageQueryOf(final String queryUser) {
     return isAdmin || userName.equals(queryUser);
-  }
-
-  @Override
-  public void close() throws Exception {
-    // no-op
   }
 
   /**

@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -60,7 +61,7 @@ public class QueryResources {
   @Path("/query.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public QueryWrapper.QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
+  public QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
     try {
       // Run the query
       return query.run(work, webUserConnection);
@@ -78,7 +79,7 @@ public class QueryResources {
                               @FormParam("queryType") String queryType) throws Exception {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
+      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
 
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result));
     } catch (Exception | Error e) {
@@ -91,7 +92,7 @@ public class QueryResources {
     private final List<String> columns;
     private final List<List<String>> rows;
 
-    public TabularResult(QueryWrapper.QueryResult result) {
+    public TabularResult(QueryResult result) {
       final List<List<String>> rows = Lists.newArrayList();
       for (Map<String, String> rowMap:result.rows) {
         final List<String> row = Lists.newArrayList();
