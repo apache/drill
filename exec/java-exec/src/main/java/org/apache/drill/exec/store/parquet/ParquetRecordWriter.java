@@ -50,12 +50,12 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.bytes.CapacityByteArrayOutputStream;
 import org.apache.parquet.column.ColumnWriteStore;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.impl.ColumnWriteStoreV1;
-import org.apache.parquet.column.page.PageWriteStore;
 import org.apache.parquet.hadoop.CodecFactory;
-import org.apache.parquet.hadoop.ColumnChunkPageWriteStoreExposer;
+import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.io.ColumnIOFactory;
@@ -100,7 +100,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
 
   private ColumnWriteStore store;
-  private PageWriteStore pageStore;
+  private ParquetColumnChunkPageWriteStore pageStore;
 
   private RecordConsumer consumer;
   private BatchSchema batchSchema;
@@ -206,11 +206,21 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     schema = new MessageType("root", types);
 
+    // We don't want this number to be too small, ideally we divide the block equally across the columns.
+    // It is unlikely all columns are going to be the same size.
+    // Its value is likely below Integer.MAX_VALUE (2GB), although rowGroupSize is a long type.
+    // Therefore this size is cast to int, since allocating byte array in under layer needs to
+    // limit the array size in an int scope.
     int initialBlockBufferSize = max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5);
-    pageStore = ColumnChunkPageWriteStoreExposer.newColumnChunkPageWriteStore(this.oContext,
-        codecFactory.getCompressor(codec),
-        schema);
+    // We don't want this number to be too small either. Ideally, slightly bigger than the page size,
+    // but not bigger than the block buffer
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
+    // TODO: Use initialSlabSize from ParquetProperties once drill will be updated to the latest version of Parquet library
+    int initialSlabSize = CapacityByteArrayOutputStream.initialSlabSizeHeuristic(64, pageSize, 10);
+    // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
+    // once PARQUET-1006 will be resolved
+    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, initialSlabSize,
+        pageSize, new ParquetDirectByteBufferAllocator(oContext));
     store = new ColumnWriteStoreV1(pageStore, pageSize, initialPageBufferSize, enableDictionary,
         writerVersion, new ParquetDirectByteBufferAllocator(oContext));
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
@@ -263,26 +273,27 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   }
 
   private void flush() throws IOException {
-    if (recordCount > 0) {
-      parquetFileWriter.startBlock(recordCount);
-      consumer.flush();
-      store.flush();
-      ColumnChunkPageWriteStoreExposer.flushPageStore(pageStore, parquetFileWriter);
-      recordCount = 0;
-      parquetFileWriter.endBlock();
+    try {
+      if (recordCount > 0) {
+        parquetFileWriter.startBlock(recordCount);
+        consumer.flush();
+        store.flush();
+        pageStore.flushToFileWriter(parquetFileWriter);
+        recordCount = 0;
+        parquetFileWriter.endBlock();
 
-      // we are writing one single block per file
-      parquetFileWriter.end(extraMetaData);
-      parquetFileWriter = null;
+        // we are writing one single block per file
+        parquetFileWriter.end(extraMetaData);
+        parquetFileWriter = null;
+      }
+    } finally {
+      store.close();
+      pageStore.close();
+
+      store = null;
+      pageStore = null;
+      index++;
     }
-
-    store.close();
-    // TODO(jaltekruse) - review this close method should no longer be necessary
-//    ColumnChunkPageWriteStoreExposer.close(pageStore);
-
-    store = null;
-    pageStore = null;
-    index++;
   }
 
   private void checkBlockSizeReached() throws IOException {
