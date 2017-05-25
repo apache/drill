@@ -760,7 +760,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
-  Test the reading of a binary field as drill varbinary where data is in dicationary _and_ non-dictionary encoded pages
+  Test the reading of a binary field as drill varbinary where data is in dictionary _and_ non-dictionary encoded pages
    */
   @Test
   public void testImpalaParquetBinaryAsVarBinary_DictChange() throws Exception {
@@ -768,7 +768,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
-  Test the reading of a binary field as drill timestamp where data is in dicationary _and_ non-dictionary encoded pages
+  Test the reading of a binary field as drill timestamp where data is in dictionary _and_ non-dictionary encoded pages
    */
   @Test
   @Ignore("relies on particular time zone, works for UTC")
