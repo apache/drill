@@ -37,31 +37,6 @@ import static org.junit.Assert.assertTrue;
 public class TestPcapDecoder extends BaseTestQuery {
   private static File bigFile;
 
-  /**
-   * Creates an ephemeral file of about a GB in size
-   *
-   * @throws IOException If input file can't be read or output can't be written.
-   */
-  @BeforeClass
-  public static void buildBigTcpFile() throws IOException {
-    bigFile = File.createTempFile("tcp", ".pcap");
-    bigFile.deleteOnExit();
-    boolean first = true;
-    System.out.printf("Building large test file\n");
-    try (DataOutputStream out = new DataOutputStream(new FileOutputStream(bigFile))) {
-      for (int i = 0; i < 1000e6 / (29208 - 24) + 1; i++) {
-        // might be faster to keep this open and rewind each time, but
-        // that is hard to do with a resource, especially if it comes
-        // from the class path instead of files.
-        try (InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream()) {
-          ConcatPcap.copy(first, in, out);
-        }
-        first = false;
-      }
-      System.out.printf("Created file is %.1f MB\n", bigFile.length() / 1e6);
-    }
-  }
-
   @Test
   public void testByteOrdering() throws IOException {
     File f = File.createTempFile("foo", "pcap");
@@ -74,6 +49,30 @@ public class TestPcapDecoder extends BaseTestQuery {
       PacketDecoder pd = new PacketDecoder(in);
       assertTrue(pd.isBigEndian());
     }
+  }
+
+  @Test
+  public void testBasics() throws IOException {
+    InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream();
+    PacketDecoder pd = new PacketDecoder(in);
+    Packet p = pd.packet();
+    int offset = 0;
+
+
+    byte[] buffer = new byte[100000];
+    int validBytes = in.read(buffer);
+    assertTrue(validBytes > 50);
+
+    offset = pd.decodePacket(buffer, offset, p);
+    offset = pd.decodePacket(buffer, offset, p);
+    assertEquals(228, offset);
+
+    assertEquals("FE:00:00:00:00:02", p.getEthernetDestination());
+    assertEquals("FE:00:00:00:00:01", p.getEthernetSource());
+    assertEquals("/192.168.0.1", p.getSrc_ip().toString());
+    assertEquals("/192.168.0.2", p.getDst_ip().toString());
+    assertEquals(161, p.getSrc_port());
+    assertEquals(0, p.getDst_port());
   }
 
   private static void writeHeader(DataOutputStream out) throws IOException {
@@ -102,6 +101,10 @@ public class TestPcapDecoder extends BaseTestQuery {
     out.writeInt(1);                 // ETHERNET
   }
 
+  // ----------------------------------------
+  // the code from here down is useful in that it tests the assumptions that
+  // the entire package is based on, but it doesn't really define tests.
+  // As such, it can be run as a main class, but isn't supported as unit tests.
   /**
    * This tests the speed when creating an actual object for each packet.
    * <p>
@@ -109,24 +112,22 @@ public class TestPcapDecoder extends BaseTestQuery {
    *
    * @throws IOException If file can't be read.
    */
-  @Test
-  public void testConventionalApproach() throws IOException {
+  private static void checkConventionalApproach() throws IOException {
     speedRun(new FileInputStream(bigFile), " without buffering");
   }
 
   /**
-   * This tests the speed when creating an actual object for each packet.
+   * This checks the speed when creating an actual object for each packet.
    * <p>
    * Even with decent buffering, this isn't very fast.
    *
    * @throws IOException If file can't be read.
    */
-  @Test
-  public void testBufferedApproach() throws IOException {
+  private static void checkBufferedApproach() throws IOException {
     speedRun(new BufferedInputStream(new FileInputStream(bigFile), 100000), " with buffering");
   }
 
-  private void speedRun(InputStream in, String msg) throws IOException {
+  private static void speedRun(InputStream in, String msg) throws IOException {
     PacketDecoder pd = new PacketDecoder(in);
     Packet p = pd.nextPacket();
     long total = 0;
@@ -158,8 +159,7 @@ public class TestPcapDecoder extends BaseTestQuery {
    *
    * @throws IOException If file can't be read.
    */
-  @Test
-  public void testFastApproach() throws IOException {
+  private static void checkFastApproach() throws IOException {
     InputStream in = new FileInputStream(bigFile);
     PacketDecoder pd = new PacketDecoder(in);
     Packet p = pd.packet();
@@ -205,26 +205,35 @@ public class TestPcapDecoder extends BaseTestQuery {
     System.out.printf("\n\n\n");
   }
 
-  @Test
-  public void testBasics() throws IOException {
-    InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream();
-    PacketDecoder pd = new PacketDecoder(in);
-    Packet p = pd.packet();
-    int offset = 0;
 
+  /**
+   * Creates an ephemeral file of about a GB in size
+   *
+   * @throws IOException If input file can't be read or output can't be written.
+   */
+  private static void buildBigTcpFile() throws IOException {
+    bigFile = File.createTempFile("tcp", ".pcap");
+    bigFile.deleteOnExit();
+    boolean first = true;
+    System.out.printf("Building large test file\n");
+    try (DataOutputStream out = new DataOutputStream(new FileOutputStream(bigFile))) {
+      for (int i = 0; i < 1000e6 / (29208 - 24) + 1; i++) {
+        // might be faster to keep this open and rewind each time, but
+        // that is hard to do with a resource, especially if it comes
+        // from the class path instead of files.
+        try (InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream()) {
+          ConcatPcap.copy(first, in, out);
+        }
+        first = false;
+      }
+    }
+  }
 
-    byte[] buffer = new byte[100000];
-    int validBytes = in.read(buffer);
-
-    offset = pd.decodePacket(buffer, offset, p);
-    offset = pd.decodePacket(buffer, offset, p);
-    assertEquals(228, offset);
-
-    assertEquals("FE:00:00:00:00:02", p.getEthernetDestination());
-    assertEquals("FE:00:00:00:00:01", p.getEthernetSource());
-    assertEquals("/192.168.0.1", p.getSrc_ip().toString());
-    assertEquals("/192.168.0.2", p.getDst_ip().toString());
-    assertEquals(161, p.getSrc_port());
-    assertEquals(0, p.getDst_port());
+  public static void main(String[] args) throws IOException {
+    System.out.printf("Checking speeds for various approaches\n\n");
+    buildBigTcpFile();
+    checkConventionalApproach();
+    checkBufferedApproach();
+    checkFastApproach();
   }
 }
