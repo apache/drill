@@ -36,4 +36,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Abhishek Girish | agirish |
 | Rahul Challapalli | rkins |
 | Arina Ielchiieva | arina |  
+| Paul Rogers | progers |  
 
