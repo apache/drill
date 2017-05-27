@@ -131,10 +131,11 @@ public class PreparedStatementProvider {
       try {
         UserClientConnectionWrapper wrapper = new UserClientConnectionWrapper(connection);
 
+        boolean isSelectQry = req.getSqlQuery().trim().toUpperCase().startsWith("SELECT");
         final RunQuery limit0Query =
             RunQuery.newBuilder()
                 .setType(QueryType.SQL)
-                .setPlan(String.format("SELECT * FROM (%s) LIMIT 0", req.getSqlQuery()))
+                .setPlan((isSelectQry)?String.format("SELECT * FROM (%s) LIMIT 0", req.getSqlQuery()):req.getSqlQuery())
                 .build();
 
         final QueryId limit0QueryId = userWorker.submitWork(wrapper, limit0Query);
