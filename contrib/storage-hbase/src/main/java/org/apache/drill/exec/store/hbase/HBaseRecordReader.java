@@ -128,6 +128,11 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     } else {
       rowKeyOnly = false;
       transformed.add(ROW_KEY_PATH);
+      /* DRILL-5137 - optimize count(*) queries on MapR-DB Binary tables */
+      if (isSkipQuery()) {
+        hbaseScan.setFilter(
+            HBaseUtils.andFilterAtIndex(hbaseScan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter()));
+      }
     }
 
 
