@@ -48,8 +48,20 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private static final int CHUNK_SIZE = AllocationManager.INNER_ALLOCATOR.getChunkSize();
 
   public static final int DEBUG_LOG_LENGTH = 6;
+  /**
+   * Indicate if debug logging is enabled. This logging is quite expensive,
+   * adding 10x-20x to query cost. It is enabled only if two conditions are
+   * both true:
+   * <ul>
+   * <li>Assertions are enabled (-ea JVM option), and</li>
+   * <li>-Ddrill.memory.debug.allocator=true is also on the JVM
+   * command line.</li>
+   * </ul>
+   * Note: in earlier versions the condition was OR, resulting in
+   * very slow performance whenever assertions were enabled.
+   */
   public static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
-      || Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
+      && Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
   private final Object DEBUG_LOCK = DEBUG ? new Object() : null;
 
   private final BaseAllocator parentAllocator;
