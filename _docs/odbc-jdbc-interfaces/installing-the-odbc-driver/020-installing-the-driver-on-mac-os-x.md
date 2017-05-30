@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-05-23 23:46:31 UTC
+date: 2017-05-30 23:11:54 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -15,7 +15,7 @@ Install the MapR Drill ODBC Driver on a system that meets the [system requiremen
 ## System Requirements  
 To install the driver, you need Administrator privileges on the computer.
 
-  * Mac OS X version 10.8.0 or later  
+  * Mac OS X version 10.9, 10.10, or 10.11  
   * 100 MB of available disk space  
   * iODBC 3.52.7 or later  
     The iodbc-config file in the `/usr/local/iODBC/bin` includes the version of the driver.  
@@ -25,15 +25,19 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
     `<drill-machine-IP> <drill-machine-hostname>`  
     Example: `127.0.0.1 localhost`
 
-
-
 ----------
 
 ## Step 1: Download the MapR Drill ODBC Driver
 
-Click the following link to download the driver:  
 
-[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/MapR_Drill_1.3.dmg)
+----------
+Note: The most current (version 1.3.8)  MapR Drill ODBC driver for Mac might not be available yet. 
+----------
+
+
+Click the following link to download the latest version (1.3.8) of the driver, which supports both 32- and 64-bit client applications:  
+
+[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)
 
 ----------
 
@@ -41,7 +45,7 @@ Click the following link to download the driver:
 
 To install the driver, complete the following steps:
 
-  1. Double-click `MapR_Drill_1.3.dmg` to mount the disk image.
+  1. Double-click `MapR Drill 1.3.dmg` to mount the disk image.
   2. Double-click `MapRDrillODBC.pkg` to run the Installer.
   3. Follow the instructions in the Installer to complete the installation process.
   4. When the installation completes, click **Close.**
@@ -59,7 +63,7 @@ To check the version of the driver you installed, use the following command on t
     $ pkgutil --pkg-info mapr.drillodbc  
 
     package-id: mapr.drillodbc
-    version: 1.3.0 (You may see 3.52.12.)
+    version: 1.3.8 (You may see 3.52.12.)
     volume: /
     location: 
     install-time: 1433465518  
@@ -67,6 +71,8 @@ To display information about the iODBC driver manager installed on the machine, 
 
     /usr/local/iODBC/bin/iodbc-config
 
+
 ### Next Step
 
 [Configuring ODBC on Mac OS X]({{ site.baseurl }}/docs/configuring-odbc-on-mac-os-x/).
+

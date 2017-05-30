@@ -1,11 +1,14 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2017-02-24 20:28:56 UTC
+date: 2017-05-30 23:11:55 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32- and 64-bit
-applications on Windows. Both versions of the driver can be installed on a 64-bit
-machine. 
+applications on Windows®. On 64-bit Windows operating systems, you can execute both 32- and 64-bit applications. However, 64-bit applications must use 64-bit drivers, and 32-bit applications must use 32-bit drivers. Make sure that you use the driver version that matches the bitness of the client application machine. 
+					
+  * MapR Drill 1.3 32-bit.msi for 32-bit applications
+  * MapR Drill 1.3 64-bit.msi for 64-bit applications
+
 
 Install the MapR Drill ODBC Driver on a system that meets the system requirements. 
 
@@ -14,12 +17,13 @@ Install the MapR Drill ODBC Driver on a system that meets the system requirement
 Each computer where you install the driver must meet the following system
 requirements:
 
-  * The 64-bit editions of the following operating systems are supported:
-    * Windows® 8 and 8.1
-    * Windows® 7 Professional
-    * Windows® Server 2008, 2013 R2
+  * One of the following operating systems are supported:
+    * Windows Vista, 7, 8, or 10
+    * Windows Server 2008 or later
+  * 75 MB of available disk space
   * .NET Framework 4.5, installed and enabled by default on Windows 8 and later
-  * 60 MB of available disk space
+  * Visual C++ Redistributable for Visual Studio 2013 installed (with the same bitness as the driver that you are installing)
+ 
   * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes.   
 If not, create an entry in `\Windows\system32\drivers\etc\hosts` for each node in the following format:  
 
@@ -34,10 +38,10 @@ To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Download the MapR Drill ODBC Driver
 
-Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection:
+Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection. Version 1.3.8 is the current version.
 
-* [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/MapR_Drill_1.3_32-bit.msi)  
-* [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.0.1009/MapR_Drill_1.3_64-bit.msi)
+* [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)  
+* [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)
 
 ----------
 
@@ -54,20 +58,18 @@ Download the installer that corresponds to the bitness of the client application
 
 ## Step 3: Verify the installation
 
-To verify the installation, perform the following steps:
+To verify the installation on Windows 10, perform the following steps:
 
-1. Click **Start**, and locate the ODBC Administrator app that you just installed.  
-   Installing the ODBC Administrator installs Drill Explorer and the Tableau TDC file. For example, on Windows 8.1 in Apps, several apps appear under MaprDrill ODBC Driver 1.0:
-   ![]({{ site.baseurl }}/docs/img/odbc-mapr-drill-apps.png)
+1. Go to **Settings** and enter **odbc**. Select ***Setup ODBC data sources <version>***.
 
-2. Click the ODBC Administrator app icon.
-   The ODBC Data Source Administrator dialog appears.
+2. The ODBC Data Source Administrator <version> dialog appears. Click the **System DSN** to view 
+   the MapR Drill data source. 
    ![]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
+
 3. Click the **Drivers** tab and verify that the MapR Drill ODBC Driver appears in the list of drivers that are installed on the computer.
    ![]({{ site.baseurl }}/docs/img/odbc-drivers.png)
 
 You need to configure and start Drill before [testing]({{site.baseurl}}/docs/testing-the-odbc-connection/) the ODBC Data Source Administrator.
-
 
 ### Next Step 
 [Configuring ODBC on Windows]({{ site.baseurl }}/docs/configuring-odbc-on-windows).
