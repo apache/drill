@@ -260,7 +260,8 @@ fi
 # Add $DRILL_HOME/conf if the user has provided their own
 # site configuration directory.
 # Ensures we pick up the default logback.xml, etc. if the
-# user does not provide their own.
+# user does not provide their own, and that we pick up the
+# drill-distrib.conf file, if provided by the distro.
 # Also, set a variable to remember that the config dir
 # is non-default, which is needed later.
 
