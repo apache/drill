@@ -23,7 +23,6 @@ import com.google.common.collect.Sets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelPromise;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
@@ -49,36 +48,26 @@ import java.util.Set;
  */
 
 public class WebUserConnection extends AbstractDisposableUserClientConnection implements ConnectionThrottle {
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebUserConnection.class);
 
-  protected BufferAllocator allocator;
-
-  protected SocketAddress remoteAddress;
-
-  protected UserSession webUserSession;
-
-  protected final ChannelPromise closeFuture;
+  protected WebSessionResources webSessionResources;
 
   public final List<Map<String, String>> results = Lists.newArrayList();
 
   public final Set<String> columns = Sets.newLinkedHashSet();
 
-  WebUserConnection(BufferAllocator allocator, UserSession webUserSession,
-                    SocketAddress remoteAddress, ChannelPromise closeFuture) {
-    this.allocator = allocator;
-    this.webUserSession = webUserSession;
-    this.remoteAddress = remoteAddress;
-    this.closeFuture = closeFuture;
+  WebUserConnection(WebSessionResources webSessionResources) {
+    this.webSessionResources = webSessionResources;
   }
 
   @Override
   public UserSession getSession() {
-    return webUserSession;
+    return webSessionResources.getSession();
   }
 
   @Override
   public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result) {
-
     // Check if there is any data or not. There can be overflow here but DrillBuf doesn't support allocating with
     // bytes in long. Hence we are just preserving the earlier behavior and logging debug log for the case.
     final int dataByteCount = (int) result.getByteCount();
@@ -94,6 +83,7 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
     // If here that means there is some data for sure. Create a ByteBuf with all the data in it.
     final int rows = result.getHeader().getRowCount();
+    final BufferAllocator allocator = webSessionResources.getAllocator();
     final DrillBuf bufferWithData = allocator.buffer(dataByteCount);
     try {
       final ByteBuf[] resultDataBuffers = result.getBuffers();
@@ -136,12 +126,12 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   @Override
   public ChannelFuture getChannelClosureFuture() {
-    return closeFuture;
+    return webSessionResources.getCloseFuture();
   }
 
   @Override
   public SocketAddress getRemoteAddress() {
-    return remoteAddress;
+    return webSessionResources.getRemoteAddress();
   }
 
   @Override
@@ -150,7 +140,7 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
   }
 
   /**
-   * For authenticated WebUser no cleanup of {@link UserSession} or {@link BufferAllocator} is done since it's re-used
+   * For authenticated WebUser no cleanup of {@link WebSessionResources} is done since it's re-used
    * for all the queries until lifetime of the web session.
    */
   public void cleanupSession() {
@@ -159,26 +149,16 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
 
   public static class AnonWebUserConnection extends WebUserConnection {
 
-    AnonWebUserConnection(BufferAllocator allocator, UserSession webUserSession,
-                          SocketAddress remoteAddress, ChannelPromise closeFuture) {
-      super(allocator, webUserSession, remoteAddress, closeFuture);
+    AnonWebUserConnection(WebSessionResources webSessionResources) {
+      super(webSessionResources);
     }
 
     /**
-     * For anonymous WebUser after each query request is completed the resources for {@link UserSession} and
-     * {@link BufferAllocator} is cleaned up.
+     * For anonymous WebUser after each query request is completed the {@link WebSessionResources} is cleaned up.
      */
     @Override
     public void cleanupSession() {
-      if (webUserSession != null) {
-        webUserSession.close();
-        webUserSession = null;
-      }
-
-      if(allocator != null) {
-        allocator.close();
-        allocator = null;
-      }
+      webSessionResources.close();
     }
   }
 }

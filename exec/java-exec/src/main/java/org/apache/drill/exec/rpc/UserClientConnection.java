@@ -19,8 +19,8 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.channel.ChannelFuture;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
-import org.apache.drill.exec.proto.GeneralRPCProtos;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.rpc.user.UserSession;
 
 import java.net.SocketAddress;
@@ -46,7 +46,7 @@ public interface UserClientConnection {
    * @param listener
    * @param result
    */
-  void sendResult(RpcOutcomeListener<GeneralRPCProtos.Ack> listener, UserBitShared.QueryResult result);
+  void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result);
 
   /**
    * Send query data to client. Outcome is returned through <code>listener</code>
@@ -54,7 +54,7 @@ public interface UserClientConnection {
    * @param listener
    * @param result
    */
-  void sendData(RpcOutcomeListener<GeneralRPCProtos.Ack> listener, QueryWritableBatch result);
+  void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result);
 
   /**
    * Returns the {@link ChannelFuture} which will be notified when this

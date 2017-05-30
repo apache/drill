@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,15 +22,11 @@ import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.ChannelPromise;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.rest.auth.DrillRestLoginService;
 import org.apache.drill.exec.work.WorkManager;
@@ -94,9 +90,13 @@ public class WebServer implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
 
   private final DrillConfig config;
+
   private final MetricRegistry metrics;
+
   private final WorkManager workManager;
+
   private final Server embeddedJetty;
+
   private final BootStrapContext context;
 
   /**
@@ -119,6 +119,7 @@ public class WebServer implements AutoCloseable {
   }
 
   private static final String BASE_STATIC_PATH = "/rest/static/";
+
   private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
 
   /**
@@ -157,8 +158,7 @@ public class WebServer implements AutoCloseable {
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    servletContextHandler.addServlet(
-        new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
+    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
@@ -173,8 +173,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
     if (authEnabled) {
-        servletContextHandler.setSecurityHandler(createSecurityHandler());
-        servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+      servletContextHandler.setSecurityHandler(createSecurityHandler());
+      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
@@ -188,7 +188,7 @@ public class WebServer implements AutoCloseable {
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
               String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
-      for (String path: new String[] { "*.json", "/storage/*/enable/*", "/status*" }) {
+      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
       }
     }
@@ -207,14 +207,6 @@ public class WebServer implements AutoCloseable {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
 
-        // Create per session BufferAllocator and set it in session
-        final HttpSession session = se.getSession();
-        final String sessionAllocatorName = String.format("WebServer:AuthUserSession:%s", session.getId());
-        final BufferAllocator sessionAllocator = workManager.getContext().getAllocator().newChildAllocator(
-            sessionAllocatorName,
-            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
-            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
-        session.setAttribute(BufferAllocator.class.getSimpleName(), sessionAllocator);
       }
 
       @Override
@@ -231,44 +223,18 @@ public class WebServer implements AutoCloseable {
           session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
         }
 
-        // Clear all the custom attributes set as part of session
-        clearSessionCustomAttributes(session);
+        // Clear all the resources allocated for this session
+        final WebSessionResources webSessionResources =
+            (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
+
+        if (webSessionResources != null) {
+          webSessionResources.close();
+          session.removeAttribute(WebSessionResources.class.getSimpleName());
+        }
       }
     });
 
     return new SessionHandler(sessionManager);
-  }
-
-  /**
-   * Cleanup all the resources held as part of the input {@link HttpSession}
-   * @param session
-   */
-  private void clearSessionCustomAttributes(HttpSession session) {
-
-    // Clean up the UserSession
-    final UserSession drillUserSession = (UserSession) session.getAttribute(UserSession.class.getSimpleName());
-    if (drillUserSession != null) {
-      drillUserSession.close();
-      session.removeAttribute(UserSession.class.getSimpleName());
-    }
-
-    // Set Failure in sessionCloseFuture which will notify listeners for all in-flight queries associated with this
-    // session.
-    final ChannelPromise sessionCloseFuture =
-        (ChannelPromise) session.getAttribute(ChannelPromise.class.getSimpleName());
-
-    if (sessionCloseFuture != null) {
-      sessionCloseFuture.setFailure(new ChannelClosedException("Logged in user Http Session is closed."));
-      session.removeAttribute(ChannelPromise.class.getSimpleName());
-    }
-
-    // Clean up the BufferAllocator set for this session
-    final BufferAllocator allocator = (BufferAllocator) session.getAttribute(BufferAllocator.class.getSimpleName());
-
-    if (allocator != null) {
-      allocator.close();
-      session.removeAttribute(BufferAllocator.class.getSimpleName());
-    }
   }
 
   /**
