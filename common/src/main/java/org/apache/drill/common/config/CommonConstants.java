@@ -25,6 +25,9 @@ public interface CommonConstants {
   /** Module configuration files name.  (Classpath resource pathname.) */
   String DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME = "drill-module.conf";
 
+  /** Distribution Specific Override configuration file name.  (Classpath resource pathname.) */
+  String CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-distrib.conf";
+
   /** Override configuration file name.  (Classpath resource pathname.) */
   String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
 

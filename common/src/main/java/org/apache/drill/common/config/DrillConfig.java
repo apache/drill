@@ -116,11 +116,9 @@ public class DrillConfig extends NestedConfig {
 
 
   /**
-   * <p>
    * DrillConfig loads up Drill configuration information. It does this utilizing a combination of classpath scanning
    * and Configuration fallbacks provided by the TypeSafe configuration library. The order of precedence is as
    * follows:
-   * </p>
    * <p>
    * Configuration values are retrieved as follows:
    * <ul>
@@ -128,6 +126,8 @@ public class DrillConfig extends NestedConfig {
    *     on the classpath, which copy is read is indeterminate.
    *     If a non-null value for overrideFileResourcePathname is provided, this
    *     is used instead of "{@code drill-override.conf}".</li>
+   * <li>Check a single copy of "drill-distrib.conf". If multiple copies are
+   *     on the classpath, which copy is read is indeterminate. </li>
    * <li>Check all copies of "{@code drill-module.conf}".  Loading order is
    *     indeterminate.</li>
    * <li>Check a single copy of "{@code drill-default.conf}".  If multiple
@@ -216,12 +216,21 @@ public class DrillConfig extends NestedConfig {
     }
     logString.append("\n");
 
-    // 3. Load any specified overrides configuration file along with any
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    // 3. Load distribution specific configuration file.
+    final URL distribConfigFileUrl = classLoader.getResource(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME);
+    if (null != distribConfigFileUrl ) {
+      logString.append("Distribution Specific Configuration File: ").append(distribConfigFileUrl).append("\n");
+    }
+    fallback =
+      ConfigFactory.load(CommonConstants.CONFIG_DISTRIBUTION_RESOURCE_PATHNAME).withFallback(fallback);
+
+    // 4. Load any specified overrides configuration file along with any
     //    overrides from JVM system properties (e.g., {-Dname=value").
 
     // (Per ConfigFactory.load(...)'s mention of using Thread.getContextClassLoader():)
-    final URL overrideFileUrl =
-        Thread.currentThread().getContextClassLoader().getResource(overrideFileResourcePathname);
+    final URL overrideFileUrl = classLoader.getResource(overrideFileResourcePathname);
     if (null != overrideFileUrl ) {
       logString.append("Override File: ").append(overrideFileUrl).append("\n");
     }
