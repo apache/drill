@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-05-31 00:03:41 UTC
+date: 2017-05-31 00:23:14 UTC
 parent: "Configuring ODBC"
 ---
 Complete one of the following steps to create an ODBC connection on Windows to Drill data
@@ -16,11 +16,14 @@ version of the ODBC Administrator to create the DSN.
 
 1\. Click **Start** and locate the ODBC Administrator app that you installed. Then click ODBC Administrator to start the app. The ODBC Data Source Administrator dialog appears.  
 
-![odbcuser]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
+![odbcuser]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)  
+
+
 
 2\. On the **System DSN** tab in System Data Sources, select the sample MapR Drill.  
 
-![odbcconfig]({{ site.baseurl }}/docs/img/odbc-configure1.png)  
+![configure1]({{ site.baseurl }}/docs/img/odbc-configure1.png)  
+
 
    The system DSN is available for all users who log in to the machine. You can set up a user DSN is available only to the user who creates the DSN on the **User DSN** tab. 
  
@@ -28,7 +31,9 @@ version of the ODBC Administrator to create the DSN.
   
    The MapR Drill setup dialog appears with a preconfigured sample DSN. The following screenshot shows a possible DSN configuration for using Drill in embedded mode.  
 
-![odbcconfig2]({{ site.baseurl }}/docs/img/odbc-configure2.png)
+![configure2]({{ site.baseurl }}/docs/img/odbc-configure2.png)  
+
+
    
 ### Authentication Options
 To password protect the DSN, select the appropriate AuthenticationType in the dropdown.  If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option; you do not need to configure additional settings.
@@ -59,8 +64,10 @@ If you select ZooKeeper Quorum, provide values for the following properties:
 * Cluster ID - 
   Name of the drillbit cluster. Check the drill-override.conf file for ZooKeeper node information and for any cluster name changes.
 
- Check the `drill-override.conf` file for the cluster name.
-![]({{ site.baseurl }}/docs/img/odbc-configure3.png)
+ Check the `drill-override.conf` file for the cluster name.  
+
+![]({{ site.baseurl }}/docs/img/odbc-configure3.png)  
+
 
 The [Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/) section describes the advanced properties.
 

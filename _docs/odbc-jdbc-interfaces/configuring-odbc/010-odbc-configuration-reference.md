@@ -1,6 +1,6 @@
 ---
 title: "ODBC Configuration Reference"
-date: 2017-05-30 23:11:51 UTC
+date: 2017-05-31 00:23:14 UTC
 parent: "Configuring ODBC"
 ---
 You can use various configuration options to control the behavior of the MapR
@@ -196,9 +196,9 @@ To disable logging:
 
 1. Open the `.mapr.drillodbc.ini` configuration file in a text editor.
 2. Set the LogLevel key to zero (`0`).
-3. Save the `.mapr.drillodbc.ini` configuration file.
+3. Save the `.mapr.drillodbc.ini` configuration file.  
 
-#### What's Next? Go to [Connecting to ODBC Data Sources]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
+
 
 
 
