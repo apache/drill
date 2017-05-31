@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Mac OS X"
-date: 2017-05-31 00:03:40 UTC
+date: 2017-05-31 23:17:32 UTC
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
@@ -71,12 +71,12 @@ You set the following properties for using Drill in distributed mode:
     ZKClusterID=<cluster name in `drill-override.conf`>
 
 ### Authentication Properties
-If the Drillbit requires authentication, uncomment the AuthenticationType, add an AuthenticationType, and configure properties. If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option; you do not need to configure additional settings.
+If the Drillbit requires authentication, uncomment the AuthenticationType, add an AuthenticationType, and configure properties. If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings.
 
 
 * **MapRSASL** 
 	* The MapR login utility must be used to obtain a MapR ticket for MapR SASL authentication. 
-	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html/">Tickets</a>.
+	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html">Tickets</a>.
 
 * **Kerberos** 
 	*  See the <a href="http://web.mit.edu/kerberos/" title="MIT Kerberos">MIT Kerberos</a> documentation for installing and configuring a Kerberos environment, which is beyond the scope of the information provided here.
@@ -127,9 +127,9 @@ The following sample shows a possible configuration for using Drill in embedded 
     # Driver: The location where the ODBC driver is installed.
     Driver=/Library/mapr/drill/lib/libdrillodbc_sbu.dylib
   
-    # The DriverUnicodeEncoding setting is only used for MapRDM
-    # When set to 1, MapRDM runs in UTF-16 mode.
-    # When set to 2, MapRDM runs in UTF-8 mode.
+    # The DriverUnicodeEncoding setting is only used for SimbaDM
+    # When set to 1, SimbaDM runs in UTF-16 mode.
+    # When set to 2, SimbaDM runs in UTF-8 mode.
     #DriverUnicodeEncoding=2
 
     # Values for ConnectionType, AdvancedProperties, Catalog, Schema should be set here.
@@ -177,13 +177,15 @@ file. This configures the driver to work with your ODBC driver manager. The foll
 
 ### Configuring .mapr.drillodbc.ini
 
-To configure the MapR Drill ODBC Driver in the `mapr.drillodbc.ini` configuration file, complete the following steps:
+To configure the MapR Drill ODBC Driver in the `.mapr.drillodbc.ini` configuration file, complete the following steps:
 
-  1. Open the `mapr.drillodbc.ini` configuration file in a text editor.  
-  2. Edit the DisableAsync setting if you want to enable a synchronous ODBC connection for performance reasons. Change the default 0 to 1 to disable the asynchronous and enable the synchronous connection.  
-     A change in state occurs during driver initialization and is propagated to all driver DSNs.  
-  3. Edit the DriverManagerEncoding setting if necessary. The value is typically UTF-16 or UTF-32, but depends on the driver manager used. iODBC uses UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager documentation for the correct setting.
-  4. Save the `mapr.drillodbc.ini` configuration file.
+  1. Open the `.mapr.drillodbc.ini` configuration file in a text editor. 
+ 
+  2. Edit the DisableAsync setting if you want to enable a synchronous ODBC connection for performance reasons. Change the default 0 to 1 to disable the asynchronous and enable the synchronous connection. A change in state occurs during driver initialization and is propagated to all driver DSNs.  
+  
+	**Note**: As of version 1.3.8 of the driver, the DriverManagerEncoding setting is automatically detected and set if necessary. The value depends on the driver manager used; it's typically UTF-16 or UTF-32. iODBC uses UTF-32 and unixODBC uses UTF-16.
+
+  3. Save the `.mapr.drillodbc.ini` configuration file.
 
 
 ### Next Step

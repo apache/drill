@@ -1,6 +1,6 @@
 ---
 title: "Testing the ODBC Connection"
-date: 2017-05-30 23:11:53 UTC
+date: 2017-05-31 23:17:33 UTC
 parent: "Configuring ODBC"
 ---
 You can use DSN connection strings and DSN-less connection strings for your connections.
@@ -35,7 +35,7 @@ The placeholders in the examples are defined as follows, in alphabetical order:
 ###Drillbit Connections
 The following is the format of a DSN-less connection string for a Drillbit that does not require authentication:
 
-Driver=MapR Drill ODBC Driver;ConnectionType=Direct; Host=[*Server*];Port=[*PortNumbe*r]
+	Driver=MapR Drill ODBC Driver;ConnectionType=Direct; Host=[*Server*];Port=[*PortNumber*]
 
 For example:
 
@@ -92,10 +92,10 @@ For example:
 
 The following is the format of a DSN-less connection string for a Drillbit that requires Plain authentication:
 
-Driver=MapR Drill ODBC Driver;ConnectionType=Direct; 
-Host=[*Server*];Port=[*PortNumber*];	
-AuthenticationType=Plain;
-UID=[*YourUserName*];PWD=[*YourPassword*]
+	Driver=MapR Drill ODBC Driver;ConnectionType=Direct; 
+	Host=[*Server*];Port=[*PortNumber*];	
+	AuthenticationType=Plain;
+	UID=[*YourUserName*];PWD=[*YourPassword*]
 
 For example:
 
@@ -213,8 +213,9 @@ To test the ODBC connection on Mac OS X, follow these steps.
 To test the ODBC connection on Windows, follow these steps:
 
 1. Follow instructions to configure the ODBC connection on Windows. 
-   The MapR Drill ODBC Driver DSN Setup dialog is displayed.
-   ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
+   The **MapR Drill ODBC Driver DSN Setup** dialog is displayed.
 
 2. Click **Test**. A Test Results popup will display that states you have successfully connected to the data source. 
+
+	![](http://i.imgur.com/Hxuutmq.png)
 

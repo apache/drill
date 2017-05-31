@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-05-31 00:03:41 UTC
+date: 2017-05-31 23:17:34 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -9,8 +9,8 @@ the Drill service.
 Install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#system-requirements). Complete the following steps, described in detail in this document:
 
   * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-1-download-the-mapr-drill-odbc-driver)  
-  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2-install-the-mapr-drill-odbc-driver) 
-  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3-check-the-mapr-drill-odbc-driver-version)
+  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2:-install-the-mapr-drill-odbc-driver) 
+  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)
 
 ## System Requirements  
 To install the driver, you need Administrator privileges on the computer.
@@ -19,11 +19,9 @@ To install the driver, you need Administrator privileges on the computer.
   * 100 MB of available disk space  
   * iODBC 3.52.7 or later  
     The iodbc-config file in the `/usr/local/iODBC/bin` includes the version of the driver.  
-  * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes.   
-If not, create an entry in `/etc/hosts` for each node in the following format:  
-
-    `<drill-machine-IP> <drill-machine-hostname>`  
-    Example: `127.0.0.1 localhost`
+  * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes. If not, create an entry in `/etc/hosts` for each node in the following format:  `<drill-machine-IP> <drill-machine-hostname>`. 
+    
+	Example: `127.0.0.1 localhost`
 
 ----------
 
@@ -32,7 +30,7 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
 
 {% include startnote.html %}The most current (version 1.3.8)  MapR Drill ODBC driver for Mac might not be available yet.{% include endnote.html %}  
 
-Click the following link to download the latest version (1.3.8) of the driver, which supports both 32- and 64-bit client applications:  
+Click the following link to download available drivers that support both 32- and 64-bit client applications:  
 
 [MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)
 

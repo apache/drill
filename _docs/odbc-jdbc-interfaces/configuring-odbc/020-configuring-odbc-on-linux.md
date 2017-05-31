@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: 2017-05-31 00:03:40 UTC
+date: 2017-05-31 23:17:32 UTC
 parent: "Configuring ODBC"
 ---
 
@@ -24,9 +24,9 @@ on Linux, copy the following configuration files in `/opt/mapr/drill/Setup` to y
 
 In your home directory, rename the files as hidden files. Use sudo if necessary:
 
-* .mapr.drillodbc.ini
-* .odbc.ini
-* .odbcinst.ini
+* `.mapr.drillodbc.ini`
+* `.odbc.ini`
+* `.odbcinst.ini`
 
 ----------
 
@@ -34,8 +34,10 @@ In your home directory, rename the files as hidden files. Use sudo if necessary:
 
 1. Set the ODBCINI environment variable to point to the `.odbc.ini` in your home directory. For example:  
    `export ODBCINI=~/.odbc.ini`
+
 2. Set the MAPRDRILLINI environment variable to point to `.mapr.drillodbc.ini` in your home directory. For example:  
    `export MAPRDRILLINI=~/.mapr.drillodbc.ini`
+
 3. Set the `LD_LIBRARY_PATH` environment variable  to point to your ODBC driver manager libraries. For example:  
    `export LD_LIBRARY_PATH=/usr/local/lib`
 
@@ -63,7 +65,7 @@ To use Drill in distributed mode, set the following properties, described in det
     ZKQuorum=<host name>:<port>,<host name>:<port> . . . <host name>:<port>
     ZKClusterID=<cluster name in `drill-override.conf`>
 
-The following Linux sample shows a possible configuration for using Drill in distributed mode. The configuration assumes you started Drill using the `drill-conf` command. The example modifies the default Linux-installed `.odbc.ini` for a 64-bit system by commenting out 32-bit properties, adding 64-bit properties, and removes the extraneous MapR Drill 64-bit from `.odbc.ini`.
+The following Linux sample shows a possible configuration for using Drill in distributed mode. The example modifies the default Linux-installed `.odbc.ini` for a 64-bit system by commenting out 32-bit properties, adding 64-bit properties, and removes the extraneous MapR Drill 64-bit from `.odbc.ini`.
 
     [ODBC]
     Trace=no
@@ -136,12 +138,12 @@ The following Linux sample shows a possible configuration for using Drill in dis
     Schema=
 
 ### Authentication Properties
-If the Drillbit requires authentication, uncomment the AuthenticationType, add an AuthenticationType, and configure properties. If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option; you do not need to configure additional settings. 
+If the Drillbit requires authentication, uncomment the AuthenticationType, add an AuthenticationType, and configure properties. If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings. 
 
 
 * **MapRSASL** 
 	* The MapR login utility must be used to obtain a MapR ticket for MapR SASL authentication. 
-	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html/">Tickets</a>.
+	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html">Tickets</a>.
 
 * **Kerberos** 
 	*  See the <a href="http://web.mit.edu/kerberos/" title="MIT Kerberos">MIT Kerberos</a> documentation for installing and configuring a Kerberos environment, which is beyond the scope of the information provided here.  
@@ -157,6 +159,7 @@ If the Drillbit requires authentication, uncomment the AuthenticationType, add a
 
 ### Direct and ZooKeeper Quorum Properties
 To use Drill in distributed mode, set ConnectionType to Zookeeper, get the ZKQuorum and ZKClusterID values from the `drill-override.conf` file, and define the ZKQuorum and ZKClusterID properties. The `drill-override.conf` is in the `/drill/drill-<version>/conf` directory. Format ZKQuorum as a comma separated list of ZooKeeper nodes in the following format:  
+
 `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .` 
 
 For example:
@@ -221,17 +224,18 @@ To configure the MapR Drill ODBC Driver in the `.mapr.drillodbc.ini` configurati
 
   1. Open the `.mapr.drillodbc.ini` configuration file in a text editor.  
  
-  2. Edit the DisableAsync setting if you want to enable a synchronous ODBC connection for performance reasons. Change the default 0 to 1 to disable the asynchronous and enable the synchronous connection.
-     A change in state occurs during driver initialization and is propagated to all driver DSNs.  
+  2. Edit the DisableAsync setting if you want to enable a synchronous ODBC connection for performance reasons. Change the default 0 to 1 to disable the asynchronous and enable the synchronous connection. A change in state occurs during driver initialization and is propagated to all driver DSNs.  
   
-     **Note**: As of version 1.3.8 of the driver, the DriverManagerEncoding setting is automatically detected and set if necessary. The value is typically UTF-16 or UTF-32, but depends on the driver manager used. iODBC uses UTF-32 and unixODBC uses UTF-16. 
+     **Note**: As of version 1.3.8 of the driver, the DriverManagerEncoding setting is automatically detected and set if necessary. The value depends on the driver manager used; it's typically UTF-16 or UTF-32. iODBC uses UTF-32 and unixODBC uses UTF-16. 
     
-  4. Save the `.mapr.drillodbc.ini` configuration file.
+  3. Save the `.mapr.drillodbc.ini` configuration file.
 
 
 ### Next Step
 
-Refer to [Testing the ODBC Connection]({{ site.baseurl }}/docs/testing-the-odbc-connection).
+[Testing the ODBC Connection]({{ site.baseurl }}/docs/testing-the-odbc-connection/) 
+
+
 
 
 
