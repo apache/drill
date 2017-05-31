@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-05-30 23:11:54 UTC
+date: 2017-05-31 00:03:41 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -27,13 +27,10 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
 
 ----------
 
-## Step 1: Download the MapR Drill ODBC Driver
+## Step 1: Download the MapR Drill ODBC Driver  
+ 
 
-
-----------
-Note: The most current (version 1.3.8)  MapR Drill ODBC driver for Mac might not be available yet. 
-----------
-
+{% include startnote.html %}The most current (version 1.3.8)  MapR Drill ODBC driver for Mac might not be available yet.{% include endnote.html %}  
 
 Click the following link to download the latest version (1.3.8) of the driver, which supports both 32- and 64-bit client applications:  
 

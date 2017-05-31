@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2017-05-30 23:11:55 UTC
+date: 2017-05-31 00:03:41 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32- and 64-bit
@@ -63,13 +63,15 @@ To verify the installation on Windows 10, perform the following steps:
 1. Go to **Settings** and enter **odbc**. Select ***Setup ODBC data sources <version>***.
 
 2. The ODBC Data Source Administrator <version> dialog appears. Click the **System DSN** to view 
-   the MapR Drill data source. 
-   ![]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
+   the MapR Drill data source.  
 
-3. Click the **Drivers** tab and verify that the MapR Drill ODBC Driver appears in the list of drivers that are installed on the computer.
-   ![]({{ site.baseurl }}/docs/img/odbc-drivers.png)
+   ![odbcuser]({{site.baseurl}}/docs/img/odbc-user-dsn.png)    
 
-You need to configure and start Drill before [testing]({{site.baseurl}}/docs/testing-the-odbc-connection/) the ODBC Data Source Administrator.
+3. Click the **Drivers** tab and verify that the MapR Drill ODBC Driver appears in the list of drivers that are installed on the computer.  
+
+   ![odbcdriver]({{site.baseurl}}/docs/img/odbc-drivers.png)
+
+Configure and start Drill before [testing]({{site.baseurl}}/docs/testing-the-odbc-connection/) the ODBC Data Source Administrator.
 
 ### Next Step 
 [Configuring ODBC on Windows]({{ site.baseurl }}/docs/configuring-odbc-on-windows).

@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: 2017-05-30 23:11:52 UTC
+date: 2017-05-31 00:03:40 UTC
 parent: "Configuring ODBC"
 ---
 
@@ -143,14 +143,15 @@ If the Drillbit requires authentication, uncomment the AuthenticationType, add a
 	* The MapR login utility must be used to obtain a MapR ticket for MapR SASL authentication. 
 	* You must install and configure the MapR login utility before you can use the MapR SASL authentication mechanism. See <a href="http://maprdocs.mapr.com/home/SecurityGuide/SecurityArchitecture-AuthenticationArchitecture.html" title="MapR Login Utilty">Authentication Architecture: The maprlogin Utility</a> and <a href="http://maprdocs.mapr.com/home/SecurityGuide/Tickets.html/">Tickets</a>.
 
-	**Kerberos** 
-	*  See the <a href="http://web.mit.edu/kerberos/" title="MIT Kerberos">MIT Kerberos</a> documentation for installing and configuring a Kerberos environment, which is beyond the scope of the information provided here.
-	* To specify the Kerberos mechanism:
+* **Kerberos** 
+	*  See the <a href="http://web.mit.edu/kerberos/" title="MIT Kerberos">MIT Kerberos</a> documentation for installing and configuring a Kerberos environment, which is beyond the scope of the information provided here.  
+	*  To specify the Kerberos mechanism:
 		* Set the AuthenticationType to Kerberos.
 		* Set the KrbServiceHost property to the FQDN of the Drill server host.
-		* Set the KrbServiceName property to the Kerberos service principal name of the Drill server.
+		* Set the KrbServiceName property to the Kerberos service principal name of the Drill server.  
+		
 
-	**Plain (or Basic Authentication)**
+* **Plain (or Basic Authentication)**
 	* Configure the UID to an appropriate name for accessing the Drill server. 
 	* Set the PWD property to the password corresponding to the UID. 
 

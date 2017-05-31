@@ -1,6 +1,6 @@
 ---
 title: "Connecting Drill Explorer to Data"
-date: 2017-05-30 23:11:55 UTC
+date: 2017-05-31 00:03:42 UTC
 parent: "Using Drill Explorer"
 ---
 The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. 
@@ -32,28 +32,28 @@ In Windows 10, you can start Drill Explorer from the Start menu or from the ODBC
 
 To start Drill Explorer from the Start menu:
 
-1. Click **Start**, and locate MaprR Drill ODBC Driver <*version*>. 
+1\. Click **Start**, and locate MaprR Drill ODBC Driver <*version*>. 
    
-   ![]({{ site.baseurl }}/docs/img/winstart.png)
+   ![winstart]({{ site.baseurl }}/docs/img/winstart.png)
 
-2. Click **Drill Explorer**.
+2\. Click **Drill Explorer**.
    
-   ![]({{ site.baseurl }}/docs/img/odbc-explorer-win.png)
+   ![odbcexplore]({{ site.baseurl }}/docs/img/odbc-explorer-win.png)
 
-3. Select the DSN that you want to explore. For example, select MapR Drill and click Connect.
+3\. Select the DSN that you want to explore. For example, select MapR Drill and click Connect.
    
 To start Drill Explorer from the ODBC Administrator in Windows 10:
 
-1. In the Settings field, enter **odbc**. Select a version and the ODBC Data Source Administrator <version> appears. 
+1\. In the Settings field, enter **odbc**. Select a version and the ODBC Data Source Administrator <version> appears. 
    
-   ![]({{ site.baseurl }}/docs/img/odbc-configure1.png)
+   ![obdcconfig]({{ site.baseurl }}/docs/img/odbc-configure1.png)
    
-3. Click **System DSN**. Select MapR Drill and click Connect. 
+3\. Click **System DSN**. Select MapR Drill and click Connect. 
    The DSN Setup dialog appears showing the properties.  
    
-   ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
+   ![odbcconfig2]({{ site.baseurl }}/docs/img/odbc-configure2.png)
 
-4. Click **Drill Explorer** at the bottom of the dialog.
+. Click **Drill Explorer** at the bottom of the dialog.
    Drill Explorer appears.
 
 
