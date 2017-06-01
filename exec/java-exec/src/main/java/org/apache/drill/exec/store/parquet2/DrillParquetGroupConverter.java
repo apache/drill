@@ -47,6 +47,7 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetColumnMetadata;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
@@ -169,6 +170,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
     }
   }
 
+  @SuppressWarnings("resource")
   private PrimitiveConverter getConverterForType(String name, PrimitiveType type) {
 
     switch(type.getPrimitiveTypeName()) {
@@ -236,7 +238,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
             return new DrillFixedBinaryToTimeStampConverter(writer);
           } else {
             VarBinaryWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varBinary() : mapWriter.varBinary(name);
-            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetRecordReader.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
+            return new DrillFixedBinaryToVarbinaryConverter(writer, ParquetColumnMetadata.getTypeLengthInBits(type.getPrimitiveTypeName()) / 8, mutator.getManagedBuffer());
           }
         }
 
