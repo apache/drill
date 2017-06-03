@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-05-31 23:17:33 UTC
+date: 2017-06-03 01:09:31 UTC
 parent: "Configuring ODBC"
 ---
 Complete one of the following steps to create an ODBC connection on Windows to Drill data
@@ -31,7 +31,7 @@ version of the ODBC Data Source Administrator to create the DSN.
 
 ![](http://i.imgur.com/f9Avhcz.png) 
 
-   To access **Drill Explorer**, click **Drill Explorer...**.
+   To access Drill Explorer, click **Drill Explorer...**.
    
 ### Authentication Options
 To password protect the DSN, select the appropriate authentication type in the **Authentication Type** dropdown.  If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings.
