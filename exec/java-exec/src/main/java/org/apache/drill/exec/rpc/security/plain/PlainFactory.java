@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.security.plain;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.FastSaslClientFactory;
+import org.apache.drill.exec.rpc.security.SecurityConfiguration;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -58,7 +59,7 @@ public class PlainFactory implements AuthenticatorFactory {
 
   @Override
   public UserGroupInformation createAndLoginUser(Map<String, ?> properties) throws IOException {
-    final Configuration conf = new Configuration();
+    final Configuration conf = new SecurityConfiguration();
     UserGroupInformation.setConfiguration(conf);
     try {
       return UserGroupInformation.getCurrentUser();
