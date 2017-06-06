@@ -99,6 +99,17 @@ public abstract class ColumnReader<V extends ValueVector> {
           new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
               columnChunkMetaData);
     }
+    try {
+      pageReader.init();
+    } catch (IOException e) {
+      UserException ex = UserException.dataReadError(e)
+          .message("Error initializing page reader for Parquet file")
+          .pushContext("Row Group Start: ", this.columnChunkMetaData.getStartingPos())
+          .pushContext("Column: ", this.schemaElement.getName())
+          .pushContext("File: ", this.parentReader.getHadoopPath().toString() )
+          .build(logger);
+      throw ex;
+    }
     if (columnDescriptor.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
       if (columnDescriptor.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
         dataTypeLengthInBits = columnDescriptor.getTypeLength() * 8;
@@ -106,9 +117,7 @@ public abstract class ColumnReader<V extends ValueVector> {
         dataTypeLengthInBits = ParquetColumnMetadata.getTypeLengthInBits(columnDescriptor.getType());
       }
     }
-    if(threadPool == null) {
-      threadPool = parentReader.getOperatorContext().getScanDecodeExecutor();
-    }
+    threadPool = parentReader.getOperatorContext().getScanDecodeExecutor();
   }
 
   public int getRecordsReadInCurrentPass() {
@@ -218,7 +227,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   public Future<Boolean> readPageAsync() {
     Future<Boolean> f = threadPool.submit(new Callable<Boolean>() {
       @Override public Boolean call() throws Exception {
-        return new Boolean(readPage());
+        return Boolean.valueOf(readPage());
       }
     });
     return f;
