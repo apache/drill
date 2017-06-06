@@ -134,13 +134,17 @@ public class Packet {
     if (isTcpPacket()) {
       Murmur128 h1 = new Murmur128(1, 2);
       byte[] buf = getIpAddressBytes(true);
-      assert buf != null;
+      if (buf == null) {
+        return 0;
+      }
       h1.hash(buf, 0, buf.length);
       h1.hash(getSrc_port());
 
       Murmur128 h2 = new Murmur128(1, 2);
       buf = getIpAddressBytes(false);
-      assert buf != null;
+      if (buf == null) {
+        return 0;
+      }
       h2.hash(buf, 0, buf.length);
       h2.hash(getDst_port());
 
@@ -241,16 +245,16 @@ public class Packet {
   private byte[] getIpAddressBytes(final boolean src) {
     int srcPos;
     byte[] ipBuffer;
+    int byteShift = 0;
     if (isIpV4Packet()) {
       ipBuffer = new byte[4];
       srcPos = src ? PacketConstants.IP4_SRC_OFFSET : PacketConstants.IP4_DST_OFFSET;
     } else if (isIpV6Packet()) {
       ipBuffer = new byte[16];
       if (isRoutingV6) {
-        srcPos = src ? PacketConstants.IP6_SRC_OFFSET + 96 : PacketConstants.IP6_DST_OFFSET + 96;
-      } else {
-        srcPos = src ? PacketConstants.IP6_SRC_OFFSET : PacketConstants.IP6_DST_OFFSET;
+        byteShift = 96;
       }
+      srcPos = src ? PacketConstants.IP6_SRC_OFFSET + byteShift : PacketConstants.IP6_DST_OFFSET + byteShift;
     } else if (isPPPoV6Packet()) {
       ipBuffer = new byte[16];
       srcPos = src ? PacketConstants.IP6_SRC_OFFSET + PacketConstants.PPPoV6_IP_OFFSET : PacketConstants.IP6_DST_OFFSET + PacketConstants.PPPoV6_IP_OFFSET;

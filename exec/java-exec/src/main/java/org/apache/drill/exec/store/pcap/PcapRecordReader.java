@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.pcap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -40,6 +41,8 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -52,16 +55,22 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.drill.exec.store.pcap.Utils.parseBytesToASCII;
 
 public class PcapRecordReader extends AbstractRecordReader {
+  private static final Logger logger = LoggerFactory.getLogger(PcapRecordReader.class);
+
+  private static final int BATCH_SIZE = 40_000;
 
   private OutputMutator output;
 
-  private final PacketDecoder decoder;
+  private PacketDecoder decoder;
   private ImmutableList<ProjectedColumnInfo> projectedCols;
 
-  private byte[] buffer = new byte[100000];
+  private byte[] buffer;
   private int offset = 0;
   private InputStream in;
   private int validBytes;
+
+  private String inputPath;
+  private List<SchemaPath> projectedColumns;
 
   private static final Map<PcapTypes, MinorType> TYPES;
 
@@ -81,41 +90,43 @@ public class PcapRecordReader extends AbstractRecordReader {
 
   public PcapRecordReader(final String inputPath,
                           final List<SchemaPath> projectedColumns) {
-    try {
-      this.in = new FileInputStream(inputPath);
-      this.decoder = getPacketDecoder();
-      validBytes = in.read(buffer);
-    } catch (IOException e) {
-      throw new RuntimeException("File " + inputPath + " not Found");
-    }
-    setColumns(projectedColumns);
+    this.inputPath = inputPath;
+    this.projectedColumns = projectedColumns;
   }
 
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
-    this.output = output;
+    try {
+
+      this.output = output;
+      this.buffer = new byte[100000];
+      this.in = new FileInputStream(inputPath);
+      this.decoder = new PacketDecoder(in);
+      this.validBytes = in.read(buffer);
+      this.projectedCols = getProjectedColsIfItNull();
+      setColumns(projectedColumns);
+    } catch (IOException io) {
+      throw UserException.dataReadError(io)
+          .addContext("File name:", inputPath)
+          .build(logger);
+    }
   }
 
   @Override
   public int next() {
-    projectedCols = getProjectedColsIfItNull();
     try {
       return parsePcapFilesAndPutItToTable();
     } catch (IOException io) {
-      throw new RuntimeException("Trouble with reading packets in file!");
+      throw UserException.dataReadError(io)
+          .addContext("Trouble with reading packets in file!")
+          .build(logger);
     }
   }
 
   @Override
   public void close() throws Exception {
-  }
-
-  private PacketDecoder getPacketDecoder() {
-    try {
-      return new PacketDecoder(in);
-    } catch (IOException io) {
-      throw new RuntimeException("File Not Found or some I/O issue");
-    }
+//    buffer = null;
+//    in.close();
   }
 
   private ImmutableList<ProjectedColumnInfo> getProjectedColsIfItNull() {
@@ -176,13 +187,14 @@ public class PcapRecordReader extends AbstractRecordReader {
       return vector;
 
     } catch (SchemaChangeException sce) {
-      throw new NullPointerException("The addition of this field is incompatible with this OutputMutator's capabilities");
+      throw new IllegalStateException("The addition of this field is incompatible with this OutputMutator's capabilities");
     }
   }
 
   private int parsePcapFilesAndPutItToTable() throws IOException {
     Packet packet = new Packet();
-    while (offset < validBytes) {
+    int counter = 0;
+    while (offset < validBytes && counter != BATCH_SIZE) {
 
       if (validBytes - offset < 9000) {
         System.arraycopy(buffer, offset, buffer, 0, validBytes - offset);
@@ -197,69 +209,69 @@ public class PcapRecordReader extends AbstractRecordReader {
 
       offset = decoder.decodePacket(buffer, offset, packet);
 
-      if (addDataToTable(packet, decoder.getNetwork())) {
-        return 1;
+      if (addDataToTable(packet, decoder.getNetwork(), counter)) {
+        counter++;
       }
     }
-    return 0;
+    return counter;
   }
 
-  private boolean addDataToTable(final Packet packet, final int networkType) {
+  private boolean addDataToTable(final Packet packet, final int networkType, final int count) {
     for (ProjectedColumnInfo pci : projectedCols) {
       switch (pci.pcapColumn.getColumnName()) {
         case "type":
-          setStringColumnValue(packet.getPacketType(), pci);
+          setStringColumnValue(packet.getPacketType(), pci, count);
           break;
         case "timestamp":
-          setTimestampColumnValue(packet.getTimestamp(), pci);
+          setTimestampColumnValue(packet.getTimestamp(), pci, count);
           break;
         case "network":
-          setIntegerColumnValue(networkType, pci);
+          setIntegerColumnValue(networkType, pci, count);
           break;
         case "src_mac_address":
-          setStringColumnValue(packet.getEthernetSource(), pci);
+          setStringColumnValue(packet.getEthernetSource(), pci, count);
           break;
         case "dst_mac_address":
-          setStringColumnValue(packet.getEthernetDestination(), pci);
+          setStringColumnValue(packet.getEthernetDestination(), pci, count);
           break;
         case "dst_ip":
           if (packet.getDst_ip() != null) {
-            setStringColumnValue(packet.getDst_ip().getHostAddress(), pci);
+            setStringColumnValue(packet.getDst_ip().getHostAddress(), pci, count);
           } else {
-            setStringColumnValue(null, pci);
+            setStringColumnValue(null, pci, count);
           }
           break;
         case "src_ip":
           if (packet.getSrc_ip() != null) {
-            setStringColumnValue(packet.getSrc_ip().getHostAddress(), pci);
+            setStringColumnValue(packet.getSrc_ip().getHostAddress(), pci, count);
           } else {
-            setStringColumnValue(null, pci);
+            setStringColumnValue(null, pci, count);
           }
           break;
         case "src_port":
-          setIntegerColumnValue(packet.getSrc_port(), pci);
+          setIntegerColumnValue(packet.getSrc_port(), pci, count);
           break;
         case "dst_port":
-          setIntegerColumnValue(packet.getDst_port(), pci);
+          setIntegerColumnValue(packet.getDst_port(), pci, count);
           break;
         case "tcp_session":
           if (packet.isTcpPacket()) {
-            setLongColumnValue(packet.getSessionHash(), pci);
+            setLongColumnValue(packet.getSessionHash(), pci, count);
           }
           break;
         case "tcp_sequence":
           if (packet.isTcpPacket()) {
-            setIntegerColumnValue(packet.getSequenceNumber(), pci);
+            setIntegerColumnValue(packet.getSequenceNumber(), pci, count);
           }
           break;
         case "packet_length":
-          setIntegerColumnValue(packet.getPacketLength(), pci);
+          setIntegerColumnValue(packet.getPacketLength(), pci, count);
           break;
         case "data":
           if (packet.getData() != null) {
-            setStringColumnValue(parseBytesToASCII(packet.getData()), pci);
+            setStringColumnValue(parseBytesToASCII(packet.getData()), pci, count);
           } else {
-            setStringColumnValue("[]", pci);
+            setStringColumnValue("[]", pci, count);
           }
           break;
       }
@@ -267,29 +279,29 @@ public class PcapRecordReader extends AbstractRecordReader {
     return true;
   }
 
-  private void setLongColumnValue(long data, ProjectedColumnInfo pci) {
+  private void setLongColumnValue(long data, ProjectedColumnInfo pci, final int count) {
     ((NullableBigIntVector.Mutator) pci.vv.getMutator())
-        .setSafe(0, data);
+        .setSafe(count, data);
   }
 
-  private void setIntegerColumnValue(final int data, final ProjectedColumnInfo pci) {
+  private void setIntegerColumnValue(final int data, final ProjectedColumnInfo pci, final int count) {
     ((NullableIntVector.Mutator) pci.vv.getMutator())
-        .setSafe(0, data);
+        .setSafe(count, data);
   }
 
-  private void setTimestampColumnValue(final long data, final ProjectedColumnInfo pci) {
+  private void setTimestampColumnValue(final long data, final ProjectedColumnInfo pci, final int count) {
     ((NullableTimeStampVector.Mutator) pci.vv.getMutator())
-        .setSafe(0, data);
+        .setSafe(count, data);
   }
 
-  private void setStringColumnValue(final String data, final ProjectedColumnInfo pci) {
+  private void setStringColumnValue(final String data, final ProjectedColumnInfo pci, final int count) {
     if (data == null) {
       ((NullableVarCharVector.Mutator) pci.vv.getMutator())
-          .setNull(0);
+          .setNull(count);
     } else {
       ByteBuffer value = ByteBuffer.wrap(data.getBytes(UTF_8));
       ((NullableVarCharVector.Mutator) pci.vv.getMutator())
-          .setSafe(0, value, 0, value.remaining());
+          .setSafe(count, value, 0, value.remaining());
     }
   }
 }

@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -71,12 +72,12 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
 
   @Override
   public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    return null;
+    throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
   public int getReaderOperatorType() {
-    return 0;
+    return UserBitShared.CoreOperatorType.PCAP_SUB_SCAN_VALUE;
   }
 
   @Override
