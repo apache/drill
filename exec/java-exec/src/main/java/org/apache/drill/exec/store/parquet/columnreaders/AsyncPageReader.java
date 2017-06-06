@@ -118,7 +118,7 @@ class AsyncPageReader extends PageReader {
             if (skipBuf != null) {
               skipBuf.release();
             } else {
-              throw new EOFException("End of File reachecd.");
+              throw new EOFException("End of File reached.");
             }
           }
         }
@@ -431,7 +431,7 @@ class AsyncPageReader extends PageReader {
           readStatus.setDiskScanTime(timeToRead);
           assert (totalValuesRead <= totalValuesCount);
         }
-        // FindBugs reports this is a possible bug, but it is not. You do need the synchronized block
+        // You do need the synchronized block
         // because you want the check to see if there is remaining capacity in the queue, to be
         // synchronized
         synchronized (parent.pageQueueSyncronize) {
