@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: 2017-05-31 23:17:32 UTC
+date: 2017-06-06 23:26:12 UTC
 parent: "Configuring ODBC"
 ---
 
@@ -32,13 +32,19 @@ In your home directory, rename the files as hidden files. Use sudo if necessary:
 
 ## Step 1: Set Environment Variables 
 
-1. Set the ODBCINI environment variable to point to the `.odbc.ini` in your home directory. For example:  
+1. Set the ODBCINI environment variable to point to the `.odbc.ini` in your home directory. 
+
+	Example:  
    `export ODBCINI=~/.odbc.ini`
 
-2. Set the MAPRDRILLINI environment variable to point to `.mapr.drillodbc.ini` in your home directory. For example:  
+2. Set the MAPRDRILLINI environment variable to point to `.mapr.drillodbc.ini` in your home directory. 
+
+	Example:  
    `export MAPRDRILLINI=~/.mapr.drillodbc.ini`
 
-3. Set the `LD_LIBRARY_PATH` environment variable  to point to your ODBC driver manager libraries. For example:  
+3. Set the `LD_LIBRARY_PATH` environment variable  to point to your ODBC driver manager libraries. 
+
+	Example:  
    `export LD_LIBRARY_PATH=/usr/local/lib`
 
 You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
@@ -57,7 +63,7 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
     ZKQuorum=
     ZKClusterID=
 
-To use Drill in distributed mode, set the following properties, described in detail in section ["Direct and ZooKeeper Quorum Properties"]({{site.baseurl}}/docs/configuring-odbc-on-linux/#direct-and-zookeeper-quorum-properties):
+To use Drill in distributed mode, set the following properties. (These properties are described in detail in the [Direct and ZooKeeper Quorum Properties]({{site.baseurl}}/docs/configuring-odbc-on-linux/#direct-and-zookeeper-quorum-properties) section.)
 
     ConnectionType=ZooKeeper
     HOST=
@@ -65,7 +71,7 @@ To use Drill in distributed mode, set the following properties, described in det
     ZKQuorum=<host name>:<port>,<host name>:<port> . . . <host name>:<port>
     ZKClusterID=<cluster name in `drill-override.conf`>
 
-The following Linux sample shows a possible configuration for using Drill in distributed mode. The example modifies the default Linux-installed `.odbc.ini` for a 64-bit system by commenting out 32-bit properties, adding 64-bit properties, and removes the extraneous MapR Drill 64-bit from `.odbc.ini`.
+The following Linux sample shows a possible configuration for using Drill in distributed mode. 
 
     [ODBC]
     Trace=no
@@ -73,7 +79,8 @@ The following Linux sample shows a possible configuration for using Drill in dis
     [ODBC Data Sources]
     MapR Drill 32-bit=MapR Drill ODBC Driver 32-bit
     MapR Drill 64-bit=MapR Drill ODBC Driver 64-bit
-    [MapR Drill 32-bit]
+   
+	[MapR Drill 32-bit]
     # This key is not necessary and only describes the data source.
     
 	# Description=MapR Drill ODBC Driver (32-bit) DSN
@@ -90,10 +97,10 @@ The following Linux sample shows a possible configuration for using Drill in dis
     # Values for ConnectionType, AdvancedProperties, Catalog, Schema should be set here.
     # If ConnectionType is Direct, include Host and Port. If ConnectionType is ZooKeeper, include ZKQuorum and ZKClusterID
     # They can also be specified on the connection string.
-    # AuthenticationType:No authentication;Plain;Kerberos
+    # AuthenticationType:No authentication;Plain;Kerberos;
     ConnectionType=Direct
-    HOST=
-    PORT=
+    HOST=[HOST]
+    PORT=[PORT]
     ZKQuorum=[Zookeeper Quorum]
     ZKClusterID=[Cluster ID]]
     AuthenticationType=No Authentication
@@ -121,10 +128,10 @@ The following Linux sample shows a possible configuration for using Drill in dis
     # Values for ConnectionType, AdvancedProperties, Catalog, Schema should be set here.
     # If ConnectionType is Direct, include Host and Port. If ConnectionType is ZooKeeper, include ZKQuorum and ZKClusterID
     # They can also be specified on the connection string.
-    # AuthenticationType:No authentication;Plain;Kerberos;MapRSASL
+    # AuthenticationType:No authentication;Plain;Kerberos;MapRSASL;
     ConnectionType=Direct
-    HOST=
-    PORT=
+    HOST=[HOST]
+    PORT=[PORT]
     ZKQuorum=[Zookeeper Quorum]
     ZKClusterID=[Cluster ID]]
     AuthenticationType=No Authentication

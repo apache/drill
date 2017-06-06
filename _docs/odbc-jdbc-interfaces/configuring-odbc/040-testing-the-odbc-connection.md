@@ -1,6 +1,6 @@
 ---
 title: "Testing the ODBC Connection"
-date: 2017-06-03 01:09:33 UTC
+date: 2017-06-06 23:26:13 UTC
 parent: "Configuring ODBC"
 ---
 You can use DSN connection strings and DSN-less connection strings for your connections.
