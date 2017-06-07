@@ -56,7 +56,7 @@ public class ReplaceMethodInvoke {
     check(output);
 
     final DrillConfig c = DrillConfig.forClient();
-    final SystemOptionManager m = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), new LocalPersistentStoreProvider(c));
+    final SystemOptionManager m = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), new LocalPersistentStoreProvider(c), c);
     m.init();
     try (QueryClassLoader ql = new QueryClassLoader(DrillConfig.create(), m)) {
       ql.injectByteCode("org.apache.drill.Pickle$OutgoingBatch", output);
