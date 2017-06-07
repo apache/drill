@@ -30,7 +30,7 @@ public class CodeCompilerTestFactory {
     DrillConfig config = checkNotNull(c);
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config));
     LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
-    SystemOptionManager systemOptionManager = new SystemOptionManager(persistence, provider);
+    SystemOptionManager systemOptionManager = new SystemOptionManager(persistence, provider, config);
     return new CodeCompiler(config, systemOptionManager.init());
   }
 }

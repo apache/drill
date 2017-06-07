@@ -32,6 +32,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 
 /**
  * Static methods for constructing exception and pause injections for testing purposes.
@@ -71,7 +72,7 @@ public class ControlsInjectionUtil {
   public static void setControls(final UserSession session, final String controls) {
     validateControlsString(controls);
     final OptionValue opValue = OptionValue.createString(OptionValue.OptionType.SESSION,
-      DRILLBIT_CONTROL_INJECTIONS, controls);
+      DRILLBIT_CONTROL_INJECTIONS, controls, OptionScope.SESSION);
 
     final OptionManager options = session.getOptions();
     try {

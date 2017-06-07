@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 
@@ -28,7 +29,7 @@ public abstract class OptionValidator {
   // the error messages produced by the validator
   private final String optionName;
   private final boolean isAdminOption;
-
+  public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
   /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
     this(optionName, false);
@@ -105,5 +106,12 @@ public abstract class OptionValidator {
    * @return kind of this option value
    */
   public abstract Kind getKind();
+
+  /**
+   * Loads the default option value for this validator.
+   *
+   * @return  default option value
+   */
+  public abstract void loadDefault(DrillConfig bootConfig);
 
 }
