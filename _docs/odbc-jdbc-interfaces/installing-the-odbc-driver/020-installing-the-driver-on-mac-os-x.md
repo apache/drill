@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-06-06 23:26:14 UTC
+date: 2017-06-07 00:02:30 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -11,6 +11,12 @@ Install the MapR Drill ODBC Driver on a system that meets the [system requiremen
   * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-1-download-the-mapr-drill-odbc-driver)  
   * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2:-install-the-mapr-drill-odbc-driver) 
   * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)
+
+## Known Issues
+
+- The 32- and 64-bit MapR Drill ODBC drivers are supported on 64-bit machines. 
+- MapR SASL support for Kerberos and MapR tickets is only available on 64-bit machines. 
+
 
 ## System Requirements  
 To install the driver, you need Administrator privileges on the computer.
@@ -27,8 +33,7 @@ To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Download the MapR Drill ODBC Driver  
  
-
-{% include startnote.html %}The most current (version 1.3.8)  MapR Drill ODBC driver for Mac might not be available yet.{% include endnote.html %}  
+{% include startnote.html %}The most current (version 1.3.8) MapR Drill ODBC driver for Mac might not be available yet.{% include endnote.html %}  
 
 To download available drivers that support both 32- and 64-bit client applications, click 
 [MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/).
@@ -44,7 +49,9 @@ To install the driver, complete the following steps:
   3. Follow the instructions in the Installer to complete the installation process.
   4. When the installation completes, click **Close.**
 
-{% include startnote.html %}MapR Drill ODBC Driver files install in the following locations:{% include endnote.html %}
+
+
+MapR Drill ODBC Driver files install in the following locations:
 
   * `/Library/mapr/drill/ErrorMessages` – Error messages files directory
   * `/Library/mapr/drill/Setup` – Sample configuration files directory
