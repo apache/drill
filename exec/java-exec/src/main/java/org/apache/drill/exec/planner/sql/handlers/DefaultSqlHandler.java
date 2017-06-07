@@ -448,8 +448,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       log("Not enough memory for this plan", phyRelNode, logger, null);
       logger.debug("Re-planning without hash operations.");
 
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false));
-      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false));
+      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false, OptionValue.OptionScope.QUERY));
+      queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false, OptionValue.OptionScope.QUERY));
 
       try {
         final RelNode relNode = transform(PlannerType.VOLCANO, PlannerPhase.PHYSICAL, drel, traits);

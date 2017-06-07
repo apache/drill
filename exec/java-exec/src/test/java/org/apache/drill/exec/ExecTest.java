@@ -65,7 +65,7 @@ public class ExecTest extends DrillTest {
   public static void setupOptionManager() throws Exception{
     final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(c);
     provider.start();
-    optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider);
+    optionManager = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider,c);
     optionManager.init();
   }
 

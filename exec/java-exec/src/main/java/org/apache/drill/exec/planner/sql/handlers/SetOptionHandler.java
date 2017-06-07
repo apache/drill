@@ -31,6 +31,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlLiteral;
@@ -64,15 +65,19 @@ public class SetOptionHandler extends AbstractSqlHandler {
 
     final String scope = option.getScope();
     final OptionValue.OptionType type;
+    final OptionValue.OptionScope optionScope;
     if (scope == null) { // No scope mentioned assumed SESSION
       type = OptionType.SESSION;
+      optionScope = OptionScope.SESSION;
     } else {
       switch (scope.toLowerCase()) {
       case "session":
         type = OptionType.SESSION;
+        optionScope = OptionScope.SESSION;
         break;
       case "system":
         type = OptionType.SYSTEM;
+        optionScope = OptionScope.SYSTEM;
         break;
       default:
         throw UserException.validationError()
@@ -99,7 +104,7 @@ public class SetOptionHandler extends AbstractSqlHandler {
     // Currently, we convert multi-part identifier to a string.
     final String name = option.getName().toString();
     if (value != null) { // SET option
-      final OptionValue optionValue = createOptionValue(name, type, (SqlLiteral) value);
+      final OptionValue optionValue = createOptionValue(name, type, (SqlLiteral) value, optionScope);
       options.setOption(optionValue);
     } else { // RESET option
       if ("ALL".equalsIgnoreCase(name)) {
@@ -113,36 +118,36 @@ public class SetOptionHandler extends AbstractSqlHandler {
   }
 
   private static OptionValue createOptionValue(final String name, final OptionValue.OptionType type,
-                                               final SqlLiteral literal) {
+                                               final SqlLiteral literal, final OptionValue.OptionScope scope) {
     final Object object = literal.getValue();
     final SqlTypeName typeName = literal.getTypeName();
     switch (typeName) {
     case DECIMAL: {
       final BigDecimal bigDecimal = (BigDecimal) object;
       if (bigDecimal.scale() == 0) {
-        return OptionValue.createLong(type, name, bigDecimal.longValue());
+        return OptionValue.createLong(type, name, bigDecimal.longValue(), scope);
       } else {
-        return OptionValue.createDouble(type, name, bigDecimal.doubleValue());
+        return OptionValue.createDouble(type, name, bigDecimal.doubleValue(), scope);
       }
     }
 
     case DOUBLE:
     case FLOAT:
-      return OptionValue.createDouble(type, name, ((BigDecimal) object).doubleValue());
+      return OptionValue.createDouble(type, name, ((BigDecimal) object).doubleValue(), scope);
 
     case SMALLINT:
     case TINYINT:
     case BIGINT:
     case INTEGER:
-      return OptionValue.createLong(type, name, ((BigDecimal) object).longValue());
+      return OptionValue.createLong(type, name, ((BigDecimal) object).longValue(), scope);
 
     case VARBINARY:
     case VARCHAR:
     case CHAR:
-      return OptionValue.createString(type, name, ((NlsString) object).getValue());
+      return OptionValue.createString(type, name, ((NlsString) object).getValue(), scope);
 
     case BOOLEAN:
-      return OptionValue.createBoolean(type, name, (Boolean) object);
+      return OptionValue.createBoolean(type, name, (Boolean) object, scope);
 
     default:
       throw UserException.validationError()

@@ -46,6 +46,7 @@ import org.apache.drill.exec.server.options.BaseOptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.HyperRowSetImpl;
@@ -127,19 +128,19 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     public void set(String key, long value) {
-      values.put(key, OptionValue.createLong(OptionType.SYSTEM, key, value));
+      values.put(key, OptionValue.createLong(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, boolean value) {
-      values.put(key, OptionValue.createBoolean(OptionType.SYSTEM, key, value));
+      values.put(key, OptionValue.createBoolean(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, double value) {
-      values.put(key, OptionValue.createDouble(OptionType.SYSTEM, key, value));
+      values.put(key, OptionValue.createDouble(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     public void set(String key, String value) {
-      values.put(key, OptionValue.createString(OptionType.SYSTEM, key, value));
+      values.put(key, OptionValue.createString(OptionType.SYSTEM, key, value, OptionScope.SYSTEM));
     }
 
     @Override

@@ -49,6 +49,7 @@ public class FixtureBuilder {
   public static final int DEFAULT_ZK_REFRESH = 500; // ms
   public static final int DEFAULT_SERVER_RPC_THREADS = 10;
   public static final int DEFAULT_SCAN_THREADS = 8;
+  public static final String OPTION_DEFAULTS_ROOT = "drill.exec.options.";
 
   protected ConfigBuilder configBuilder = new ConfigBuilder();
   protected List<RuntimeOption> sessionOptions;
@@ -96,6 +97,14 @@ public class FixtureBuilder {
     return this;
   }
 
+  /**
+   *
+   */
+   public FixtureBuilder setOptionDefault(String key, Object value) {
+     String option_name = OPTION_DEFAULTS_ROOT + key;
+     configBuilder().put(option_name, value.toString());
+     return this;
+   }
   /**
    * Add an additional boot-time property for the embedded Drillbit.
    * @param key config property name

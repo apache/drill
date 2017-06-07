@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.codehaus.commons.compiler.CompileException;
 import org.junit.Assert;
@@ -58,7 +59,7 @@ public class TestClassTransformation extends BaseTestQuery {
   @Test
   public void testJaninoClassCompiler() throws Exception {
     logger.debug("Testing JaninoClassCompiler");
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JANINO.name()));
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JANINO.name(), OptionScope.SESSION));
     for (int i = 0; i < ITERATION_COUNT; i++) {
       compilationInnerClass(false); // Traditional byte-code manipulation
       compilationInnerClass(true); // Plain-old Java
@@ -68,7 +69,8 @@ public class TestClassTransformation extends BaseTestQuery {
   @Test
   public void testJDKClassCompiler() throws Exception {
     logger.debug("Testing JDKClassCompiler");
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name()));
+    OptionType type = OptionType.SESSION;
+    sessionOptions.setOption(OptionValue.createString(type, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name(), OptionScope.SESSION));
     for (int i = 0; i < ITERATION_COUNT; i++) {
       compilationInnerClass(false); // Traditional byte-code manipulation
       compilationInnerClass(true); // Plain-old Java
@@ -80,9 +82,10 @@ public class TestClassTransformation extends BaseTestQuery {
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
     ClassSet classSet = new ClassSet(null, cg.getDefinition().getTemplateClassName(), cg.getMaterializedClassName());
     String sourceCode = cg.generateAndGet();
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name()));
+    OptionType type = OptionType.SESSION;
+    sessionOptions.setOption(OptionValue.createString(type, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name(), OptionScope.SESSION));
 
-    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, false));
+    sessionOptions.setOption(OptionValue.createBoolean(type, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, false, OptionScope.SESSION));
     @SuppressWarnings("resource")
     QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
     final byte[][] codeWithoutDebug = loader.getClassByteCode(classSet.generated, sourceCode);
@@ -92,7 +95,7 @@ public class TestClassTransformation extends BaseTestQuery {
       sizeWithoutDebug += bs.length;
     }
 
-    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, true));
+    sessionOptions.setOption(OptionValue.createBoolean(type, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, true, OptionScope.SESSION));
     loader = new QueryClassLoader(config, sessionOptions);
     final byte[][] codeWithDebug = loader.getClassByteCode(classSet.generated, sourceCode);
     loader.close();

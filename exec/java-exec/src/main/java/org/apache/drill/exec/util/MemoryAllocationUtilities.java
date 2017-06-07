@@ -58,7 +58,9 @@ public class MemoryAllocationUtilities {
     // if there are any sorts, compute the maximum allocation, and set it on them
     if (bufferedOpList.size() > 0) {
       final OptionManager optionManager = queryContext.getOptions();
-      final long maxWidthPerNode = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val;
+      double cpu_load_average = optionManager.getOption(ExecConstants.CPU_LOAD_AVERAGE);
+      final long maxWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE);
+      final long maxWidthPerNode = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(cpu_load_average,maxWidth);
       long maxAllocPerNode = Math.min(DrillConfig.getMaxDirectMemory(),
           queryContext.getConfig().getLong(RootAllocatorFactory.TOP_LEVEL_MAX_ALLOC));
       maxAllocPerNode = Math.min(maxAllocPerNode,

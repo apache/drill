@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -75,13 +76,11 @@ public final class ExecutionControls {
 
     /**
      * Constructor for controls option validator.
-     *
-     * @param name the name of the validator
-     * @param def  the default JSON, specified as string
+     *  @param name the name of the validator
      * @param ttl  the number of queries for which this option should be valid
      */
-    public ControlsOptionValidator(final String name, final String def, final int ttl) {
-      super(name, OptionValue.Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
+    public ControlsOptionValidator(final String name, final int ttl) {
+      super(name, OptionValue.Kind.STRING);
       assert ttl > 0;
       this.ttl = ttl;
     }
@@ -111,6 +110,11 @@ public final class ExecutionControls {
             .message(String.format("Invalid controls option string (%s) due to %s.", jsonString, e.getMessage()))
             .build(logger);
       }
+    }
+
+    public void loadDefault(DrillConfig bootConfig){
+      OptionValue value = OptionValue.createString(OptionType.SYSTEM, getOptionName(), bootConfig.getString(getConfigProperty()), OptionValue.OptionScope.BOOT);
+      setDefaultValue(value);
     }
   }
 

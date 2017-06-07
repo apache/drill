@@ -102,7 +102,7 @@ public class StatusResources {
           OptionValue.Kind.valueOf(kind),
           OptionValue.OptionType.SYSTEM,
           name,
-          value));
+          value, OptionValue.OptionScope.SYSTEM));
     } catch (Exception e) {
       logger.debug("Could not update.", e);
     }
