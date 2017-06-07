@@ -359,6 +359,47 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
+   * Wraps an error that arises from execution due to issues in the query, in
+   * the environment and so on -- anything other than "this should never occur"
+   * type checks.
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+
+  public static Builder executionError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.EXECUTION_ERROR, cause);
+  }
+
+  /**
+   * Indicates an internal validation failed or similar unexpected error. Indicates
+   * the problem is likely within Drill itself rather than due to the environment,
+   * query, etc.
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+
+  public static Builder internalError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, cause);
+  }
+
+  /**
+   * Indicates an unspecified error: code caught the exception, but does not have
+   * visibility into the cause well enough to pick one of the more specific
+   * error types. In practice, using this exception indicates that error handling
+   * should be moved closer to the source of the exception so we can provide the
+   * user with a better explanation than "something went wrong."
+   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   *              returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+  public static Builder unspecifiedError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.UNSPECIFIED_ERROR, cause);
+  }
+
+
+  /**
    * Builder class for DrillUserException. You can wrap an existing exception, in this case it will first check if
    * this exception is, or wraps, a DrillUserException. If it does then the builder will use the user exception as it is
    * (it will ignore the message passed to the constructor) and will add any additional context information to the

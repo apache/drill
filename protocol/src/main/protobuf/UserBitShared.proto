@@ -90,6 +90,21 @@ message DrillPBError{
      * - invalid entries in SQL tree
      */
     VALIDATION = 10;
+    /* Execution exception
+     *  - Internal errors not related to bad code
+     */
+    EXECUTION_ERROR = 11;
+    /* Internal exception
+     *  - Failed assertions
+     *  - Other "this should not happen" cases
+     */
+    INTERNAL_ERROR = 12;
+    /* Unspecified exception
+     *  - Exception caught but cause is unknown
+     * Indicates code that needs revisiting to move error reporting
+     * closer to the cause.
+     */
+    UNSPECIFIED_ERROR = 13;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
