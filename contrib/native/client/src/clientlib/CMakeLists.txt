@@ -20,14 +20,17 @@
 
 set (CLIENTLIB_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/decimalUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/drillConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drillClient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drillClientImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/drillError.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/fieldmeta.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/metadata.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/recordBatch.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rpcMessage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/errmsgs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/recordBatch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rpcMessage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/userProperties.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/saslAuthenticatorImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/zookeeperClient.cpp)

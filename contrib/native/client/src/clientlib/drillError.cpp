@@ -16,18 +16,26 @@
  * limitations under the License.
  */
 
-#ifndef DRILL_CLIENT_ALL_H
-#define DRILL_CLIENT_ALL_H
 
-#include "drill/common.hpp"
-#include "drill/drillConfig.hpp"
 #include "drill/drillError.hpp"
-#include "drill/drillClient.hpp"
-#include "drill/fieldmeta.hpp"
-#include "drill/preparedStatement.hpp"
-#include "drill/recordBatch.hpp"
-#include "drill/userProperties.hpp"
-#include "drill/protobuf/Types.pb.h"
+#include "errmsgs.hpp"
+#include "logger.hpp"
+#include "UserBitShared.pb.h"
 
-#endif
+namespace exec{
+    namespace shared{
+        class DrillPBError;
+    };
+};
 
+namespace Drill{
+
+DrillClientError* DrillClientError::getErrorObject(const exec::shared::DrillPBError& e){
+    std::string s=Drill::getMessage(ERR_QRY_FAILURE, e.message().c_str());
+    DrillClientError* err=NULL;
+    err=new DrillClientError(QRY_FAILURE, QRY_ERROR_START+QRY_FAILURE, s);
+    return err;
+}
+
+
+} // namespace Drill

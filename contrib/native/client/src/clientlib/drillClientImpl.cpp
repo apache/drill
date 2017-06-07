@@ -536,19 +536,9 @@ bool DrillClientImpl::clientNeedsEncryption(const DrillUserProperties* userPrope
         return needsEncryption;
     }
 
-    // Loop through the property to find USERPROP_SASL_ENCRYPT and it's value
-    for (size_t i = 0; i < userProperties->size(); i++) {
-        const std::string key = userProperties->keyAt(i);
-        std::string value = userProperties->valueAt(i);
-
-        if(USERPROP_SASL_ENCRYPT == key) {
-            boost::algorithm::to_lower(value);
-
-            if(0 == value.compare("true")) {
-                needsEncryption = true;
-            }
-        }
-    }
+    std::string val;
+    needsEncryption = userProperties->isPropSet(USERPROP_SASL_ENCRYPT) &&
+        boost::iequals(userProperties->getProp(USERPROP_SASL_ENCRYPT, val), "true") ;
     return needsEncryption;
 }
 
@@ -581,33 +571,33 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         exec::user::UserProperties* userProperties = u2b.mutable_properties();
 
         std::map<char,int>::iterator it;
-        for(size_t i=0; i<properties->size(); i++){
-            std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(properties->keyAt(i));
+        for (std::map<std::string,std::string>::const_iterator propIter=properties->begin(); propIter!=properties->end(); ++propIter){
+            std::string currKey=propIter->first;
+            std::string currVal=propIter->second;
+            std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(currKey);
             if(it==DrillUserProperties::USER_PROPERTIES.end()){
-                DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connection property ("<< properties->keyAt(i)
+                DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connection property ("<< currKey
                     << ") is unknown" << std::endl;)
-
                 exec::user::Property* connProp = userProperties->add_properties();
-                connProp->set_key(properties->keyAt(i));
-                connProp->set_value(properties->valueAt(i));
-
+                connProp->set_key(currKey);
+                connProp->set_value(currVal);
                 continue;
             }
             if(IS_BITSET((*it).second,USERPROP_FLAGS_SERVERPROP)){
                 exec::user::Property* connProp = userProperties->add_properties();
-                connProp->set_key(properties->keyAt(i));
-                connProp->set_value(properties->valueAt(i));
+                connProp->set_key(currKey);
+                connProp->set_value(currVal);
                 //Username(but not the password) also needs to be set in UserCredentials
                 if(IS_BITSET((*it).second,USERPROP_FLAGS_USERNAME)){
                     exec::shared::UserCredentials* creds = u2b.mutable_credentials();
-                    username=properties->valueAt(i);
+                    username=currVal;
                     creds->set_user_name(username);
                     //u2b.set_credentials(&creds);
                 }
                 if(IS_BITSET((*it).second,USERPROP_FLAGS_PASSWORD)){
-                    DRILL_MT_LOG(DRILL_LOG(LOG_INFO) <<  properties->keyAt(i) << ": ********** " << std::endl;)
+                    DRILL_MT_LOG(DRILL_LOG(LOG_INFO) <<  currKey << ": ********** " << std::endl;)
                 }else{
-                    DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << properties->keyAt(i) << ":" << properties->valueAt(i) << std::endl;)
+                    DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << currKey << ":" << currVal << std::endl;)
                 }
             }// Server properties
         }
@@ -2725,10 +2715,13 @@ connectionStatus_t PooledDrillClientImpl::validateHandshake(DrillUserProperties*
     // Keep a copy of the user properties
     if(props!=NULL){
         m_pUserProperties = boost::shared_ptr<DrillUserProperties>(new DrillUserProperties);
-        for(size_t i=0; i<props->size(); i++){
+        //for(size_t i=0; i<props->size(); i++){
+        for(std::map<std::string, std::string>::const_iterator propIter = props->begin(); propIter != props->end(); ++propIter){
+            std::string currKey=propIter->first;
+            std::string currVal=propIter->second;
             m_pUserProperties->setProperty(
-                    props->keyAt(i),
-                    props->valueAt(i)
+                    currKey,
+                    currVal
                     );
         }
     }

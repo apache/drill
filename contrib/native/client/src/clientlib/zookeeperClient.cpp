@@ -18,6 +18,7 @@
 
 #include <boost/bind.hpp>
 #include <drill/drillClient.hpp>
+#include <drill/drillConfig.hpp>
 #include "zookeeperClient.hpp"
 
 #include "errmsgs.hpp"
@@ -157,6 +158,10 @@ int ZookeeperClient::getEndPoint(const std::string& drillbit, exec::DrillbitEndp
 	exec::DrillServiceInstance drillServiceInstance;
 	drillServiceInstance.ParseFromArray(buffer, buffer_len);
 	endpoint=drillServiceInstance.endpoint();
+
+    if(p_zh!=NULL && m_state==ZOO_CONNECTED_STATE){
+        DRILL_LOG(LOG_TRACE) << drillServiceInstance.DebugString() << std::endl;
+    }
 
     return 0;
 }

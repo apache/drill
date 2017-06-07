@@ -116,7 +116,10 @@ if(MSVC)
     add_definitions(-DUSE_STATIC_LIB)
 else()
     add_definitions(-DBOOST_ALL_DYN_LINK)
+    #suppress boost warnings (clang, gcc)
+    add_definitions ("-Wno-unused-local-typedefs")
 endif()
+
 
 # Find Protobufs
 find_package(Protobuf REQUIRED )

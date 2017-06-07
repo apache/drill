@@ -41,8 +41,9 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
-
 #include "drill/drillClient.hpp"
+#include "drill/drillConfig.hpp"
+#include "drill/drillError.hpp"
 #include "drill/preparedStatement.hpp"
 #include "collectionsImpl.hpp"
 #include "metadata.hpp"
