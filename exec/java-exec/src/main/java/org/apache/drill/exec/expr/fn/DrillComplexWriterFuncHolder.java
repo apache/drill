@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,58 +32,54 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
 
-public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
-
-  private FieldReference ref;
+public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
 
   public DrillComplexWriterFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
     super(functionAttributes, initializer);
   }
 
-  public void setReference(FieldReference ref) {
-    this.ref = ref;
-  }
-
-  public FieldReference getReference() {
-    return ref;
+  @Override
+  public boolean isComplexWriterFuncHolder() {
+    return true;
   }
 
   @Override
-  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
+  protected HoldingContainer generateEvalBody(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables, String body,
+                                              JVar[] workspaceJVars, FieldReference fieldReference) {
 
-    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", registeredNames[0]));
+    classGenerator.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);
     JBlock topSub = sub;
 
-    JVar complexWriter = g.declareClassField("complexWriter", g.getModel()._ref(ComplexWriter.class));
+    JVar complexWriter = classGenerator.declareClassField("complexWriter", classGenerator.getModel()._ref(ComplexWriter.class));
 
 
-    JInvocation container = g.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
+    JInvocation container = classGenerator.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
 
     //Default name is "col", if not passed in a reference name for the output vector.
-    String refName = ref == null? "col" : ref.getRootSegment().getPath();
+    String refName = fieldReference == null ? "col" : fieldReference.getRootSegment().getPath();
 
-    JClass cwClass = g.getModel().ref(VectorAccessibleComplexWriter.class);
-    g.getSetupBlock().assign(complexWriter, cwClass.staticInvoke("getWriter").arg(refName).arg(container));
+    JClass cwClass = classGenerator.getModel().ref(VectorAccessibleComplexWriter.class);
+    classGenerator.getSetupBlock().assign(complexWriter, cwClass.staticInvoke("getWriter").arg(refName).arg(container));
 
-    JClass projBatchClass = g.getModel().ref(ProjectRecordBatch.class);
-    JExpression projBatch = JExpr.cast(projBatchClass, g.getMappingSet().getOutgoing());
+    JClass projBatchClass = classGenerator.getModel().ref(ProjectRecordBatch.class);
+    JExpression projBatch = JExpr.cast(projBatchClass, classGenerator.getMappingSet().getOutgoing());
 
-    g.getSetupBlock().add(projBatch.invoke("addComplexWriter").arg(complexWriter));
+    classGenerator.getSetupBlock().add(projBatch.invoke("addComplexWriter").arg(complexWriter));
 
 
-    g.getEvalBlock().add(complexWriter.invoke("setPosition").arg(g.getMappingSet().getValueWriteIndex()));
+    classGenerator.getEvalBlock().add(complexWriter.invoke("setPosition").arg(classGenerator.getMappingSet().getValueWriteIndex()));
 
-    sub.decl(g.getModel()._ref(ComplexWriter.class), returnValue.name, complexWriter);
+    sub.decl(classGenerator.getModel()._ref(ComplexWriter.class), getReturnValue().getName(), complexWriter);
 
     // add the subblock after the out declaration.
-    g.getEvalBlock().add(topSub);
+    classGenerator.getEvalBlock().add(topSub);
 
-    addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
+    addProtectedBlock(classGenerator, sub, body, inputVariables, workspaceJVars, false);
 
 
-//    JConditional jc = g.getEvalBlock()._if(complexWriter.invoke("ok").not());
+//    JConditional jc = classGenerator.getEvalBlock()._if(complexWriter.invoke("ok").not());
 
 //    jc._then().add(complexWriter.invoke("reset"));
     //jc._then().directStatement("System.out.println(\"debug : write ok fail!, inIndex = \" + inIndex);");
@@ -91,9 +87,8 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
 
     //jc._else().directStatement("System.out.println(\"debug : write successful, inIndex = \" + inIndex);");
 
-    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", registeredNames[0]));
+    classGenerator.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     return null;
   }
-
 }

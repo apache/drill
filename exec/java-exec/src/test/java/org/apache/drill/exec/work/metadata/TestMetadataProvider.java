@@ -21,8 +21,10 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_DESCR;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_NAME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
@@ -36,7 +38,6 @@ import org.apache.drill.exec.proto.UserProtos.LikeFilter;
 import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.proto.UserProtos.SchemaMetadata;
 import org.apache.drill.exec.proto.UserProtos.TableMetadata;
-
 import org.junit.Test;
 
 /**
@@ -65,7 +66,7 @@ public class TestMetadataProvider extends BaseTestQuery {
     // test("SELECT * FROM INFORMATION_SCHEMA.CATALOGS " +
     //    "WHERE CATALOG_NAME LIKE '%DRI%' ESCAPE '\\'"); // SQL equivalent
     GetCatalogsResp resp =
-        client.getCatalogs(LikeFilter.newBuilder().setRegex("%DRI%").setEscape("\\").build()).get();
+        client.getCatalogs(LikeFilter.newBuilder().setPattern("%DRI%").setEscape("\\").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<CatalogMetadata> catalogs = resp.getCatalogsList();
@@ -83,7 +84,7 @@ public class TestMetadataProvider extends BaseTestQuery {
     //     WHERE CATALOG_NAME LIKE '%DRIj\\\\hgjh%' ESCAPE '\\'"); // SQL equivalent
 
     GetCatalogsResp resp =
-        client.getCatalogs(LikeFilter.newBuilder().setRegex("%DRIj\\%hgjh%").setEscape("\\").build()).get();
+        client.getCatalogs(LikeFilter.newBuilder().setPattern("%DRIj\\%hgjh%").setEscape("\\").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<CatalogMetadata> catalogs = resp.getCatalogsList();
@@ -115,7 +116,7 @@ public class TestMetadataProvider extends BaseTestQuery {
   public void schemasWithSchemaNameFilter() throws Exception {
     // test("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME LIKE '%y%'"); // SQL equivalent
 
-    GetSchemasResp resp = client.getSchemas(null, LikeFilter.newBuilder().setRegex("%y%").build()).get();
+    GetSchemasResp resp = client.getSchemas(null, LikeFilter.newBuilder().setPattern("%y%").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<SchemaMetadata> schemas = resp.getSchemasList();
@@ -131,8 +132,8 @@ public class TestMetadataProvider extends BaseTestQuery {
     //    "WHERE CATALOG_NAME LIKE '%RI%' AND SCHEMA_NAME LIKE '%y%'"); // SQL equivalent
 
     GetSchemasResp resp = client.getSchemas(
-        LikeFilter.newBuilder().setRegex("%RI%").build(),
-        LikeFilter.newBuilder().setRegex("%dfs_test%").build()).get();
+        LikeFilter.newBuilder().setPattern("%RI%").build(),
+        LikeFilter.newBuilder().setPattern("%dfs_test%").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<SchemaMetadata> schemas = resp.getSchemasList();
@@ -147,7 +148,41 @@ public class TestMetadataProvider extends BaseTestQuery {
   public void tables() throws Exception {
     // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES`"); // SQL equivalent
 
-    GetTablesResp resp = client.getTables(null, null, null).get();
+    GetTablesResp resp = client.getTables(null, null, null, null).get();
+
+    assertEquals(RequestStatus.OK, resp.getStatus());
+    List<TableMetadata> tables = resp.getTablesList();
+    assertEquals(11, tables.size());
+
+    verifyTable("INFORMATION_SCHEMA", "CATALOGS", tables);
+    verifyTable("INFORMATION_SCHEMA", "COLUMNS", tables);
+    verifyTable("INFORMATION_SCHEMA", "SCHEMATA", tables);
+    verifyTable("INFORMATION_SCHEMA", "TABLES", tables);
+    verifyTable("INFORMATION_SCHEMA", "VIEWS", tables);
+    verifyTable("sys", "boot", tables);
+    verifyTable("sys", "drillbits", tables);
+    verifyTable("sys", "memory", tables);
+    verifyTable("sys", "options", tables);
+    verifyTable("sys", "threads", tables);
+    verifyTable("sys", "version", tables);
+  }
+
+  @Test
+  public void tablesWithTableFilter() throws Exception {
+    // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_TYPE IN ('TABLE')"); // SQL equivalent
+
+    GetTablesResp resp = client.getTables(null, null, null, Arrays.asList("TABLE")).get();
+
+    assertEquals(RequestStatus.OK, resp.getStatus());
+    List<TableMetadata> tables = resp.getTablesList();
+    assertTrue(tables.isEmpty());
+  }
+
+  @Test
+  public void tablesWithSystemTableFilter() throws Exception {
+    // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_TYPE IN ('SYSTEM_TABLE')"); // SQL equivalent
+
+    GetTablesResp resp = client.getTables(null, null, null, Arrays.asList("SYSTEM_TABLE")).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
@@ -171,7 +206,8 @@ public class TestMetadataProvider extends BaseTestQuery {
     // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE '%o%'"); // SQL equivalent
 
     GetTablesResp resp = client.getTables(null, null,
-        LikeFilter.newBuilder().setRegex("%o%").build()).get();
+        LikeFilter.newBuilder().setPattern("%o%").build(),
+        null).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
@@ -189,8 +225,9 @@ public class TestMetadataProvider extends BaseTestQuery {
     //    "WHERE TABLE_SCHEMA LIKE '%N\\_S%' ESCAPE '\\' AND TABLE_NAME LIKE '%o%'"); // SQL equivalent
 
     GetTablesResp resp = client.getTables(null,
-        LikeFilter.newBuilder().setRegex("%N\\_S%").setEscape("\\").build(),
-        LikeFilter.newBuilder().setRegex("%o%").build()).get();
+        LikeFilter.newBuilder().setPattern("%N\\_S%").setEscape("\\").build(),
+        LikeFilter.newBuilder().setPattern("%o%").build(),
+        null).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
@@ -205,7 +242,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(70, columns.size());
+    assertEquals(71, columns.size());
     // too many records to verify the output.
   }
 
@@ -214,7 +251,7 @@ public class TestMetadataProvider extends BaseTestQuery {
     // test("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME LIKE '%\\_p%' ESCAPE '\\'"); // SQL equivalent
 
     GetColumnsResp resp = client.getColumns(null, null, null,
-        LikeFilter.newBuilder().setRegex("%\\_p%").setEscape("\\").build()).get();
+        LikeFilter.newBuilder().setPattern("%\\_p%").setEscape("\\").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
@@ -233,8 +270,8 @@ public class TestMetadataProvider extends BaseTestQuery {
     //     WHERE TABLE_NAME LIKE '%bits' AND COLUMN_NAME LIKE '%\\_p%' ESCAPE '\\'"); // SQL equivalent
 
     GetColumnsResp resp = client.getColumns(null, null,
-        LikeFilter.newBuilder().setRegex("%bits").build(),
-        LikeFilter.newBuilder().setRegex("%\\_p%").setEscape("\\").build()).get();
+        LikeFilter.newBuilder().setPattern("%bits").build(),
+        LikeFilter.newBuilder().setPattern("%\\_p%").setEscape("\\").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
@@ -252,10 +289,10 @@ public class TestMetadataProvider extends BaseTestQuery {
     //    "TABLE_NAME LIKE '%bits' AND COLUMN_NAME LIKE '%\\_p%' ESCAPE '\\'"); // SQL equivalent
 
     GetColumnsResp resp = client.getColumns(
-        LikeFilter.newBuilder().setRegex("%ILL").build(),
-        LikeFilter.newBuilder().setRegex("sys").build(),
-        LikeFilter.newBuilder().setRegex("%bits").build(),
-        LikeFilter.newBuilder().setRegex("%\\_p%").setEscape("\\").build()).get();
+        LikeFilter.newBuilder().setPattern("%ILL").build(),
+        LikeFilter.newBuilder().setPattern("sys").build(),
+        LikeFilter.newBuilder().setPattern("%bits").build(),
+        LikeFilter.newBuilder().setPattern("%\\_p%").setEscape("\\").build()).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();

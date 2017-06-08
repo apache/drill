@@ -25,6 +25,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
@@ -54,7 +54,8 @@ import com.google.common.collect.Lists;
  * level specific object is visited and decision is taken to visit the contents of the object. Object here is catalog,
  * schema, table or field.
  */
-public abstract class InfoSchemaRecordGenerator {
+public abstract class InfoSchemaRecordGenerator<S> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaRecordGenerator.class);
   protected InfoSchemaFilter filter;
 
   protected OptionManager optionManager;
@@ -151,7 +152,7 @@ public abstract class InfoSchemaRecordGenerator {
     return true;
   }
 
-  protected boolean shouldVisitTable(String schemaName, String tableName) {
+  protected boolean shouldVisitTable(String schemaName, String tableName, TableType tableType) {
     if (filter == null) {
       return true;
     }
@@ -161,7 +162,8 @@ public abstract class InfoSchemaRecordGenerator {
             CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
             SHRD_COL_TABLE_SCHEMA, schemaName,
             SCHS_COL_SCHEMA_NAME, schemaName,
-            SHRD_COL_TABLE_NAME, tableName);
+            SHRD_COL_TABLE_NAME, tableName,
+            TBLS_COL_TABLE_TYPE, tableType.toString());
 
     // If the filter evaluates to false then we don't need to visit the table.
     // For other two results (TRUE, INCONCLUSIVE) continue to visit the table.
@@ -186,7 +188,7 @@ public abstract class InfoSchemaRecordGenerator {
     return filter.evaluate(recordValues) != Result.FALSE;
   }
 
-  public abstract PojoRecordReader<?> getRecordReader();
+  public abstract PojoRecordReader<S> getRecordReader();
 
   public void scanSchema(SchemaPlus root) {
     if (shouldVisitCatalog() && visitCatalog()) {
@@ -225,8 +227,9 @@ public abstract class InfoSchemaRecordGenerator {
     for(Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(tableNames)) {
       final String tableName = tableNameToTable.getKey();
       final Table table = tableNameToTable.getValue();
+      final TableType tableType = table.getJdbcTableType();
       // Visit the table, and if requested ...
-      if(shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
+      if(shouldVisitTable(schemaPath, tableName, tableType) && visitTable(schemaPath, tableName, table)) {
         // ... do for each of the table's fields.
         final RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
         for (RelDataTypeField field: tableRow.getFieldList()) {
@@ -238,7 +241,7 @@ public abstract class InfoSchemaRecordGenerator {
     }
   }
 
-  public static class Catalogs extends InfoSchemaRecordGenerator {
+  public static class Catalogs extends InfoSchemaRecordGenerator<Records.Catalog> {
     List<Records.Catalog> records = ImmutableList.of();
 
     public Catalogs(OptionManager optionManager) {
@@ -257,7 +260,7 @@ public abstract class InfoSchemaRecordGenerator {
     }
   }
 
-  public static class Schemata extends InfoSchemaRecordGenerator {
+  public static class Schemata extends InfoSchemaRecordGenerator<Records.Schema> {
     List<Records.Schema> records = Lists.newArrayList();
 
     public Schemata(OptionManager optionManager) {
@@ -278,7 +281,7 @@ public abstract class InfoSchemaRecordGenerator {
     }
   }
 
-  public static class Tables extends InfoSchemaRecordGenerator {
+  public static class Tables extends InfoSchemaRecordGenerator<Records.Table> {
     List<Records.Table> records = Lists.newArrayList();
 
     public Tables(OptionManager optionManager) {
@@ -293,23 +296,26 @@ public abstract class InfoSchemaRecordGenerator {
     @Override
     public void visitTables(String schemaPath, SchemaPlus schema) {
       final AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+      final List<Pair<String, TableType>> tableNamesAndTypes = drillSchema
+          .getTableNamesAndTypes(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST),
+              (int)optionManager.getOption(ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE));
 
-      final List<String> tableNames = Lists.newArrayList(schema.getTableNames());
-      final List<Pair<String, ? extends Table>> tableNameToTables;
-      if(optionManager.getOption(ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST)) {
-        tableNameToTables = drillSchema.getTablesByNamesByBulkLoad(tableNames);
-      } else {
-        tableNameToTables = drillSchema.getTablesByNames(tableNames);
-      }
-
-      for(Pair<String, ? extends Table> tableNameToTable : tableNameToTables) {
-        final String tableName = tableNameToTable.getKey();
-        final Table table = tableNameToTable.getValue();
+      for (Pair<String, TableType> tableNameAndType : tableNamesAndTypes) {
+        final String tableName = tableNameAndType.getKey();
+        final TableType tableType = tableNameAndType.getValue();
         // Visit the table, and if requested ...
-        if(shouldVisitTable(schemaPath, tableName)) {
-          visitTable(schemaPath, tableName, table);
+        if (shouldVisitTable(schemaPath, tableName, tableType)) {
+          visitTableWithType(schemaPath, tableName, tableType);
         }
       }
+    }
+
+    private void visitTableWithType(String schemaName, String tableName, TableType type) {
+      Preconditions
+          .checkNotNull(type, "Error. Type information for table %s.%s provided is null.", schemaName,
+              tableName);
+      records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName, type.toString()));
+      return;
     }
 
     @Override
@@ -326,7 +332,7 @@ public abstract class InfoSchemaRecordGenerator {
     }
   }
 
-  public static class Views extends InfoSchemaRecordGenerator {
+  public static class Views extends InfoSchemaRecordGenerator<Records.View> {
     List<Records.View> records = Lists.newArrayList();
 
     public Views(OptionManager optionManager) {
@@ -348,7 +354,7 @@ public abstract class InfoSchemaRecordGenerator {
     }
   }
 
-  public static class Columns extends InfoSchemaRecordGenerator {
+  public static class Columns extends InfoSchemaRecordGenerator<Records.Column> {
     List<Records.Column> records = Lists.newArrayList();
     public Columns(OptionManager optionManager) {
       super(optionManager);

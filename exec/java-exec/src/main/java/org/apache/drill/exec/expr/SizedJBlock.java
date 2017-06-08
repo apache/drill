@@ -32,7 +32,10 @@ public class SizedJBlock {
 
   public SizedJBlock(JBlock block) {
     this.block = block;
-    this.count = 0;
+    // Project, Filter and Aggregator receives JBlock, using ClassGenerator.addExpr() method,
+    // but the Copier is doing kind of short-cut handling, by accessing the eval() and setup() directly.
+    // To take into account JBlocks, that were filled in Copier, sets count to 1.
+    this.count = 1;
   }
 
   public JBlock getBlock() {

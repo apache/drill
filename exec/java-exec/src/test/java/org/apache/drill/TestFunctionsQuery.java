@@ -912,4 +912,15 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues("foo")
         .go();
   }
+
+  @Test
+  public void testRandom() throws Exception {
+    String query = "select 2*random()=2*random() as col1 from (values (1))";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("col1")
+            .baselineValues(false)
+            .go();
+  }
 }

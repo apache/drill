@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,15 +44,16 @@ import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
 /**
- * A server is bound to a port and is responsible for responding to various type of requests. In some cases, the inbound
- * requests will generate more than one outbound request.
+ * A server is bound to a port and is responsible for responding to various type of requests. In some cases,
+ * the inbound requests will generate more than one outbound request.
+ *
+ * @param <T> RPC type
+ * @param <SC> server connection type
  */
-public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection> extends RpcBus<T, C> {
+public abstract class BasicServer<T extends EnumLite, SC extends ServerConnection<SC>> extends RpcBus<T, SC> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
-  protected static final String TIMEOUT_HANDLER = "timeout-handler";
-
-  private ServerBootstrap b;
+  private final ServerBootstrap b;
   private volatile boolean connect = false;
   private final EventLoopGroup eventLoopGroup;
 
@@ -77,22 +78,22 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
 //            logger.debug("Starting initialization of server connection.");
-            C connection = initRemoteConnection(ch);
+            SC connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(ch, connection));
 
             final ChannelPipeline pipe = ch.pipeline();
-            pipe.addLast("protocol-decoder", getDecoder(connection.getAllocator(), getOutOfMemoryHandler()));
-            pipe.addLast("message-decoder", new RpcDecoder("s-" + rpcConfig.getName()));
-            pipe.addLast("protocol-encoder", new RpcEncoder("s-" + rpcConfig.getName()));
-            pipe.addLast("handshake-handler", getHandshakeHandler(connection));
+            pipe.addLast(RpcConstants.PROTOCOL_DECODER, getDecoder(connection.getAllocator(), getOutOfMemoryHandler()));
+            pipe.addLast(RpcConstants.MESSAGE_DECODER, new RpcDecoder("s-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.PROTOCOL_ENCODER, new RpcEncoder("s-" + rpcConfig.getName()));
+            pipe.addLast(RpcConstants.HANDSHAKE_HANDLER, getHandshakeHandler(connection));
 
             if (rpcMapping.hasTimeout()) {
-              pipe.addLast(TIMEOUT_HANDLER,
-                  new LogggingReadTimeoutHandler(connection, rpcMapping.getTimeout()));
+              pipe.addLast(RpcConstants.TIMEOUT_HANDLER,
+                  new LoggingReadTimeoutHandler(connection, rpcMapping.getTimeout()));
             }
 
-            pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler<C>(connection));
+            pipe.addLast(RpcConstants.MESSAGE_HANDLER, new InboundHandler(connection));
+            pipe.addLast(RpcConstants.EXCEPTION_HANDLER, new RpcExceptionHandler<>(connection));
 
             connect = true;
 //            logger.debug("Server connection initialization completed.");
@@ -104,11 +105,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 //     }
   }
 
-  private class LogggingReadTimeoutHandler extends ReadTimeoutHandler {
+  private class LoggingReadTimeoutHandler extends ReadTimeoutHandler {
 
-    private final C connection;
+    private final SC connection;
     private final int timeoutSeconds;
-    public LogggingReadTimeoutHandler(C connection, int timeoutSeconds) {
+    public LoggingReadTimeoutHandler(SC connection, int timeoutSeconds) {
       super(timeoutSeconds);
       this.connection = connection;
       this.timeoutSeconds = timeoutSeconds;
@@ -116,24 +117,20 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
     @Override
     protected void readTimedOut(ChannelHandlerContext ctx) throws Exception {
-      logger.info("RPC connection {} timed out.  Timeout was set to {} seconds. Closing connection.", connection.getName(),
-          timeoutSeconds);
+      logger.info("RPC connection {} timed out.  Timeout was set to {} seconds. Closing connection.",
+          connection.getName(), timeoutSeconds);
       super.readTimedOut(ctx);
     }
 
   }
 
-  public OutOfMemoryHandler getOutOfMemoryHandler() {
+  protected OutOfMemoryHandler getOutOfMemoryHandler() {
     return OutOfMemoryHandler.DEFAULT_INSTANCE;
   }
 
-  protected void removeTimeoutHandler() {
+  protected abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
 
-  }
-
-  public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
-
-  protected abstract ServerHandshakeHandler<?> getHandshakeHandler(C connection);
+  protected abstract ServerHandshakeHandler<?> getHandshakeHandler(SC connection);
 
   protected static abstract class ServerHandshakeHandler<T extends MessageLite> extends AbstractHandshakeHandler<T> {
 
@@ -152,30 +149,16 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
   }
 
+  protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
+
   @Override
-  protected MessageLite getResponseDefaultInstance(int rpcType) throws RpcException {
-    return null;
+  protected void handle(SC connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
+                        ResponseSender sender) throws RpcException {
+    connection.getCurrentHandler().handle(connection, rpcType, pBody, dBody, sender);
   }
 
   @Override
-  protected Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
-    return null;
-  }
-
-  @Override
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
-      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
-    return super.send(connection, rpcType, protobufBody, clazz, dataBodies);
-  }
-
-  @Override
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
-      C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
-    super.send(listener, connection, rpcType, protobufBody, clazz, dataBodies);
-  }
-
-  @Override
-  public C initRemoteConnection(SocketChannel channel) {
+  protected SC initRemoteConnection(SocketChannel channel) {
     local = channel.localAddress();
     remote = channel.remoteAddress();
     return null;

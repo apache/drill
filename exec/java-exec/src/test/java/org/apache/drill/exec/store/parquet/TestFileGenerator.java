@@ -265,7 +265,7 @@ public class TestFileGenerator {
       w.endBlock();
     }
     w.end(new HashMap<String, String>());
-    logger.debug("Finished generating parquet file.");
+    logger.debug("Finished generating parquet file {}", path.getName());
   }
 
 }

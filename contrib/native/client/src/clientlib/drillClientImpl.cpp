@@ -19,35 +19,34 @@
 
 #include "drill/common.hpp"
 #include <queue>
-#include <string.h>
+#include <string>
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
+#include <boost/assign.hpp>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
+#include <boost/functional/factory.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#ifdef _WIN32
-#include <zookeeper.h>
-#else
-#include <zookeeper/zookeeper.h>
-#endif
-#include <boost/assign.hpp>
 
 #include "drill/drillClient.hpp"
+#include "drill/fieldmeta.hpp"
 #include "drill/recordBatch.hpp"
 #include "drillClientImpl.hpp"
+#include "collectionsImpl.hpp"
 #include "errmsgs.hpp"
 #include "logger.hpp"
-#include "rpcEncoder.hpp"
-#include "rpcDecoder.hpp"
+#include "metadata.hpp"
 #include "rpcMessage.hpp"
 #include "utils.hpp"
-
 #include "GeneralRPC.pb.h"
 #include "UserBitShared.pb.h"
+#include "zookeeperClient.hpp"
+#include "saslAuthenticatorImpl.hpp"
 
 namespace Drill{
-
+namespace { // anonymous namespace
 static std::map<exec::shared::QueryResult_QueryState, status_t> QUERYSTATE_TO_STATUS_MAP = boost::assign::map_list_of
     (exec::shared::QueryResult_QueryState_STARTING, QRY_PENDING)
     (exec::shared::QueryResult_QueryState_RUNNING, QRY_RUNNING)
@@ -56,70 +55,76 @@ static std::map<exec::shared::QueryResult_QueryState, status_t> QUERYSTATE_TO_ST
     (exec::shared::QueryResult_QueryState_FAILED, QRY_FAILED)
     ;
 
-RpcEncoder DrillClientImpl::s_encoder;
-RpcDecoder DrillClientImpl::s_decoder;
-
-std::string debugPrintQid(const exec::shared::QueryId& qid){
+static std::string debugPrintQid(const exec::shared::QueryId& qid){
     return std::string("[")+boost::lexical_cast<std::string>(qid.part1()) +std::string(":") + boost::lexical_cast<std::string>(qid.part2())+std::string("] ");
 }
 
-void setSocketTimeout(boost::asio::ip::tcp::socket& socket, int32_t timeout){
-#if defined _WIN32
-    int32_t timeoutMsecs=timeout*1000;
-    setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeoutMsecs, sizeof(timeoutMsecs));
-    setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeoutMsecs, sizeof(timeoutMsecs));
-#else
-    struct timeval tv;
-    tv.tv_sec  = timeout;
-    tv.tv_usec = 0;
-    int e=0;
-    e=setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-    e=setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-#endif
+// Convertion helper
+struct ToRpcType: public std::unary_function<google::protobuf::int32, exec::user::RpcType> {
+	exec::user::RpcType operator() (google::protobuf::int32 i) const {
+		return static_cast<exec::user::RpcType>(i);
+	}
+};
 }
-
-connectionStatus_t DrillClientImpl::connect(const char* connStr){
+connectionStatus_t DrillClientImpl::connect(const char* connStr, DrillUserProperties* props){
     std::string pathToDrill, protocol, hostPortStr;
     std::string host;
     std::string port;
-    if(!this->m_bIsConnected){
-        m_connectStr=connStr;
-        Utils::parseConnectStr(connStr, pathToDrill, protocol, hostPortStr);
-        if(!strcmp(protocol.c_str(), "zk")){
-            ZookeeperImpl zook;
-            std::vector<std::string> drillbits;
-            int err = zook.getAllDrillbits(hostPortStr.c_str(), pathToDrill.c_str(), drillbits);
-            if(!err){
-                Utils::shuffle(drillbits);
-                exec::DrillbitEndpoint endpoint;
-                err = zook.getEndPoint(drillbits, drillbits.size()-1, endpoint);// get the last one in the list
-                if(!err){
-                    host=boost::lexical_cast<std::string>(endpoint.address());
-                    port=boost::lexical_cast<std::string>(endpoint.user_port());
-                }
-            }
-            if(err){
-                return handleConnError(CONN_ZOOKEEPER_ERROR, getMessage(ERR_CONN_ZOOKEEPER, zook.getError().c_str()));
-            }
-            zook.close();
-            m_bIsDirectConnection=true;  
-        }else if(!strcmp(protocol.c_str(), "local")){
-            boost::lock_guard<boost::mutex> lock(m_dcMutex);//strtok is not reentrant
-            char tempStr[MAX_CONNECT_STR+1];
-            strncpy(tempStr, hostPortStr.c_str(), MAX_CONNECT_STR); tempStr[MAX_CONNECT_STR]=0;
-            host=strtok(tempStr, ":");
-            port=strtok(NULL, "");
-            m_bIsDirectConnection=false;  
-        }else{
-            return handleConnError(CONN_INVALID_INPUT, getMessage(ERR_CONN_UNKPROTO, protocol.c_str()));
+
+    if (this->m_bIsConnected) {
+        if(std::strcmp(connStr, m_connectStr.c_str())){ // trying to connect to a different address is not allowed if already connected
+            return handleConnError(CONN_ALREADYCONNECTED, getMessage(ERR_CONN_ALREADYCONN));
         }
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connecting to endpoint: " << host << ":" << port << std::endl;)
-        connectionStatus_t ret = this->connect(host.c_str(), port.c_str());
-        return ret;
-    }else if(std::strcmp(connStr, m_connectStr.c_str())){ // tring to connect to a different address is not allowed if already connected
-        return handleConnError(CONN_ALREADYCONNECTED, getMessage(ERR_CONN_ALREADYCONN));
+        return CONN_SUCCESS;
     }
-    return CONN_SUCCESS;
+
+    m_connectStr=connStr;
+    Utils::parseConnectStr(connStr, pathToDrill, protocol, hostPortStr);
+    if(protocol == "zk"){
+        ZookeeperClient zook(pathToDrill);
+        std::vector<std::string> drillbits;
+        int err = zook.getAllDrillbits(hostPortStr, drillbits);
+        if(!err){
+            if (drillbits.empty()){
+                return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_ZKNODBIT));
+            }
+            Utils::shuffle(drillbits);
+            exec::DrillbitEndpoint endpoint;
+            err = zook.getEndPoint(drillbits[drillbits.size() -1], endpoint);// get the last one in the list
+            if(!err){
+                host=boost::lexical_cast<std::string>(endpoint.address());
+                port=boost::lexical_cast<std::string>(endpoint.user_port());
+            }
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Choosing drillbit <" << (drillbits.size() - 1)  << ">. Selected " << endpoint.DebugString() << std::endl;)
+
+        }
+        if(err){
+            return handleConnError(CONN_ZOOKEEPER_ERROR, getMessage(ERR_CONN_ZOOKEEPER, zook.getError().c_str()));
+        }
+        zook.close();
+        m_bIsDirectConnection=true;
+    }else if(protocol == "local"){
+        boost::lock_guard<boost::mutex> lock(m_dcMutex);//strtok is not reentrant
+        char tempStr[MAX_CONNECT_STR+1];
+        strncpy(tempStr, hostPortStr.c_str(), MAX_CONNECT_STR); tempStr[MAX_CONNECT_STR]=0;
+        host=strtok(tempStr, ":");
+        port=strtok(NULL, "");
+        m_bIsDirectConnection=false;
+    }else{
+        return handleConnError(CONN_INVALID_INPUT, getMessage(ERR_CONN_UNKPROTO, protocol.c_str()));
+    }
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connecting to endpoint: " << host << ":" << port << std::endl;)
+    std::string serviceHost;
+    for (size_t i = 0; i < props->size(); i++) {
+        if (props->keyAt(i) == USERPROP_SERVICE_HOST) {
+            serviceHost = props->valueAt(i);
+        }
+    }
+    if (serviceHost.empty()) {
+        props->setProperty(USERPROP_SERVICE_HOST, host);
+    }
+    connectionStatus_t ret = this->connect(host.c_str(), port.c_str());
+    return ret;
 }
 
 connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
@@ -140,7 +145,7 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
             return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_FAILURE, host, port, ec.message().c_str()));
         }
 
-    }catch(std::exception e){
+    }catch(const std::exception & e){
         // Handle case when the hostname cannot be resolved. "resolve" is hard-coded in boost asio resolver.resolve
         if (!strcmp(e.what(), "resolve")) {
             return handleConnError(CONN_HOSTNAME_RESOLUTION_ERROR, getMessage(ERR_CONN_EXCEPT, e.what()));
@@ -152,7 +157,7 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
     // set socket keep alive
     boost::asio::socket_base::keep_alive keepAlive(true);
     m_socket.set_option(keepAlive);
-	// set no_delay
+    // set no_delay
     boost::asio::ip::tcp::no_delay noDelay(true);
     m_socket.set_option(noDelay);
 
@@ -160,31 +165,34 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
     connectedHost << "id: " << m_socket.native_handle() << " address: " << host << ":" << port;
     m_connectedHost = connectedHost.str();
     DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connected to endpoint: " << m_connectedHost << std::endl;)
-    
+
     return CONN_SUCCESS;
 }
 
 void DrillClientImpl::startHeartbeatTimer(){
-    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Started new heartbeat timer with "
-        << DrillClientConfig::getHeartbeatFrequency() << " seconds." << std::endl;)
-    m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getHeartbeatFrequency()));
-    m_heartbeatTimer.async_wait(boost::bind(
+    if (DrillClientConfig::getHeartbeatFrequency() > 0) {
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Started new heartbeat timer with "
+                                          << DrillClientConfig::getHeartbeatFrequency()
+                                          << " seconds." << std::endl;)
+        m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getHeartbeatFrequency()));
+        m_heartbeatTimer.async_wait(boost::bind(
                 &DrillClientImpl::handleHeartbeatTimeout,
                 this,
                 boost::asio::placeholders::error
-                ));
+        ));
         startMessageListener(); // start this thread early so we don't have the timer blocked
+    }
 }
 
 connectionStatus_t DrillClientImpl::sendHeartbeat(){
     connectionStatus_t status=CONN_SUCCESS;
     exec::rpc::Ack ack;
     ack.set_ok(true);
-    OutBoundRpcMessage heartbeatMsg(exec::rpc::PING, exec::user::ACK/*can be anything */, 0, &ack);
+    rpc::OutBoundRpcMessage heartbeatMsg(exec::rpc::PING, exec::user::ACK/*can be anything */, 0, &ack);
     boost::lock_guard<boost::mutex> prLock(this->m_prMutex);
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Heartbeat sent." << std::endl;)
-    status=sendSync(heartbeatMsg);
+    status=sendSyncCommon(heartbeatMsg);
     status=status==CONN_SUCCESS?status:CONN_DEAD;
     //If the server sends responses to a heartbeat, we need to increment the pending requests counter.
     if(m_pendingRequests++==0){
@@ -193,17 +201,11 @@ connectionStatus_t DrillClientImpl::sendHeartbeat(){
     return status;
 }
 
-void DrillClientImpl::resetHeartbeatTimer(){
-    m_heartbeatTimer.cancel();
-    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Reset Heartbeat timer." << std::endl;)
-    startHeartbeatTimer();
-}
-
 void DrillClientImpl::handleHeartbeatTimeout(const boost::system::error_code & err){
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl:: Heartbeat timer expired." << std::endl;)
     if(err != boost::asio::error::operation_aborted){
         // Check whether the deadline has passed.
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::Heartbeat Timer -  Expires at: " 
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::Heartbeat Timer -  Expires at: "
             << to_simple_string(m_heartbeatTimer.expires_at())
             << " and time now is: "
             << to_simple_string(boost::asio::deadline_timer::traits_type::now())
@@ -230,16 +232,123 @@ void DrillClientImpl::Close() {
     shutdownSocket();
 }
 
+/*
+ * Write bytesToWrite length data bytes pointed by dataPtr. It handles EINTR error
+ * occurred during write_some sys call and does a retry on that.
+ *
+ * Parameters:
+ *      dataPtr      - in param   - Pointer to data bytes to write on socket.
+ *      bytesToWrite - in param   - Length of data bytes to write from dataPtr.
+ *      errorCode    -  out param - Error code set by boost.
+ */
+void DrillClientImpl::doWriteToSocket(const char* dataPtr, size_t bytesToWrite,
+                                        boost::system::error_code& errorCode) {
+    if(0 == bytesToWrite) {
+        return;
+    }
 
-connectionStatus_t DrillClientImpl::sendSync(OutBoundRpcMessage& msg){
-    DrillClientImpl::s_encoder.Encode(m_wbuf, msg);
+    // Write all the bytes to socket. In case of error when all bytes are not successfully written
+    // proper errorCode will be set.
+    while(1) {
+        size_t bytesWritten = m_socket.write_some(boost::asio::buffer(dataPtr, bytesToWrite), errorCode);
+
+        // Update the state
+        bytesToWrite -= bytesWritten;
+        dataPtr += bytesWritten;
+
+        if(EINTR != errorCode.value()) break;
+
+        // Check if all the data is written then break from loop
+        if(0 == bytesToWrite) break;
+    }
+}
+
+/*
+ * Common wrapper to take care of sending both plain or encrypted message. It creates a send buffer from an
+ * OutboundRPCMessage and then call the send handler pointing to either sendSyncPlain or sendSyncEncrypted
+ *
+ * Return:
+ *  connectionStatus_t  -   CONN_SUCCESS - In case of successful send
+ *                      -   CONN_FAILURE - In case of failure to send
+ */
+connectionStatus_t DrillClientImpl::sendSyncCommon(rpc::OutBoundRpcMessage& msg) {
+    encode(m_wbuf, msg);
+    return (this->*m_fpCurrentSendHandler)();
+}
+
+/*
+ * Send handler for sending plain messages over wire
+ *
+ * Return:
+ *  connectionStatus_t  -   CONN_SUCCESS - In case of successful send
+ *                      -   CONN_FAILURE - In case of failure to send
+ */
+connectionStatus_t DrillClientImpl::sendSyncPlain(){
+
     boost::system::error_code ec;
-    size_t s=m_socket.write_some(boost::asio::buffer(m_wbuf), ec);
-    if(!ec && s!=0){
+    doWriteToSocket(reinterpret_cast<char*>(m_wbuf.data()), m_wbuf.size(), ec);
+
+    if(!ec) {
         return CONN_SUCCESS;
-    }else{
+    } else {
         return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_WFAIL, ec.message().c_str()));
     }
+}
+
+/*
+ * Send handler for sending encrypted messages over wire. It encrypts the send buffer using wrap api provided by
+ * saslAuthenticatorImpl and then transmit the encrypted bytes over wire.
+ *
+ * Return:
+ *  connectionStatus_t  -   CONN_SUCCESS - In case of successful send
+ *                      -   CONN_FAILURE - In case of failure to send
+ */
+connectionStatus_t DrillClientImpl::sendSyncEncrypted() {
+
+    boost::system::error_code ec;
+
+    // Encoded message is encrypted into chunks of size <= WrapSizeLimit. Each encrypted chunk along with
+    // its encrypted length in network order (added by Cyrus-SASL plugin) is sent over wire.
+    const int wrapChunkSize = m_encryptionCtxt.getWrapSizeLimit();
+    int lengthToEncrypt = m_wbuf.size();
+
+    int currentChunkLen = std::min(wrapChunkSize, lengthToEncrypt);
+    uint32_t currentChunkOffset = 0;
+    std::stringstream errorMsg;
+
+    // Encrypt and send each chunk
+    while(lengthToEncrypt != 0) {
+        const char* wrappedChunk = NULL;
+        uint32_t wrappedLen = 0;
+        const int wrapResult = m_saslAuthenticator->wrap(reinterpret_cast<const char*>(m_wbuf.data() + currentChunkOffset),
+                                                   currentChunkLen, &wrappedChunk, wrappedLen);
+        if(SASL_OK != wrapResult) {
+            errorMsg << "Sasl wrap failed while encrypting chunk of length: " << currentChunkLen << " , EncodeError: "
+                     << wrapResult;
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::sendSyncEncrypted - " << errorMsg.str()
+                                              << " ,ChunkOffset: " << currentChunkOffset << ", Message Len: " << m_wbuf.size()
+                                              << ", Closing connection.";)
+            return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_WFAIL, errorMsg.str().c_str()));
+        }
+
+        // Send the encrypted chunk.
+        doWriteToSocket(wrappedChunk, wrappedLen, ec);
+
+        if(ec) {
+            errorMsg << "Failure while sending encrypted chunk. Error: " << ec.message().c_str();
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::sendSyncEncrypted - " << errorMsg.str()
+                                              << ", Chunk Length: " << currentChunkLen << ", ChunkOffset:" << currentChunkOffset
+                                              << ", Message Len: " << m_wbuf.size() << ", Closing connection.";)
+            return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_WFAIL, errorMsg.str().c_str()));
+        }
+
+        // Update variables after sending each encrypted chunk
+        lengthToEncrypt -= currentChunkLen;
+        currentChunkOffset += currentChunkLen;
+        currentChunkLen = std::min(wrapChunkSize, lengthToEncrypt);
+    }
+
+    return CONN_SUCCESS;
 }
 
 connectionStatus_t DrillClientImpl::recvHandshake(){
@@ -274,17 +383,53 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
     if(m_rbuf!=NULL){
         Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
     }
-#ifdef WIN32_SHUTDOWN_ON_TIMEOUT
+
     if (m_pError != NULL) {
+        DRILL_MT_LOG(DRILL_LOG(LOG_ERROR) << "DrillClientImpl::recvHandshake: failed to complete handshake with server."
+                    << m_pError->msg << "\n";)
         return static_cast<connectionStatus_t>(m_pError->status);
     }
-#endif // WIN32_SHUTDOWN_ON_TIMEOUT
+
     startHeartbeatTimer();
 
     return CONN_SUCCESS;
 }
 
-void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
+/*
+ * Read bytesToRead length data bytes from socket into inBuf. It handles EINTR error
+ * occurred during read_some sys call and does a retry on that.
+ *
+ * Parameters:
+ *      inBuf        - out param  - Pointer to buffer to read data into from socket.
+ *      bytesToRead  - in param   - Length of data bytes to read from socket.
+ *      errorCode    - out param  - Error code set by boost.
+ */
+void DrillClientImpl::doReadFromSocket(ByteBuf_t inBuf, size_t bytesToRead,
+                                       boost::system::error_code& errorCode) {
+
+    // Check if bytesToRead is zero
+    if(0 == bytesToRead) {
+        return;
+    }
+
+    // Read all the bytes. In case when all the bytes were not read the proper
+    // errorCode will be set.
+    while(1){
+        size_t dataBytesRead = m_socket.read_some(boost::asio::buffer(inBuf, bytesToRead),
+                                           errorCode);
+        // Update the state
+        bytesToRead -= dataBytesRead;
+        inBuf += dataBytesRead;
+
+        // Check if errorCode is EINTR then just retry otherwise break from loop
+        if(EINTR != errorCode.value()) break;
+
+        // Check if all the data is read then break from loop
+        if(0 == bytesToRead) break;
+    }
+}
+
+void DrillClientImpl::handleHandshake(ByteBuf_t inBuf,
         const boost::system::error_code& err,
         size_t bytes_transferred) {
     boost::system::error_code error=err;
@@ -292,24 +437,30 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
     m_deadlineTimer.cancel();
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Deadline timer cancelled." << std::endl;)
     if(!error){
-        InBoundRpcMessage msg;
+        rpc::InBoundRpcMessage msg;
         uint32_t length = 0;
-        int bytes_read = DrillClientImpl::s_decoder.LengthDecode(m_rbuf, &length);
+        std::size_t bytes_read = rpcLengthDecode(m_rbuf, length);
         if(length>0){
-            size_t leftover = LEN_PREFIX_BUFLEN - bytes_read;
-            ByteBuf_t b=m_rbuf + LEN_PREFIX_BUFLEN;
-            size_t bytesToRead=length - leftover;
-            while(1){
-                size_t dataBytesRead=m_socket.read_some(
-                        boost::asio::buffer(b, bytesToRead),
-                        error);
-                if(err) break;
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Handshake Message: actual bytes read = " << dataBytesRead << std::endl;)
-                if(dataBytesRead==bytesToRead) break;
-                bytesToRead-=dataBytesRead;
-                b+=dataBytesRead;
+            const size_t leftover = LEN_PREFIX_BUFLEN - bytes_read;
+            const ByteBuf_t b = m_rbuf + LEN_PREFIX_BUFLEN;
+            const size_t bytesToRead=length - leftover;
+            doReadFromSocket(b, bytesToRead, error);
+
+            // Check if any error happen while reading the message bytes. If yes then return before decoding the Msg
+            if(error) {
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. "
+                                                  << " Failed to read entire handshake message. with error: "
+                                                  << error.message().c_str() << "\n";)
+                handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, "Failed to read entire handshake message"));
+                return;
             }
-            DrillClientImpl::s_decoder.Decode(m_rbuf+bytes_read, length, msg);
+
+            // Decode the bytes into a valid RPC Message
+            if (!decode(m_rbuf+bytes_read, length, msg)) {
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. Cannot decode handshake.\n";)
+                handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, "Cannot decode handshake"));
+                return;
+            }
         }else{
             DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. No handshake.\n";)
             handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, "No handshake"));
@@ -321,7 +472,21 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
         this->m_handshakeStatus=b2u.status();
         this->m_handshakeErrorId=b2u.errorid();
         this->m_handshakeErrorMsg=b2u.errormessage();
+        this->m_serverInfos = b2u.server_infos();
+        std::transform(b2u.supported_methods().begin(), b2u.supported_methods().end(),
+        		std::back_inserter(this->m_supportedMethods),
+        		ToRpcType());
+        for (int i=0; i<b2u.authenticationmechanisms_size(); i++) {
+            std::string mechanism = b2u.authenticationmechanisms(i);
+            boost::algorithm::to_lower(mechanism);
+            this->m_serverAuthMechanisms.push_back(mechanism);
+        }
 
+        // Updated encryption context based on server response
+        this->m_encryptionCtxt.setEncryptionReqd(b2u.has_encrypted() && b2u.encrypted());
+        if(b2u.has_maxwrappedsize()) {
+            this->m_encryptionCtxt.setMaxWrappedSize(b2u.maxwrappedsize());
+        }
     }else{
         // boost error
         if(error==boost::asio::error::eof){ // Server broke off the connection
@@ -342,7 +507,8 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
         if (m_deadlineTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now()){
             // The deadline has passed.
             m_deadlineTimer.expires_at(boost::posix_time::pos_infin);
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::HandleHShakeReadTimeout: Deadline timer expired; ERR_CONN_HSHAKETIMOUT.\n";)
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::HandleHShakeReadTimeout: "
+                                              << "Deadline timer expired; ERR_CONN_HSHAKETIMOUT.\n";)
             handleConnError(CONN_HANDSHAKE_TIMEOUT, getMessage(ERR_CONN_HSHAKETIMOUT));
             m_io_service.stop();
             boost::system::error_code ignorederr;
@@ -350,6 +516,33 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
         }
     }
     return;
+}
+
+/*
+ * Check's if client has explicitly expressed interest in encrypted connections only. It looks for USERPROP_SASL_ENCRYPT
+ * connection string property. If set to true then returns true else returns false
+ */
+bool DrillClientImpl::clientNeedsEncryption(const DrillUserProperties* userProperties) {
+    bool needsEncryption = false;
+    // check if userProperties is null
+    if(!userProperties) {
+        return needsEncryption;
+    }
+
+    // Loop through the property to find USERPROP_SASL_ENCRYPT and it's value
+    for (size_t i = 0; i < userProperties->size(); i++) {
+        const std::string key = userProperties->keyAt(i);
+        std::string value = userProperties->valueAt(i);
+
+        if(USERPROP_SASL_ENCRYPT == key) {
+            boost::algorithm::to_lower(value);
+
+            if(0 == value.compare("true")) {
+                needsEncryption = true;
+            }
+        }
+    }
+    return needsEncryption;
 }
 
 connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* properties){
@@ -360,7 +553,17 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
     u2b.set_channel(exec::shared::USER);
     u2b.set_rpc_version(DRILL_RPC_VERSION);
     u2b.set_support_listening(true);
-    u2b.set_support_timeout(true);
+    u2b.set_support_timeout(DrillClientConfig::getHeartbeatFrequency() > 0);
+    u2b.set_sasl_support(exec::user::SASL_PRIVACY);
+
+    // Adding version info
+    exec::user::RpcEndpointInfos* infos = u2b.mutable_client_infos();
+    infos->set_name(DrillClientConfig::getClientName());
+    infos->set_application(DrillClientConfig::getApplicationName());
+    infos->set_version(DRILL_VERSION_STRING);
+    infos->set_majorversion(DRILL_VERSION_MAJOR);
+    infos->set_minorversion(DRILL_VERSION_MINOR);
+    infos->set_patchversion(DRILL_VERSION_PATCH);
 
     if(properties != NULL && properties->size()>0){
         std::string username;
@@ -374,8 +577,13 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         for(size_t i=0; i<properties->size(); i++){
             std::map<std::string,uint32_t>::const_iterator it=DrillUserProperties::USER_PROPERTIES.find(properties->keyAt(i));
             if(it==DrillUserProperties::USER_PROPERTIES.end()){
-                DRILL_MT_LOG(DRILL_LOG(LOG_WARNING) << "Connection property ("<< properties->keyAt(i) 
-                    << ") is unknown and is being skipped" << std::endl;)
+                DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connection property ("<< properties->keyAt(i)
+                    << ") is unknown" << std::endl;)
+
+                exec::user::Property* connProp = userProperties->add_properties();
+                connProp->set_key(properties->keyAt(i));
+                connProp->set_value(properties->valueAt(i));
+
                 continue;
             }
             if(IS_BITSET((*it).second,USERPROP_FLAGS_SERVERPROP)){
@@ -402,8 +610,8 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         uint64_t coordId = this->getNextCoordinationId();
 
-        OutBoundRpcMessage out_msg(exec::rpc::REQUEST, exec::user::HANDSHAKE, coordId, &u2b);
-        sendSync(out_msg);
+        rpc::OutBoundRpcMessage out_msg(exec::rpc::REQUEST, exec::user::HANDSHAKE, coordId, &u2b);
+        sendSyncCommon(out_msg);
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Sent handshake request message. Coordination id: " << coordId << "\n";)
     }
 
@@ -411,37 +619,182 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
     if(ret!=CONN_SUCCESS){
         return ret;
     }
-    if(this->m_handshakeStatus != exec::user::SUCCESS){
-        switch(this->m_handshakeStatus){
-            case exec::user::RPC_VERSION_MISMATCH:
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Invalid rpc version.  Expected "
-                    << DRILL_RPC_VERSION << ", actual "<< m_handshakeVersion << "." << std::endl;)
-                return handleConnError(CONN_BAD_RPC_VER,
-                        getMessage(ERR_CONN_BAD_RPC_VER, DRILL_RPC_VERSION,
-                            m_handshakeVersion,
-                            this->m_handshakeErrorId.c_str(),
-                            this->m_handshakeErrorMsg.c_str()));
-            case exec::user::AUTH_FAILED:
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Authentication failed." << std::endl;)
-                return handleConnError(CONN_AUTH_FAILED,
-                        getMessage(ERR_CONN_AUTHFAIL,
-                            this->m_handshakeErrorId.c_str(),
-                            this->m_handshakeErrorMsg.c_str()));
-            case exec::user::UNKNOWN_FAILURE:
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Unknown error during handshake." << std::endl;)
-                return handleConnError(CONN_HANDSHAKE_FAILED,
-                        getMessage(ERR_CONN_UNKNOWN_ERR,
-                            this->m_handshakeErrorId.c_str(),
-                            this->m_handshakeErrorMsg.c_str()));
-            default:
-                break;
-        }
+
+    switch(this->m_handshakeStatus) {
+        case exec::user::SUCCESS:
+            // reset io_service after handshake is validated before running queries
+            m_io_service.reset();
+            return CONN_SUCCESS;
+        case exec::user::RPC_VERSION_MISMATCH:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Invalid rpc version.  Expected "
+                << DRILL_RPC_VERSION << ", actual "<< m_handshakeVersion << "." << std::endl;)
+            return handleConnError(CONN_BAD_RPC_VER, getMessage(ERR_CONN_BAD_RPC_VER, DRILL_RPC_VERSION,
+                                                                m_handshakeVersion,
+                                                                this->m_handshakeErrorId.c_str(),
+                                                                this->m_handshakeErrorMsg.c_str()));
+        case exec::user::AUTH_FAILED:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Authentication failed." << std::endl;)
+            return handleConnError(CONN_AUTH_FAILED, getMessage(ERR_CONN_AUTHFAIL,
+                                                                this->m_handshakeErrorId.c_str(),
+                                                                this->m_handshakeErrorMsg.c_str()));
+        case exec::user::UNKNOWN_FAILURE:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Unknown error during handshake." << std::endl;)
+            return handleConnError(CONN_HANDSHAKE_FAILED, getMessage(ERR_CONN_UNKNOWN_ERR,
+                                                                     this->m_handshakeErrorId.c_str(),
+                                                                     this->m_handshakeErrorMsg.c_str()));
+        case exec::user::AUTH_REQUIRED:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Server requires SASL authentication." << std::endl;)
+            return handleAuthentication(properties);
+        default:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Unknown return status." << std::endl;)
+            return handleConnError(CONN_HANDSHAKE_FAILED, getMessage(ERR_CONN_UNKNOWN_ERR,
+                                                                     this->m_handshakeErrorId.c_str(),
+                                                                     this->m_handshakeErrorMsg.c_str()));
     }
-    // reset io_service after handshake is validated before running queries
-    m_io_service.reset();
-    return CONN_SUCCESS;
 }
 
+connectionStatus_t DrillClientImpl::handleAuthentication(const DrillUserProperties *userProperties) {
+
+    // Check if client needs encryption and server is configured for encryption or not before starting handshake
+    if(clientNeedsEncryption(userProperties) && !m_encryptionCtxt.isEncryptionReqd()) {
+        return handleConnError(CONN_AUTH_FAILED, "Client needs encryption but on server side encryption is disabled."
+                                                 " Please check connection parameters or contact administrator?");
+    }
+
+    try {
+        m_saslAuthenticator = new SaslAuthenticatorImpl(userProperties);
+    } catch (std::runtime_error& e) {
+        return handleConnError(CONN_AUTH_FAILED, e.what());
+    }
+
+    startMessageListener();
+    initiateAuthentication();
+
+    { // block until SASL exchange is complete
+        boost::mutex::scoped_lock lock(m_saslMutex);
+        while (!m_saslDone) {
+            m_saslCv.wait(lock);
+        }
+    }
+
+    std::stringstream logMsg;
+    logMsg << "DrillClientImpl::handleAuthentication: Authentication failed. [Details: ";
+
+    if (SASL_OK == m_saslResultCode) {
+        // Check the negotiated SSF value and change the handlers.
+        if(m_encryptionCtxt.isEncryptionReqd()) {
+            if(SASL_OK != m_saslAuthenticator->verifyAndUpdateSaslProps()) {
+                logMsg << m_encryptionCtxt << "]. Negotiated Parameter is invalid."
+                       << " Error: " << m_saslResultCode;
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
+                return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
+            }
+
+            // Successfully negotiated for encryption related security parameters.
+            // Start using Encrypt and Decrypt handlers.
+            m_fpCurrentSendHandler = &DrillClientImpl::sendSyncEncrypted;
+            m_fpCurrentReadMsgHandler = &DrillClientImpl::readAndDecryptMsg;
+        }
+
+        // Reset the errorMsg stream since this is success case.
+        logMsg.str(std::string());
+        logMsg << "DrillClientImpl::handleAuthentication: Successfully authenticated! [Details: "
+               << m_encryptionCtxt << " ]";
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
+        m_io_service.reset();
+        return CONN_SUCCESS;
+    } else {
+        logMsg << m_encryptionCtxt << ", Error: " << m_saslResultCode;
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << logMsg.str() << std::endl;)
+
+        // shuts down socket as well
+        logMsg << "]. Check connection parameters?";
+        return handleConnError(CONN_AUTH_FAILED, logMsg.str().c_str());
+    }
+}
+
+void DrillClientImpl::initiateAuthentication() {
+    exec::shared::SaslMessage response;
+    m_saslResultCode = m_saslAuthenticator->init(m_serverAuthMechanisms, response, &m_encryptionCtxt);
+
+    switch (m_saslResultCode) {
+        case SASL_CONTINUE:
+        case SASL_OK: {
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::initiateAuthentication: initiated. " << std::endl;)
+            boost::lock_guard<boost::mutex> prLock(m_prMutex);
+            sendSaslResponse(response); // the challenge returned by server is handled by processSaslChallenge
+            break;
+        }
+        case SASL_NOMECH:
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::initiateAuthentication: "
+                                              << "Mechanism is not supported (by server/client)." << std::endl;)
+        default:
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::initiateAuthentication: "
+                                              << "Failed to initiate authentication." << std::endl;)
+            finishAuthentication();
+            break;
+    }
+}
+
+void DrillClientImpl::sendSaslResponse(const exec::shared::SaslMessage& response) {
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+    const int32_t coordId = getNextCoordinationId();
+    rpc::OutBoundRpcMessage msg(exec::rpc::REQUEST, exec::user::SASL_MESSAGE, coordId, &response);
+    sendSyncCommon(msg);
+    if (m_pendingRequests++ == 0) {
+        getNextResult();
+    }
+}
+
+void DrillClientImpl::processSaslChallenge(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg) {
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    assert(m_saslAuthenticator != NULL);
+
+    // parse challenge
+    exec::shared::SaslMessage challenge;
+    const bool parseStatus = challenge.ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
+    if (!parseStatus) {
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Failed to parse challenge." << std::endl;)
+        m_saslResultCode = SASL_FAIL;
+        finishAuthentication();
+        m_pendingRequests--;
+        return;
+    }
+
+    // respond accordingly
+    exec::shared::SaslMessage response;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processSaslChallenge: status: "
+                                      << exec::shared::SaslStatus_Name(challenge.status()) << std::endl;)
+    switch (challenge.status()) {
+        case exec::shared::SASL_IN_PROGRESS:
+            m_saslResultCode = m_saslAuthenticator->step(challenge, response);
+            if (m_saslResultCode == SASL_CONTINUE || m_saslResultCode == SASL_OK) {
+                sendSaslResponse(response);
+            } else { // failure
+                finishAuthentication();
+            }
+            break;
+        case exec::shared::SASL_SUCCESS:
+            if (SASL_CONTINUE == m_saslResultCode) { // client may need to evaluate once more
+                m_saslResultCode = m_saslAuthenticator->step(challenge, response);
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "SASL succeeded on client? " << m_saslResultCode << std::endl;)
+            }
+            finishAuthentication();
+            break;
+        default:
+            m_saslResultCode = SASL_FAIL;
+            finishAuthentication();
+            break;
+    }
+    m_pendingRequests--;
+}
+
+void DrillClientImpl::finishAuthentication() {
+    boost::mutex::scoped_lock lock(m_saslMutex);
+    m_saslDone = true;
+    m_saslCv.notify_one();
+}
 
 FieldDefPtr DrillClientQueryResult::s_emptyColDefs( new (std::vector<Drill::FieldMetadata*>));
 
@@ -469,60 +822,188 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
     query.set_type(t);
     query.set_plan(plan);
 
-    uint64_t coordId;
-    DrillClientQueryResult* pQuery=NULL;
+    boost::function<DrillClientQueryResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientQueryResult*>(),
+            boost::ref(*this),
+            _1,
+            boost::cref(plan),
+            l,
+            lCtx);
+    return sendMsg(factory, ::exec::user::RUN_QUERY, query);
+}
+
+DrillClientPrepareHandle* DrillClientImpl::PrepareQuery(const std::string& plan,
+        pfnPreparedStatementListener l,
+        void* lCtx){
+    exec::user::CreatePreparedStatementReq query;
+    query.set_sql_query(plan);
+
+    boost::function<DrillClientPrepareHandle*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientPrepareHandle*>(),
+            boost::ref(*this),
+            _1,
+            boost::cref(plan),
+            l,
+            lCtx);
+    return sendMsg(factory, ::exec::user::CREATE_PREPARED_STATEMENT, query);
+}
+
+DrillClientQueryResult* DrillClientImpl::ExecuteQuery(const PreparedStatement& pstmt,
+        pfnQueryResultsListener l,
+        void* lCtx){
+    const DrillClientPrepareHandle& handle = static_cast<const DrillClientPrepareHandle&>(pstmt);
+
+    exec::user::RunQuery query;
+    query.set_results_mode(exec::user::STREAM_FULL);
+    query.set_type(::exec::shared::PREPARED_STATEMENT);
+    query.set_allocated_prepared_statement_handle(new ::exec::user::PreparedStatementHandle(handle.m_preparedStatementHandle));
+
+    boost::function<DrillClientQueryResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientQueryResult*>(),
+            boost::ref(*this),
+            _1,
+            boost::cref(handle.m_query),
+            l,
+            lCtx);
+    return sendMsg(factory, ::exec::user::RUN_QUERY, query);
+}
+
+static void updateLikeFilter(exec::user::LikeFilter& likeFilter, const std::string& pattern,
+        const std::string& searchEscapeString) {
+	likeFilter.set_pattern(pattern);
+	likeFilter.set_escape(searchEscapeString);
+}
+
+DrillClientCatalogResult* DrillClientImpl::getCatalogs(const std::string& catalogPattern,
+        const std::string& searchEscapeString,
+        Metadata::pfnCatalogMetadataListener listener,
+        void* listenerCtx) {
+    exec::user::GetCatalogsReq query;
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+
+    boost::function<DrillClientCatalogResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientCatalogResult*>(),
+            boost::ref(*this),
+            _1,
+            listener,
+            listenerCtx);
+    return sendMsg(factory, ::exec::user::GET_CATALOGS, query);
+}
+
+DrillClientSchemaResult* DrillClientImpl::getSchemas(const std::string& catalogPattern,
+        const std::string& schemaPattern,
+        const std::string& searchEscapeString,
+        Metadata::pfnSchemaMetadataListener listener,
+        void* listenerCtx) {
+    exec::user::GetSchemasReq query;
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
+
+    boost::function<DrillClientSchemaResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientSchemaResult*>(),
+            boost::ref(*this),
+            _1,
+            listener,
+            listenerCtx);
+    return sendMsg(factory, ::exec::user::GET_SCHEMAS, query);
+}
+
+DrillClientTableResult* DrillClientImpl::getTables(const std::string& catalogPattern,
+        const std::string& schemaPattern,
+        const std::string& tablePattern,
+		const std::vector<std::string>* tableTypes,
+        const std::string& searchEscapeString,
+        Metadata::pfnTableMetadataListener listener,
+        void* listenerCtx) {
+    exec::user::GetTablesReq query;
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern, searchEscapeString);
+
+    if (tableTypes) {
+    	std::copy(tableTypes->begin(), tableTypes->end(),
+    			google::protobuf::RepeatedFieldBackInserter(query.mutable_table_type_filter()));
+    }
+
+    boost::function<DrillClientTableResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientTableResult*>(),
+            boost::ref(*this),
+            _1,
+            listener,
+            listenerCtx);
+    return sendMsg(factory, ::exec::user::GET_TABLES, query);
+}
+
+DrillClientColumnResult* DrillClientImpl::getColumns(const std::string& catalogPattern,
+        const std::string& schemaPattern,
+        const std::string& tablePattern,
+        const std::string& columnsPattern,
+        const std::string& searchEscapeString,
+        Metadata::pfnColumnMetadataListener listener,
+        void* listenerCtx) {
+    exec::user::GetColumnsReq query;
+    updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_table_name_filter(), tablePattern, searchEscapeString);
+    updateLikeFilter(*query.mutable_column_name_filter(), columnsPattern, searchEscapeString);
+
+    boost::function<DrillClientColumnResult*(int32_t)> factory = boost::bind(
+            boost::factory<DrillClientColumnResult*>(),
+            boost::ref(*this),
+            _1,
+            listener,
+            listenerCtx);
+    return sendMsg(factory, ::exec::user::GET_COLUMNS, query);
+}
+
+template<typename Handle>
+Handle* DrillClientImpl::sendMsg(boost::function<Handle*(int32_t)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& message) {
+    int32_t coordId;
+    Handle* phandle=NULL;
     connectionStatus_t cStatus=CONN_SUCCESS;
     {
         boost::lock_guard<boost::mutex> prLock(this->m_prMutex);
         boost::lock_guard<boost::mutex> dcLock(this->m_dcMutex);
         coordId = this->getNextCoordinationId();
-        OutBoundRpcMessage out_msg(exec::rpc::REQUEST, exec::user::RUN_QUERY, coordId, &query);
+        rpc::OutBoundRpcMessage out_msg(exec::rpc::REQUEST, type, coordId, &message);
 
-        // Create the result object and register the listener before we send the query
-        // because sometimes the caller is not checking the status of the submitQuery call.
-        // This way, the broadcast error call will cause the results listener to be called
-        // with a COMM_ERROR status.
-        pQuery = new DrillClientQueryResult(this, coordId, plan);
-        pQuery->registerListener(l, lCtx);
-        this->m_queryIds[coordId]=pQuery;
+        phandle = handleFactory(coordId);
+        this->m_queryHandles[coordId]=phandle;
 
-        connectionStatus_t cStatus=sendSync(out_msg);
+        connectionStatus_t cStatus = sendSyncCommon(out_msg);
         if(cStatus == CONN_SUCCESS){
             bool sendRequest=false;
 
-            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query request. " << "[" << m_connectedHost << "]"  << "Coordination id = " << coordId << std::endl;)
-                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent query " <<  "Coordination id = " << coordId << " query: " << plan << std::endl;)
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent " << ::exec::user::RpcType_Name(type) << " request. " << "[" << m_connectedHost << "]"  << "Coordination id = " << coordId << std::endl;)
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)  << "Sent " << ::exec::user::RpcType_Name(type) <<  " Coordination id = " << coordId << " query: " << phandle->getQuery() << std::endl;)
 
-                if(m_pendingRequests++==0){
-                    sendRequest=true;
-                }else{
-                    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Queueing query request to server" << std::endl;)
-                        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Number of pending requests = " << m_pendingRequests << std::endl;)
-                }
+            if(m_pendingRequests++==0){
+                sendRequest=true;
+            }else{
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Queuing " << ::exec::user::RpcType_Name(type) <<  " request to server" << std::endl;)
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Number of pending requests = " << m_pendingRequests << std::endl;)
+            }
             if(sendRequest){
-                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Sending query request. Number of pending requests = "
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Sending " << ::exec::user::RpcType_Name(type) <<  " request. Number of pending requests = "
                         << m_pendingRequests << std::endl;)
-                    getNextResult(); // async wait for results
+                getNextResult(); // async wait for results
             }
         }
 
     }
     if(cStatus!=CONN_SUCCESS){
-        this->m_queryIds.erase(coordId);
-        delete pQuery;
+        this->m_queryHandles.erase(coordId);
+        delete phandle;
         return NULL;
     }
-
-
 
     //run this in a new thread
     startMessageListener();
 
-    return pQuery;
+    return phandle;
 }
 
 void DrillClientImpl::getNextResult(){
-
     // This call is always made from within a function where the mutex has already been acquired
     //boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
 
@@ -533,7 +1014,7 @@ void DrillClientImpl::getNextResult(){
             AllocatedBuffer::s_memCV.wait(memLock);
         }
     }
-    
+
     //use free, not delete to free
     ByteBuf_t readBuf = Utils::allocateBuffer(LEN_PREFIX_BUFLEN);
     if (DrillClientConfig::getQueryTimeout() > 0){
@@ -547,7 +1028,7 @@ void DrillClientImpl::getNextResult(){
             ));
     }
 
-    resetHeartbeatTimer();
+    startHeartbeatTimer();
 
     async_read(
             this->m_socket,
@@ -575,77 +1056,323 @@ void DrillClientImpl::waitForResults(){
     }
 }
 
-status_t DrillClientImpl::readMsg(ByteBuf_t _buf,
-        AllocatedBufferPtr* allocatedBuffer,
-        InBoundRpcMessage& msg,
-        boost::system::error_code& error){
+/*
+ *  Decode the length of the message from bufWithLen and then read entire message from the socket.
+ *  Parameters:
+ *      bufWithLenField            - in  param  - buffer containing the length of the RPC message/encrypted chunk
+ *      bufferWithDataAndLenBytes  - out param  - buffer pointer which points to memory allocated in this function and has the
+ *                                                entire one RPC message / encrypted chunk along with the length of the message.
+ *                                                Memory for this buffer is released by caller.
+ *      lengthFieldLength          - out param  - bytes of bufWithLen which contains the length of the entire RPC message or
+ *                                                encrypted chunk
+ *      lengthDecodeHandler        - in  param  - function pointer with length decoder to use. For encrypted chunk we use
+ *                                                lengthDecode and for plain RPC message we use rpcLengthDecode.
+ *  Return:
+ *      status_t    - QRY_SUCCESS    - In case of success.
+ *                  - QRY_COMM_ERROR/QRY_INTERNAL_ERROR/QRY_CLIENT_OUTOFMEM - In cases of error.
+ */
+status_t DrillClientImpl::readLenBytesFromSocket(const ByteBuf_t bufWithLenField, AllocatedBufferPtr* bufferWithDataAndLenBytes,
+                                                 uint32_t& lengthFieldLength, lengthDecoder lengthDecodeHandler) {
+
+    uint32_t rmsgLen = 0;
+    boost::system::error_code error;
+    *bufferWithDataAndLenBytes = NULL;
+
+    // Decode the length field
+    lengthFieldLength = (this->*lengthDecodeHandler)(bufWithLenField, rmsgLen);
+
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Length bytes = " << lengthFieldLength << std::endl;)
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Msg Length = " << rmsgLen << std::endl;)
+
+    if(rmsgLen>0) {
+        const size_t leftover = LEN_PREFIX_BUFLEN - lengthFieldLength;
+
+        // Allocate a buffer for reading all the bytes in bufWithLen and length number of bytes.
+        const size_t bufferSizeWithLenBytes = rmsgLen + lengthFieldLength;
+        *bufferWithDataAndLenBytes = new AllocatedBuffer(bufferSizeWithLenBytes);
+
+        if(*bufferWithDataAndLenBytes == NULL) {
+            return handleQryError(QRY_CLIENT_OUTOFMEM, getMessage(ERR_QRY_OUTOFMEM), NULL);
+        }
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readLenBytesFromSocket: Allocated and locked buffer: [ "
+                                          << *bufferWithDataAndLenBytes << ", size = " << bufferSizeWithLenBytes << " ]\n";)
+
+        // Copy the memory of bufWithLen into bufferWithLenBytesSize
+        memcpy((*bufferWithDataAndLenBytes)->m_pBuffer, bufWithLenField, LEN_PREFIX_BUFLEN);
+        const size_t bytesToRead = rmsgLen - leftover;
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Copied bufWithLen into bufferWithLenBytes. "
+                                          << "Now reading data (rmsgLen - leftover) : " << bytesToRead
+                                          << std::endl;)
+
+        // Read the entire data left from socket and copy to currentBuffer.
+        const ByteBuf_t b = (*bufferWithDataAndLenBytes)->m_pBuffer + LEN_PREFIX_BUFLEN;
+        doReadFromSocket(b, bytesToRead, error);
+    } else {
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVREADLEN), NULL);
+    }
+
+    return error ? handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL)
+                 : QRY_SUCCESS;
+}
+
+
+/*
+ *  Function to read entire RPC message from socket and decode it to InboundRpcMessage
+ *  Parameters:
+ *      inBuf           - in param  - Buffer containing the length bytes.
+ *      allocatedBuffer - out param - Buffer containing the length bytes and entire RPC message bytes.
+ *      msg             - out param - Decoded InBoundRpcMessage from the bytes in allocatedBuffer
+ *  Return:
+ *      status_t    - QRY_SUCCESS   - In case of success.
+ *                  - QRY_COMM_ERROR/QRY_INTERNAL_ERROR/QRY_CLIENT_OUTOFMEM - In cases of error.
+ */
+status_t DrillClientImpl::readMsg(const ByteBuf_t inBuf, AllocatedBufferPtr* allocatedBuffer,
+                                  rpc::InBoundRpcMessage& msg){
 
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readMsg: Read message from buffer "
-        <<  reinterpret_cast<int*>(_buf) << std::endl;)
-    size_t leftover=0;
-    uint32_t rmsgLen;
-    AllocatedBufferPtr currentBuffer;
-    *allocatedBuffer=NULL;
+                                      <<  reinterpret_cast<int*>(inBuf) << std::endl;)
+    *allocatedBuffer = NULL;
     {
         // We need to protect the readLength and read buffer, and the pending requests counter,
         // but we don't have to keep the lock while we decode the rest of the buffer.
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-        int bytes_read = DrillClientImpl::s_decoder.LengthDecode(_buf, &rmsgLen);
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "len bytes = " << bytes_read << std::endl;)
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "rmsgLen = " << rmsgLen << std::endl;)
+        uint32_t lengthFieldSize = 0;
 
-        if(rmsgLen>0){
-            leftover = LEN_PREFIX_BUFLEN - bytes_read;
-            // Allocate a buffer
-            currentBuffer=new AllocatedBuffer(rmsgLen);
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readMsg: Allocated and locked buffer: [ "
-                << currentBuffer << ", size = " << rmsgLen << " ]\n";)
-            if(currentBuffer==NULL){
-                Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
-                return handleQryError(QRY_CLIENT_OUTOFMEM, getMessage(ERR_QRY_OUTOFMEM), NULL);
-            }
-            *allocatedBuffer=currentBuffer;
-            if(leftover){
-                memcpy(currentBuffer->m_pBuffer, _buf + bytes_read, leftover);
-            }
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "reading data (rmsgLen - leftover) : "
-                << (rmsgLen - leftover) << std::endl;)
-            ByteBuf_t b=currentBuffer->m_pBuffer + leftover;
-            size_t bytesToRead=rmsgLen - leftover;
-              
-            while(1){
-                size_t dataBytesRead=this->m_socket.read_some(
-                        boost::asio::buffer(b, bytesToRead),
-                        error);
-                if(error) break;
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Data Message: actual bytes read = " << dataBytesRead << std::endl;)
-                if(dataBytesRead==bytesToRead) break;
-                bytesToRead-=dataBytesRead;
-                b+=dataBytesRead;
-            }
-            
-            if(!error){
-                // read data successfully
-                DrillClientImpl::s_decoder.Decode(currentBuffer->m_pBuffer, rmsgLen, msg);
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Done decoding chunk. Coordination id: " <<msg.m_coord_id<< std::endl;)
-            }else{
-                Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
-                return handleQryError(QRY_COMM_ERROR,
-                        getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
-            }
-        }else{
-            // got a message with an invalid read length.
-            Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
-            return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVREADLEN), NULL);
+        // Read the message length and extract length size bytes to form InBoundRpcMessage
+        const status_t statusCode = readLenBytesFromSocket(inBuf, allocatedBuffer, lengthFieldSize,
+                                                           &DrillClientImpl::rpcLengthDecode);
+
+        // Check for error conditions
+        if(QRY_SUCCESS != statusCode) {
+            Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+            return statusCode;
         }
+
+        // Get the message size
+        size_t msgLen = (*allocatedBuffer)->m_bufSize;
+
+        // Read data successfully, now let's try to decode the buffer and form a valid RPC message.
+        // allocatedBuffer also contains the length bytes which is not needed by decodes so skip that part of buffer.
+        // We have it since in case of encryption the unwrap function expects it
+        if (!decode((*allocatedBuffer)->m_pBuffer + lengthFieldSize, msgLen - lengthFieldSize, msg)) {
+            Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+            return handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, "Cannot decode server message"), NULL);
+        }
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Successfully created a RPC message with Coordination id: "
+                                          << msg.m_coord_id << std::endl;)
     }
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readMsg: Free buffer "
-        <<  reinterpret_cast<int*>(_buf) << std::endl;)
-    Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
+                                      <<  reinterpret_cast<int*>(inBuf) << std::endl;)
+    Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
     return QRY_SUCCESS;
 }
 
-status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer, InBoundRpcMessage& msg ){
+
+/*
+ *  Read ENCRYPT_LEN_PREFIX_BUFLEN bytes to decode length of one complete encrypted chunk. The length bytes are expected
+ *  to be in network order. It is converted to host order and the value is stored in rmsgLen parameter.
+ *  Parameters:
+ *      inBuf   - in param  - ByteBuf_t containing atleast the length bytes.
+ *      rmsgLen - out param - Contain the decoded value of length.
+ *  Return:
+ *      size_t  - length bytes read to decode
+ */
+size_t DrillClientImpl::lengthDecode(const ByteBuf_t inBuf, uint32_t& rmsgLen) {
+    memcpy(&rmsgLen, inBuf, ENCRYPT_LEN_PREFIX_BUFLEN);
+    rmsgLen = ntohl(rmsgLen);
+    return ENCRYPT_LEN_PREFIX_BUFLEN;
+}
+
+/*
+ *  Wrapper which uses RPC message length decoder to get length of one complete RPC message from _buf.
+ *  Parameters:
+ *      inBuf   - in param  - ByteBuf_t containing atleast the length bytes.
+ *      rmsgLen - out param - Contain the decoded value of length.
+ *  Return:
+ *      size_t	- length bytes read to decode
+ */
+size_t DrillClientImpl::rpcLengthDecode(const ByteBuf_t inBuf, uint32_t& rmsgLen) {
+    return rpc::lengthDecode(inBuf, rmsgLen);
+}
+
+
+/*
+ *  Read all the encrypted chunk needed to form a complete RPC message. Read an entire chunk from network, decrypt it
+ *  and put in a buffer. The same process is repeated until the entire buffer to form a completed RPC message is read.
+ *  Parameters:
+ *      inBuf           - in param  - ByteBuf_t containing atleast the length bytes.
+ *      allocatedBuffer - out param - Buffer containing the entire RPC message bytes which is formed by reading all the
+ *                                    required encrypted chunk from network and decrypting each individual chunk. The
+ *                                    buffer memory is released by caller.
+.*      msg             - out param - InBoundRpcMessage formed from bytes in allocatedBuffer
+ *  Return:
+ *      status_t    - QRY_SUCCESS - In case of success.
+ *                  - QRY_COMM_ERROR/QRY_INTERNAL_ERROR/QRY_CLIENT_OUTOFMEM - In cases of error.
+ */
+status_t DrillClientImpl::readAndDecryptMsg(const ByteBuf_t inBuf, AllocatedBufferPtr* allocatedBuffer,
+                                            rpc::InBoundRpcMessage& msg) {
+
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Read message from buffer "
+                                      << reinterpret_cast<int*>(inBuf) << std::endl;)
+
+    size_t leftover = 0;
+    uint32_t rpcMsgLen = 0;
+    size_t bytes_read = 0;
+    uint32_t writeIndex = 0;
+    size_t bytesToRead = 0;
+
+    *allocatedBuffer = NULL;
+    boost::system::error_code error;
+    std::stringstream errorMsg;
+
+    {
+        // We need to protect the readLength and read buffer, and the pending requests counter,
+        // but we don't have to keep the lock while we decode the rest of the buffer.
+        boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+
+        do{
+            AllocatedBufferPtr currentBuffer = NULL;
+            uint32_t lengthFieldSize = 0;
+            const status_t statusCode = readLenBytesFromSocket(inBuf, &currentBuffer, lengthFieldSize,
+                                                               &DrillClientImpl::lengthDecode);
+
+            if(QRY_SUCCESS != statusCode) {
+                Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+
+                // Release the buffer allocated to hold chunk
+                if(currentBuffer != NULL) {
+                    Utils::freeBuffer(currentBuffer->m_pBuffer, currentBuffer->m_bufSize);
+                    currentBuffer = NULL;
+                }
+                return statusCode;
+            }
+
+            // read one chunk successfully. Let's try to decrypt the message
+            const char* unWrappedData = NULL;
+            uint32_t unWrappedLen = 0;
+            const int decryptResult = m_saslAuthenticator->unwrap(reinterpret_cast<const char*>(currentBuffer->m_pBuffer),
+                                                                  currentBuffer->m_bufSize, &unWrappedData, unWrappedLen);
+
+            if(SASL_OK != decryptResult) {
+
+                errorMsg << "Sasl unwrap failed for the buffer of size:" << currentBuffer->m_bufSize << " , Error: "
+                         << decryptResult;
+
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::readAndDecryptMsg: "
+                                                  << errorMsg.str() << std::endl;)
+
+                Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+
+                // Release the buffer allocated to hold chunk
+                Utils::freeBuffer(currentBuffer->m_pBuffer, currentBuffer->m_bufSize);
+                currentBuffer = NULL;
+                return handleQryError(QRY_COMM_ERROR,
+                                      getMessage(ERR_QRY_COMMERR, errorMsg.str().c_str()), NULL);
+            }
+
+            // Check for case if the unWrappedLen is 0, since Cyrus SASL plugin verifies if the length of wrapped data
+            // is less than the length specified by prepended 4 octets as per RFC 4422/2222. If so it just returns
+            // and waits for more data
+            if(unWrappedLen == 0 || (unWrappedData == NULL)) {
+                errorMsg << "Sasl unwrap failed with mismatch in length of wrapped data and the prepended length value";
+                DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::readAndDecryptMsg: " << errorMsg.str()
+                                                  << std::endl;)
+
+                Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+
+                // Release the buffer allocated to hold chunk
+                Utils::freeBuffer(currentBuffer->m_pBuffer, currentBuffer->m_bufSize);
+                currentBuffer = NULL;
+                return handleQryError(QRY_COMM_ERROR,
+                                      getMessage(ERR_QRY_COMMERR, errorMsg.str().c_str()), NULL);
+            }
+
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Successfully decrypted the buffer"
+                                              << " Sizes - Before Decryption =  " << currentBuffer->m_bufSize
+                                              << " and After Decryption = " << unWrappedLen << std::endl;)
+
+            // Release the buffer allocated to hold chunk
+            Utils::freeBuffer(currentBuffer->m_pBuffer, currentBuffer->m_bufSize);
+            currentBuffer = NULL;
+
+            bytes_read = 0;
+            if(*allocatedBuffer == NULL) {
+                // This is the first chunk of the RPC message. We will decode the RPC message full length
+                bytes_read = rpcLengthDecode(reinterpret_cast<ByteBuf_t>(const_cast<char*>(unWrappedData)), rpcMsgLen);
+
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Rpc Message Length bytes = "
+                                                  << bytes_read << std::endl;)
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Rpc Message Length = "
+                                                  << rpcMsgLen << std::endl;)
+
+                if(rpcMsgLen == 0) {
+                    Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+                    return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVREADLEN), NULL);
+                }
+                // Allocate a buffer for storing full RPC message. This is released by the caller
+                *allocatedBuffer = new AllocatedBuffer(rpcMsgLen);
+
+                if(*allocatedBuffer == NULL){
+                    Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+                    return handleQryError(QRY_CLIENT_OUTOFMEM, getMessage(ERR_QRY_OUTOFMEM), NULL);
+                }
+
+                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg:  Allocated and locked buffer:"
+                                                  << "[ " << *allocatedBuffer << ", size = " << rpcMsgLen << " ]\n";)
+
+                bytesToRead = rpcMsgLen;
+            }
+
+            // Update the leftover bytes that is not copied yet
+            leftover = unWrappedLen - bytes_read;
+
+            // Copy rest of decrypted message to the buffer. We can do this since it is assured that one
+            // entire decrypted chunk is part of the same RPC message.
+            if(leftover) {
+                memcpy((*allocatedBuffer)->m_pBuffer + writeIndex, unWrappedData + bytes_read, leftover);
+            }
+
+            // Update bytes left to read to form full RPC message.
+            bytesToRead -= leftover;
+            writeIndex += leftover;
+
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Left to read unencrypted data"
+                                              << " of length (bytesToRead) : " << bytesToRead << std::endl;)
+
+            if(bytesToRead > 0) {
+                // Read synchronously buffer of size LEN_PREFIX_BUFLEN to get length of next chunk
+                doReadFromSocket(inBuf, LEN_PREFIX_BUFLEN, error);
+
+                if(error) {
+                    Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+                    return handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
+                }
+            }
+        }while(bytesToRead > 0); // more chunks to read for entire RPC message
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Done decrypting entire RPC message "
+                                          << " of length: " << rpcMsgLen << ". Now starting decode:" << std::endl;)
+
+        // Decode the buffer and form a RPC message
+        if (!decode((*allocatedBuffer)->m_pBuffer, rpcMsgLen, msg)) {
+            Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+            return handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR,
+                                  "Cannot decode server message into valid RPC message"), NULL);
+        }
+
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Successfully created a RPC message with Coordination id: "
+                                          << msg.m_coord_id << std::endl;)
+    }
+
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readAndDecryptMsg: Free buffer "
+                                      <<  reinterpret_cast<int*>(inBuf) << std::endl;)
+    Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
+    return QRY_SUCCESS;
+}
+
+status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     status_t ret=QRY_SUCCESS;
     exec::shared::QueryId qid;
@@ -657,15 +1384,15 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing Query Result " << std::endl;)
         qr.ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << qr.DebugString() << std::endl;)
-        
+
         qid.CopyFrom(qr.query_id());
-        
+
         if (qr.has_query_state() &&
                 qr.query_state() != exec::shared::QueryResult_QueryState_RUNNING &&
                 qr.query_state() != exec::shared::QueryResult_QueryState_STARTING) {
             pDrillClientQueryResult=findQueryResult(qid);
-            //Queries that have been cancelled or whose resources are freed before completion 
-            //do not have a DrillClientQueryResult object. We need not handle the terminal message 
+            //Queries that have been cancelled or whose resources are freed before completion
+            //do not have a DrillClientQueryResult object. We need not handle the terminal message
             //in that case since all it does is to free resources (and they have already been freed)
             if(pDrillClientQueryResult!=NULL){
                 //Validate the RPC message
@@ -703,10 +1430,9 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
     return ret;
 }
 
-status_t DrillClientImpl::processQueryData(AllocatedBufferPtr  allocatedBuffer, InBoundRpcMessage& msg ){
+status_t DrillClientImpl::processQueryData(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     status_t ret=QRY_SUCCESS;
-    exec::shared::QueryId qid;
     // Be a good client and send ack as early as possible.
     // Drillbit pushed the query result to the client, the client should send ack
     // whenever it receives the message
@@ -720,7 +1446,7 @@ status_t DrillClientImpl::processQueryData(AllocatedBufferPtr  allocatedBuffer, 
         qr->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << qr->DebugString() << std::endl;)
 
-        qid.CopyFrom(qr->query_id());
+        const ::exec::shared::QueryId& qid = qr->query_id();
         if(qid.part1()==0){
             DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryData: QID=0. Ignore and return QRY_SUCCESS." << std::endl;)
             delete allocatedBuffer;
@@ -729,105 +1455,384 @@ status_t DrillClientImpl::processQueryData(AllocatedBufferPtr  allocatedBuffer, 
 
         pDrillClientQueryResult=findQueryResult(qid);
         if(pDrillClientQueryResult==NULL){
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Cleaning up resources allocated for canceled query (" 
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Cleaning up resources allocated for canceled query ("
                                  << debugPrintQid(qid) << ")." << std::endl;)
             delete qr;
             delete allocatedBuffer;
             return ret;
         }
-        
-        //Validate the RPC message
-        std::string valErr;
-        if( (ret=validateDataMessage(msg, *qr, valErr)) != QRY_SUCCESS){
-            delete allocatedBuffer;
-            delete qr;
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryData: ERR_QRY_INVRPC.\n";)
-            pDrillClientQueryResult->setQueryStatus(ret);
-            return handleQryError(ret, getMessage(ERR_QRY_INVRPC, valErr.c_str()), pDrillClientQueryResult);
-        }
 
-        //Build Record Batch here
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Building record batch for Query Id - " << debugPrintQid(qr->query_id()) << std::endl;)
+        // check if query has been cancelled
+        if (pDrillClientQueryResult->isCancelled()) {
+            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing Query cancellation " << std::endl;)
+        	delete qr;
+        	delete allocatedBuffer;
+        	ret =  QRY_CANCELED;
+        } else {
+        	//Validate the RPC message
+        	std::string valErr;
+        	if( (ret=validateDataMessage(msg, *qr, valErr)) != QRY_SUCCESS){
+        		delete allocatedBuffer;
+        		delete qr;
+        		DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryData: ERR_QRY_INVRPC.\n";)
+        		pDrillClientQueryResult->setQueryStatus(ret);
+        		return handleQryError(ret, getMessage(ERR_QRY_INVRPC, valErr.c_str()), pDrillClientQueryResult);
+        	}
 
-        pRecordBatch= new RecordBatch(qr, allocatedBuffer,  msg.m_dbody);
-        pDrillClientQueryResult->m_numBatches++;
+        	//Build Record Batch here
+        	DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Building record batch for Query Id - " << debugPrintQid(qid) << std::endl;)
 
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Allocated new Record batch." << (void*)pRecordBatch << std::endl;)
-        pRecordBatch->build();
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(qr->query_id())<<"recordBatch.numRecords "
-            << pRecordBatch->getNumRecords()  << std::endl;)
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(qr->query_id())<<"recordBatch.numFields "
-            << pRecordBatch->getNumFields()  << std::endl;)
+        	pRecordBatch= new RecordBatch(qr, allocatedBuffer,  msg.m_dbody);
+        	pDrillClientQueryResult->m_numBatches++;
 
-        ret=pDrillClientQueryResult->setupColumnDefs(qr);
-        if(ret==QRY_SUCCESS_WITH_INFO){
-            pRecordBatch->schemaChanged(true);
-        }
+        	DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Allocated new Record batch." << (void*)pRecordBatch << std::endl;)
+        	pRecordBatch->build();
+        	DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(qid)<<"recordBatch.numRecords "
+        			<< pRecordBatch->getNumRecords()  << std::endl;)
+        	DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(qid)<<"recordBatch.numFields "
+        			<< pRecordBatch->getNumFields()  << std::endl;)
 
-        pDrillClientQueryResult->setIsQueryPending(true);
-        pfnQueryResultsListener pResultsListener=pDrillClientQueryResult->m_pResultsListener;
-        if(pDrillClientQueryResult->m_bIsLastChunk){
-            DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(*pDrillClientQueryResult->m_pQueryId)
-                <<  "Received last batch. " << std::endl;)
-            ret=QRY_NO_MORE_DATA;
-        }
-        pDrillClientQueryResult->setQueryStatus(ret);
-        if(pResultsListener!=NULL){
-            ret = pResultsListener(pDrillClientQueryResult, pRecordBatch, NULL);
-        }else{
-            //Use a default callback that is called when a record batch is received
-            ret = pDrillClientQueryResult->defaultQueryResultsListener(pDrillClientQueryResult,
-                    pRecordBatch, NULL);
+					ret=pDrillClientQueryResult->setupColumnDefs(qr);
+        	if(ret==QRY_SUCCESS_WITH_INFO){
+        		pRecordBatch->schemaChanged(true);
+        	}
+
+        	pDrillClientQueryResult->setIsQueryPending(true);
+        	if(pDrillClientQueryResult->m_bIsLastChunk){
+        		DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << debugPrintQid(qid)
+        				<<  "Received last batch. " << std::endl;)
+            		ret=QRY_NO_MORE_DATA;
+        	}
+        	pDrillClientQueryResult->setQueryStatus(ret);
+        	ret = pDrillClientQueryResult->notifyListener(pRecordBatch, NULL);
         }
     } // release lock
-    if(ret==QRY_FAILURE){
-        sendCancel(&qid);
-        // Do not decrement pending requests here. We have sent a cancel and we may still receive results that are
-        // pushed on the wire before the cancel is processed.
-        pDrillClientQueryResult->setIsQueryPending(false);
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Client app cancelled query." << std::endl;)
-        pDrillClientQueryResult->setQueryStatus(ret);
-        clearMapEntries(pDrillClientQueryResult);
-        return ret;
+    if((ret==QRY_FAILURE || ret==QRY_CANCELED) && pDrillClientQueryResult != NULL){
+        return handleQryCancellation(ret, pDrillClientQueryResult);
     }
     return ret;
 }
 
-status_t DrillClientImpl::processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg ){
-    DrillClientQueryResult* pDrillClientQueryResult=NULL;
+status_t DrillClientImpl::processQueryId(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
     DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing Query Handle with coordination id:" << msg.m_coord_id << std::endl;)
+	DrillClientQueryResult* pDrillClientQueryResult=NULL;
     status_t ret=QRY_SUCCESS;
 
-    boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    std::map<int,DrillClientQueryResult*>::iterator it;
-    for(it=this->m_queryIds.begin();it!=this->m_queryIds.end();it++){
-        std::string qidString = it->second->m_pQueryId!=NULL?debugPrintQid(*it->second->m_pQueryId):std::string("NULL");
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::processQueryId: m_queryIds: coordinationId: " << it->first
-        << " QueryId: "<< qidString << std::endl;)
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    {
+    	boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    	if(msg.m_coord_id==0){
+    		DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryId: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+      		return QRY_SUCCESS;
+    	}
+
+    	for(std::map< ::exec::shared::QueryId*, DrillClientQueryResult*>::const_iterator it=this->m_queryResults.begin();it!=this->m_queryResults.end();it++){
+    		DrillClientQueryResult* pQueryResult=it->second;
+    		std::string qidString = (pQueryResult->m_pQueryId!=NULL)?debugPrintQid(*pQueryResult->m_pQueryId):std::string("NULL");
+    		DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::processQueryId: m_queryIds: coordinationId: " << pQueryResult->m_coordinationId
+    				<< " QueryId: "<< qidString << std::endl;)
+    	}
+
+    	std::map<int, DrillClientQueryHandle*>::const_iterator it;
+    	it=this->m_queryHandles.find(msg.m_coord_id);
+    	if(it==this->m_queryHandles.end()){
+    		return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    	}
+    	pDrillClientQueryResult=dynamic_cast<DrillClientQueryResult*>((*it).second);
+    	if (!pDrillClientQueryResult) {
+    		return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    	}
+
+    	// Check for cancellation to notify
+    	if (pDrillClientQueryResult->isCancelled()) {
+    		ret = QRY_CANCELED;
+    	}
+    	else {
+    		exec::shared::QueryId *qid = new exec::shared::QueryId;
+    		DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received Query Handle " << msg.m_pbody.size() << std::endl;)
+    		qid->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
+    		DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Query Id - " << debugPrintQid(*qid) << std::endl;)
+    		m_queryResults[qid]=pDrillClientQueryResult;
+    		//save queryId allocated here so we can free it later
+    		pDrillClientQueryResult->setQueryId(qid);
+    	}
     }
-    if(msg.m_coord_id==0){
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryId: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
-        return QRY_SUCCESS;
+    if (ret == QRY_CANCELED && pDrillClientQueryResult != NULL) {
+    	return handleQryCancellation(ret, pDrillClientQueryResult);
     }
-    it=this->m_queryIds.find(msg.m_coord_id);
-    if(it!=this->m_queryIds.end()){
-        pDrillClientQueryResult=(*it).second;
-        exec::shared::QueryId *qid = new exec::shared::QueryId;
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received Query Handle " << msg.m_pbody.size() << std::endl;)
-        qid->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
-        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Query Id - " << debugPrintQid(*qid) << std::endl;)
-        m_queryResults[qid]=pDrillClientQueryResult;
-        //save queryId allocated here so we can free it later
-        pDrillClientQueryResult->setQueryId(qid);
-    }else{
-        delete allocatedBuffer;
-        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
-    }
-    delete allocatedBuffer;
     return ret;
 }
 
-DrillClientQueryResult* DrillClientImpl::findQueryResult(exec::shared::QueryId& qid){
+status_t DrillClientImpl::processPreparedStatement(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing Prepared Statement with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processPreparedStatement: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientPrepareHandle* pDrillClientPrepareHandle=static_cast<DrillClientPrepareHandle*>((*it).second);
+        exec::user::CreatePreparedStatementResp resp;
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received Prepared Statement Handle " << msg.m_pbody.size() << std::endl;)
+        if (!resp.ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size())) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode prepared statement", pDrillClientPrepareHandle);
+        }
+        if (resp.has_status() && resp.status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp.error(), pDrillClientPrepareHandle);
+        }
+        pDrillClientPrepareHandle->setupPreparedStatement(resp.prepared_statement());
+        pDrillClientPrepareHandle->notifyListener(pDrillClientPrepareHandle, NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Prepared Statement handle - " << resp.prepared_statement().server_handle().DebugString() << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processPreparedStament: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+status_t DrillClientImpl::processCatalogsResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing GetCatalogsResp with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processCatalogsResult: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientCatalogResult* pHandle=static_cast<DrillClientCatalogResult*>((*it).second);
+        exec::user::GetCatalogsResp* resp = new exec::user::GetCatalogsResp;
+        pHandle->attachMetadataResult(resp);
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GetCatalogs result Handle " << msg.m_pbody.size() << std::endl;)
+        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode getcatalogs results", pHandle);
+        }
+        if (resp->status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        }
+
+        const ::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata>& catalogs = resp->catalogs();
+        pHandle->m_meta.clear();
+        pHandle->m_meta.reserve(resp->catalogs_size());
+
+        for(::google::protobuf::RepeatedPtrField< ::exec::user::CatalogMetadata>::const_iterator it = catalogs.begin(); it != catalogs.end(); ++it) {
+            meta::DrillCatalogMetadata meta(*it);
+            pHandle->m_meta.push_back(meta);
+        }
+        pHandle->notifyListener(&pHandle->m_meta, NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetCatalogs result -  " << resp->catalogs_size() << " catalog(s)" << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processCatalogsResult: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+status_t DrillClientImpl::processSchemasResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing GetSchemaResp with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processSchemasResult: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientSchemaResult* pHandle=static_cast<DrillClientSchemaResult*>((*it).second);
+        exec::user::GetSchemasResp* resp = new exec::user::GetSchemasResp();
+        pHandle->attachMetadataResult(resp);
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GetSchemasResp result Handle " << msg.m_pbody.size() << std::endl;)
+        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode getschemas results", pHandle);
+        }
+        if (resp->status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        }
+
+        const ::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata>& schemas = resp->schemas();
+        pHandle->m_meta.clear();
+        pHandle->m_meta.reserve(resp->schemas_size());
+
+        for(::google::protobuf::RepeatedPtrField< ::exec::user::SchemaMetadata>::const_iterator it = schemas.begin(); it != schemas.end(); ++it) {
+            meta::DrillSchemaMetadata meta(*it);
+            pHandle->m_meta.push_back(meta);
+        }
+        pHandle->notifyListener(&pHandle->m_meta, NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetSchemaResp result - " << resp->schemas_size() << " schema(s)" << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processSchemasResult: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+status_t DrillClientImpl::processTablesResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing GetTablesResp with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processTablesResult: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientTableResult* pHandle=static_cast<DrillClientTableResult*>((*it).second);
+        exec::user::GetTablesResp* resp =  new exec::user::GetTablesResp();
+        pHandle->attachMetadataResult(resp);
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GeTablesResp result Handle " << msg.m_pbody.size() << std::endl;)
+        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode gettables results", pHandle);
+        }
+        if (resp->status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        }
+        const ::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata>& tables = resp->tables();
+        pHandle->m_meta.clear();
+        pHandle->m_meta.reserve(resp->tables_size());
+
+        for(::google::protobuf::RepeatedPtrField< ::exec::user::TableMetadata>::const_iterator it = tables.begin(); it != tables.end(); ++it) {
+            meta::DrillTableMetadata meta(*it);
+            pHandle->m_meta.push_back(meta);
+        }
+        pHandle->notifyListener(&pHandle->m_meta, NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetTables result - " << resp->tables_size() << " table(s)" << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processTablesResult: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+status_t DrillClientImpl::processColumnsResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing GetColumnsResp with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processColumnsResult: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientColumnResult* pHandle=static_cast<DrillClientColumnResult*>((*it).second);
+        exec::user::GetColumnsResp* resp = new exec::user::GetColumnsResp();
+        pHandle->attachMetadataResult(resp);
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GetColumnsResp result Handle " << msg.m_pbody.size() << std::endl;)
+        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode getcolumns results", pHandle);
+        }
+        if (resp->status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        }
+        const ::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata>& columns = resp->columns();
+        pHandle->m_meta.clear();
+        pHandle->m_meta.reserve(resp->columns_size());
+
+        for(::google::protobuf::RepeatedPtrField< ::exec::user::ColumnMetadata>::const_iterator it = columns.begin(); it != columns.end(); ++it) {
+            meta::DrillColumnMetadata meta(*it);
+            pHandle->m_meta.push_back(meta);
+        }
+        pHandle->notifyListener(&pHandle->m_meta, NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetColumnsResp result - " << resp->columns_size() << " columns(s)" << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processColumnsResult: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+status_t DrillClientImpl::processServerMetaResult(AllocatedBufferPtr allocatedBuffer, const rpc::InBoundRpcMessage& msg ){
+    DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Processing GetServerMetaResp with coordination id:" << msg.m_coord_id << std::endl;)
+    status_t ret=QRY_SUCCESS;
+
+    // make sure to deallocate buffer
+    boost::shared_ptr<AllocatedBuffer> deallocationGuard(allocatedBuffer);
+    boost::lock_guard<boost::mutex> lock(m_dcMutex);
+
+    if(msg.m_coord_id==0){
+         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processServerMetaResult: m_coord_id=0. Ignore and return QRY_SUCCESS." << std::endl;)
+        return QRY_SUCCESS;
+    }
+    std::map<int,DrillClientQueryHandle*>::const_iterator it=this->m_queryHandles.find(msg.m_coord_id);
+    if(it!=this->m_queryHandles.end()){
+        DrillClientServerMetaHandle* pHandle=static_cast<DrillClientServerMetaHandle*>((*it).second);
+        exec::user::GetServerMetaResp* resp = new exec::user::GetServerMetaResp();
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE)  << "Received GetServerMetaResp result Handle " << msg.m_pbody.size() << std::endl;)
+        if (!(resp->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size()))) {
+            return handleQryError(QRY_COMM_ERROR, "Cannot decode GetServerMetaResp results", pHandle);
+        }
+        if (resp->status() != exec::user::OK) {
+            return handleQryError(QRY_FAILED, resp->error(), pHandle);
+        }
+        pHandle->notifyListener(&(resp->server_meta()), NULL);
+        DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "GetServerMetaResp result " << std::endl;)
+    }else{
+        return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
+    }
+    m_pendingRequests--;
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processServerMetaResult: " << m_pendingRequests << " requests pending." << std::endl;)
+    if(m_pendingRequests==0){
+        // signal any waiting client that it can exit because there are no more any query results to arrive.
+        // We keep the heartbeat going though.
+        m_cv.notify_one();
+    }
+    return ret;
+}
+
+DrillClientQueryResult* DrillClientImpl::findQueryResult(const exec::shared::QueryId& qid){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Searching for Query Id - " << debugPrintQid(qid) << std::endl;)
     std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::iterator it;
@@ -838,7 +1843,7 @@ DrillClientQueryResult* DrillClientImpl::findQueryResult(exec::shared::QueryId& 
                 << it->first->part2() << "]\n";)
         }
     }
-    it=this->m_queryResults.find(&qid);
+    it=this->m_queryResults.find(const_cast<exec::shared::QueryId * const>(&qid));
     if(it!=this->m_queryResults.end()){
         pDrillClientQueryResult=(*it).second;
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Drill Client Query Result Query Id - " <<
@@ -924,131 +1929,154 @@ void DrillClientImpl::handleReadTimeout(const boost::system::error_code & err){
     return;
 }
 
-void DrillClientImpl::handleRead(ByteBuf_t _buf,
-        const boost::system::error_code& err,
+void DrillClientImpl::handleRead(ByteBuf_t inBuf,
+        const boost::system::error_code& error,
         size_t bytes_transferred) {
-    boost::system::error_code error=err;
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handle Read from buffer "
-        <<  reinterpret_cast<int*>(_buf) << std::endl;)
+        <<  reinterpret_cast<int*>(inBuf) << std::endl;)
     if(DrillClientConfig::getQueryTimeout() > 0){
         // Cancel the timeout if handleRead is called
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Cancel deadline timer.\n";)
         m_deadlineTimer.cancel();
     }
-    if(!error){
-        InBoundRpcMessage msg;
-        boost::lock_guard<boost::mutex> lock(this->m_prMutex);
-
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Getting new message" << std::endl;)
-        AllocatedBufferPtr allocatedBuffer=NULL;
-
-        if(readMsg(_buf, &allocatedBuffer, msg, error)!=QRY_SUCCESS){
-            if(m_pendingRequests!=0){
-                boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                getNextResult();
-            }
-            return;
-        }
-
-        if(!error && msg.m_mode==exec::rpc::PONG){ //heartbeat response. Throw it away
-            m_pendingRequests--;
-            delete allocatedBuffer;
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Received heartbeat from server. " <<  std::endl;)
-            if(m_pendingRequests!=0){
-                boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                getNextResult();
-            }else{
-                boost::unique_lock<boost::mutex> cvLock(this->m_dcMutex);
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "No more results expected from server. " <<  std::endl;)
-                m_cv.notify_one();
-            }
-            return;
-        }else if(!error && msg.m_rpc_type==exec::user::QUERY_RESULT){
-            status_t s = processQueryResult(allocatedBuffer, msg);
-            if(s !=QRY_SUCCESS && s!= QRY_NO_MORE_DATA){
-                if(m_pendingRequests!=0){
-                    boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                    getNextResult();
-                }
-                return;
-            }
-        }else if(!error && msg.m_rpc_type==exec::user::QUERY_DATA){
-            if(processQueryData(allocatedBuffer, msg)!=QRY_SUCCESS){
-                if(m_pendingRequests!=0){
-                    boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                    getNextResult();
-                }
-                return;
-            }
-        }else if(!error && msg.m_rpc_type==exec::user::QUERY_HANDLE){
-            if(processQueryId(allocatedBuffer, msg)!=QRY_SUCCESS){
-                if(m_pendingRequests!=0){
-                    boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                    getNextResult();
-                }
-                return;
-            }
-        }else if(!error && msg.m_rpc_type==exec::user::ACK){
-            // Cancel requests will result in an ACK sent back.
-            // Consume silently
-            delete allocatedBuffer;
-            if(m_pendingRequests!=0){
-                boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-                getNextResult();
-            }
-            return;
-        }else{
-            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-            if(error){
-                // We have a socket read error, but we do not know which query this is for.
-                // Signal ALL pending queries that they should stop waiting.
-                delete allocatedBuffer;
-                DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "read error: " << error << std::endl;)
-                handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
-                return;
-            }else{
-                // If not QUERY_RESULT, then we think something serious has gone wrong?
-                // In one case when the client hung, we observed that the server was sending a handshake request to the client
-                // We should properly handle these handshake requests/responses
-                if(msg.has_rpc_type() && msg.m_rpc_type==exec::user::HANDSHAKE){
-                    if(msg.has_mode() && msg.m_mode==exec::rpc::REQUEST){
-                        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake request from server. Send response.\n";)
-                        exec::user::UserToBitHandshake u2b;
-                        u2b.set_channel(exec::shared::USER);
-                        u2b.set_rpc_version(DRILL_RPC_VERSION);
-                        u2b.set_support_listening(true);
-                        OutBoundRpcMessage out_msg(exec::rpc::RESPONSE, exec::user::HANDSHAKE, msg.m_coord_id, &u2b);
-                        sendSync(out_msg);
-                        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response sent.\n";)
-                    }else{
-                        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response from server. Ignore.\n";)
-                    }
-                }else{
-                    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
-                        << "QueryResult returned " << msg.m_rpc_type << std::endl;)
-                    handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);
-                }
-                delete allocatedBuffer;
-                return;
-            }
-        }
-        {
-            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-            getNextResult();
-        }
-    }else{
+    if (error) {
         // boost error
-        Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
+        Utils::freeBuffer(inBuf, LEN_PREFIX_BUFLEN);
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_COMMERR. "
             "Boost Communication Error: " << error.message() << std::endl;)
         handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
         return;
     }
-    return;
+
+    rpc::InBoundRpcMessage msg;
+    boost::lock_guard<boost::mutex> lockPR(this->m_prMutex);
+
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Getting new message" << std::endl;)
+    AllocatedBufferPtr allocatedBuffer=NULL;
+
+    if((this->*m_fpCurrentReadMsgHandler)(inBuf, &allocatedBuffer, msg)!=QRY_SUCCESS){
+        delete allocatedBuffer;
+        if(m_pendingRequests!=0){
+            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+            getNextResult();
+        }
+        return;
+    }
+
+    if(msg.m_mode==exec::rpc::PONG) { //heartbeat response. Throw it away
+        m_pendingRequests--;
+        delete allocatedBuffer;
+        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Received heartbeat from server. " <<  std::endl;)
+        if(m_pendingRequests!=0){
+            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+            getNextResult();
+        }else{
+            boost::unique_lock<boost::mutex> cvLock(this->m_dcMutex);
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "No more results expected from server. " <<  std::endl;)
+            m_cv.notify_one();
+        }
+
+        return;
+    }
+
+    if(msg.m_mode == exec::rpc::RESPONSE) {
+        status_t s;
+        switch(msg.m_rpc_type) {
+        case exec::user::QUERY_HANDLE:
+            s = processQueryId(allocatedBuffer, msg);
+            break;
+
+        case exec::user::PREPARED_STATEMENT:
+            s = processPreparedStatement(allocatedBuffer, msg);
+            break;
+
+        case exec::user::CATALOGS:
+            s = processCatalogsResult(allocatedBuffer, msg);
+            break;
+
+        case exec::user::SCHEMAS:
+            s = processSchemasResult(allocatedBuffer, msg);
+            break;
+
+        case exec::user::TABLES:
+            s = processTablesResult(allocatedBuffer, msg);
+            break;
+
+        case exec::user::COLUMNS:
+            s = processColumnsResult(allocatedBuffer, msg);
+            break;
+
+        case exec::user::HANDSHAKE:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: Handshake response from server. Ignore.\n";)
+            delete allocatedBuffer;
+            break;
+
+        case exec::user::SASL_MESSAGE:
+            processSaslChallenge(allocatedBuffer, msg);
+            break;
+
+        case exec::user::SERVER_META:
+        	processServerMetaResult(allocatedBuffer, msg);
+        	break;
+
+        case exec::user::ACK:
+            // Cancel requests will result in an ACK sent back.
+            // Consume silently
+            s = QRY_CANCELED;
+            delete allocatedBuffer;
+            break;
+
+        default:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
+                    << "QueryResult returned " << msg.m_rpc_type << std::endl;)
+            delete allocatedBuffer;
+            handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);
+        }
+
+        if (m_pendingRequests != 0) {
+            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+            getNextResult();
+        }
+
+        return;
+    }
+
+    if (msg.has_mode() && msg.m_mode == exec::rpc::REQUEST) {
+        status_t s;
+        switch(msg.m_rpc_type) {
+        case exec::user::QUERY_RESULT:
+            s = processQueryResult(allocatedBuffer, msg);
+            break;
+
+        case exec::user::QUERY_DATA:
+            s = processQueryData(allocatedBuffer, msg);
+            break;
+
+        default:
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
+                    << "QueryResult returned " << msg.m_rpc_type << std::endl;)
+            delete allocatedBuffer;
+            handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);
+        }
+
+        if (m_pendingRequests != 0) {
+            boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
+            getNextResult();
+        }
+
+        return;
+    }
+
+    // If not QUERY_RESULT, then we think something serious has gone wrong?
+    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
+        << "QueryResult returned " << msg.m_rpc_type << " for " << msg.m_mode << std::endl;)
+    handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);
+    delete allocatedBuffer;
+
 }
 
-status_t DrillClientImpl::validateDataMessage(InBoundRpcMessage& msg, exec::shared::QueryData& qd, std::string& valErr){
+status_t DrillClientImpl::validateDataMessage(const rpc::InBoundRpcMessage& msg, const exec::shared::QueryData& qd, std::string& valErr){
     if(msg.m_mode == exec::rpc::RESPONSE_FAILURE){
         valErr=getMessage(ERR_QRY_RESPFAIL);
         return QRY_FAILURE;
@@ -1060,7 +2088,7 @@ status_t DrillClientImpl::validateDataMessage(InBoundRpcMessage& msg, exec::shar
     return QRY_SUCCESS;
 }
 
-status_t DrillClientImpl::validateResultMessage(InBoundRpcMessage& msg, exec::shared::QueryResult& qr, std::string& valErr){
+status_t DrillClientImpl::validateResultMessage(const rpc::InBoundRpcMessage& msg, const exec::shared::QueryResult& qr, std::string& valErr){
     if(msg.m_mode == exec::rpc::RESPONSE_FAILURE){
         valErr=getMessage(ERR_QRY_RESPFAIL);
         return QRY_FAILURE;
@@ -1072,10 +2100,13 @@ status_t DrillClientImpl::validateResultMessage(InBoundRpcMessage& msg, exec::sh
     return QRY_SUCCESS;
 }
 
-connectionStatus_t DrillClientImpl::handleConnError(connectionStatus_t status, std::string msg){
+/*
+ * Called when there is failure in connect/send.
+ */
+connectionStatus_t DrillClientImpl::handleConnError(connectionStatus_t status, const std::string& msg){
     DrillClientError* pErr = new DrillClientError(status, DrillClientError::CONN_ERROR_START+status, msg);
     m_pendingRequests=0;
-    if(!m_queryIds.empty()){
+    if(!m_queryHandles.empty()){
         // set query error only if queries are running
         broadcastError(pErr);
     }else{
@@ -1086,42 +2117,62 @@ connectionStatus_t DrillClientImpl::handleConnError(connectionStatus_t status, s
     return status;
 }
 
-status_t DrillClientImpl::handleQryError(status_t status, std::string msg, DrillClientQueryResult* pQueryResult){
+/*
+ * Always called with NULL QueryHandle when there is any error while reading data from socket. Once enough data is read
+ * and a valid RPC message is formed then it can get called with NULL/valid QueryHandle depending on if QueryHandle is found
+ * for the created RPC message.
+ */
+status_t DrillClientImpl::handleQryError(status_t status, const std::string& msg, DrillClientQueryHandle* pQueryHandle){
     DrillClientError* pErr = new DrillClientError(status, DrillClientError::QRY_ERROR_START+status, msg);
-    // set query error only if queries are running
-    if(pQueryResult!=NULL){
+    // Set query error only if queries are running. If valid QueryHandle that means the bytes to form a valid
+    // RPC message was read successfully from socket. So there is no socket/connection issues.
+    if(pQueryHandle!=NULL){
         m_pendingRequests--;
-        pQueryResult->signalError(pErr);
-    }else{
+        pQueryHandle->signalError(pErr);
+    }else{ // This means error was while reading from socket, hence call broadcastError which eventually closes socket.
         m_pendingRequests=0;
         broadcastError(pErr);
     }
     return status;
 }
 
+/*
+ * Always called with valid QueryHandle when there is any error processing Query related data.
+ */
 status_t DrillClientImpl::handleQryError(status_t status,
         const exec::shared::DrillPBError& e,
-        DrillClientQueryResult* pQueryResult){
-    assert(pQueryResult!=NULL);
+        DrillClientQueryHandle* pQueryHandle){
+    assert(pQueryHandle!=NULL);
     DrillClientError* pErr =  DrillClientError::getErrorObject(e);
-    pQueryResult->signalError(pErr);
+    pQueryHandle->signalError(pErr);
     m_pendingRequests--;
     return status;
 }
 
+status_t DrillClientImpl::handleQryCancellation(status_t status, DrillClientQueryResult* pQueryHandle) {
+	sendCancel(&pQueryHandle->getQueryId());
+	// Do not decrement pending requests here. We have sent a cancel and we may still receive results that are
+	// pushed on the wire before the cancel is processed.
+	pQueryHandle->setIsQueryPending(false);
+	DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "Client app cancelled query." << std::endl;)
+	pQueryHandle->setQueryStatus(status);
+	removeQueryHandle(pQueryHandle);
+	return status;
+}
+
 void DrillClientImpl::broadcastError(DrillClientError* pErr){
     if(pErr!=NULL){
-        std::map<int, DrillClientQueryResult*>::iterator iter;
-        if(!m_queryIds.empty()){
-            for(iter = m_queryIds.begin(); iter != m_queryIds.end(); iter++) {
+        std::map<int, DrillClientQueryHandle*>::const_iterator iter;
+        if(!m_queryHandles.empty()){
+            for(iter = m_queryHandles.begin(); iter != m_queryHandles.end(); iter++) {
                 DrillClientError* err=new DrillClientError(pErr->status, pErr->errnum, pErr->msg);
                 iter->second->signalError(err);
             }
         }
         delete pErr;
     }
-    // We have an error at the connection level. Cancel the heartbeat. 
-    // And close the connection 
+    // We have an error at the connection level. Cancel the heartbeat.
+    // And close the connection
     m_heartbeatTimer.cancel();
     m_pendingRequests=0;
     m_cv.notify_one();
@@ -1132,7 +2183,7 @@ void DrillClientImpl::broadcastError(DrillClientError* pErr){
 // The implementation is similar to handleQryError
 status_t DrillClientImpl::handleTerminatedQryState(
         status_t status,
-        std::string msg,
+        const std::string& msg,
         DrillClientQueryResult* pQueryResult){
     assert(pQueryResult!=NULL);
     if(status==QRY_COMPLETED){
@@ -1145,43 +2196,42 @@ status_t DrillClientImpl::handleTerminatedQryState(
     return status;
 }
 
-
-void DrillClientImpl::clearMapEntries(DrillClientQueryResult* pQueryResult){
-    std::map<int, DrillClientQueryResult*>::iterator iter;
+void DrillClientImpl::removeQueryHandle(DrillClientQueryHandle* pQueryHandle){
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    if(!m_queryIds.empty()){
-        for(iter=m_queryIds.begin(); iter!=m_queryIds.end(); iter++) {
-            if(pQueryResult==(DrillClientQueryResult*)iter->second){
-                m_queryIds.erase(iter->first);
-                break;
-            }
-        }
+    // Removing first the base handle
+    for(std::map<int, DrillClientQueryHandle*>::const_iterator iter=m_queryHandles.begin(); iter!=m_queryHandles.end(); iter++) {
+    	if(pQueryHandle==(DrillClientQueryHandle*)iter->second){
+    		m_queryHandles.erase(iter->first);
+    		break;
+    	}
     }
-    if(!m_queryResults.empty()){
-        std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::iterator it;
-        for(it=m_queryResults.begin(); it!=m_queryResults.end(); it++) {
-            if(pQueryResult==(DrillClientQueryResult*)it->second){
-                m_queryResults.erase(it->first);
-                break;
-            }
-        }
+
+    // if the query handle is a result handle, m_queryResults also need to be cleaned.
+    DrillClientQueryResult* pQueryResult = dynamic_cast<DrillClientQueryResult*>(pQueryHandle);
+    if (pQueryResult) {
+    	for(std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::const_iterator it=m_queryResults.begin(); it!=m_queryResults.end(); it++) {
+    		if(pQueryResult==(DrillClientQueryResult*)it->second){
+    			m_queryResults.erase(it->first);
+    			break;
+    		}
+    	}
     }
 }
 
-void DrillClientImpl::sendAck(InBoundRpcMessage& msg, bool isOk){
+void DrillClientImpl::sendAck(const rpc::InBoundRpcMessage& msg, bool isOk){
     exec::rpc::Ack ack;
     ack.set_ok(isOk);
-    OutBoundRpcMessage ack_msg(exec::rpc::RESPONSE, exec::user::ACK, msg.m_coord_id, &ack);
+    rpc::OutBoundRpcMessage ack_msg(exec::rpc::RESPONSE, exec::user::ACK, msg.m_coord_id, &ack);
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    sendSync(ack_msg);
+    sendSyncCommon(ack_msg);
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "ACK sent" << std::endl;)
 }
 
-void DrillClientImpl::sendCancel(exec::shared::QueryId* pQueryId){
+void DrillClientImpl::sendCancel(const exec::shared::QueryId* pQueryId){
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
     uint64_t coordId = this->getNextCoordinationId();
-    OutBoundRpcMessage cancel_msg(exec::rpc::REQUEST, exec::user::CANCEL_QUERY, coordId, pQueryId);
-    sendSync(cancel_msg);
+    rpc::OutBoundRpcMessage cancel_msg(exec::rpc::REQUEST, exec::user::CANCEL_QUERY, coordId, pQueryId);
+    sendSyncCommon(cancel_msg);
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "CANCEL sent" << std::endl;)
 }
 
@@ -1190,7 +2240,93 @@ void DrillClientImpl::shutdownSocket(){
     boost::system::error_code ignorederr;
     m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
     m_bIsConnected=false;
+
+    // Delete the saslAuthenticatorImpl instance since connection is broken. It will recreated on next
+    // call to connect.
+    if(m_saslAuthenticator != NULL) {
+        delete m_saslAuthenticator;
+        m_saslAuthenticator = NULL;
+    }
+
+    // Reset the SASL states.
+    m_saslDone = false;
+    m_saslResultCode = SASL_OK;
+
+    // Reset the encryption context since connection is invalid
+    m_encryptionCtxt.reset();
+
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Socket shutdown" << std::endl;)
+}
+
+namespace { // anonymous
+
+}
+
+namespace { // anonymous
+// Helper class to wait on ServerMeta results
+struct ServerMetaContext {
+	bool m_done;
+	status_t m_status;
+	exec::user::ServerMeta m_serverMeta;
+	boost::mutex m_mutex;
+	boost::condition_variable m_cv;
+
+	static status_t listener(void* ctx, const exec::user::ServerMeta* serverMeta, DrillClientError* err) {
+		ServerMetaContext* context = static_cast<ServerMetaContext*>(ctx);
+			if (err) {
+				context->m_status = QRY_FAILURE;
+			} else {
+				context->m_status = QRY_SUCCESS;
+				context->m_serverMeta.CopyFrom(*serverMeta);
+			}
+
+			{
+				boost::lock_guard<boost::mutex> lock(context->m_mutex);
+				context->m_done = true;
+			}
+			context->m_cv.notify_one();
+			return QRY_SUCCESS;
+		}
+};
+}
+
+meta::DrillMetadata* DrillClientImpl::getMetadata() {
+	DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Getting metadata" << std::endl;)
+	if (std::find(m_supportedMethods.begin(), m_supportedMethods.end(), exec::user::GET_SERVER_META) == m_supportedMethods.end()) {
+		DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Server metadata not supported " << m_supportedMethods.size() << ". Falling back to default." << std::endl;)
+		return new meta::DrillMetadata(*this, meta::DrillMetadata::s_defaultServerMeta);
+	}
+
+	DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Server metadata supported." << std::endl;)
+	exec::user::GetServerMetaReq req;
+	ServerMetaContext ctx;
+	boost::function<DrillClientServerMetaHandle*(int32_t)> factory = boost::bind(
+	            boost::factory<DrillClientServerMetaHandle*>(),
+	            boost::ref(*this),
+	            _1,
+				ServerMetaContext::listener,
+	            &ctx);
+	// Getting a query handle, and make sure to free when done
+	boost::shared_ptr<DrillClientServerMetaHandle> handle = boost::shared_ptr<DrillClientServerMetaHandle>(
+					sendMsg(factory, exec::user::GET_SERVER_META, req),
+					boost::bind(&DrillClientImpl::freeQueryResources, this, _1));
+	{
+		boost::unique_lock<boost::mutex> lock(ctx.m_mutex);
+		while(!ctx.m_done) {
+			ctx.m_cv.wait(lock);
+		}
+	}
+
+	DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Server metadata received." << std::endl;)
+	if (ctx.m_status != QRY_SUCCESS) {
+		return NULL;
+	}
+	return new meta::DrillMetadata(*this, ctx.m_serverMeta);
+
+}
+
+void DrillClientImpl::freeMetadata(meta::DrillMetadata* metadata) {
+    delete metadata;
 }
 
 // This COPIES the FieldMetadata definition for the record batch.  ColumnDefs held by this
@@ -1254,7 +2390,7 @@ status_t DrillClientQueryResult::defaultQueryResultsListener(void* ctx,
     //ctx; // unused, we already have the this pointer
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Query result listener called" << std::endl;)
     //check if the query has been canceled. IF so then return FAILURE. Caller will send cancel to the server.
-    if(this->m_bCancel){
+    if(this->isCancelled()){
         if(b!=NULL) delete b;
         return QRY_FAILURE;
     }
@@ -1284,7 +2420,7 @@ RecordBatch*  DrillClientQueryResult::peekNext(){
     //if no more data, return NULL;
     if(!m_bIsQueryPending) return NULL;
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Synchronous read waiting for data." << std::endl;)
-    while(!this->m_bHasData && !m_bHasError && m_bIsQueryPending) {
+    while(!this->m_bHasData && !this->hasError() && m_bIsQueryPending) {
         this->m_cv.wait(cvLock);
     }
     // READ but not remove first element from queue
@@ -1292,6 +2428,16 @@ RecordBatch*  DrillClientQueryResult::peekNext(){
     return pRecordBatch;
 }
 
+void DrillClientQueryResult::cancel() {
+	// Calling parent class
+	DrillClientBaseHandle<pfnQueryResultsListener, RecordBatch*>::cancel();
+
+	// If queryId has already been received, don't wait to send the
+	// cancellation message
+	if (this->m_pQueryId) {
+		this->client().handleQryCancellation(QRY_CANCELED, this);
+	}
+}
 RecordBatch*  DrillClientQueryResult::getNext() {
     RecordBatch* pRecordBatch=NULL;
     boost::unique_lock<boost::mutex> cvLock(this->m_cvMutex);
@@ -1305,7 +2451,7 @@ RecordBatch*  DrillClientQueryResult::getNext() {
     }
 
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Synchronous read waiting for data." << std::endl;)
-    while(!this->m_bHasData && !m_bHasError && m_bIsQueryPending){
+    while(!this->m_bHasData && !this->hasError() && m_bIsQueryPending){
         this->m_cv.wait(cvLock);
     }
     // remove first element from queue
@@ -1322,33 +2468,60 @@ void DrillClientQueryResult::waitForData() {
     boost::unique_lock<boost::mutex> cvLock(this->m_cvMutex);
     //if no more data, return NULL;
     if(!m_bIsQueryPending) return;
-    while(!this->m_bHasData && !m_bHasError && m_bIsQueryPending) {
+    while(!this->m_bHasData && !this->hasError() && m_bIsQueryPending) {
         this->m_cv.wait(cvLock);
     }
 }
 
-void DrillClientQueryResult::cancel() {
+template<typename Listener, typename Value>
+status_t DrillClientBaseHandle<Listener, Value>::notifyListener(Value v, DrillClientError* pErr){
+	return m_pApplicationListener(getApplicationContext(), v, pErr);
+}
+
+void DrillClientQueryHandle::cancel() {
     this->m_bCancel=true;
 }
 
-void DrillClientQueryResult::signalError(DrillClientError* pErr){
+void DrillClientQueryHandle::signalError(DrillClientError* pErr){
     // Ignore return values from the listener.
     if(pErr!=NULL){
         if(m_pError!=NULL){
             delete m_pError; m_pError=NULL;
         }
         m_pError=pErr;
-        pfnQueryResultsListener pResultsListener=this->m_pResultsListener;
-        if(pResultsListener!=NULL){
-            pResultsListener(this, NULL, pErr);
-        }else{
-            defaultQueryResultsListener(this, NULL, pErr);
-        }
+        // TODO should it be protected by m_cvMutex?
+        m_bHasError=true;
+    }
+    return;
+}
+
+template<typename Listener, typename Value>
+void DrillClientBaseHandle<Listener, Value>::signalError(DrillClientError* pErr){
+    DrillClientQueryHandle::signalError(pErr);
+    // Ignore return values from the listener.
+    if(pErr!=NULL){
+        this->notifyListener(NULL, pErr);
+    }
+}
+
+status_t DrillClientQueryResult::notifyListener(RecordBatch* batch, DrillClientError* pErr) {
+    pfnQueryResultsListener pResultsListener=getApplicationListener();
+    if(pResultsListener!=NULL){
+        return pResultsListener(this, batch, pErr);
+    }else{
+        return defaultQueryResultsListener(this, batch, pErr);
+    }
+}
+
+void DrillClientQueryResult::signalError(DrillClientError* pErr){
+    DrillClientQueryHandle::signalError(pErr);
+    // Ignore return values from the listener.
+    if(pErr!=NULL){
+        this->notifyListener(NULL, pErr);
         {
             boost::lock_guard<boost::mutex> cvLock(this->m_cvMutex);
             m_bIsQueryPending=false;
             m_bHasData=false;
-            m_bHasError=true;
         }
         //Signal the cv in case there is a client waiting for data already.
         m_cv.notify_one();
@@ -1357,24 +2530,27 @@ void DrillClientQueryResult::signalError(DrillClientError* pErr){
 }
 
 void DrillClientQueryResult::signalComplete(){
-    pfnQueryResultsListener pResultsListener=this->m_pResultsListener;
-    if(pResultsListener!=NULL){
-        pResultsListener(this, NULL, NULL);
-    }else{
-        defaultQueryResultsListener(this, NULL, NULL);
-    }
+    this->notifyListener(NULL, NULL);
     {
         boost::lock_guard<boost::mutex> cvLock(this->m_cvMutex);
-        m_bIsQueryPending=false;
         m_bIsQueryPending=!(this->m_recordBatches.empty()&&m_queryState==exec::shared::QueryResult_QueryState_COMPLETED);
-        m_bHasError=false;
+        resetError();
     }
     //Signal the cv in case there is a client waiting for data already.
     m_cv.notify_one();
     return;
 }
 
+void DrillClientQueryHandle::clearAndDestroy(){
+    //Tell the parent to remove this from its lists
+    m_client.removeQueryHandle(this);
+
+    if(m_pError!=NULL){
+        delete m_pError; m_pError=NULL;
+    }
+}
 void DrillClientQueryResult::clearAndDestroy(){
+    DrillClientQueryHandle::clearAndDestroy();
     //free memory allocated for FieldMetadata objects saved in m_columnDefs;
     if(!m_columnDefs->empty()){
         for(std::vector<Drill::FieldMetadata*>::iterator it = m_columnDefs->begin(); it != m_columnDefs->end(); ++it){
@@ -1385,15 +2561,13 @@ void DrillClientQueryResult::clearAndDestroy(){
     if(this->m_pQueryId!=NULL){
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Clearing state for Query Id - " << debugPrintQid(*this->m_pQueryId) << std::endl;)
     }
-    //Tell the parent to remove this from its lists
-    m_pClient->clearMapEntries(this);
 
     //clear query id map entries.
     if(this->m_pQueryId!=NULL){
         delete this->m_pQueryId; this->m_pQueryId=NULL;
     }
     if(!m_recordBatches.empty()){
-        // When multiple qwueries execute in parallel we sometimes get an empty record batch back from the server _after_
+        // When multiple queries execute in parallel we sometimes get an empty record batch back from the server _after_
         // the last chunk has been received. We eventually delete it.
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Freeing Record batch(es) left behind "<< std::endl;)
         RecordBatch* pR=NULL;
@@ -1403,13 +2577,34 @@ void DrillClientQueryResult::clearAndDestroy(){
             delete pR;
         }
     }
-    if(m_pError!=NULL){
-        delete m_pError; m_pError=NULL;
+}
+
+status_t DrillClientPrepareHandle::setupPreparedStatement(const exec::user::PreparedStatement& pstmt) {
+    // Get columns schema information
+    const ::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata>& columns = pstmt.columns();
+    for(::google::protobuf::RepeatedPtrField< ::exec::user::ResultColumnMetadata>::const_iterator it = columns.begin(); it != columns.end(); ++it) {
+        FieldMetadata* metadata = new FieldMetadata;
+        metadata->set(*it);
+        m_columnDefs->push_back(metadata);
+    }
+
+    // Copy server handle
+    this->m_preparedStatementHandle.CopyFrom(pstmt.server_handle());
+    return QRY_SUCCESS;
+}
+
+void DrillClientPrepareHandle::clearAndDestroy(){
+    DrillClientQueryHandle::clearAndDestroy();
+    //free memory allocated for FieldMetadata objects saved in m_columnDefs;
+    if(!m_columnDefs->empty()){
+        for(std::vector<Drill::FieldMetadata*>::iterator it = m_columnDefs->begin(); it != m_columnDefs->end(); ++it){
+            delete *it;
+        }
+        m_columnDefs->clear();
     }
 }
 
-
-connectionStatus_t PooledDrillClientImpl::connect(const char* connStr){
+connectionStatus_t PooledDrillClientImpl::connect(const char* connStr, DrillUserProperties* props){
     connectionStatus_t stat = CONN_SUCCESS;
     std::string pathToDrill, protocol, hostPortStr;
     std::string host;
@@ -1418,10 +2613,13 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr){
     Utils::parseConnectStr(connStr, pathToDrill, protocol, hostPortStr);
     if(!strcmp(protocol.c_str(), "zk")){
         // Get a list of drillbits
-        ZookeeperImpl zook;
+        ZookeeperClient zook(pathToDrill);
         std::vector<std::string> drillbits;
-        int err = zook.getAllDrillbits(hostPortStr.c_str(), pathToDrill.c_str(), drillbits);
+        int err = zook.getAllDrillbits(hostPortStr, drillbits);
         if(!err){
+            if (drillbits.empty()){
+                return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_ZKNODBIT));
+            }
             Utils::shuffle(drillbits);
             // The original shuffled order is maintained if we shuffle first and then add any missing elements
             Utils::add(m_drillbits, drillbits);
@@ -1432,15 +2630,17 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr){
                 m_lastConnection++;
                 nextIndex = (m_lastConnection)%(getDrillbitCount());
             }
+
             DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Pooled Connection"
                     << "(" << (void*)this << ")"
-                    << ": Current counter is: " 
+                    << ": Current counter is: "
                     << m_lastConnection << std::endl;)
-                err=zook.getEndPoint(m_drillbits, nextIndex, e);
+                err=zook.getEndPoint(m_drillbits[nextIndex], e);
             if(!err){
                 host=boost::lexical_cast<std::string>(e.address());
                 port=boost::lexical_cast<std::string>(e.user_port());
             }
+            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Choosing drillbit <" << nextIndex  << ">. Selected " << e.DebugString() << std::endl;)
         }
         if(err){
             return handleConnError(CONN_ZOOKEEPER_ERROR, getMessage(ERR_CONN_ZOOKEEPER, zook.getError().c_str()));
@@ -1475,7 +2675,7 @@ connectionStatus_t PooledDrillClientImpl::validateHandshake(DrillUserProperties*
     connectionStatus_t stat=CONN_FAILURE;
     // Keep a copy of the user properties
     if(props!=NULL){
-        m_pUserProperties = new DrillUserProperties;
+        m_pUserProperties = boost::shared_ptr<DrillUserProperties>(new DrillUserProperties);
         for(size_t i=0; i<props->size(); i++){
             m_pUserProperties->setProperty(
                     props->keyAt(i),
@@ -1486,10 +2686,10 @@ connectionStatus_t PooledDrillClientImpl::validateHandshake(DrillUserProperties*
     DrillClientImpl* pDrillClientImpl = getOneConnection();
     if(pDrillClientImpl != NULL){
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Validating handshake: (Pooled) " << pDrillClientImpl->m_connectedHost << std::endl;)
-        stat=pDrillClientImpl->validateHandshake(m_pUserProperties);
+        stat = pDrillClientImpl->validateHandshake(m_pUserProperties.get());
     }
     else{
-        stat =  handleConnError(CONN_NOTCONNECTED, getMessage(ERR_CONN_NOCONN));
+        stat = handleConnError(CONN_NOTCONNECTED, getMessage(ERR_CONN_NOCONN));
     }
     return stat;
 }
@@ -1505,16 +2705,52 @@ DrillClientQueryResult* PooledDrillClientImpl::SubmitQuery(::exec::shared::Query
     return pDrillClientQueryResult;
 }
 
-void PooledDrillClientImpl::freeQueryResources(DrillClientQueryResult* pQryResult){
-    // Nothing to do. If this class ever keeps track of executing queries then it will need 
-    // to implement this call to free any query specific resources the pool might have 
+DrillClientPrepareHandle* PooledDrillClientImpl::PrepareQuery(const std::string& plan, pfnPreparedStatementListener listener, void* listenerCtx){
+    DrillClientPrepareHandle* pDrillClientPrepareHandle = NULL;
+    DrillClientImpl* pDrillClientImpl = NULL;
+    pDrillClientImpl = getOneConnection();
+    if(pDrillClientImpl != NULL){
+        pDrillClientPrepareHandle=pDrillClientImpl->PrepareQuery(plan,listener,listenerCtx);
+        m_queriesExecuted++;
+    }
+    return pDrillClientPrepareHandle;
+}
+
+DrillClientQueryResult* PooledDrillClientImpl::ExecuteQuery(const PreparedStatement& pstmt, pfnQueryResultsListener listener, void* listenerCtx){
+    DrillClientQueryResult* pDrillClientQueryResult = NULL;
+    DrillClientImpl* pDrillClientImpl = NULL;
+    pDrillClientImpl = getOneConnection();
+    if(pDrillClientImpl != NULL){
+        pDrillClientQueryResult=pDrillClientImpl->ExecuteQuery(pstmt, listener, listenerCtx);
+        m_queriesExecuted++;
+    }
+    return pDrillClientQueryResult;
+}
+
+void PooledDrillClientImpl::freeQueryResources(DrillClientQueryHandle* pQryHandle){
+    // If this class ever keeps track of executing queries then it will need
+    // to implement this call to free any query specific resources the pool might have
     // allocated
-    return;
+
+    pQryHandle->client().freeQueryResources(pQryHandle);
+}
+
+meta::DrillMetadata* PooledDrillClientImpl::getMetadata() {
+    meta::DrillMetadata* metadata = NULL;
+    DrillClientImpl* pDrillClientImpl = getOneConnection();
+    if (pDrillClientImpl != NULL) {
+        metadata = pDrillClientImpl->getMetadata();
+    }
+    return metadata;
+}
+
+void PooledDrillClientImpl::freeMetadata(meta::DrillMetadata* metadata) {
+    metadata->client().freeMetadata(metadata);
 }
 
 bool PooledDrillClientImpl::Active(){
     boost::lock_guard<boost::mutex> lock(m_poolMutex);
-    for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
+    for(std::vector<DrillClientImpl*>::const_iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
         if((*it)->Active()){
             return true;
         }
@@ -1529,7 +2765,7 @@ void PooledDrillClientImpl::Close() {
         delete *it;
     }
     m_clientConnections.clear();
-    if(m_pUserProperties!=NULL){ delete m_pUserProperties; m_pUserProperties=NULL;}
+    m_pUserProperties.reset();
     if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
     m_lastConnection=-1;
     m_queriesExecuted=0;
@@ -1574,7 +2810,7 @@ DrillClientImpl* PooledDrillClientImpl::getOneConnection(){
     DrillClientImpl* pDrillClientImpl = NULL;
     while(pDrillClientImpl==NULL){
         if(m_queriesExecuted == 0){
-            // First query ever sent can use the connection already established to authenticate the user
+            // First query ever sent can use the connection already established to handleAuthentication the user
             boost::lock_guard<boost::mutex> lock(m_poolMutex);
             pDrillClientImpl=m_clientConnections[0];// There should be one connection in the list when the first query is executed
         }else if(m_clientConnections.size() == m_maxConcurrentConnections){
@@ -1589,10 +2825,10 @@ DrillClientImpl* PooledDrillClientImpl::getOneConnection(){
             int tries=0;
             connectionStatus_t ret=CONN_SUCCESS;
             while(pDrillClientImpl==NULL && tries++ < 3){
-                if((ret=connect(m_connectStr.c_str()))==CONN_SUCCESS){
+                if((ret=connect(m_connectStr.c_str(), m_pUserProperties.get()))==CONN_SUCCESS){
                     boost::lock_guard<boost::mutex> lock(m_poolMutex);
                     pDrillClientImpl=m_clientConnections.back();
-                    ret=pDrillClientImpl->validateHandshake(m_pUserProperties);
+                    ret=pDrillClientImpl->validateHandshake(m_pUserProperties.get());
                     if(ret!=CONN_SUCCESS){
                         delete pDrillClientImpl; pDrillClientImpl=NULL;
                         m_clientConnections.erase(m_clientConnections.end());
@@ -1602,251 +2838,14 @@ DrillClientImpl* PooledDrillClientImpl::getOneConnection(){
             if(ret!=CONN_SUCCESS){
                 break;
             }
-        } // need a new connection 
+        } // need a new connection
     }// while
 
     if(pDrillClientImpl==NULL){
         connectionStatus_t status = CONN_NOTCONNECTED;
-        handleConnError(status, getMessage(status));
+        handleConnError(status, getMessage(ERR_CONN_NOCONN));
     }
     return pDrillClientImpl;
-}
-
-char ZookeeperImpl::s_drillRoot[]="/drill/";
-char ZookeeperImpl::s_defaultCluster[]="drillbits1";
-
-ZookeeperImpl::ZookeeperImpl(){
-    m_pDrillbits=new String_vector;
-    m_bConnecting=true;
-    memset(&m_id, 0, sizeof(m_id));
-}
-
-ZookeeperImpl::~ZookeeperImpl(){
-    delete m_pDrillbits;
-}
-
-ZooLogLevel ZookeeperImpl::getZkLogLevel(){
-    //typedef enum {ZOO_LOG_LEVEL_ERROR=1,
-    //    ZOO_LOG_LEVEL_WARN=2,
-    //    ZOO_LOG_LEVEL_INFO=3,
-    //    ZOO_LOG_LEVEL_DEBUG=4
-    //} ZooLogLevel;
-    switch(DrillClientConfig::getLogLevel()){
-        case LOG_TRACE:
-        case LOG_DEBUG:
-            return ZOO_LOG_LEVEL_DEBUG;
-        case LOG_INFO:
-            return ZOO_LOG_LEVEL_INFO;
-        case LOG_WARNING:
-            return ZOO_LOG_LEVEL_WARN;
-        case LOG_ERROR:
-        case LOG_FATAL:
-        default:
-            return ZOO_LOG_LEVEL_ERROR;
-    }
-    return ZOO_LOG_LEVEL_ERROR;
-}
-
-int ZookeeperImpl::getAllDrillbits(const char* connectStr, const char* pathToDrill, std::vector<std::string>& drillbits){
-    uint32_t waitTime=30000; // 10 seconds
-    zoo_set_debug_level(getZkLogLevel());
-    zoo_deterministic_conn_order(1); // enable deterministic order
-    struct String_vector* pDrillbits=NULL;
-    m_zh = zookeeper_init(connectStr, watcher, waitTime, 0, this, 0);
-    if(!m_zh) {
-        m_err = getMessage(ERR_CONN_ZKFAIL);
-        zookeeper_close(m_zh);
-        return -1;
-    }else{
-        m_err="";
-        //Wait for the completion handler to signal successful connection
-        boost::unique_lock<boost::mutex> bufferLock(this->m_cvMutex);
-        boost::system_time const timeout=boost::get_system_time()+ boost::posix_time::milliseconds(waitTime);
-        while(this->m_bConnecting) {
-            if(!this->m_cv.timed_wait(bufferLock, timeout)){
-                m_err = getMessage(ERR_CONN_ZKTIMOUT);
-                zookeeper_close(m_zh);
-                return -1;
-            }
-        }
-    }
-    if(m_state!=ZOO_CONNECTED_STATE){
-        zookeeper_close(m_zh);
-        return -1;
-    }
-    int rc = ZOK;
-    if(pathToDrill==NULL || strlen(pathToDrill)==0){
-        m_rootDir=s_drillRoot;
-        m_rootDir += s_defaultCluster;
-    }else{
-        m_rootDir=pathToDrill;
-    }
-
-    pDrillbits = new String_vector;
-    rc=zoo_get_children(m_zh, m_rootDir.c_str(), 0, pDrillbits);
-    if(rc!=ZOK){
-        delete pDrillbits;
-        m_err=getMessage(ERR_CONN_ZKERR, rc);
-        zookeeper_close(m_zh);
-        return -1;
-    }
-    if(pDrillbits && pDrillbits->count > 0){
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Found " << pDrillbits->count << " drillbits in cluster (" 
-                << connectStr << "/" << pathToDrill
-                << ")." <<std::endl;)
-            for(int i=0; i<pDrillbits->count; i++){
-                drillbits.push_back(pDrillbits->data[i]);
-            }
-        for(int i=0; i<drillbits.size(); i++){
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "\t Unshuffled Drillbit id: " << drillbits[i] << std::endl;)
-        }
-    }
-    delete pDrillbits;
-    return 0;
-}
-
-int ZookeeperImpl::getEndPoint(std::vector<std::string>& drillbits, size_t index, exec::DrillbitEndpoint& endpoint){
-    int rc = ZOK;
-    exec::DrillServiceInstance drillServiceInstance;
-    if( drillbits.size() >0){
-        // pick the drillbit at 'index'
-        const char * bit=drillbits[index].c_str();
-        std::string s;
-        s=m_rootDir +  std::string("/") + bit;
-        int buffer_len=MAX_CONNECT_STR;
-        char buffer[MAX_CONNECT_STR+1];
-        struct Stat stat;
-        buffer[MAX_CONNECT_STR]=0;
-        rc= zoo_get(m_zh, s.c_str(), 0, buffer,  &buffer_len, &stat);
-        if(rc!=ZOK){
-            m_err=getMessage(ERR_CONN_ZKDBITERR, rc);
-            zookeeper_close(m_zh);
-            return -1;
-        }
-        exec::DrillServiceInstance drillServiceInstance;
-        drillServiceInstance.ParseFromArray(buffer, buffer_len);
-        endpoint=drillServiceInstance.endpoint();
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Choosing drillbit <" <<index << ">. Selected " << drillServiceInstance.DebugString() << std::endl;)
-    }else{
-
-        m_err=getMessage(ERR_CONN_ZKNODBIT);
-        zookeeper_close(m_zh);
-        return -1;
-    }
-    return 0;
-}
-
-// Deprecated
-int ZookeeperImpl::connectToZookeeper(const char* connectStr, const char* pathToDrill){
-    uint32_t waitTime=30000; // 10 seconds
-    zoo_set_debug_level(getZkLogLevel());
-    zoo_deterministic_conn_order(1); // enable deterministic order
-    m_zh = zookeeper_init(connectStr, watcher, waitTime, 0, this, 0);
-    if(!m_zh) {
-        m_err = getMessage(ERR_CONN_ZKFAIL);
-        return CONN_FAILURE;
-    }else{
-        m_err="";
-        //Wait for the completion handler to signal successful connection
-        boost::unique_lock<boost::mutex> bufferLock(this->m_cvMutex);
-        boost::system_time const timeout=boost::get_system_time()+ boost::posix_time::milliseconds(waitTime);
-        while(this->m_bConnecting) {
-            if(!this->m_cv.timed_wait(bufferLock, timeout)){
-                m_err = getMessage(ERR_CONN_ZKTIMOUT);
-                return CONN_FAILURE;
-            }
-        }
-    }
-    if(m_state!=ZOO_CONNECTED_STATE){
-        return CONN_FAILURE;
-    }
-    int rc = ZOK;
-    char rootDir[MAX_CONNECT_STR+1];
-    if(pathToDrill==NULL || strlen(pathToDrill)==0){
-        strcpy(rootDir, (char*)s_drillRoot);
-        strcat(rootDir, s_defaultCluster);
-    }else{
-        strncpy(rootDir, pathToDrill, MAX_CONNECT_STR); rootDir[MAX_CONNECT_STR]=0;
-    }
-    rc=zoo_get_children(m_zh, (char*)rootDir, 0, m_pDrillbits);
-    if(rc!=ZOK){
-        m_err=getMessage(ERR_CONN_ZKERR, rc);
-        zookeeper_close(m_zh);
-        return -1;
-    }
-
-    //Let's pick a random drillbit.
-    if(m_pDrillbits && m_pDrillbits->count >0){
-
-        std::vector<std::string> randomDrillbits;
-        for(int i=0; i<m_pDrillbits->count; i++){
-            randomDrillbits.push_back(m_pDrillbits->data[i]);
-        }
-        //Use the same random shuffle as the Java client instead of picking a drillbit at random.
-        //Gives much better randomization when the size of the cluster is small.
-        std::random_shuffle(randomDrillbits.begin(), randomDrillbits.end());
-        const char * bit=randomDrillbits[0].c_str();
-        std::string s;
-
-        s=rootDir +  std::string("/") + bit;
-        int buffer_len=MAX_CONNECT_STR;
-        char buffer[MAX_CONNECT_STR+1];
-        struct Stat stat;
-        buffer[MAX_CONNECT_STR]=0;
-        rc= zoo_get(m_zh, s.c_str(), 0, buffer,  &buffer_len, &stat);
-        if(rc!=ZOK){
-            m_err=getMessage(ERR_CONN_ZKDBITERR, rc);
-            zookeeper_close(m_zh);
-            return -1;
-        }
-        m_drillServiceInstance.ParseFromArray(buffer, buffer_len);
-    }else{
-        m_err=getMessage(ERR_CONN_ZKNODBIT);
-        zookeeper_close(m_zh);
-        return -1;
-    }
-    return 0;
-}
-
-void ZookeeperImpl::close(){
-    zookeeper_close(m_zh);
-}
-
-void ZookeeperImpl::watcher(zhandle_t *zzh, int type, int state, const char *path, void* context) {
-    //From cli.c
-
-    /* Be careful using zh here rather than zzh - as this may be mt code
-     * the client lib may call the watcher before zookeeper_init returns */
-
-    ZookeeperImpl* self=(ZookeeperImpl*)context;
-    self->m_state=state;
-    if (type == ZOO_SESSION_EVENT) {
-        if (state == ZOO_CONNECTED_STATE) {
-        } else if (state == ZOO_AUTH_FAILED_STATE) {
-            self->m_err= getMessage(ERR_CONN_ZKNOAUTH);
-            zookeeper_close(zzh);
-            self->m_zh=0;
-        } else if (state == ZOO_EXPIRED_SESSION_STATE) {
-            self->m_err= getMessage(ERR_CONN_ZKEXP);
-            zookeeper_close(zzh);
-            self->m_zh=0;
-        }
-    }
-    // signal the cond var
-    {
-        if (state == ZOO_CONNECTED_STATE){
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connected to Zookeeper." << std::endl;)
-        }
-        boost::lock_guard<boost::mutex> bufferLock(self->m_cvMutex);
-        self->m_bConnecting=false;
-    }
-    self->m_cv.notify_one();
-}
-
-void ZookeeperImpl:: debugPrint(){
-    if(m_zh!=NULL && m_state==ZOO_CONNECTED_STATE){
-        DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << m_drillServiceInstance.DebugString() << std::endl;)
-    }
 }
 
 } // namespace Drill

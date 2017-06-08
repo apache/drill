@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -27,23 +30,40 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
+import org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat;
+import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
+import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 
 @SuppressWarnings("unused")
 public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
 
+  /**
+   * Use different classes for different Hive native formats:
+   * ORC, AVRO, RCFFile, Text and Parquet.
+   * If input format is none of them falls to default reader.
+   */
+  static Map<String, Class> readerMap = new HashMap<>();
+  static {
+    readerMap.put(OrcInputFormat.class.getCanonicalName(), HiveOrcReader.class);
+    readerMap.put(AvroContainerInputFormat.class.getCanonicalName(), HiveAvroReader.class);
+    readerMap.put(RCFileInputFormat.class.getCanonicalName(), HiveRCFileReader.class);
+    readerMap.put(MapredParquetInputFormat.class.getCanonicalName(), HiveParquetReader.class);
+    readerMap.put(TextInputFormat.class.getCanonicalName(), HiveTextReader.class);
+  }
+
   @Override
   public ScanBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
     List<RecordReader> readers = Lists.newArrayList();
-    Table table = config.getTable();
+    HiveTableWithColumnCache table = config.getTable();
     List<InputSplit> splits = config.getInputSplits();
-    List<Partition> partitions = config.getPartitions();
+    List<HivePartition> partitions = config.getPartitions();
     boolean hasPartitions = (partitions != null && partitions.size() > 0);
     int i = 0;
     final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(config.getUserName(),
@@ -51,29 +71,27 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
 
     final HiveConf hiveConf = config.getHiveConf();
 
-    // Native hive text record reader doesn't handle all types currently. For now use HiveRecordReader which uses
-    // Hive InputFormat and SerDe classes to read the data.
-    //if (table.getSd().getInputFormat().equals(TextInputFormat.class.getCanonicalName()) &&
-    //        table.getSd().getSerdeInfo().getSerializationLib().equals(LazySimpleSerDe.class.getCanonicalName()) &&
-    //        config.getColumns() != null) {
-    //  for (InputSplit split : splits) {
-    //    readers.add(new HiveTextRecordReader(table,
-    //        (hasPartitions ? partitions.get(i++) : null),
-    //        split, config.getColumns(), context));
-    //  }
-    //} else {
+    final String formatName = table.getSd().getInputFormat();
+    Class<? extends HiveAbstractReader> readerClass = HiveDefaultReader.class;
+    if (readerMap.containsKey(formatName)) {
+      readerClass = readerMap.get(formatName);
+    }
+    Constructor<? extends HiveAbstractReader> readerConstructor = null;
+    try {
+      readerConstructor = readerClass.getConstructor(HiveTableWithColumnCache.class, HivePartition.class,
+          InputSplit.class, List.class, FragmentContext.class, HiveConf.class,
+          UserGroupInformation.class);
       for (InputSplit split : splits) {
-        readers.add(new HiveRecordReader(table,
+        readers.add(readerConstructor.newInstance(table,
             (hasPartitions ? partitions.get(i++) : null), split, config.getColumns(), context, hiveConf, proxyUgi));
       }
-    //}
-
-    // If there are no readers created (which is possible when the table is empty), create an empty RecordReader to
-    // output the schema
-    if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, config.getColumns(), context, hiveConf, proxyUgi));
+      if (readers.size() == 0) {
+        readers.add(readerConstructor.newInstance(
+            table, null, null, config.getColumns(), context, hiveConf, proxyUgi));
+      }
+    } catch(Exception e) {
+      logger.error("No constructor for {}, thrown {}", readerClass.getName(), e);
     }
-
     return new ScanBatch(config, context, readers.iterator());
   }
 }

@@ -19,14 +19,12 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import com.google.common.collect.Lists;
 
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.HashPrelUtil;
 import org.apache.drill.exec.planner.physical.HashPrelUtil.HashExpressionCreatorHelper;
 import org.apache.drill.exec.planner.physical.HashToRandomExchangePrel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.planner.physical.UnorderedDeMuxExchangePrel;
@@ -40,6 +38,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -58,7 +57,7 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
     @Override
     public RexNode createCall(String funcName, List<RexNode> inputFields) {
       final DrillSqlOperator op =
-          new DrillSqlOperator(funcName, inputFields.size(), true);
+          new DrillSqlOperator(funcName, inputFields.size(), true, false);
       return rexBuilder.makeCall(op, inputFields);
     }
   }
@@ -119,7 +118,8 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
       }
 
       outputFieldNames.add(HashPrelUtil.HASH_EXPR_NAME);
-      updatedExpr.add(HashPrelUtil.createHashBasedPartitionExpression(distFieldRefs, hashHelper));
+      final RexNode distSeed = rexBuilder.makeBigintLiteral(BigDecimal.valueOf(HashPrelUtil.DIST_SEED)); // distribution seed
+      updatedExpr.add(HashPrelUtil.createHashBasedPartitionExpression(distFieldRefs, distSeed, hashHelper));
 
       RelDataType rowType = RexUtil.createStructType(prel.getCluster().getTypeFactory(), updatedExpr, outputFieldNames);
 

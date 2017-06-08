@@ -31,7 +31,6 @@
     #undef random
   #endif
 #endif
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/random/mersenne_twister.hpp> // for mt19937
 #include <boost/random/random_device.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -62,7 +61,7 @@ class AllocatedBuffer{
 
 };
 
-class Utils{
+class DECLSPEC_DRILL_CLIENT Utils{
     public:
         static boost::random::random_device s_RNG;   //Truly random (expensive and device dependent)
         static boost::random::mt19937 s_URNG; //Pseudo random with a period of ( 2^19937 - 1 )
@@ -98,6 +97,38 @@ class Utils{
         }
 
 }; // Utils
+
+/*
+ * Encryption related configuration parameters. The member's are updated with value received from server
+ * and also after the SASL Handshake is done.
+ */
+class EncryptionContext {
+
+	bool m_bEncryptionReqd;
+	int m_maxWrappedSize;
+	int m_wrapSizeLimit;
+
+public:
+	EncryptionContext();
+
+	EncryptionContext(const bool& encryptionReqd, const int& maxWrappedSize, const int& wrapSizeLimit);
+
+	void setEncryptionReqd(const bool& encryptionReqd);
+
+	void setMaxWrappedSize(const int& maxWrappedSize);
+
+	void setWrapSizeLimit(const int& wrapSizeLimit);
+
+	bool isEncryptionReqd() const;
+
+	int getMaxWrappedSize() const;
+
+	int getWrapSizeLimit() const;
+
+	void reset();
+
+	friend std::ostream& operator<<(std::ostream &contextStream, const EncryptionContext& context);
+};
 
 } // namespace Drill
 

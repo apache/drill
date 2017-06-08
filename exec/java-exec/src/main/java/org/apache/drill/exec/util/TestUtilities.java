@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,26 @@
  */
 package org.apache.drill.exec.util;
 
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
-import java.io.File;
+import com.google.common.io.Files;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 
 /**
  * This class contains utility methods to speed up tests. Some of the production code currently calls this method
@@ -64,6 +75,7 @@ public class TestUtilities {
   public static void updateDfsTestTmpSchemaLocation(final StoragePluginRegistry pluginRegistry,
                                                       final String tmpDirPath)
       throws ExecutionSetupException {
+    @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsTestPluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     final WorkspaceConfig tmpWSConfig = pluginConfig.workspaces.get(dfsTestTmpSchema);
@@ -81,6 +93,7 @@ public class TestUtilities {
    * Schema "dfs.tmp" added as part of the default bootstrap plugins file that comes with drill-java-exec jar
    */
   public static void makeDfsTmpSchemaImmutable(final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+    @SuppressWarnings("resource")
     final FileSystemPlugin dfsPlugin = (FileSystemPlugin) pluginRegistry.getPlugin(dfsPluginName);
     final FileSystemConfig dfsPluginConfig = (FileSystemConfig) dfsPlugin.getConfig();
     final WorkspaceConfig tmpWSConfig = dfsPluginConfig.workspaces.get(dfsTmpSchema);
@@ -93,4 +106,44 @@ public class TestUtilities {
 
     pluginRegistry.createOrUpdate(dfsPluginName, dfsPluginConfig, true);
   }
+
+  /**
+   * Create JSONRecordReader from input strings.
+   * @param jsonBatches : list of input strings, each element represent a batch. Each string could either
+   *                    be in the form of "[{...}, {...}, ..., {...}]", or in the form of "{...}".
+   * @param fragContext : fragment context
+   * @param columnsToRead : list of schema pathes to read from JSON reader.
+   * @return
+   */
+  public static Iterator<RecordReader> getJsonReadersFromBatchString(List<String> jsonBatches, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
+    ObjectMapper mapper = new ObjectMapper();
+    List<RecordReader> readers = new ArrayList<>();
+    for (String batchJason : jsonBatches) {
+      JsonNode records;
+      try {
+        records = mapper.readTree(batchJason);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      readers.add(new JSONRecordReader(fragContext, records, null, columnsToRead));
+    }
+    return readers.iterator();
+  }
+
+  /**
+   * Create JSONRecordReader from files on a file system.
+   * @param fs : file system.
+   * @param inputPaths : list of .json file paths.
+   * @param fragContext
+   * @param columnsToRead
+   * @return
+   */
+  public static Iterator<RecordReader> getJsonReadersFromInputFiles(DrillFileSystem fs, List<String> inputPaths, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
+    List<RecordReader> readers = new ArrayList<>();
+    for (String inputPath : inputPaths) {
+      readers.add(new JSONRecordReader(fragContext, inputPath, fs, columnsToRead));
+    }
+    return readers.iterator();
+  }
+
 }

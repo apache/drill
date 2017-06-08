@@ -18,25 +18,31 @@
 package org.apache.drill.exec.work.metadata;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.CATALOGS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.COLUMNS;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.SCHEMATA;
 import static org.apache.drill.exec.store.ischema.InfoSchemaTableType.TABLES;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.UserProtos.CatalogMetadata;
 import org.apache.drill.exec.proto.UserProtos.ColumnMetadata;
-import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
@@ -55,7 +61,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.store.SchemaTreeProvider;
-import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ConstantExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode;
@@ -69,7 +74,9 @@ import org.apache.drill.exec.store.ischema.Records.Table;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * Contains worker {@link Runnable} classes for providing the metadata and related helper methods.
@@ -77,6 +84,7 @@ import com.google.common.collect.ImmutableList;
 public class MetadataProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetadataProvider.class);
 
+  private static final String IN_FUNCTION = "in";
   private static final String LIKE_FUNCTION = "like";
   private static final String AND_FUNCTION = "booleanand";
   private static final String OR_FUNCTION = "booleanor";
@@ -141,12 +149,23 @@ public class MetadataProvider {
      * @return A {@link Response} message. Response must be returned in any case.
      */
     protected abstract Response runInternal(UserSession session, SchemaTreeProvider schemaProvider);
+
+    public DrillConfig getConfig() {
+      return dContext.getConfig();
+    }
   }
 
   /**
    * Runnable that fetches the catalog metadata for given {@link GetCatalogsReq} and sends response at the end.
    */
   private static class CatalogsProvider extends MetadataRunnable {
+    private static final Ordering<CatalogMetadata> CATALOGS_ORDERING = new Ordering<CatalogMetadata>() {
+      @Override
+      public int compare(CatalogMetadata left, CatalogMetadata right) {
+        return Ordering.natural().compare(left.getCatalogName(), right.getCatalogName());
+      }
+    };
+
     private final GetCatalogsReq req;
 
     public CatalogsProvider(final UserSession session, final DrillbitContext dContext,
@@ -158,23 +177,27 @@ public class MetadataProvider {
     @Override
     protected Response runInternal(final UserSession session, final SchemaTreeProvider schemaProvider) {
       final GetCatalogsResp.Builder respBuilder = GetCatalogsResp.newBuilder();
-
       final InfoSchemaFilter filter = createInfoSchemaFilter(
-          req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null, null, null, null);
+          req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null, null, null, null, null);
 
       try {
         final PojoRecordReader<Catalog> records =
-            (PojoRecordReader<Catalog>) getPojoRecordReader(CATALOGS, filter, schemaProvider, session);
+            getPojoRecordReader(CATALOGS, filter, getConfig(), schemaProvider, session);
 
+        List<CatalogMetadata> metadata = new ArrayList<>();
         for(Catalog c : records) {
           final CatalogMetadata.Builder catBuilder = CatalogMetadata.newBuilder();
           catBuilder.setCatalogName(c.CATALOG_NAME);
           catBuilder.setDescription(c.CATALOG_DESCRIPTION);
           catBuilder.setConnect(c.CATALOG_CONNECT);
 
-          respBuilder.addCatalogs(catBuilder.build());
+          metadata.add(catBuilder.build());
         }
 
+        // Reorder results according to JDBC spec
+        Collections.sort(metadata, CATALOGS_ORDERING);
+
+        respBuilder.addAllCatalogs(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -186,6 +209,16 @@ public class MetadataProvider {
   }
 
   private static class SchemasProvider extends MetadataRunnable {
+    private static final Ordering<SchemaMetadata> SCHEMAS_ORDERING = new Ordering<SchemaMetadata>() {
+      @Override
+      public int compare(SchemaMetadata left, SchemaMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .result();
+      };
+    };
+
     private final GetSchemasReq req;
 
     private SchemasProvider(final UserSession session, final DrillbitContext dContext,
@@ -200,13 +233,14 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
-          null, null);
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
+          null, null, null);
 
       try {
-        final PojoRecordReader<Schema> records = (PojoRecordReader<Schema>)
-            getPojoRecordReader(SCHEMATA, filter, schemaProvider, session);
+        final PojoRecordReader<Schema> records =
+            getPojoRecordReader(SCHEMATA, filter, getConfig(), schemaProvider, session);
 
+        List<SchemaMetadata> metadata = new ArrayList<>();
         for(Schema s : records) {
           final SchemaMetadata.Builder schemaBuilder = SchemaMetadata.newBuilder();
           schemaBuilder.setCatalogName(s.CATALOG_NAME);
@@ -215,9 +249,12 @@ public class MetadataProvider {
           schemaBuilder.setType(s.TYPE);
           schemaBuilder.setMutable(s.IS_MUTABLE);
 
-          respBuilder.addSchemas(schemaBuilder.build());
+          metadata.add(schemaBuilder.build());
         }
+        // Reorder results according to JDBC spec
+        Collections.sort(metadata, SCHEMAS_ORDERING);
 
+        respBuilder.addAllSchemas(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -229,6 +266,17 @@ public class MetadataProvider {
   }
 
   private static class TablesProvider extends MetadataRunnable {
+    private static final Ordering<TableMetadata> TABLES_ORDERING = new Ordering<TableMetadata>() {
+      @Override
+      public int compare(TableMetadata left, TableMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getType(), right.getType())
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .compare(left.getTableName(), right.getTableName())
+            .result();
+      }
+    };
     private final GetTablesReq req;
 
     private TablesProvider(final UserSession session, final DrillbitContext dContext,
@@ -243,14 +291,16 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
           req.hasTableNameFilter() ? req.getTableNameFilter() : null,
+          req.getTableTypeFilterCount() != 0 ? req.getTableTypeFilterList() : null,
           null);
 
       try {
         final PojoRecordReader<Table> records =
-            (PojoRecordReader<Table>)getPojoRecordReader(TABLES, filter, schemaProvider, session);
+            getPojoRecordReader(TABLES, filter, getConfig(), schemaProvider, session);
 
+        List<TableMetadata> metadata = new ArrayList<>();
         for(Table t : records) {
           final TableMetadata.Builder tableBuilder = TableMetadata.newBuilder();
           tableBuilder.setCatalogName(t.TABLE_CATALOG);
@@ -258,9 +308,13 @@ public class MetadataProvider {
           tableBuilder.setTableName(t.TABLE_NAME);
           tableBuilder.setType(t.TABLE_TYPE);
 
-          respBuilder.addTables(tableBuilder.build());
+          metadata.add(tableBuilder.build());
         }
 
+        // Reorder results according to JDBC/ODBC spec
+        Collections.sort(metadata, TABLES_ORDERING);
+
+        respBuilder.addAllTables(metadata);
         respBuilder.setStatus(RequestStatus.OK);
       } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
@@ -272,6 +326,18 @@ public class MetadataProvider {
   }
 
   private static class ColumnsProvider extends MetadataRunnable {
+    private static final Ordering<ColumnMetadata> COLUMNS_ORDERING = new Ordering<ColumnMetadata>() {
+      @Override
+      public int compare(ColumnMetadata left, ColumnMetadata right) {
+        return ComparisonChain.start()
+            .compare(left.getCatalogName(), right.getCatalogName())
+            .compare(left.getSchemaName(), right.getSchemaName())
+            .compare(left.getTableName(), right.getTableName())
+            .compare(left.getOrdinalPosition(), right.getOrdinalPosition())
+            .result();
+      }
+    };
+
     private final GetColumnsReq req;
 
     private ColumnsProvider(final UserSession session, final DrillbitContext dContext,
@@ -286,15 +352,16 @@ public class MetadataProvider {
 
       final InfoSchemaFilter filter = createInfoSchemaFilter(
           req.hasCatalogNameFilter() ? req.getCatalogNameFilter() : null,
-          req.hasSchameNameFilter() ? req.getSchameNameFilter() : null,
+          req.hasSchemaNameFilter() ? req.getSchemaNameFilter() : null,
           req.hasTableNameFilter() ? req.getTableNameFilter() : null,
-          req.hasColumnNameFilter() ? req.getColumnNameFilter() : null
+          null, req.hasColumnNameFilter() ? req.getColumnNameFilter() : null
       );
 
       try {
         final PojoRecordReader<Column> records =
-            (PojoRecordReader<Column>)getPojoRecordReader(COLUMNS, filter, schemaProvider, session);
+            getPojoRecordReader(COLUMNS, filter, getConfig(), schemaProvider, session);
 
+        List<ColumnMetadata> metadata = new ArrayList<>();
         for(Column c : records) {
           final ColumnMetadata.Builder columnBuilder = ColumnMetadata.newBuilder();
           columnBuilder.setCatalogName(c.TABLE_CATALOG);
@@ -320,6 +387,10 @@ public class MetadataProvider {
             columnBuilder.setCharOctetLength(c.CHARACTER_OCTET_LENGTH);
           }
 
+          if (c.NUMERIC_SCALE != null) {
+            columnBuilder.setNumericScale(c.NUMERIC_SCALE);
+          }
+
           if (c.NUMERIC_PRECISION != null) {
             columnBuilder.setNumericPrecision(c.NUMERIC_PRECISION);
           }
@@ -340,11 +411,19 @@ public class MetadataProvider {
             columnBuilder.setIntervalPrecision(c.INTERVAL_PRECISION);
           }
 
-          respBuilder.addColumns(columnBuilder.build());
+          if (c.COLUMN_SIZE != null) {
+            columnBuilder.setColumnSize(c.COLUMN_SIZE);
+          }
+
+          metadata.add(columnBuilder.build());
         }
 
+        // Reorder results according to JDBC/ODBC spec
+        Collections.sort(metadata, COLUMNS_ORDERING);
+
+        respBuilder.addAllColumns(metadata);
         respBuilder.setStatus(RequestStatus.OK);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         respBuilder.setStatus(RequestStatus.FAILED);
         respBuilder.setError(createPBError("get columns", e));
       } finally {
@@ -358,11 +437,12 @@ public class MetadataProvider {
    * @param catalogNameFilter Optional filter on <code>catalog name</code>
    * @param schemaNameFilter Optional filter on <code>schema name</code>
    * @param tableNameFilter Optional filter on <code>table name</code>
+   * @param tableTypeFilter Optional filter on <code>table type</code>
    * @param columnNameFilter Optional filter on <code>column name</code>
    * @return
    */
   private static InfoSchemaFilter createInfoSchemaFilter(final LikeFilter catalogNameFilter,
-      final LikeFilter schemaNameFilter, final LikeFilter tableNameFilter, final LikeFilter columnNameFilter) {
+      final LikeFilter schemaNameFilter, final LikeFilter tableNameFilter, List<String> tableTypeFilter, final LikeFilter columnNameFilter) {
 
     FunctionExprNode exprNode = createLikeFunctionExprNode(CATS_COL_CATALOG_NAME,  catalogNameFilter);
 
@@ -381,7 +461,12 @@ public class MetadataProvider {
 
     exprNode = combineFunctions(AND_FUNCTION,
         exprNode,
-        createLikeFunctionExprNode(InfoSchemaConstants.COLS_COL_COLUMN_NAME, columnNameFilter)
+        createInFunctionExprNode(TBLS_COL_TABLE_TYPE, tableTypeFilter)
+        );
+
+    exprNode = combineFunctions(AND_FUNCTION,
+        exprNode,
+        createLikeFunctionExprNode(COLS_COL_COLUMN_NAME, columnNameFilter)
     );
 
     return exprNode != null ? new InfoSchemaFilter(exprNode) : null;
@@ -402,12 +487,32 @@ public class MetadataProvider {
         likeFilter.hasEscape() ?
             ImmutableList.of(
                 new FieldExprNode(fieldName),
-                new ConstantExprNode(likeFilter.getRegex()),
+                new ConstantExprNode(likeFilter.getPattern()),
                 new ConstantExprNode(likeFilter.getEscape())) :
             ImmutableList.of(
                 new FieldExprNode(fieldName),
-                new ConstantExprNode(likeFilter.getRegex()))
+                new ConstantExprNode(likeFilter.getPattern()))
     );
+  }
+
+  /**
+   * Helper method to create {@link FunctionExprNode} from {@code List<String>}.
+   * @param fieldName Name of the filed on which the like expression is applied.
+   * @param valuesFilter a list of values
+   * @return {@link FunctionExprNode} for given arguments. Null if the <code>valuesFilter</code> is null.
+   */
+  private static FunctionExprNode createInFunctionExprNode(String fieldName, List<String> valuesFilter) {
+    if (valuesFilter == null) {
+      return null;
+    }
+
+    ImmutableList.Builder<ExprNode> nodes = ImmutableList.builder();
+    nodes.add(new FieldExprNode(fieldName));
+    for(String type: valuesFilter) {
+      nodes.add(new ConstantExprNode(type));
+    }
+
+    return new FunctionExprNode(IN_FUNCTION, nodes.build());
   }
 
   /**
@@ -435,29 +540,41 @@ public class MetadataProvider {
    * @param userSession
    * @return
    */
-  private static PojoRecordReader getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter,
+  private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter, final DrillConfig config,
       final SchemaTreeProvider provider, final UserSession userSession) {
     final SchemaPlus rootSchema =
-        provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(userSession));
+        provider.createRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
     return tableType.getRecordReader(rootSchema, filter, userSession.getOptions());
   }
 
   /**
    * Helper method to create a {@link SchemaConfigInfoProvider} instance for metadata purposes.
    * @param session
+   * @param schemaTreeProvider
    * @return
    */
-  private static SchemaConfigInfoProvider newSchemaConfigInfoProvider(final UserSession session) {
+  private static SchemaConfigInfoProvider newSchemaConfigInfoProvider(final DrillConfig config, final UserSession session, final SchemaTreeProvider schemaTreeProvider) {
     return new SchemaConfigInfoProvider() {
+      private final ViewExpansionContext viewExpansionContext = new ViewExpansionContext(config, this);
+
       @Override
       public ViewExpansionContext getViewExpansionContext() {
-        // Metadata APIs don't expect to expand the views.
-        throw new UnsupportedOperationException("View expansion context is not supported");
+        return viewExpansionContext;
+      }
+
+      @Override
+      public SchemaPlus getRootSchema(String userName) {
+        return schemaTreeProvider.createRootSchema(userName, this);
       }
 
       @Override
       public OptionValue getOption(String optionKey) {
         return session.getOptions().getOption(optionKey);
+      }
+
+      @Override
+      public String getQueryUserName() {
+        return session.getCredentials().getUserName();
       }
     };
   }
@@ -468,7 +585,7 @@ public class MetadataProvider {
    * @param ex Exception thrown
    * @return
    */
-  private static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
+  static DrillPBError createPBError(final String failedFunction, final Throwable ex) {
     final String errorId = UUID.randomUUID().toString();
     logger.error("Failed to {}. ErrorId: {}", failedFunction, errorId, ex);
 

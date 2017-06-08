@@ -63,6 +63,7 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
     private int dateTimePrecision;
     private String intervalType;
     private int intervalPrecision;
+    private int columnSize;
 
     public ColumnMetadata()
     {
@@ -279,6 +280,19 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
         return this;
     }
 
+    // columnSize
+
+    public int getColumnSize()
+    {
+        return columnSize;
+    }
+
+    public ColumnMetadata setColumnSize(int columnSize)
+    {
+        this.columnSize = columnSize;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -381,6 +395,9 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
                 case 16:
                     message.intervalPrecision = input.readInt32();
                     break;
+                case 17:
+                    message.columnSize = input.readInt32();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -437,6 +454,9 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
 
         if(message.intervalPrecision != 0)
             output.writeInt32(16, message.intervalPrecision, false);
+
+        if(message.columnSize != 0)
+            output.writeInt32(17, message.columnSize, false);
     }
 
     public String getFieldName(int number)
@@ -459,6 +479,7 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
             case 14: return "dateTimePrecision";
             case 15: return "intervalType";
             case 16: return "intervalPrecision";
+            case 17: return "columnSize";
             default: return null;
         }
     }
@@ -488,6 +509,7 @@ public final class ColumnMetadata implements Externalizable, Message<ColumnMetad
         __fieldMap.put("dateTimePrecision", 14);
         __fieldMap.put("intervalType", 15);
         __fieldMap.put("intervalPrecision", 16);
+        __fieldMap.put("columnSize", 17);
     }
     
 }

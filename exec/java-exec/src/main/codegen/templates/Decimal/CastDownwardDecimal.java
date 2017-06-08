@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,8 +43,15 @@ import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
@@ -116,8 +123,15 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
@@ -159,8 +173,15 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;

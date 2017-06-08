@@ -21,6 +21,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -40,6 +43,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static final String DEBUG_ALLOCATOR = "drill.memory.debug.allocator";
 
+  @SuppressWarnings("unused")
   private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
   private static final int CHUNK_SIZE = AllocationManager.INNER_ALLOCATOR.getChunkSize();
 
@@ -63,6 +67,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private final IdentityHashMap<BufferLedger, Object> childLedgers;
   private final IdentityHashMap<Reservation, Object> reservations;
   private final HistoricalLog historicalLog;
+
+  /**
+   * Disk I/O buffer used for all reads and writes of DrillBufs.
+   * The buffer is allocated when first needed, then reused by all
+   * subsequent I/O operations for the same operator. Since very few
+   * operators do I/O, the number of allocated buffers should be
+   * low. Better would be to hold the buffer at the fragment level
+   * since all operators within a fragment run within a single thread.
+   */
+
+  private byte ioBuffer[];
 
   protected BaseAllocator(
       final BaseAllocator parentAllocator,
@@ -98,9 +113,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       historicalLog = null;
       childLedgers = null;
     }
-
   }
 
+  @Override
   public void assertOpen() {
     if (AssertionUtil.ASSERT_ENABLED) {
       if (isClosed) {
@@ -289,6 +304,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       }
     }
 
+    @Override
     public boolean add(final int nBytes) {
       assertOpen();
 
@@ -310,6 +326,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return true;
     }
 
+    @Override
     public DrillBuf allocateBuffer() {
       assertOpen();
 
@@ -321,14 +338,17 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       return drillBuf;
     }
 
+    @Override
     public int getSize() {
       return nBytes;
     }
 
+    @Override
     public boolean isUsed() {
       return used;
     }
 
+    @Override
     public boolean isClosed() {
       return closed;
     }
@@ -341,6 +361,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         return;
       }
 
+      if (ioBuffer != null) {
+        ioBuffer = null;
+      }
       if (DEBUG) {
         if (!isClosed()) {
           final Object object;
@@ -366,6 +389,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       closed = true;
     }
 
+    @Override
     public boolean reserve(int nBytes) {
       assertOpen();
 
@@ -503,14 +527,11 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
     if (DEBUG) {
       historicalLog.recordEvent("closed");
-      logger.debug(String.format(
-          "closed allocator[%s].",
-          name));
+      logger.debug(String.format("closed allocator[%s].", name));
     }
-
-
   }
 
+  @Override
   public String toString() {
     final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE
         : Verbosity.BASIC;
@@ -525,6 +546,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *
    * @return A Verbose string of current allocator state.
    */
+  @Override
   public String toVerboseString() {
     final StringBuilder sb = new StringBuilder();
     print(sb, 0, Verbosity.LOG_WITH_STACKTRACE);
@@ -542,7 +564,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    *          An integer value.
    * @return The closest power of two of that value.
    */
-  static int nextPowerOfTwo(int val) {
+  public static int nextPowerOfTwo(int val) {
     int highestBit = Integer.highestOneBit(val);
     if (highestBit == val) {
       return val;
@@ -779,5 +801,55 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   public static boolean isDebug() {
     return DEBUG;
+  }
+
+  public byte[] getIOBuffer() {
+    if (ioBuffer == null) {
+      // Length chosen to the smallest size that maximizes
+      // disk I/O performance. Smaller sizes slow I/O. Larger
+      // sizes provide no increase in performance.
+      // Revisit from time to time.
+
+      ioBuffer = new byte[32*1024];
+    }
+    return ioBuffer;
+  }
+
+  @Override
+  public void read(DrillBuf buf, int length, InputStream in) throws IOException {
+    buf.clear();
+
+    byte[] buffer = getIOBuffer();
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
+      in.read(buffer, 0, len);
+      buf.writeBytes(buffer, 0, len);
+    }
+  }
+
+  public DrillBuf read(int length, InputStream in) throws IOException {
+    DrillBuf buf = buffer(length);
+    try {
+      read(buf, length, in);
+      return buf;
+    } catch (IOException e) {
+      buf.release();
+      throw e;
+    }
+  }
+
+  @Override
+  public void write(DrillBuf buf, OutputStream out) throws IOException {
+    write(buf, buf.readableBytes(), out);
+  }
+
+  @Override
+  public void write(DrillBuf buf, int length, OutputStream out) throws IOException {
+    byte[] buffer = getIOBuffer();
+    for (int posn = 0; posn < length; posn += buffer.length) {
+      int len = Math.min(buffer.length, length - posn);
+      buf.getBytes(posn, buffer, 0, len);
+      out.write(buffer, 0, len);
+    }
   }
 }

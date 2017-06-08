@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import java.nio.charset.Charset;
+import org.apache.calcite.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
+import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
@@ -43,11 +44,11 @@ import com.google.common.collect.Lists;
 public class DrillHiveTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveTable.class);
 
-  protected final Table hiveTable;
+  protected final HiveTableWithColumnCache hiveTable;
 
   public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, String userName, HiveReadEntry readEntry) {
     super(storageEngineName, plugin, userName, readEntry);
-    this.hiveTable = new Table(readEntry.getTable());
+    this.hiveTable = new HiveTableWithColumnCache(readEntry.getTable());
   }
 
   @Override
@@ -55,7 +56,7 @@ public class DrillHiveTable extends DrillTable{
     List<RelDataType> typeList = Lists.newArrayList();
     List<String> fieldNameList = Lists.newArrayList();
 
-    List<FieldSchema> hiveFields = hiveTable.getCols();
+    List<FieldSchema> hiveFields = hiveTable.getColumnListsCache().getColumns(0);
     for(FieldSchema hiveField : hiveFields) {
       fieldNameList.add(hiveField.getName());
       typeList.add(getNullableRelDataTypeFromHiveType(
@@ -116,7 +117,7 @@ public class DrillHiveTable extends DrillTable{
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
           typeFactory.createSqlType(SqlTypeName.VARCHAR, maxLen), /*input type*/
-          Charset.forName("ISO-8859-1"), /*unicode char set*/
+          Util.getDefaultCharset(),
           SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
         );
       }
@@ -124,9 +125,9 @@ public class DrillHiveTable extends DrillTable{
       case CHAR: {
         int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
-            typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
-            Charset.forName("ISO-8859-1"), /*unicode char set*/
-            SqlCollation.IMPLICIT
+          typeFactory.createSqlType(SqlTypeName.CHAR, maxLen), /*input type*/
+          Util.getDefaultCharset(),
+          SqlCollation.IMPLICIT
         );
       }
 

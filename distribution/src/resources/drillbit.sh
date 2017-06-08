@@ -59,7 +59,7 @@ usage="Usage: drillbit.sh [--config|--site <site-dir>]\
  (start|stop|status|restart|run) [args]"
 
 bin=`dirname "${BASH_SOURCE-$0}"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=`cd -P "$bin">/dev/null; pwd`
 
 base=`basename "${BASH_SOURCE-$0}"`
 command=${base/.*/}
@@ -102,7 +102,7 @@ waitForProcessEnd()
   # process still there : kill -9
   if kill -0 $pidKilled > /dev/null 2>&1; then
     echo "$commandName did not complete after $origcnt seconds, killing with kill -9 $pidKilled"
-    $JAVA_HOME/bin/jstack -l $pidKilled > "$logout" 2>&1
+    `dirname $JAVA`/jstack -l $pidKilled > "$logout" 2>&1
     kill -9 $pidKilled > /dev/null 2>&1
   fi
 }

@@ -29,13 +29,18 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
+import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.VectorUtil;
 
 /**
@@ -163,4 +168,55 @@ public class QueryTestUtil {
     final String query = QueryTestUtil.normalizeQuery(queryString);
     drillClient.runQuery(type, query, resultListener);
   }
+
+  /**
+   * Set up the options to test the scalar replacement retry option (see
+   * ClassTransformer.java). Scalar replacement rewrites bytecode to replace
+   * value holders (essentially boxed values) with their member variables as
+   * locals. There is still one pattern that doesn't work, and occasionally new
+   * ones are introduced. This can be used in tests that exercise failing patterns.
+   *
+   * <p>This also flushes the compiled code cache.
+   *
+   * @param drillbit the drillbit
+   * @param srOption the scalar replacement option value to use
+   * @return the original scalar replacement option setting (so it can be restored)
+   */
+  @SuppressWarnings("resource")
+  public static OptionValue setupScalarReplacementOption(
+      final Drillbit drillbit, final ClassTransformer.ScalarReplacementOption srOption) {
+    // set the system option
+    final DrillbitContext drillbitContext = drillbit.getContext();
+    final OptionManager optionManager = drillbitContext.getOptionManager();
+    final OptionValue originalOptionValue = optionManager.getOption(ClassTransformer.SCALAR_REPLACEMENT_OPTION);
+    final OptionValue newOptionValue = OptionValue.createString(OptionValue.OptionType.SYSTEM,
+        ClassTransformer.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
+    optionManager.setOption(newOptionValue);
+
+    // flush the code cache
+    drillbitContext.getCompiler().flushCache();
+
+    return originalOptionValue;
+  }
+
+  /**
+   * Restore the original scalar replacement option returned from
+   * setupScalarReplacementOption().
+   *
+   * <p>This also flushes the compiled code cache.
+   *
+   * @param drillbit the drillbit
+   * @param srOption the scalar replacement option value to use
+   */
+  public static void restoreScalarReplacementOption(final Drillbit drillbit, final OptionValue srOption) {
+    @SuppressWarnings("resource")
+    final DrillbitContext drillbitContext = drillbit.getContext();
+    @SuppressWarnings("resource")
+    final OptionManager optionManager = drillbitContext.getOptionManager();
+    optionManager.setOption(srOption);
+
+    // flush the code cache
+    drillbitContext.getCompiler().flushCache();
+  }
+
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -162,6 +162,12 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   public static Sorter createNewSorter(FragmentContext context, List<Ordering> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> cg = CodeGenerator.get(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    // This operator may be deprecated. No tests exercise it.
+    // There is no way, at present, to verify if the generated code
+    // works with Plain-old Java.
+//    cg.plainOldJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.saveCodeForDebugging(true);
     ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 

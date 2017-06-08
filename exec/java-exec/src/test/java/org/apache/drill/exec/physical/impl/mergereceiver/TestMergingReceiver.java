@@ -37,7 +37,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class TestMergingReceiver extends PopUnitTestBase {
@@ -45,6 +44,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
   @Test
   public void twoBitTwoExchange() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
@@ -73,6 +73,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
   @Test
   public void testMultipleProvidersMixedSizes() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
@@ -95,7 +96,8 @@ public class TestMergingReceiver extends PopUnitTestBase {
         final int batchRowCount = queryData.getRowCount();
         count += batchRowCount;
         batchLoader.load(queryData.getDef(), b.getData());
-        for (final VectorWrapper vw : batchLoader) {
+        for (final VectorWrapper<?> vw : batchLoader) {
+          @SuppressWarnings("resource")
           final ValueVector vv = vw.getValueVector();
           final ValueVector.Accessor va = vv.getAccessor();
           final MaterializedField materializedField = vv.getField();
@@ -120,6 +122,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
   @Test
   public void handleEmptyBatch() throws Exception {
+    @SuppressWarnings("resource")
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);

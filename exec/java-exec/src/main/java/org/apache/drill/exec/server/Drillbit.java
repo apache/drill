@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,6 +38,7 @@ import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.store.provider.CachingPersistentStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
@@ -64,7 +65,7 @@ public class Drillbit implements AutoCloseable {
     Environment.logEnv("Drillbit environment: ", logger);
   }
 
-  private final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
+  public final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
 
   private boolean isClosed = false;
 
@@ -76,6 +77,7 @@ public class Drillbit implements AutoCloseable {
   private final WebServer webServer;
   private RegistrationHandle registrationHandle;
   private volatile StoragePluginRegistry storageRegistry;
+  private final PersistentStoreProvider profileStoreProvider;
 
   @VisibleForTesting
   public Drillbit(
@@ -94,7 +96,7 @@ public class Drillbit implements AutoCloseable {
     context = new BootStrapContext(config, classpathScan);
     manager = new WorkManager(context);
 
-    webServer = new WebServer(config, context.getMetrics(), manager);
+    webServer = new WebServer(context, manager);
     boolean isDistributedMode = false;
     if (serviceSet != null) {
       coord = serviceSet.getCoordinator();
@@ -105,8 +107,15 @@ public class Drillbit implements AutoCloseable {
       isDistributedMode = true;
     }
 
-    engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context,
-        manager.getWorkBus(), manager.getBee(), allowPortHunting, isDistributedMode);
+    //Check if InMemory Profile Store, else use Default Store Provider
+    if (config.getBoolean(ExecConstants.PROFILES_STORE_INMEMORY)) {
+      profileStoreProvider = new InMemoryStoreProvider(config.getInt(ExecConstants.PROFILES_STORE_CAPACITY));
+      logger.info("Upto {} latest query profiles will be retained in-memory", config.getInt(ExecConstants.PROFILES_STORE_CAPACITY));
+    } else {
+      profileStoreProvider = storeProvider;
+    }
+
+    engine = new ServiceEngine(manager, context, allowPortHunting, isDistributedMode);
 
     logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
@@ -116,13 +125,17 @@ public class Drillbit implements AutoCloseable {
     logger.debug("Startup begun.");
     coord.start(10000);
     storeProvider.start();
+    if (profileStoreProvider != storeProvider) {
+      profileStoreProvider.start();
+    }
     final DrillbitEndpoint md = engine.start();
-    manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
+    manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider, profileStoreProvider);
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
+    manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     registrationHandle = coord.register(md);
     webServer.start();
 
@@ -164,6 +177,11 @@ public class Drillbit implements AutoCloseable {
           manager,
           storageRegistry,
           context);
+
+      //Closing the profile store provider if distinct
+      if (storeProvider != profileStoreProvider) {
+        AutoCloseables.close(profileStoreProvider);
+      }
     } catch(Exception e) {
       logger.warn("Failure on close()", e);
     }

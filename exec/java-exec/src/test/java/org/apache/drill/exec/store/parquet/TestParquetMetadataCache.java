@@ -371,7 +371,32 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   }
 
+  @Test // DRILL-4877
+  public void testDrill4877() throws Exception {
+    // create metadata cache
+    test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName2));
+    checkForMetadataFile(tableName2);
 
+    // run query and check correctness
+    String query1 = String.format("select max(dir0) as max0, max(dir1) as max1 from dfs_test.`%s/%s` ",
+        getDfsTestTmpSchemaLocation(), tableName2);
+
+    testBuilder()
+    .sqlQuery(query1)
+      .unOrdered()
+      .baselineColumns("max0", "max1")
+      .baselineValues("1995", "Q4")
+      .go();
+
+    int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
+
+    String numFilesPattern = "numFiles=" + expectedNumFiles;
+    String usedMetaPattern = "usedMetadataFile=true";
+    String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), tableName2);
+    PlanTestBase.testPlanMatchingPatterns(query1, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
+        new String[] {});
+
+  }
 
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();

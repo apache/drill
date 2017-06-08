@@ -57,6 +57,9 @@ class MinorFragmentProfile;
 class OperatorProfile;
 class StreamProfile;
 class MetricValue;
+class Registry;
+class Jar;
+class SaslMessage;
 
 enum DrillPBError_ErrorType {
   DrillPBError_ErrorType_CONNECTION = 0,
@@ -152,11 +155,13 @@ inline bool RpcChannel_Parse(
 enum QueryType {
   SQL = 1,
   LOGICAL = 2,
-  PHYSICAL = 3
+  PHYSICAL = 3,
+  EXECUTION = 4,
+  PREPARED_STATEMENT = 5
 };
 bool QueryType_IsValid(int value);
 const QueryType QueryType_MIN = SQL;
-const QueryType QueryType_MAX = PHYSICAL;
+const QueryType QueryType_MAX = PREPARED_STATEMENT;
 const int QueryType_ARRAYSIZE = QueryType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* QueryType_descriptor();
@@ -246,6 +251,28 @@ inline bool CoreOperatorType_Parse(
     const ::std::string& name, CoreOperatorType* value) {
   return ::google::protobuf::internal::ParseNamedEnum<CoreOperatorType>(
     CoreOperatorType_descriptor(), name, value);
+}
+enum SaslStatus {
+  SASL_UNKNOWN = 0,
+  SASL_START = 1,
+  SASL_IN_PROGRESS = 2,
+  SASL_SUCCESS = 3,
+  SASL_FAILED = 4
+};
+bool SaslStatus_IsValid(int value);
+const SaslStatus SaslStatus_MIN = SASL_UNKNOWN;
+const SaslStatus SaslStatus_MAX = SASL_FAILED;
+const int SaslStatus_ARRAYSIZE = SaslStatus_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SaslStatus_descriptor();
+inline const ::std::string& SaslStatus_Name(SaslStatus value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SaslStatus_descriptor(), value);
+}
+inline bool SaslStatus_Parse(
+    const ::std::string& name, SaslStatus* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SaslStatus>(
+    SaslStatus_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -1798,6 +1825,18 @@ class QueryInfo : public ::google::protobuf::Message {
   inline ::exec::DrillbitEndpoint* release_foreman();
   inline void set_allocated_foreman(::exec::DrillbitEndpoint* foreman);
 
+  // optional string options_json = 6;
+  inline bool has_options_json() const;
+  inline void clear_options_json();
+  static const int kOptionsJsonFieldNumber = 6;
+  inline const ::std::string& options_json() const;
+  inline void set_options_json(const ::std::string& value);
+  inline void set_options_json(const char* value);
+  inline void set_options_json(const char* value, size_t size);
+  inline ::std::string* mutable_options_json();
+  inline ::std::string* release_options_json();
+  inline void set_allocated_options_json(::std::string* options_json);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryInfo)
  private:
   inline void set_has_query();
@@ -1810,6 +1849,8 @@ class QueryInfo : public ::google::protobuf::Message {
   inline void clear_has_user();
   inline void set_has_foreman();
   inline void clear_has_foreman();
+  inline void set_has_options_json();
+  inline void clear_has_options_json();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1818,10 +1859,11 @@ class QueryInfo : public ::google::protobuf::Message {
   ::std::string* user_;
   static ::std::string* _default_user_;
   ::exec::DrillbitEndpoint* foreman_;
+  ::std::string* options_json_;
   int state_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -2042,6 +2084,32 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_error_node();
   inline void set_allocated_error_node(::std::string* error_node);
 
+  // optional string options_json = 17;
+  inline bool has_options_json() const;
+  inline void clear_options_json();
+  static const int kOptionsJsonFieldNumber = 17;
+  inline const ::std::string& options_json() const;
+  inline void set_options_json(const ::std::string& value);
+  inline void set_options_json(const char* value);
+  inline void set_options_json(const char* value, size_t size);
+  inline ::std::string* mutable_options_json();
+  inline ::std::string* release_options_json();
+  inline void set_allocated_options_json(::std::string* options_json);
+
+  // optional int64 planEnd = 18;
+  inline bool has_planend() const;
+  inline void clear_planend();
+  static const int kPlanEndFieldNumber = 18;
+  inline ::google::protobuf::int64 planend() const;
+  inline void set_planend(::google::protobuf::int64 value);
+
+  // optional int64 queueWaitEnd = 19;
+  inline bool has_queuewaitend() const;
+  inline void clear_queuewaitend();
+  static const int kQueueWaitEndFieldNumber = 19;
+  inline ::google::protobuf::int64 queuewaitend() const;
+  inline void set_queuewaitend(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
  private:
   inline void set_has_id();
@@ -2074,6 +2142,12 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_error_id();
   inline void set_has_error_node();
   inline void clear_has_error_node();
+  inline void set_has_options_json();
+  inline void clear_has_options_json();
+  inline void set_has_planend();
+  inline void clear_has_planend();
+  inline void set_has_queuewaitend();
+  inline void clear_has_queuewaitend();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2094,9 +2168,12 @@ class QueryProfile : public ::google::protobuf::Message {
   ::std::string* verboseerror_;
   ::std::string* error_id_;
   ::std::string* error_node_;
+  ::std::string* options_json_;
+  ::google::protobuf::int64 planend_;
+  ::google::protobuf::int64 queuewaitend_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(19 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -2750,6 +2827,307 @@ class MetricValue : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static MetricValue* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Registry : public ::google::protobuf::Message {
+ public:
+  Registry();
+  virtual ~Registry();
+
+  Registry(const Registry& from);
+
+  inline Registry& operator=(const Registry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Registry& default_instance();
+
+  void Swap(Registry* other);
+
+  // implements Message ----------------------------------------------
+
+  Registry* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Registry& from);
+  void MergeFrom(const Registry& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .exec.shared.Jar jar = 1;
+  inline int jar_size() const;
+  inline void clear_jar();
+  static const int kJarFieldNumber = 1;
+  inline const ::exec::shared::Jar& jar(int index) const;
+  inline ::exec::shared::Jar* mutable_jar(int index);
+  inline ::exec::shared::Jar* add_jar();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >&
+      jar() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >*
+      mutable_jar();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.Registry)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar > jar_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static Registry* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Jar : public ::google::protobuf::Message {
+ public:
+  Jar();
+  virtual ~Jar();
+
+  Jar(const Jar& from);
+
+  inline Jar& operator=(const Jar& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Jar& default_instance();
+
+  void Swap(Jar* other);
+
+  // implements Message ----------------------------------------------
+
+  Jar* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Jar& from);
+  void MergeFrom(const Jar& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string name = 1;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 1;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const char* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // repeated string function_signature = 2;
+  inline int function_signature_size() const;
+  inline void clear_function_signature();
+  static const int kFunctionSignatureFieldNumber = 2;
+  inline const ::std::string& function_signature(int index) const;
+  inline ::std::string* mutable_function_signature(int index);
+  inline void set_function_signature(int index, const ::std::string& value);
+  inline void set_function_signature(int index, const char* value);
+  inline void set_function_signature(int index, const char* value, size_t size);
+  inline ::std::string* add_function_signature();
+  inline void add_function_signature(const ::std::string& value);
+  inline void add_function_signature(const char* value);
+  inline void add_function_signature(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& function_signature() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_function_signature();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.Jar)
+ private:
+  inline void set_has_name();
+  inline void clear_has_name();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* name_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> function_signature_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static Jar* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SaslMessage : public ::google::protobuf::Message {
+ public:
+  SaslMessage();
+  virtual ~SaslMessage();
+
+  SaslMessage(const SaslMessage& from);
+
+  inline SaslMessage& operator=(const SaslMessage& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SaslMessage& default_instance();
+
+  void Swap(SaslMessage* other);
+
+  // implements Message ----------------------------------------------
+
+  SaslMessage* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SaslMessage& from);
+  void MergeFrom(const SaslMessage& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string mechanism = 1;
+  inline bool has_mechanism() const;
+  inline void clear_mechanism();
+  static const int kMechanismFieldNumber = 1;
+  inline const ::std::string& mechanism() const;
+  inline void set_mechanism(const ::std::string& value);
+  inline void set_mechanism(const char* value);
+  inline void set_mechanism(const char* value, size_t size);
+  inline ::std::string* mutable_mechanism();
+  inline ::std::string* release_mechanism();
+  inline void set_allocated_mechanism(::std::string* mechanism);
+
+  // optional bytes data = 2;
+  inline bool has_data() const;
+  inline void clear_data();
+  static const int kDataFieldNumber = 2;
+  inline const ::std::string& data() const;
+  inline void set_data(const ::std::string& value);
+  inline void set_data(const char* value);
+  inline void set_data(const void* value, size_t size);
+  inline ::std::string* mutable_data();
+  inline ::std::string* release_data();
+  inline void set_allocated_data(::std::string* data);
+
+  // optional .exec.shared.SaslStatus status = 3;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 3;
+  inline ::exec::shared::SaslStatus status() const;
+  inline void set_status(::exec::shared::SaslStatus value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.SaslMessage)
+ private:
+  inline void set_has_mechanism();
+  inline void clear_has_mechanism();
+  inline void set_has_data();
+  inline void clear_has_data();
+  inline void set_has_status();
+  inline void clear_has_status();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* mechanism_;
+  ::std::string* data_;
+  int status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static SaslMessage* default_instance_;
 };
 // ===================================================================
 
@@ -4547,6 +4925,76 @@ inline void QueryInfo::set_allocated_foreman(::exec::DrillbitEndpoint* foreman) 
   }
 }
 
+// optional string options_json = 6;
+inline bool QueryInfo::has_options_json() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void QueryInfo::set_has_options_json() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void QueryInfo::clear_has_options_json() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void QueryInfo::clear_options_json() {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    options_json_->clear();
+  }
+  clear_has_options_json();
+}
+inline const ::std::string& QueryInfo::options_json() const {
+  return *options_json_;
+}
+inline void QueryInfo::set_options_json(const ::std::string& value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryInfo::set_options_json(const char* value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryInfo::set_options_json(const char* value, size_t size) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryInfo::mutable_options_json() {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  return options_json_;
+}
+inline ::std::string* QueryInfo::release_options_json() {
+  clear_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = options_json_;
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryInfo::set_allocated_options_json(::std::string* options_json) {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    delete options_json_;
+  }
+  if (options_json) {
+    set_has_options_json();
+    options_json_ = options_json;
+  } else {
+    clear_has_options_json();
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
 // -------------------------------------------------------------------
 
 // QueryProfile
@@ -5276,6 +5724,120 @@ inline void QueryProfile::set_allocated_error_node(::std::string* error_node) {
   }
 }
 
+// optional string options_json = 17;
+inline bool QueryProfile::has_options_json() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void QueryProfile::set_has_options_json() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void QueryProfile::clear_has_options_json() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void QueryProfile::clear_options_json() {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    options_json_->clear();
+  }
+  clear_has_options_json();
+}
+inline const ::std::string& QueryProfile::options_json() const {
+  return *options_json_;
+}
+inline void QueryProfile::set_options_json(const ::std::string& value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryProfile::set_options_json(const char* value) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(value);
+}
+inline void QueryProfile::set_options_json(const char* value, size_t size) {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  options_json_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_options_json() {
+  set_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    options_json_ = new ::std::string;
+  }
+  return options_json_;
+}
+inline ::std::string* QueryProfile::release_options_json() {
+  clear_has_options_json();
+  if (options_json_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = options_json_;
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_options_json(::std::string* options_json) {
+  if (options_json_ != &::google::protobuf::internal::kEmptyString) {
+    delete options_json_;
+  }
+  if (options_json) {
+    set_has_options_json();
+    options_json_ = options_json;
+  } else {
+    clear_has_options_json();
+    options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int64 planEnd = 18;
+inline bool QueryProfile::has_planend() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void QueryProfile::set_has_planend() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void QueryProfile::clear_has_planend() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void QueryProfile::clear_planend() {
+  planend_ = GOOGLE_LONGLONG(0);
+  clear_has_planend();
+}
+inline ::google::protobuf::int64 QueryProfile::planend() const {
+  return planend_;
+}
+inline void QueryProfile::set_planend(::google::protobuf::int64 value) {
+  set_has_planend();
+  planend_ = value;
+}
+
+// optional int64 queueWaitEnd = 19;
+inline bool QueryProfile::has_queuewaitend() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void QueryProfile::set_has_queuewaitend() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void QueryProfile::clear_has_queuewaitend() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void QueryProfile::clear_queuewaitend() {
+  queuewaitend_ = GOOGLE_LONGLONG(0);
+  clear_has_queuewaitend();
+}
+inline ::google::protobuf::int64 QueryProfile::queuewaitend() const {
+  return queuewaitend_;
+}
+inline void QueryProfile::set_queuewaitend(::google::protobuf::int64 value) {
+  set_has_queuewaitend();
+  queuewaitend_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // MajorFragmentProfile
@@ -5935,6 +6497,320 @@ inline void MetricValue::set_double_value(double value) {
   double_value_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// Registry
+
+// repeated .exec.shared.Jar jar = 1;
+inline int Registry::jar_size() const {
+  return jar_.size();
+}
+inline void Registry::clear_jar() {
+  jar_.Clear();
+}
+inline const ::exec::shared::Jar& Registry::jar(int index) const {
+  return jar_.Get(index);
+}
+inline ::exec::shared::Jar* Registry::mutable_jar(int index) {
+  return jar_.Mutable(index);
+}
+inline ::exec::shared::Jar* Registry::add_jar() {
+  return jar_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >&
+Registry::jar() const {
+  return jar_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::Jar >*
+Registry::mutable_jar() {
+  return &jar_;
+}
+
+// -------------------------------------------------------------------
+
+// Jar
+
+// optional string name = 1;
+inline bool Jar::has_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Jar::set_has_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Jar::clear_has_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Jar::clear_name() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& Jar::name() const {
+  return *name_;
+}
+inline void Jar::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Jar::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Jar::set_name(const char* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Jar::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  return name_;
+}
+inline ::std::string* Jar::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Jar::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated string function_signature = 2;
+inline int Jar::function_signature_size() const {
+  return function_signature_.size();
+}
+inline void Jar::clear_function_signature() {
+  function_signature_.Clear();
+}
+inline const ::std::string& Jar::function_signature(int index) const {
+  return function_signature_.Get(index);
+}
+inline ::std::string* Jar::mutable_function_signature(int index) {
+  return function_signature_.Mutable(index);
+}
+inline void Jar::set_function_signature(int index, const ::std::string& value) {
+  function_signature_.Mutable(index)->assign(value);
+}
+inline void Jar::set_function_signature(int index, const char* value) {
+  function_signature_.Mutable(index)->assign(value);
+}
+inline void Jar::set_function_signature(int index, const char* value, size_t size) {
+  function_signature_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Jar::add_function_signature() {
+  return function_signature_.Add();
+}
+inline void Jar::add_function_signature(const ::std::string& value) {
+  function_signature_.Add()->assign(value);
+}
+inline void Jar::add_function_signature(const char* value) {
+  function_signature_.Add()->assign(value);
+}
+inline void Jar::add_function_signature(const char* value, size_t size) {
+  function_signature_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Jar::function_signature() const {
+  return function_signature_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Jar::mutable_function_signature() {
+  return &function_signature_;
+}
+
+// -------------------------------------------------------------------
+
+// SaslMessage
+
+// optional string mechanism = 1;
+inline bool SaslMessage::has_mechanism() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SaslMessage::set_has_mechanism() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SaslMessage::clear_has_mechanism() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SaslMessage::clear_mechanism() {
+  if (mechanism_ != &::google::protobuf::internal::kEmptyString) {
+    mechanism_->clear();
+  }
+  clear_has_mechanism();
+}
+inline const ::std::string& SaslMessage::mechanism() const {
+  return *mechanism_;
+}
+inline void SaslMessage::set_mechanism(const ::std::string& value) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(value);
+}
+inline void SaslMessage::set_mechanism(const char* value) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(value);
+}
+inline void SaslMessage::set_mechanism(const char* value, size_t size) {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  mechanism_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SaslMessage::mutable_mechanism() {
+  set_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    mechanism_ = new ::std::string;
+  }
+  return mechanism_;
+}
+inline ::std::string* SaslMessage::release_mechanism() {
+  clear_has_mechanism();
+  if (mechanism_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = mechanism_;
+    mechanism_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SaslMessage::set_allocated_mechanism(::std::string* mechanism) {
+  if (mechanism_ != &::google::protobuf::internal::kEmptyString) {
+    delete mechanism_;
+  }
+  if (mechanism) {
+    set_has_mechanism();
+    mechanism_ = mechanism;
+  } else {
+    clear_has_mechanism();
+    mechanism_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes data = 2;
+inline bool SaslMessage::has_data() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SaslMessage::set_has_data() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SaslMessage::clear_has_data() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SaslMessage::clear_data() {
+  if (data_ != &::google::protobuf::internal::kEmptyString) {
+    data_->clear();
+  }
+  clear_has_data();
+}
+inline const ::std::string& SaslMessage::data() const {
+  return *data_;
+}
+inline void SaslMessage::set_data(const ::std::string& value) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(value);
+}
+inline void SaslMessage::set_data(const char* value) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(value);
+}
+inline void SaslMessage::set_data(const void* value, size_t size) {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  data_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* SaslMessage::mutable_data() {
+  set_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    data_ = new ::std::string;
+  }
+  return data_;
+}
+inline ::std::string* SaslMessage::release_data() {
+  clear_has_data();
+  if (data_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = data_;
+    data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void SaslMessage::set_allocated_data(::std::string* data) {
+  if (data_ != &::google::protobuf::internal::kEmptyString) {
+    delete data_;
+  }
+  if (data) {
+    set_has_data();
+    data_ = data;
+  } else {
+    clear_has_data();
+    data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional .exec.shared.SaslStatus status = 3;
+inline bool SaslMessage::has_status() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SaslMessage::set_has_status() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SaslMessage::clear_has_status() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SaslMessage::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::exec::shared::SaslStatus SaslMessage::status() const {
+  return static_cast< ::exec::shared::SaslStatus >(status_);
+}
+inline void SaslMessage::set_status(::exec::shared::SaslStatus value) {
+  assert(::exec::shared::SaslStatus_IsValid(value));
+  set_has_status();
+  status_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -5972,6 +6848,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::FragmentState>()
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::CoreOperatorType>() {
   return ::exec::shared::CoreOperatorType_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::SaslStatus>() {
+  return ::exec::shared::SaslStatus_descriptor();
 }
 
 }  // namespace google

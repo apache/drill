@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,7 @@ import org.junit.Test;
 import java.util.List;
 
 public class TestUnionAll extends BaseTestQuery{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
 
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
@@ -1090,7 +1090,7 @@ public class TestUnionAll extends BaseTestQuery{
 
     final String query = String.format("SELECT o_custkey FROM \n" +
         " (select o1.o_custkey from dfs_test.`%s` o1 inner join dfs_test.`%s` o2 on o1.o_orderkey = o2.o_custkey) \n" +
-        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey < 10", l, r, l);
+        " Union All SELECT o_custkey FROM dfs_test.`%s` where o_custkey > 10", l, r, l);
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};

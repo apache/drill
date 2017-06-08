@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -73,6 +74,25 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     for (Class<? extends UDF> clazz : udfClasses) {
       register(clazz, methodsUDF);
     }
+
+    if (logger.isTraceEnabled()) {
+      StringBuilder allHiveFunctions = new StringBuilder();
+      for (Map.Entry<String, Class<? extends GenericUDF>> method : methodsGenericUDF.entries()) {
+        allHiveFunctions.append(method.toString()).append("\n");
+      }
+      logger.trace("Registered Hive GenericUDFs: [\n{}]", allHiveFunctions);
+
+      StringBuilder allUDFs = new StringBuilder();
+      for (Map.Entry<String, Class<? extends UDF>> method : methodsUDF.entries()) {
+        allUDFs.append(method.toString()).append("\n");
+      }
+      logger.trace("Registered Hive UDFs: [\n{}]", allUDFs);
+      StringBuilder allNonDeterministic = new StringBuilder();
+      for (Class<?> clz : nonDeterministicUDFs) {
+        allNonDeterministic.append(clz.toString()).append("\n");
+      }
+      logger.trace("Registered Hive nonDeterministicUDFs: [\n{}]", allNonDeterministic);
+    }
   }
 
   @Override
@@ -96,7 +116,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     }
 
     UDFType type = clazz.getAnnotation(UDFType.class);
-    if (type != null && type.deterministic()) {
+    if (type != null && !type.deterministic()) {
       nonDeterministicUDFs.add(clazz);
     }
 

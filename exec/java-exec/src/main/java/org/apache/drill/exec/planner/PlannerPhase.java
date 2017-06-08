@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,14 @@
  */
 package org.apache.drill.exec.planner;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
+import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
-import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
 import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
@@ -88,9 +86,11 @@ import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.parquet.ParquetPushDownFilter;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public enum PlannerPhase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
@@ -127,11 +127,14 @@ public enum PlannerPhase {
 
   JOIN_PLANNING("LOPT Join Planning") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      List<RelOptRule> rules = Lists.newArrayList();
+      if (context.getPlannerSettings().isJoinOptimizationEnabled()) {
+        rules.add(DRILL_JOIN_TO_MULTIJOIN_RULE);
+        rules.add(DRILL_LOPT_OPTIMIZE_JOIN_RULE);
+      }
+      rules.add(ProjectRemoveRule.INSTANCE);
       return PlannerPhase.mergedRuleSets(
-          RuleSets.ofList(
-              DRILL_JOIN_TO_MULTIJOIN_RULE,
-              DRILL_LOPT_OPTIMIZE_JOIN_RULE,
-              ProjectRemoveRule.INSTANCE),
+          RuleSets.ofList(rules),
           getStorageRules(context, plugins, this)
           );
     }
@@ -151,6 +154,12 @@ public enum PlannerPhase {
   PARTITION_PRUNING("Partition Prune Planning") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPruneScanRules(context), getStorageRules(context, plugins, this));
+    }
+  },
+
+  PHYSICAL_PARTITION_PRUNING("Physical Partition Prune Planning") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(getPhysicalPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
@@ -339,6 +348,26 @@ public enum PlannerPhase {
             ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
             DrillPushLimitToScanRule.LIMIT_ON_SCAN,
             DrillPushLimitToScanRule.LIMIT_ON_PROJECT
+        )
+        .build();
+
+    return RuleSets.ofList(pruneRules);
+  }
+
+  /**
+   *   Get an immutable list of pruning rules that will be used post physical planning.
+   */
+  static RuleSet getPhysicalPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
+    final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+        .add(
+            // See DRILL-4998 for more detail.
+            // Main reason for doing this is we want to reduce the performance regression possibility
+            // caused by a different join order, as a result of reduced row count in scan operator.
+            // Ideally this should be done in logical planning, before join order planning is done.
+            // Before we can make such change, we have to figure out how to adjust the selectivity
+            // estimation of filter operator, after filter is pushed down to scan.
+            ParquetPushDownFilter.getFilterOnProject(optimizerRulesContext),
+            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext)
         )
         .build();
 

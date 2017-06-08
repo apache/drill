@@ -19,17 +19,17 @@ package org.apache.drill.exec.store.ischema;
 
 import static org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike;
 
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Joiner;
-import org.apache.drill.exec.expr.fn.impl.RegexpUtil;
-import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
-
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 @JsonTypeName("info-schema-filter")
 public class InfoSchemaFilter {
@@ -210,6 +210,22 @@ public class InfoSchemaFilter {
         }
 
         return Result.TRUE;
+      }
+
+      case "in": {
+        FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
+        List<ExprNode> args = exprNode.args.subList(1, exprNode.args.size());
+        final String fieldValue = recordValues.get(col.field.toString());
+        if (fieldValue != null) {
+          for(ExprNode arg: args) {
+            if (fieldValue.equals(((ConstantExprNode) arg).value)) {
+              return Result.TRUE;
+            }
+          }
+          return Result.FALSE;
+        }
+
+        return Result.INCONCLUSIVE;
       }
     }
 

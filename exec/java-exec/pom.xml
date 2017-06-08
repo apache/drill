@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-  license agreements. See the NOTICE file distributed with this work for additional 
-  information regarding copyright ownership. The ASF licenses this file to 
-  You under the Apache License, Version 2.0 (the "License"); you may not use 
-  this file except in compliance with the License. You may obtain a copy of 
-  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-  by applicable law or agreed to in writing, software distributed under the 
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-  OF ANY KIND, either express or implied. See the License for the specific 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+  license agreements. See the NOTICE file distributed with this work for additional
+  information regarding copyright ownership. The ASF licenses this file to
+  You under the Apache License, Version 2.0 (the "License"); you may not use
+  this file except in compliance with the License. You may obtain a copy of
+  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+  by applicable law or agreed to in writing, software distributed under the
+  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+  OF ANY KIND, either express or implied. See the License for the specific
   language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
@@ -26,7 +26,34 @@
       <version>1.3</version>
       <scope>test</scope>
     </dependency>
-    
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-client</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-core</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-simplekdc</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
     <!-- <dependency> -->
     <!-- <groupId>org.ow2.asm</groupId> -->
     <!-- <artifactId>asm-util</artifactId> -->
@@ -54,13 +81,13 @@
       <artifactId>commons-pool2</artifactId>
       <version>2.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>com.univocity</groupId>
       <artifactId>univocity-parsers</artifactId>
       <version>1.3.0</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math</artifactId>
@@ -71,7 +98,7 @@
       <artifactId>paranamer</artifactId>
       <version>2.5.6</version>
       <exclusions>
-        <!-- Exclude Paranamer's dependency on mockito-all, which has a Jar 
+        <!-- Exclude Paranamer's dependency on mockito-all, which has a Jar
              file that contains old Hamcrest 1.1 classes (rather than declaring
              a dependency on Hamcrest).  (See DRILL-2130.) -->
         <exclusion>
@@ -156,7 +183,7 @@
     <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>mongo-java-driver</artifactId>
-      <version>3.0.2</version>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
@@ -321,7 +348,7 @@
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-logical</artifactId>
       <version>${project.version}</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-rpc</artifactId>
@@ -376,11 +403,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.xerial.snappy</groupId>
-      <artifactId>snappy-java</artifactId>
-      <version>1.0.5-M3</version>
-    </dependency>
-    <dependency>
       <groupId>com.carrotsearch</groupId>
       <artifactId>hppc</artifactId>
       <version>0.7.1</version>
@@ -389,16 +411,6 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <version>2.5.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.7.4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>commons-compiler-jdk</artifactId>
-      <version>2.7.4</version>
     </dependency>
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
@@ -429,6 +441,12 @@
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
       <version>1.7.7</version>
+      <exclusions>
+    	<exclusion>
+    	  <groupId>org.xerial.snappy</groupId>
+    	  <artifactId>snappy-java</artifactId>
+    	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
@@ -452,6 +470,17 @@
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>nl.basjes.parse.httpdlog</groupId>
+      <artifactId>httpdlog-parser</artifactId>
+      <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.0.4</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -513,7 +542,7 @@
   </profiles>
 
   <build>
-  
+
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -537,9 +566,8 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.8</version>
         <executions>
-        <!-- Extract parser grammar template from calcite-core.jar and put 
+        <!-- Extract parser grammar template from calcite-core.jar and put
           it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
           <execution>
             <id>unpack-parser-template</id>
@@ -560,8 +588,8 @@
               </artifactItems>
             </configuration>
           </execution>
-          
-        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
+
+        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put
           it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
           <execution>
             <id>unpack-vector-types</id>
@@ -581,7 +609,7 @@
                 </artifactItem>
               </artifactItems>
             </configuration>
-          </execution>          
+          </execution>
         </executions>
       </plugin>
 
@@ -697,8 +725,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <executions>
           <execution>
-            <!-- we override the default test execution to exclude tests 
-              that would take unusually long time to run (> 1 minute) and run such tests 
+            <!-- we override the default test execution to exclude tests
+              that would take unusually long time to run (> 1 minute) and run such tests
               in a different profile -->
             <id>default-test</id>
             <phase>test</phase>
@@ -714,7 +742,7 @@
     </plugins>
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings 
+        <!--This plugin's configuration is used to store Eclipse m2e settings
           only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>

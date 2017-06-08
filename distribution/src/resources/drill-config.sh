@@ -66,7 +66,7 @@ done
 # convert relative path to absolute path
 bin=`dirname "$this"`
 script=`basename "$this"`
-home=`cd "$bin/..">/dev/null; pwd`
+home=`cd -P "$bin/..">/dev/null; pwd`
 this="$home/bin/$script"
 
 # the root of the drill installation
@@ -226,7 +226,8 @@ export DRILL_PID_DIR=${DRILL_PID_DIR:-$DRILL_HOME}
 
 # Prepare log file prefix and the main Drillbit log file.
 
-export DRILL_LOG_PREFIX="$DRILL_LOG_DIR/drillbit"
+export DRILL_LOG_NAME=${DRILL_LOG_NAME:-"drillbit"}
+export DRILL_LOG_PREFIX="$DRILL_LOG_DIR/$DRILL_LOG_NAME"
 export DRILLBIT_LOG_PATH="${DRILL_LOG_PREFIX}.log"
 
 # Class path construction.
@@ -324,16 +325,39 @@ if [ -n "$DRILL_CLASSPATH" ]; then
   CP="$CP:$DRILL_CLASSPATH"
 fi
 
+# Drill temporary directory is used as base for temporary storage of Dynamic UDF jars.
+# If tmp dir is given, it must exist.
+if [ -n "$DRILL_TMP_DIR" ]; then
+  if [[ ! -d "$DRILL_TMP_DIR" ]]; then
+    fatal_error "Temporary dir does not exist:" $DRILL_TMP_DIR
+  fi
+else
+  # Otherwise, use the default
+  DRILL_TMP_DIR="/tmp"
+fi
+
+mkdir -p "$DRILL_TMP_DIR"
+if [[ ! -d "$DRILL_TMP_DIR" || ! -w "$DRILL_TMP_DIR" ]]; then
+  fatal_error "Temporary directory does not exist or is not writable: $DRILL_TMP_DIR"
+fi
+
 # Test for cygwin
 is_cygwin=false
 case "`uname`" in
 CYGWIN*) is_cygwin=true;;
 esac
 
+if $is_cygwin; then
+  JAVA_BIN="java.exe"
+else
+  JAVA_BIN="java"
+fi
+
 # Test for or find JAVA_HOME
+
 if [ -z "$JAVA_HOME" ]; then
-  if [ -e `which java` ]; then
-    SOURCE=`which java`
+  SOURCE=`which java`
+  if [ -e $SOURCE ]; then
     while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
       DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
       SOURCE="$(readlink "$SOURCE")"
@@ -342,6 +366,7 @@ if [ -z "$JAVA_HOME" ]; then
       [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
     done
     JAVA_HOME="$( cd -P "$( dirname "$SOURCE" )" && cd .. && pwd )"
+    JAVA=$SOURCE
   fi
   # if we didn't set it
   if [ -z "$JAVA_HOME" ]; then
@@ -350,12 +375,18 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 # Now, verify that 'java' binary exists and is suitable for Drill.
-if $is_cygwin; then
-  JAVA_BIN="java.exe"
-else
-  JAVA_BIN="java"
+# If we started with `which java` above, use that path (after replacing
+# symlinks.) If we started with JAVA_HOME, try in bin. Doing so handles
+# the case in which JAVA_HOME is a JDK that has a nested JRE; we prefer
+# the JDK bin. Finally, if nothing else works, just search for the
+# executable.
+
+if [ -z "$JAVA" ]; then
+  JAVA="$JAVA_HOME/bin/$JAVA_BIN"
+  if [[ ! -e $JAVA ]]; then
+    JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
+  fi
 fi
-JAVA=`find -L "$JAVA_HOME" -name $JAVA_BIN -type f | head -n 1`
 if [ ! -e "$JAVA" ]; then
   fatal_error "Java not found at JAVA_HOME=$JAVA_HOME."
 fi
@@ -371,6 +402,7 @@ if $is_cygwin; then
   DRILL_HOME=`cygpath -w "$DRILL_HOME"`
   DRILL_CONF_DIR=`cygpath -w "$DRILL_CONF_DIR"`
   DRILL_LOG_DIR=`cygpath -w "$DRILL_LOG_DIR"`
+  DRILL_TMP_DIR=`cygpath -w "$DRILL_TMP_DIR"`
   CP=`cygpath -w -p "$CP"`
   if [ -z "$HADOOP_HOME" ]; then
     export HADOOP_HOME=${DRILL_HOME}/winutils
@@ -391,6 +423,9 @@ export is_cygwin
 export DRILL_HOME
 export DRILL_CONF_DIR
 export DRILL_LOG_DIR
+export DRILL_TMP_DIR
 export CP
-export JAVA_HOME
+# DRILL-4870: Don't export JAVA_HOME. Java can find it just fine from the java
+# command. If we attempt to work it out, we do so incorrectly for the Mac.
+#export JAVA_HOME
 export JAVA

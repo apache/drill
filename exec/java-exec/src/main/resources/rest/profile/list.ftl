@@ -36,6 +36,7 @@
            <td>User</td>
            <td>Query</td>
            <td>State</td>
+           <td>Elapsed</td>
            <td>Foreman</td>
         </thead>
         <tbody>
@@ -62,7 +63,9 @@
               </a>
             </td> 
             <td>
-              <div style="height:100%;width:100%">${query.getState()}</div>          
+              <div style="height:100%;width:100%">${query.getState()}</div>
+            <td>
+              <div style="height:100%;width:100%">${query.getDuration()}</div>
             <td>
                 <div style="height:100%;width:100%">
                   ${query.getForeman()}
@@ -91,6 +94,7 @@
          <!-- <td>Query Id</td> -->
          <td>Query</td>
          <td>State</td>
+         <td>Duration</td>
          <td>Foreman</td>
       </thead>
       <tbody>
@@ -119,6 +123,9 @@
           </td>      
           <td>
               <div style="height:100%;width:100%">${query.getState()}</div>
+          </td>
+          <td>
+              <div style="height:100%;width:100%">${query.getDuration()}</div>
           </td>
           <td>
               <div style="height:100%;width:100%">

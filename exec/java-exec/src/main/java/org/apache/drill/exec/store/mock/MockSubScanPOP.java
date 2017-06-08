@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -26,26 +26,50 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+
+/**
+ * Describes a physical scan operation for the mock data source. Each operator
+ * can, in general, give rise to one or more actual scans. For the mock data
+ * source, each sub-scan does exactly one (simulated) scan.
+ */
 
 @JsonTypeName("mock-sub-scan")
 public class MockSubScanPOP extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockGroupScanPOP.class);
 
   private final String url;
-  protected final List<MockGroupScanPOP.MockScanEntry> readEntries;
-//  private final OperatorCost cost;
-//  private final Size size;
-  private  LinkedList<MockGroupScanPOP.MockScanEntry>[] mappings;
+  protected final List<MockScanEntry> readEntries;
+  private final boolean extended;
+
+  /**
+   * This constructor is called from Jackson and is designed to support both
+   * older physical plans and the newer ("extended") plans. Jackson will fill
+   * in a null value for the <tt>extended</tt> field for older plans; we use
+   * that null value to know that the plan is old, thus not extended. Newer
+   * plans simply provide the value.
+   *
+   * @param url
+   *          not used for the mock plan, appears to be a vestige of creating
+   *          this from a file-based plugin. Must keep it because older physical
+   *          plans contained a dummy URL value.
+   * @param extended
+   *          see above
+   * @param readEntries
+   *          a description of the columns to generate in a Jackson-serialized
+   *          form unique to the mock data source plugin.
+   */
 
   @JsonCreator
-  public MockSubScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockGroupScanPOP.MockScanEntry> readEntries) {
+  public MockSubScanPOP(@JsonProperty("url") String url,
+                        @JsonProperty("extended") Boolean extended,
+                        @JsonProperty("entries") List<MockScanEntry> readEntries) {
     this.readEntries = readEntries;
 //    OperatorCost cost = new OperatorCost(0,0,0,0);
 //    Size size = new Size(0,0);
@@ -56,20 +80,20 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
 //    this.cost = cost;
 //    this.size = size;
     this.url = url;
+    this.extended = extended == null ? false : extended;
   }
 
-  public String getUrl() {
-    return url;
-  }
+  public String getUrl() { return url; }
+  public boolean isExtended() { return extended; }
 
   @JsonProperty("entries")
-  public List<MockGroupScanPOP.MockScanEntry> getReadEntries() {
+  public List<MockScanEntry> getReadEntries() {
     return readEntries;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   // will want to replace these two methods with an interface above for AbstractSubScan
@@ -88,7 +112,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MockSubScanPOP(url, readEntries);
+    return new MockSubScanPOP(url, extended, readEntries);
 
   }
 
@@ -96,5 +120,4 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   public int getOperatorType() {
     return CoreOperatorType.MOCK_SUB_SCAN_VALUE;
   }
-
 }

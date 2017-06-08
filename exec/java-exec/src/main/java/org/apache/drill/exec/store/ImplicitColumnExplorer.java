@@ -52,12 +52,21 @@ public class ImplicitColumnExplorer {
    * Also populates map with implicit columns names as keys and their values
    */
   public ImplicitColumnExplorer(FragmentContext context, List<SchemaPath> columns) {
-    this.partitionDesignator = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    this(context.getOptions(), columns);
+  }
+
+  /**
+   * Helper class that encapsulates logic for sorting out columns
+   * between actual table columns, partition columns and implicit file columns.
+   * Also populates map with implicit columns names as keys and their values
+   */
+  public ImplicitColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
+    this.partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     this.columns = columns;
     this.isStarQuery = columns != null && AbstractRecordReader.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
     this.tableColumns = Lists.newArrayList();
-    this.allImplicitColumns = initImplicitFileColumns(context.getOptions());
+    this.allImplicitColumns = initImplicitFileColumns(optionManager);
     this.selectedImplicitColumns = CaseInsensitiveMap.newHashMap();
 
     init();
@@ -84,10 +93,20 @@ public class ImplicitColumnExplorer {
    * @return map with columns names as keys and their values
    */
   public Map<String, String> populateImplicitColumns(FileWork work, String selectionRoot) {
+    return populateImplicitColumns(work.getPath(), selectionRoot);
+  }
+
+  /**
+   * Compares selection root and actual file path to determine partition columns values.
+   * Adds implicit file columns according to columns list.
+   *
+   * @return map with columns names as keys and their values
+   */
+  public Map<String, String> populateImplicitColumns(String filePath, String selectionRoot) {
     Map<String, String> implicitValues = Maps.newLinkedHashMap();
     if (selectionRoot != null) {
       String[] r = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot)).toString().split("/");
-      Path path = Path.getPathWithoutSchemeAndAuthority(new Path(work.getPath()));
+      Path path = Path.getPathWithoutSchemeAndAuthority(new Path(filePath));
       String[] p = path.toString().split("/");
       if (p.length > r.length) {
         String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);

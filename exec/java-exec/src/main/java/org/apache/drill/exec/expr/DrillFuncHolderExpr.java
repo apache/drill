@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,9 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
@@ -49,7 +47,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
   }
 
   @Override
-  public FuncHolder getHolder() {
+  public DrillFuncHolder getHolder() {
     return holder;
   }
 
@@ -66,10 +64,6 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
   @Override
   public boolean argConstantOnly(int i) {
     return holder.isConstant(i);
-  }
-
-  public boolean isComplexWriterFuncHolder() {
-    return holder instanceof DrillComplexWriterFuncHolder;
   }
 
   @Override

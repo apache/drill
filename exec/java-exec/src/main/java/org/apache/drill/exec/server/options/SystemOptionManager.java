@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.options;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,15 +26,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.LogicalPlanPersistence;
-import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.compile.ClassCompilerSelector;
 import org.apache.drill.exec.compile.ClassTransformer;
-import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -40,14 +40,15 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
  * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
  * persist between restarts.
  */
-public class SystemOptionManager extends BaseOptionManager implements AutoCloseable {
+public class SystemOptionManager extends BaseOptionManager implements OptionManager, AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
   private static final CaseInsensitiveMap<OptionValidator> VALIDATORS;
@@ -88,9 +89,14 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       PlannerSettings.TYPE_INFERENCE,
       PlannerSettings.IN_SUBQUERY_THRESHOLD,
       PlannerSettings.UNIONALL_DISTRIBUTE,
+      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING,
+      PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD,
+      PlannerSettings.QUOTING_IDENTIFIERS,
+      PlannerSettings.JOIN_OPTIMIZATION,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
+      ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK_VALIDATOR,
       ExecConstants.PARQUET_PAGE_SIZE_VALIDATOR,
       ExecConstants.PARQUET_DICT_PAGE_SIZE_VALIDATOR,
       ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR,
@@ -98,6 +104,14 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.PARQUET_VECTOR_FILL_THRESHOLD_VALIDATOR,
       ExecConstants.PARQUET_VECTOR_FILL_CHECK_THRESHOLD_VALIDATOR,
       ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_ASYNC_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_QUEUE_SIZE_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_ENFORCETOTALSIZE_VALIDATOR,
+      ExecConstants.PARQUET_COLUMNREADER_ASYNC_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_USE_BUFFERED_READ_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR,
+      ExecConstants.PARQUET_PAGEREADER_USE_FADVISE_VALIDATOR,
+      ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR,
       ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.ENABLE_UNION_TYPE,
       ExecConstants.TEXT_ESTIMATED_ROW_SIZE,
@@ -105,6 +119,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.JSON_WRITER_UGLIFY,
       ExecConstants.JSON_WRITER_SKIPNULLFIELDS,
       ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
+      ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR,
+      ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR,
       ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR,
       ExecConstants.MONGO_READER_ALL_TEXT_MODE_VALIDATOR,
       ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR,
@@ -133,21 +149,31 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
       ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
-      QueryClassLoader.JAVA_COMPILER_VALIDATOR,
-      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
-      QueryClassLoader.JAVA_COMPILER_DEBUG,
+      ClassCompilerSelector.JAVA_COMPILER_VALIDATOR,
+      ClassCompilerSelector.JAVA_COMPILER_JANINO_MAXSIZE,
+      ClassCompilerSelector.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
       ExecConstants.ENABLE_NEW_TEXT_READER,
       ExecConstants.ENABLE_BULK_LOAD_TABLE_LIST,
+      ExecConstants.BULK_LOAD_TABLE_LIST_BULK_SIZE,
       ExecConstants.WEB_LOGS_MAX_LINES_VALIDATOR,
       ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL_VALIDATOR,
       ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR,
       ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR,
       ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR,
       ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR,
-      ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR
+      ExecConstants.CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS_VALIDATOR,
+      ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR,
+      ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION,
+      ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR,
+      ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR,
+      ExecConstants.USE_DYNAMIC_UDFS,
+      ExecConstants.QUERY_TRANSIENT_STATE_UPDATE,
+      ExecConstants.PERSISTENT_TABLE_UMASK_VALIDATOR,
+      ExecConstants.ENABLE_ITERATOR_VALIDATOR,
+      ExecConstants.ENABLE_VECTOR_VALIDATOR
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {

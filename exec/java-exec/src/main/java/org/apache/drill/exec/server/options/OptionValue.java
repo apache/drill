@@ -76,8 +76,9 @@ public class OptionValue implements Comparable<OptionValue> {
         return createString(type, name, val);
       case DOUBLE:
         return createDouble(type, name, Double.valueOf(val));
+      default:
+        return null;
     }
-    return null;
   }
 
   @JsonCreator
@@ -99,6 +100,10 @@ public class OptionValue implements Comparable<OptionValue> {
     this.bool_val = bool_val;
   }
 
+  public String getName() {
+    return name;
+  }
+
   @JsonIgnore
   public Object getValue() {
     switch (kind) {
@@ -110,8 +115,9 @@ public class OptionValue implements Comparable<OptionValue> {
         return string_val;
       case DOUBLE:
         return float_val;
+      default:
+        return null;
     }
-    return null;
   }
 
   @Override
@@ -196,6 +202,6 @@ public class OptionValue implements Comparable<OptionValue> {
 
   @Override
   public String toString() {
-    return "OptionValue [type=" + type + ", name=" + name + ", value=" + getValue() + "]";
+    return "OptionValue [ type=" + type + ", name=" + name + ", value=" + getValue() + " ]";
   }
 }

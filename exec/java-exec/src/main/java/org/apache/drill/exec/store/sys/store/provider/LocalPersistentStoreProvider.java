@@ -23,20 +23,18 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.testing.store.NoWriteLocalStore;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
  */
 public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
-  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
+//  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
 
   private final Path path;
   private final DrillFileSystem fs;
@@ -44,7 +42,7 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
   // how to handle this flag.
   private final boolean enableWrite;
 
-  public LocalPersistentStoreProvider(final PersistentStoreRegistry registry) throws StoreException {
+  public LocalPersistentStoreProvider(final PersistentStoreRegistry<?> registry) throws StoreException {
     this(registry.getConfig());
   }
 

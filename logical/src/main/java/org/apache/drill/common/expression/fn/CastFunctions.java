@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
@@ -142,7 +143,7 @@ public class CastFunctions {
       return func;
     }
 
-    throw new RuntimeException(
+    throw new IllegalArgumentException(
       String.format("cast function for type %s is not defined", targetMinorType.name()));
   }
 
@@ -175,6 +176,15 @@ public class CastFunctions {
   public static boolean isReplacementNeeded(String originalfunction, MinorType inputType) {
     return (inputType == MinorType.VARCHAR || inputType == MinorType.VARBINARY || inputType == MinorType.VAR16CHAR) &&
         CAST_FUNC_REPLACEMENT_NEEDED.contains(originalfunction);
+  }
+
+  /**
+   * Check if a funcName is one of the cast function.
+   * @param funcName
+   * @return
+   */
+  public static boolean isCastFunction(String funcName) {
+    return TYPE2FUNC.values().contains(funcName);
   }
 
   private static String getReplacingCastFunctionFromNonNullable(String originalCastFunction, MinorType inputType) {

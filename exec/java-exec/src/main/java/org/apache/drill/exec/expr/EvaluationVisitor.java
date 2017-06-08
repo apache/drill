@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -144,6 +144,9 @@ public class EvaluationVisitor {
     previousExpressions = mapStack.pop();
   }
 
+  /**
+   * Get a HoldingContainer for the expression if it had been already evaluated
+   */
   private HoldingContainer getPrevious(LogicalExpression expression, MappingSet mappingSet) {
     HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mappingSet));
     if (previous != null) {
@@ -199,7 +202,7 @@ public class EvaluationVisitor {
         generator.getMappingSet().exitChild();
       }
 
-      return holder.renderEnd(generator, args, workspaceVars);
+      return holder.renderEnd(generator, args, workspaceVars, holderExpr.getFieldReference());
     }
 
     @Override
@@ -396,15 +399,29 @@ public class EvaluationVisitor {
     private HoldingContainer visitValueVectorReadExpression(ValueVectorReadExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
       // declare value vector
+      DirectExpression batchName;
+      JExpression batchIndex;
+      JExpression recordIndex;
 
-      JExpression vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(),
-          e.getFieldId());
-      JExpression indexVariable = generator.getMappingSet().getValueReadIndex();
+      // if value vector read expression has batch reference, use its values in generated code,
+      // otherwise use values provided by mapping set (which point to only one batch)
+      // primary used for non-equi joins where expression conditions may refer to more than one batch
+      BatchReference batchRef = e.getBatchRef();
+      if (batchRef != null) {
+        batchName = DirectExpression.direct(batchRef.getBatchName());
+        batchIndex = DirectExpression.direct(batchRef.getBatchIndex());
+        recordIndex = DirectExpression.direct(batchRef.getRecordIndex());
+      } else {
+        batchName = generator.getMappingSet().getIncoming();
+        batchIndex = generator.getMappingSet().getValueReadIndex();
+        recordIndex = batchIndex;
+      }
 
-      JExpression componentVariable = indexVariable.shrz(JExpr.lit(16));
+      JExpression vv1 = generator.declareVectorValueSetupAndMember(batchName, e.getFieldId());
+      JExpression componentVariable = batchIndex.shrz(JExpr.lit(16));
       if (e.isSuperReader()) {
         vv1 = (vv1.component(componentVariable));
-        indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
+        recordIndex = recordIndex.band(JExpr.lit((int) Character.MAX_VALUE));
       }
 
       // evaluation work.
@@ -415,14 +432,9 @@ public class EvaluationVisitor {
       final boolean repeated = Types.isRepeated(e.getMajorType());
       final boolean listVector = e.getTypedFieldId().isListVector();
 
-      int[] fieldIds = e.getFieldId().getFieldIds();
-      for (int i = 1; i < fieldIds.length; i++) {
-
-      }
-
       if (!hasReadPath && !complex) {
         JBlock eval = new JBlock();
-        GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), indexVariable);
+        GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), recordIndex);
         generator.getEvalBlock().add(eval);
 
       } else {
@@ -441,7 +453,7 @@ public class EvaluationVisitor {
 
         // position to the correct value.
         eval.add(expr.invoke("reset"));
-        eval.add(expr.invoke("setPosition").arg(indexVariable));
+        eval.add(expr.invoke("setPosition").arg(recordIndex));
         int listNum = 0;
 
         while (seg != null) {
@@ -560,7 +572,7 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitQuotedStringConstant(QuotedString e, ClassGenerator<?> generator)
         throws RuntimeException {
-      MajorType majorType = Types.required(MinorType.VARCHAR);
+      MajorType majorType = e.getMajorType();
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("string", holderType);
@@ -671,8 +683,8 @@ public class EvaluationVisitor {
       HoldingContainer out = generator.declare(op.getMajorType());
 
       JLabel label = generator.getEvalBlockLabel("AndOP");
-      JBlock eval = generator.getEvalBlock().block();  // enter into nested block
-      generator.nestEvalBlock(eval);
+      JBlock eval = generator.createInnerEvalBlock();
+      generator.nestEvalBlock(eval);  // enter into nested block
 
       HoldingContainer arg = null;
 
@@ -733,7 +745,7 @@ public class EvaluationVisitor {
       HoldingContainer out = generator.declare(op.getMajorType());
 
       JLabel label = generator.getEvalBlockLabel("OrOP");
-      JBlock eval = generator.getEvalBlock().block();
+      JBlock eval = generator.createInnerEvalBlock();
       generator.nestEvalBlock(eval);   // enter into nested block.
 
       HoldingContainer arg = null;
@@ -811,7 +823,7 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holder, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer hc = getPrevious(holder, generator.getMappingSet());
-      if (hc == null) {
+      if (hc == null || holder.isRandom()) {
         hc = super.visitFunctionHolderExpression(holder, generator);
         put(holder, hc, generator.getMappingSet());
       }

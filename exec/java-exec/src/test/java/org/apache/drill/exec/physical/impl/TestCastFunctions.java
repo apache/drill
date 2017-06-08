@@ -45,7 +45,7 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -68,7 +68,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   // cast to bigint.
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
 
     mockDrillbitContext(bitContext);
 
@@ -106,7 +106,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //cast to int
   public void testCastInt(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
 
     mockDrillbitContext(bitContext);
 
@@ -143,7 +143,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //cast to float4
   public void testCastFloat4(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
@@ -180,7 +180,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //cast to float8
   public void testCastFloat8(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
@@ -217,7 +217,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //cast to varchar(length)
   public void testCastVarChar(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
@@ -253,7 +253,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //cast to varbinary(length)
   public void testCastVarBinary(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
     mockDrillbitContext(bitContext);
 
     final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
@@ -289,7 +289,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   //nested: cast is nested in another cast, or another function.
   public void testCastNested(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
 
     mockDrillbitContext(bitContext);
 
@@ -327,7 +327,7 @@ public class TestCastFunctions extends PopUnitTestBase{
 
   @Test(expected = NumberFormatException.class)
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
+                            @Injectable UserClientConnection connection) throws Throwable {
 
     mockDrillbitContext(bitContext);
 

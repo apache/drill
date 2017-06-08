@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,15 +24,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
-
-import com.google.common.base.Joiner;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
@@ -652,4 +652,92 @@ public class TestJsonReader extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testFlattenEmptyArrayWithAllTextMode() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array_all_text_mode.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array_all_text_mode.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = false")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+    }
+  }
+
+  @Test
+  public void testFlattenEmptyArrayWithUnionType() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    path.mkdirs();
+    path.deleteOnExit();
+    String pathString = path.toPath().toString();
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_array.json")))) {
+      writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
+    }
+
+    try {
+      String query = String.format("select flatten(t.a.b.c) as c from dfs_test.`%s/empty_array.json` t",
+        pathString);
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .expectsEmptyResultSet()
+        .go();
+
+    } finally {
+      testNoResult("alter session reset `store.json.all_text_mode`");
+      testNoResult("alter session reset `exec.enable_union_type`");
+    }
+  }
+
+  @Test // DRILL-5521
+  public void testKvgenWithUnionAll() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "map.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk\": \"a\", \"m\": {\"a\":\"1\"}}");
+      }
+
+      String query = String.format("select kvgen(m) as res from (select m from dfs_test.`%s/%s` union all " +
+          "select convert_from('{\"a\" : null}' ,'json') as m from (values(1)))", directory.toPath().toString(), fileName);
+      assertEquals("Row count should match", 2, testSql(query));
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
 }

@@ -209,6 +209,17 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     vector = v;
   }
 
+
+  @Override
+  public int getAllocatedByteCount() {
+    return offsets.getAllocatedByteCount() + vector.getAllocatedByteCount();
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return offsets.getPayloadByteCount() + vector.getPayloadByteCount();
+  }
+
   public abstract class BaseRepeatedAccessor extends BaseValueVector.BaseAccessor implements RepeatedAccessor {
 
     @Override
@@ -255,6 +266,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       final int childValueCount = valueCount == 0 ? 0 : offsets.getAccessor().get(valueCount);
       vector.getMutator().setValueCount(childValueCount);
     }
-  }
 
+    public int getInnerValueCountAt(int index) {
+      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
+    }
+  }
 }

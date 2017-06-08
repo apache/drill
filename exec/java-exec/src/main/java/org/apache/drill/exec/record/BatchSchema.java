@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,10 +28,11 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
-  final SelectionVectorMode selectionVectorMode;
+
+  private final SelectionVectorMode selectionVectorMode;
   private final List<MaterializedField> fields;
 
-  BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
+  public BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
     this.fields = fields;
     this.selectionVectorMode = selectionVector;
   }

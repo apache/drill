@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.aggregate;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -53,7 +52,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     this.outgoing = outgoing;
     setupInterior(incoming, outgoing);
   }
-
 
   private void allocateOutgoing() {
     for (VectorWrapper<?> w : outgoing) {
@@ -348,5 +346,4 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public abstract void outputRecordValues(@Named("outIndex") int outIndex);
   public abstract int getVectorIndex(@Named("recordIndex") int recordIndex);
   public abstract boolean resetValues();
-
 }

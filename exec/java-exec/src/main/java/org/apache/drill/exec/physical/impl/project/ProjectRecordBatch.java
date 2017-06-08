@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,10 +45,8 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.StarColumnHelper;
@@ -77,7 +75,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private Projector projector;
   private List<ValueVector> allocationVectors;
   private List<ComplexWriter> complexWriters;
-  private List<DrillComplexWriterFuncHolder> complexExprList;
+  private List<FieldReference> complexFieldReferencesList;
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
@@ -166,8 +164,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
             // Only need to add the schema for the complex exprs because others should already have
             // been setup during setupNewSchema
-            for (DrillComplexWriterFuncHolder f : complexExprList) {
-              container.addOrGet(f.getReference().getRootSegment().getPath(),
+            for (FieldReference fieldReference : complexFieldReferencesList) {
+              container.addOrGet(fieldReference.getRootSegment().getPath(),
                   Types.required(MinorType.MAP), MapVector.class);
             }
             container.buildSchema(SelectionVectorMode.NONE);
@@ -322,6 +320,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     final List<TransferPair> transfers = Lists.newArrayList();
 
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
 
     final IntHashSet transferFieldIds = new IntHashSet();
 
@@ -441,7 +442,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
       } else if (expr instanceof DrillFuncHolderExpr &&
-          ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {
+          ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
         // Need to process ComplexWriter function evaluation.
         // Lazy initialization of the list of complex writers, if not done yet.
         if (complexWriters == null) {
@@ -451,13 +452,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
+        ((DrillFuncHolderExpr) expr).getFieldReference(namedExpression.getRef());
         cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
-        if (complexExprList == null) {
-          complexExprList = Lists.newArrayList();
+        if (complexFieldReferencesList == null) {
+          complexFieldReferencesList = Lists.newArrayList();
         }
-        // save the expr for later for getting schema when input is empty
-        complexExprList.add((DrillComplexWriterFuncHolder)((DrillFuncHolderExpr)expr).getHolder());
+        // save the field reference for later for getting schema when input is empty
+        complexFieldReferencesList.add(namedExpression.getRef());
       } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);
@@ -481,7 +482,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     try {
-      this.projector = context.getImplementationClass(cg.getCodeGenerator());
+      CodeGenerator<Projector> codeGen = cg.getCodeGenerator();
+      codeGen.plainJavaCapable(true);
+      // Uncomment out this line to debug the generated code.
+//      codeGen.saveCodeForDebugging(true);
+      this.projector = context.getImplementationClass(codeGen);
       projector.setup(context, incoming, this, transfers);
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
@@ -510,12 +515,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final String castFuncName = CastFunctions.getCastFunc(MinorType.VARCHAR);
         final List<LogicalExpression> castArgs = Lists.newArrayList();
         castArgs.add(convertToJson);  //input_expr
-        /*
-         * We are implicitly casting to VARCHAR so we don't have a max length,
-         * using an arbitrary value. We trim down the size of the stored bytes
-         * to the actual size so this size doesn't really matter.
-         */
-        castArgs.add(new ValueExpressions.LongExpression(TypeHelper.VARCHAR_DEFAULT_CAST_LEN, null)); //
+        // implicitly casting to varchar, since we don't know actual source length, cast to undefined length, which will preserve source length
+        castArgs.add(new ValueExpressions.LongExpression(Types.MAX_VARCHAR_LENGTH, null));
         final FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
         exprs.add(new NamedExpression(castCall, new FieldReference(field.getPath())));
       } else {

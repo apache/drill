@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -42,6 +44,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -196,6 +199,12 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       }
     };
 
+    new MockUp<RemoteFunctionRegistry>() {
+      @Mock
+      long getRegistryVersion() {
+        return 0L;
+      }
+    };
 
     LogicalExpression functionCallExpr = new FunctionCall("testFunc",
       ImmutableList.of((LogicalExpression) new FieldReference("test", ExpressionPosition.UNKNOWN) ),

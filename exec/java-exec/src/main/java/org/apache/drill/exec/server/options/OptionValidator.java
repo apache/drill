@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,10 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
 
 /**
  * Validates the values provided to Drill options.
@@ -26,9 +27,16 @@ public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
   // the error messages produced by the validator
   private final String optionName;
+  private final boolean isAdminOption;
 
+  /** By default, if admin option value is not specified, it would be set to false.*/
   public OptionValidator(String optionName) {
+    this(optionName, false);
+  }
+
+  public OptionValidator(String optionName, boolean isAdminOption) {
     this.optionName = optionName;
+    this.isAdminOption = isAdminOption;
   }
 
   /**
@@ -69,6 +77,13 @@ public abstract class OptionValidator {
   }
 
   /**
+   * @return true is option is system-level property that can be only specified by admin (not user).
+   */
+  public boolean isAdminOption() {
+    return isAdminOption;
+  }
+
+  /**
    * Gets the default option value for this validator.
    *
    * @return default option value
@@ -82,6 +97,13 @@ public abstract class OptionValidator {
    * @param manager the manager for accessing validation dependencies (options)
    * @throws UserException message to describe error with value, including range or list of expected values
    */
-  public abstract void validate(OptionValue value, OptionManager manager);
+  public abstract void validate(OptionValue value, OptionSet manager);
+
+  /**
+   * Gets the kind of this option value for this validator.
+   *
+   * @return kind of this option value
+   */
+  public abstract Kind getKind();
 
 }

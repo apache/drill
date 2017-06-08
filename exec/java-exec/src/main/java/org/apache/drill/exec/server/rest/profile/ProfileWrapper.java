@@ -20,27 +20,41 @@ package org.apache.drill.exec.server.rest.profile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.OptionValue;
+
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
  */
 public class ProfileWrapper {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
+  private static final String ESTIMATED_LABEL = " (Estimated)";
+  private static final String NOT_AVAILABLE_LABEL = "Not Available";
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
+  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
   private QueryProfile profile;
   private String id;
   private final List<FragmentWrapper> fragmentProfiles;
   private final List<OperatorWrapper> operatorProfiles;
+  private OptionList options;
+  private final HashMap<String, Long> majorFragmentTallyMap;
+  private long majorFragmentTallyTotal;
 
   public ProfileWrapper(final QueryProfile profile) {
     this.profile = profile;
@@ -55,6 +69,8 @@ public class ProfileWrapper {
       fragmentProfiles.add(new FragmentWrapper(major, profile.getStart()));
     }
     this.fragmentProfiles = fragmentProfiles;
+    majorFragmentTallyMap = new HashMap<String, Long>(majors.size());
+    this.majorFragmentTallyTotal = tallyMajorFragmentCost(majors);
 
     final List<OperatorWrapper> ows = new ArrayList<>();
     // temporary map to store (major_id, operator_id) -> [(op_profile, minor_id)]
@@ -89,6 +105,29 @@ public class ProfileWrapper {
       ows.add(new OperatorWrapper(ip.getLeft(), opmap.get(ip)));
     }
     this.operatorProfiles = ows;
+
+    try {
+      options = mapper.readValue(profile.getOptionsJson(), OptionList.class);
+    } catch (Exception e) {
+      logger.error("Unable to deserialize query options", e);
+      options = new OptionList();
+    }
+  }
+
+  private long tallyMajorFragmentCost(List<MajorFragmentProfile> majorFragments) {
+    long globalProcessNanos = 0L;
+    for (MajorFragmentProfile majorFP : majorFragments) {
+      String majorFragmentId = new OperatorPathBuilder().setMajor(majorFP).build();
+      long processNanos = 0L;
+      for (MinorFragmentProfile minorFP : majorFP.getMinorFragmentProfileList()) {
+        for (OperatorProfile op : minorFP.getOperatorProfileList()) {
+          processNanos += op.getProcessNanos();
+        }
+      }
+      majorFragmentTallyMap.put(majorFragmentId, processNanos);
+      globalProcessNanos += processNanos;
+    }
+    return globalProcessNanos;
   }
 
   public boolean hasError() {
@@ -99,8 +138,95 @@ public class ProfileWrapper {
     return profile;
   }
 
+  public String getProfileDuration() {
+    return (new SimpleDurationFormat(profile.getStart(), profile.getEnd())).verbose();
+  }
+
   public String getQueryId() {
     return id;
+  }
+
+  public String getPlanningDuration() {
+    //Check if Planning End is known
+    if (profile.getPlanEnd() > 0L) {
+      return (new SimpleDurationFormat(profile.getStart(), profile.getPlanEnd())).verbose();
+    }
+
+    //Check if any fragments have started
+    if (profile.getFragmentProfileCount() > 0) {
+      //Init Planning End Time
+      long estimatedPlanEnd = Long.MAX_VALUE;
+      //Using Screen MajorFragment as reference
+      MajorFragmentProfile majorFrag0 = profile.getFragmentProfile(0);
+      //Searching for earliest starting fragment
+      for (MinorFragmentProfile fragmentWrapper : majorFrag0.getMinorFragmentProfileList()) {
+        long minorFragmentStart = fragmentWrapper.getStartTime();
+        if (minorFragmentStart > 0 && minorFragmentStart < estimatedPlanEnd) {
+          estimatedPlanEnd = minorFragmentStart;
+        }
+      }
+      //Provide estimated plan time
+      return (new SimpleDurationFormat(profile.getStart(), estimatedPlanEnd)).verbose() + ESTIMATED_LABEL;
+    }
+
+    //Unable to  estimate/calculate Specific Time spent in Planning
+    return NOT_AVAILABLE_LABEL;
+  }
+
+  public String getQueuedDuration() {
+    //Check if State is ENQUEUED
+    if (profile.getState() == QueryState.ENQUEUED) {
+      return (new SimpleDurationFormat(profile.getPlanEnd(), System.currentTimeMillis())).verbose();
+    }
+
+    //Check if Queue Wait End is known
+    if (profile.getQueueWaitEnd() > 0L) {
+      return (new SimpleDurationFormat(profile.getPlanEnd(), profile.getQueueWaitEnd())).verbose();
+    }
+
+    //Unable to  estimate/calculate Specific Time spent in Queue
+    return NOT_AVAILABLE_LABEL;
+  }
+
+  public String getExecutionDuration() {
+    //Check if State is STARTING or RUNNING
+    if (profile.getState() == QueryState.STARTING ||
+        profile.getState() == QueryState.ENQUEUED ||
+        profile.getState() == QueryState.RUNNING) {
+      return NOT_AVAILABLE_LABEL;
+    }
+
+    //Check if QueueEnd is known
+    if (profile.getQueueWaitEnd() > 0L) {
+      //Execution time [end(QueueWait) - endTime(Query)]
+      return (new SimpleDurationFormat(profile.getQueueWaitEnd(), profile.getEnd())).verbose();
+    }
+
+    //Check if Plan End is known
+    if (profile.getPlanEnd() > 0L) {
+      //Execution time [end(Planning) - endTime(Query)]
+      return (new SimpleDurationFormat(profile.getPlanEnd(), profile.getEnd())).verbose();
+    }
+
+    //Check if any fragments have started
+    if (profile.getFragmentProfileCount() > 0) {
+      //Providing Invalid Planning End Time (Will update later)
+      long estimatedPlanEnd = Long.MAX_VALUE;
+      //Using Screen MajorFragment as reference
+      MajorFragmentProfile majorFrag0 = profile.getFragmentProfile(0);
+      //Searching for earliest starting fragment
+      for (MinorFragmentProfile fragmentWrapper : majorFrag0.getMinorFragmentProfileList()) {
+        long minorFragmentStart = fragmentWrapper.getStartTime();
+        if (minorFragmentStart > 0 && minorFragmentStart < estimatedPlanEnd) {
+          estimatedPlanEnd = minorFragmentStart;
+        }
+      }
+      //Execution time [start(rootFragment) - endTime(Query)]
+      return (new SimpleDurationFormat(estimatedPlanEnd, profile.getEnd())).verbose() + ESTIMATED_LABEL;
+    }
+
+    //Unable to  estimate/calculate Specific Execution Time
+    return NOT_AVAILABLE_LABEL;
   }
 
   public List<FragmentWrapper> getFragmentProfiles() {
@@ -108,9 +234,18 @@ public class ProfileWrapper {
   }
 
   public String getFragmentsOverview() {
-    TableBuilder tb = new TableBuilder(FragmentWrapper.FRAGMENT_OVERVIEW_COLUMNS);
-    for (final FragmentWrapper fw : fragmentProfiles) {
-      fw.addSummary(tb);
+    TableBuilder tb;
+    if (profile.getState() == QueryState.STARTING
+        || profile.getState() == QueryState.RUNNING) {
+      tb = new TableBuilder(FragmentWrapper.ACTIVE_FRAGMENT_OVERVIEW_COLUMNS, FragmentWrapper.ACTIVE_FRAGMENT_OVERVIEW_COLUMNS_TOOLTIP);
+      for (final FragmentWrapper fw : fragmentProfiles) {
+        fw.addSummary(tb);
+      }
+    } else {
+      tb = new TableBuilder(FragmentWrapper.COMPLETED_FRAGMENT_OVERVIEW_COLUMNS, FragmentWrapper.COMPLETED_FRAGMENT_OVERVIEW_COLUMNS_TOOLTIP);
+      for (final FragmentWrapper fw : fragmentProfiles) {
+        fw.addFinalSummary(tb);
+      }
     }
     return tb.build();
   }
@@ -120,9 +255,11 @@ public class ProfileWrapper {
   }
 
   public String getOperatorsOverview() {
-    final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS);
+    final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS,
+        OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS_TOOLTIP);
+
     for (final OperatorWrapper ow : operatorProfiles) {
-      ow.addSummary(tb);
+      ow.addSummary(tb, this.majorFragmentTallyMap, this.majorFragmentTallyTotal);
     }
     return tb.build();
   }
@@ -135,5 +272,23 @@ public class ProfileWrapper {
       sep = ", ";
     }
     return sb.append("}").toString();
+  }
+
+  /**
+   * Generates sorted map with properties used to display on Web UI,
+   * where key is property name and value is property string value.
+   * When property value is null, it would be replaced with 'null',
+   * this is achieved using {@link String#valueOf(Object)} method.
+   * Options will be stored in ascending key order, sorted according
+   * to the natural order for the option name represented by {@link String}.
+   *
+   * @return map with properties names and string values
+   */
+  public Map<String, String> getOptions() {
+    final Map<String, String> map = Maps.newTreeMap();
+    for (OptionValue option : options) {
+      map.put(option.getName(), String.valueOf(option.getValue()));
+    }
+    return map;
   }
 }

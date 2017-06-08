@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
-
-public interface VariableWidthVector extends ValueVector{
+public interface VariableWidthVector extends ValueVector {
 
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.

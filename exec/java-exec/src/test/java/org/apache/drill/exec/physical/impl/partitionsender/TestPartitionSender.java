@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -216,7 +216,7 @@ public class TestPartitionSender extends PlanTestBase {
       RecordBatch incoming, FunctionImplementationRegistry registry, PhysicalPlanReader planReader, PlanningSet planningSet, Fragment rootFragment,
       int expectedThreadsCount) throws Exception {
 
-    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName");
+    final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     final QueryWorkUnit qwu = PARALLELIZER.getFragments(options, drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
         drillbitContext.getBits(), planReader, rootFragment, USER_SESSION, queryContextInfo);
@@ -363,8 +363,12 @@ public class TestPartitionSender extends PlanTestBase {
       super(context, incoming, operator);
     }
 
-    public void close() throws Exception {
-      ((AutoCloseable) oContext).close();
+    @Override
+    public void close() {
+      // Don't close the context here; it is closed
+      // separately. Close only resources this sender
+      // controls.
+//      ((AutoCloseable) oContext).close();
     }
 
     public int getNumberPartitions() {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,6 +58,18 @@ public class MongoPersistentStore<V> extends BasePersistentStore<V> {
   @Override
   public PersistentStoreMode getMode() {
     return PersistentStoreMode.PERSISTENT;
+  }
+
+  @Override
+  public boolean contains(String key) {
+    try {
+      Bson query = Filters.eq(DrillMongoConstants.ID, key);
+      Document document = collection.find(query).first();
+      return document != null && document.containsKey(pKey);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override

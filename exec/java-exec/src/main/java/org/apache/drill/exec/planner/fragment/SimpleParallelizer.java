@@ -316,11 +316,15 @@ public class SimpleParallelizer implements ParallelizationParameters {
             .build();
 
         if (isRootNode) {
-          logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          if (logger.isDebugEnabled()) {
+            logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          }
           rootFragment = fragment;
           rootOperator = root;
         } else {
-          logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          if (logger.isDebugEnabled()) {
+            logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          }
           fragments.add(fragment);
         }
       }

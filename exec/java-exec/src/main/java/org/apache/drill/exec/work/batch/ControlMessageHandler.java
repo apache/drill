@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,9 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.Acks;
+import org.apache.drill.exec.rpc.RequestHandler;
 import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserRpcException;
@@ -50,7 +52,7 @@ import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
 import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
 
-public class ControlMessageHandler {
+public class ControlMessageHandler implements RequestHandler<ControlConnection> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlMessageHandler.class);
   private final WorkerBee bee;
   private final CustomHandlerRegistry handlerRegistry = new CustomHandlerRegistry();
@@ -59,8 +61,9 @@ public class ControlMessageHandler {
     this.bee = bee;
   }
 
-  public Response handle(final ControlConnection connection, final int rpcType,
-      final ByteBuf pBody, final ByteBuf dBody) throws RpcException {
+  @Override
+  public void handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody,
+                     ResponseSender sender) throws RpcException {
     if (RpcConstants.EXTRA_DEBUGGING) {
       logger.debug("Received bit com message of type {}", rpcType);
     }
@@ -70,34 +73,39 @@ public class ControlMessageHandler {
     case RpcType.REQ_CANCEL_FRAGMENT_VALUE: {
       final FragmentHandle handle = get(pBody, FragmentHandle.PARSER);
       cancelFragment(handle);
-      return ControlRpcConfig.OK;
+      sender.send(ControlRpcConfig.OK);
+      break;
     }
 
     case RpcType.REQ_CUSTOM_VALUE: {
       final CustomMessage customMessage = get(pBody, CustomMessage.PARSER);
-      return handlerRegistry.handle(customMessage, (DrillBuf) dBody);
+      sender.send(handlerRegistry.handle(customMessage, (DrillBuf) dBody));
+      break;
     }
 
     case RpcType.REQ_RECEIVER_FINISHED_VALUE: {
       final FinishedReceiver finishedReceiver = get(pBody, FinishedReceiver.PARSER);
       receivingFragmentFinished(finishedReceiver);
-      return ControlRpcConfig.OK;
+      sender.send(ControlRpcConfig.OK);
+      break;
     }
 
     case RpcType.REQ_FRAGMENT_STATUS_VALUE:
       bee.getContext().getWorkBus().statusUpdate( get(pBody, FragmentStatus.PARSER));
       // TODO: Support a type of message that has no response.
-      return ControlRpcConfig.OK;
+      sender.send(ControlRpcConfig.OK);
+      break;
 
     case RpcType.REQ_QUERY_CANCEL_VALUE: {
       final QueryId queryId = get(pBody, QueryId.PARSER);
       final Foreman foreman = bee.getForemanForQueryId(queryId);
       if (foreman != null) {
         foreman.cancel();
-        return ControlRpcConfig.OK;
+        sender.send(ControlRpcConfig.OK);
       } else {
-        return ControlRpcConfig.FAIL;
+        sender.send(ControlRpcConfig.FAIL);
       }
+      break;
     }
 
     case RpcType.REQ_INITIALIZE_FRAGMENTS_VALUE: {
@@ -105,7 +113,8 @@ public class ControlMessageHandler {
       for(int i = 0; i < fragments.getFragmentCount(); i++) {
         startNewRemoteFragment(fragments.getFragment(i));
       }
-      return ControlRpcConfig.OK;
+      sender.send(ControlRpcConfig.OK);
+      break;
     }
 
     case RpcType.REQ_QUERY_STATUS_VALUE: {
@@ -115,13 +124,15 @@ public class ControlMessageHandler {
         throw new RpcException("Query not running on node.");
       }
       final QueryProfile profile = foreman.getQueryManager().getQueryProfile();
-      return new Response(RpcType.RESP_QUERY_STATUS, profile);
+      sender.send(new Response(RpcType.RESP_QUERY_STATUS, profile));
+      break;
     }
 
     case RpcType.REQ_UNPAUSE_FRAGMENT_VALUE: {
       final FragmentHandle handle = get(pBody, FragmentHandle.PARSER);
       resumeFragment(handle);
-      return ControlRpcConfig.OK;
+      sender.send(ControlRpcConfig.OK);
+      break;
     }
 
     default:

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
@@ -62,12 +63,12 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
 
-    double numRows = getRows();
+    double numRows = estimateRowCount(mq);
     double cpuCost = DrillCostBase.COMPARE_CPU_COST * numRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(numRows, cpuCost, 0, 0);
@@ -82,11 +83,11 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
   }
 
   @Override
-  public double getRows() {
+  public double estimateRowCount(RelMetadataQuery mq) {
     int off = offset != null ? RexLiteral.intValue(offset) : 0 ;
 
     if (fetch == null) {
-      return getInput().getRows() - off;
+      return getInput().estimateRowCount(mq) - off;
     } else {
       int f = RexLiteral.intValue(fetch);
       return off + f;

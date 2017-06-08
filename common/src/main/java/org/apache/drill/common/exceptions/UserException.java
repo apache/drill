@@ -38,6 +38,7 @@ import org.slf4j.Logger;
  * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType
  */
 public class UserException extends DrillRuntimeException {
+  private static final long serialVersionUID = -6720929331624621840L;
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserException.class);
 
   public static final String MEMORY_ERROR_MSG = "One or more nodes ran out of memory while executing the query.";
@@ -76,6 +77,14 @@ public class UserException extends DrillRuntimeException {
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
    * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
    * instead of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>
+   * This exception, previously deprecated, has been repurposed to indicate unspecified
+   * errors. In particular, the case in which a lower level bit of code throws an
+   * exception other than UserException. The catching code then only knows "something went
+   * wrong", but not enough information to categorize the error.
+   * <p>
+   * System errors also indicate illegal internal states, missing functionality, and other
+   * code-related errors -- all of which "should never occur."
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#SYSTEM
    *
@@ -83,10 +92,8 @@ public class UserException extends DrillRuntimeException {
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    *
-   * @deprecated This method should never need to be used explicitly, unless you are passing the exception to the
-   *             Rpc layer or UserResultListener.submitFailed()
    */
-  @Deprecated
+
   public static Builder systemError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.SYSTEM, cause);
   }
@@ -549,7 +556,15 @@ public class UserException extends DrillRuntimeException {
       if (isSystemError) {
         logger.error(newException.getMessage(), newException);
       } else {
-        logger.info("User Error Occurred", newException);
+        StringBuilder buf = new StringBuilder();
+        buf.append("User Error Occurred");
+        if (message != null) {
+          buf.append(": ").append(message);
+        }
+        if (cause != null) {
+          buf.append(" (").append(cause.getMessage()).append(")");
+        }
+        logger.info(buf.toString(), newException);
       }
 
       return newException;

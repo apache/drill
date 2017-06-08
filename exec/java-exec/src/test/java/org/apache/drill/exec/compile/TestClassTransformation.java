@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,11 @@ public class TestClassTransformation extends BaseTestQuery {
 
   @BeforeClass
   public static void beforeTestClassTransformation() throws Exception {
+    // Tests here require the byte-code merge technique and are meaningless
+    // if the plain-old Java technique is selected. Force the plain-Java
+    // technique to be off if it happened to be set on in the default
+    // configuration.
+    System.setProperty(CodeCompiler.PREFER_POJ_CONFIG, "false");
     final UserSession userSession = UserSession.Builder.newBuilder()
       .withOptionManager(getDrillbitContext().getOptionManager())
       .build();
@@ -53,23 +58,21 @@ public class TestClassTransformation extends BaseTestQuery {
   @Test
   public void testJaninoClassCompiler() throws Exception {
     logger.debug("Testing JaninoClassCompiler");
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JANINO.name()));
-    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JANINO.name()));
     for (int i = 0; i < ITERATION_COUNT; i++) {
-      compilationInnerClass(loader);
+      compilationInnerClass(false); // Traditional byte-code manipulation
+      compilationInnerClass(true); // Plain-old Java
     }
-    loader.close();
   }
 
   @Test
   public void testJDKClassCompiler() throws Exception {
     logger.debug("Testing JDKClassCompiler");
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JDK.name()));
-    QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name()));
     for (int i = 0; i < ITERATION_COUNT; i++) {
-      compilationInnerClass(loader);
+      compilationInnerClass(false); // Traditional byte-code manipulation
+      compilationInnerClass(true); // Plain-old Java
     }
-    loader.close();
   }
 
   @Test
@@ -77,9 +80,10 @@ public class TestClassTransformation extends BaseTestQuery {
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
     ClassSet classSet = new ClassSet(null, cg.getDefinition().getTemplateClassName(), cg.getMaterializedClassName());
     String sourceCode = cg.generateAndGet();
-    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_OPTION, QueryClassLoader.CompilerPolicy.JDK.name()));
+    sessionOptions.setOption(OptionValue.createString(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_OPTION, ClassCompilerSelector.CompilerPolicy.JDK.name()));
 
-    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_DEBUG_OPTION, false));
+    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, false));
+    @SuppressWarnings("resource")
     QueryClassLoader loader = new QueryClassLoader(config, sessionOptions);
     final byte[][] codeWithoutDebug = loader.getClassByteCode(classSet.generated, sourceCode);
     loader.close();
@@ -88,7 +92,7 @@ public class TestClassTransformation extends BaseTestQuery {
       sizeWithoutDebug += bs.length;
     }
 
-    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, QueryClassLoader.JAVA_COMPILER_DEBUG_OPTION, true));
+    sessionOptions.setOption(OptionValue.createBoolean(OptionType.SESSION, ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, true));
     loader = new QueryClassLoader(config, sessionOptions);
     final byte[][] codeWithDebug = loader.getClassByteCode(classSet.generated, sourceCode);
     loader.close();
@@ -105,11 +109,13 @@ public class TestClassTransformation extends BaseTestQuery {
    * Do a test of a three level class to ensure that nested code generators works correctly.
    * @throws Exception
    */
-  private void compilationInnerClass(QueryClassLoader loader) throws Exception{
+  private void compilationInnerClass(boolean asPoj) throws Exception{
     CodeGenerator<ExampleInner> cg = newCodeGenerator(ExampleInner.class, ExampleTemplateWithInner.class);
+    cg.preferPlainJava(asPoj);
 
-    ClassTransformer ct = new ClassTransformer(sessionOptions);
-    Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) ct.getImplementationClass(loader, cg.getDefinition(), cg.generateAndGet(), cg.getMaterializedClassName());
+    CodeCompiler.CodeGenCompiler cc = new CodeCompiler.CodeGenCompiler(config, sessionOptions);
+    @SuppressWarnings("unchecked")
+    Class<? extends ExampleInner> c = (Class<? extends ExampleInner>) cc.generateAndCompile(cg);
     ExampleInner t = (ExampleInner) c.newInstance();
     t.doOutside();
     t.doInsideOutside();
@@ -118,6 +124,7 @@ public class TestClassTransformation extends BaseTestQuery {
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<T>(iface, impl);
     CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getFunctionImplementationRegistry(), getDrillbitContext().getOptionManager());
+    cg.plainJavaCapable(true);
 
     ClassGenerator<T> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));

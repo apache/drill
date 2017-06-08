@@ -211,11 +211,15 @@ public class SplittingParallelizer extends SimpleParallelizer {
             .build();
 
         if (isRootNode) {
-          logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          if (logger.isDebugEnabled()) {
+            logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          }
           rootFragment = fragment;
           rootOperator = root;
         } else {
-          logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          if (logger.isDebugEnabled()) {
+            logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
+          }
           throw new ForemanSetupException(String.format("There should not be non-root/remote fragment present in plan split, but there is:",
               DrillStringUtils.unescapeJava(fragment.toString())));
          }

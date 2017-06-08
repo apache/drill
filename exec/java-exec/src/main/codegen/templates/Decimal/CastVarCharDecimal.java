@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,12 +48,22 @@ import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 <#if type.major == "VarCharDecimalSimple">
-@FunctionTemplate(name ="cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 <#elseif type.major == "EmptyStringVarCharDecimalSimple">
-@FunctionTemplate(name ="castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+@FunctionTemplate(name ="castEmptyString${type.from}To${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.INTERNAL)
 public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc {
 </#if>
     @Param ${type.from}Holder in;
@@ -221,12 +231,22 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 <#if type.major == "VarCharDecimalComplex">
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 <#elseif type.major == "EmptyStringVarCharDecimalComplex">
-@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    returnType = FunctionTemplate.ReturnType.DECIMAL_CAST,
+    nulls = NullHandling.INTERNAL)
 public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc {
 </#if>
     @Param ${type.from}Holder in;

@@ -25,11 +25,11 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLTimeoutException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -40,23 +40,20 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaFactory;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Helper;
-import net.hydromatic.avatica.Meta;
-import net.hydromatic.avatica.UnregisteredDriver;
-
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.ExecuteResult;
+import org.apache.calcite.avatica.Meta.MetaResultSet;
+import org.apache.calcite.avatica.UnregisteredDriver;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.client.InvalidConnectionInfoException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
-import org.apache.drill.exec.proto.UserProtos.RequestStatus;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -68,6 +65,8 @@ import org.apache.drill.jdbc.DrillConnectionConfig;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
 import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
+
+import com.google.common.base.Throwables;
 
 /**
  * Drill's implementation of {@link Connection}.
@@ -94,12 +93,15 @@ class DrillConnectionImpl extends AvaticaConnection
     super(driver, factory, url, info);
 
     // Initialize transaction-related settings per Drill behavior.
-    super.setTransactionIsolation( TRANSACTION_NONE );
-    super.setAutoCommit( true );
+    super.setTransactionIsolation(TRANSACTION_NONE);
+    super.setAutoCommit(true);
+    super.setReadOnly(false);
 
     this.config = new DrillConnectionConfig(info);
 
     try {
+      String connect = null;
+
       if (config.isLocal()) {
         try {
           Class.forName("org.eclipse.jetty.server.Handler");
@@ -137,12 +139,11 @@ class DrillConnectionImpl extends AvaticaConnection
         makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
 
         this.client = new DrillClient(dConfig, set.getCoordinator());
-        this.client.connect(null, info);
       } else if(config.isDirect()) {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = RootAllocatorFactory.newRoot(dConfig);
         this.client = new DrillClient(dConfig, true); // Get a direct connection
-        this.client.connect(config.getZookeeperConnectionString(), info);
+        connect = config.getZookeeperConnectionString();
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = RootAllocatorFactory.newRoot(dConfig);
@@ -151,10 +152,14 @@ class DrillConnectionImpl extends AvaticaConnection
         // implementations (needed by a server, but not by a client-only
         // process, right?)?  Probably pass dConfig to construction.
         this.client = new DrillClient();
-        this.client.connect(config.getZookeeperConnectionString(), info);
+        connect = config.getZookeeperConnectionString();
       }
+      this.client.setClientName("Apache Drill JDBC Driver");
+      this.client.connect(connect, info);
     } catch (OutOfMemoryException e) {
       throw new SQLException("Failure creating root allocator", e);
+    } catch (InvalidConnectionInfoException e) {
+      throw new SQLException("Invalid parameter in connection string: " + e.getMessage(), e);
     } catch (RpcException e) {
       // (Include cause exception's text in wrapping exception's text so
       // it's more likely to get to user (e.g., via SQLLine), and use
@@ -163,6 +168,22 @@ class DrillConnectionImpl extends AvaticaConnection
     }
   }
 
+
+  @Override
+  protected ResultSet createResultSet(MetaResultSet metaResultSet) throws SQLException {
+    return super.createResultSet(metaResultSet);
+  }
+
+  @Override
+  protected ExecuteResult prepareAndExecuteInternal(AvaticaStatement statement, String sql, long maxRowCount)
+      throws SQLException {
+    try {
+      return super.prepareAndExecuteInternal(statement, sql, maxRowCount);
+    } catch(RuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SQLException.class);
+      throw e;
+    }
+  }
   /**
    * Throws AlreadyClosedSqlException <i>iff</i> this Connection is closed.
    *
@@ -177,15 +198,6 @@ class DrillConnectionImpl extends AvaticaConnection
   @Override
   public DrillConnectionConfig getConfig() {
     return config;
-  }
-
-  @Override
-  protected Meta createMeta() {
-    return new MetaImpl(this);
-  }
-
-  MetaImpl meta() {
-    return (MetaImpl) meta;
   }
 
   BufferAllocator getAllocator() {
@@ -364,53 +376,12 @@ class DrillConnectionImpl extends AvaticaConnection
                                             int resultSetConcurrency,
                                             int resultSetHoldability) throws SQLException {
     throwIfClosed();
-    try {
-      DrillRpcFuture<CreatePreparedStatementResp> respFuture = client.createPreparedStatement(sql);
-
-      CreatePreparedStatementResp resp;
-      try {
-        resp = respFuture.get();
-      } catch (InterruptedException e) {
-        // Preserve evidence that the interruption occurred so that code higher up
-        // on the call stack can learn of the interruption and respond to it if it
-        // wants to.
-        Thread.currentThread().interrupt();
-
-        throw new SQLException( "Interrupted", e );
-      }
-
-      final RequestStatus status = resp.getStatus();
-      if (status != RequestStatus.OK) {
-        final String errMsgFromServer = resp.getError() != null ? resp.getError().getMessage() : "";
-
-        if (status == RequestStatus.TIMEOUT) {
-          logger.error("Request timed out to create prepare statement: {}", errMsgFromServer);
-          throw new SQLTimeoutException("Failed to create prepared statement: " + errMsgFromServer);
-        }
-
-        if (status == RequestStatus.FAILED) {
-          logger.error("Failed to create prepared statement: {}", errMsgFromServer);
-          throw new SQLException("Failed to create prepared statement: " + errMsgFromServer);
-        }
-
-        logger.error("Failed to create prepared statement. Unknown status: {}, Error: {}", status, errMsgFromServer);
-        throw new SQLException(String.format(
-            "Failed to create prepared statement. Unknown status: %s, Error: %s", status, errMsgFromServer));
-      }
-
-      DrillPrepareResult prepareResult = new DrillPrepareResult(sql, resp.getPreparedStatement());
-      DrillPreparedStatementImpl statement =
-          (DrillPreparedStatementImpl) factory.newPreparedStatement(
-              this, prepareResult, resultSetType, resultSetConcurrency,
-              resultSetHoldability);
-      return statement;
-    } catch (SQLException e) {
-      throw e;
-    } catch (RuntimeException e) {
-      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
-    } catch (Exception e) {
-      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
-    }
+    DrillPreparedStatementImpl statement =
+        (DrillPreparedStatementImpl) super.prepareStatement(sql,
+                                                            resultSetType,
+                                                            resultSetConcurrency,
+                                                            resultSetHoldability);
+    return statement;
   }
 
   @Override

@@ -126,6 +126,14 @@ public final class BitControl {
      * <code>RESP_CUSTOM = 18;</code>
      */
     RESP_CUSTOM(16, 18),
+    /**
+     * <code>SASL_MESSAGE = 19;</code>
+     *
+     * <pre>
+     * both bit request and response
+     * </pre>
+     */
+    SASL_MESSAGE(17, 19),
     ;
 
     /**
@@ -220,6 +228,14 @@ public final class BitControl {
      * <code>RESP_CUSTOM = 18;</code>
      */
     public static final int RESP_CUSTOM_VALUE = 18;
+    /**
+     * <code>SASL_MESSAGE = 19;</code>
+     *
+     * <pre>
+     * both bit request and response
+     * </pre>
+     */
+    public static final int SASL_MESSAGE_VALUE = 19;
 
 
     public final int getNumber() { return value; }
@@ -243,6 +259,7 @@ public final class BitControl {
         case 13: return RESP_BIT_STATUS;
         case 14: return RESP_QUERY_STATUS;
         case 18: return RESP_CUSTOM;
+        case 19: return SASL_MESSAGE;
         default: return null;
       }
     }
@@ -330,6 +347,26 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder();
+
+    // repeated string authenticationMechanisms = 4;
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    java.util.List<java.lang.String>
+    getAuthenticationMechanismsList();
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    int getAuthenticationMechanismsCount();
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    java.lang.String getAuthenticationMechanisms(int index);
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index);
   }
   /**
    * Protobuf type {@code exec.bit.control.BitControlHandshake}
@@ -411,6 +448,14 @@ public final class BitControl {
               bitField0_ |= 0x00000004;
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              authenticationMechanisms_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -419,6 +464,9 @@ public final class BitControl {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(authenticationMechanisms_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -505,10 +553,41 @@ public final class BitControl {
       return endpoint_;
     }
 
+    // repeated string authenticationMechanisms = 4;
+    public static final int AUTHENTICATIONMECHANISMS_FIELD_NUMBER = 4;
+    private com.google.protobuf.LazyStringList authenticationMechanisms_;
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    public java.util.List<java.lang.String>
+        getAuthenticationMechanismsList() {
+      return authenticationMechanisms_;
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    public int getAuthenticationMechanismsCount() {
+      return authenticationMechanisms_.size();
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    public java.lang.String getAuthenticationMechanisms(int index) {
+      return authenticationMechanisms_.get(index);
+    }
+    /**
+     * <code>repeated string authenticationMechanisms = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAuthenticationMechanismsBytes(int index) {
+      return authenticationMechanisms_.getByteString(index);
+    }
+
     private void initFields() {
       rpcVersion_ = 0;
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.BIT_CONTROL;
       endpoint_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
+      authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -531,6 +610,9 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, endpoint_);
       }
+      for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+        output.writeBytes(4, authenticationMechanisms_.getByteString(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -551,6 +633,15 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, endpoint_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < authenticationMechanisms_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(authenticationMechanisms_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getAuthenticationMechanismsList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -679,6 +770,8 @@ public final class BitControl {
           endpointBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -723,6 +816,12 @@ public final class BitControl {
         } else {
           result.endpoint_ = endpointBuilder_.build();
         }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          authenticationMechanisms_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              authenticationMechanisms_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.authenticationMechanisms_ = authenticationMechanisms_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -747,6 +846,16 @@ public final class BitControl {
         }
         if (other.hasEndpoint()) {
           mergeEndpoint(other.getEndpoint());
+        }
+        if (!other.authenticationMechanisms_.isEmpty()) {
+          if (authenticationMechanisms_.isEmpty()) {
+            authenticationMechanisms_ = other.authenticationMechanisms_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureAuthenticationMechanismsIsMutable();
+            authenticationMechanisms_.addAll(other.authenticationMechanisms_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -959,6 +1068,99 @@ public final class BitControl {
           endpoint_ = null;
         }
         return endpointBuilder_;
+      }
+
+      // repeated string authenticationMechanisms = 4;
+      private com.google.protobuf.LazyStringList authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureAuthenticationMechanismsIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList(authenticationMechanisms_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public java.util.List<java.lang.String>
+          getAuthenticationMechanismsList() {
+        return java.util.Collections.unmodifiableList(authenticationMechanisms_);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public int getAuthenticationMechanismsCount() {
+        return authenticationMechanisms_.size();
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public java.lang.String getAuthenticationMechanisms(int index) {
+        return authenticationMechanisms_.get(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAuthenticationMechanismsBytes(int index) {
+        return authenticationMechanisms_.getByteString(index);
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public Builder setAuthenticationMechanisms(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public Builder addAuthenticationMechanisms(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public Builder addAllAuthenticationMechanisms(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureAuthenticationMechanismsIsMutable();
+        super.addAll(values, authenticationMechanisms_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public Builder clearAuthenticationMechanisms() {
+        authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string authenticationMechanisms = 4;</code>
+       */
+      public Builder addAuthenticationMechanismsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAuthenticationMechanismsIsMutable();
+        authenticationMechanisms_.add(value);
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.bit.control.BitControlHandshake)
@@ -6869,6 +7071,33 @@ public final class BitControl {
      */
     com.google.protobuf.ByteString
         getDefaultSchemaNameBytes();
+
+    // optional string session_id = 4;
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    boolean hasSessionId();
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    java.lang.String getSessionId();
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSessionIdBytes();
   }
   /**
    * Protobuf type {@code exec.bit.control.QueryContextInformation}
@@ -6934,6 +7163,11 @@ public final class BitControl {
             case 26: {
               bitField0_ |= 0x00000004;
               defaultSchemaName_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              sessionId_ = input.readBytes();
               break;
             }
           }
@@ -7079,10 +7313,66 @@ public final class BitControl {
       }
     }
 
+    // optional string session_id = 4;
+    public static final int SESSION_ID_FIELD_NUMBER = 4;
+    private java.lang.Object sessionId_;
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    public boolean hasSessionId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    public java.lang.String getSessionId() {
+      java.lang.Object ref = sessionId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          sessionId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string session_id = 4;</code>
+     *
+     * <pre>
+     * current session id
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSessionIdBytes() {
+      java.lang.Object ref = sessionId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        sessionId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       queryStartTime_ = 0L;
       timeZone_ = 0;
       defaultSchemaName_ = "";
+      sessionId_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -7105,6 +7395,9 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getDefaultSchemaNameBytes());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getSessionIdBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -7125,6 +7418,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getDefaultSchemaNameBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getSessionIdBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -7248,6 +7545,8 @@ public final class BitControl {
         bitField0_ = (bitField0_ & ~0x00000002);
         defaultSchemaName_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        sessionId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -7288,6 +7587,10 @@ public final class BitControl {
           to_bitField0_ |= 0x00000004;
         }
         result.defaultSchemaName_ = defaultSchemaName_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.sessionId_ = sessionId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7313,6 +7616,11 @@ public final class BitControl {
         if (other.hasDefaultSchemaName()) {
           bitField0_ |= 0x00000004;
           defaultSchemaName_ = other.defaultSchemaName_;
+          onChanged();
+        }
+        if (other.hasSessionId()) {
+          bitField0_ |= 0x00000008;
+          sessionId_ = other.sessionId_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -7534,6 +7842,104 @@ public final class BitControl {
   }
   bitField0_ |= 0x00000004;
         defaultSchemaName_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string session_id = 4;
+      private java.lang.Object sessionId_ = "";
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public boolean hasSessionId() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public java.lang.String getSessionId() {
+        java.lang.Object ref = sessionId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          sessionId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSessionIdBytes() {
+        java.lang.Object ref = sessionId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          sessionId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public Builder setSessionId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        sessionId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public Builder clearSessionId() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        sessionId_ = getDefaultInstance().getSessionId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string session_id = 4;</code>
+       *
+       * <pre>
+       * current session id
+       * </pre>
+       */
+      public Builder setSessionIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        sessionId_ = value;
         onChanged();
         return this;
       }
@@ -8978,53 +9384,54 @@ public final class BitControl {
     java.lang.String[] descriptorData = {
       "\n\020BitControl.proto\022\020exec.bit.control\032\025Ex" +
       "ecutionProtos.proto\032\022Coordination.proto\032" +
-      "\023UserBitShared.proto\"\213\001\n\023BitControlHands" +
+      "\023UserBitShared.proto\"\255\001\n\023BitControlHands" +
       "hake\022\023\n\013rpc_version\030\001 \001(\005\0225\n\007channel\030\002 \001" +
       "(\0162\027.exec.shared.RpcChannel:\013BIT_CONTROL" +
       "\022(\n\010endpoint\030\003 \001(\0132\026.exec.DrillbitEndpoi" +
-      "nt\"F\n\tBitStatus\0229\n\017fragment_status\030\001 \003(\013" +
-      "2 .exec.bit.control.FragmentStatus\"n\n\016Fr" +
-      "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha" +
-      "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013",
-      "2\030.exec.bit.FragmentHandle\"G\n\023Initialize" +
-      "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c" +
-      "ontrol.PlanFragment\".\n\rCustomMessage\022\014\n\004" +
-      "type\030\001 \001(\005\022\017\n\007message\030\002 \001(\014\"\374\003\n\014PlanFrag" +
-      "ment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragment" +
-      "Handle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost" +
-      "\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost" +
-      "\030\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fr" +
-      "agment\030\t \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec." +
-      "DrillbitEndpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec",
-      ".DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\010" +
-      "20000000\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n" +
-      "\013credentials\030\016 \001(\0132\034.exec.shared.UserCre" +
-      "dentials\022\024\n\014options_json\030\017 \001(\t\022:\n\007contex" +
-      "t\030\020 \001(\0132).exec.bit.control.QueryContextI" +
-      "nformation\022.\n\tcollector\030\021 \003(\0132\033.exec.bit" +
-      ".control.Collector\"\210\001\n\tCollector\022\"\n\032oppo" +
-      "site_major_fragment_id\030\001 \001(\005\022#\n\027incoming" +
-      "_minor_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_ou" +
-      "t_of_order\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n",
-      "\027QueryContextInformation\022\030\n\020query_start_" +
-      "time\030\001 \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default" +
-      "_schema_name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n" +
-      "\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndpoint\022" +
-      "\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001" +
-      "(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030\001 \001(\013" +
-      "2\030.exec.bit.FragmentHandle\022(\n\006sender\030\002 \001" +
-      "(\0132\030.exec.bit.FragmentHandle*\364\002\n\007RpcType" +
-      "\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n" +
-      "\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCE",
-      "L_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022" +
-      "\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STAT" +
-      "US\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_" +
-      "CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016\n\nRE" +
-      "Q_CUSTOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024" +
-      "RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_STATU" +
-      "S\020\r\022\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_CUSTO" +
-      "M\020\022B+\n\033org.apache.drill.exec.protoB\nBitC" +
-      "ontrolH\001"
+      "nt\022 \n\030authenticationMechanisms\030\004 \003(\t\"F\n\t" +
+      "BitStatus\0229\n\017fragment_status\030\001 \003(\0132 .exe" +
+      "c.bit.control.FragmentStatus\"n\n\016Fragment" +
+      "Status\0222\n\007profile\030\001 \001(\0132!.exec.shared.Mi",
+      "norFragmentProfile\022(\n\006handle\030\002 \001(\0132\030.exe" +
+      "c.bit.FragmentHandle\"G\n\023InitializeFragme" +
+      "nts\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.control" +
+      ".PlanFragment\".\n\rCustomMessage\022\014\n\004type\030\001" +
+      " \001(\005\022\017\n\007message\030\002 \001(\014\"\374\003\n\014PlanFragment\022(" +
+      "\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentHandle" +
+      "\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002" +
+      "\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002" +
+      "\022\025\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fragment" +
+      "\030\t \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec.Drillb",
+      "itEndpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drill" +
+      "bitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\010200000" +
+      "00\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n\013crede" +
+      "ntials\030\016 \001(\0132\034.exec.shared.UserCredentia" +
+      "ls\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001(" +
+      "\0132).exec.bit.control.QueryContextInforma" +
+      "tion\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.contr" +
+      "ol.Collector\"\210\001\n\tCollector\022\"\n\032opposite_m" +
+      "ajor_fragment_id\030\001 \001(\005\022#\n\027incoming_minor" +
+      "_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_o",
+      "rder\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027Query" +
+      "ContextInformation\022\030\n\020query_start_time\030\001" +
+      " \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schem" +
+      "a_name\030\003 \001(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017Work" +
+      "QueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.Dri" +
+      "llbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013r" +
+      "eport_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010" +
+      "receiver\030\001 \001(\0132\030.exec.bit.FragmentHandle" +
+      "\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHand" +
+      "le*\206\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013",
+      "\n\007GOODBYE\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020" +
+      "\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIV" +
+      "ER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022" +
+      "\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n" +
+      "\022\024\n\020REQ_QUERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FR" +
+      "AGMENT\020\020\022\016\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMEN" +
+      "T_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017" +
+      "RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016" +
+      "\022\017\n\013RESP_CUSTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033o" +
+      "rg.apache.drill.exec.protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -9036,7 +9443,7 @@ public final class BitControl {
           internal_static_exec_bit_control_BitControlHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_BitControlHandshake_descriptor,
-              new java.lang.String[] { "RpcVersion", "Channel", "Endpoint", });
+              new java.lang.String[] { "RpcVersion", "Channel", "Endpoint", "AuthenticationMechanisms", });
           internal_static_exec_bit_control_BitStatus_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_bit_control_BitStatus_fieldAccessorTable = new
@@ -9078,7 +9485,7 @@ public final class BitControl {
           internal_static_exec_bit_control_QueryContextInformation_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_QueryContextInformation_descriptor,
-              new java.lang.String[] { "QueryStartTime", "TimeZone", "DefaultSchemaName", });
+              new java.lang.String[] { "QueryStartTime", "TimeZone", "DefaultSchemaName", "SessionId", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
             getDescriptor().getMessageTypes().get(8);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,8 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
+
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -39,8 +40,12 @@ public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
     Preconditions.checkArgument(children.isEmpty());
     final List<MockScanEntry> entries = config.getReadEntries();
     final List<RecordReader> readers = Lists.newArrayList();
-    for(final MockScanEntry e : entries) {
-      readers.add(new MockRecordReader(context, e));
+    for(final MockTableDef.MockScanEntry e : entries) {
+      if ( e.isExtended( ) ) {
+        readers.add(new ExtendedMockRecordReader(context, e));
+      } else {
+        readers.add(new MockRecordReader(context, e));
+      }
     }
     return new ScanBatch(config, context, readers.iterator());
   }

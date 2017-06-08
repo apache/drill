@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.data;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -36,38 +37,32 @@ public class DataConnectionCreator implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionCreator.class);
 
   private volatile DataServer server;
-  private final BootStrapContext context;
-  private final WorkEventBus workBus;
-  private final WorkerBee bee;
-  private final boolean allowPortHunting;
-  private ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
-  private final BufferAllocator dataAllocator;
+  private final ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
 
-  public DataConnectionCreator(
-      BootStrapContext context,
-      BufferAllocator allocator,
-      WorkEventBus workBus,
-      WorkerBee bee,
-      boolean allowPortHunting) {
-    super();
-    this.context = context;
-    this.workBus = workBus;
-    this.bee = bee;
-    this.allowPortHunting = allowPortHunting;
-    this.dataAllocator = allocator;
+  private final DataConnectionConfig config;
+
+  public DataConnectionCreator(BootStrapContext context, BufferAllocator allocator, WorkEventBus workBus,
+                               WorkerBee bee) throws DrillbitStartupException {
+    config = new DataConnectionConfig(allocator, context, new DataServerRequestHandler(workBus, bee));
+
+    // Initialize the singleton instance of DataRpcMetrics.
+    ((DataRpcMetrics) DataRpcMetrics.getInstance()).initialize(config.isEncryptionEnabled(), allocator);
   }
 
-  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
-    server = new DataServer(context, dataAllocator, workBus, bee);
-    int port = server.bind(partialEndpoint.getControlPort() + 1, allowPortHunting);
-    DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setDataPort(port).build();
-    return completeEndpoint;
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, boolean allowPortHunting) {
+    server = new DataServer(config);
+    int port = partialEndpoint.getControlPort() + 1;
+    if (config.getBootstrapContext().getConfig().hasPath(ExecConstants.INITIAL_DATA_PORT)) {
+      port = config.getBootstrapContext().getConfig().getInt(ExecConstants.INITIAL_DATA_PORT);
+    }
+    port = server.bind(port, allowPortHunting);
+    return partialEndpoint.toBuilder().setDataPort(port).build();
   }
 
   public DataTunnel getTunnel(DrillbitEndpoint endpoint) {
-    DataConnectionManager newManager = new DataConnectionManager(endpoint, context);
+    DataConnectionManager newManager = new DataConnectionManager(endpoint, config);
     DataConnectionManager oldManager = connectionManager.putIfAbsent(endpoint, newManager);
-    if(oldManager != null){
+    if (oldManager != null) {
       newManager = oldManager;
     }
     return new DataTunnel(newManager);
@@ -75,7 +70,7 @@ public class DataConnectionCreator implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    AutoCloseables.close(server, dataAllocator);
+    AutoCloseables.close(server, config.getAllocator());
   }
 
 }

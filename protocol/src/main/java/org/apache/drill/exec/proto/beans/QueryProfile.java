@@ -67,6 +67,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private String verboseError;
     private String errorId;
     private String errorNode;
+    private String optionsJson;
+    private long planEnd;
+    private long queueWaitEnd;
 
     public QueryProfile()
     {
@@ -283,6 +286,45 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // optionsJson
+
+    public String getOptionsJson()
+    {
+        return optionsJson;
+    }
+
+    public QueryProfile setOptionsJson(String optionsJson)
+    {
+        this.optionsJson = optionsJson;
+        return this;
+    }
+
+    // planEnd
+
+    public long getPlanEnd()
+    {
+        return planEnd;
+    }
+
+    public QueryProfile setPlanEnd(long planEnd)
+    {
+        this.planEnd = planEnd;
+        return this;
+    }
+
+    // queueWaitEnd
+
+    public long getQueueWaitEnd()
+    {
+        return queueWaitEnd;
+    }
+
+    public QueryProfile setQueueWaitEnd(long queueWaitEnd)
+    {
+        this.queueWaitEnd = queueWaitEnd;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -390,6 +432,15 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                 case 16:
                     message.errorNode = input.readString();
                     break;
+                case 17:
+                    message.optionsJson = input.readString();
+                    break;
+                case 18:
+                    message.planEnd = input.readInt64();
+                    break;
+                case 19:
+                    message.queueWaitEnd = input.readInt64();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -455,6 +506,15 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
         if(message.errorNode != null)
             output.writeString(16, message.errorNode, false);
+
+        if(message.optionsJson != null)
+            output.writeString(17, message.optionsJson, false);
+
+        if(message.planEnd != 0)
+            output.writeInt64(18, message.planEnd, false);
+
+        if(message.queueWaitEnd != 0)
+            output.writeInt64(19, message.queueWaitEnd, false);
     }
 
     public String getFieldName(int number)
@@ -477,6 +537,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 14: return "verboseError";
             case 15: return "errorId";
             case 16: return "errorNode";
+            case 17: return "optionsJson";
+            case 18: return "planEnd";
+            case 19: return "queueWaitEnd";
             default: return null;
         }
     }
@@ -506,6 +569,9 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("verboseError", 14);
         __fieldMap.put("errorId", 15);
         __fieldMap.put("errorNode", 16);
+        __fieldMap.put("optionsJson", 17);
+        __fieldMap.put("planEnd", 18);
+        __fieldMap.put("queueWaitEnd", 19);
     }
     
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -66,6 +66,11 @@ public class JdbcAssert {
   public static Properties getDefaultProperties() {
     final Properties properties = new Properties();
     properties.setProperty("drillJDBCUnitTests", "true");
+
+    // Must set this to false to ensure that the tests ignore any existing
+    // plugin configurations stored in /tmp/drill.
+
+    properties.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
     properties.setProperty(ExecConstants.HTTP_ENABLE, "false");
     return properties;
   }
@@ -162,7 +167,7 @@ public class JdbcAssert {
       this.info = info;
       this.adapter = new ConnectionFactoryAdapter() {
         @Override
-        public Connection createConnection() throws Exception {
+        public Connection createConnection() throws SQLException {
           return factory.getConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
         }
       };
@@ -246,7 +251,6 @@ public class JdbcAssert {
       }
     }
 
-
     /**
      * Checks that the current SQL statement returns the expected result lines. Lines are compared unordered; the test
      * succeeds if the query returns these lines in any order.
@@ -291,7 +295,6 @@ public class JdbcAssert {
           connection.close();
         }
       }
-
     }
 
     private SortedSet<String> unsortedList(List<String> strings) {
@@ -353,7 +356,6 @@ public class JdbcAssert {
   private static interface ConnectionFactoryAdapter {
     Connection createConnection() throws Exception;
   }
-
 }
 
 // End JdbcAssert.java

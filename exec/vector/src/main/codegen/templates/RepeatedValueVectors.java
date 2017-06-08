@@ -160,23 +160,23 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     }
   }
 
-    public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
-      final Accessor vAccessor = v.getAccessor();
-      final int count = vAccessor.getInnerValueCountAt(inIndex);
-      mutator.startNewValue(outIndex);
-      for (int i = 0; i < count; i++) {
-        mutator.add(outIndex, vAccessor.get(inIndex, i));
-      }
+  public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
+    final Accessor vAccessor = v.getAccessor();
+    final int count = vAccessor.getInnerValueCountAt(inIndex);
+    mutator.startNewValue(outIndex);
+    for (int i = 0; i < count; i++) {
+      mutator.add(outIndex, vAccessor.get(inIndex, i));
     }
+  }
 
-    public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
-      final Accessor vAccessor = v.getAccessor();
-      final int count = vAccessor.getInnerValueCountAt(inIndex);
-      mutator.startNewValue(outIndex);
-      for (int i = 0; i < count; i++) {
-        mutator.addSafe(outIndex, vAccessor.get(inIndex, i));
-      }
+  public void copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v) {
+    final Accessor vAccessor = v.getAccessor();
+    final int count = vAccessor.getInnerValueCountAt(inIndex);
+    mutator.startNewValue(outIndex);
+    for (int i = 0; i < count; i++) {
+      mutator.addSafe(outIndex, vAccessor.get(inIndex, i));
     }
+  }
 
   public boolean allocateNewSafe() {
     /* boolean to keep track if all the memory allocation were successful
@@ -236,7 +236,6 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
 
   <#else>
-
   @Override
   public void allocateNew(int valueCount, int innerValueCount) {
     clear();
@@ -258,7 +257,6 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
 
   </#if>
-
   // This is declared a subclass of the accessor declared inside of FixedWidthVector, this is also used for
   // variable length vectors, as they should ahve consistent interface as much as possible, if they need to diverge
   // in the future, the interface shold be declared in the respective value vector superclasses for fixed and variable
@@ -348,7 +346,6 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     }
 
     <#else>
-
     public void addSafe(int index, ${minor.javaType!type.javaType} srcValue) {
       final int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().setSafe(nextOffset, srcValue);
@@ -356,7 +353,6 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     }
 
     </#if>
-
     public void setSafe(int index, Repeated${minor.class}Holder h) {
       final ${minor.class}Holder ih = new ${minor.class}Holder();
       final ${minor.class}Vector.Accessor hVectorAccessor = h.vector.getAccessor();
@@ -385,8 +381,16 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
       values.getMutator().setSafe(nextOffset, <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
       offsets.getMutator().setSafe(arrayIndex+1, nextOffset+1);
     }
-    </#if>
 
+    </#if>
+    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
+    public void addSafe(int index, BigDecimal value) {
+      int nextOffset = offsets.getAccessor().get(index+1);
+      values.getMutator().setSafe(nextOffset, value);
+      offsets.getMutator().setSafe(index+1, nextOffset+1);
+    }
+
+    </#if>
     protected void add(int index, ${minor.class}Holder holder) {
       int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().set(nextOffset, holder);

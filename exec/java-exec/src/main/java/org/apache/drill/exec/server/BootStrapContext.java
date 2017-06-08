@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,35 +20,67 @@ package org.apache.drill.exec.server;
 import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.drill.common.DrillAutoCloseables;
+import java.util.concurrent.SynchronousQueue;
+import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.KerberosUtil;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
+import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
+import org.apache.drill.exec.rpc.security.AuthenticatorProviderImpl;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public class BootStrapContext implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
+  // Tests and embedded servers need a small footprint, so the minimum
+  // scan count is small. The actual value is set by the
+  // ExecConstants.SCAN_THREADPOOL_SIZE. If the number below
+  // is large, then tests cannot shrink the number using the
+  // config property.
+  private static final int MIN_SCAN_THREADPOOL_SIZE = 4; // Magic num
+
+  // DRILL_HOST_NAME sets custom host name. See drill-env.sh for details.
+  private static final String customHostName = System.getenv("DRILL_HOST_NAME");
+  private static final String processUserName = System.getProperty("user.name");
+
+  private static final String SERVICE_LOGIN_PREFIX = "drill.exec.security.auth";
+  public static final String SERVICE_PRINCIPAL = SERVICE_LOGIN_PREFIX + ".principal";
+  public static final String SERVICE_KEYTAB_LOCATION = SERVICE_LOGIN_PREFIX + ".keytab";
+  public static final String KERBEROS_NAME_MAPPING = SERVICE_LOGIN_PREFIX + ".auth_to_local";
 
   private final DrillConfig config;
+  private final AuthenticatorProvider authProvider;
   private final EventLoopGroup loop;
   private final EventLoopGroup loop2;
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
   private final ExecutorService executor;
+  private final ExecutorService scanExecutor;
+  private final ExecutorService scanDecodeExecutor;
+  private final String hostName;
 
-  public BootStrapContext(DrillConfig config, ScanResult classpathScan) {
+  public BootStrapContext(DrillConfig config, ScanResult classpathScan) throws DrillbitStartupException {
     this.config = config;
     this.classpathScan = classpathScan;
+    this.hostName = getCanonicalHostName();
+    login(config);
+    this.authProvider = new AuthenticatorProviderImpl(config, classpathScan);
     this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
     this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
     // Note that metrics are stored in a static instance
@@ -65,10 +97,93 @@ public class BootStrapContext implements AutoCloseable {
         super.afterExecute(r, t);
       }
     };
+    // Setup two threadpools one for reading raw data from disk and another for decoding the data
+    // A good guideline is to have the number threads in the scan pool to be a multiple (fractional
+    // numbers are ok) of the number of disks.
+    // A good guideline is to have the number threads in the decode pool to be a small multiple (fractional
+    // numbers are ok) of the number of cores.
+    final int numCores = Runtime.getRuntime().availableProcessors();
+    final int numScanThreads = (int) (config.getDouble(ExecConstants.SCAN_THREADPOOL_SIZE));
+    final int numScanDecodeThreads = (int) config.getDouble(ExecConstants.SCAN_DECODE_THREADPOOL_SIZE);
+    final int scanThreadPoolSize =
+        MIN_SCAN_THREADPOOL_SIZE > numScanThreads ? MIN_SCAN_THREADPOOL_SIZE : numScanThreads;
+    final int scanDecodeThreadPoolSize =
+        (numCores + 1) / 2 > numScanDecodeThreads ? (numCores + 1) / 2 : numScanDecodeThreads;
+    this.scanExecutor = Executors.newFixedThreadPool(scanThreadPoolSize, new NamedThreadFactory("scan-"));
+    this.scanDecodeExecutor =
+        Executors.newFixedThreadPool(scanDecodeThreadPoolSize, new NamedThreadFactory("scan-decode-"));
+  }
+
+  private void login(final DrillConfig config) throws DrillbitStartupException {
+    try {
+      if (config.hasPath(SERVICE_PRINCIPAL)) {
+        // providing a service principal => Kerberos mechanism
+        final Configuration loginConf = new Configuration();
+        loginConf.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
+            UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
+
+        // set optional user name mapping
+        if (config.hasPath(KERBEROS_NAME_MAPPING)) {
+          loginConf.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTH_TO_LOCAL,
+              config.getString(KERBEROS_NAME_MAPPING));
+        }
+
+        UserGroupInformation.setConfiguration(loginConf);
+
+        // service principal canonicalization
+        final String principal = config.getString(SERVICE_PRINCIPAL);
+        final String parts[] = KerberosUtil.splitPrincipalIntoParts(principal);
+        if (parts.length != 3) {
+          throw new DrillbitStartupException(
+              String.format("Invalid %s, Drill service principal must be of format: primary/instance@REALM",
+                  SERVICE_PRINCIPAL));
+        }
+        parts[1] = KerberosUtil.canonicalizeInstanceName(parts[1], hostName);
+
+        final String canonicalizedPrincipal = KerberosUtil.getPrincipalFromParts(parts[0], parts[1], parts[2]);
+        final String keytab = config.getString(SERVICE_KEYTAB_LOCATION);
+
+        // login to KDC (AS)
+        // Note that this call must happen before any call to UserGroupInformation#getLoginUser,
+        // but there is no way to enforce the order (this static init. call and parameters from
+        // DrillConfig are both required).
+        UserGroupInformation.loginUserFromKeytab(canonicalizedPrincipal, keytab);
+
+        logger.info("Process user name: '{}' and logged in successfully as '{}'", processUserName,
+            canonicalizedPrincipal);
+      } else {
+        UserGroupInformation.getLoginUser(); // init
+      }
+
+      // ugi does not support logout
+    } catch (final IOException e) {
+      throw new DrillbitStartupException("Failed to login.", e);
+    }
+
+  }
+
+  private static String getCanonicalHostName() throws DrillbitStartupException {
+    try {
+      return customHostName != null ? customHostName : InetAddress.getLocalHost().getCanonicalHostName();
+    } catch (final UnknownHostException e) {
+      throw new DrillbitStartupException("Could not get canonical hostname.", e);
+    }
+  }
+
+  public String getHostName() {
+    return hostName;
   }
 
   public ExecutorService getExecutor() {
     return executor;
+  }
+
+  public ExecutorService getScanExecutor() {
+    return scanExecutor;
+  }
+
+  public ExecutorService getScanDecodeExecutor() {
+    return scanDecodeExecutor;
   }
 
   public DrillConfig getConfig() {
@@ -93,6 +208,10 @@ public class BootStrapContext implements AutoCloseable {
 
   public ScanResult getClasspathScan() {
     return classpathScan;
+  }
+
+  public AuthenticatorProvider getAuthProvider() {
+    return authProvider;
   }
 
   @Override
@@ -124,6 +243,10 @@ public class BootStrapContext implements AutoCloseable {
       }
     }
 
-    DrillAutoCloseables.closeNoChecked(allocator);
+    try {
+      AutoCloseables.close(allocator, authProvider);
+    } catch (final Exception e) {
+      logger.error("Error while closing", e);
+    }
   }
 }

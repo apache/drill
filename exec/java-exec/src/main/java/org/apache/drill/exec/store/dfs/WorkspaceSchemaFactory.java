@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -41,6 +42,7 @@ import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.TableMacro;
 import org.apache.calcite.schema.TranslatableTable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -51,13 +53,13 @@ import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
-import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
@@ -520,7 +522,6 @@ public class WorkspaceSchemaFactory {
       } catch (UnsupportedOperationException e) {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
-
       return tables.get(tableKey);
     }
 
@@ -538,7 +539,7 @@ public class WorkspaceSchemaFactory {
     }
 
     @Override
-    public CreateTableEntry createNewTable(String tableName, List<String> partitonColumns) {
+    public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
       String storage = schemaConfig.getOption(ExecConstants.OUTPUT_FORMAT_OPTION).string_val;
       FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
       if (formatPlugin == null) {
@@ -551,7 +552,8 @@ public class WorkspaceSchemaFactory {
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName,
-          partitonColumns);
+          partitionColumns,
+          storageStrategy);
     }
 
     @Override
@@ -738,5 +740,50 @@ public class WorkspaceSchemaFactory {
             .build(logger);
       }
     }
+
+    @Override
+    public List<Pair<String, TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
+      final List<Pair<String, TableType>> tableNamesAndTypes = Lists.newArrayList();
+
+      // Look for raw tables first
+      if (!tables.isEmpty()) {
+        for (Map.Entry<TableInstance, DrillTable> tableEntry : tables.entrySet()) {
+          tableNamesAndTypes
+              .add(Pair.of(tableEntry.getKey().sig.name, tableEntry.getValue().getJdbcTableType()));
+        }
+      }
+      // Then look for files that start with this name and end in .drill.
+      List<DotDrillFile> files = Collections.emptyList();
+      try {
+        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), DotDrillType.VIEW);
+      } catch (AccessControlException e) {
+        if (!schemaConfig.getIgnoreAuthErrors()) {
+          logger.debug(e.getMessage());
+          throw UserException.permissionError(e)
+              .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
+              .build(logger);
+        }
+      } catch (IOException e) {
+        logger.warn("Failure while trying to list view tables in workspace [{}]", getFullSchemaName(), e);
+      } catch (UnsupportedOperationException e) {
+        // the file system (e.g. the classpath filesystem) may not support listing
+        // of files. But see getViews(), it ignores the exception and continues
+        logger.debug("Failure while trying to list view tables in workspace [{}]", getFullSchemaName(), e);
+      }
+
+      try {
+        for (DotDrillFile f : files) {
+          if (f.getType() == DotDrillType.VIEW) {
+            tableNamesAndTypes.add(Pair.of(f.getBaseName(), TableType.VIEW));
+          }
+        }
+      } catch (UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support this operation.", e);
+      }
+
+      return tableNamesAndTypes;
+    }
+
   }
+
 }

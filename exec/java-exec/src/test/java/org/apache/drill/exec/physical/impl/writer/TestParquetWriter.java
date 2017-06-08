@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import static org.apache.drill.exec.store.parquet.ParquetRecordWriter.DRILL_VERSION_PROPERTY;
+import static org.apache.drill.TestBuilder.convertToLocalTimestamp;
 import static org.apache.parquet.format.converter.ParquetMetadataConverter.SKIP_ROW_GROUPS;
 import static org.junit.Assert.assertEquals;
 
@@ -25,24 +26,25 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.store.parquet.ParquetRecordWriter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.format.converter.ParquetMetadataConverter.MetadataFilter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.joda.time.DateTime;
@@ -53,9 +55,17 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class TestParquetWriter extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
+
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[][] { {100} });
+  }
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -104,10 +114,13 @@ public class TestParquetWriter extends BaseTestQuery {
 
   private String allTypesTable = "cp.`/parquet/alltypes.json`";
 
+  @Parameterized.Parameter
+  public int repeat = 1;
+
   @BeforeClass
   public static void initFs() throws Exception {
     Configuration conf = new Configuration();
-    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "local");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
     fs = FileSystem.get(conf);
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
@@ -358,7 +371,7 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate("*", "*", inputTable, "nullable_test");
   }
 
-  @Ignore("Binary file too large for version control, TODO - make available on S3 bucket or similar service")
+  @Ignore("Test file not available")
   @Test
   public void testBitError_Drill_2031() throws Exception {
     compareParquetReadersHyperVector("*", "dfs.`/tmp/wide2/0_0_3.parquet`");
@@ -370,8 +383,7 @@ public class TestParquetWriter extends BaseTestQuery {
         "cast(salary as decimal(24,2)) as decimal24, cast(salary as decimal(38,2)) as decimal38";
     String validateSelection = "decimal8, decimal15, decimal24, decimal38";
     String inputTable = "cp.`employee.json`";
-    runTestAndValidate(selection, validateSelection, inputTable,
-        "parquet_decimal");
+    runTestAndValidate(selection, validateSelection, inputTable, "parquet_decimal");
   }
 
   @Test
@@ -438,17 +450,13 @@ public class TestParquetWriter extends BaseTestQuery {
       testBuilder()
         .ordered()
         .sqlQuery(query)
-        .optionSettingQueriesForTestQuery(
-            "alter system set `store.parquet.use_new_reader` = false")
+        .optionSettingQueriesForTestQuery("alter system set `store.parquet.use_new_reader` = false")
         .sqlBaselineQuery(query)
-        .optionSettingQueriesForBaseline(
-            "alter system set `store.parquet.use_new_reader` = true")
+        .optionSettingQueriesForBaseline("alter system set `store.parquet.use_new_reader` = true")
         .build().run();
     } finally {
-      test("alter system set `%s` = %b",
-          ExecConstants.PARQUET_NEW_RECORD_READER,
-          ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR
-              .getDefault().bool_val);
+      test("alter system set `%s` = %b", ExecConstants.PARQUET_NEW_RECORD_READER,
+          ExecConstants.PARQUET_RECORD_READER_IMPLEMENTATION_VALIDATOR.getDefault().bool_val);
     }
   }
 
@@ -474,47 +482,44 @@ public class TestParquetWriter extends BaseTestQuery {
     }
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testReadVoter() throws Exception {
     compareParquetReadersHyperVector("*", "dfs.`/tmp/voter.parquet`");
   }
 
-  @Ignore
+  @Ignore("Test file not available")
   @Test
   public void testReadSf_100_supplier() throws Exception {
     compareParquetReadersHyperVector("*", "dfs.`/tmp/sf100_supplier.parquet`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testParquetRead_checkNulls_NullsFirst() throws Exception {
     compareParquetReadersColumnar("*",
         "dfs.`/tmp/parquet_with_nulls_should_sum_100000_nulls_first.parquet`");
   }
 
-  @Ignore
+  @Ignore("Test file not available")
   @Test
   public void testParquetRead_checkNulls() throws Exception {
-    compareParquetReadersColumnar("*",
-        "dfs.`/tmp/parquet_with_nulls_should_sum_100000.parquet`");
+    compareParquetReadersColumnar("*", "dfs.`/tmp/parquet_with_nulls_should_sum_100000.parquet`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void test958_sql() throws Exception {
-    compareParquetReadersHyperVector("ss_ext_sales_price",
-        "dfs.`/tmp/store_sales`");
+    compareParquetReadersHyperVector("ss_ext_sales_price", "dfs.`/tmp/store_sales`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testReadSf_1_supplier() throws Exception {
-    compareParquetReadersHyperVector("*",
-        "dfs.`/tmp/orders_part-m-00001.parquet`");
+    compareParquetReadersHyperVector("*", "dfs.`/tmp/orders_part-m-00001.parquet`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void test958_sql_all_columns() throws Exception {
     compareParquetReadersHyperVector("*", "dfs.`/tmp/store_sales`");
@@ -525,13 +530,13 @@ public class TestParquetWriter extends BaseTestQuery {
 //        "dfs.`/tmp/store_sales`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testDrill_1314() throws Exception {
     compareParquetReadersColumnar("l_partkey ", "dfs.`/tmp/drill_1314.parquet`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testDrill_1314_all_columns() throws Exception {
     compareParquetReadersHyperVector("*", "dfs.`/tmp/drill_1314.parquet`");
@@ -540,19 +545,19 @@ public class TestParquetWriter extends BaseTestQuery {
         "dfs.`/tmp/drill_1314.parquet`");
   }
 
-  @Ignore
+  @Ignore("Test file not available")
   @Test
   public void testParquetRead_checkShortNullLists() throws Exception {
     compareParquetReadersColumnar("*", "dfs.`/tmp/short_null_lists.parquet`");
   }
 
-  @Ignore
+  @Ignore("Test file not available")
   @Test
   public void testParquetRead_checkStartWithNull() throws Exception {
     compareParquetReadersColumnar("*", "dfs.`/tmp/start_with_null.parquet`");
   }
 
-  @Ignore
+  @Ignore("Binary file too large for version control")
   @Test
   public void testParquetReadWebReturns() throws Exception {
     compareParquetReadersColumnar("wr_returning_customer_sk", "dfs.`/tmp/web_returns`");
@@ -739,27 +744,74 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
-  Test the reading of an int96 field. Impala encodes timestamps as int96 fields
+    Impala encodes timestamp values as int96 fields. Test the reading of an int96 field with two converters:
+    the first one converts parquet INT96 into drill VARBINARY and the second one (works while
+    store.parquet.reader.int96_as_timestamp option is enabled) converts parquet INT96 into drill TIMESTAMP.
    */
   @Test
   public void testImpalaParquetInt96() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+    try {
+      test("alter session set %s = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+    } finally {
+      test("alter session reset %s", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
   }
 
   /*
-  Test the reading of a binary field where data is in dicationary _and_ non-dictionary encoded pages
+  Test the reading of a binary field as drill varbinary where data is in dicationary _and_ non-dictionary encoded pages
    */
   @Test
-  public void testImpalaParquetVarBinary_DictChange() throws Exception {
+  public void testImpalaParquetBinaryAsVarBinary_DictChange() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+  }
+
+  /*
+  Test the reading of a binary field as drill timestamp where data is in dicationary _and_ non-dictionary encoded pages
+   */
+  @Test
+  @Ignore("relies on particular time zone, works for UTC")
+  public void testImpalaParquetBinaryAsTimeStamp_DictChange() throws Exception {
+    final String WORKING_PATH = TestTools.getWorkingPath();
+    final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+    try {
+      testBuilder()
+          .sqlQuery("select int96_ts from dfs_test.`%s/parquet/int96_dict_change` order by int96_ts", TEST_RES_PATH)
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .ordered()
+          .csvBaselineFile("testframework/testParquetReader/testInt96DictChange/q1.tsv")
+          .baselineTypes(TypeProtos.MinorType.TIMESTAMP)
+          .baselineColumns("int96_ts")
+          .build().run();
+    } finally {
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
   }
 
   /*
      Test the conversion from int96 to impala timestamp
    */
   @Test
-  public void testImpalaParquetTimestampAsInt96() throws Exception {
+  public void testTimestampImpalaConvertFrom() throws Exception {
     compareParquetReadersColumnar("convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
+     Test reading parquet Int96 as TimeStamp and comparing obtained values with the
+     old results (reading the same values as VarBinary and convert_fromTIMESTAMP_IMPALA function using)
+   */
+  @Test
+  public void testImpalaParquetTimestampInt96AsTimeStamp() throws Exception {
+    try {
+      test("alter session set %s = false", ExecConstants.PARQUET_NEW_RECORD_READER);
+      compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+      test("alter session set %s = true", ExecConstants.PARQUET_NEW_RECORD_READER);
+      compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+    } finally {
+      test("alter session reset `%s`", ExecConstants.PARQUET_NEW_RECORD_READER);
+    }
   }
 
   /*
@@ -775,7 +827,8 @@ public class TestParquetWriter extends BaseTestQuery {
   */
   @Test
   public void testHiveParquetTimestampAsInt96_compare() throws Exception {
-    compareParquetReadersColumnar("convert_from(timestamp_field, 'TIMESTAMP_IMPALA')", "cp.`parquet/part1/hive_all_types.parquet`");
+    compareParquetReadersColumnar("convert_from(timestamp_field, 'TIMESTAMP_IMPALA')",
+        "cp.`parquet/part1/hive_all_types.parquet`");
   }
 
   /*
@@ -857,6 +910,79 @@ public class TestParquetWriter extends BaseTestQuery {
     compareParquetReadersColumnar(
         "c_varchar, c_integer, c_bigint, c_float, c_double, c_date, c_time, c_timestamp, c_boolean",
         "cp.`parquet/last_page_one_null.parquet`");
+  }
+
+  private void compareParquetInt96Converters(String selection, String table) throws Exception {
+    try {
+      testBuilder()
+          .ordered()
+          .sqlQuery("select `%1$s` from %2$s order by `%1$s`", selection, table)
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .sqlBaselineQuery("select convert_from(`%1$s`, 'TIMESTAMP_IMPALA') as `%1$s` from %2$s order by `%1$s`",
+              selection, table)
+          .optionSettingQueriesForBaseline(
+              "alter session set `%s` = false", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .build()
+          .run();
+    } finally {
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
+  }
+
+  @Ignore ("Used to test decompression in AsyncPageReader. Takes too long.")
+  @Test
+  public void testTPCHReadWriteRunRepeated() throws Exception {
+    for (int i = 1; i <= repeat; i++) {
+      if(i%100 == 0) {
+        System.out.println("\n\n Iteration : "+i +"\n");
+      }
+      testTPCHReadWriteGzip();
+      testTPCHReadWriteSnappy();
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteGzip() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = 'gzip'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+      String inputTable = "cp.`tpch/supplier.parquet`";
+        runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
+    } finally {
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteSnappy() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = 'snappy'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE));
+      String inputTable = "cp.`supplier_snappy.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
+    } finally {
+      test(String.format("alter session set `%s` = '%s'", ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR.getDefault().string_val));
+    }
+  }
+
+  @Test // DRILL-5097
+  public void testInt96TimeStampValueWidth() throws Exception {
+    try {
+      testBuilder()
+          .unOrdered()
+          .sqlQuery("select c, d from cp.`parquet/data.snappy.parquet` " +
+              "where `a` is not null and `c` is not null and `d` is not null")
+          .optionSettingQueriesForTestQuery(
+              "alter session set `%s` = true", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP)
+          .baselineColumns("c", "d")
+          .baselineValues(new DateTime(Date.valueOf("2012-12-15").getTime()),
+              new DateTime(convertToLocalTimestamp("2016-04-24 20:06:28")))
+          .baselineValues(new DateTime(Date.valueOf("2011-07-09").getTime()),
+              new DateTime(convertToLocalTimestamp("2015-04-15 22:35:49")))
+          .build()
+          .run();
+    } finally {
+      test("alter system reset `%s`", ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
   }
 
 }

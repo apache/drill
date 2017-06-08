@@ -96,6 +96,7 @@
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-mongo-storage</include>
         <include>org.apache.drill.contrib:drill-storage-hbase</include>
+        <include>org.apache.drill.contrib:drill-format-mapr</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage</include>
         <include>org.apache.drill.contrib:drill-kudu-storage</include>
         <include>org.apache.drill.contrib:drill-gis</include>
@@ -118,7 +119,9 @@
         <exclude>org.apache.drill</exclude>
         <exclude>org.apache.drill.exec</exclude>
         <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.data</exclude>
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.apache.drill.memory</exclude>
         <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
         <exclude>org.apache.hive:hive-common</exclude>
         <exclude>org.apache.hive:hive-serde</exclude>

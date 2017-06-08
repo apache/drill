@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -29,7 +30,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.DrillTestWrapper.TestServices;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -49,7 +52,6 @@ import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -64,15 +66,17 @@ import org.junit.runner.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import java.util.ArrayList;
+import java.util.Arrays;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
-  protected static final String TEMP_SCHEMA = "dfs_test.tmp";
+  public static final String TEMP_SCHEMA = "dfs_test.tmp";
 
-  private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
   private static final int MAX_WIDTH_PER_NODE = 2;
 
   @SuppressWarnings("serial")
@@ -127,6 +131,10 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {
+    updateTestCluster(newDrillbitCount, newConfig, null);
+  }
+
+  protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig, Properties properties) {
     Preconditions.checkArgument(newDrillbitCount > 0, "Number of Drillbits must be at least one");
     if (drillbitCount != newDrillbitCount || config != null) {
       // TODO: Currently we have to shutdown the existing Drillbit cluster before starting a new one with the given
@@ -139,7 +147,7 @@ public class BaseTestQuery extends ExecTest {
           // of the @BeforeClass method of test class.
           config = newConfig;
         }
-        openClient();
+        openClient(properties);
       } catch(Exception e) {
         throw new RuntimeException("Failure while updating the test Drillbit cluster.", e);
       }
@@ -175,12 +183,12 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static void openClient() throws Exception {
+    openClient(null);
+  }
+
+  private static void openClient(Properties properties) throws Exception {
     allocator = RootAllocatorFactory.newRoot(config);
-    if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
-      serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-    } else {
-      serviceSet = RemoteServiceSet.getLocalServiceSet();
-    }
+    serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
 
@@ -194,7 +202,7 @@ public class BaseTestQuery extends ExecTest {
       TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
     }
 
-    client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, null);
+    client = QueryTestUtil.createClient(config,  serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   /**
@@ -229,9 +237,9 @@ public class BaseTestQuery extends ExecTest {
    */
   public static void updateClient(final String user, final String password) throws Exception {
     final Properties props = new Properties();
-    props.setProperty(UserSession.USER, user);
+    props.setProperty(DrillProperties.USER, user);
     if (password != null) {
-      props.setProperty(UserSession.PASSWORD, password);
+      props.setProperty(DrillProperties.PASSWORD, password);
     }
     updateClient(props);
   }
@@ -244,8 +252,26 @@ public class BaseTestQuery extends ExecTest {
     return testBuilder();
   }
 
+
+  public static class ClassicTestServices implements TestServices {
+    @Override
+    public BufferAllocator allocator() {
+      return allocator;
+    }
+
+    @Override
+    public void test(String query) throws Exception {
+      BaseTestQuery.test(query);
+    }
+
+    @Override
+    public List<QueryDataBatch> testRunAndReturn(final QueryType type, final Object query) throws Exception {
+      return BaseTestQuery.testRunAndReturn(type, query);
+    }
+  }
+
   public static TestBuilder testBuilder() {
-    return new TestBuilder(allocator);
+    return new TestBuilder(new ClassicTestServices());
   }
 
   @AfterClass
@@ -385,8 +411,8 @@ public class BaseTestQuery extends ExecTest {
       } catch (AssertionError e) {
         e.addSuppressed(actualException);
         throw e;
-      }
     }
+  }
   }
 
   /**
@@ -422,19 +448,6 @@ public class BaseTestQuery extends ExecTest {
 
     return file.getPath();
   }
-
-  /**
-   * Create a temp directory to store the given <i>dirName</i>
-   * @param dirName
-   * @return Full path including temp parent directory and given directory name.
-   */
-  public static String getTempDir(final String dirName) {
-    final File dir = Files.createTempDir();
-    dir.deleteOnExit();
-
-    return dir.getAbsolutePath() + File.separator + dirName;
-  }
-
 
   protected static void setSessionOption(final String option, final String value) {
     try {
@@ -515,4 +528,69 @@ public class BaseTestQuery extends ExecTest {
 
     return formattedResults.toString();
   }
-}
+
+
+  public class TestResultSet {
+
+    private final List<List<String>> rows;
+
+    public TestResultSet() {
+      rows = new ArrayList<>();
+    }
+
+    public TestResultSet(List<QueryDataBatch> batches) throws SchemaChangeException {
+      rows = new ArrayList<>();
+      convert(batches);
+    }
+
+    public void addRow(String... cells) {
+      List<String> newRow = Arrays.asList(cells);
+      rows.add(newRow);
+    }
+
+    public int size() {
+      return rows.size();
+    }
+
+    @Override public boolean equals(Object o) {
+      boolean result = false;
+
+      if (this == o) {
+        result = true;
+      } else if (o instanceof TestResultSet) {
+        TestResultSet that = (TestResultSet) o;
+        assertEquals(this.size(), that.size());
+        for (int i = 0; i < this.rows.size(); i++) {
+          assertEquals(this.rows.get(i).size(), that.rows.get(i).size());
+          for (int j = 0; j < this.rows.get(i).size(); ++j) {
+            assertEquals(this.rows.get(i).get(j), that.rows.get(i).get(j));
+          }
+        }
+        result = true;
+      }
+
+      return result;
+    }
+
+    private void convert(List<QueryDataBatch> batches) throws SchemaChangeException {
+      RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+      for (QueryDataBatch batch : batches) {
+        int rc = batch.getHeader().getRowCount();
+        if (batch.getData() != null) {
+          loader.load(batch.getHeader().getDef(), batch.getData());
+          for (int i = 0; i < rc; ++i) {
+            List<String> newRow = new ArrayList<>();
+            rows.add(newRow);
+            for (VectorWrapper<?> vw : loader) {
+              ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
+              Object o = accessor.getObject(i);
+              newRow.add(o == null ? null : o.toString());
+            }
+          }
+        }
+        loader.clear();
+        batch.release();
+      }
+    }
+  }
+ }

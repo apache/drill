@@ -53,11 +53,16 @@ public class TestFormatPluginOptionExtractor {
           assertEquals(NamedFormatPluginConfig.class, d.pluginConfigClass);
           assertEquals("(type: String, name: String)", d.presentParams());
           break;
+        case "parquet":
+          assertEquals(d.typeName, "(type: String, autoCorrectCorruptDates: boolean)", d.presentParams());
+          break;
         case "json":
         case "sequencefile":
-        case "parquet":
         case "avro":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
+          break;
+        case "httpd":
+          assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());
           break;
         default:
           fail("add validation for format plugin type " + d.typeName);

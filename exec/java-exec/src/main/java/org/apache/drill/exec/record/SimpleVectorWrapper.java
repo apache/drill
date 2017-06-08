@@ -78,6 +78,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
   }
 
 
+  @SuppressWarnings("resource")
   @Override
   public VectorWrapper<?> getChildWrapper(int[] ids) {
     if (ids.length == 1) {
@@ -106,6 +107,15 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
     Preconditions.checkArgument(destination instanceof SimpleVectorWrapper);
     Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
     vector.makeTransferPair(((SimpleVectorWrapper<?>)destination).vector).transfer();
+  }
+
+  @Override
+  public String toString() {
+    if (vector == null) {
+      return "null";
+    } else {
+      return vector.toString();
+    }
   }
 
 }

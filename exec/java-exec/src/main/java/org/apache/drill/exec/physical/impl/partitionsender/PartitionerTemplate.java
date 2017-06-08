@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -67,9 +67,6 @@ public abstract class PartitionerTemplate implements Partitioner {
 
   private int outgoingRecordBatchSize = DEFAULT_RECORD_BATCH_SIZE;
 
-  public PartitionerTemplate() throws SchemaChangeException {
-  }
-
   @Override
   public List<? extends PartitionOutgoingBatch> getOutgoingBatches() {
     return outgoingBatches;
@@ -109,7 +106,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       // create outgoingBatches only for subset of Destination Points
       if ( fieldId >= start && fieldId < end ) {
         logger.debug("start: {}, count: {}, fieldId: {}", start, end, fieldId);
-        outgoingBatches.add(new OutgoingRecordBatch(stats, popConfig,
+        outgoingBatches.add(newOutgoingRecordBatch(stats, popConfig,
           context.getDataTunnel(destination.getEndpoint()), context, oContext.getAllocator(), destination.getId()));
       }
       fieldId++;
@@ -135,6 +132,18 @@ public abstract class PartitionerTemplate implements Partitioner {
       default:
         throw new UnsupportedOperationException("Unknown selection vector mode: " + svMode.toString());
     }
+  }
+
+  /**
+   * Shim method to be overridden in plain-old Java mode by the subclass to instantiate the
+   * generated inner class. Byte-code manipulation appears to fix up the byte codes
+   * directly. The name is special, it must be "new" + inner class name.
+   */
+
+  protected OutgoingRecordBatch newOutgoingRecordBatch(
+                               OperatorStats stats, HashPartitionSender operator, AccountingDataTunnel tunnel,
+                               FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
+    return new OutgoingRecordBatch(stats, operator, tunnel, context, allocator, oppositeMinorFragmentId);
   }
 
   @Override
@@ -202,12 +211,20 @@ public abstract class PartitionerTemplate implements Partitioner {
    * @throws IOException
    */
   private void doCopy(int svIndex) throws IOException {
-    int index = doEval(svIndex);
+    int index;
+    try {
+      index = doEval(svIndex);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
     if ( index >= start && index < end) {
       OutgoingRecordBatch outgoingBatch = outgoingBatches.get(index - start);
       outgoingBatch.copy(svIndex);
     }
   }
+
+  @Override
+  public void initialize() { }
 
   @Override
   public void clear() {
@@ -216,8 +233,11 @@ public abstract class PartitionerTemplate implements Partitioner {
     }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
-  public abstract int doEval(@Named("inIndex") int inIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+                               @Named("incoming") RecordBatch incoming,
+                               @Named("outgoing") OutgoingRecordBatch[] outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("inIndex") int inIndex) throws SchemaChangeException;
 
   public class OutgoingRecordBatch implements PartitionOutgoingBatch, VectorAccessible {
 
@@ -245,7 +265,11 @@ public abstract class PartitionerTemplate implements Partitioner {
     }
 
     protected void copy(int inIndex) throws IOException {
-      doEval(inIndex, recordCount);
+      try {
+        doEval(inIndex, recordCount);
+      } catch (SchemaChangeException e) {
+        throw new UnsupportedOperationException(e);
+      }
       recordCount++;
       totalRecords++;
       if (recordCount == outgoingRecordBatchSize) {
@@ -260,10 +284,12 @@ public abstract class PartitionerTemplate implements Partitioner {
     }
 
     @RuntimeOverridden
-    protected void doSetup(@Named("incoming") RecordBatch incoming, @Named("outgoing") VectorAccessible outgoing) {};
+    protected void doSetup(@Named("incoming") RecordBatch incoming,
+                           @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException { };
 
     @RuntimeOverridden
-    protected void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex) { };
+    protected void doEval(@Named("inIndex") int inIndex,
+                          @Named("outIndex") int outIndex) throws SchemaChangeException { };
 
     public void flush(boolean schemaChanged) throws IOException {
       if (dropAll) {
@@ -350,12 +376,17 @@ public abstract class PartitionerTemplate implements Partitioner {
     public void initializeBatch() {
       for (VectorWrapper<?> v : incoming) {
         // create new vector
+        @SuppressWarnings("resource")
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
         outgoingVector.setInitialCapacity(outgoingRecordBatchSize);
         vectorContainer.add(outgoingVector);
       }
       allocateOutgoingRecordBatch();
-      doSetup(incoming, vectorContainer);
+      try {
+        doSetup(incoming, vectorContainer);
+      } catch (SchemaChangeException e) {
+        throw new UnsupportedOperationException(e);
+      }
     }
 
     public void resetBatch() {

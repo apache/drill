@@ -17,28 +17,27 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.*;
-
-import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.test.JdbcAssert;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.SQLException;
 import java.sql.Types;
+
+import org.apache.drill.jdbc.test.JdbcAssert;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 
 /**
@@ -386,11 +385,10 @@ public class ResultSetMetaDataTest extends JdbcTestBase {
   //       designated column"
   // (What exactly is the "normal maximum" number of characters?)
 
-  @Ignore( "TODO(DRILL-3355): unignore when getColumnDisplaySize(...) implemented" )
   @Test
   public void test_getColumnDisplaySize_forBOOLEAN() throws SQLException {
     assertThat( rowMetadata.getColumnDisplaySize( ordOptBOOLEAN ),
-                equalTo( 5 ) );
+                equalTo( 1 ) );
   }
 
   // TODO(DRILL-3355):  Do more types when metadata is available.
@@ -788,13 +786,13 @@ public class ResultSetMetaDataTest extends JdbcTestBase {
   @Test
   public void test_getColumnTypeName_forINTERVAL_Y() throws SQLException {
     assertThat( rowMetadata.getColumnTypeName( ordReqINTERVAL_Y ),
-                equalTo( "INTERVAL" ) );
+                equalTo( "INTERVAL YEAR TO MONTH" ) );
   }
 
   @Test
   public void test_getColumnTypeName_forINTERVAL_D() throws SQLException {
     assertThat( rowMetadata.getColumnTypeName( ordReqINTERVAL_4D_H ),
-                equalTo( "INTERVAL" ) );
+                equalTo( "INTERVAL DAY TO SECOND" ) );
   }
 
   // TODO(DRILL-3253):  Do more types when we have all-types test storage plugin.

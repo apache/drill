@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.client;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
-import io.netty.buffer.DrillBuf;
-import io.netty.channel.EventLoopGroup;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -37,7 +37,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.Version;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -55,54 +57,58 @@ import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq;
 import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
-import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
+import org.apache.drill.exec.proto.UserProtos.GetCatalogsResp;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsReq;
 import org.apache.drill.exec.proto.UserProtos.GetColumnsResp;
 import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasReq;
 import org.apache.drill.exec.proto.UserProtos.GetSchemasResp;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaReq;
+import org.apache.drill.exec.proto.UserProtos.GetServerMetaResp;
 import org.apache.drill.exec.proto.UserProtos.GetTablesReq;
 import org.apache.drill.exec.proto.UserProtos.GetTablesResp;
 import org.apache.drill.exec.proto.UserProtos.LikeFilter;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle;
-import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
+import org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
-import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
+import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.rpc.user.UserRpcUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
+
+import io.netty.channel.EventLoopGroup;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms
  * String into ByteBuf.
  */
 public class DrillClient implements Closeable, ConnectionThrottle {
+  public static final String DEFAULT_CLIENT_NAME = "Apache Drill Java client";
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DrillConfig config;
   private UserClient client;
-  private UserProperties props = null;
+  private DrillProperties properties;
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
   private final BufferAllocator allocator;
@@ -114,6 +120,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private final boolean isDirectConnection; // true if the connection bypasses zookeeper and connects directly to a drillbit
   private EventLoopGroup eventLoopGroup;
   private ExecutorService executor;
+  private String clientName = DEFAULT_CLIENT_NAME;
 
   public DrillClient() throws OutOfMemoryException {
     this(DrillConfig.create(), false);
@@ -175,6 +182,23 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
+   * Sets the client name.
+   *
+   * If not set, default is {@code DrillClient#DEFAULT_CLIENT_NAME}.
+   *
+   * @param name the client name
+   *
+   * @throws IllegalStateException if called after a connection has been established.
+   * @throws NullPointerException if client name is null
+   */
+  public void setClientName(String name) {
+    if (connected) {
+      throw new IllegalStateException("Attempted to modify client connection property after connection has been established.");
+    }
+    this.clientName = checkNotNull(name, "client name should not be null");
+  }
+
+  /**
    * Sets whether the application is willing to accept complex types (Map, Arrays) in the returned result set.
    * Default is {@code true}. If set to {@code false}, the complex types are returned as JSON encoded VARCHAR type.
    *
@@ -200,19 +224,102 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     connect(null, props);
   }
 
+  /**
+   * Populates the endpointlist with drillbits information provided in the connection string by client.
+   * For direct connection we can have connection string with drillbit property as below:
+   * <dl>
+   *   <dt>drillbit=ip</dt>
+   *   <dd>use the ip specified as the Foreman ip with default port in config file</dd>
+   *   <dt>drillbit=ip:port</dt>
+   *   <dd>use the ip and port specified as the Foreman ip and port</dd>
+   *   <dt>drillbit=ip1:port1,ip2:port2,...</dt>
+   *   <dd>randomly select the ip and port pair from the specified list as the Foreman ip and port.</dd>
+   * </dl>
+   *
+   * @param drillbits string with drillbit value provided in connection string
+   * @param defaultUserPort string with default userport of drillbit specified in config file
+   * @return list of drillbit endpoints parsed from connection string
+   * @throws InvalidConnectionInfoException if the connection string has invalid or no drillbit information
+   */
+  static List<DrillbitEndpoint> parseAndVerifyEndpoints(String drillbits, String defaultUserPort)
+                                throws InvalidConnectionInfoException {
+    // If no drillbits is provided then throw exception
+    drillbits = drillbits.trim();
+    if (drillbits.isEmpty()) {
+      throw new InvalidConnectionInfoException("No drillbit information specified in the connection string");
+    }
+
+    final List<DrillbitEndpoint> endpointList = new ArrayList<>();
+    final String[] connectInfo = drillbits.split(",");
+
+    // Fetch ip address and port information for each drillbit and populate the list
+    for (String drillbit : connectInfo) {
+
+      // Trim all the empty spaces and check if the entry is empty string.
+      // Ignore the empty ones.
+      drillbit = drillbit.trim();
+
+      if (!drillbit.isEmpty()) {
+        // Verify if we have only ":" or only ":port" pattern
+        if (drillbit.charAt(0) == ':') {
+          // Invalid drillbit information
+          throw new InvalidConnectionInfoException("Malformed connection string with drillbit hostname or " +
+                                                     "hostaddress missing for an entry: " + drillbit);
+        }
+
+        // We are now sure that each ip:port entry will have both the values atleast once.
+        // Split each drillbit connection string to get ip address and port value
+        final String[] drillbitInfo = drillbit.split(":");
+
+        // Check if we have more than one port
+        if (drillbitInfo.length > 2) {
+          throw new InvalidConnectionInfoException("Malformed connection string with more than one port in a " +
+                                                     "drillbit entry: " + drillbit);
+        }
+
+        // At this point we are sure that drillbitInfo has atleast hostname or host address
+        // trim all the empty spaces which might be present in front of hostname or
+        // host address information
+        final String ipAddress = drillbitInfo[0].trim();
+        String port = defaultUserPort;
+
+        if (drillbitInfo.length == 2) {
+          // We have a port value also given by user. trim all the empty spaces between : and port value before
+          // validating the correctness of value.
+          port = drillbitInfo[1].trim();
+        }
+
+        try {
+          final DrillbitEndpoint endpoint = DrillbitEndpoint.newBuilder()
+                                            .setAddress(ipAddress)
+                                            .setUserPort(Integer.parseInt(port))
+                                            .build();
+
+          endpointList.add(endpoint);
+        } catch (NumberFormatException e) {
+          throw new InvalidConnectionInfoException("Malformed port value in entry: " + ipAddress + ":" + port + " " +
+                                                     "passed in connection string");
+        }
+      }
+    }
+    if (endpointList.size() == 0) {
+      throw new InvalidConnectionInfoException("No valid drillbit information specified in the connection string");
+    }
+    return endpointList;
+  }
+
   public synchronized void connect(String connect, Properties props) throws RpcException {
     if (connected) {
       return;
     }
+    properties = DrillProperties.createFromProperties(props);
 
-    final DrillbitEndpoint endpoint;
+    final List<DrillbitEndpoint> endpoints = new ArrayList<>();
+
     if (isDirectConnection) {
-      final String[] connectInfo = props.getProperty("drillbit").split(":");
-      final String port = connectInfo.length==2?connectInfo[1]:config.getString(ExecConstants.INITIAL_USER_PORT);
-      endpoint = DrillbitEndpoint.newBuilder()
-              .setAddress(connectInfo[0])
-              .setUserPort(Integer.parseInt(port))
-              .build();
+      // Populate the endpoints list with all the drillbit information provided in the connection string
+      endpoints.addAll(parseAndVerifyEndpoints(properties.getProperty(DrillProperties.DRILLBIT_CONNECTION),
+                                               config.getString(ExecConstants.INITIAL_USER_PORT)));
     } else {
       if (ownsZkConnection) {
         try {
@@ -222,22 +329,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
           throw new RpcException("Failure setting up ZK for client.", e);
         }
       }
-
-      final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
-      checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
-      // shuffle the collection then get the first endpoint
-      Collections.shuffle(endpoints);
-      endpoint = endpoints.iterator().next();
+      endpoints.addAll(clusterCoordinator.getAvailableEndpoints());
+      // Make sure we have at least one endpoint in the list
+      checkState(!endpoints.isEmpty(), "No active Drillbit endpoint found from ZooKeeper. Check connection parameters?");
     }
 
-    if (props != null) {
-      final UserProperties.Builder upBuilder = UserProperties.newBuilder();
-      for (final String key : props.stringPropertyNames()) {
-        upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
-      }
-
-      this.props = upBuilder.build();
-    }
+    // shuffle the collection then get the first endpoint
+    Collections.shuffle(endpoints);
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
     executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
@@ -251,10 +349,56 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         super.afterExecute(r, t);
       }
     };
-    client = new UserClient(config, supportComplexTypes, allocator, eventLoopGroup, executor);
-    logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
-    connect(endpoint);
-    connected = true;
+
+    final String connectTriesConf = properties.getProperty(DrillProperties.TRIES, "5");
+    int connectTriesVal;
+    try {
+      connectTriesVal = Math.min(endpoints.size(), Integer.parseInt(connectTriesConf));
+    } catch (NumberFormatException e) {
+      throw new InvalidConnectionInfoException("Invalid tries value: " + connectTriesConf + " specified in " +
+                                               "connection string");
+    }
+
+    // If the value provided in the connection string is <=0 then override with 1 since we want to try connecting
+    // at least once
+    connectTriesVal = Math.max(1, connectTriesVal);
+
+    int triedEndpointIndex = 0;
+    DrillbitEndpoint endpoint;
+
+    while (triedEndpointIndex < connectTriesVal) {
+      client = new UserClient(clientName, config, supportComplexTypes, allocator, eventLoopGroup, executor);
+      endpoint = endpoints.get(triedEndpointIndex);
+      logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
+
+      if (!properties.containsKey(DrillProperties.SERVICE_HOST)) {
+        properties.setProperty(DrillProperties.SERVICE_HOST, endpoint.getAddress());
+      }
+
+      try {
+        connect(endpoint);
+        connected = true;
+        logger.info("Successfully connected to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
+        break;
+      } catch (NonTransientRpcException ex) {
+        logger.error("Connection to {}:{} failed with error {}. Not retrying anymore", endpoint.getAddress(),
+                     endpoint.getUserPort(), ex.getMessage());
+        throw ex;
+      } catch (RpcException ex) {
+        ++triedEndpointIndex;
+        logger.error("Attempt {}: Failed to connect to server {}:{}", triedEndpointIndex, endpoint.getAddress(),
+                     endpoint.getUserPort());
+
+        // Throw exception when we have exhausted all the tries without having a successful connection
+        if (triedEndpointIndex == connectTriesVal) {
+          throw ex;
+        }
+
+        // Close the connection here to avoid calling close twice in case when all tries are exhausted.
+        // Since DrillClient.close is also calling client.close
+        client.close();
+      }
+    }
   }
 
   protected static EventLoopGroup createEventLoop(int size, String prefix) {
@@ -285,9 +429,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
-    final FutureHandler f = new FutureHandler();
-    client.connect(f, endpoint, props, getUserCredentials());
-    f.checkedGet();
+    client.connect(endpoint, properties, getUserCredentials());
   }
 
   public BufferAllocator getAllocator() {
@@ -327,6 +469,68 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     // TODO: fix tests that fail when this is called.
     //allocator.close();
     connected = false;
+  }
+
+
+  /**
+   * Return the server infos. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the informations.
+   *
+   * @return the server informations, or null if not connected or if the server
+   *         doesn't provide the information
+   * @deprecated use {@code DrillClient#getServerVersion()}
+   */
+  @Deprecated
+  public RpcEndpointInfos getServerInfos() {
+    return client != null ? client.getServerInfos() : null;
+  }
+
+  /**
+   * Return the server name. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the name information.
+   *
+   * @return the server name, or null if not connected or if the server
+   *         doesn't provide the name
+   * @return
+   */
+  public String getServerName() {
+    return (client != null && client.getServerInfos() != null) ? client.getServerInfos().getName() : null;
+  }
+
+  /**
+   * Return the server version. Only available after connecting
+   *
+   * The result might be null if the server doesn't provide the version information.
+   *
+   * @return the server version, or null if not connected or if the server
+   *         doesn't provide the version
+   * @return
+   */
+  public Version getServerVersion() {
+    return (client != null && client.getServerInfos() != null) ? UserRpcUtils.getVersion(client.getServerInfos()) : null;
+  }
+
+  /**
+   * Get server meta information
+   *
+   * Get meta information about the server like the the available functions
+   * or the identifier quoting string used by the current session
+   *
+   * @return a future to the server meta response
+   */
+  public DrillRpcFuture<GetServerMetaResp> getServerMeta() {
+    return client.send(RpcType.GET_SERVER_META, GetServerMetaReq.getDefaultInstance(), GetServerMetaResp.class);
+  }
+
+  /**
+   * Returns the list of methods supported by the server based on its advertised information.
+   *
+   * @return an immutable set of capabilities
+   */
+  public Set<ServerMethod> getSupportedMethods() {
+    return client != null ? ServerMethod.getSupportedMethods(client.getSupportedMethods(), client.getServerInfos()) : null;
   }
 
   /**
@@ -405,19 +609,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * Helper method to generate the UserCredentials message from the properties.
    */
   private UserBitShared.UserCredentials getUserCredentials() {
-    // If username is not propagated as one of the properties
-    String userName = "anonymous";
-
-    if (props != null) {
-      for (Property property: props.getPropertiesList()) {
-        if (property.getKey().equalsIgnoreCase("user") && !Strings.isNullOrEmpty(property.getValue())) {
-          userName = property.getValue();
-          break;
-        }
-      }
+    String userName = properties.getProperty(DrillProperties.USER);
+    if (Strings.isNullOrEmpty(userName)) {
+      userName = "anonymous"; // if username is not propagated as one of the properties
     }
-
-    return UserBitShared.UserCredentials.newBuilder().setUserName(userName).build();
+    return UserBitShared.UserCredentials.newBuilder()
+      .setUserName(userName)
+      .build();
   }
 
   public DrillRpcFuture<Ack> cancelQuery(QueryId id) {
@@ -463,7 +661,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     return client.send(RpcType.GET_SCHEMAS, reqBuilder.build(), GetSchemasResp.class);
@@ -475,21 +673,26 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
    * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
    * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
+   * @param tableTypeFilter Filter in <code>table type</code>. Pass null to apply no filter
    * @return
    */
   public DrillRpcFuture<GetTablesResp> getTables(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
-      LikeFilter tableNameFilter) {
+      LikeFilter tableNameFilter, List<String> tableTypeFilter) {
     final GetTablesReq.Builder reqBuilder = GetTablesReq.newBuilder();
     if (catalogNameFilter != null) {
       reqBuilder.setCatalogNameFilter(catalogNameFilter);
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     if (tableNameFilter != null) {
       reqBuilder.setTableNameFilter(tableNameFilter);
+    }
+
+    if (tableTypeFilter != null) {
+      reqBuilder.addAllTableTypeFilter(tableTypeFilter);
     }
 
     return client.send(RpcType.GET_TABLES, reqBuilder.build(), GetTablesResp.class);
@@ -512,7 +715,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     if (schemaNameFilter != null) {
-      reqBuilder.setSchameNameFilter(schemaNameFilter);
+      reqBuilder.setSchemaNameFilter(schemaNameFilter);
     }
 
     if (tableNameFilter != null) {
@@ -657,36 +860,6 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       if (logger.isDebugEnabled()) {
         logger.debug("Query ID arrived: {}", QueryIdHelper.getQueryId(queryId));
       }
-    }
-  }
-
-  private class FutureHandler extends AbstractCheckedFuture<Void, RpcException> implements RpcConnectionHandler<ServerConnection>, DrillRpcFuture<Void>{
-    protected FutureHandler() {
-      super( SettableFuture.<Void>create());
-    }
-
-    @Override
-    public void connectionSucceeded(ServerConnection connection) {
-      getInner().set(null);
-    }
-
-    @Override
-    public void connectionFailed(FailureType type, Throwable t) {
-      getInner().setException(new RpcException(String.format("%s : %s", type.name(), t.getMessage()), t));
-    }
-
-    private SettableFuture<Void> getInner() {
-      return (SettableFuture<Void>) delegate();
-    }
-
-    @Override
-    protected RpcException mapException(Exception e) {
-      return RpcException.mapException(e);
-    }
-
-    @Override
-    public DrillBuf getBuffer() {
-      return null;
     }
   }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet2;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import org.apache.parquet.io.api.GroupConverter;
@@ -35,9 +36,10 @@ public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
   private ComplexWriter complexWriter;
 
   public DrillParquetRecordMaterializer(OutputMutator mutator, ComplexWriter complexWriter, MessageType schema,
-                                        Collection<SchemaPath> columns, OptionManager options) {
+                                        Collection<SchemaPath> columns, OptionManager options,
+                                        ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
     this.complexWriter = complexWriter;
-    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns, options);
+    root = new DrillParquetGroupConverter(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates);
   }
 
   public void setPosition(int position) {

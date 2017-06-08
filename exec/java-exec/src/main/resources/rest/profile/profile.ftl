@@ -84,7 +84,7 @@
       </p>
       <p>Failure node: ${model.getProfile().errorNode}</p>
       <p>Error ID: ${model.getProfile().errorId}</p>
-      
+
         <h3 class="panel-title">
           <a data-toggle="collapse" href="#error-verbose">
             Verbose Error Message...
@@ -106,6 +106,47 @@
   <p>STATE: ${model.getProfile().getState().name()}</p>
   <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
   <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
+  <p>DURATION: ${model.getProfileDuration()}</p>
+  <p style="text-indent:5em;">PLANNING: ${model.getPlanningDuration()}</p>
+  <p style="text-indent:5em;">QUEUED: ${model.getQueuedDuration()}</p>
+  <p style="text-indent:5em;">EXECUTION: ${model.getExecutionDuration()}</p>
+
+  <#assign options = model.getOptions()>
+  <#if (options?keys?size > 0)>
+    <div class="page-header"></div>
+    <h3>Session Options</h3>
+    <div class="panel-group" id="session-options-accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#session-options-overview">
+              Overview
+            </a>
+          </h4>
+        </div>
+        <div id="session-options-overview" class="panel-collapse collapse in">
+          <div class="panel-body">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <#list options?keys as name>
+                  <tr>
+                    <td>${name}</td>
+                    <td>${options[name]}</td>
+                  </tr>
+                </#list>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </#if>
 
   <div class="page-header"></div>
   <h3>Fragment Profiles</h3>
@@ -185,7 +226,7 @@
             </h4>
           </div>
           <div id="${op.getId()}-metrics" class="panel-collapse collapse">
-            <div class="panel-body">
+            <div class="panel-body" style="display:block;overflow-x:auto">
               ${op.getMetricsTable()}
             </div>
           </div>

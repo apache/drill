@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.calcite.rel.logical.LogicalAggregate;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -70,27 +70,65 @@ public class DrillOptiq {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
 
   /**
-   * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax.
+   * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax using one input.
+   *
+   * @param context parse context which contains planner settings
+   * @param input data input
+   * @param expr expression to be converted
+   * @return converted expression
    */
   public static LogicalExpression toDrill(DrillParseContext context, RelNode input, RexNode expr) {
-    final RexToDrill visitor = new RexToDrill(context, input);
+    return toDrill(context, Lists.newArrayList(input), expr);
+  }
+
+  /**
+   * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax using multiple inputs.
+   *
+   * @param context parse context which contains planner settings
+   * @param inputs multiple data inputs
+   * @param expr expression to be converted
+   * @return converted expression
+   */
+  public static LogicalExpression toDrill(DrillParseContext context, List<RelNode> inputs, RexNode expr) {
+    final RexToDrill visitor = new RexToDrill(context, inputs);
     return expr.accept(visitor);
   }
 
   private static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
-    private final RelNode input;
+    private final List<RelNode> inputs;
     private final DrillParseContext context;
+    private final List<RelDataTypeField> fieldList;
 
-    RexToDrill(DrillParseContext context, RelNode input) {
+    RexToDrill(DrillParseContext context, List<RelNode> inputs) {
       super(true);
       this.context = context;
-      this.input = input;
+      this.inputs = inputs;
+      this.fieldList = Lists.newArrayList();
+      /*
+         Fields are enumerated by their presence order in input. Details {@link org.apache.calcite.rex.RexInputRef}.
+         Thus we can merge field list from several inputs by adding them into the list in order of appearance.
+         Each field index in the list will match field index in the RexInputRef instance which will allow us
+         to retrieve field from filed list by index in {@link #visitInputRef(RexInputRef)} method. Example:
+
+         Query: select t1.c1, t2.c1. t2.c2 from t1 inner join t2 on t1.c1 between t2.c1 and t2.c2
+
+         Input 1: $0
+         Input 2: $1, $2
+
+         Result: $0, $1, $2
+       */
+      for (RelNode input : inputs) {
+        if (input != null) {
+          fieldList.addAll(input.getRowType().getFieldList());
+        }
+      }
     }
 
     @Override
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
-      final RelDataTypeField field = input.getRowType().getFieldList().get(index);
+      final RelDataTypeField field = fieldList.get(index);
+      Preconditions.checkNotNull(field, "Unable to find field using input reference");
       return FieldReference.getWithQuotedRef(field.getName());
     }
 
@@ -129,7 +167,7 @@ public class DrillOptiq {
             return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
                 ExpressionPosition.UNKNOWN, arg);
           case MINUS_PREFIX:
-            final RexBuilder builder = input.getCluster().getRexBuilder();
+            final RexBuilder builder = inputs.get(0).getCluster().getRexBuilder();
             final List<RexNode> operands = Lists.newArrayList();
             operands.add(builder.makeExactLiteral(new BigDecimal(-1)));
             operands.add(call.getOperands().get(0));
@@ -256,20 +294,19 @@ public class DrillOptiq {
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
       LogicalExpression arg = call.getOperands().get(0).accept(this);
-      MajorType castType = null;
+      MajorType castType;
 
       switch(call.getType().getSqlTypeName().getName()){
       case "VARCHAR":
       case "CHAR":
-        castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+        castType = Types.required(MinorType.VARCHAR).toBuilder().setPrecision(call.getType().getPrecision()).build();
         break;
 
       case "INTEGER": castType = Types.required(MinorType.INT); break;
       case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
       case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
       case "DECIMAL":
-        if (context.getPlannerSettings().getOptions().
-            getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false ) {
+        if (!context.getPlannerSettings().getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val) {
           throw UserException
               .unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
@@ -296,7 +333,7 @@ public class DrillOptiq {
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         case "BOOLEAN": castType = Types.required(MinorType.BIT); break;
-        case "BINARY": castType = Types.required(MinorType.VARBINARY).toBuilder().setWidth(call.getType().getPrecision()).build(); break;
+        case "BINARY": castType = Types.required(MinorType.VARBINARY); break;
         case "ANY": return arg; // Type will be same as argument.
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
@@ -384,7 +421,7 @@ public class DrillOptiq {
            * (empty string literal) to the list of arguments.
            */
           List<LogicalExpression> concatArgs = new LinkedList<>(args);
-          concatArgs.add(new QuotedString("", ExpressionPosition.UNKNOWN));
+          concatArgs.add(QuotedString.EMPTY_STRING);
 
           return FunctionCallFactory.createExpression(functionName, concatArgs);
 
@@ -474,9 +511,9 @@ public class DrillOptiq {
         return ValueExpressions.getBit(((Boolean) literal.getValue()));
       case CHAR:
         if (isLiteralNull(literal)) {
-          return createNullExpr(MinorType.VARCHAR);
+          return createStringNullExpr(literal.getType().getPrecision());
         }
-        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue(), literal.getType().getPrecision());
       case DOUBLE:
         if (isLiteralNull(literal)){
           return createNullExpr(MinorType.FLOAT8);
@@ -518,14 +555,14 @@ public class DrillOptiq {
         return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
         if (isLiteralNull(literal)) {
-          return createNullExpr(MinorType.VARCHAR);
+          return createStringNullExpr(literal.getType().getPrecision());
         }
-        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue(), literal.getType().getPrecision());
       case SYMBOL:
         if (isLiteralNull(literal)) {
-          return createNullExpr(MinorType.VARCHAR);
+          return createStringNullExpr(literal.getType().getPrecision());
         }
-        return ValueExpressions.getChar(literal.getValue().toString());
+        return ValueExpressions.getChar(literal.getValue().toString(), literal.getType().getPrecision());
       case DATE:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.DATE);
@@ -561,10 +598,28 @@ public class DrillOptiq {
         throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getType().getSqlTypeName()));
       }
     }
-  }
 
-  private static final TypedNullConstant createNullExpr(MinorType type) {
-    return new TypedNullConstant(Types.optional(type));
+    /**
+     * Create nullable major type using given minor type
+     * and wraps it in typed null constant.
+     *
+     * @param type minor type
+     * @return typed null constant instance
+     */
+    private TypedNullConstant createNullExpr(MinorType type) {
+      return new TypedNullConstant(Types.optional(type));
+    }
+
+    /**
+     * Create nullable varchar major type with given precision
+     * and wraps it in typed null constant.
+     *
+     * @param precision precision value
+     * @return typed null constant instance
+     */
+    private TypedNullConstant createStringNullExpr(int precision) {
+      return new TypedNullConstant(Types.withPrecision(MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, precision));
+    }
   }
 
   public static boolean isLiteralNull(RexLiteral literal) {

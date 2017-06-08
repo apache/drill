@@ -90,4 +90,15 @@ public class TestContextFunctions extends BaseTestQuery {
         .baselineValues("dfs_test.tmp")
         .go();
   }
+
+  @Test
+  public void sessionIdUDFWithinSameSession() throws Exception {
+    final String sessionIdQuery = "select session_id as sessionId from (values(1))";
+    testBuilder()
+        .sqlQuery(sessionIdQuery)
+        .ordered()
+        .sqlBaselineQuery(sessionIdQuery)
+        .build()
+        .run();
+  }
 }

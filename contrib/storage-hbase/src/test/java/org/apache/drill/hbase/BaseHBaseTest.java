@@ -27,7 +27,6 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseStoragePlugin;
 import org.apache.drill.exec.store.hbase.HBaseStoragePluginConfig;
-import org.apache.drill.exec.util.GuavaPatcher;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.junit.AfterClass;
@@ -38,10 +37,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
-
-  static {
-    GuavaPatcher.patch();
-  }
 
   private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 

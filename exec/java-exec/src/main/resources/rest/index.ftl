@@ -17,17 +17,79 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <tbody>
-        <#list model as stat>
-          <tr>
-            <td style="border:none;"><b>${stat.getName()}</b></td>
-            <td style="border:none; font-family: Courier;">${stat.getValue()}</td>
-          </tr>
-        </#list>
-      </tbody>
-    </table>
+
+  <#if (model.getMismatchedVersions()?size > 0)>
+    <div id="message" class="alert alert-danger alert-dismissable">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <strong>Drill does not support clusters containing a mix of Drillbit versions.
+          Current drillbit version is ${model.getCurrentVersion()}.
+          One or more drillbits in cluster have different version:
+          ${model.getMismatchedVersions()?join(", ")}.
+      </strong>
+    </div>
+  </#if>
+
+  <div class="row">
+    <div class="col-md-12">
+      <h3>Drillbits <span class="label label-primary">${model.getDrillbits()?size}</span></h3>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Address</th>
+              <th>User Port</th>
+              <th>Control Port</th>
+              <th>Data Port</th>
+              <th>Version</th>
+            </tr>
+          </thead>
+          <tbody>
+            <#assign i = 1>
+            <#list model.getDrillbits() as drillbit>
+              <tr>
+                <td>${i}</td>
+                <td>${drillbit.getAddress()}
+                  <#if drillbit.isCurrent()>
+                    <span class="label label-info">Current</span>
+                  </#if>
+                </td>
+                <td>${drillbit.getUserPort()}</td>
+                <td>${drillbit.getControlPort()}</td>
+                <td>${drillbit.getDataPort()}</td>
+                <td>
+                  <span class="label
+                    <#if drillbit.isVersionMatch()>label-success<#else>label-danger</#if>">
+                    ${drillbit.getVersion()}
+                  </span>
+                </td>
+              </tr>
+              <#assign i = i + 1>
+            </#list>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-md-12">
+        <h3>Encryption Info <span class="label label-primary"></span></h3>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <tbody>
+                <tr>
+                  <td>Client to Bit Encryption:</td>
+                  <td>${model.isUserEncryptionEnabled()?string("enabled", "disabled")}</td>
+                </tr>
+                <tr>
+                  <td>Bit to Bit Encryption:</td>
+                  <td>${model.isBitEncryptionEnabled()?string("enabled", "disabled")}</td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
   </div>
 </#macro>
 

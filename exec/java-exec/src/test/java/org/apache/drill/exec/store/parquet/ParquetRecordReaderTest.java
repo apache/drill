@@ -50,7 +50,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
@@ -603,7 +603,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   @Test
   @Ignore
   public void testPerformance(@Injectable final DrillbitContext bitContext,
-                              @Injectable UserServer.UserClientConnection connection) throws Exception {
+                              @Injectable UserClientConnection connection) throws Exception {
     final DrillConfig c = DrillConfig.create();
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
@@ -637,9 +637,9 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final FileSystem fs = new CachedSingleFileSystem(fileName);
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     for(int i = 0; i < 25; i++) {
-      final ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
+      final ParquetRecordReader rr = new ParquetRecordReader(context, fileName, 0, fs,
           CodecFactory.createDirectCodecFactory(dfsConfig, new ParquetDirectByteBufferAllocator(allocator), 0),
-          f.getParquetMetadata(), columns);
+          f.getParquetMetadata(), columns, ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
       final Stopwatch watch = Stopwatch.createStarted();
@@ -691,4 +691,67 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final long D = System.nanoTime();
     System.out.println(String.format("Took %f s to run query", (float)(D-C) / 1E9));
   }
+
+  @Test
+  public void testLimit() throws Exception {
+    List<QueryDataBatch> results = testSqlWithResults("SELECT * FROM cp.`/parquet/tpch/nation/01.parquet` LIMIT 1");
+
+    int recordsInOutput = 0;
+    for (QueryDataBatch batch : results) {
+      recordsInOutput += batch.getHeader().getDef().getRecordCount();
+      batch.release();
+    }
+
+    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s", 1, recordsInOutput), 1 == recordsInOutput);
+  }
+
+  @Test
+  public void testLimitBeyondRowCount() throws Exception {
+    List<QueryDataBatch> results = testSqlWithResults("SELECT * FROM cp.`/parquet/tpch/nation/01.parquet` LIMIT 100");
+
+    int recordsInOutput = 0;
+    for (QueryDataBatch batch : results) {
+      recordsInOutput += batch.getHeader().getDef().getRecordCount();
+      batch.release();
+    }
+
+    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s", 9, recordsInOutput), 9 == recordsInOutput);
+  }
+
+  @Test
+  public void testLimitMultipleRowGroups() throws Exception {
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(3, 100, 1024 * 1024, fields);
+    populateFieldInfoMap(props);
+    TestFileGenerator.generateParquetFile("/tmp/testLimit.parquet", props);
+
+    List<QueryDataBatch> results = testSqlWithResults("SELECT * FROM dfs.`/tmp/testLimit.parquet` LIMIT 225");
+
+    int recordsInOutput = 0;
+    for (QueryDataBatch batch : results) {
+      recordsInOutput += batch.getHeader().getDef().getRecordCount();
+      batch.release();
+    }
+
+    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s", 225, recordsInOutput), 225 == recordsInOutput);
+  }
+
+  @Test
+  public void testLimitMultipleRowGroupsBeyondRowCount() throws Exception {
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(3, 100, 1024 * 1024, fields);
+    populateFieldInfoMap(props);
+    TestFileGenerator.generateParquetFile("/tmp/testLimit.parquet", props);
+
+    List<QueryDataBatch> results = testSqlWithResults("SELECT * FROM dfs.`/tmp/testLimit.parquet` LIMIT 500");
+
+    int recordsInOutput = 0;
+    for (QueryDataBatch batch : results) {
+      recordsInOutput += batch.getHeader().getDef().getRecordCount();
+      batch.release();
+    }
+
+    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s", 300, recordsInOutput), 300 == recordsInOutput);
+  }
+
 }

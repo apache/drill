@@ -238,14 +238,15 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   }
 
   /**
-   * For given recordcount how muchmemory does SortRecordBatchBuilder needs for its own purpose. This is used in
+   * For given record count how much memory does SortRecordBatchBuilder needs for its own purpose. This is used in
    * ExternalSortBatch to make decisions about whether to spill or not.
    *
    * @param recordCount
    * @return
    */
   public static long memoryNeeded(int recordCount) {
-    // We need 4 bytes (SV4) for each record.
-    return recordCount * 4;
+    // We need 4 bytes (SV4) for each record. Due to power-of-two allocations, the
+    // backing buffer might be twice this size.
+    return recordCount * 2 * 4;
   }
 }

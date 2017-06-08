@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
 import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
 import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 /**
@@ -47,6 +48,7 @@ public class OperatorMetricRegistry {
     register(CoreOperatorType.HASH_AGGREGATE_VALUE, HashAggTemplate.Metric.class);
     register(CoreOperatorType.HASH_JOIN_VALUE, HashJoinBatch.Metric.class);
     register(CoreOperatorType.EXTERNAL_SORT_VALUE, ExternalSortBatch.Metric.class);
+    register(CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE, ParquetRecordReader.Metric.class);
   }
 
   private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {

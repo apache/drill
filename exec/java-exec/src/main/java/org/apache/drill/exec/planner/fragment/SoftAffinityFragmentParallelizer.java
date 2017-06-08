@@ -117,7 +117,7 @@ public class SoftAffinityFragmentParallelizer implements FragmentParallelizer {
 
       // Find the maximum number of slots which should go to endpoints with affinity (See DRILL-825 for details)
       int affinedSlots =
-          Math.max(1, (int) (parameters.getAffinityFactor() * width / activeEndpoints.size())) * sortedAffinityList.size();
+          Math.max(1, (int) (Math.ceil((double)parameters.getAffinityFactor() * width / activeEndpoints.size()) * sortedAffinityList.size()));
 
       // Make sure affined slots is at least the number of mandatory nodes
       affinedSlots = Math.max(affinedSlots, numRequiredNodes);

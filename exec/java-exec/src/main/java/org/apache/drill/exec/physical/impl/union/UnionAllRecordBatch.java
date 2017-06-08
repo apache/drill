@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,13 +29,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
@@ -152,6 +152,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     return true;
   }
 
+  @SuppressWarnings("resource")
   private IterOutcome doWork() throws ClassTransformationException, IOException, SchemaChangeException {
     if (allocationVectors != null) {
       for (ValueVector v : allocationVectors) {
@@ -180,11 +181,13 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       return IterOutcome.OK_NEW_SCHEMA;
     }
 
-
     final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+//    cg.getCodeGenerator().saveCodeForDebugging(true);
     int index = 0;
     for(VectorWrapper<?> vw : current) {
-      ValueVector vvIn = vw.getValueVector();
+       ValueVector vvIn = vw.getValueVector();
       // get the original input column names
       SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getPath());
       // get the renamed column names
@@ -195,16 +198,24 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       // transfer directly,
       // rename columns or
       // cast data types (Minortype or DataMode)
-      if(hasSameTypeAndMode(outputFields.get(index), vw.getValueVector().getField())) {
+      if (hasSameTypeAndMode(outputFields.get(index), vw.getValueVector().getField())) {
         // Transfer column
-        if(outputFields.get(index).getPath().equals(inputPath)) {
-          final LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, current, collector, context.getFunctionRegistry());
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
 
-          ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-          ValueVector vvOut = container.addOrGet(MaterializedField.create(outputPath.getAsUnescapedPath(), vectorRead.getMajorType()));
+        MajorType outputFieldType = outputFields.get(index).getType();
+        MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), outputFieldType);
+
+        /*
+          todo: Fix if condition when DRILL-4824 is merged
+          If condition should be changed to:
+          `if (outputFields.get(index).getPath().equals(inputPath.getAsUnescapedPath())) {`
+          DRILL-5419 has changed condition to correct one but this caused regression (DRILL-5521).
+          Root cause is missing indication of child column in map types when it is null.
+          DRILL-4824 is re-working json reader implementation, including map types and will fix this problem.
+          Reverting condition to previous one to avoid regression till DRILL-4824 is merged.
+          Unit test - TestJsonReader.testKvgenWithUnionAll().
+         */
+        if (outputFields.get(index).getPath().equals(inputPath)) {
+          ValueVector vvOut = container.addOrGet(outputField);
           TransferPair tp = vvIn.makeTransferPair(vvOut);
           transfers.add(tp);
         // Copy data in order to rename the column
@@ -214,7 +225,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
           }
 
-          MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), expr.getMajorType());
           ValueVector vv = container.addOrGet(outputField, callBack);
           allocationVectors.add(vv);
           TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
@@ -568,39 +578,40 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
       int index = 1;
-      while(leftIter.hasNext() && rightIter.hasNext()) {
+      while (leftIter.hasNext() && rightIter.hasNext()) {
         MaterializedField leftField  = leftIter.next();
         MaterializedField rightField = rightIter.next();
 
-        if(hasSameTypeAndMode(leftField, rightField)) {
-          outputFields.add(MaterializedField.create(leftField.getPath(), leftField.getType()));
+        if (hasSameTypeAndMode(leftField, rightField)) {
+          MajorType.Builder builder = MajorType.newBuilder().setMinorType(leftField.getType().getMinorType()).setMode(leftField.getDataMode());
+          builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
+          outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
         } else {
           // If the output type is not the same,
           // cast the column of one of the table to a data type which is the Least Restrictive
-          MinorType outputMinorType;
-          if(leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
-            outputMinorType = leftField.getType().getMinorType();
+          MajorType.Builder builder = MajorType.newBuilder();
+          if (leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
+            builder.setMinorType(leftField.getType().getMinorType());
+            builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
           } else {
             List<MinorType> types = Lists.newLinkedList();
             types.add(leftField.getType().getMinorType());
             types.add(rightField.getType().getMinorType());
-            outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
-            if(outputMinorType == null) {
+            MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
+            if (outputMinorType == null) {
               throw new DrillRuntimeException("Type mismatch between " + leftField.getType().getMinorType().toString() +
                   " on the left side and " + rightField.getType().getMinorType().toString() +
                   " on the right side in column " + index + " of UNION ALL");
             }
+            builder.setMinorType(outputMinorType);
           }
 
           // The output data mode should be as flexible as the more flexible one from the two input tables
           List<DataMode> dataModes = Lists.newLinkedList();
           dataModes.add(leftField.getType().getMode());
           dataModes.add(rightField.getType().getMode());
-          DataMode dataMode = TypeCastRules.getLeastRestrictiveDataMode(dataModes);
+          builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(dataModes));
 
-          MajorType.Builder builder = MajorType.newBuilder();
-          builder.setMinorType(outputMinorType);
-          builder.setMode(dataMode);
           outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
         }
         ++index;

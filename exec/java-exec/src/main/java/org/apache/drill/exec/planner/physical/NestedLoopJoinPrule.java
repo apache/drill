@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,24 +49,21 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       PlannerSettings settings) {
     JoinRelType type = join.getJoinType();
 
-    if (! (type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
+    if (!(type == JoinRelType.INNER || type == JoinRelType.LEFT)) {
       return false;
     }
 
     List<Integer> leftKeys = Lists.newArrayList();
-    List<Integer> rightKeys = Lists.newArrayList() ;
-    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys);
+    List<Integer> rightKeys = Lists.newArrayList();
+    List<Boolean> filterNulls = Lists.newArrayList();
+    JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), leftKeys, rightKeys, filterNulls);
     if (category == JoinCategory.EQUALITY
         && (settings.isHashJoinEnabled() || settings.isMergeJoinEnabled())) {
       return false;
     }
 
     if (settings.isNlJoinForScalarOnly()) {
-      if (JoinUtils.isScalarSubquery(left) || JoinUtils.isScalarSubquery(right)) {
-        return true;
-      } else {
-        return false;
-      }
+      return JoinUtils.hasScalarSubqueryInput(left, right);
     }
 
     return true;

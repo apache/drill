@@ -176,4 +176,14 @@ public class ZeroVector implements ValueVector {
 
   @Override
   public void load(UserBitShared.SerializedField metadata, DrillBuf buffer) { }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return 0;
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return 0;
+  }
 }

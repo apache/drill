@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -34,6 +35,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -76,9 +78,12 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private static final int MINIMUM_BUFFER_SIZE = 64 * 1024;
   private static final int MINIMUM_RECORD_COUNT_FOR_CHECK = 100;
   private static final int MAXIMUM_RECORD_COUNT_FOR_CHECK = 10000;
+  private static final int BLOCKSIZE_MULTIPLE = 64 * 1024;
 
   public static final String DRILL_VERSION_PROPERTY = "drill.version";
+  public static final String WRITER_VERSION_PROPERTY = "drill-writer.version";
 
+  private final StorageStrategy storageStrategy;
   private ParquetFileWriter parquetFileWriter;
   private MessageType schema;
   private Map<String, String> extraMetaData = new HashMap<>();
@@ -86,6 +91,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private int pageSize;
   private int dictionaryPageSize;
   private boolean enableDictionary = false;
+  private boolean useSingleFSBlock = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
   private CodecFactory codecFactory;
@@ -100,7 +106,9 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private BatchSchema batchSchema;
 
   private Configuration conf;
+  private FileSystem fs;
   private String location;
+  private List<Path> cleanUpLocations;
   private String prefix;
   private int index = 0;
   private OperatorContext oContext;
@@ -115,6 +123,9 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     this.partitionColumns = writer.getPartitionColumns();
     this.hasPartitions = partitionColumns != null && partitionColumns.size() > 0;
     this.extraMetaData.put(DRILL_VERSION_PROPERTY, DrillVersionInfo.getVersion());
+    this.extraMetaData.put(WRITER_VERSION_PROPERTY, String.valueOf(ParquetWriter.WRITER_VERSION));
+    this.storageStrategy = writer.getStorageStrategy() == null ? StorageStrategy.DEFAULT : writer.getStorageStrategy();
+    this.cleanUpLocations = Lists.newArrayList();
   }
 
   @Override
@@ -124,6 +135,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
     conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
+    fs = FileSystem.get(conf);
     blockSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_BLOCK_SIZE));
     pageSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_PAGE_SIZE));
     dictionaryPageSize= Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_DICT_PAGE_SIZE));
@@ -147,6 +159,12 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
 
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
+    useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
+
+    if (useSingleFSBlock) {
+      // Round up blockSize to multiple of 64K.
+      blockSize = (int)ceil((double)blockSize/BLOCKSIZE_MULTIPLE) * BLOCKSIZE_MULTIPLE;
+    }
   }
 
   private boolean containsComplexVectors(BatchSchema schema) {
@@ -361,17 +379,52 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     // we wait until there is at least one record before creating the parquet file
     if (parquetFileWriter == null) {
       Path path = new Path(location, prefix + "_" + index + ".parquet");
-      parquetFileWriter = new ParquetFileWriter(conf, schema, path);
+      // to ensure that our writer was the first to create output file, we create empty file first and fail if file exists
+      Path firstCreatedPath = storageStrategy.createFileAndApply(fs, path);
+
+      // since parquet reader supports partitions, it means that several output files may be created
+      // if this writer was the one to create table folder, we store only folder and delete it with its content in case of abort
+      // if table location was created before, we store only files created by this writer and delete them in case of abort
+      addCleanUpLocation(fs, firstCreatedPath);
+
+      // since ParquetFileWriter will overwrite empty output file (append is not supported)
+      // we need to re-apply file permission
+      if (useSingleFSBlock) {
+        // Passing blockSize creates files with this blockSize instead of filesystem default blockSize.
+        // Currently, this is supported only by filesystems included in
+        // BLOCK_FS_SCHEMES (ParquetFileWriter.java in parquet-mr), which includes HDFS.
+        // For other filesystems, it uses default blockSize configured for the file system.
+        parquetFileWriter = new ParquetFileWriter(conf, schema, path, ParquetFileWriter.Mode.OVERWRITE, blockSize, 0);
+      } else {
+        parquetFileWriter = new ParquetFileWriter(conf, schema, path, ParquetFileWriter.Mode.OVERWRITE);
+      }
+      storageStrategy.applyToFile(fs, path);
       parquetFileWriter.start();
     }
-
     recordCount++;
-
     checkBlockSizeReached();
   }
 
   @Override
   public void abort() throws IOException {
+    List<String> errors = Lists.newArrayList();
+    for (Path location : cleanUpLocations) {
+      try {
+        if (fs.exists(location)) {
+          fs.delete(location, true);
+          logger.info("Aborting writer. Location [{}] on file system [{}] is deleted.",
+              location.toUri().getPath(), fs.getUri());
+        }
+      } catch (IOException e) {
+        errors.add(location.toUri().getPath());
+        logger.error("Failed to delete location [{}] on file system [{}].",
+            location, fs.getUri(), e);
+      }
+    }
+    if (!errors.isEmpty()) {
+      throw new IOException(String.format("Failed to delete the following locations %s on file system [%s]" +
+          " during aborting writer", errors, fs.getUri()));
+    }
   }
 
   @Override
@@ -379,5 +432,28 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     flush();
 
     codecFactory.release();
+  }
+
+  /**
+   * Adds passed location to the list of locations to be cleaned up in case of abort.
+   * Add locations if:
+   * <li>if no locations were added before</li>
+   * <li>if first location is a file</li>
+   *
+   * If first added location is a folder, we don't add other locations (which can be only files),
+   * since this writer was the one to create main folder where files are located,
+   * on abort we'll delete this folder with its content.
+   *
+   * If first location is a file, then we add other files, since this writer didn't create main folder
+   * and on abort we need to delete only created files but not the whole folder.
+   *
+   * @param fs file system where location is created
+   * @param location passed location
+   * @throws IOException in case of errors during check if passed location is a file
+   */
+  private void addCleanUpLocation(FileSystem fs, Path location) throws IOException {
+    if (cleanUpLocations.isEmpty() || fs.isFile(cleanUpLocations.get(0))) {
+      cleanUpLocations.add(location);
+    }
   }
 }

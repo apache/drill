@@ -24,15 +24,21 @@ import java.sql.NClob;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLXML;
-import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Helper;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.client.ServerMethod;
+import org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp;
+import org.apache.drill.exec.proto.UserProtos.RequestStatus;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
 
 
 /**
@@ -42,6 +48,8 @@ import net.hydromatic.avatica.ColumnMetaData;
 // Note:  Must be public so net.hydromatic.avatica.UnregisteredDriver can
 // (reflectively) call no-args constructor.
 public class DrillJdbc41Factory extends DrillFactory {
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(DrillJdbc41Factory.class);
 
   /** Creates a factory for JDBC version 4.1. */
   // Note:  Must be public so net.hydromatic.avatica.UnregisteredDriver can
@@ -72,10 +80,12 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   @Override
   public DrillStatementImpl newStatement(AvaticaConnection connection,
+                                         StatementHandle h,
                                          int resultSetType,
                                          int resultSetConcurrency,
                                          int resultSetHoldability) {
     return new DrillStatementImpl((DrillConnectionImpl) connection,
+                                  h,
                                   resultSetType,
                                   resultSetConcurrency,
                                   resultSetHoldability);
@@ -83,31 +93,95 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   @Override
   public DrillJdbc41PreparedStatement newPreparedStatement(AvaticaConnection connection,
-                                                       AvaticaPrepareResult prepareResult,
+                                                       StatementHandle h,
+                                                       Meta.Signature signature,
                                                        int resultSetType,
                                                        int resultSetConcurrency,
                                                        int resultSetHoldability)
       throws SQLException {
-    return new DrillJdbc41PreparedStatement((DrillConnectionImpl) connection,
-                                            (DrillPrepareResult) prepareResult,
-                                            resultSetType,
-                                            resultSetConcurrency,
-                                            resultSetHoldability);
+    DrillConnectionImpl drillConnection = (DrillConnectionImpl) connection;
+    DrillClient client = drillConnection.getClient();
+    if (drillConnection.getConfig().isServerPreparedStatementDisabled() || !client.getSupportedMethods().contains(ServerMethod.PREPARED_STATEMENT)) {
+      // fallback to client side prepared statement
+      return new DrillJdbc41PreparedStatement(drillConnection, h, signature, null, resultSetType, resultSetConcurrency, resultSetHoldability);
+    }
+    return newServerPreparedStatement(drillConnection, h, signature, resultSetType,
+        resultSetConcurrency, resultSetHoldability);
+  }
+
+  private DrillJdbc41PreparedStatement newServerPreparedStatement(DrillConnectionImpl connection,
+                                                                  StatementHandle h,
+                                                                  Meta.Signature signature,
+                                                                  int resultSetType,
+                                                                  int resultSetConcurrency,
+                                                                  int resultSetHoldability
+      ) throws SQLException {
+    String sql = signature.sql;
+
+    try {
+      DrillRpcFuture<CreatePreparedStatementResp> respFuture = connection.getClient().createPreparedStatement(signature.sql);
+
+      CreatePreparedStatementResp resp;
+      try {
+        resp = respFuture.get();
+      } catch (InterruptedException e) {
+        // Preserve evidence that the interruption occurred so that code higher up
+        // on the call stack can learn of the interruption and respond to it if it
+        // wants to.
+        Thread.currentThread().interrupt();
+
+        throw new SQLException( "Interrupted", e );
+      }
+
+      final RequestStatus status = resp.getStatus();
+      if (status != RequestStatus.OK) {
+        final String errMsgFromServer = resp.getError() != null ? resp.getError().getMessage() : "";
+
+        if (status == RequestStatus.TIMEOUT) {
+          logger.error("Request timed out to create prepare statement: {}", errMsgFromServer);
+          throw new SQLTimeoutException("Failed to create prepared statement: " + errMsgFromServer);
+        }
+
+        if (status == RequestStatus.FAILED) {
+          logger.error("Failed to create prepared statement: {}", errMsgFromServer);
+          throw new SQLException("Failed to create prepared statement: " + errMsgFromServer);
+        }
+
+        logger.error("Failed to create prepared statement. Unknown status: {}, Error: {}", status, errMsgFromServer);
+        throw new SQLException(String.format(
+            "Failed to create prepared statement. Unknown status: %s, Error: %s", status, errMsgFromServer));
+      }
+
+      return new DrillJdbc41PreparedStatement(connection,
+          h,
+          signature,
+          resp.getPreparedStatement(),
+          resultSetType,
+          resultSetConcurrency,
+          resultSetHoldability);
+    } catch (SQLException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
+    } catch (Exception e) {
+      throw Helper.INSTANCE.createException("Error while preparing statement [" + sql + "]", e);
+    }
   }
 
   @Override
   public DrillResultSetImpl newResultSet(AvaticaStatement statement,
-                                         AvaticaPrepareResult prepareResult,
-                                         TimeZone timeZone) {
+                                         Meta.Signature signature,
+                                         TimeZone timeZone,
+                                         Meta.Frame firstFrame) {
     final ResultSetMetaData metaData =
-        newResultSetMetaData(statement, prepareResult.getColumnList());
-    return new DrillResultSetImpl(statement, prepareResult, metaData, timeZone);
+        newResultSetMetaData(statement, signature);
+    return new DrillResultSetImpl(statement, signature, metaData, timeZone, firstFrame);
   }
 
   @Override
   public ResultSetMetaData newResultSetMetaData(AvaticaStatement statement,
-                                                List<ColumnMetaData> columnMetaDataList) {
-    return new DrillResultSetMetaDataImpl(statement, null, columnMetaDataList);
+                                                Meta.Signature signature) {
+    return new DrillResultSetMetaDataImpl(statement, null, signature);
   }
 
 
@@ -117,11 +191,13 @@ public class DrillJdbc41Factory extends DrillFactory {
   private static class DrillJdbc41PreparedStatement extends DrillPreparedStatementImpl {
 
     DrillJdbc41PreparedStatement(DrillConnectionImpl connection,
-                                 DrillPrepareResult prepareResult,
+                                 StatementHandle h,
+                                 Meta.Signature signature,
+                                 org.apache.drill.exec.proto.UserProtos.PreparedStatement pstmt,
                                  int resultSetType,
                                  int resultSetConcurrency,
                                  int resultSetHoldability) throws SQLException {
-      super(connection, prepareResult,
+      super(connection, h, signature, pstmt,
             resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
@@ -129,104 +205,104 @@ public class DrillJdbc41Factory extends DrillFactory {
 
     @Override
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-      getParameter(parameterIndex).setRowId(x);
+      getSite(parameterIndex).setRowId(x);
     }
 
     @Override
     public void setNString(int parameterIndex, String value) throws SQLException {
-      getParameter(parameterIndex).setNString(value);
+      getSite(parameterIndex).setNString(value);
     }
 
     @Override
     public void setNCharacterStream(int parameterIndex, Reader value,
                                     long length) throws SQLException {
-      getParameter(parameterIndex).setNCharacterStream(value, length);
+      getSite(parameterIndex).setNCharacterStream(value, length);
     }
 
     @Override
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
-      getParameter(parameterIndex).setNClob(value);
+      getSite(parameterIndex).setNClob(value);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader,
                         long length) throws SQLException {
-      getParameter(parameterIndex).setClob(reader, length);
+      getSite(parameterIndex).setClob(reader, length);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream,
                         long length) throws SQLException {
-      getParameter(parameterIndex).setBlob(inputStream, length);
+      getSite(parameterIndex).setBlob(inputStream, length);
     }
 
     @Override
     public void setNClob(int parameterIndex, Reader reader,
                          long length) throws SQLException {
-      getParameter(parameterIndex).setNClob(reader, length);
+      getSite(parameterIndex).setNClob(reader, length);
     }
 
     @Override
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-      getParameter(parameterIndex).setSQLXML(xmlObject);
+      getSite(parameterIndex).setSQLXML(xmlObject);
     }
 
     @Override
     public void setAsciiStream(int parameterIndex, InputStream x,
                                long length) throws SQLException {
-      getParameter(parameterIndex).setAsciiStream(x, length);
+      getSite(parameterIndex).setAsciiStream(x, length);
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream x,
                                 long length) throws SQLException {
-      getParameter(parameterIndex).setBinaryStream(x, length);
+      getSite(parameterIndex).setBinaryStream(x, length);
     }
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader,
                                    long length) throws SQLException {
-      getParameter(parameterIndex).setCharacterStream(reader, length);
+      getSite(parameterIndex).setCharacterStream(reader, length);
     }
 
     @Override
     public void setAsciiStream(int parameterIndex,
                                InputStream x) throws SQLException {
-      getParameter(parameterIndex).setAsciiStream(x);
+      getSite(parameterIndex).setAsciiStream(x);
     }
 
     @Override
     public void setBinaryStream(int parameterIndex,
                                 InputStream x) throws SQLException {
-      getParameter(parameterIndex).setBinaryStream(x);
+      getSite(parameterIndex).setBinaryStream(x);
     }
 
     @Override
     public void setCharacterStream(int parameterIndex,
                                    Reader reader) throws SQLException {
-      getParameter(parameterIndex).setCharacterStream(reader);
+      getSite(parameterIndex).setCharacterStream(reader);
     }
 
     @Override
     public void setNCharacterStream(int parameterIndex,
                                     Reader value) throws SQLException {
-      getParameter(parameterIndex).setNCharacterStream(value);
+      getSite(parameterIndex).setNCharacterStream(value);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
-      getParameter(parameterIndex).setClob(reader);
+      getSite(parameterIndex).setClob(reader);
     }
 
     @Override
     public void setBlob(int parameterIndex,
                         InputStream inputStream) throws SQLException {
-      getParameter(parameterIndex).setBlob(inputStream);
+      getSite(parameterIndex).setBlob(inputStream);
     }
 
     @Override
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-      getParameter(parameterIndex).setNClob(reader);
+      getSite(parameterIndex).setNClob(reader);
     }
 
   }

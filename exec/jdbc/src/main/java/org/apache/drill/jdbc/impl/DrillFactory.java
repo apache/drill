@@ -21,9 +21,9 @@ package org.apache.drill.jdbc.impl;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaFactory;
-import net.hydromatic.avatica.UnregisteredDriver;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
+import org.apache.calcite.avatica.UnregisteredDriver;
 
 
 /**

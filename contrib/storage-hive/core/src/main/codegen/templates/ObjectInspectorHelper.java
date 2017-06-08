@@ -172,48 +172,35 @@ public class ObjectInspectorHelper {
             booleanJC._then().assign(returnValueHolder.ref("value"), JExpr.lit(1));
             booleanJC._else().assign(returnValueHolder.ref("value"), JExpr.lit(0));
 
-          <#elseif entry.hiveType == "VARCHAR">
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+          <#elseif entry.hiveType == "VARCHAR" || entry.hiveType == "CHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
+            <#if entry.hiveType == "VARCHAR">
+              JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                  castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
                       .invoke("getValue")
                       .invoke("getBytes"));
-
-            jc._else().add(returnValueHolder.ref("buffer")
-              .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-
-
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-
             <#elseif entry.hiveType == "CHAR">
                 JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-                castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
-                    .invoke("getStrippedValue")
-                    .invoke("getBytes"));
-
-            jc._else().add(returnValueHolder.ref("buffer")
-                .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-
-
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-
-          <#elseif entry.hiveType == "STRING">
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+                    castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+                        .invoke("getStrippedValue")
+                        .invoke("getBytes"));
+            <#elseif entry.hiveType == "STRING">
+              JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                  castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
                       .invoke("getBytes"));
-            jc._else().add(returnValueHolder.ref("buffer")
-              .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-          <#elseif entry.hiveType == "BINARY">
+            <#elseif entry.hiveType == "BINARY">
+                JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                    castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+            </#if>
 
-            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
-              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
-            jc._else().add(returnValueHolder.ref("buffer")
+            JConditional jnullif = jc._else()._if(data.eq(JExpr._null()));
+            jnullif._then().assign(returnValueHolder.ref("isSet"), JExpr.lit(0));
+
+            jnullif._else().add(returnValueHolder.ref("buffer")
                 .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
-            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
-            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+            jnullif._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
+            jnullif._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+            jnullif._else().add(returnValueHolder.ref("buffer").invoke("setIndex").arg(JExpr.lit(0)).arg(data.ref("length")));
+
           <#elseif entry.hiveType == "TIMESTAMP">
             JVar tsVar = jc._else().decl(m.directClass(java.sql.Timestamp.class.getCanonicalName()), "ts",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));

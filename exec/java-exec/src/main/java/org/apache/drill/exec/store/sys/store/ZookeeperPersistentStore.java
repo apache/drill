@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,8 +62,28 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
+  public boolean contains(final String key) {
+    return contains(key, null);
+  }
+
+  @Override
+  public boolean contains(final String key, final DataChangeVersion version) {
+    return client.hasPath(key, true, version);
+  }
+
+  @Override
   public V get(final String key) {
-    final byte[] bytes = client.get(key);
+    return get(key, false, null);
+  }
+
+  @Override
+  public V get(final String key, final DataChangeVersion version) {
+    return get(key, true, version);
+  }
+
+  public V get(final String key, final boolean consistencyFlag, final DataChangeVersion version) {
+    byte[] bytes = client.get(key, consistencyFlag, version);
+
     if (bytes == null) {
       return null;
     }
@@ -76,28 +96,30 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public void put(final String key, final V value) {
+    put(key, value, null);
+  }
+
+  @Override
+  public void put(final String key, final V value, final DataChangeVersion version) {
     final InstanceSerializer<V> serializer = config.getSerializer();
     try {
       final byte[] bytes = serializer.serialize(value);
-      client.put(key, bytes);
+      client.put(key, bytes, version);
     } catch (final IOException e) {
       throw new DrillRuntimeException(String.format("unable to de/serialize value of type %s", value.getClass()), e);
     }
   }
 
+
   @Override
   public boolean putIfAbsent(final String key, final V value) {
-    final V old = get(key);
-    if (old == null) {
-      try {
-        final byte[] bytes = config.getSerializer().serialize(value);
-        client.put(key, bytes);
-        return true;
-      } catch (final IOException e) {
-        throw new DrillRuntimeException(String.format("unable to serialize value of type %s", value.getClass()), e);
-      }
+    try {
+      final byte[] bytes = config.getSerializer().serialize(value);
+      final byte[] data = client.putIfAbsent(key, bytes);
+      return data == null;
+    } catch (final IOException e) {
+      throw new DrillRuntimeException(String.format("unable to serialize value of type %s", value.getClass()), e);
     }
-    return false;
   }
 
   @Override

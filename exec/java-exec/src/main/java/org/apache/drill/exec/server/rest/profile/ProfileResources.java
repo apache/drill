@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,12 +31,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -45,6 +48,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.rest.ViewableWithPermissions;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -61,8 +65,6 @@ import com.google.common.collect.Lists;
 public class ProfileResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
 
-  public final static int MAX_PROFILES = 100;
-
   @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject DrillUserPrincipal principal;
@@ -72,6 +74,8 @@ public class ProfileResources {
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private String queryId;
+    private long startTime;
+    private long endTime;
     private Date time;
     private String location;
     private String foreman;
@@ -79,9 +83,11 @@ public class ProfileResources {
     private String state;
     private String user;
 
-    public ProfileInfo(String queryId, long time, String foreman, String query, String state, String user) {
+    public ProfileInfo(String queryId, long startTime, long endTime, String foreman, String query, String state, String user) {
       this.queryId = queryId;
-      this.time = new Date(time);
+      this.startTime = startTime;
+      this.endTime = endTime;
+      this.time = new Date(startTime);
       this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
       this.query = query.substring(0,  Math.min(query.length(), 150));
@@ -105,6 +111,17 @@ public class ProfileResources {
       return format.format(time);
     }
 
+    public long getStartTime() {
+      return startTime;
+    }
+
+    public long getEndTime() {
+      return endTime;
+    }
+
+    public String getDuration() {
+      return (new SimpleDurationFormat(startTime, endTime)).verbose();
+    }
 
     public String getState() {
       return state;
@@ -156,13 +173,17 @@ public class ProfileResources {
     public List<String> getErrors() { return errors; }
   }
 
+  //max Param to cap listing of profiles
+  private static final String MAX_QPROFILES_PARAM = "max";
+
   @GET
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public QProfiles getProfilesJSON() {
+  public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
     try {
-      final PersistentStore<QueryProfile> completed = getProvider().getOrCreateStore(QueryManager.QUERY_PROFILE);
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
+      final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
+      final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
 
       final List<String> errors = Lists.newArrayList();
 
@@ -174,7 +195,7 @@ public class ProfileResources {
           final Map.Entry<String, QueryInfo> runningEntry = runningEntries.next();
           final QueryInfo profile = runningEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            runningQueries.add(new ProfileInfo(runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -186,13 +207,21 @@ public class ProfileResources {
 
       final List<ProfileInfo> finishedQueries = Lists.newArrayList();
 
-      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, MAX_PROFILES);
+      //Defining #Profiles to load
+      int maxProfilesToLoad = work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
+      String maxProfilesParams = uriInfo.getQueryParameters().getFirst(MAX_QPROFILES_PARAM);
+      if (maxProfilesParams != null && !maxProfilesParams.isEmpty()) {
+        maxProfilesToLoad = Integer.valueOf(maxProfilesParams);
+      }
+
+      final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
+
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
           final QueryProfile profile = profileEntry.getValue();
           if (principal.canManageProfileOf(profile.getUser())) {
-            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
+            finishedQueries.add(new ProfileInfo(profileEntry.getKey(), profile.getStart(), profile.getEnd(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name(), profile.getUser()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
@@ -200,19 +229,21 @@ public class ProfileResources {
         }
       }
 
+      Collections.sort(finishedQueries, Collections.reverseOrder());
+
       return new QProfiles(runningQueries, finishedQueries, errors);
     } catch (Exception e) {
       throw UserException.resourceError(e)
-          .message("Failed to get profiles from persistent or ephemeral store.")
-          .build(logger);
+      .message("Failed to get profiles from persistent or ephemeral store.")
+      .build(logger);
     }
   }
 
   @GET
   @Path("/profiles")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfiles() {
-    QProfiles profiles = getProfilesJSON();
+  public Viewable getProfiles(@Context UriInfo uriInfo) {
+    QProfiles profiles = getProfilesJSON(uriInfo);
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
   }
 
@@ -229,7 +260,7 @@ public class ProfileResources {
 
     // then check remote running
     try {
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final TransientStore<QueryInfo> running = work.getContext().getProfileStoreContext().getRunningProfileStore();
       final QueryInfo info = running.get(queryId);
       if (info != null) {
         QueryProfile queryProfile = work.getContext()
@@ -246,7 +277,7 @@ public class ProfileResources {
 
     // then check blob store
     try {
-      final PersistentStore<QueryProfile> profiles = getProvider().getOrCreateStore(QueryManager.QUERY_PROFILE);
+      final PersistentStore<QueryProfile> profiles = work.getContext().getProfileStoreContext().getCompletedProfileStore();
       final QueryProfile queryProfile = profiles.get(queryId);
       if (queryProfile != null) {
         checkOrThrowProfileViewAuthorization(queryProfile);
@@ -257,8 +288,8 @@ public class ProfileResources {
     }
 
     throw UserException.validationError()
-        .message("No profile with given query id '%s' exists. Please verify the query id.", queryId)
-        .build(logger);
+    .message("No profile with given query id '%s' exists. Please verify the query id.", queryId)
+    .build(logger);
   }
 
 
@@ -267,7 +298,7 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public String getProfileJSON(@PathParam("queryid") String queryId) {
     try {
-      return new String(QueryManager.QUERY_PROFILE.getSerializer().serialize(getQueryProfile(queryId)));
+      return new String(work.getContext().getProfileStoreContext().getProfileStoreConfig().getSerializer().serialize(getQueryProfile(queryId)));
     } catch (Exception e) {
       logger.debug("Failed to serialize profile for: " + queryId);
       return ("{ 'message' : 'error (unable to serialize profile)' }");
@@ -300,7 +331,7 @@ public class ProfileResources {
 
     // then check remote running
     try {
-      final TransientStore<QueryInfo> running = getCoordinator().getOrCreateTransientStore(QueryManager.RUNNING_QUERY_INFO);
+      final TransientStore<QueryInfo> running = work.getContext().getProfileStoreContext().getRunningProfileStore();
       final QueryInfo info = running.get(queryId);
       checkOrThrowQueryCancelAuthorization(info.getUser(), queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
@@ -318,16 +349,17 @@ public class ProfileResources {
   private void checkOrThrowProfileViewAuthorization(final QueryProfile profile) {
     if (!principal.canManageProfileOf(profile.getUser())) {
       throw UserException.permissionError()
-          .message("Not authorized to view the profile of query '%s'", profile.getId())
-          .build(logger);
+      .message("Not authorized to view the profile of query '%s'", profile.getId())
+      .build(logger);
     }
   }
 
   private void checkOrThrowQueryCancelAuthorization(final String queryUser, final String queryId) {
     if (!principal.canManageQueryOf(queryUser)) {
       throw UserException.permissionError()
-          .message("Not authorized to cancel the query '%s'", queryId)
-          .build(logger);
+      .message("Not authorized to cancel the query '%s'", queryId)
+      .build(logger);
     }
   }
 }
+

@@ -14,16 +14,16 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-jdbc</artifactId>
   <name>exec/JDBC Driver using dependencies</name>
 
   <dependencies>
     <dependency>
-      <groupId>net.hydromatic</groupId>
-      <artifactId>optiq-avatica</artifactId>
-      <version>0.9-drill-r20</version>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-avatica</artifactId>
+      <version>${calcite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -56,6 +56,11 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>${jackson.version}</version>
     </dependency>
@@ -77,11 +82,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.6.1</version>
-    </dependency>
-    <dependency>
       <groupId>sqlline</groupId>
       <artifactId>sqlline</artifactId>
       <scope>test</scope>
@@ -95,9 +95,20 @@
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
     </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>1.1.0.Final</version>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+         <directory>${project.basedir}/src/main/resources</directory>
+         <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.rat</groupId>
@@ -112,6 +123,7 @@
             <exclude>**/donuts-output-data.txt</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/derby.log</exclude>
+            <exclude>src/main/resources/META-INF/services/**</exclude>
           </excludes>
         </configuration>
       </plugin>

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,21 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.flatten;
 
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -65,6 +70,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecords)
         .createFiles(1, numCopies, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("uid", 1l,
             "lst_lst_0", listOf(1l, 2l, 3l, 4l, 5l),
@@ -99,6 +105,7 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void testFlattenReferenceImpl() throws Exception {
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("a",1,
               "b",2,
@@ -108,7 +115,8 @@ public class TestFlatten extends BaseTestQuery {
                   listOf(1000,999)
             )));
     List<JsonStringHashMap<String, Object>> result = flatten(flatten(flatten(data, "list_col"), "nested_list_col"), "nested_list_col");
-     List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
+     @SuppressWarnings("unchecked")
+    List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
         mapOf("nested_list_col", 100,  "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 99,   "list_col", 10,"a", 1, "b",2),
         mapOf("nested_list_col", 1000, "list_col", 10,"a", 1, "b",2),
@@ -171,6 +179,7 @@ public class TestFlatten extends BaseTestQuery {
         .setRecord(jsonRecord)
         .createFiles(1, numRecords, "json");
 
+    @SuppressWarnings("unchecked")
     List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
         mapOf("int_list", inputList)
     );
@@ -546,6 +555,36 @@ public class TestFlatten extends BaseTestQuery {
         .baselineValues(3L)
         .go();
 
+  }
+
+  @Test
+  public void testFlattenOnEmptyArrayAndNestedMap() throws Exception {
+    File path = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      path.mkdirs();
+      String pathString = path.toPath().toString();
+
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path, "empty_arrays.json")))) {
+        writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [1]}\n");
+        for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+          writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [], \"c\" : 1}\n");
+        }
+        writer.write("{\"a\" : {\"a1\" : \"a1\"}, \"b\" : [1], \"c\" : 1}");
+      }
+
+      String query = "select typeof(t1.a.a1) as col from " +
+        "(select t.*, flatten(t.b) as b from dfs_test.`%s/empty_arrays.json` t where t.c is not null) t1";
+
+      testBuilder()
+        .sqlQuery(query, pathString)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues("VARCHAR")
+        .go();
+
+    } finally {
+      deleteQuietly(path);
+    }
   }
 
 }

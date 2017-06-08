@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -48,8 +50,9 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
 
     
     private LikeFilter catalogNameFilter;
-    private LikeFilter schameNameFilter;
+    private LikeFilter schemaNameFilter;
     private LikeFilter tableNameFilter;
+    private List<String> tableTypeFilter;
 
     public GetTablesReq()
     {
@@ -71,16 +74,16 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
         return this;
     }
 
-    // schameNameFilter
+    // schemaNameFilter
 
-    public LikeFilter getSchameNameFilter()
+    public LikeFilter getSchemaNameFilter()
     {
-        return schameNameFilter;
+        return schemaNameFilter;
     }
 
-    public GetTablesReq setSchameNameFilter(LikeFilter schameNameFilter)
+    public GetTablesReq setSchemaNameFilter(LikeFilter schemaNameFilter)
     {
-        this.schameNameFilter = schameNameFilter;
+        this.schemaNameFilter = schemaNameFilter;
         return this;
     }
 
@@ -94,6 +97,19 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
     public GetTablesReq setTableNameFilter(LikeFilter tableNameFilter)
     {
         this.tableNameFilter = tableNameFilter;
+        return this;
+    }
+
+    // tableTypeFilter
+
+    public List<String> getTableTypeFilterList()
+    {
+        return tableTypeFilter;
+    }
+
+    public GetTablesReq setTableTypeFilterList(List<String> tableTypeFilter)
+    {
+        this.tableTypeFilter = tableTypeFilter;
         return this;
     }
 
@@ -156,13 +172,18 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
                     break;
 
                 case 2:
-                    message.schameNameFilter = input.mergeObject(message.schameNameFilter, LikeFilter.getSchema());
+                    message.schemaNameFilter = input.mergeObject(message.schemaNameFilter, LikeFilter.getSchema());
                     break;
 
                 case 3:
                     message.tableNameFilter = input.mergeObject(message.tableNameFilter, LikeFilter.getSchema());
                     break;
 
+                case 4:
+                    if(message.tableTypeFilter == null)
+                        message.tableTypeFilter = new ArrayList<String>();
+                    message.tableTypeFilter.add(input.readString());
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -176,13 +197,22 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
              output.writeObject(1, message.catalogNameFilter, LikeFilter.getSchema(), false);
 
 
-        if(message.schameNameFilter != null)
-             output.writeObject(2, message.schameNameFilter, LikeFilter.getSchema(), false);
+        if(message.schemaNameFilter != null)
+             output.writeObject(2, message.schemaNameFilter, LikeFilter.getSchema(), false);
 
 
         if(message.tableNameFilter != null)
              output.writeObject(3, message.tableNameFilter, LikeFilter.getSchema(), false);
 
+
+        if(message.tableTypeFilter != null)
+        {
+            for(String tableTypeFilter : message.tableTypeFilter)
+            {
+                if(tableTypeFilter != null)
+                    output.writeString(4, tableTypeFilter, true);
+            }
+        }
     }
 
     public String getFieldName(int number)
@@ -190,8 +220,9 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
         switch(number)
         {
             case 1: return "catalogNameFilter";
-            case 2: return "schameNameFilter";
+            case 2: return "schemaNameFilter";
             case 3: return "tableNameFilter";
+            case 4: return "tableTypeFilter";
             default: return null;
         }
     }
@@ -206,8 +237,9 @@ public final class GetTablesReq implements Externalizable, Message<GetTablesReq>
     static
     {
         __fieldMap.put("catalogNameFilter", 1);
-        __fieldMap.put("schameNameFilter", 2);
+        __fieldMap.put("schemaNameFilter", 2);
         __fieldMap.put("tableNameFilter", 3);
+        __fieldMap.put("tableTypeFilter", 4);
     }
     
 }

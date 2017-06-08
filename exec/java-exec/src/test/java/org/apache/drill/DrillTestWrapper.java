@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -64,6 +65,14 @@ import org.apache.drill.exec.vector.ValueVector;
 public class DrillTestWrapper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
+  public interface TestServices {
+    BufferAllocator allocator();
+
+    void test(String query) throws Exception;
+
+    List<QueryDataBatch> testRunAndReturn(QueryType type, Object query) throws Exception;
+  }
+
   // TODO - when in JSON, read baseline in all text mode to avoid precision loss for decimal values
 
   // This flag will enable all of the values that are validated to be logged. For large validations this is time consuming
@@ -91,7 +100,7 @@ public class DrillTestWrapper {
   private UserBitShared.QueryType baselineQueryType;
   // should ordering be enforced in the baseline check
   private boolean ordered;
-  private BufferAllocator allocator;
+  private TestServices services;
   // queries to run before the baseline or test queries, can be used to set options
   private String baselineOptionSettingQueries;
   private String testOptionSettingQueries;
@@ -108,12 +117,12 @@ public class DrillTestWrapper {
 
   private int expectedNumBatches;
 
-  public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, Object query, QueryType queryType,
-                          String baselineOptionSettingQueries, String testOptionSettingQueries,
-                          QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
-                          List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
+  public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
+      String baselineOptionSettingQueries, String testOptionSettingQueries,
+      QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
+      List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
-    this.allocator = allocator;
+    this.services = services;
     this.query = query;
     this.queryType = queryType;
     this.baselineQueryType = baselineQueryType;
@@ -138,11 +147,11 @@ public class DrillTestWrapper {
   }
 
   private BufferAllocator getAllocator() {
-    return allocator;
+    return services.allocator();
   }
 
   private void compareHyperVectors(Map<String, HyperVectorValueIterator> expectedRecords,
-                                         Map<String, HyperVectorValueIterator> actualRecords) throws Exception {
+      Map<String, HyperVectorValueIterator> actualRecords) throws Exception {
     for (String s : expectedRecords.keySet()) {
       assertNotNull("Expected column '" + s + "' not found.", actualRecords.get(s));
       assertEquals(expectedRecords.get(s).getTotalRecords(), actualRecords.get(s).getTotalRecords());
@@ -216,7 +225,7 @@ public class DrillTestWrapper {
   }
 
   private Map<String, HyperVectorValueIterator> addToHyperVectorMap(final List<QueryDataBatch> records,
-                                                                    final RecordBatchLoader loader)
+      final RecordBatchLoader loader)
       throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, HyperVectorValueIterator> combinedVectors = new TreeMap<>();
@@ -299,12 +308,28 @@ public class DrillTestWrapper {
   }
 
   /**
+   * Iterate over batches, and combine the batches into a map, where key is schema path, and value is
+   * the list of column values across all the batches.
    * @param batches
    * @return
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
   public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches)
+      throws SchemaChangeException, UnsupportedEncodingException {
+    return addToCombinedVectorResults(batches, null);
+  }
+
+  /**
+   * Add to result vectors and compare batch schema against expected schema while iterating batches.
+   * @param batches
+   * @param  expectedSchema: the expected schema the batches should contain. Through SchemaChangeException
+   *                       if encounter different batch schema.
+   * @return
+   * @throws SchemaChangeException
+   * @throws UnsupportedEncodingException
+   */
+  public static Map<String, List<Object>> addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema)
        throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
     Map<String, List<Object>> combinedVectors = new TreeMap<>();
@@ -312,6 +337,14 @@ public class DrillTestWrapper {
     long totalRecords = 0;
     BatchSchema schema = null;
     for (VectorAccessible loader : batches)  {
+      if (expectedSchema != null) {
+        if (! expectedSchema.equals(loader.getSchema())) {
+          throw new SchemaChangeException(String.format("Batch schema does not match expected schema\n" +
+                  "Actual schema: %s.  Expected schema : %s",
+              loader.getSchema(), expectedSchema));
+        }
+      }
+
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
       // SchemaChangeException, so check/clean throws clause above.
       if (schema == null) {
@@ -388,8 +421,8 @@ public class DrillTestWrapper {
     List<QueryDataBatch> actual;
     QueryDataBatch batch = null;
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
       batch = actual.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
 
@@ -438,8 +471,8 @@ public class DrillTestWrapper {
     List<Map<String, Object>> actualRecords = new ArrayList<>();
 
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
 
       checkNumBatches(actual);
 
@@ -449,8 +482,8 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        BaseTestQuery.test(baselineOptionSettingQueries);
-        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        test(baselineOptionSettingQueries);
+        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
         addToMaterializedResults(expectedRecords, expected, loader);
       } else {
         expectedRecords = baselineRecords;
@@ -481,7 +514,6 @@ public class DrillTestWrapper {
 
   public void compareMergedOnHeapVectors() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    BatchSchema schema = null;
 
     List<QueryDataBatch> actual = Collections.emptyList();
     List<QueryDataBatch> expected = Collections.emptyList();
@@ -489,8 +521,8 @@ public class DrillTestWrapper {
     Map<String, List<Object>> expectedSuperVectors;
 
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      test(testOptionSettingQueries);
+      actual = testRunAndReturn(queryType, query);
 
       checkNumBatches(actual);
 
@@ -504,8 +536,8 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        BaseTestQuery.test(baselineOptionSettingQueries);
-        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        test(baselineOptionSettingQueries);
+        expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
         BatchIterator exBatchIter = new BatchIterator(expected, loader);
         expectedSuperVectors = addToCombinedVectorResults(exBatchIter);
         exBatchIter.close();
@@ -539,8 +571,8 @@ public class DrillTestWrapper {
   public void compareResultsHyperVector() throws Exception {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
 
-    BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+    test(testOptionSettingQueries);
+    List<QueryDataBatch> results = testRunAndReturn(queryType, query);
 
     checkNumBatches(results);
 
@@ -549,8 +581,8 @@ public class DrillTestWrapper {
 
     Map<String, HyperVectorValueIterator> actualSuperVectors = addToHyperVectorMap(results, loader);
 
-    BaseTestQuery.test(baselineOptionSettingQueries);
-    List<QueryDataBatch> expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+    test(baselineOptionSettingQueries);
+    List<QueryDataBatch> expected = testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
 
     Map<String, HyperVectorValueIterator> expectedSuperVectors = addToHyperVectorMap(expected, loader);
 
@@ -732,8 +764,8 @@ public class DrillTestWrapper {
           sb.append(printRecord(actualRecords.get(actualRecordDisplayCount)));
         }
         String actualRecordExamples = sb.toString();
-        throw new Exception(String.format("After matching %d records, did not find expected record in result set: %s\n\n" +
-            "Some examples of expected records:%s\n\n Some examples of records returned by the test query:%s",
+        throw new Exception(String.format("After matching %d records, did not find expected record in result set:\n %s\n\n" +
+            "Some examples of expected records:\n%s\n\n Some examples of records returned by the test query:\n%s",
             counter, printRecord(expectedRecord), expectedRecordExamples, actualRecordExamples));
       } else {
         actualRecords.remove(i);
@@ -761,4 +793,11 @@ public class DrillTestWrapper {
     return ret + "\n";
   }
 
+  private void test(String query) throws Exception {
+    services.test(query);
+  }
+
+  private List<QueryDataBatch> testRunAndReturn(QueryType type, Object query) throws Exception {
+    return services.testRunAndReturn(type, query);
+  }
 }

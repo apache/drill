@@ -139,18 +139,13 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       skipBatch = true;
     } else {
       outgoingSv.allocateNew(recordCount);
-      if(incomingSv != null) {
-       limitWithSV(recordCount);
-      } else {
-       limitWithNoSV(recordCount);
-      }
+      limit(recordCount);
     }
 
     return IterOutcome.OK;
   }
 
-  // These two functions are identical except for the computation of the index; merge
-  private void limitWithNoSV(int recordCount) {
+  private void limit(int recordCount) {
     final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
     recordsToSkip -= offset;
     int fetch;
@@ -163,28 +158,12 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
 
     int svIndex = 0;
-    for(char i = (char) offset; i < fetch; svIndex++, i++) {
-      outgoingSv.setIndex(svIndex, i);
-    }
-    outgoingSv.setRecordCount(svIndex);
-  }
-
-  private void limitWithSV(int recordCount) {
-    final int offset = Math.max(0, Math.min(recordCount - 1, recordsToSkip));
-    recordsToSkip -= offset;
-    int fetch;
-
-    if(noEndLimit) {
-      fetch = recordCount;
-    } else {
-      fetch = Math.min(recordCount, recordsLeft);
-      recordsLeft -= Math.max(0, fetch - offset);
-    }
-
-    int svIndex = 0;
     for(int i = offset; i < fetch; svIndex++, i++) {
-      final char index = incomingSv.getIndex(i);
-      outgoingSv.setIndex(svIndex, index);
+      if (incomingSv != null) {
+        outgoingSv.setIndex(svIndex, incomingSv.getIndex(i));
+      } else {
+        outgoingSv.setIndex(svIndex, (char) i);
+      }
     }
     outgoingSv.setRecordCount(svIndex);
   }

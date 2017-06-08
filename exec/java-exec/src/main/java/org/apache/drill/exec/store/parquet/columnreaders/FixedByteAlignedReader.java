@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.DateVector;
@@ -34,7 +33,7 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
-import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeConstants;
 
 import io.netty.buffer.DrillBuf;
 
@@ -119,9 +118,11 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
   public static class DateReader extends ConvertedReader<DateVector> {
 
+    private final DateVector.Mutator mutator;
     DateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      mutator = v.getMutator();
     }
 
     @Override
@@ -133,7 +134,67 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
         intValue = readIntLittleEndian(bytebuf, start);
       }
 
-      valueVec.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      mutator.set(index, intValue * (long) DateTimeConstants.MILLIS_PER_DAY);
+    }
+  }
+
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   */
+  public static class CorruptDateReader extends ConvertedReader<DateVector> {
+
+    private final DateVector.Mutator mutator;
+
+    CorruptDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                      boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      mutator = v.getMutator();
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int intValue;
+      if (usingDictionary) {
+        intValue = pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      mutator.set(index, (intValue - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY);
+    }
+
+  }
+
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   * <p/>
+   * For files that lack enough metadata to determine if the dates are corrupt, we must just
+   * correct values when they look corrupt during this low level read.
+   */
+  public static class CorruptionDetectingDateReader extends ConvertedReader<DateVector> {
+
+    private final DateVector.Mutator mutator;
+
+    CorruptionDetectingDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                                  boolean fixedLength, DateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      mutator = v.getMutator();
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int intValue;
+      if (usingDictionary) {
+        intValue = pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      if (intValue > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+        mutator.set(index, (intValue - ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT) * DateTimeConstants.MILLIS_PER_DAY);
+      } else {
+        mutator.set(index, intValue * (long) DateTimeConstants.MILLIS_PER_DAY);
+      }
     }
 
   }

@@ -134,10 +134,9 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    int expectedSize = getBufferSize();
-    int actualSize   = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedSize == actualSize);
+    //int expectedSize = getBufferSize();
+    //int actualSize   = super.getBufferSize();
+    //Preconditions.checkArgument(expectedSize == actualSize);
     return super.getBuffers(clear);
   }
 
@@ -278,7 +277,10 @@ public class MapVector extends AbstractMapVector {
       bufOffset += child.getBufferLength();
     }
 
-    assert bufOffset == buf.capacity();
+    // We should have consumed all bytes written into the buffer
+    // during deserialization.
+
+    assert bufOffset == buf.writerIndex();
   }
 
   @Override

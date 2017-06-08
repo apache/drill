@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,7 @@ public class PamUserAuthenticator implements UserAuthenticator {
 
   @Override
   public void setup(DrillConfig drillConfig) throws DrillbitStartupException {
-    profiles = DrillConfig.create().getStringList(ExecConstants.PAM_AUTHENTICATOR_PROFILES);
+    profiles = drillConfig.getStringList(ExecConstants.PAM_AUTHENTICATOR_PROFILES);
 
     // Create a JPAM object so that it triggers loading of native "jpamlib" needed. Issues in loading/finding native
     // "jpamlib" will be found it Drillbit start rather than when authenticating the first user.

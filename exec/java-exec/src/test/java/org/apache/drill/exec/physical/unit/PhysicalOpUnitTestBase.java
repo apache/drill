@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.unit;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import mockit.Delegate;
@@ -56,6 +54,7 @@ import org.apache.drill.exec.ops.BufferManagerImpl;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
@@ -66,8 +65,9 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.util.TestUtilities;
+import org.junit.Before;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -78,10 +78,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
+
 /**
  * Look! Doesn't extend BaseTestQuery!!
  */
 public class PhysicalOpUnitTestBase extends ExecTest {
+//  public static long INIT_ALLOCATION = 1_000_000l;
+//  public static long MAX_ALLOCATION = 10_000_000L;
 
   @Injectable FragmentContext fragContext;
   @Injectable OperatorContext opContext;
@@ -94,9 +98,15 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   private final BufferManagerImpl bufManager = new BufferManagerImpl(allocator);
   private final ScanResult classpathScan = ClassPathScanner.fromPrescan(drillConf);
   private final FunctionImplementationRegistry funcReg = new FunctionImplementationRegistry(drillConf, classpathScan);
-  private final TemplateClassDefinition templateClassDefinition = new TemplateClassDefinition<>(Projector.class, ProjectorTemplate.class);
+  private final TemplateClassDefinition<Projector> templateClassDefinition = new TemplateClassDefinition<Projector>(Projector.class, ProjectorTemplate.class);
   private final OperatorCreatorRegistry opCreatorReg = new OperatorCreatorRegistry(classpathScan);
 
+  @Before
+  public void setup() throws Exception {
+    mockFragmentContext();
+  }
+
+  @Override
   protected LogicalExpression parseExpr(String expr) {
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -127,37 +137,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     return ret;
   }
 
-
-  void runTest(OperatorTestBuilder testBuilder) {
-    BatchCreator<PhysicalOperator> opCreator;
-    RecordBatch testOperator;
-    try {
-      mockFragmentContext(testBuilder.initReservation, testBuilder.maxAllocation);
-      opCreator = (BatchCreator<PhysicalOperator>)
-          opCreatorReg.getOperatorCreator(testBuilder.popConfig.getClass());
-       List<RecordBatch> incomingStreams = Lists.newArrayList();
-       for (List<String> batchesJson : testBuilder.inputStreamsJSON) {
-         incomingStreams.add(new ScanBatch(null, fragContext,
-             getRecordReadersForJsonBatches(batchesJson, fragContext)));
-       }
-       testOperator = opCreator.getBatch(fragContext, testBuilder.popConfig, incomingStreams);
-
-      Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator));
-      Map<String, List<Object>> expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(testBuilder.baselineRecords);
-      DrillTestWrapper.compareMergedVectors(expectedSuperVectors, actualSuperVectors);
-
-    } catch (ExecutionSetupException e) {
-      throw new RuntimeException(e);
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    } catch (SchemaChangeException e) {
-      throw new RuntimeException(e);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static class BatchIterator implements Iterable<VectorAccessible> {
+  protected static class BatchIterator implements Iterable<VectorAccessible> {
 
     private RecordBatch operator;
     public BatchIterator(RecordBatch operator) {
@@ -212,11 +192,40 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     private String[] baselineColumns;
     private List<Map<String, Object>> baselineRecords;
     private List<List<String>> inputStreamsJSON;
-    private long initReservation = 10000000;
-    private long maxAllocation = 15000000;
+    private long initReservation = AbstractBase.INIT_ALLOCATION;
+    private long maxAllocation = AbstractBase.MAX_ALLOCATION;
 
     public void go() {
-      runTest(this);
+      BatchCreator<PhysicalOperator> opCreator;
+      RecordBatch testOperator;
+      try {
+        mockOpContext(initReservation, maxAllocation);
+
+        opCreator = (BatchCreator<PhysicalOperator>)
+            opCreatorReg.getOperatorCreator(popConfig.getClass());
+        List<RecordBatch> incomingStreams = Lists.newArrayList();
+        if (inputStreamsJSON != null) {
+          for (List<String> batchesJson : inputStreamsJSON) {
+            incomingStreams.add(new ScanBatch(null, fragContext,
+                getRecordReadersForJsonBatches(batchesJson, fragContext)));
+          }
+        }
+
+        testOperator = opCreator.getBatch(fragContext, popConfig, incomingStreams);
+
+        Map<String, List<Object>> actualSuperVectors = DrillTestWrapper.addToCombinedVectorResults(new BatchIterator(testOperator));
+        Map<String, List<Object>> expectedSuperVectors = DrillTestWrapper.translateRecordListToHeapVectors(baselineRecords);
+        DrillTestWrapper.compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+
+      } catch (ExecutionSetupException e) {
+        throw new RuntimeException(e);
+      } catch (UnsupportedEncodingException e) {
+        throw new RuntimeException(e);
+      } catch (SchemaChangeException e) {
+        throw new RuntimeException(e);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
 
     public OperatorTestBuilder physicalOperator(PhysicalOperator batch) {
@@ -260,9 +269,9 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
     public OperatorTestBuilder baselineValues(Object ... baselineValues) {
       if (baselineRecords == null) {
-        baselineRecords = new ArrayList();
+        baselineRecords = new ArrayList<>();
       }
-      Map<String, Object> ret = new HashMap();
+      Map<String, Object> ret = new HashMap<>();
       int i = 0;
       Preconditions.checkArgument(baselineValues.length == baselineColumns.length,
           "Must supply the same number of baseline values as columns.");
@@ -275,9 +284,9 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
   }
 
-  private void mockFragmentContext(long initReservation, long maxAllocation) throws Exception{
+  protected void mockFragmentContext() throws Exception{
     final CodeCompiler compiler = new CodeCompiler(drillConf, optionManager);
-    final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
+//    final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
     new NonStrictExpectations() {
       {
 //        optManager.getOption(withAny(new TypeValidators.BooleanValidator("", false))); result = false;
@@ -295,18 +304,23 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         fragContext.getConfig(); result = drillConf;
         fragContext.getHandle(); result = ExecProtos.FragmentHandle.getDefaultInstance();
         try {
-          fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition, funcReg)));
-          result = new Delegate()
+          CodeGenerator<?> cg = CodeGenerator.get(templateClassDefinition, funcReg);
+          cg.plainJavaCapable(true);
+//          cg.saveCodeForDebugging(true);
+          fragContext.getImplementationClass(withAny(cg));
+          result = new Delegate<Object>()
           {
-            Object getImplementationClass(CodeGenerator gen) throws IOException, ClassTransformationException {
-              return compiler.getImplementationClass(gen);
+            @SuppressWarnings("unused")
+            Object getImplementationClass(CodeGenerator<Object> gen) throws IOException, ClassTransformationException {
+              return compiler.createInstance(gen);
             }
           };
           fragContext.getImplementationClass(withAny(CodeGenerator.get(templateClassDefinition, funcReg).getRoot()));
-          result = new Delegate()
+          result = new Delegate<Object>()
           {
-            Object getImplementationClass(ClassGenerator gen) throws IOException, ClassTransformationException {
-              return compiler.getImplementationClass(gen.getCodeGenerator());
+            @SuppressWarnings("unused")
+            Object getImplementationClass(ClassGenerator<Object> gen) throws IOException, ClassTransformationException {
+              return compiler.createInstance(gen.getCodeGenerator());
             }
           };
         } catch (ClassTransformationException e) {
@@ -314,6 +328,14 @@ public class PhysicalOpUnitTestBase extends ExecTest {
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
+      }
+    };
+  }
+
+  protected void mockOpContext(long initReservation, long maxAllocation) throws Exception{
+    final BufferAllocator allocator = this.allocator.newChildAllocator("allocator_for_operator_test", initReservation, maxAllocation);
+    new NonStrictExpectations() {
+      {
         opContext.getStats();result = opStats;
         opContext.getAllocator(); result = allocator;
         fragContext.newOperatorContext(withAny(popConf));result = opContext;
@@ -321,18 +343,13 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     };
   }
 
-  private Iterator<RecordReader> getRecordReadersForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
-    ObjectMapper mapper = new ObjectMapper();
-    List<RecordReader> readers = new ArrayList<>();
-    for (String batchJason : jsonBatches) {
-      JsonNode records;
-      try {
-        records = mapper.readTree(batchJason);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      readers.add(new JSONRecordReader(fragContext, records, null, Collections.singletonList(SchemaPath.getSimplePath("*"))));
-    }
-    return readers.iterator();
+  protected OperatorCreatorRegistry getOpCreatorReg() {
+    return opCreatorReg;
   }
+
+  private Iterator<RecordReader> getRecordReadersForJsonBatches(List<String> jsonBatches, FragmentContext fragContext) {
+    return TestUtilities.getJsonReadersFromBatchString(jsonBatches, fragContext, Collections.singletonList(SchemaPath.getSimplePath("*")));
+  }
+
+
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.sys;
 
+import org.apache.drill.exec.store.sys.store.DataChangeVersion;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -32,10 +34,36 @@ public interface PersistentStore<V> extends AutoCloseable {
   PersistentStoreMode getMode();
 
   /**
+   * Checks if lookup key is present in store.
+   *
+   * @param key lookup key
+   * @return true if store contains lookup key, false otherwise
+   */
+  boolean contains(String key);
+
+  /**
+   * Checks if lookup key is present in store.
+   * Sets data change version number.
+   *
+   * @param key lookup key
+   * @param version version holder
+   * @return true if store contains lookup key, false otherwise
+   */
+  boolean contains(String key, DataChangeVersion version);
+
+  /**
    * Returns the value for the given key if exists, null otherwise.
    * @param key  lookup key
    */
   V get(String key);
+
+  /**
+   * Returns the value for the given key if exists, null otherwise.
+   * Sets data change version number.
+   * @param key  lookup key
+   * @param version version holder
+   */
+  V get(String key, DataChangeVersion version);
 
   /**
    * Stores the (key, value) tuple in the store. Lifetime of the tuple depends upon store {@link #getMode mode}.
@@ -45,6 +73,17 @@ public interface PersistentStore<V> extends AutoCloseable {
    */
   void put(String key, V value);
 
+  /**
+   * Stores the (key, value) tuple in the store.
+   * If tuple already exits, stores it only if versions match,
+   * otherwise throws {@link org.apache.drill.exec.exception.VersionMismatchException}
+   * Lifetime of the tuple depends upon store {@link #getMode mode}.
+   *
+   * @param key  lookup key
+   * @param value  value to store
+   * @param version version holder
+   */
+  void put(String key, V value, DataChangeVersion version);
 
   /**
    * Removes the value corresponding to the given key if exists, nothing happens otherwise.

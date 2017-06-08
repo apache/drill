@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.FragmentExecContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -37,7 +37,8 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
 
   private SelectionVector2 vector2;
 
-  public void setup(FragmentContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
+  @Override
+  public void setup(FragmentExecContext context, SelectionVector2 vector2, VectorAccessible incoming) throws SchemaChangeException{
     Preconditions.checkNotNull(vector2);
     this.vector2 = vector2;
     try {
@@ -68,10 +69,18 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   public int compare(int leftIndex, int rightIndex) {
     char sv1 = vector2.getIndex(leftIndex);
     char sv2 = vector2.getIndex(rightIndex);
-    return doEval(sv1, sv2);
+    try {
+      return doEval(sv1, sv2);
+    } catch (SchemaChangeException e) {
+      throw new RuntimeException( e );
+    }
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract int doEval(@Named("leftIndex") char leftIndex, @Named("rightIndex") char rightIndex);
-
+  public abstract void doSetup(@Named("context") FragmentExecContext context,
+                               @Named("incoming") VectorAccessible incoming,
+                               @Named("outgoing") RecordBatch outgoing)
+                       throws SchemaChangeException;
+  public abstract int doEval(@Named("leftIndex") char leftIndex,
+                             @Named("rightIndex") char rightIndex)
+                      throws SchemaChangeException;
 }

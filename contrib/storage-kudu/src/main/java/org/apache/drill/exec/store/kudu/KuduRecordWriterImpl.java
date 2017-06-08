@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.store.kudu;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,15 +24,21 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.kududb.ColumnSchema;
-import org.kududb.Schema;
-import org.kududb.Type;
-import org.kududb.client.Insert;
-import org.kududb.client.KuduClient;
-import org.kududb.client.KuduSession;
-import org.kududb.client.KuduTable;
-import org.kududb.client.OperationResponse;
-import org.kududb.client.SessionConfiguration.FlushMode;
+import org.apache.kudu.ColumnSchema;
+import org.apache.kudu.Schema;
+import org.apache.kudu.Type;
+import org.apache.kudu.client.Insert;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduSession;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.CreateTableOptions;
+import org.apache.kudu.client.OperationResponse;
+import org.apache.kudu.client.SessionConfiguration.FlushMode;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class KuduRecordWriterImpl extends KuduRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduRecordWriterImpl.class);
@@ -81,7 +82,7 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
           i++;
         }
         Schema kuduSchema = new Schema(columns);
-        table = client.createTable(name, kuduSchema);
+        table = client.createTable(name, kuduSchema, new CreateTableOptions());
       }
     } catch (Exception e) {
       throw new IOException(e);
@@ -113,11 +114,11 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
     case INT:
       return Type.INT32;
     case TIMESTAMP:
-      return Type.TIMESTAMP;
-    case VARBINARY:
-      return Type.BINARY;
+      return Type.UNIXTIME_MICROS;
     case VARCHAR:
       return Type.STRING;
+    case VARBINARY:
+      return Type.BINARY;
     default:
       throw UserException
         .dataWriteError()

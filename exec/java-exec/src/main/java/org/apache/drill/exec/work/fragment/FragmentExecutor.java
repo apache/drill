@@ -179,6 +179,7 @@ public class FragmentExecutor implements Runnable {
     eventProcessor.receiverFinished(handle);
   }
 
+  @SuppressWarnings("resource")
   @Override
   public void run() {
     // if a cancel thread has already entered this executor, we have not reason to continue.
@@ -224,6 +225,7 @@ public class FragmentExecutor implements Runnable {
           ImpersonationUtil.getProcessUserUGI();
 
       queryUserUgi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
         public Void run() throws Exception {
           injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
           /*

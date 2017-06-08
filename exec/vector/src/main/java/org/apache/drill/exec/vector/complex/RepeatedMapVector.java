@@ -48,7 +48,6 @@ import org.apache.drill.exec.vector.complex.impl.NullReader;
 import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractMapVector
@@ -413,10 +412,9 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    final int expectedBufferSize = getBufferSize();
-    final int actualBufferSize = super.getBufferSize();
-
-    Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
+    //final int expectedBufferSize = getBufferSize();
+    //final int actualBufferSize = super.getBufferSize();
+    //Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
     return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
 
@@ -584,5 +582,10 @@ public class RepeatedMapVector extends AbstractMapVector
     for(final ValueVector vector : getChildren()) {
       vector.clear();
     }
+  }
+
+  @Override
+  public int getAllocatedByteCount() {
+    return super.getAllocatedByteCount( ) + offsets.getAllocatedByteCount();
   }
 }

@@ -29,11 +29,15 @@ import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVisitor;
+import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.Util;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.resolver.TypeCastRules;
@@ -169,4 +173,54 @@ public abstract class DrillRelOptUtil {
     }
     return true;
   }
+
+  /**
+   * Travesal RexNode to find the item/flattern operator. Continue search if RexNode has a
+   * RexInputRef which refers to a RexNode in project expressions.
+   *
+   * @param node : RexNode to search
+   * @param projExprs : the list of project expressions. Empty list means there is No project operator underneath.
+   * @return : Return null if there is NONE; return the first appearance of item/flatten RexCall.
+   */
+  public static RexCall findItemOrFlatten(
+      final RexNode node,
+      final List<RexNode> projExprs) {
+    try {
+      RexVisitor<Void> visitor =
+          new RexVisitorImpl<Void>(true) {
+            public Void visitCall(RexCall call) {
+              if ("item".equals(call.getOperator().getName().toLowerCase()) ||
+                  "flatten".equals(call.getOperator().getName().toLowerCase())) {
+                throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
+                                              other utility methods in RexUtil.java */
+              }
+              return super.visitCall(call);
+            }
+
+            public Void visitInputRef(RexInputRef inputRef) {
+              if (projExprs.size() == 0 ) {
+                return super.visitInputRef(inputRef);
+              } else {
+                final int index = inputRef.getIndex();
+                RexNode n = projExprs.get(index);
+                if (n instanceof RexCall) {
+                  RexCall r = (RexCall) n;
+                  if ("item".equals(r.getOperator().getName().toLowerCase()) ||
+                      "flatten".equals(r.getOperator().getName().toLowerCase())) {
+                    throw new Util.FoundOne(r);
+                  }
+                }
+
+                return super.visitInputRef(inputRef);
+              }
+            }
+          };
+      node.accept(visitor);
+      return null;
+    } catch (Util.FoundOne e) {
+      Util.swallow(e, null);
+      return (RexCall) e.getNode();
+    }
+  }
+
 }

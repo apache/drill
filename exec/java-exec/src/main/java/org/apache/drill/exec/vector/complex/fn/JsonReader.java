@@ -44,7 +44,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class JsonReader extends BaseJsonProcessor {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128 * 1024;
 
   private final WorkingBuffer workingBuffer;
@@ -56,12 +57,20 @@ public class JsonReader extends BaseJsonProcessor {
   private final boolean readNumbersAsDouble;
 
   /**
-   * Describes whether or not this reader can unwrap a single root array record and treat it like a set of distinct records.
+   * Collection for tracking empty array writers during reading
+   * and storing them for initializing empty arrays
+   */
+  private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
+
+  /**
+   * Describes whether or not this reader can unwrap a single root array record
+   * and treat it like a set of distinct records.
    */
   private final boolean skipOuterList;
 
   /**
-   * Whether the reader is currently in a situation where we are unwrapping an outer list.
+   * Whether the reader is currently in a situation where we are unwrapping an
+   * outer list.
    */
   private boolean inOuterList;
   /**
@@ -71,11 +80,14 @@ public class JsonReader extends BaseJsonProcessor {
 
   private FieldSelection selection;
 
-  public JsonReader(DrillBuf managedBuf, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
-    this(managedBuf, GroupScan.ALL_COLUMNS, allTextMode, skipOuterList, readNumbersAsDouble);
+  public JsonReader(DrillBuf managedBuf, boolean allTextMode,
+      boolean skipOuterList, boolean readNumbersAsDouble) {
+    this(managedBuf, GroupScan.ALL_COLUMNS, allTextMode, skipOuterList,
+        readNumbersAsDouble);
   }
 
-  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
+  public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns,
+      boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
     super(managedBuf);
     assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
     this.selection = FieldSelection.getFieldSelection(columns);
@@ -85,10 +97,11 @@ public class JsonReader extends BaseJsonProcessor {
     this.columns = columns;
     this.mapOutput = new MapVectorOutput(workingBuffer);
     this.listOutput = new ListVectorOutput(workingBuffer);
-    this.currentFieldName="<none>";
+    this.currentFieldName = "<none>";
     this.readNumbersAsDouble = readNumbersAsDouble;
   }
 
+  @SuppressWarnings("resource")
   @Override
   public void ensureAtLeastOneField(ComplexWriter writer) {
     List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
@@ -100,7 +113,7 @@ public class JsonReader extends BaseJsonProcessor {
       SchemaPath sp = columns.get(i);
       PathSegment fieldPath = sp.getRootSegment();
       BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-      while (fieldPath.getChild() != null && ! fieldPath.getChild().isArray()) {
+      while (fieldPath.getChild() != null && !fieldPath.getChild().isArray()) {
         fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
         fieldPath = fieldPath.getChild();
       }
@@ -110,12 +123,18 @@ public class JsonReader extends BaseJsonProcessor {
         emptyStatus.set(i, true);
       }
       if (i == 0 && !allTextMode) {
-        // when allTextMode is false, there is not much benefit to producing all the empty
-        // fields; just produce 1 field.  The reason is that the type of the fields is
-        // unknown, so if we produce multiple Integer fields by default, a subsequent batch
-        // that contains non-integer fields will error out in any case.  Whereas, with
-        // allTextMode true, we are sure that all fields are going to be treated as varchar,
-        // so it makes sense to produce all the fields, and in fact is necessary in order to
+        // when allTextMode is false, there is not much benefit to producing all
+        // the empty
+        // fields; just produce 1 field. The reason is that the type of the
+        // fields is
+        // unknown, so if we produce multiple Integer fields by default, a
+        // subsequent batch
+        // that contains non-integer fields will error out in any case. Whereas,
+        // with
+        // allTextMode true, we are sure that all fields are going to be treated
+        // as varchar,
+        // so it makes sense to produce all the fields, and in fact is necessary
+        // in order to
         // avoid schema change exceptions by downstream operators.
         break;
       }
@@ -123,8 +142,10 @@ public class JsonReader extends BaseJsonProcessor {
     }
 
     // second pass: create default typed vectors corresponding to empty fields
-    // Note: this is not easily do-able in 1 pass because the same fieldWriter may be
-    // shared by multiple fields whereas we want to keep track of all fields independently,
+    // Note: this is not easily do-able in 1 pass because the same fieldWriter
+    // may be
+    // shared by multiple fields whereas we want to keep track of all fields
+    // independently,
     // so we rely on the emptyStatus.
     for (int j = 0; j < fieldPathList.size(); j++) {
       BaseWriter.MapWriter fieldWriter = writerList.get(j);
@@ -137,12 +158,22 @@ public class JsonReader extends BaseJsonProcessor {
         }
       }
     }
+
+    for (ListWriter field : emptyArrayWriters) {
+      // checks that array has not been initialized
+      if (field.getValueCapacity() == 0) {
+        if (allTextMode) {
+          field.varChar();
+        } else {
+          field.integer();
+        }
+      }
+    }
   }
 
   public void setSource(int start, int end, DrillBuf buf) throws IOException {
     setSource(DrillBufInputStream.getStream(start, end, buf));
   }
-
 
   @Override
   public void setSource(InputStream is) throws IOException {
@@ -162,108 +193,123 @@ public class JsonReader extends BaseJsonProcessor {
     setSource(data.getBytes(Charsets.UTF_8));
   }
 
+  @SuppressWarnings("resource")
   public void setSource(byte[] bytes) throws IOException {
     setSource(new SeekableBAIS(bytes));
   }
 
   @Override
   public ReadState write(ComplexWriter writer) throws IOException {
-    JsonToken t = parser.nextToken();
 
-    while (!parser.hasCurrentToken() && !parser.isClosed()) {
-      t = parser.nextToken();
+    ReadState readState = null;
+    try {
+      JsonToken t = lastSeenJsonToken;
+      if (t == null || t == JsonToken.END_OBJECT) {
+        t = parser.nextToken();
+      }
+      while (!parser.hasCurrentToken() && !parser.isClosed()) {
+        t = parser.nextToken();
+      }
+      lastSeenJsonToken = null;
+
+      if (parser.isClosed()) {
+        return ReadState.END_OF_STREAM;
+      }
+
+      readState = writeToVector(writer, t);
+
+      switch (readState) {
+      case END_OF_STREAM:
+        break;
+      case WRITE_SUCCEED:
+        break;
+      default:
+        throw getExceptionWithContext(UserException.dataReadError(),
+            currentFieldName, null).message(
+            "Failure while reading JSON. (Got an invalid read state %s )",
+            readState.toString()).build(logger);
+      }
+    } catch (com.fasterxml.jackson.core.JsonParseException ex) {
+      if (ignoreJSONParseError()) {
+        if (processJSONException() == JsonExceptionProcessingState.END_OF_STREAM) {
+          return ReadState.JSON_RECORD_PARSE_EOF_ERROR;
+        } else {
+          return ReadState.JSON_RECORD_PARSE_ERROR;
+        }
+      } else {
+        throw ex;
+      }
     }
-
-    if (parser.isClosed()) {
-      return ReadState.END_OF_STREAM;
-    }
-
-    ReadState readState = writeToVector(writer, t);
-
-    switch (readState) {
-    case END_OF_STREAM:
-      break;
-    case WRITE_SUCCEED:
-      break;
-    default:
-      throw
-        getExceptionWithContext(
-          UserException.dataReadError(), currentFieldName, null)
-          .message("Failure while reading JSON. (Got an invalid read state %s )", readState.toString())
-          .build(logger);
-    }
-
     return readState;
   }
 
-  private void confirmLast() throws IOException{
+  private void confirmLast() throws IOException {
     parser.nextToken();
-    if(!parser.isClosed()){
-      throw
-        getExceptionWithContext(
-          UserException.dataReadError(), currentFieldName, null)
-        .message("Drill attempted to unwrap a toplevel list "
-          + "in your document.  However, it appears that there is trailing content after this top level list.  Drill only "
-          + "supports querying a set of distinct maps or a single json array with multiple inner maps.")
-        .build(logger);
+    if (!parser.isClosed()) {
+      throw getExceptionWithContext(UserException.dataReadError(),
+          currentFieldName, null)
+          .message(
+              "Drill attempted to unwrap a toplevel list "
+                  + "in your document.  However, it appears that there is trailing content after this top level list.  Drill only "
+                  + "supports querying a set of distinct maps or a single json array with multiple inner maps.")
+          .build(logger);
     }
   }
 
-  private ReadState writeToVector(ComplexWriter writer, JsonToken t) throws IOException {
+  private ReadState writeToVector(ComplexWriter writer, JsonToken t)
+      throws IOException {
+
     switch (t) {
     case START_OBJECT:
       writeDataSwitch(writer.rootAsMap());
       break;
     case START_ARRAY:
-      if(inOuterList){
-        throw
-          getExceptionWithContext(
-            UserException.dataReadError(), currentFieldName, null)
-          .message("The top level of your document must either be a single array of maps or a set "
-            + "of white space delimited maps.")
-          .build(logger);
+      if (inOuterList) {
+        throw getExceptionWithContext(UserException.dataReadError(),
+            currentFieldName, null)
+            .message(
+                "The top level of your document must either be a single array of maps or a set "
+                    + "of white space delimited maps.").build(logger);
       }
 
-      if(skipOuterList){
+      if (skipOuterList) {
         t = parser.nextToken();
-        if(t == JsonToken.START_OBJECT){
+        if (t == JsonToken.START_OBJECT) {
           inOuterList = true;
           writeDataSwitch(writer.rootAsMap());
-        }else{
-          throw
-            getExceptionWithContext(
-              UserException.dataReadError(), currentFieldName, null)
-            .message("The top level of your document must either be a single array of maps or a set "
-              + "of white space delimited maps.")
-            .build(logger);
+        } else {
+          throw getExceptionWithContext(UserException.dataReadError(),
+              currentFieldName, null)
+              .message(
+                  "The top level of your document must either be a single array of maps or a set "
+                      + "of white space delimited maps.").build(logger);
         }
 
-      }else{
+      } else {
         writeDataSwitch(writer.rootAsList());
       }
       break;
     case END_ARRAY:
 
-      if(inOuterList){
+      if (inOuterList) {
         confirmLast();
         return ReadState.END_OF_STREAM;
-      }else{
-        throw
-          getExceptionWithContext(
-            UserException.dataReadError(), currentFieldName, null)
-          .message("Failure while parsing JSON.  Ran across unexpected %s.", JsonToken.END_ARRAY)
-          .build(logger);
+      } else {
+        throw getExceptionWithContext(UserException.dataReadError(),
+            currentFieldName, null).message(
+            "Failure while parsing JSON.  Ran across unexpected %s.",
+            JsonToken.END_ARRAY).build(logger);
       }
 
     case NOT_AVAILABLE:
       return ReadState.END_OF_STREAM;
     default:
-      throw
-        getExceptionWithContext(
-          UserException.dataReadError(), currentFieldName, null)
-          .message("Failure while parsing JSON.  Found token of [%s].  Drill currently only supports parsing "
-              + "json strings that contain either lists or maps.  The root object cannot be a scalar.", t)
-          .build(logger);
+      throw getExceptionWithContext(UserException.dataReadError(),
+          currentFieldName, null)
+          .message(
+              "Failure while parsing JSON.  Found token of [%s].  Drill currently only supports parsing "
+                  + "json strings that contain either lists or maps.  The root object cannot be a scalar.",
+              t).build(logger);
     }
 
     return ReadState.WRITE_SUCCEED;
@@ -304,16 +350,17 @@ public class JsonReader extends BaseJsonProcessor {
    * @param map
    * @param selection
    * @param moveForward
-   *          Whether or not we should start with using the current token or the next token. If moveForward = true, we
-   *          should start with the next token and ignore the current one.
+   *          Whether or not we should start with using the current token or the
+   *          next token. If moveForward = true, we should start with the next
+   *          token and ignore the current one.
    * @throws IOException
    */
-  private void writeData(MapWriter map, FieldSelection selection, boolean moveForward) throws IOException {
+  private void writeData(MapWriter map, FieldSelection selection,
+      boolean moveForward) throws IOException {
     //
     map.start();
     try {
-      outside:
-      while (true) {
+      outside: while (true) {
 
         JsonToken t;
         if (moveForward) {
@@ -322,12 +369,12 @@ public class JsonReader extends BaseJsonProcessor {
           t = parser.getCurrentToken();
           moveForward = true;
         }
-
         if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
           return;
         }
 
-        assert t == JsonToken.FIELD_NAME : String.format("Expected FIELD_NAME but got %s.", t.name());
+        assert t == JsonToken.FIELD_NAME : String.format(
+            "Expected FIELD_NAME but got %s.", t.name());
 
         final String fieldName = parser.getText();
         this.currentFieldName = fieldName;
@@ -375,11 +422,9 @@ public class JsonReader extends BaseJsonProcessor {
           break;
 
         default:
-          throw
-                  getExceptionWithContext(
-                          UserException.dataReadError(), currentFieldName, null)
-                          .message("Unexpected token %s", parser.getCurrentToken())
-                          .build(logger);
+          throw getExceptionWithContext(UserException.dataReadError(),
+              currentFieldName, null).message("Unexpected token %s",
+              parser.getCurrentToken()).build(logger);
         }
 
       }
@@ -389,26 +434,26 @@ public class JsonReader extends BaseJsonProcessor {
 
   }
 
-  private void writeDataAllText(MapWriter map, FieldSelection selection, boolean moveForward) throws IOException {
+  private void writeDataAllText(MapWriter map, FieldSelection selection,
+      boolean moveForward) throws IOException {
     //
     map.start();
     outside: while (true) {
 
-
       JsonToken t;
 
-      if(moveForward){
+      if (moveForward) {
         t = parser.nextToken();
-      }else{
+      } else {
         t = parser.getCurrentToken();
         moveForward = true;
       }
-
-      if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
+       if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
         return;
       }
 
-      assert t == JsonToken.FIELD_NAME : String.format("Expected FIELD_NAME but got %s.", t.name());
+      assert t == JsonToken.FIELD_NAME : String.format(
+          "Expected FIELD_NAME but got %s.", t.name());
 
       final String fieldName = parser.getText();
       this.currentFieldName = fieldName;
@@ -443,11 +488,9 @@ public class JsonReader extends BaseJsonProcessor {
         break;
 
       default:
-        throw
-          getExceptionWithContext(
-            UserException.dataReadError(), currentFieldName, null)
-          .message("Unexpected token %s", parser.getCurrentToken())
-          .build(logger);
+        throw getExceptionWithContext(UserException.dataReadError(),
+            currentFieldName, null).message("Unexpected token %s",
+            parser.getCurrentToken()).build(logger);
       }
     }
     map.end();
@@ -455,13 +498,16 @@ public class JsonReader extends BaseJsonProcessor {
   }
 
   /**
-   * Will attempt to take the current value and consume it as an extended value (if extended mode is enabled).  Whether extended is enable or disabled, will consume the next token in the stream.
+   * Will attempt to take the current value and consume it as an extended value
+   * (if extended mode is enabled). Whether extended is enable or disabled, will
+   * consume the next token in the stream.
    * @param writer
    * @param fieldName
    * @return
    * @throws IOException
    */
-  private boolean writeMapDataIfTyped(MapWriter writer, String fieldName) throws IOException {
+  private boolean writeMapDataIfTyped(MapWriter writer, String fieldName)
+      throws IOException {
     if (extended) {
       return mapOutput.run(writer, fieldName);
     } else {
@@ -471,7 +517,9 @@ public class JsonReader extends BaseJsonProcessor {
   }
 
   /**
-   * Will attempt to take the current value and consume it as an extended value (if extended mode is enabled).  Whether extended is enable or disabled, will consume the next token in the stream.
+   * Will attempt to take the current value and consume it as an extended value
+   * (if extended mode is enabled). Whether extended is enable or disabled, will
+   * consume the next token in the stream.
    * @param writer
    * @return
    * @throws IOException
@@ -485,72 +533,90 @@ public class JsonReader extends BaseJsonProcessor {
     }
   }
 
-  private void handleString(JsonParser parser, MapWriter writer, String fieldName) throws IOException {
-    writer.varChar(fieldName).writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()),
+  private void handleString(JsonParser parser, MapWriter writer,
+      String fieldName) throws IOException {
+    writer.varChar(fieldName).writeVarChar(0,
+        workingBuffer.prepareVarCharHolder(parser.getText()),
         workingBuffer.getBuf());
   }
 
-  private void handleString(JsonParser parser, ListWriter writer) throws IOException {
-    writer.varChar().writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()), workingBuffer.getBuf());
+  private void handleString(JsonParser parser, ListWriter writer)
+      throws IOException {
+    writer.varChar().writeVarChar(0,
+        workingBuffer.prepareVarCharHolder(parser.getText()),
+        workingBuffer.getBuf());
   }
 
   private void writeData(ListWriter list) throws IOException {
     list.startList();
     outside: while (true) {
       try {
-      switch (parser.nextToken()) {
-      case START_ARRAY:
-        writeData(list.list());
-        break;
-      case START_OBJECT:
-        if (!writeListDataIfTyped(list)) {
-          writeData(list.map(), FieldSelection.ALL_VALID, false);
-        }
-        break;
-      case END_ARRAY:
-      case END_OBJECT:
-        break outside;
+        switch (parser.nextToken()) {
+        case START_ARRAY:
+          writeData(list.list());
+          break;
+        case START_OBJECT:
+          if (!writeListDataIfTyped(list)) {
+            writeData(list.map(), FieldSelection.ALL_VALID, false);
+          }
+          break;
+        case END_ARRAY:
+          addIfNotInitialized(list);
+        case END_OBJECT:
+          break outside;
 
-      case VALUE_EMBEDDED_OBJECT:
-      case VALUE_FALSE: {
-        list.bit().writeBit(0);
-        break;
-      }
-      case VALUE_TRUE: {
-        list.bit().writeBit(1);
-        break;
-      }
-      case VALUE_NULL:
-        throw UserException.unsupportedError()
-          .message("Null values are not supported in lists by default. " +
-            "Please set `store.json.all_text_mode` to true to read lists containing nulls. " +
-            "Be advised that this will treat JSON null values as a string containing the word 'null'.")
-          .build(logger);
-      case VALUE_NUMBER_FLOAT:
-        list.float8().writeFloat8(parser.getDoubleValue());
-        break;
-      case VALUE_NUMBER_INT:
-        if (this.readNumbersAsDouble) {
+        case VALUE_EMBEDDED_OBJECT:
+        case VALUE_FALSE: {
+          list.bit().writeBit(0);
+          break;
+        }
+        case VALUE_TRUE: {
+          list.bit().writeBit(1);
+          break;
+        }
+        case VALUE_NULL:
+          throw UserException
+              .unsupportedError()
+              .message(
+                  "Null values are not supported in lists by default. "
+                      + "Please set `store.json.all_text_mode` to true to read lists containing nulls. "
+                      + "Be advised that this will treat JSON null values as a string containing the word 'null'.")
+              .build(logger);
+        case VALUE_NUMBER_FLOAT:
           list.float8().writeFloat8(parser.getDoubleValue());
+          break;
+        case VALUE_NUMBER_INT:
+          if (this.readNumbersAsDouble) {
+            list.float8().writeFloat8(parser.getDoubleValue());
+          } else {
+            list.bigInt().writeBigInt(parser.getLongValue());
+          }
+          break;
+        case VALUE_STRING:
+          handleString(parser, list);
+          break;
+        default:
+          throw UserException.dataReadError()
+              .message("Unexpected token %s", parser.getCurrentToken())
+              .build(logger);
         }
-        else {
-          list.bigInt().writeBigInt(parser.getLongValue());
-        }
-        break;
-      case VALUE_STRING:
-        handleString(parser, list);
-        break;
-      default:
-        throw UserException.dataReadError()
-          .message("Unexpected token %s", parser.getCurrentToken())
-          .build(logger);
-    }
-    } catch (Exception e) {
-      throw getExceptionWithContext(e, this.currentFieldName, null).build(logger);
-    }
+      } catch (Exception e) {
+        throw getExceptionWithContext(e, this.currentFieldName, null).build(
+            logger);
+      }
     }
     list.endList();
 
+  }
+
+  /**
+   * Checks that list has not been initialized and adds it to the emptyArrayWriters collection.
+   * @param list ListWriter that should be checked
+   */
+  private void addIfNotInitialized(ListWriter list) {
+    if (list.getValueCapacity() == 0) {
+      emptyArrayWriters.add(list);
+    }
   }
 
   private void writeDataAllText(ListWriter list) throws IOException {
@@ -567,6 +633,7 @@ public class JsonReader extends BaseJsonProcessor {
         }
         break;
       case END_ARRAY:
+        addIfNotInitialized(list);
       case END_OBJECT:
         break outside;
 
@@ -580,11 +647,9 @@ public class JsonReader extends BaseJsonProcessor {
         handleString(parser, list);
         break;
       default:
-        throw
-          getExceptionWithContext(
-            UserException.dataReadError(), currentFieldName, null)
-          .message("Unexpected token %s", parser.getCurrentToken())
-          .build(logger);
+        throw getExceptionWithContext(UserException.dataReadError(),
+            currentFieldName, null).message("Unexpected token %s",
+            parser.getCurrentToken()).build(logger);
       }
     }
     list.endList();

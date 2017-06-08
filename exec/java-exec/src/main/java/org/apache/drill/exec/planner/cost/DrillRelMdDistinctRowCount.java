@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,13 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -35,11 +36,11 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
           BuiltInMethod.DISTINCT_ROW_COUNT.method, INSTANCE);
 
   @Override
-  public Double getDistinctRowCount(RelNode rel, ImmutableBitSet groupKey, RexNode predicate) {
+  public Double getDistinctRowCount(RelNode rel, RelMetadataQuery mq, ImmutableBitSet groupKey, RexNode predicate) {
     if (rel instanceof DrillScanRel) {
       return getDistinctRowCount((DrillScanRel) rel, groupKey, predicate);
     } else {
-      return super.getDistinctRowCount(rel, groupKey, predicate);
+      return super.getDistinctRowCount(rel, mq, groupKey, predicate);
     }
   }
 

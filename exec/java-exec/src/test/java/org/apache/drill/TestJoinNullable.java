@@ -20,7 +20,6 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.TestTools;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestJoinNullable extends BaseTestQuery{
@@ -413,5 +412,193 @@ public class TestJoinNullable extends BaseTestQuery{
     final int actualRecordCount = testSql(query);
     assertEquals("Number of output rows", expectedRecordCount, actualRecordCount);
   }
+
+  @Test
+  public void testNullEqualInWhereConditionHashJoin() throws Exception {
+    final String query = "SELECT * FROM "
+        + "cp.`jsoninput/nullableOrdered1.json` t1, "
+        + "cp.`jsoninput/nullableOrdered2.json` t2 "
+        + "WHERE t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+    nullEqualJoinHelper(query);
+  }
+
+  @Test
+  public void testNullEqualInWhereConditionMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM "
+          + "cp.`jsoninput/nullableOrdered1.json` t1, "
+          + "cp.`jsoninput/nullableOrdered2.json` t2 "
+          + "WHERE t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+      nullEqualJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  @Test
+  public void testNullEqualHashJoin() throws Exception {
+    final String query = "SELECT * FROM "
+        + "cp.`jsoninput/nullableOrdered1.json` t1 JOIN "
+        + "cp.`jsoninput/nullableOrdered2.json` t2 "
+        + "ON t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+    nullEqualJoinHelper(query);
+  }
+
+  @Test
+  public void testNullEqualMergeJoin() throws Exception {
+    try {
+      test("alter session set `planner.enable_hashjoin` = false");
+      final String query = "SELECT * FROM "
+          + "cp.`jsoninput/nullableOrdered1.json` t1 JOIN "
+          + "cp.`jsoninput/nullableOrdered2.json` t2 "
+          + "ON t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)";
+      nullEqualJoinHelper(query);
+    } finally {
+      test("alter session set `planner.enable_hashjoin` = true");
+    }
+  }
+
+  public void nullEqualJoinHelper(final String query) throws Exception {
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues(null, "L_null_1", "R_null_1", null)
+        .baselineValues(null, "L_null_2", "R_null_1", null)
+        .baselineValues("A", "L_A_1", "R_A_1", "A")
+        .baselineValues("A", "L_A_2", "R_A_1", "A")
+        .baselineValues(null, "L_null_1", "R_null_2", null)
+        .baselineValues(null, "L_null_2", "R_null_2", null)
+        .baselineValues(null, "L_null_1", "R_null_3", null)
+        .baselineValues(null, "L_null_2", "R_null_3", null)
+        .go();
+  }
+
+  @Test
+  public void testNullEqualAdditionFilter() throws Exception {
+    final String query = "SELECT * FROM "
+        + "cp.`jsoninput/nullableOrdered1.json` t1 JOIN "
+        + "cp.`jsoninput/nullableOrdered2.json` t2 "
+        + "ON (t1.key = t2.key OR (t1.key IS NULL AND t2.key IS NULL)) AND t1.data LIKE '%1%'";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues(null, "L_null_1", "R_null_1", null)
+        .baselineValues("A", "L_A_1", "R_A_1", "A")
+        .baselineValues(null, "L_null_1", "R_null_2", null)
+        .baselineValues(null, "L_null_1", "R_null_3", null)
+        .go();
+  }
+
+  @Test
+  public void testMixedEqualAndIsNotDistinctHashJoin() throws Exception {
+    enableJoin(true, false);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key AND t1.data is not distinct from t2.data";
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testMixedEqualAndIsNotDistinctMergeJoin() throws Exception {
+    enableJoin(false, true);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key AND t1.data is not distinct from t2.data";
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testMixedEqualAndIsNotDistinctFilterHashJoin() throws Exception {
+    enableJoin(true, false);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "WHERE t1.data is not distinct from t2.data";
+      // Expected the filter to be pushed into the join
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testMixedEqualAndIsNotDistinctFilterMergeJoin() throws Exception {
+    enableJoin(false, true);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "WHERE t1.data is not distinct from t2.data";
+      // Expected the filter to be pushed into the join
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testMixedEqualAndEqualOrHashJoin() throws Exception {
+    enableJoin(true, false);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "AND ((t1.data=t2.data) OR (t1.data IS NULL AND t2.data IS NULL))";
+      // Expected the filter to be pushed into the join
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  @Test
+  public void testMixedEqualAndEqualOrMergeJoin() throws Exception {
+    enableJoin(false, true);
+    try {
+      final String query = "SELECT * FROM " +
+          "cp.`jsoninput/nullEqualJoin1.json` t1 JOIN " +
+          "cp.`jsoninput/nullEqualJoin2.json` t2 " +
+          "ON t1.key = t2.key " +
+          "AND ((t1.data=t2.data) OR (t1.data IS NULL AND t2.data IS NULL))";
+      // Expected the filter to be pushed into the join
+      nullMixedComparatorEqualJoinHelper(query);
+    } finally {
+      resetJoinOptions();
+    }
+  }
+
+  public void nullMixedComparatorEqualJoinHelper(final String query) throws Exception {
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("key", "data", "data0", "key0")
+        .baselineValues("A", "L_A_1", "L_A_1", "A")
+        .baselineValues("A", null, null, "A")
+        .baselineValues("B", null, null, "B")
+        .baselineValues("B", "L_B_1", "L_B_1", "B")
+        .go();
+  }
+
+  private static void resetJoinOptions() throws Exception {
+    test("alter session set `planner.enable_hashjoin` = true");
+    test("alter session set `planner.enable_mergejoin` = false");
+   }
 
 }

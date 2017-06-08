@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,9 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunction;
-import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.drill.common.expression.FunctionCallFactory;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.calcite.sql.SqlFunctionCategory;
@@ -35,10 +33,10 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.SystemOptionManager;
 
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * Implementation of {@link SqlOperatorTable} that contains standard operators and functions provided through
@@ -54,6 +52,9 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithoutInferenceMap = ArrayListMultimap.create();
   private final ArrayListMultimap<String, SqlOperator> drillOperatorsWithInferenceMap = ArrayListMultimap.create();
+  // indicates remote function registry version based on which drill operator were loaded
+  // is used to define if we need to reload operator table in case remote function registry version has changed
+  private long functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
 
@@ -62,6 +63,22 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     calciteOperators.addAll(inner.getOperatorList());
     populateWrappedCalciteOperators();
     this.systemOptionManager = systemOptionManager;
+  }
+
+  /**
+   * Set function registry version based on which operator table was loaded.
+   *
+   * @param version registry version
+   */
+  public void setFunctionRegistryVersion(long version) {
+    functionRegistryVersion = version;
+  }
+
+  /**
+   * @return function registry version based on which operator table was loaded
+   */
+  public long getFunctionRegistryVersion() {
+    return functionRegistryVersion;
   }
 
   /**
@@ -106,7 +123,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
       }
     } else {
       // if no function is found, check in Drill UDFs
-      if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
+      if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
         List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(opName.getSimple().toLowerCase());
         if (drillOps != null && !drillOps.isEmpty()) {
           operatorList.addAll(drillOps);
@@ -118,7 +135,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
       SqlSyntax syntax, List<SqlOperator> operatorList) {
     inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
-    if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
+    if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(opName.getSimple().toLowerCase());
       if (drillOps != null) {
         operatorList.addAll(drillOps);

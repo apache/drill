@@ -67,16 +67,25 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
     if (!columnExplorer.isStarQuery()) {
       rowGroupScan = new ParquetRowGroupScan(rowGroupScan.getUserName(), rowGroupScan.getStorageEngine(),
-          rowGroupScan.getRowGroupReadEntries(), columnExplorer.getTableColumns(), rowGroupScan.getSelectionRoot());
+          rowGroupScan.getRowGroupReadEntries(), columnExplorer.getTableColumns(), rowGroupScan.getSelectionRoot(),
+          rowGroupScan.getFilter());
       rowGroupScan.setOperatorId(rowGroupScan.getOperatorId());
     }
 
     DrillFileSystem fs;
     try {
-      fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
-    } catch(IOException e) {
-      throw new ExecutionSetupException(String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
+      boolean useAsyncPageReader =
+          context.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
+      if (useAsyncPageReader) {
+        fs = oContext.newNonTrackingFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      } else {
+        fs = oContext.newFileSystem(rowGroupScan.getStorageEngine().getFsConf());
+      }
+    } catch (IOException e) {
+      throw new ExecutionSetupException(
+          String.format("Failed to create DrillFileSystem: %s", e.getMessage()), e);
     }
+
     Configuration conf = new Configuration(fs.getConf());
     conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
     conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
@@ -104,20 +113,27 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", e.getPath(), "", 0, 0, 0, timeToRead);
           footers.put(e.getPath(), footer );
         }
+        boolean autoCorrectCorruptDates = rowGroupScan.formatConfig.autoCorrectCorruptDates;
+        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footers.get(e.getPath()), rowGroupScan.getColumns(),
+                autoCorrectCorruptDates);
+        if (logger.isDebugEnabled()) {
+          logger.debug(containsCorruptDates.toString());
+        }
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(
               new ParquetRecordReader(
-                  context, e.getPath(), e.getRowGroupIndex(), fs,
+                  context, e.getPath(), e.getRowGroupIndex(), e.getNumRecordsToRead(), fs,
                   CodecFactory.createDirectCodecFactory(
                   fs.getConf(),
                   new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                   footers.get(e.getPath()),
-                  rowGroupScan.getColumns()
+                  rowGroupScan.getColumns(),
+                  containsCorruptDates
               )
           );
         } else {
           ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs));
+          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs, containsCorruptDates));
         }
 
         Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(e, rowGroupScan.getSelectionRoot());

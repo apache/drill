@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -288,6 +288,9 @@ public class FileSelection {
     }
     final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
     logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    if (fileSel == null) {
+      return null;
+    }
     fileSel.setHadWildcard(hasWildcard);
     return fileSel;
 
@@ -369,7 +372,7 @@ public class FileSelection {
   private static Path handleWildCard(final String root) {
     if (root.contains(WILD_CARD)) {
       int idx = root.indexOf(WILD_CARD); // first wild card in the path
-      idx = root.lastIndexOf(PATH_SEPARATOR, idx); // file separator right before the first wild card
+      idx = root.lastIndexOf('/', idx); // file separator right before the first wild card
       final String newRoot = root.substring(0, idx);
       return new Path(newRoot);
     } else {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -77,7 +77,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected IterOutcome doWork() {
     container.zeroVectors();
     int recordCount = incoming.getRecordCount();
-    filter.filterBatch(recordCount);
+    try {
+      filter.filterBatch(recordCount);
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
+    }
 
     return IterOutcome.OK;
   }
@@ -191,7 +195,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     try {
       final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      final Filterer filter = context.getImplementationClass(cg);
+      CodeGenerator<Filterer> codeGen = cg.getCodeGenerator();
+      codeGen.plainJavaCapable(true);
+      // Uncomment out this line to debug the generated code.
+//    cg.saveCodeForDebugging(true);
+      final Filterer filter = context.getImplementationClass(codeGen);
       filter.setup(context, incoming, this, tx);
       return filter;
     } catch (ClassTransformationException | IOException e) {

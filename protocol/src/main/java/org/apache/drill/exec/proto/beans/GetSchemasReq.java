@@ -48,7 +48,7 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
 
     
     private LikeFilter catalogNameFilter;
-    private LikeFilter schameNameFilter;
+    private LikeFilter schemaNameFilter;
 
     public GetSchemasReq()
     {
@@ -70,16 +70,16 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
         return this;
     }
 
-    // schameNameFilter
+    // schemaNameFilter
 
-    public LikeFilter getSchameNameFilter()
+    public LikeFilter getSchemaNameFilter()
     {
-        return schameNameFilter;
+        return schemaNameFilter;
     }
 
-    public GetSchemasReq setSchameNameFilter(LikeFilter schameNameFilter)
+    public GetSchemasReq setSchemaNameFilter(LikeFilter schemaNameFilter)
     {
-        this.schameNameFilter = schameNameFilter;
+        this.schemaNameFilter = schemaNameFilter;
         return this;
     }
 
@@ -142,7 +142,7 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
                     break;
 
                 case 2:
-                    message.schameNameFilter = input.mergeObject(message.schameNameFilter, LikeFilter.getSchema());
+                    message.schemaNameFilter = input.mergeObject(message.schemaNameFilter, LikeFilter.getSchema());
                     break;
 
                 default:
@@ -158,8 +158,8 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
              output.writeObject(1, message.catalogNameFilter, LikeFilter.getSchema(), false);
 
 
-        if(message.schameNameFilter != null)
-             output.writeObject(2, message.schameNameFilter, LikeFilter.getSchema(), false);
+        if(message.schemaNameFilter != null)
+             output.writeObject(2, message.schemaNameFilter, LikeFilter.getSchema(), false);
 
     }
 
@@ -168,7 +168,7 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
         switch(number)
         {
             case 1: return "catalogNameFilter";
-            case 2: return "schameNameFilter";
+            case 2: return "schemaNameFilter";
             default: return null;
         }
     }
@@ -183,7 +183,7 @@ public final class GetSchemasReq implements Externalizable, Message<GetSchemasRe
     static
     {
         __fieldMap.put("catalogNameFilter", 1);
-        __fieldMap.put("schameNameFilter", 2);
+        __fieldMap.put("schemaNameFilter", 2);
     }
     
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-import java.lang.Override;
-
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -30,6 +28,7 @@ import java.lang.Override;
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
+import org.apache.drill.exec.util.DecimalUtility;
 
 /**
  * ${minor.class} implements a vector of fixed width values.  Elements in the vector are accessed
@@ -69,7 +68,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   @Override
   public int getValueCapacity(){
-    return (int) (data.capacity() *1.0 / ${type.width});
+    return data.capacity() / ${type.width};
   }
 
   @Override
@@ -137,7 +136,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     allocationMonitor = 0;
     zeroVector();
     super.reset();
-    }
+  }
 
   private void allocateBytes(final long size) {
     if (size > MAX_ALLOCATION_SIZE) {
@@ -196,8 +195,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     data = buffer.slice(0, actualLength);
     data.retain(1);
     data.writerIndex(actualLength);
-    }
+  }
 
+  @Override
   public TransferPair getTransferPair(BufferAllocator allocator){
     return new TransferImpl(getField(), allocator);
   }
@@ -225,6 +225,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     target.clear();
     target.data = data.slice(startPoint, sliceLength).transferOwnership(target.allocator).buffer;
     target.data.writerIndex(sliceLength);
+  }
+
+  @Override
+  public int getPayloadByteCount() {
+    return getAccessor().getValueCount() * ${type.width};
   }
 
   private class TransferImpl implements TransferPair{
@@ -299,7 +304,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     <#if (type.width > 8)>
-
     public ${minor.javaType!type.javaType} get(int index) {
       return data.slice(index * ${type.width}, ${type.width});
     }
@@ -390,7 +394,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return p.plusDays(days).plusMillis(millis);
     }
 
-
     public StringBuilder getAsStringBuilder(int index) {
       final int offsetIndex = index * ${type.width};
 
@@ -419,27 +422,27 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#elseif (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
 
     public void get(int index, ${minor.class}Holder holder) {
-        holder.start = index * ${type.width};
-        holder.buffer = data;
-        holder.scale = getField().getScale();
-        holder.precision = getField().getPrecision();
+      holder.start = index * ${type.width};
+      holder.buffer = data;
+      holder.scale = getField().getScale();
+      holder.precision = getField().getPrecision();
     }
 
     public void get(int index, Nullable${minor.class}Holder holder) {
-        holder.isSet = 1;
-        holder.start = index * ${type.width};
-        holder.buffer = data;
-        holder.scale = getField().getScale();
-        holder.precision = getField().getPrecision();
+      holder.isSet = 1;
+      holder.start = index * ${type.width};
+      holder.buffer = data;
+      holder.scale = getField().getScale();
+      holder.precision = getField().getPrecision();
     }
 
-      @Override
-      public ${friendlyType} getObject(int index) {
+    @Override
+    public ${friendlyType} getObject(int index) {
       <#if (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse")>
       // Get the BigDecimal object
-      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
+      return DecimalUtility.getBigDecimalFromSparse(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
       <#else>
-      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
+      return DecimalUtility.getBigDecimalFromDense(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
       </#if>
     }
 
@@ -539,6 +542,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public ${friendlyType} getObject(int index) {
       return get(index);
     }
+
     public ${minor.javaType!type.javaType} getPrimitiveObject(int index) {
       return get(index);
     }
@@ -557,9 +561,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.isSet = 1;
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
-
-
-   </#if> <#-- type.width -->
+    </#if> <#-- type.width -->
  }
 
  /**
@@ -582,230 +584,244 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     * @param value   value to set
     */
   <#if (type.width > 8)>
-   public void set(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     data.setBytes(index * ${type.width}, value, 0, ${type.width});
-   }
+    public void set(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+      data.setBytes(index * ${type.width}, value, 0, ${type.width});
+    }
 
-   public void setSafe(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     data.setBytes(index * ${type.width}, value, 0, ${type.width});
-   }
+    public void setSafe(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      data.setBytes(index * ${type.width}, value, 0, ${type.width});
+    }
 
   <#if (minor.class == "Interval")>
-   public void set(int index, int months, int days, int milliseconds){
-     final int offsetIndex = index * ${type.width};
-     data.setInt(offsetIndex, months);
-     data.setInt((offsetIndex + ${minor.daysOffset}), days);
-     data.setInt((offsetIndex + ${minor.millisecondsOffset}), milliseconds);
-   }
+    public void set(int index, int months, int days, int milliseconds){
+      final int offsetIndex = index * ${type.width};
+      data.setInt(offsetIndex, months);
+      data.setInt((offsetIndex + ${minor.daysOffset}), days);
+      data.setInt((offsetIndex + ${minor.millisecondsOffset}), milliseconds);
+    }
 
-   protected void set(int index, ${minor.class}Holder holder){
-     set(index, holder.months, holder.days, holder.milliseconds);
-   }
+    protected void set(int index, ${minor.class}Holder holder){
+      set(index, holder.months, holder.days, holder.milliseconds);
+    }
 
-   protected void set(int index, Nullable${minor.class}Holder holder){
-     set(index, holder.months, holder.days, holder.milliseconds);
-   }
+    protected void set(int index, Nullable${minor.class}Holder holder){
+      set(index, holder.months, holder.days, holder.milliseconds);
+    }
 
-   public void setSafe(int index, int months, int days, int milliseconds){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, months, days, milliseconds);
-   }
+    public void setSafe(int index, int months, int days, int milliseconds){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, months, days, milliseconds);
+    }
 
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     setSafe(index, holder.months, holder.days, holder.milliseconds);
-   }
+    public void setSafe(int index, Nullable${minor.class}Holder holder){
+      setSafe(index, holder.months, holder.days, holder.milliseconds);
+    }
 
-   public void setSafe(int index, ${minor.class}Holder holder){
-     setSafe(index, holder.months, holder.days, holder.milliseconds);
-   }
+    public void setSafe(int index, ${minor.class}Holder holder){
+      setSafe(index, holder.months, holder.days, holder.milliseconds);
+    }
 
-   <#elseif (minor.class == "IntervalDay")>
-   public void set(int index, int days, int milliseconds){
-     final int offsetIndex = index * ${type.width};
-     data.setInt(offsetIndex, days);
-     data.setInt((offsetIndex + ${minor.millisecondsOffset}), milliseconds);
-   }
+  <#elseif (minor.class == "IntervalDay")>
+    public void set(int index, int days, int milliseconds){
+      final int offsetIndex = index * ${type.width};
+      data.setInt(offsetIndex, days);
+      data.setInt((offsetIndex + ${minor.millisecondsOffset}), milliseconds);
+    }
 
-   protected void set(int index, ${minor.class}Holder holder){
-     set(index, holder.days, holder.milliseconds);
-   }
-   protected void set(int index, Nullable${minor.class}Holder holder){
-     set(index, holder.days, holder.milliseconds);
-   }
+    protected void set(int index, ${minor.class}Holder holder){
+      set(index, holder.days, holder.milliseconds);
+    }
 
-   public void setSafe(int index, int days, int milliseconds){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, days, milliseconds);
-   }
+    protected void set(int index, Nullable${minor.class}Holder holder){
+      set(index, holder.days, holder.milliseconds);
+    }
 
-   public void setSafe(int index, ${minor.class}Holder holder){
-     setSafe(index, holder.days, holder.milliseconds);
-   }
+    public void setSafe(int index, int days, int milliseconds){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, days, milliseconds);
+    }
 
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     setSafe(index, holder.days, holder.milliseconds);
-   }
+    public void setSafe(int index, ${minor.class}Holder holder){
+      setSafe(index, holder.days, holder.milliseconds);
+    }
 
-   <#elseif (minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
+    public void setSafe(int index, Nullable${minor.class}Holder holder){
+      setSafe(index, holder.days, holder.milliseconds);
+    }
 
-   public void set(int index, ${minor.class}Holder holder){
-     set(index, holder.start, holder.buffer);
-   }
+  <#elseif (minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
+    public void set(int index, ${minor.class}Holder holder){
+      set(index, holder.start, holder.buffer);
+    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
-     set(index, holder.start, holder.buffer);
-   }
+    void set(int index, Nullable${minor.class}Holder holder){
+      set(index, holder.start, holder.buffer);
+    }
 
-   public void setSafe(int index,  Nullable${minor.class}Holder holder){
-     setSafe(index, holder.start, holder.buffer);
-   }
-   public void setSafe(int index,  ${minor.class}Holder holder){
-     setSafe(index, holder.start, holder.buffer);
-   }
+    public void setSafe(int index,  Nullable${minor.class}Holder holder){
+      setSafe(index, holder.start, holder.buffer);
+    }
 
-   public void setSafe(int index, int start, DrillBuf buffer){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, start, buffer);
-   }
+    public void setSafe(int index,  ${minor.class}Holder holder){
+      setSafe(index, holder.start, holder.buffer);
+    }
 
-   public void set(int index, int start, DrillBuf buffer){
-     data.setBytes(index * ${type.width}, buffer, start, ${type.width});
-   }
+    public void setSafe(int index, int start, DrillBuf buffer){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, start, buffer);
+    }
 
-   <#else>
+  <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
+    public void set(int index, BigDecimal value) {
+      DecimalUtility.getSparseFromBigDecimal(value, data, index * ${type.width},
+           field.getScale(), field.getPrecision(), ${minor.nDecimalDigits});
+    }
 
-   protected void set(int index, ${minor.class}Holder holder){
-     set(index, holder.start, holder.buffer);
-   }
+    public void setSafe(int index, BigDecimal value) {
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, value);
+    }
 
-   public void set(int index, Nullable${minor.class}Holder holder){
-     set(index, holder.start, holder.buffer);
-   }
+  </#if>
+    public void set(int index, int start, DrillBuf buffer){
+      data.setBytes(index * ${type.width}, buffer, start, ${type.width});
+    }
 
-   public void set(int index, int start, DrillBuf buffer){
-     data.setBytes(index * ${type.width}, buffer, start, ${type.width});
-   }
+  <#else>
+    protected void set(int index, ${minor.class}Holder holder){
+      set(index, holder.start, holder.buffer);
+    }
 
-   public void setSafe(int index, ${minor.class}Holder holder){
-     setSafe(index, holder.start, holder.buffer);
-   }
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     setSafe(index, holder.start, holder.buffer);
-   }
+    public void set(int index, Nullable${minor.class}Holder holder){
+      set(index, holder.start, holder.buffer);
+    }
 
-   public void setSafe(int index, int start, DrillBuf buffer){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, holder);
-   }
+    public void set(int index, int start, DrillBuf buffer){
+      data.setBytes(index * ${type.width}, buffer, start, ${type.width});
+    }
 
-   public void set(int index, Nullable${minor.class}Holder holder){
-     data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
-   }
+    public void setSafe(int index, ${minor.class}Holder holder){
+      setSafe(index, holder.start, holder.buffer);
+    }
+
+    public void setSafe(int index, Nullable${minor.class}Holder holder){
+      setSafe(index, holder.start, holder.buffer);
+    }
+
+    public void setSafe(int index, int start, DrillBuf buffer){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, holder);
+    }
+
+    public void set(int index, Nullable${minor.class}Holder holder){
+      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
+    }
    </#if>
 
-   @Override
-   public void generateTestData(int count) {
-     setValueCount(count);
-     boolean even = true;
-     final int valueCount = getAccessor().getValueCount();
-     for(int i = 0; i < valueCount; i++, even = !even) {
-       final byte b = even ? Byte.MIN_VALUE : Byte.MAX_VALUE;
-       for(int w = 0; w < ${type.width}; w++){
-         data.setByte(i + w, b);
-       }
-     }
-   }
+    @Override
+    public void generateTestData(int count) {
+      setValueCount(count);
+      boolean even = true;
+      final int valueCount = getAccessor().getValueCount();
+      for(int i = 0; i < valueCount; i++, even = !even) {
+        final byte b = even ? Byte.MIN_VALUE : Byte.MAX_VALUE;
+        for(int w = 0; w < ${type.width}; w++){
+          data.setByte(i + w, b);
+        }
+      }
+    }
 
    <#else> <#-- type.width <= 8 -->
-   public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
-   }
+    public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
+    }
 
    public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, value);
-   }
+        reAlloc();
+      }
+      set(index, value);
+    }
 
-   protected void set(int index, ${minor.class}Holder holder){
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
-   }
+    protected void set(int index, ${minor.class}Holder holder){
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+    }
 
-   public void setSafe(int index, ${minor.class}Holder holder){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, holder);
-   }
+    public void setSafe(int index, ${minor.class}Holder holder){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, holder);
+    }
 
-   protected void set(int index, Nullable${minor.class}Holder holder){
-     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
-   }
+    protected void set(int index, Nullable${minor.class}Holder holder){
+      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+    }
 
-   public void setSafe(int index, Nullable${minor.class}Holder holder){
-     while(index >= getValueCapacity()) {
-       reAlloc();
-     }
-     set(index, holder);
-   }
+    public void setSafe(int index, Nullable${minor.class}Holder holder){
+      while(index >= getValueCapacity()) {
+        reAlloc();
+      }
+      set(index, holder);
+    }
 
-   @Override
-   public void generateTestData(int size) {
-     setValueCount(size);
-     boolean even = true;
-     final int valueCount = getAccessor().getValueCount();
-     for(int i = 0; i < valueCount; i++, even = !even) {
-       if(even){
-         set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
-       }else{
-         set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
-       }
-     }
-   }
+    @Override
+    public void generateTestData(int size) {
+      setValueCount(size);
+      boolean even = true;
+      final int valueCount = getAccessor().getValueCount();
+      for(int i = 0; i < valueCount; i++, even = !even) {
+        if(even) {
+          set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
+        } else {
+          set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
+        }
+      }
+    }
 
-   public void generateTestDataAlt(int size) {
-     setValueCount(size);
-     boolean even = true;
-     final int valueCount = getAccessor().getValueCount();
-     for(int i = 0; i < valueCount; i++, even = !even) {
-       if(even){
-         set(i, (${(minor.javaType!type.javaType)}) 1);
-       }else{
-         set(i, (${(minor.javaType!type.javaType)}) 0);
-       }
-     }
-   }
+    public void generateTestDataAlt(int size) {
+      setValueCount(size);
+      boolean even = true;
+      final int valueCount = getAccessor().getValueCount();
+      for(int i = 0; i < valueCount; i++, even = !even) {
+        if(even) {
+          set(i, (${(minor.javaType!type.javaType)}) 1);
+        } else {
+          set(i, (${(minor.javaType!type.javaType)}) 0);
+        }
+      }
+    }
 
   </#if> <#-- type.width -->
-
-   @Override
-   public void setValueCount(int valueCount) {
-     final int currentValueCapacity = getValueCapacity();
-     final int idx = (${type.width} * valueCount);
-     while(valueCount > getValueCapacity()) {
-       reAlloc();
-     }
-     if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
-       incrementAllocationMonitor();
-     } else if (allocationMonitor > 0) {
-       allocationMonitor = 0;
-     }
-     VectorTrimmer.trim(data, idx);
-     data.writerIndex(valueCount * ${type.width});
-   }
- }
+    @Override
+    public void setValueCount(int valueCount) {
+      final int currentValueCapacity = getValueCapacity();
+      final int idx = (${type.width} * valueCount);
+      while(valueCount > getValueCapacity()) {
+        reAlloc();
+      }
+      if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
+        incrementAllocationMonitor();
+      } else if (allocationMonitor > 0) {
+        allocationMonitor = 0;
+      }
+      VectorTrimmer.trim(data, idx);
+      data.writerIndex(valueCount * ${type.width});
+    }
+  }
 }
 
 </#if> <#-- type.major -->

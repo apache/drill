@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -83,7 +83,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
     options.put("skipnulls", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_SKIPNULLFIELDS)));
 
-    RecordWriter recordWriter = new JsonRecordWriter();
+    RecordWriter recordWriter = new JsonRecordWriter(writer.getStorageStrategy());
     recordWriter.init(options);
 
     return recordWriter;
@@ -133,8 +133,6 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       }
       return true;
     }
-
-
   }
 
   @Override
@@ -151,5 +149,4 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public boolean supportsPushDown() {
     return true;
   }
-
 }

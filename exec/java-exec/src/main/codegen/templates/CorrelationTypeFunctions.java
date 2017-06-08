@@ -61,6 +61,10 @@ import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 
+/*
+ * This class is generated using freemarker and the ${.template_name} template.
+ */
+
 @SuppressWarnings("unused")
 
 public class ${aggrtype.className}Functions {

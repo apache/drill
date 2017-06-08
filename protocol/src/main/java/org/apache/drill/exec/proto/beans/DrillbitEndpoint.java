@@ -52,6 +52,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
     private int controlPort;
     private int dataPort;
     private Roles roles;
+    private String version;
 
     public DrillbitEndpoint()
     {
@@ -125,6 +126,19 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         return this;
     }
 
+    // version
+
+    public String getVersion()
+    {
+        return version;
+    }
+
+    public DrillbitEndpoint setVersion(String version)
+    {
+        this.version = version;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -195,6 +209,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
                     message.roles = input.mergeObject(message.roles, Roles.getSchema());
                     break;
 
+                case 6:
+                    message.version = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -219,6 +236,9 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         if(message.roles != null)
              output.writeObject(5, message.roles, Roles.getSchema(), false);
 
+
+        if(message.version != null)
+            output.writeString(6, message.version, false);
     }
 
     public String getFieldName(int number)
@@ -230,6 +250,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
             case 3: return "controlPort";
             case 4: return "dataPort";
             case 5: return "roles";
+            case 6: return "version";
             default: return null;
         }
     }
@@ -248,6 +269,7 @@ public final class DrillbitEndpoint implements Externalizable, Message<DrillbitE
         __fieldMap.put("controlPort", 3);
         __fieldMap.put("dataPort", 4);
         __fieldMap.put("roles", 5);
+        __fieldMap.put("version", 6);
     }
     
 }

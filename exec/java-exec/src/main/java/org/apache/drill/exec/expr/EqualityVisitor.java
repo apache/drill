@@ -75,6 +75,9 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!holder.getName().equals(((FunctionHolderExpression) value).getName())) {
       return false;
     }
+    if (holder.isRandom()) {
+      return false;
+    }
     return checkChildren(holder, value);
   }
 
@@ -287,7 +290,7 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
     if (!(value instanceof TypedNullConstant)) {
       return false;
     }
-    return e.getMajorType().equals(e.getMajorType());
+    return value.getMajorType().equals(e.getMajorType());
   }
 
   @Override

@@ -54,6 +54,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
     private QueryResult.QueryState state;
     private String user = DEFAULT_USER;
     private DrillbitEndpoint foreman;
+    private String optionsJson;
 
     public QueryInfo()
     {
@@ -127,6 +128,19 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         return this;
     }
 
+    // optionsJson
+
+    public String getOptionsJson()
+    {
+        return optionsJson;
+    }
+
+    public QueryInfo setOptionsJson(String optionsJson)
+    {
+        this.optionsJson = optionsJson;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -197,6 +211,9 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
                     message.foreman = input.mergeObject(message.foreman, DrillbitEndpoint.getSchema());
                     break;
 
+                case 6:
+                    message.optionsJson = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -221,6 +238,9 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         if(message.foreman != null)
              output.writeObject(5, message.foreman, DrillbitEndpoint.getSchema(), false);
 
+
+        if(message.optionsJson != null)
+            output.writeString(6, message.optionsJson, false);
     }
 
     public String getFieldName(int number)
@@ -232,6 +252,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
             case 3: return "state";
             case 4: return "user";
             case 5: return "foreman";
+            case 6: return "optionsJson";
             default: return null;
         }
     }
@@ -250,6 +271,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         __fieldMap.put("state", 3);
         __fieldMap.put("user", 4);
         __fieldMap.put("foreman", 5);
+        __fieldMap.put("optionsJson", 6);
     }
     
 }

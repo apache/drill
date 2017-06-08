@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,19 +17,22 @@
  */
 package org.apache.drill.exec.store;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
 import com.google.common.collect.Lists;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Class which creates new schema trees. It keeps track of newly created schema trees and closes them safely as
@@ -46,6 +49,41 @@ public class SchemaTreeProvider implements AutoCloseable {
     this.dContext = dContext;
     schemaTreesToClose = Lists.newArrayList();
     isImpersonationEnabled = dContext.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+  }
+
+  /**
+   * Return root schema for process user.
+   *
+   * @param options list of options
+   * @return root of the schema tree
+   */
+  public SchemaPlus createRootSchema(final OptionManager options) {
+    SchemaConfigInfoProvider schemaConfigInfoProvider = new SchemaConfigInfoProvider() {
+
+      @Override
+      public ViewExpansionContext getViewExpansionContext() {
+        throw new UnsupportedOperationException("View expansion context is not supported");
+      }
+
+      @Override
+      public OptionValue getOption(String optionKey) {
+        return options.getOption(optionKey);
+      }
+
+      @Override public SchemaPlus getRootSchema(String userName) {
+        return createRootSchema(userName, this);
+      }
+
+      @Override public String getQueryUserName() {
+        return ImpersonationUtil.getProcessUserName();
+      }
+    };
+
+    final SchemaConfig schemaConfig = SchemaConfig.newBuilder(
+        ImpersonationUtil.getProcessUserName(), schemaConfigInfoProvider)
+        .build();
+
+    return createRootSchema(schemaConfig);
   }
 
   /**

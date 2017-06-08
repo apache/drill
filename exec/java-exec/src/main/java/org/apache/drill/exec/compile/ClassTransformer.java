@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,12 +22,14 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
@@ -39,13 +41,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+/**
+ * Compiles generated code, merges the resulting class with the
+ * template class, and performs byte-code cleanup on the resulting
+ * byte codes. The most important transform is scalar replacement
+ * which replaces occurrences of non-escaping objects with a
+ * collection of member variables.
+ */
+
 public class ClassTransformer {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
   private static final int MAX_SCALAR_REPLACE_CODE_SIZE = 2*1024*1024; // 2meg
 
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
-  private final OptionManager optionManager;
+  private final DrillConfig config;
+  private final OptionSet optionManager;
 
   public final static String SCALAR_REPLACEMENT_OPTION =
       "org.apache.drill.exec.compile.ClassTransformer.scalar_replacement";
@@ -73,13 +84,14 @@ public class ClassTransformer {
         return TRY;
       case "on":
         return ON;
+      default:
+        throw new IllegalArgumentException("Invalid ScalarReplacementOption \"" + s + "\"");
       }
-
-      throw new IllegalArgumentException("Invalid ScalarReplacementOption \"" + s + "\"");
     }
   }
 
-  public ClassTransformer(final OptionManager optionManager) {
+  public ClassTransformer(final DrillConfig config, final OptionSet optionManager) {
+    this.config = config;
     this.optionManager = optionManager;
   }
 
@@ -210,6 +222,13 @@ public class ClassTransformer {
     }
   }
 
+  @SuppressWarnings("resource")
+  public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
+    final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
+    return getImplementationClass(loader, cg.getDefinition(),
+        cg.getGeneratedCode(), cg.getMaterializedClassName());
+  }
+
   public Class<?> getImplementationClass(
       final QueryClassLoader classLoader,
       final TemplateClassDefinition<?> templateDefinition,
@@ -224,14 +243,14 @@ public class ClassTransformer {
       final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
 
       long totalBytecodeSize = 0;
-      Map<String, ClassNode> classesToMerge = Maps.newHashMap();
+      Map<String, Pair<byte[], ClassNode>> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
         final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
         if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }
-        classesToMerge.put(node.name, node);
+        classesToMerge.put(node.name, Pair.of(clazz, node));
       }
 
       final LinkedList<ClassSet> names = Lists.newLinkedList();
@@ -246,9 +265,16 @@ public class ClassTransformer {
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         final ClassNames nextGenerated = nextSet.generated;
-        final ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
+        // keeps only classes that have not be merged
+        Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
+        final ClassNode generatedNode;
+        if (classNodePair != null) {
+          generatedNode = classNodePair.getValue();
+        } else {
+          generatedNode = null;
+        }
 
-        /**
+        /*
          * TODO
          * We're having a problem with some cases of scalar replacement, but we want to get
          * the code in so it doesn't rot anymore.
@@ -291,9 +317,16 @@ public class ClassTransformer {
         namesCompleted.add(nextSet);
       }
 
+      // adds byte code of the classes that have not been merged to make them accessible for outer class
+      for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
+        classLoader.injectByteCode(clazz.getKey().replace(FileUtils.separatorChar, '.'), clazz.getValue().getKey());
+      }
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        logger.debug("Done compiling (bytecode size={}, time:{} millis).", DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
+             c.getSimpleName(),
+             DrillStringUtils.readable(totalBytecodeSize),
+             (System.nanoTime() - t1 + 500_000) / 1_000_000);
         return c;
       }
 

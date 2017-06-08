@@ -44,6 +44,10 @@ public interface MongoTestConstants {
   public static final String EMP_DATA = "emp.json";
   public static final String SCHEMA_CHANGE_DATA = "schema_change_int_to_string.json";
 
+  String DATATYPE_DB = "datatype";
+  String DATATYPE_COLLECTION = "types";
+  String DATATYPE_DATA = "datatype-oid.json";
+
   public static final String REPLICA_SET_1_NAME = "shard_1_replicas";
   public static final String REPLICA_SET_2_NAME = "shard_2_replicas";
 

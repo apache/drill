@@ -18,6 +18,7 @@
 package org.apache.drill.jdbc;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * A factory used to get open {@link Connection} instances.
@@ -31,5 +32,5 @@ public interface ConnectionFactory {
    * @param info the connection parameters
    * @throws Exception if factory fails to get a connection.
    */
-  Connection getConnection(ConnectionInfo info) throws Exception;
+  Connection getConnection(ConnectionInfo info) throws SQLException;
 }

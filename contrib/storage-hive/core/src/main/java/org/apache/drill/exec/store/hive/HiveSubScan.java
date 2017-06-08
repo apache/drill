@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,19 +26,13 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputSplit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -58,9 +51,9 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @JsonIgnore
   protected List<InputSplit> inputSplits = Lists.newArrayList();
   @JsonIgnore
-  protected Table table;
+  protected HiveTableWithColumnCache table;
   @JsonIgnore
-  protected List<Partition> partitions;
+  protected List<HivePartition> partitions;
   @JsonIgnore
   protected HiveStoragePlugin storagePlugin;
 
@@ -112,11 +105,11 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     return splits;
   }
 
-  public Table getTable() {
+  public HiveTableWithColumnCache getTable() {
     return table;
   }
 
-  public List<Partition> getPartitions() {
+  public List<HivePartition> getPartitions() {
     return partitions;
   }
 

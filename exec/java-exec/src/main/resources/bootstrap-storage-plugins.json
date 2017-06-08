@@ -29,6 +29,11 @@
           extensions: [ "tsv" ],
           delimiter: "\t"
         },
+        "httpd" : {
+          type: "httpd",
+          logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\""
+          /* timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" */
+        },
         "parquet" : {
           type: "parquet"
         },

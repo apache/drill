@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,9 +30,8 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.SqlRankFunction;
 import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
@@ -46,7 +45,6 @@ import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
@@ -126,14 +124,15 @@ public class TypeInferenceUtils {
       .put("DATE_PART", DrillDatePartSqlReturnTypeInference.INSTANCE)
       .put("SUM", DrillSumSqlReturnTypeInference.INSTANCE)
       .put("COUNT", DrillCountSqlReturnTypeInference.INSTANCE)
-      .put("CONCAT", DrillConcatSqlReturnTypeInference.INSTANCE)
+      .put("CONCAT", DrillConcatSqlReturnTypeInference.INSTANCE_CONCAT)
+      .put("CONCATOPERATOR", DrillConcatSqlReturnTypeInference.INSTANCE_CONCAT_OP)
       .put("LENGTH", DrillLengthSqlReturnTypeInference.INSTANCE)
-      .put("LPAD", DrillPadTrimSqlReturnTypeInference.INSTANCE)
-      .put("RPAD", DrillPadTrimSqlReturnTypeInference.INSTANCE)
-      .put("LTRIM", DrillPadTrimSqlReturnTypeInference.INSTANCE)
-      .put("RTRIM", DrillPadTrimSqlReturnTypeInference.INSTANCE)
-      .put("BTRIM", DrillPadTrimSqlReturnTypeInference.INSTANCE)
-      .put("TRIM", DrillPadTrimSqlReturnTypeInference.INSTANCE)
+      .put("LPAD", DrillPadSqlReturnTypeInference.INSTANCE)
+      .put("RPAD", DrillPadSqlReturnTypeInference.INSTANCE)
+      .put("LTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put("RTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put("BTRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
+      .put("TRIM", DrillTrimSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_TO", DrillConvertToSqlReturnTypeInference.INSTANCE)
       .put("EXTRACT", DrillExtractSqlReturnTypeInference.INSTANCE)
       .put("SQRT", DrillSqrtSqlReturnTypeInference.INSTANCE)
@@ -141,6 +140,12 @@ public class TypeInferenceUtils {
       .put("FLATTEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("KVGEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_FROM", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
+
+      // Functions that return the same type
+      .put("LOWER", DrillSameSqlReturnTypeInference.INSTANCE)
+      .put("UPPER", DrillSameSqlReturnTypeInference.INSTANCE)
+      .put("INITCAP", DrillSameSqlReturnTypeInference.INSTANCE)
+      .put("REVERSE", DrillSameSqlReturnTypeInference.INSTANCE)
 
       // Window Functions
       // RANKING
@@ -158,8 +163,8 @@ public class TypeInferenceUtils {
       .put("LAG", DrillLeadLagSqlReturnTypeInference.INSTANCE)
 
       // FIRST_VALUE, LAST_VALUE
-      .put("FIRST_VALUE", DrillFirstLastValueSqlReturnTypeInference.INSTANCE)
-      .put("LAST_VALUE", DrillFirstLastValueSqlReturnTypeInference.INSTANCE)
+      .put("FIRST_VALUE", DrillSameSqlReturnTypeInference.INSTANCE)
+      .put("LAST_VALUE", DrillSameSqlReturnTypeInference.INSTANCE)
 
       // Functions rely on DrillReduceAggregatesRule for expression simplification as opposed to getting evaluated directly
       .put(SqlAvgAggFunction.Subtype.AVG.name(), DrillAvgAggSqlReturnTypeInference.INSTANCE)
@@ -212,6 +217,16 @@ public class TypeInferenceUtils {
     } else {
       return new DrillDefaultSqlReturnTypeInference(functions);
     }
+  }
+
+  /**
+   * Checks if given type is string scalar type.
+   *
+   * @param sqlTypeName Calcite's sql type name
+   * @return true if given type is string scalar type
+   */
+  public static boolean isScalarStringType(final SqlTypeName sqlTypeName) {
+    return sqlTypeName == SqlTypeName.VARCHAR || sqlTypeName == SqlTypeName.CHAR;
   }
 
   private static class DrillDefaultSqlReturnTypeInference implements SqlReturnTypeInference {
@@ -394,31 +409,37 @@ public class TypeInferenceUtils {
   }
 
   private static class DrillConcatSqlReturnTypeInference implements SqlReturnTypeInference {
-    private static final DrillConcatSqlReturnTypeInference INSTANCE = new DrillConcatSqlReturnTypeInference();
+    // Difference between concat function and concat operator ('||') is that concat function resolves nulls internally,
+    // i.e. does not return nulls at all.
+    private static final DrillConcatSqlReturnTypeInference INSTANCE_CONCAT = new DrillConcatSqlReturnTypeInference(false);
+    private static final DrillConcatSqlReturnTypeInference INSTANCE_CONCAT_OP = new DrillConcatSqlReturnTypeInference(true);
+
+    private final boolean isNullIfNull;
+
+    public DrillConcatSqlReturnTypeInference(boolean isNullIfNull) {
+      this.isNullIfNull = isNullIfNull;
+    }
 
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-      final RelDataTypeFactory factory = opBinding.getTypeFactory();
 
-      boolean isNullable = true;
-      int precision = 0;
-      for(RelDataType relDataType : opBinding.collectOperandTypes()) {
-        if(!relDataType.isNullable()) {
-          isNullable = false;
-        }
-
-        // If the underlying columns cannot offer information regarding the precision (i.e., the length) of the VarChar,
-        // Drill uses the largest to represent it
-        if(relDataType.getPrecision() == TypeHelper.VARCHAR_DEFAULT_CAST_LEN
-            || relDataType.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED) {
-          precision = TypeHelper.VARCHAR_DEFAULT_CAST_LEN;
+      // If the underlying columns cannot offer information regarding the precision of the VarChar,
+      // Drill uses the largest to represent it.
+      int totalPrecision = 0;
+      for (RelDataType relDataType : opBinding.collectOperandTypes()) {
+        if (isScalarStringType(relDataType.getSqlTypeName()) && relDataType.getPrecision() != RelDataType.PRECISION_NOT_SPECIFIED) {
+          totalPrecision += relDataType.getPrecision();
         } else {
-          precision += relDataType.getPrecision();
+          totalPrecision = Types.MAX_VARCHAR_LENGTH;
+          break;
         }
       }
 
-      return factory.createTypeWithNullability(
-          factory.createSqlType(SqlTypeName.VARCHAR, precision),
+      totalPrecision = totalPrecision > Types.MAX_VARCHAR_LENGTH ? Types.MAX_VARCHAR_LENGTH : totalPrecision;
+      boolean isNullable = isNullIfNull && isNullable(opBinding.collectOperandTypes());
+
+      return opBinding.getTypeFactory().createTypeWithNullability(
+          opBinding.getTypeFactory().createSqlType(SqlTypeName.VARCHAR, totalPrecision),
           isNullable);
     }
   }
@@ -441,23 +462,56 @@ public class TypeInferenceUtils {
     }
   }
 
-  private static class DrillPadTrimSqlReturnTypeInference implements SqlReturnTypeInference {
-    private static final DrillPadTrimSqlReturnTypeInference INSTANCE = new DrillPadTrimSqlReturnTypeInference();
+  private static class DrillPadSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillPadSqlReturnTypeInference INSTANCE = new DrillPadSqlReturnTypeInference();
 
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-      final RelDataTypeFactory factory = opBinding.getTypeFactory();
-      final SqlTypeName sqlTypeName = SqlTypeName.VARCHAR;
-
-      for(int i = 0; i < opBinding.getOperandCount(); ++i) {
-        if(opBinding.getOperandType(i).isNullable()) {
-          return createCalciteTypeWithNullability(
-              factory, sqlTypeName, true);
-        }
+      if (opBinding instanceof SqlCallBinding && (((SqlCallBinding) opBinding).operand(1) instanceof  SqlNumericLiteral)) {
+        int precision = ((SqlNumericLiteral) ((SqlCallBinding) opBinding).operand(1)).intValue(true);
+        RelDataType sqlType = opBinding.getTypeFactory().createSqlType(SqlTypeName.VARCHAR, Math.max(precision, 0));
+        return opBinding.getTypeFactory().createTypeWithNullability(sqlType, isNullable(opBinding.collectOperandTypes()));
       }
 
       return createCalciteTypeWithNullability(
-          factory, sqlTypeName, false);
+          opBinding.getTypeFactory(),
+          SqlTypeName.VARCHAR,
+          isNullable(opBinding.collectOperandTypes()));
+
+    }
+  }
+
+  private static class DrillTrimSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillTrimSqlReturnTypeInference INSTANCE = new DrillTrimSqlReturnTypeInference();
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          SqlTypeName.VARCHAR,
+          isNullable(opBinding.collectOperandTypes()));
+    }
+  }
+
+  private static class DrillSubstringSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillSubstringSqlReturnTypeInference INSTANCE = new DrillSubstringSqlReturnTypeInference();
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      boolean isNullable = isNullable(opBinding.collectOperandTypes());
+
+      boolean isScalarString = isScalarStringType(opBinding.getOperandType(0).getSqlTypeName());
+      int precision = opBinding.getOperandType(0).getPrecision();
+
+      if (isScalarString && precision != RelDataType.PRECISION_NOT_SPECIFIED) {
+        RelDataType sqlType = opBinding.getTypeFactory().createSqlType(SqlTypeName.VARCHAR, precision);
+        return opBinding.getTypeFactory().createTypeWithNullability(sqlType, isNullable);
+      }
+
+      return createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          SqlTypeName.VARCHAR,
+          isNullable);
     }
   }
 
@@ -511,21 +565,20 @@ public class TypeInferenceUtils {
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
       final RelDataTypeFactory factory = opBinding.getTypeFactory();
+      final boolean isNullable = opBinding.getOperandType(1).isNullable();
 
-      final SqlNode firstOperand = ((SqlCallBinding) opBinding).operand(0);
-      if(!(firstOperand instanceof SqlCharStringLiteral)) {
+      if (!(opBinding instanceof SqlCallBinding) || !(((SqlCallBinding) opBinding).operand(0) instanceof SqlCharStringLiteral)) {
         return createCalciteTypeWithNullability(factory,
             SqlTypeName.ANY,
-            opBinding.getOperandType(1).isNullable());
+            isNullable);
       }
 
-      final String part = ((SqlCharStringLiteral) firstOperand)
+      final String part = ((SqlCharStringLiteral) ((SqlCallBinding) opBinding).operand(0))
           .getNlsString()
           .getValue()
           .toUpperCase();
 
       final SqlTypeName sqlTypeName = getSqlTypeNameForTimeUnit(part);
-      final boolean isNullable = opBinding.getOperandType(1).isNullable();
       return createCalciteTypeWithNullability(
           factory,
           sqlTypeName,
@@ -598,15 +651,12 @@ public class TypeInferenceUtils {
     private static final DrillLeadLagSqlReturnTypeInference INSTANCE = new DrillLeadLagSqlReturnTypeInference();
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-      return createCalciteTypeWithNullability(
-          opBinding.getTypeFactory(),
-          opBinding.getOperandType(0).getSqlTypeName(),
-          true);
+      return opBinding.getTypeFactory().createTypeWithNullability(opBinding.getOperandType(0), true);
     }
   }
 
-  private static class DrillFirstLastValueSqlReturnTypeInference implements SqlReturnTypeInference {
-    private static final DrillFirstLastValueSqlReturnTypeInference INSTANCE = new DrillFirstLastValueSqlReturnTypeInference();
+  private static class DrillSameSqlReturnTypeInference implements SqlReturnTypeInference {
+    private static final DrillSameSqlReturnTypeInference INSTANCE = new DrillSameSqlReturnTypeInference();
     @Override
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
       return opBinding.getOperandType(0);
@@ -697,7 +747,7 @@ public class TypeInferenceUtils {
               TimeUnit.MONTH,
               SqlParserPos.ZERO));
     } else if (sqlTypeName == SqlTypeName.VARCHAR) {
-      type = typeFactory.createSqlType(sqlTypeName, TypeHelper.VARCHAR_DEFAULT_CAST_LEN);
+      type = typeFactory.createSqlType(sqlTypeName, Types.MAX_VARCHAR_LENGTH);
     } else {
       type = typeFactory.createSqlType(sqlTypeName);
     }
@@ -731,6 +781,21 @@ public class TypeInferenceUtils {
         args,
         ExpressionPosition.UNKNOWN);
     return functionCall;
+  }
+
+  /**
+   * Checks if at least one of the operand types is nullable.
+   *
+   * @param operandTypes operand types
+   * @return true if one of the operands is nullable, false otherwise
+   */
+  private static boolean isNullable(List<RelDataType> operandTypes) {
+    for (RelDataType relDataType : operandTypes) {
+      if (relDataType.isNullable()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

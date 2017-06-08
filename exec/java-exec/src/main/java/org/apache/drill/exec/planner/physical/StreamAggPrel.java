@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,12 +18,10 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
@@ -67,12 +65,12 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     RelNode child = this.getInput();
-    double inputRows = RelMetadataQuery.getRowCount(child);
+    double inputRows = mq.getRowCount(child);
 
     int numGroupByFields = this.getGroupCount();
     int numAggrFields = this.aggCalls.size();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed
  * with this work for additional information regarding copyright
@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -116,11 +117,9 @@ public class ChainedHashTable {
   private final RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
-  private final boolean areNullsEqual;
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing,
-                          boolean areNullsEqual) {
+                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing) {
 
     this.htConfig = htConfig;
     this.context = context;
@@ -128,12 +127,16 @@ public class ChainedHashTable {
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
-    this.areNullsEqual = areNullsEqual;
   }
 
   public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
       IOException, SchemaChangeException {
     CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
+    top.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // This code is called from generated code, so to step into this code,
+    // persist the code generated in HashAggBatch also.
+//  top.saveCodeForDebugging(true);
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
@@ -190,6 +193,7 @@ public class ChainedHashTable {
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       i++;
@@ -197,9 +201,10 @@ public class ChainedHashTable {
 
 
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
-    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild, htKeyFieldIds);
+    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild,
+        htConfig.getComparators(), htKeyFieldIds);
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe,
-        htKeyFieldIds);
+        htConfig.getComparators(), htKeyFieldIds);
 
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
     if (outgoing != null) {
@@ -221,7 +226,7 @@ public class ChainedHashTable {
 
 
   private void setupIsKeyMatchInternal(ClassGenerator<HashTable> cg, MappingSet incomingMapping, MappingSet htableMapping,
-                                       LogicalExpression[] keyExprs, TypedFieldId[] htKeyFieldIds)
+      LogicalExpression[] keyExprs, List<Comparator> comparators, TypedFieldId[] htKeyFieldIds)
       throws SchemaChangeException {
     cg.setMappingSet(incomingMapping);
 
@@ -230,19 +235,20 @@ public class ChainedHashTable {
       return;
     }
 
-    int i = 0;
-    for (LogicalExpression expr : keyExprs) {
+    for (int i=0; i<keyExprs.length; i++) {
+      final LogicalExpression expr = keyExprs[i];
       cg.setMappingSet(incomingMapping);
       HoldingContainer left = cg.addExpr(expr, ClassGenerator.BlkCreateMode.FALSE);
 
       cg.setMappingSet(htableMapping);
-      ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i++]);
+      ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
       HoldingContainer right = cg.addExpr(vvrExpr, ClassGenerator.BlkCreateMode.FALSE);
 
       JConditional jc;
 
       // codegen for nullable columns if nulls are not equal
-      if (!areNullsEqual && left.isOptional() && right.isOptional()) {
+      if (comparators.get(i) == Comparator.EQUALS
+          && left.isOptional() && right.isOptional()) {
         jc = cg.getEvalBlock()._if(left.getIsSet().eq(JExpr.lit(0)).
             cand(right.getIsSet().eq(JExpr.lit(0))));
         jc._then()._return(JExpr.FALSE);

@@ -17,15 +17,18 @@
  */
 package org.apache.drill.exec;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestHivePartitionPruning extends HiveTestBase {
   // enable decimal data type
@@ -147,6 +150,30 @@ public class TestHivePartitionPruning extends HiveTestBase {
         .baselineColumns("nullCount")
         .baselineValues(95L)
         .go();
+  }
+
+  @Test // DRILL-5032
+  public void testPartitionColumnsCaching() throws Exception {
+    final String query = "EXPLAIN PLAN FOR SELECT * FROM hive.partition_with_few_schemas";
+
+    List<QueryDataBatch> queryDataBatches = testSqlWithResults(query);
+    String resultString = getResultString(queryDataBatches, "|");
+
+    // different for both partitions column strings from physical plan
+    String columnString = "\"name\" : \"a\"";
+    String secondColumnString = "\"name\" : \"a1\"";
+
+    int columnIndex = resultString.indexOf(columnString);
+    assertTrue(columnIndex >= 0);
+    columnIndex = resultString.indexOf(columnString, columnIndex + 1);
+    // checks that column added to physical plan only one time
+    assertEquals(-1, columnIndex);
+
+    int secondColumnIndex = resultString.indexOf(secondColumnString);
+    assertTrue(secondColumnIndex >= 0);
+    secondColumnIndex = resultString.indexOf(secondColumnString, secondColumnIndex + 1);
+    // checks that column added to physical plan only one time
+    assertEquals(-1, secondColumnIndex);
   }
 
   @AfterClass

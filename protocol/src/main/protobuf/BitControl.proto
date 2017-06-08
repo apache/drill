@@ -33,12 +33,16 @@ enum RpcType {
   RESP_BIT_STATUS = 13;
   RESP_QUERY_STATUS = 14;
   RESP_CUSTOM = 18;
+
+  // both bit request and response
+  SASL_MESSAGE = 19;
 }
 
 message BitControlHandshake{
   optional int32 rpc_version = 1;
   optional exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
   optional DrillbitEndpoint endpoint = 3;
+  repeated string authenticationMechanisms = 4;
 }
 
 message BitStatus {
@@ -88,6 +92,7 @@ message QueryContextInformation {
   optional int64 query_start_time = 1;      // start time of query in milliseconds
   optional int32 time_zone = 2;             // timezone of the Drillbit where user is connected
   optional string default_schema_name = 3;  // default schema in current session when the query is submitted
+  optional string session_id = 4;           // current session id
 }
 
 message WorkQueueStatus{

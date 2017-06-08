@@ -97,7 +97,7 @@ public class TestWriteToDisk extends ExecTest {
             batch, context.getAllocator());
 
         Configuration conf = new Configuration();
-        conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
+        conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 
         final VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
             context.getAllocator());

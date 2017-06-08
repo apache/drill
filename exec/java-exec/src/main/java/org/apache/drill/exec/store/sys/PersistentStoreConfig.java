@@ -38,11 +38,17 @@ public class PersistentStoreConfig<V> {
   private final String name;
   private final InstanceSerializer<V> valueSerializer;
   private final PersistentStoreMode mode;
+  private final int capacity;
 
-  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode) {
+  protected PersistentStoreConfig(String name, InstanceSerializer<V> valueSerializer, PersistentStoreMode mode, int capacity) {
     this.name = name;
     this.valueSerializer = valueSerializer;
     this.mode = mode;
+    this.capacity = capacity;
+  }
+
+  public int getCapacity() {
+    return capacity;
   }
 
   public PersistentStoreMode getMode() {
@@ -65,7 +71,7 @@ public class PersistentStoreConfig<V> {
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof PersistentStoreConfig) {
-      final PersistentStoreConfig other = PersistentStoreConfig.class.cast(obj);
+      final PersistentStoreConfig<?> other = PersistentStoreConfig.class.cast(obj);
       return Objects.equal(name, other.name)
           && Objects.equal(valueSerializer, other.valueSerializer)
           && Objects.equal(mode, other.mode);
@@ -85,6 +91,7 @@ public class PersistentStoreConfig<V> {
     private String name;
     private InstanceSerializer<V> serializer;
     private PersistentStoreMode mode = PersistentStoreMode.PERSISTENT;
+    private int capacity;
 
     protected StoreConfigBuilder(InstanceSerializer<V> serializer) {
       super();
@@ -106,9 +113,14 @@ public class PersistentStoreConfig<V> {
       return this;
     }
 
+    public StoreConfigBuilder<V> setCapacity(int capacity) {
+      this.capacity = capacity;
+      return this;
+    }
+
     public PersistentStoreConfig<V> build(){
       Preconditions.checkNotNull(name);
-      return new PersistentStoreConfig<>(name, serializer, mode);
+      return new PersistentStoreConfig<>(name, serializer, mode, capacity);
     }
   }
 

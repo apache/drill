@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.buffer.ByteBuf;
 
 import java.util.List;
@@ -27,9 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
-import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -48,8 +49,8 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.store.sys.PersistentStore;
-import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 
@@ -65,17 +66,6 @@ import com.google.common.collect.Maps;
 public class QueryManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
 
-  public static final PersistentStoreConfig<QueryProfile> QUERY_PROFILE = PersistentStoreConfig.
-          newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE)
-      .name("profiles")
-      .blob()
-      .build();
-
-  public static final TransientStoreConfig<QueryInfo> RUNNING_QUERY_INFO = TransientStoreConfig
-      .newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE)
-      .name("running")
-      .build();
-
   private final Map<DrillbitEndpoint, NodeTracker> nodeMap = Maps.newHashMap();
   private final QueryId queryId;
   private final String stringQueryId;
@@ -90,19 +80,24 @@ public class QueryManager implements AutoCloseable {
       new IntObjectHashMap<>();
   private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
-  private final PersistentStore<QueryProfile> profileStore;
-  private final TransientStore<QueryInfo> transientProfiles;
+  private final PersistentStore<QueryProfile> completedProfileStore;
+  private final TransientStore<QueryInfo> runningProfileStore;
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
   private long startTime = System.currentTimeMillis();
   private long endTime;
+  private long planningEndTime;
+  private long queueWaitEndTime;
 
   // How many nodes have finished their execution.  Query is complete when all nodes are complete.
   private final AtomicInteger finishedNodes = new AtomicInteger(0);
 
   // How many fragments have finished their execution.
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
+
+  // Is the query saved in transient store
+  private boolean inTransientStore;
 
   public QueryManager(final QueryId queryId, final RunQuery runQuery, final PersistentStoreProvider storeProvider,
       final ClusterCoordinator coordinator, final Foreman foreman) {
@@ -111,12 +106,9 @@ public class QueryManager implements AutoCloseable {
     this.foreman = foreman;
 
     stringQueryId = QueryIdHelper.getQueryId(queryId);
-    try {
-      profileStore = storeProvider.getOrCreateStore(QUERY_PROFILE);
-    } catch (final Exception e) {
-      throw new DrillRuntimeException(e);
-    }
-    transientProfiles = coordinator.getOrCreateTransientStore(RUNNING_QUERY_INFO);
+
+    this.completedProfileStore = foreman.getQueryContext().getProfileStoreContext().getCompletedProfileStore();
+    this.runningProfileStore = foreman.getQueryContext().getProfileStoreContext().getRunningProfileStore();
   }
 
   private static boolean isTerminal(final FragmentState state) {
@@ -277,50 +269,62 @@ public class QueryManager implements AutoCloseable {
     }
   }
 
-  QueryState updateEphemeralState(final QueryState queryState) {
-    switch (queryState) {
+  void updateEphemeralState(final QueryState queryState) {
+      // If query is already in zk transient store, ignore the transient state update option.
+      // Else, they will not be removed from transient store upon completion.
+      if (!inTransientStore &&
+          !foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_TRANSIENT_STATE_UPDATE)) {
+        return;
+      }
+
+      switch (queryState) {
       case ENQUEUED:
       case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
-        transientProfiles.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        runningProfileStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+        inTransientStore = true;
         break;
 
       case COMPLETED:
       case CANCELED:
       case FAILED:
         try {
-          transientProfiles.remove(stringQueryId);
+          runningProfileStore.remove(stringQueryId);
+          inTransientStore = false;
         } catch(final Exception e) {
           logger.warn("Failure while trying to delete the estore profile for this query.", e);
         }
-
         break;
 
       default:
         throw new IllegalStateException("unrecognized queryState " + queryState);
     }
-
-    return queryState;
   }
 
   void writeFinalProfile(UserException ex) {
     try {
       // TODO(DRILL-2362) when do these ever get deleted?
-      profileStore.put(stringQueryId, getQueryProfile(ex));
+      completedProfileStore.put(stringQueryId, getQueryProfile(ex));
     } catch (Exception e) {
       logger.error("Failure while storing Query Profile", e);
     }
   }
 
   private QueryInfo getQueryInfo() {
-    return QueryInfo.newBuilder()
-        .setQuery(runQuery.getPlan())
+    final String queryText = foreman.getQueryText();
+    QueryInfo.Builder queryInfoBuilder = QueryInfo.newBuilder()
         .setState(foreman.getState())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
-        .build();
+        .setOptionsJson(getQueryOptionsAsJson());
+
+    if (queryText != null) {
+      queryInfoBuilder.setQuery(queryText);
+    }
+
+    return queryInfoBuilder.build();
   }
 
   public QueryProfile getQueryProfile() {
@@ -328,8 +332,8 @@ public class QueryManager implements AutoCloseable {
   }
 
   private QueryProfile getQueryProfile(UserException ex) {
+    final String queryText = foreman.getQueryText();
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
-        .setQuery(runQuery.getPlan())
         .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
@@ -337,8 +341,11 @@ public class QueryManager implements AutoCloseable {
         .setForeman(foreman.getQueryContext().getCurrentEndpoint())
         .setStart(startTime)
         .setEnd(endTime)
+        .setPlanEnd(planningEndTime)
+        .setQueueWaitEnd(queueWaitEndTime)
         .setTotalFragments(fragmentDataSet.size())
-        .setFinishedFragments(finishedFragments.get());
+        .setFinishedFragments(finishedFragments.get())
+        .setOptionsJson(getQueryOptionsAsJson());
 
     if (ex != null) {
       profileBuilder.setError(ex.getMessage(false));
@@ -353,9 +360,22 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setPlan(planText);
     }
 
+    if (queryText != null) {
+      profileBuilder.setQuery(queryText);
+    }
+
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
     return profileBuilder.build();
+  }
+
+  private String getQueryOptionsAsJson() {
+    try {
+      OptionList optionList = foreman.getQueryContext().getOptions().getOptionList();
+      return foreman.getQueryContext().getLpPersistence().getMapper().writeValueAsString(optionList);
+    } catch (JsonProcessingException e) {
+      throw new DrillRuntimeException("Error while trying to convert option list to json string", e);
+    }
   }
 
   private class OuterIter implements IntObjectPredicate<IntObjectHashMap<FragmentData>> {
@@ -400,6 +420,14 @@ public class QueryManager implements AutoCloseable {
 
   void markEndTime() {
     endTime = System.currentTimeMillis();
+  }
+
+  void markPlanningEndTime() {
+    planningEndTime = System.currentTimeMillis();
+  }
+
+  void markQueueWaitEndTime() {
+    queueWaitEndTime = System.currentTimeMillis();
   }
 
   /**

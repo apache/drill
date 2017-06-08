@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,6 +29,11 @@ import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
+/**
+ * Meta-data description of a column characterized by a name and a type
+ * (including both data type and cardinality AKA mode). For map types,
+ * the description includes the nested columns.)
+ */
 
 public class MaterializedField {
   private final String name;
@@ -44,7 +49,7 @@ public class MaterializedField {
 
   public static MaterializedField create(SerializedField serField){
     LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
-    for (SerializedField sf:serField.getChildList()) {
+    for (SerializedField sf : serField.getChildList()) {
       children.add(MaterializedField.create(sf));
     }
     return new MaterializedField(serField.getNamePart().getName(), serField.getMajorType(), children);
@@ -60,7 +65,6 @@ public class MaterializedField {
     }
     return serializedFieldBuilder.build();
   }
-
 
   public SerializedField.Builder getAsBuilder(){
     return SerializedField.newBuilder()
@@ -110,7 +114,6 @@ public class MaterializedField {
 //    return seg.getNameSegment().getPath();
 //  }
 
-
   // TODO: rewrite without as direct match rather than conversion then match.
   public boolean matches(SerializedField field){
     MaterializedField f = create(field);
@@ -142,43 +145,19 @@ public class MaterializedField {
 //    return sb.toString();
 //  }
 
-  public String getPath() {
-    return getName();
-  }
+  public String getPath() { return getName(); }
+  public String getLastName() { return getName(); }
+  public String getName() { return name; }
+  public int getWidth() { return type.getWidth(); }
+  public MajorType getType() { return type; }
+  public int getScale() { return type.getScale(); }
+  public int getPrecision() { return type.getPrecision(); }
+  public boolean isNullable() { return type.getMode() == DataMode.OPTIONAL; }
+  public DataMode getDataMode() { return type.getMode(); }
 
-  public String getLastName() {
-    return getName();
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getWidth() {
-    return type.getWidth();
-  }
-
-  public MajorType getType() {
-    return type;
-  }
-
-  public int getScale() {
-      return type.getScale();
-  }
-  public int getPrecision() {
-      return type.getPrecision();
-  }
-  public boolean isNullable() {
-    return type.getMode() == DataMode.OPTIONAL;
-  }
-
-  public DataMode getDataMode() {
-    return type.getMode();
-  }
-
-  public MaterializedField getOtherNullableVersion(){
+  public MaterializedField getOtherNullableVersion() {
     MajorType mt = type;
-    DataMode newDataMode = null;
+    DataMode newDataMode;
     switch (mt.getMode()){
     case OPTIONAL:
       newDataMode = DataMode.REQUIRED;
@@ -220,18 +199,48 @@ public class MaterializedField {
             Objects.equals(this.type, other.type);
   }
 
-
+  /**
+   * <p>Creates materialized field string representation.
+   * Includes field name, its type with precision and scale if any and data mode.
+   * Nested fields if any are included. Number of nested fields to include is limited to 10.</p>
+   *
+   * <b>FIELD_NAME(TYPE(PRECISION,SCALE):DATA_MODE)[NESTED_FIELD_1, NESTED_FIELD_2]</b>
+   * <p>Example: ok(BIT:REQUIRED), col(VARCHAR(3):OPTIONAL), emp_id(DECIMAL28SPARSE(6,0):REQUIRED)</p>
+   *
+   * @return materialized field string representation
+   */
   @Override
   public String toString() {
     final int maxLen = 10;
-    String childStr = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
-    return name + "(" + type.getMinorType().name() + ":" + type.getMode().name() + ")" + childStr;
-  }
+    String childString = children != null && !children.isEmpty() ? toString(children, maxLen) : "";
+    StringBuilder builder = new StringBuilder();
+    builder
+        .append(name)
+        .append("(")
+        .append(type.getMinorType().name());
 
+    if (type.hasPrecision()) {
+      builder.append("(");
+      builder.append(type.getPrecision());
+      if (type.hasScale()) {
+        builder.append(",");
+        builder.append(type.getScale());
+      }
+      builder.append(")");
+    }
+
+    builder
+        .append(":")
+        .append(type.getMode().name())
+        .append(")")
+        .append(childString);
+
+    return builder.toString();
+}
 
   private String toString(Collection<?> collection, int maxLen) {
     StringBuilder builder = new StringBuilder();
-    builder.append("[");
+    builder.append(" [");
     int i = 0;
     for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
       if (i > 0){

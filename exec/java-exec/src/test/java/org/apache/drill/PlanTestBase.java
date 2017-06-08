@@ -86,7 +86,7 @@ public class PlanTestBase extends BaseTestQuery {
       for (final String s : expectedPatterns) {
         final Pattern p = Pattern.compile(s);
         final Matcher m = p.matcher(plan);
-        assertTrue(EXPECTED_NOT_FOUND + s, m.find());
+        assertTrue(EXPECTED_NOT_FOUND + s +"\n" + plan, m.find());
       }
     }
 
@@ -95,7 +95,7 @@ public class PlanTestBase extends BaseTestQuery {
       for (final String s : excludedPatterns) {
         final Pattern p = Pattern.compile(s);
         final Matcher m = p.matcher(plan);
-        assertFalse(UNEXPECTED_FOUND + s, m.find());
+        assertFalse(UNEXPECTED_FOUND + s +"\n" + plan, m.find());
       }
     }
   }

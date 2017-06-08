@@ -62,6 +62,14 @@
 
 #export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 
+# Provide a customized host name for when the default mechanism is not accurate
+
+#export DRILL_HOST_NAME=`hostname`
+
+# Base name for Drill log files. Files are named ${DRILL_LOG_NAME}.out, etc.
+
+# DRILL_LOG_NAME="drillbit"
+
 # Location to place Drill logs. Set to $DRILL_HOME/log by default.
 
 #export DRILL_LOG_DIR=${DRILL_LOG_DIR:-$DRILL_HOME/conf}
@@ -134,3 +142,8 @@
 # Drill is embedded in Sqlline or not.
 
 #export DRILL_SHELL_JAVA_OPTS="..."
+
+# Location Drill should use for temporary files, such as downloaded dynamic UDFs jars.
+# Set to "/tmp" by default.
+#
+# export DRILL_TMP_DIR="..."

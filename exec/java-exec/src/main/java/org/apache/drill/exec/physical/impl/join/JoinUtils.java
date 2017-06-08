@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,82 +21,68 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillFilterRel;
-import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 public class JoinUtils {
-  public static enum JoinComparator {
-    NONE, // No comparator
-    EQUALS, // Equality comparator
-    IS_NOT_DISTINCT_FROM // 'IS NOT DISTINCT FROM' comparator
-  }
 
-  public static enum JoinCategory {
+  public enum JoinCategory {
     EQUALITY,  // equality join
     INEQUALITY,  // inequality join: <>, <, >
     CARTESIAN   // no join condition
   }
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinUtils.class);
 
-  // Check the comparator for the join condition. Note that a similar check is also
+  // Check the comparator is supported in join condition. Note that a similar check is also
   // done in JoinPrel; however we have to repeat it here because a physical plan
   // may be submitted directly to Drill.
-  public static JoinComparator checkAndSetComparison(JoinCondition condition,
-      JoinComparator comparator) {
-    if (condition.getRelationship().equalsIgnoreCase("EQUALS") ||
-        condition.getRelationship().equals("==") /* older json plans still have '==' */) {
-      if (comparator == JoinComparator.NONE ||
-          comparator == JoinComparator.EQUALS) {
-        return JoinComparator.EQUALS;
-      } else {
-        throw new IllegalArgumentException("This type of join does not support mixed comparators.");
-      }
-    } else if (condition.getRelationship().equalsIgnoreCase("IS_NOT_DISTINCT_FROM")) {
-      if (comparator == JoinComparator.NONE ||
-          comparator == JoinComparator.IS_NOT_DISTINCT_FROM) {
-        return JoinComparator.IS_NOT_DISTINCT_FROM;
-      } else {
-        throw new IllegalArgumentException("This type of join does not support mixed comparators.");
-      }
+  public static Comparator checkAndReturnSupportedJoinComparator(JoinCondition condition) {
+    switch(condition.getRelationship().toUpperCase()) {
+      case "EQUALS":
+      case "==": /* older json plans still have '==' */
+        return Comparator.EQUALS;
+      case "IS_NOT_DISTINCT_FROM":
+        return Comparator.IS_NOT_DISTINCT_FROM;
     }
-    throw new IllegalArgumentException("Invalid comparator supplied to this join.");
+    throw UserException.unsupportedError()
+        .message("Invalid comparator supplied to this join: ", condition.getRelationship())
+        .build(logger);
   }
 
     /**
      * Check if the given RelNode contains any Cartesian join.
      * Return true if find one. Otherwise, return false.
      *
-     * @param relNode   the RelNode to be inspected.
-     * @param leftKeys  a list used for the left input into the join which has
-     *                  equi-join keys. It can be empty or not (but not null),
-     *                  this method will clear this list before using it.
-     * @param rightKeys a list used for the right input into the join which has
-     *                  equi-join keys. It can be empty or not (but not null),
-     *                  this method will clear this list before using it.
-     * @return          Return true if the given relNode contains Cartesian join.
-     *                  Otherwise, return false
+     * @param relNode     the RelNode to be inspected.
+     * @param leftKeys    a list used for the left input into the join which has
+     *                    equi-join keys. It can be empty or not (but not null),
+     *                    this method will clear this list before using it.
+     * @param rightKeys   a list used for the right input into the join which has
+     *                    equi-join keys. It can be empty or not (but not null),
+     *                    this method will clear this list before using it.
+     * @param filterNulls The join key positions for which null values will not
+     *                    match.
+     * @return            Return true if the given relNode contains Cartesian join.
+     *                    Otherwise, return false
      */
-  public static boolean checkCartesianJoin(RelNode relNode, List<Integer> leftKeys, List<Integer> rightKeys) {
+  public static boolean checkCartesianJoin(RelNode relNode, List<Integer> leftKeys, List<Integer> rightKeys, List<Boolean> filterNulls) {
     if (relNode instanceof Join) {
       leftKeys.clear();
       rightKeys.clear();
@@ -105,20 +91,20 @@ public class JoinUtils {
       RelNode left = joinRel.getLeft();
       RelNode right = joinRel.getRight();
 
-      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys);
-      if(joinRel.getJoinType() == JoinRelType.INNER) {
-        if(leftKeys.isEmpty() || rightKeys.isEmpty()) {
+      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys, filterNulls);
+      if (joinRel.getJoinType() == JoinRelType.INNER) {
+        if (leftKeys.isEmpty() || rightKeys.isEmpty()) {
           return true;
         }
       } else {
-        if(!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
+        if (!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
           return true;
         }
       }
     }
 
     for (RelNode child : relNode.getInputs()) {
-      if(checkCartesianJoin(child, leftKeys, rightKeys)) {
+      if (checkCartesianJoin(child, leftKeys, rightKeys, filterNulls)) {
         return true;
       }
     }
@@ -249,19 +235,32 @@ public class JoinUtils {
   }
 
   public static JoinCategory getJoinCategory(RelNode left, RelNode right, RexNode condition,
-      List<Integer> leftKeys, List<Integer> rightKeys) {
+      List<Integer> leftKeys, List<Integer> rightKeys, List<Boolean> filterNulls) {
     if (condition.isAlwaysTrue()) {
       return JoinCategory.CARTESIAN;
     }
     leftKeys.clear();
     rightKeys.clear();
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
+    filterNulls.clear();
+    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys, filterNulls);
 
     if (!remaining.isAlwaysTrue() || (leftKeys.size() == 0 || rightKeys.size() == 0) ) {
       // for practical purposes these cases could be treated as inequality
       return JoinCategory.INEQUALITY;
     }
     return JoinCategory.EQUALITY;
+  }
+
+  /**
+   * Utility method to check if a any of input RelNodes is provably scalar.
+   *
+   * @param left  the RelNode to be inspected.
+   * @param right the RelNode to be inspected.
+   * @return      Return true if any of the given RelNodes is provably scalar.
+   *              Otherwise, return false
+   */
+  public static boolean hasScalarSubqueryInput(RelNode left, RelNode right) {
+    return isScalarSubquery(left) || isScalarSubquery(right);
   }
 
 }

@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 
 public class OrderedPartitionSenderCreator implements RootCreator<OrderedPartitionSender> {
 
+  @SuppressWarnings("resource")
   @Override
   public RootExec getRoot(FragmentContext context, OrderedPartitionSender config,
       List<RecordBatch> children) throws ExecutionSetupException {

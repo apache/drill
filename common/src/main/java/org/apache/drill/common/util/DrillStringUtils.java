@@ -134,7 +134,7 @@ public class DrillStringUtils {
    */
   public static String toBinaryString(byte[] buf, int strStart, int strEnd) {
     StringBuilder result = new StringBuilder();
-    for (int i = strStart; i < strEnd ; ++i) {
+    for (int i = strStart; i < strEnd; ++i) {
       appendByte(result, buf[i]);
     }
     return result.toString();
@@ -153,17 +153,16 @@ public class DrillStringUtils {
   }
 
   /**
-   * In-place parsing of a hex encoded binary string.
+   * parsing a hex encoded binary string and write to an output buffer.
    *
    * This function does not modify  the {@code readerIndex} and {@code writerIndex}
    * of the byte buffer.
    *
    * @return Index in the byte buffer just after the last written byte.
    */
-  public static int parseBinaryString(ByteBuf str, int strStart, int strEnd) {
-    int length = (strEnd - strStart);
-    int dstEnd = strStart;
-    for (int i = strStart; i < strStart+length ; i++) {
+  public static int parseBinaryString(ByteBuf str, int strStart, int strEnd, ByteBuf out) {
+    int dstEnd = 0;
+    for (int i = strStart; i < strEnd; i++) {
       byte b = str.getByte(i);
       if (b == '\\'
           && strEnd > i+3
@@ -177,7 +176,7 @@ public class DrillStringUtils {
           i += 3; // skip 3
         }
       }
-      str.setByte(dstEnd++, b);
+      out.setByte(dstEnd++, b);
     }
     return dstEnd;
   }

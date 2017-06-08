@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,6 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -44,7 +43,6 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -60,30 +58,30 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 public abstract class HashAggTemplate implements HashAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
 
-  private static final long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
-  private static final long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
+//  private static final long ALLOCATOR_INITIAL_RESERVATION = 1 * 1024 * 1024;
+//  private static final long ALLOCATOR_MAX_RESERVATION = 20L * 1000 * 1000 * 1000;
   private static final int VARIABLE_WIDTH_VALUE_SIZE = 50;
 
   private static final boolean EXTRA_DEBUG_1 = false;
   private static final boolean EXTRA_DEBUG_2 = false;
-  private static final String TOO_BIG_ERROR =
-      "Couldn't add value to an empty batch.  This likely means that a single value is too long for a varlen field.";
-  private boolean newSchema = false;
+//  private static final String TOO_BIG_ERROR =
+//      "Couldn't add value to an empty batch.  This likely means that a single value is too long for a varlen field.";
+//  private boolean newSchema = false;
   private int underlyingIndex = 0;
   private int currentIndex = 0;
   private IterOutcome outcome;
-  private int outputCount = 0;
+//  private int outputCount = 0;
   private int numGroupedRecords = 0;
   private int outBatchIndex = 0;
   private int lastBatchOutputCount = 0;
   private RecordBatch incoming;
-  private BatchSchema schema;
+//  private BatchSchema schema;
   private HashAggBatch outgoing;
   private VectorContainer outContainer;
-  private FragmentContext context;
+//  private FragmentContext context;
   private BufferAllocator allocator;
 
-  private HashAggregate hashAggrConfig;
+//  private HashAggregate hashAggrConfig;
   private HashTable htable;
   private ArrayList<BatchHolder> batchHolders;
   private IndexPointer htIdxHolder; // holder for the Hashtable's internal index returned by put()
@@ -125,7 +123,8 @@ public abstract class HashAggTemplate implements HashAggregator {
     private int capacity = Integer.MAX_VALUE;
     private boolean allocatedNextBatch = false;
 
-    private BatchHolder() {
+    @SuppressWarnings("resource")
+    public BatchHolder() {
 
       aggrValuesContainer = new VectorContainer();
       boolean success = false;
@@ -231,15 +230,15 @@ public abstract class HashAggTemplate implements HashAggregator {
       throw new IllegalArgumentException("Wrong number of workspace variables.");
     }
 
-    this.context = context;
+//    this.context = context;
     this.stats = stats;
     this.allocator = allocator;
     this.incoming = incoming;
-    this.schema = incoming.getSchema();
+//    this.schema = incoming.getSchema();
     this.outgoing = outgoing;
     this.outContainer = outContainer;
 
-    this.hashAggrConfig = hashAggrConfig;
+//    this.hashAggrConfig = hashAggrConfig;
 
     // currently, hash aggregation is only applicable if there are group-by expressions.
     // For non-grouped (a.k.a Plain) aggregations that don't involve DISTINCT, there is no
@@ -268,8 +267,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     ChainedHashTable ht =
-        new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing,
-            true /* nulls are equal */);
+        new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing);
     this.htable = ht.createAndSetupHashTable(groupByOutFieldIds);
 
     numGroupByOutFields = groupByOutFieldIds.length;
@@ -325,7 +323,7 @@ public abstract class HashAggTemplate implements HashAggregator {
                 if (EXTRA_DEBUG_1) {
                   logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
                 }
-                newSchema = true;
+//                newSchema = true;
                 this.cleanup();
                 // TODO: new schema case needs to be handled appropriately
                 return AggOutcome.UPDATE_AGGREGATOR;
@@ -382,8 +380,9 @@ public abstract class HashAggTemplate implements HashAggregator {
       outgoingIter.next();
     }
     while (outgoingIter.hasNext()) {
+      @SuppressWarnings("resource")
       ValueVector vv = outgoingIter.next().getValueVector();
-      MajorType type = vv.getField().getType();
+//      MajorType type = vv.getField().getType();
 
       /*
        * In build schema we use the allocation model that specifies exact record count
@@ -425,13 +424,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
   }
 
-  private final AggOutcome setOkAndReturn() {
-    this.outcome = IterOutcome.OK;
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(outputCount);
-    }
-    return AggOutcome.RETURN_OUTCOME;
-  }
+//  private final AggOutcome setOkAndReturn() {
+//    this.outcome = IterOutcome.OK;
+//    for (VectorWrapper<?> v : outgoing) {
+//      v.getValueVector().getMutator().setValueCount(outputCount);
+//    }
+//    return AggOutcome.RETURN_OUTCOME;
+//  }
 
   private final void incIndex() {
     underlyingIndex++;
@@ -448,7 +447,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   private void addBatchHolder() {
-    BatchHolder bh = new BatchHolder();
+    BatchHolder bh = newBatchHolder();
     batchHolders.add(bh);
 
     if (EXTRA_DEBUG_1) {
@@ -458,6 +457,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     bh.setup();
   }
 
+  // Overridden in the generated class when created as plain Java code.
+
+  protected BatchHolder newBatchHolder() {
+    return new BatchHolder();
+  }
+
+  @Override
   public IterOutcome outputCurrentBatch() {
     if (outBatchIndex >= batchHolders.size()) {
       this.outcome = IterOutcome.NONE;
@@ -487,7 +493,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       v.getValueVector().getMutator().setValueCount(numOutputRecords);
     }
 
-    outputCount += numOutputRecords;
+//    outputCount += numOutputRecords;
 
     this.outcome = IterOutcome.OK;
 
@@ -507,10 +513,12 @@ public abstract class HashAggTemplate implements HashAggregator {
     return this.outcome;
   }
 
+  @Override
   public boolean allFlushed() {
     return allFlushed;
   }
 
+  @Override
   public boolean buildComplete() {
     return buildComplete;
   }

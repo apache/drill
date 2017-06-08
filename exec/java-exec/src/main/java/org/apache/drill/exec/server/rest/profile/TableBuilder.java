@@ -21,20 +21,10 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
-class TableBuilder {
+public class TableBuilder {
   private final NumberFormat format = NumberFormat.getInstance(Locale.US);
-  private final SimpleDateFormat days = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat sdays = new SimpleDateFormat("DD'd'hh'h'mm'm'");
-  private final SimpleDateFormat hours = new SimpleDateFormat("HH'h'mm'm'");
-  private final SimpleDateFormat shours = new SimpleDateFormat("H'h'mm'm'");
-  private final SimpleDateFormat mins = new SimpleDateFormat("mm'm'ss's'");
-  private final SimpleDateFormat smins = new SimpleDateFormat("m'm'ss's'");
-
-  private final SimpleDateFormat secs = new SimpleDateFormat("ss.SSS's'");
-  private final SimpleDateFormat ssecs = new SimpleDateFormat("s.SSS's'");
   private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
   private final DecimalFormat dec = new DecimalFormat("0.00");
   private final DecimalFormat intformat = new DecimalFormat("#,###");
@@ -43,24 +33,50 @@ class TableBuilder {
   private int w = 0;
   private int width;
 
-  public TableBuilder(final String[] columns) {
+  public TableBuilder(final String[] columns, final String[] columnTooltip) {
     sb = new StringBuilder();
     width = columns.length;
 
     format.setMaximumFractionDigits(3);
 
     sb.append("<table class=\"table table-bordered text-right\">\n<tr>");
-    for (final String cn : columns) {
-      sb.append("<th>" + cn + "</th>");
+    for (int i = 0; i < columns.length; i++) {
+      String cn = columns[i];
+      String ctt = "";
+      if (columnTooltip != null) {
+        String tooltip = columnTooltip[i];
+        if (tooltip != null) {
+          ctt = " title=\""+tooltip+"\"";
+        }
+      }
+      sb.append("<th" + ctt + ">" + cn + "</th>");
     }
     sb.append("</tr>\n");
   }
 
+  public void appendCell(final String s) {
+    appendCell(s, null, null, null);
+  }
+
   public void appendCell(final String s, final String link) {
+    appendCell(s, link, null, null);
+  }
+
+  public void appendCell(final String s, final String link, final String titleText) {
+    appendCell(s, link, titleText, null);
+  }
+
+  public void appendCell(final String s, final String link, final String titleText, final String backgroundColor) {
     if (w == 0) {
-      sb.append("<tr>");
+      sb.append("<tr"
+          + (backgroundColor == null ? "" : " style=\"background-color:"+backgroundColor+"\"")
+          + ">");
     }
-    sb.append(String.format("<td>%s%s</td>", s, link != null ? link : ""));
+    if (titleText != null && titleText.length() > 0) {
+      sb.append(String.format("<td title=\""+titleText+"\">%s%s</td>", s, link != null ? link : ""));
+    } else {
+      sb.append(String.format("<td>%s%s</td>", s, link != null ? link : ""));
+    }
     if (++w >= width) {
       sb.append("</tr>\n");
       w = 0;
@@ -68,59 +84,101 @@ class TableBuilder {
   }
 
   public void appendRepeated(final String s, final String link, final int n) {
+    appendRepeated(s, link, n, null);
+  }
+
+  public void appendRepeated(final String s, final String link, final int n, final String tooltip) {
     for (int i = 0; i < n; i++) {
-      appendCell(s, link);
+      appendCell(s, link, tooltip);
     }
+  }
+
+  public void appendTime(final long d) {
+    appendCell(dateFormat.format(d), null, null);
   }
 
   public void appendTime(final long d, final String link) {
-    appendCell(dateFormat.format(d), link);
+    appendCell(dateFormat.format(d), link, null);
+  }
+
+  public void appendTime(final long d, final String link, final String tooltip) {
+    appendCell(dateFormat.format(d), link, tooltip);
+  }
+
+  public void appendMillis(final long p) {
+    appendCell((new SimpleDurationFormat(0, p)).compact(), null, null);
   }
 
   public void appendMillis(final long p, final String link) {
-    final double secs = p/1000.0;
-    final double mins = secs/60;
-    final double hours = mins/60;
-    final double days = hours / 24;
-    SimpleDateFormat timeFormat = null;
-    if (days >= 10) {
-      timeFormat = this.days;
-    } else if (days >= 1) {
-      timeFormat = this.sdays;
-    } else if (hours >= 10) {
-      timeFormat = this.hours;
-    }else if(hours >= 1){
-      timeFormat = this.shours;
-    }else if (mins >= 10){
-      timeFormat = this.mins;
-    }else if (mins >= 1){
-      timeFormat = this.smins;
-    }else if (secs >= 10){
-      timeFormat = this.secs;
-    }else {
-      timeFormat = this.ssecs;
-    }
-    appendCell(timeFormat.format(new Date(p)), null);
+    appendCell((new SimpleDurationFormat(0, p)).compact(), link, null);
+  }
+
+  public void appendMillis(final long p, final String link, final String tooltip) {
+    appendCell((new SimpleDurationFormat(0, p)).compact(), link, tooltip);
+  }
+
+  public void appendNanos(final long p) {
+    appendNanos(p, null, null);
   }
 
   public void appendNanos(final long p, final String link) {
-    appendMillis(Math.round(p / 1000.0 / 1000.0), link);
+    appendNanos(p, link, null);
+  }
+
+  public void appendNanos(final long p, final String link, final String tooltip) {
+    appendMillis(Math.round(p / 1000.0 / 1000.0), link, tooltip);
+  }
+
+  public void appendPercent(final double percentAsFraction) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), null, null);
+  }
+
+  public void appendPercent(final double percentAsFraction, final String link) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), link, null);
+  }
+
+  public void appendPercent(final double percentAsFraction, final String link, final String tooltip) {
+    appendCell(dec.format(100*percentAsFraction).concat("%"), link, tooltip);
+  }
+
+  public void appendFormattedNumber(final Number n) {
+    appendCell(format.format(n), null, null);
   }
 
   public void appendFormattedNumber(final Number n, final String link) {
-    appendCell(format.format(n), link);
+    appendCell(format.format(n), link, null);
+  }
+
+  public void appendFormattedNumber(final Number n, final String link, final String tooltip) {
+    appendCell(format.format(n), link, tooltip);
+  }
+
+  public void appendFormattedInteger(final long n) {
+    appendCell(intformat.format(n), null, null);
   }
 
   public void appendFormattedInteger(final long n, final String link) {
-    appendCell(intformat.format(n), link);
+    appendCell(intformat.format(n), link, null);
   }
 
-  public void appendInteger(final long l, final String link) {
-    appendCell(Long.toString(l), link);
+  public void appendFormattedInteger(final long n, final String link, final String tooltip) {
+    appendCell(intformat.format(n), link, tooltip);
   }
 
-  public void appendBytes(final long l, final String link){
-    appendCell(bytePrint(l), link);
+  public void appendInteger(final long l, final String link, final String tooltip) {
+    appendCell(Long.toString(l), link, tooltip);
+  }
+
+  public void appendBytes(final long l) {
+    appendCell(bytePrint(l), null, null);
+  }
+
+  public void appendBytes(final long l, final String link) {
+    appendCell(bytePrint(l), link, null);
+  }
+
+  public void appendBytes(final long l, final String link, final String tooltip) {
+    appendCell(bytePrint(l), link, tooltip);
   }
 
   private String bytePrint(final long size) {

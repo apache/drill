@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,8 +22,6 @@ import java.util.Iterator;
 
 import javax.inject.Named;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -35,7 +33,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.IntVector;
@@ -73,7 +70,7 @@ public abstract class HashTableTemplate implements HashTable {
   // Placeholder for the current index while probing the hash table
   private IndexPointer currentIdxHolder;
 
-  private FragmentContext context;
+//  private FragmentContext context;
 
   private BufferAllocator allocator;
 
@@ -114,11 +111,11 @@ public abstract class HashTableTemplate implements HashTable {
     private IntVector hashValues;
 
     private int maxOccupiedIdx = -1;
-    private int batchOutputCount = 0;
+//    private int batchOutputCount = 0;
 
     private int batchIndex = 0;
 
-    private BatchHolder(int idx) {
+    public BatchHolder(int idx) {
 
       this.batchIndex = idx;
 
@@ -126,6 +123,7 @@ public abstract class HashTableTemplate implements HashTable {
       boolean success = false;
       try {
         for (VectorWrapper<?> w : htContainerOrig) {
+          @SuppressWarnings("resource")
           ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
 
           // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
@@ -331,7 +329,9 @@ public abstract class HashTableTemplate implements HashTable {
       Iterator<VectorWrapper<?>> outgoingIter = outContainer.iterator();
 
       for (VectorWrapper<?> sourceWrapper : htContainer) {
+        @SuppressWarnings("resource")
         ValueVector sourceVV = sourceWrapper.getValueVector();
+        @SuppressWarnings("resource")
         ValueVector targetVV = outgoingIter.next().getValueVector();
         TransferPair tp = sourceVV.makeTransferPair(targetVV);
         tp.splitAndTransfer(outStartIndex, numRecords);
@@ -362,6 +362,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     private void setValueCount() {
       for (VectorWrapper<?> vw : htContainer) {
+        @SuppressWarnings("resource")
         ValueVector vv = vw.getValueVector();
         vv.getMutator().setValueCount(maxOccupiedIdx + 1);
       }
@@ -452,7 +453,7 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     this.htConfig = htConfig;
-    this.context = context;
+//    this.context = context;
     this.allocator = allocator;
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
@@ -480,6 +481,7 @@ public abstract class HashTableTemplate implements HashTable {
     currentIdxHolder = new IndexPointer();
   }
 
+  @Override
   public void updateBatches() {
     doSetup(incomingBuild, incomingProbe);
     for (BatchHolder batchHolder : batchHolders) {
@@ -495,10 +497,12 @@ public abstract class HashTableTemplate implements HashTable {
     return numResizing;
   }
 
+  @Override
   public int size() {
     return numEntries;
   }
 
+  @Override
   public void getStats(HashTableStats stats) {
     assert stats != null;
     stats.numBuckets = numBuckets();
@@ -507,10 +511,12 @@ public abstract class HashTableTemplate implements HashTable {
     stats.resizingTime = resizingTime;
   }
 
+  @Override
   public boolean isEmpty() {
     return numEntries == 0;
   }
 
+  @Override
   public void clear() {
     if (batchHolders != null) {
       for (BatchHolder bh : batchHolders) {
@@ -538,6 +544,7 @@ public abstract class HashTableTemplate implements HashTable {
     return rounded;
   }
 
+  @Override
   public void put(int incomingRowIdx, IndexPointer htIdxHolder, int retryCount) {
     put(incomingRowIdx, htIdxHolder);
   }
@@ -680,10 +687,14 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   private BatchHolder addBatchHolder() {
-    BatchHolder bh = new BatchHolder(batchHolders.size());
+    BatchHolder bh = newBatchHolder(batchHolders.size());
     batchHolders.add(bh);
     bh.setup();
     return bh;
+  }
+
+  protected BatchHolder newBatchHolder(int index) {
+    return new BatchHolder(index);
   }
 
   // Resize the hash table if needed by creating a new one with double the number of buckets.
@@ -744,6 +755,7 @@ public abstract class HashTableTemplate implements HashTable {
     numResizing++;
   }
 
+  @Override
   public boolean outputKeys(int batchIdx, VectorContainer outContainer, int outStartIndex, int numRecords) {
     assert batchIdx < batchHolders.size();
     if (!batchHolders.get(batchIdx).outputKeys(outContainer, outStartIndex, numRecords)) {
@@ -762,6 +774,7 @@ public abstract class HashTableTemplate implements HashTable {
     return vector;
   }
 
+  @Override
   public void addNewKeyBatch() {
     int numberOfBatches = batchHolders.size();
     this.addBatchHolder();

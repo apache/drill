@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
 
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
@@ -27,30 +29,42 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptTable;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
 public abstract class DrillTable implements Table {
 
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;
+  private final TableType tableType;
   private final Object selection;
   private final StoragePlugin plugin;
   private final String userName;
-
   private GroupScan scan;
 
   /**
-   * Creates a DrillTable instance.
+   * Creates a DrillTable instance for a @{code TableType#Table} table.
    * @param storageEngineName StorageEngine name.
    * @param plugin Reference to StoragePlugin.
    * @param userName Whom to impersonate while reading the contents of the table.
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
   public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, Object selection) {
+    this(storageEngineName, plugin, TableType.TABLE, userName, selection);
+  }
+
+  /**
+   * Creates a DrillTable instance.
+   * @param storageEngineName StorageEngine name.
+   * @param plugin Reference to StoragePlugin.
+   * @param tableType the JDBC table type
+   * @param userName Whom to impersonate while reading the contents of the table.
+   * @param selection Table contents (type and contents depend on type of StoragePlugin).
+   */
+  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, Object selection) {
     this.selection = selection;
     this.plugin = plugin;
+
+    this.tableType = tableType;
 
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
@@ -106,7 +120,7 @@ public abstract class DrillTable implements Table {
 
   @Override
   public TableType getJdbcTableType() {
-    return TableType.TABLE;
+    return tableType;
   }
 
   @Override

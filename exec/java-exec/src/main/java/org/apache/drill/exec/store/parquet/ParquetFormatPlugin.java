@@ -92,7 +92,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
       StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
     this.context = context;
     this.config = formatConfig;
-    this.formatMatcher = new ParquetFormatMatcher(this);
+    this.formatMatcher = new ParquetFormatMatcher(this, config);
     this.storageConfig = storageConfig;
     this.fsConf = fsConf;
     this.name = name == null ? DEFAULT_NAME : name;
@@ -139,6 +139,8 @@ public class ParquetFormatPlugin implements FormatPlugin{
     options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
 
     options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
+    options.put(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK,
+      context.getOptions().getOption(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK).bool_val.toString());
     options.put(ExecConstants.PARQUET_PAGE_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_PAGE_SIZE).num_val.toString());
     options.put(ExecConstants.PARQUET_DICT_PAGE_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_DICT_PAGE_SIZE).num_val.toString());
 
@@ -196,8 +198,11 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   private static class ParquetFormatMatcher extends BasicFormatMatcher{
 
-    public ParquetFormatMatcher(ParquetFormatPlugin plugin) {
+    private final ParquetFormatConfig formatConfig;
+
+    public ParquetFormatMatcher(ParquetFormatPlugin plugin, ParquetFormatConfig formatConfig) {
       super(plugin, PATTERNS, MAGIC_STRINGS);
+      this.formatConfig = formatConfig;
     }
 
     @Override
@@ -218,7 +223,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
           // create a metadata context that will be used for the duration of the query for this table
           MetadataContext metaContext = new MetadataContext();
 
-          ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString(), metaContext);
+          ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath.toString(), metaContext, formatConfig);
           if (mDirs.getDirectories().size() > 0) {
             FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
                 selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);

@@ -88,16 +88,17 @@ public class ZkEphemeralStore<V> extends BaseTransientStore<V> {
 
   @Override
   public V putIfAbsent(final String key, final V value) {
-    final V old = get(key);
-    if (old == null) {
-      try {
-        final byte[] bytes = config.getSerializer().serialize(value);
-        getClient().put(key, bytes);
-      } catch (final IOException e) {
-        throw new DrillRuntimeException(String.format("unable to serialize value of type %s", value.getClass()), e);
+    try {
+      final InstanceSerializer<V> serializer = config.getSerializer();
+      final byte[] bytes = serializer.serialize(value);
+      final byte[] data = getClient().putIfAbsent(key, bytes);
+      if (data == null) {
+        return null;
       }
+      return serializer.deserialize(data);
+    } catch (final IOException e) {
+      throw new DrillRuntimeException(String.format("unable to serialize value of type %s", value.getClass()), e);
     }
-    return old;
   }
 
   @Override

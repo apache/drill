@@ -31,13 +31,11 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
+//  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
 
-  private static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
+  public static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
 
   private final CuratorFramework curator;
   private final DrillFileSystem fs;

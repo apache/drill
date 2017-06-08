@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,19 +18,21 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 
 // SqlHandler for dropping a table.
@@ -46,44 +48,58 @@ public class DropTableHandler extends DefaultSqlHandler {
    * Function resolves the schema and invokes the drop method
    * (while IF EXISTS statement is used function invokes the drop method only if table exists).
    * Raises an exception if the schema is immutable.
+   *
    * @param sqlNode - SqlDropTable (SQL parse tree of drop table [if exists] query)
    * @return - Single row indicating drop succeeded or table is not found while IF EXISTS statement is used,
    * raise exception otherwise
-   * @throws ValidationException
-   * @throws RelConversionException
-   * @throws IOException
    */
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
-    SqlIdentifier tableIdentifier = dropTableNode.getTableIdentifier();
-
+    String originalTableName = dropTableNode.getName();
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
-    AbstractSchema drillSchema = null;
+    List<String> tableSchema = dropTableNode.getSchema();
+    DrillConfig drillConfig = context.getConfig();
+    UserSession session = context.getSession();
 
-    if (tableIdentifier != null) {
-      drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, dropTableNode.getSchema());
-    }
+    AbstractSchema temporarySchema = resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
+    boolean isTemporaryTable = session.isTemporaryTable(temporarySchema, drillConfig, originalTableName);
 
-    String tableName = dropTableNode.getName();
-    if (drillSchema == null) {
-      throw UserException.validationError()
-          .message("Invalid table_name [%s]", tableName)
-          .build(logger);
-    }
-
-    if (dropTableNode.checkTableExistence()) {
-      final Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
+    if (isTemporaryTable) {
+      session.removeTemporaryTable(temporarySchema, originalTableName, drillConfig);
+    } else {
+      AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+      Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
       if (tableToDrop == null || tableToDrop.getJdbcTableType() != Schema.TableType.TABLE) {
-        return DirectPlan.createDirectPlan(context, true,
-            String.format("Table [%s] not found", tableName));
+        if (dropTableNode.checkTableExistence()) {
+          return DirectPlan.createDirectPlan(context, false, String.format("Table [%s] not found", originalTableName));
+        } else {
+          throw UserException.validationError().message("Table [%s] not found", originalTableName).build(logger);
+        }
       }
+      SqlHandlerUtil.dropTableFromSchema(drillSchema, originalTableName);
     }
 
-    drillSchema.dropTable(tableName);
-
-    return DirectPlan.createDirectPlan(context, true,
-        String.format("Table [%s] %s", tableName, "dropped"));
+    String message = String.format("%s [%s] dropped", isTemporaryTable ? "Temporary table" : "Table", originalTableName);
+    logger.info(message);
+    return DirectPlan.createDirectPlan(context, true, message);
   }
+
+  /**
+   * If table schema is not indicated in sql call, returns temporary workspace.
+   * If schema is indicated, resolves to mutable table schema.
+   *
+   * @param tableSchema table schema
+   * @param defaultSchema default schema
+   * @param config drill config
+   * @return resolved schema
+   */
+  private AbstractSchema resolveToTemporarySchema(List<String> tableSchema, SchemaPlus defaultSchema, DrillConfig config) {
+    if (tableSchema.size() == 0) {
+      return SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+    } else {
+      return SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+    }
+  }
+
 }

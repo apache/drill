@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,8 +32,10 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorExecContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -53,7 +55,9 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 /**
@@ -66,49 +70,48 @@ public class ScanBatch implements CloseableRecordBatch {
   /** Main collection of fields' value vectors. */
   private final VectorContainer container = new VectorContainer();
 
-  /** Fields' value vectors indexed by fields' keys. */
-  private final Map<String, ValueVector> fieldVectorMap =
-      Maps.newHashMap();
-
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
   private RecordReader currentReader;
   private BatchSchema schema;
-  private final Mutator mutator = new Mutator();
+  private final Mutator mutator;
   private boolean done = false;
-  private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private boolean hasReadNonEmptyFile = false;
   private Map<String, ValueVector> implicitVectors;
   private Iterator<Map<String, String>> implicitColumns;
   private Map<String, String> implicitValues;
+  private final BufferAllocator allocator;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
                    OperatorContext oContext, Iterator<RecordReader> readers,
-                   List<Map<String, String>> implicitColumns) throws ExecutionSetupException {
+                   List<Map<String, String>> implicitColumns) {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
-      throw new ExecutionSetupException("A scan batch must contain at least one reader.");
+      throw UserException.systemError(
+          new ExecutionSetupException("A scan batch must contain at least one reader."))
+        .build(logger);
     }
     currentReader = readers.next();
     this.oContext = oContext;
+    allocator = oContext.getAllocator();
+    mutator = new Mutator(oContext, allocator, container);
 
-    boolean setup = false;
     try {
       oContext.getStats().startProcessing();
       currentReader.setup(oContext, mutator);
-      setup = true;
-    } finally {
-      // if we had an exception during setup, make sure to release existing data.
-      if (!setup) {
-        try {
-          currentReader.close();
-        } catch(final Exception e) {
-          throw new ExecutionSetupException(e);
-        }
+    } catch (ExecutionSetupException e) {
+      try {
+        currentReader.close();
+      } catch(final Exception e2) {
+        logger.error("Close failed for reader " + currentReader.getClass().getSimpleName(), e2);
       }
+      throw UserException.systemError(e)
+            .addContext("Setup failed for", currentReader.getClass().getSimpleName())
+            .build(logger);
+    } finally {
       oContext.getStats().stopProcessing();
     }
     this.implicitColumns = implicitColumns.iterator();
@@ -154,7 +157,7 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void clearFieldVectorMap() {
-    for (final ValueVector v : fieldVectorMap.values()) {
+    for (final ValueVector v : mutator.fieldVectorMap().values()) {
       v.clear();
     }
   }
@@ -169,11 +172,10 @@ public class ScanBatch implements CloseableRecordBatch {
       try {
         injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
 
-        currentReader.allocate(fieldVectorMap);
+        currentReader.allocate(mutator.fieldVectorMap());
       } catch (OutOfMemoryException e) {
-        logger.debug("Caught Out of Memory Exception", e);
         clearFieldVectorMap();
-        return IterOutcome.OUT_OF_MEMORY;
+        throw UserException.memoryError(e).build(logger);
       }
       while ((recordCount = currentReader.next()) == 0) {
         try {
@@ -200,10 +202,8 @@ public class ScanBatch implements CloseableRecordBatch {
           // If all the files we have read so far are just empty, the schema is not useful
           if (! hasReadNonEmptyFile) {
             container.clear();
-            for (ValueVector v : fieldVectorMap.values()) {
-              v.clear();
-            }
-            fieldVectorMap.clear();
+            clearFieldVectorMap();
+            mutator.clear();
           }
 
           currentReader.close();
@@ -211,28 +211,26 @@ public class ScanBatch implements CloseableRecordBatch {
           implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
           currentReader.setup(oContext, mutator);
           try {
-            currentReader.allocate(fieldVectorMap);
+            currentReader.allocate(mutator.fieldVectorMap());
           } catch (OutOfMemoryException e) {
-            logger.debug("Caught OutOfMemoryException");
             clearFieldVectorMap();
-            return IterOutcome.OUT_OF_MEMORY;
+            throw UserException.memoryError(e).build(logger);
           }
           addImplicitVectors();
         } catch (ExecutionSetupException e) {
-          this.context.fail(e);
           releaseAssets();
-          return IterOutcome.STOP;
+          throw UserException.systemError(e).build(logger);
         }
       }
+
       // At this point, the current reader has read 1 or more rows.
 
       hasReadNonEmptyFile = true;
       populateImplicitVectors();
 
-      for (VectorWrapper w : container) {
+      for (VectorWrapper<?> w : container) {
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
-
 
       // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.
       final boolean isNewSchema = mutator.isNewSchema();
@@ -246,18 +244,15 @@ public class ScanBatch implements CloseableRecordBatch {
         return IterOutcome.OK;
       }
     } catch (OutOfMemoryException ex) {
-      context.fail(UserException.memoryError(ex).build(logger));
-      return IterOutcome.STOP;
+      throw UserException.memoryError(ex).build(logger);
     } catch (Exception ex) {
-      logger.debug("Failed to read the batch. Stopping...", ex);
-      context.fail(ex);
-      return IterOutcome.STOP;
+      throw UserException.systemError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
     }
   }
 
-  private void addImplicitVectors() throws ExecutionSetupException {
+  private void addImplicitVectors() {
     try {
       if (implicitVectors != null) {
         for (ValueVector v : implicitVectors.values()) {
@@ -269,18 +264,23 @@ public class ScanBatch implements CloseableRecordBatch {
       if (implicitValues != null) {
         for (String column : implicitValues.keySet()) {
           final MaterializedField field = MaterializedField.create(column, Types.optional(MinorType.VARCHAR));
+          @SuppressWarnings("resource")
           final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
           implicitVectors.put(column, v);
         }
       }
     } catch(SchemaChangeException e) {
-      throw new ExecutionSetupException(e);
+      // No exception should be thrown here.
+      throw UserException.systemError(e)
+        .addContext("Failure while allocating implicit vectors")
+        .build(logger);
     }
   }
 
   private void populateImplicitVectors() {
     if (implicitValues != null) {
       for (Map.Entry<String, String> entry : implicitValues.entrySet()) {
+        @SuppressWarnings("resource")
         final NullableVarCharVector v = (NullableVarCharVector) implicitVectors.get(entry.getKey());
         String val;
         if ((val = entry.getValue()) != null) {
@@ -318,13 +318,43 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
-  private class Mutator implements OutputMutator {
+  /**
+   * Row set mutator implementation provided to record readers created by
+   * this scan batch. Made visible so that tests can create this mutator
+   * without also needing a ScanBatch instance. (This class is really independent
+   * of the ScanBatch, but resides here for historical reasons. This is,
+   * in turn, the only use of the generated vector readers in the vector
+   * package.)
+   */
+
+  @VisibleForTesting
+  public static class Mutator implements OutputMutator {
     /** Whether schema has changed since last inquiry (via #isNewSchema}).  Is
      *  true before first inquiry. */
     private boolean schemaChanged = true;
 
+    /** Fields' value vectors indexed by fields' keys. */
+    private final CaseInsensitiveMap<ValueVector> fieldVectorMap =
+            CaseInsensitiveMap.newHashMap();
 
-    @SuppressWarnings("unchecked")
+    private final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
+    private final BufferAllocator allocator;
+
+    private final VectorContainer container;
+
+    private final OperatorExecContext oContext;
+
+    public Mutator(OperatorExecContext oContext, BufferAllocator allocator, VectorContainer container) {
+      this.oContext = oContext;
+      this.allocator = allocator;
+      this.container = container;
+    }
+
+    public Map<String, ValueVector> fieldVectorMap() {
+      return fieldVectorMap;
+    }
+
+    @SuppressWarnings("resource")
     @Override
     public <T extends ValueVector> T addField(MaterializedField field,
                                               Class<T> clazz) throws SchemaChangeException {
@@ -332,7 +362,7 @@ public class ScanBatch implements CloseableRecordBatch {
       ValueVector v = fieldVectorMap.get(field.getPath());
       if (v == null || v.getClass() != clazz) {
         // Field does not exist--add it to the map and the output container.
-        v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
+        v = TypeHelper.getNewVector(field, allocator, callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
           throw new SchemaChangeException(
               String.format(
@@ -391,6 +421,10 @@ public class ScanBatch implements CloseableRecordBatch {
     public CallBack getCallBack() {
       return callBack;
     }
+
+    public void clear() {
+      fieldVectorMap.clear();
+    }
   }
 
   @Override
@@ -409,7 +443,7 @@ public class ScanBatch implements CloseableRecordBatch {
     for (final ValueVector v : implicitVectors.values()) {
       v.clear();
     }
-    fieldVectorMap.clear();
+    mutator.clear();
     currentReader.close();
   }
 

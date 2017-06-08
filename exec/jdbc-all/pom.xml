@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -144,8 +144,8 @@
           <groupId>com.hazelcast</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>commons-compiler-jdk</artifactId>
-          <groupId>org.codehaus.janino</groupId>
+	      <groupId>nl.basjes.parse.httpdlog</groupId>
+	      <artifactId>httpdlog-parser</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -163,13 +163,6 @@
           <groupId>net.hydromatic</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>2.6.1</version>
-      <scope>test</scope>
     </dependency>
 
     <!-- Test Dependencies -->
@@ -279,7 +272,8 @@
             <excludes>
               <exclude>org.slf4j:jcl-over-slf4j</exclude>
               <exclude>com.dyuproject.protostuff:*</exclude>
-              <exclude>org.apache.calcite:*</exclude>
+              <exclude>org.apache.calcite:calcite-core</exclude>
+              <exclude>org.apache.calcite:calcite-linq4j</exclude>
               <exclude>org.pentaho:*</exclude>
               <exclude>org.msgpack:*</exclude>
               <exclude>xerces:*</exclude>
@@ -289,7 +283,6 @@
               <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>dom4j:*</exclude>
               <exclude>org.hibernate:*</exclude>
-              <exclude>javax.validation:*</exclude>
               <exclude>antlr:*</exclude>
               <exclude>org.ow2.asm:*</exclude>
               <exclude>com.univocity:*</exclude>
@@ -305,7 +298,6 @@
               <exclude>org.tukaani:*</exclude>
               <exclude>org.apache.velocity:*</exclude>
               <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.codehaus.janino:*</exclude>
               <exclude>org.mortbay.jetty:*</exclude>
               <exclude>org.slf4j:jul-to-slf4j</exclude>
               <exclude>org.slf4j:log4j-over-slf4j</exclude>
@@ -313,6 +305,7 @@
               <exclude>org.mockito:mockito-core</exclude>
               <exclude>org.objenesis:objenesis</exclude>
               <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>commons-io:commons-io</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -387,12 +380,27 @@
                <exclude>**/logback.xml</exclude>
                <exclude>**/LICENSE.txt</exclude>
                <exclude>**/*.java</exclude>
-               <exclude>**/META-INF/**</exclude>
+               <exclude>META-INF/ASL2.0</exclude>
+               <exclude>META-INF/NOTICE.txt</exclude>
+               <exclude>META-INF/drill-module-scan/**</exclude>
+               <exclude>META-INF/jboss-beans.xml</exclude>
+               <exclude>META-INF/license/**</exclude>
+               <exclude>META-INF/maven/**</exclude>
+               <exclude>META-INF/native/**</exclude>
+               <exclude>META-INF/services/com.fasterxml.*</exclude>
+               <exclude>META-INF/services/javax.ws.*</exclude>
+               <exclude>META-INF/**/*.properties</exclude>
                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
                <exclude>**/*.SF</exclude>
                <exclude>**/*.RSA</exclude>
                <exclude>**/*.DSA</exclude>
-               <exclude>javax/**</exclude>
+               <exclude>javax/*</exclude>
+               <exclude>javax/activation/**</exclude>
+               <exclude>javax/annotation-api/**</exclude>
+               <exclude>javax/inject/**</exclude>
+               <exclude>javax/servlet-api/**</exclude>
+               <exclude>javax/json/**</exclude>
+               <exclude>javax/ws/**</exclude>
                <exclude>rest/**</exclude>
                <exclude>*.tokens</exclude>
                <exclude>codegen/**</exclude>
@@ -421,7 +429,7 @@
          </filters>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -436,13 +444,13 @@
               <rules>
                 <requireFilesSize>
                   <message>
-                  
-                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range. 
-                  
+
+                  The file drill-jdbc-all-${project.version}.jar is outside the expected size range.
+
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
-                  
+
                   </message>
-                  <maxsize>21000000</maxsize>
+                  <maxsize>22000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>

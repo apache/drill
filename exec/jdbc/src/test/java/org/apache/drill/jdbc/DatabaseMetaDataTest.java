@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,24 +17,25 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.junit.Assert.assertTrue;
+import static java.sql.Connection.TRANSACTION_NONE;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.jdbc.Driver;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static java.sql.Connection.*;
+import org.apache.calcite.avatica.util.Quoting;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Savepoint;
 import java.sql.SQLException;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Test for Drill's implementation of DatabaseMetaData's methods (other than
@@ -43,8 +44,8 @@ import java.sql.SQLException;
  */
 public class DatabaseMetaDataTest {
 
-  private static Connection connection;
-  private static DatabaseMetaData dbmd;
+  protected static Connection connection;
+  protected static DatabaseMetaData dbmd;
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
@@ -103,10 +104,12 @@ public class DatabaseMetaDataTest {
   //  storesMixedCaseQuotedIdentifiers()
 
 
-  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  // TODO(DRILL-5402): Update when server meta information will be updated during one session.
   @Test
-  public void testGetIdentifierQuoteStringSaysBackquote() throws SQLException {
-    assertThat( dbmd.getIdentifierQuoteString(), equalTo( "`" ) );
+  public void testGetIdentifierQuoteString() throws SQLException {
+    // If connection string hasn't "quoting_identifiers" property, this method will return current system
+    // "planner.parser.quoting_identifiers" option (back tick by default)
+    assertThat(dbmd.getIdentifierQuoteString(), equalTo(Quoting.BACK_TICK.string));
   }
 
 

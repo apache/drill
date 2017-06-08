@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,7 @@ public class SingleConnectionCachingFactory implements CachingConnectionFactory 
    * </p>
    */
   @Override
-  public Connection getConnection(ConnectionInfo info) throws Exception {
+  public Connection getConnection(ConnectionInfo info) throws SQLException {
     if (connection == null) {
       connection = delegate.getConnection(info);
     } else {
