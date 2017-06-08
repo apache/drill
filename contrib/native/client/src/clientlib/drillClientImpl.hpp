@@ -109,15 +109,16 @@ class DrillClientImplBase{
 class DrillClientQueryHandle{
     friend class DrillClientImpl;
     public:
-    DrillClientQueryHandle(DrillClientImpl& client, int32_t coordId, const std::string& query, void* context):
+        DrillClientQueryHandle(DrillClientImpl& client, int32_t coordId, const std::string& query, void* context, int in_expectedRPCType) :
         m_client(client),
         m_coordinationId(coordId),
         m_query(query),
-		m_status(QRY_SUCCESS),
+        m_status(QRY_SUCCESS),
         m_bCancel(false),
         m_bHasError(false),
+        m_expectedRPCType(in_expectedRPCType),
         m_pError(NULL),
-		m_pApplicationContext(context){
+        m_pApplicationContext(context){
     };
 
     virtual ~DrillClientQueryHandle(){
@@ -137,7 +138,7 @@ class DrillClientQueryHandle{
     void setQueryStatus(status_t s){ m_status = s;}
     status_t getQueryStatus() const { return m_status;}
     inline DrillClientImpl& client() const { return m_client; };
-
+    int getExpectedRPCType() const { return m_expectedRPCType; };
     inline void* getApplicationContext() const { return m_pApplicationContext; }
 
     protected:
@@ -153,7 +154,7 @@ class DrillClientQueryHandle{
     status_t m_status;
     bool m_bCancel;
     bool m_bHasError;
-
+    int m_expectedRPCType;
     const DrillClientError* m_pError;
 
     void* m_pApplicationContext;
@@ -163,9 +164,9 @@ template<typename Listener, typename ListenerValue>
 class DrillClientBaseHandle: public DrillClientQueryHandle {
     friend class DrillClientImpl;
     public:
-    DrillClientBaseHandle(DrillClientImpl& client, int32_t coordId, const std::string& query, Listener listener, void* context):
-    	DrillClientQueryHandle(client, coordId, query, context),
-		m_pApplicationListener(listener){
+        DrillClientBaseHandle(DrillClientImpl& client, int32_t coordId, const std::string& query, Listener listener, void* context, int in_expectedRPCType) :
+            DrillClientQueryHandle(client, coordId, query, context, in_expectedRPCType),
+            m_pApplicationListener(listener){
     };
 
     virtual ~DrillClientBaseHandle(){
@@ -189,7 +190,7 @@ class DrillClientQueryResult: public DrillClientBaseHandle<pfnQueryResultsListen
     friend class DrillClientImpl;
     public:
     DrillClientQueryResult(DrillClientImpl& client, int32_t coordId, const std::string& query, pfnQueryResultsListener listener, void* listenerCtx):
-    	DrillClientBaseHandle<pfnQueryResultsListener, RecordBatch*>(client, coordId, query, listener, listenerCtx),
+        DrillClientBaseHandle<pfnQueryResultsListener, RecordBatch*>(client, coordId, query, listener, listenerCtx, exec::user::QUERY_HANDLE),
         m_numBatches(0),
         m_columnDefs(new std::vector<Drill::FieldMetadata*>),
         m_bIsQueryPending(true),
@@ -288,8 +289,8 @@ class DrillClientQueryResult: public DrillClientBaseHandle<pfnQueryResultsListen
 class DrillClientPrepareHandle: public DrillClientBaseHandle<pfnPreparedStatementListener, PreparedStatement*>, public PreparedStatement {
     public:
     DrillClientPrepareHandle(DrillClientImpl& client, int32_t coordId, const std::string& query, pfnPreparedStatementListener listener, void* listenerCtx):
-    	DrillClientBaseHandle<pfnPreparedStatementListener, PreparedStatement*>(client, coordId, query, listener, listenerCtx),
-		PreparedStatement(),
+        DrillClientBaseHandle<pfnPreparedStatementListener, PreparedStatement*>(client, coordId, query, listener, listenerCtx, exec::user::PREPARED_STATEMENT),
+        PreparedStatement(),
         m_columnDefs(new std::vector<Drill::FieldMetadata*>) {
     };
 
@@ -311,8 +312,8 @@ class DrillClientPrepareHandle: public DrillClientBaseHandle<pfnPreparedStatemen
 typedef status_t (*pfnServerMetaListener)(void* ctx, const exec::user::ServerMeta* serverMeta, DrillClientError* err);
 class DrillClientServerMetaHandle: public DrillClientBaseHandle<pfnServerMetaListener, const exec::user::ServerMeta*> {
     public:
-	DrillClientServerMetaHandle(DrillClientImpl& client, int32_t coordId, pfnServerMetaListener listener, void* listenerCtx):
-    	DrillClientBaseHandle<pfnServerMetaListener, const exec::user::ServerMeta*>(client, coordId, "server meta", listener, listenerCtx) {
+    DrillClientServerMetaHandle(DrillClientImpl& client, int32_t coordId, pfnServerMetaListener listener, void* listenerCtx):
+        DrillClientBaseHandle<pfnServerMetaListener, const exec::user::ServerMeta*>(client, coordId, "server meta", listener, listenerCtx, exec::user::SERVER_META) {
     };
 
     private:
@@ -323,8 +324,8 @@ class DrillClientServerMetaHandle: public DrillClientBaseHandle<pfnServerMetaLis
 template<typename Listener, typename MetaType, typename MetaImpl, typename MetadataResult>
 class DrillClientMetadataResult: public DrillClientBaseHandle<Listener, const DrillCollection<MetaType>*> {
 public:
-    DrillClientMetadataResult(DrillClientImpl& client, int32_t coordId, const std::string& query, Listener listener, void* listenerCtx):
-    	DrillClientBaseHandle<Listener, const DrillCollection<MetaType>*>(client, coordId, query, listener, listenerCtx) {}
+    DrillClientMetadataResult(DrillClientImpl& client, int32_t coordId, const std::string& query, Listener listener, void* listenerCtx, int in_expectedRPCType) :
+        DrillClientBaseHandle<Listener, const DrillCollection<MetaType>*>(client, coordId, query, listener, listenerCtx, in_expectedRPCType) {}
 
     void attachMetadataResult(MetadataResult* result) { this->m_pMetadata.reset(result); }
 
@@ -344,28 +345,28 @@ class DrillClientCatalogResult: public DrillClientMetadataResult<Metadata::pfnCa
     friend class DrillClientImpl;
 public:
     DrillClientCatalogResult(DrillClientImpl& client, int32_t coordId, Metadata::pfnCatalogMetadataListener listener, void* listenerCtx):
-    	DrillClientMetadataResult<Metadata::pfnCatalogMetadataListener, meta::CatalogMetadata, meta::DrillCatalogMetadata, exec::user::GetCatalogsResp>(client, coordId, "getCatalog", listener, listenerCtx) {}
+        DrillClientMetadataResult<Metadata::pfnCatalogMetadataListener, meta::CatalogMetadata, meta::DrillCatalogMetadata, exec::user::GetCatalogsResp>(client, coordId, "getCatalog", listener, listenerCtx, exec::user::CATALOGS) {}
 };
 
 class DrillClientSchemaResult: public DrillClientMetadataResult<Metadata::pfnSchemaMetadataListener, meta::SchemaMetadata, meta::DrillSchemaMetadata, exec::user::GetSchemasResp> {
     friend class DrillClientImpl;
 public:
     DrillClientSchemaResult(DrillClientImpl& client, int32_t coordId, Metadata::pfnSchemaMetadataListener listener, void* listenerCtx):
-    	DrillClientMetadataResult<Metadata::pfnSchemaMetadataListener, meta::SchemaMetadata, meta::DrillSchemaMetadata, exec::user::GetSchemasResp>(client, coordId, "getSchemas", listener, listenerCtx) {}
+        DrillClientMetadataResult<Metadata::pfnSchemaMetadataListener, meta::SchemaMetadata, meta::DrillSchemaMetadata, exec::user::GetSchemasResp>(client, coordId, "getSchemas", listener, listenerCtx, exec::user::SCHEMAS) {}
 };
 
 class DrillClientTableResult: public DrillClientMetadataResult<Metadata::pfnTableMetadataListener, meta::TableMetadata, meta::DrillTableMetadata, exec::user::GetTablesResp> {
     friend class DrillClientImpl;
 public:
     DrillClientTableResult(DrillClientImpl& client, int32_t coordId, Metadata::pfnTableMetadataListener listener, void* listenerCtx):
-    	DrillClientMetadataResult<Metadata::pfnTableMetadataListener, meta::TableMetadata, meta::DrillTableMetadata, exec::user::GetTablesResp>(client, coordId, "getTables", listener, listenerCtx) {}
+        DrillClientMetadataResult<Metadata::pfnTableMetadataListener, meta::TableMetadata, meta::DrillTableMetadata, exec::user::GetTablesResp>(client, coordId, "getTables", listener, listenerCtx, exec::user::TABLES) {}
 };
 
 class DrillClientColumnResult: public DrillClientMetadataResult<Metadata::pfnColumnMetadataListener, meta::ColumnMetadata, meta::DrillColumnMetadata, exec::user::GetColumnsResp> {
     friend class DrillClientImpl;
     public:
     DrillClientColumnResult(DrillClientImpl& client, int32_t coordId, Metadata::pfnColumnMetadataListener listener, void* listenerCtx):
-    	DrillClientMetadataResult<Metadata::pfnColumnMetadataListener, meta::ColumnMetadata, meta::DrillColumnMetadata, exec::user::GetColumnsResp>(client, coordId, "getColumns", listener, listenerCtx) {}
+        DrillClientMetadataResult<Metadata::pfnColumnMetadataListener, meta::ColumnMetadata, meta::DrillColumnMetadata, exec::user::GetColumnsResp>(client, coordId, "getColumns", listener, listenerCtx, exec::user::COLUMNS) {}
 };
 
 // Length Decoder Function Pointer definition
@@ -519,6 +520,7 @@ class DrillClientImpl : public DrillClientImplBase{
         void handleRead(ByteBuf_t inBuf, const boost::system::error_code & err, size_t bytes_transferred) ;
         status_t validateDataMessage(const rpc::InBoundRpcMessage& msg, const exec::shared::QueryData& qd, std::string& valError);
         status_t validateResultMessage(const rpc::InBoundRpcMessage& msg, const exec::shared::QueryResult& qr, std::string& valError);
+        bool validateResultRPCType(DrillClientQueryHandle* pQueryHandle, const rpc::InBoundRpcMessage& msg);
         connectionStatus_t handleConnError(connectionStatus_t status, const std::string& msg);
         status_t handleQryCancellation(status_t status, DrillClientQueryResult* pQueryResult);
         status_t handleQryError(status_t status, const std::string& msg, DrillClientQueryHandle* pQueryHandle);
