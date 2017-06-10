@@ -33,6 +33,7 @@ class UserConnectionConfig extends AbstractConnectionConfig {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserConnectionConfig.class);
 
   private final boolean authEnabled;
+  private final boolean sslEnabled;
   private final InboundImpersonationManager impersonationManager;
 
   private final UserServerRequestHandler handler;
@@ -75,10 +76,16 @@ class UserConnectionConfig extends AbstractConnectionConfig {
     } else {
       authEnabled = false;
     }
-
     impersonationManager = !config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)
         ? null
         : new InboundImpersonationManager();
+
+    sslEnabled = config.getBoolean(ExecConstants.USER_SSL_ENABLED);
+
+    if(isSSLEnabled() && isAuthEnabled() && isEncryptionEnabled()){
+      logger.warn("The server is configured to use both SSL and SASL encryption (only one should be configured).");
+    }
+
   }
 
   @Override
@@ -88,6 +95,10 @@ class UserConnectionConfig extends AbstractConnectionConfig {
 
   boolean isAuthEnabled() {
     return authEnabled;
+  }
+
+  boolean isSSLEnabled() {
+    return sslEnabled;
   }
 
   InboundImpersonationManager getImpersonationManager() {

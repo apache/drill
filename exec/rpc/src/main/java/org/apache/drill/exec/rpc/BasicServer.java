@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -82,6 +83,11 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
             ch.closeFuture().addListener(getCloseHandler(ch, connection));
 
             final ChannelPipeline pipe = ch.pipeline();
+            // Make sure that the SSL handler is the first handler in the pipeline so everything is encrypted
+            if (isSslEnabled()) {
+              setupSSL(pipe);
+            }
+
             pipe.addLast(RpcConstants.PROTOCOL_DECODER, getDecoder(connection.getAllocator(), getOutOfMemoryHandler()));
             pipe.addLast(RpcConstants.MESSAGE_DECODER, new RpcDecoder("s-" + rpcConfig.getName()));
             pipe.addLast(RpcConstants.PROTOCOL_ENCODER, new RpcEncoder("s-" + rpcConfig.getName()));
@@ -103,6 +109,25 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
 //     if(TransportCheck.SUPPORTS_EPOLL){
 //       b.option(EpollChannelOption.SO_REUSEPORT, true); //
 //     }
+  }
+
+  // Adds a SSL handler if enabled. Required only for client and server communications, so
+  // a real implementation is only available for UserServer
+  protected void setupSSL(ChannelPipeline pipe) {
+    throw new UnsupportedOperationException("SSL is implemented only by the User Server.");
+  }
+
+  protected boolean isSslEnabled() {
+    return false;
+  }
+
+  // Save the SslChannel after the SSL handshake so it can be closed later
+  public void setSslChannel(Channel c) {
+    return;
+  }
+
+  protected void closeSSL() {
+    return;
   }
 
   private class LoggingReadTimeoutHandler extends ReadTimeoutHandler {
@@ -202,6 +227,9 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
       long elapsed = watch.elapsed(MILLISECONDS);
       if (elapsed > 500) {
         logger.info("closed eventLoopGroup " + eventLoopGroup + " in " + elapsed + " ms");
+      }
+      if(isSslEnabled()) {
+        closeSSL();
       }
     } catch (final InterruptedException | ExecutionException e) {
       logger.warn("Failure while shutting down {}. ", this.getClass().getName(), e);

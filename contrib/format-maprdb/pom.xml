@@ -50,6 +50,15 @@
               <groupId>io.netty</groupId>
               <artifactId>netty-all</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+          </exclusion>
+
         </exclusions>
       </dependency>
     </dependencies>
@@ -122,14 +131,6 @@
           <artifactId>log4j-over-slf4j</artifactId>
           <groupId>org.slf4j</groupId>
         </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
 
@@ -152,16 +153,6 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -174,14 +165,6 @@
           <artifactId>log4j-over-slf4j</artifactId>
           <groupId>org.slf4j</groupId>
         </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -190,16 +173,6 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
   </dependencies>

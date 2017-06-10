@@ -117,6 +117,18 @@ public final class ExecConstants {
   public static final String HASHAGG_FALLBACK_ENABLED_KEY = "drill.exec.hashagg.fallback.enabled";
   public static final BooleanValidator HASHAGG_FALLBACK_ENABLED_VALIDATOR = new BooleanValidator(HASHAGG_FALLBACK_ENABLED_KEY);
 
+  public static final String SSL_PROVIDER = "drill.exec.ssl.provider"; // valid values are "JDK", "OPENSSL" // default JDK
+  public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2(default)
+  public static final String SSL_KEYSTORE_TYPE = "drill.exec.ssl.keyStoreType";
+  public static final String SSL_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";     // path to keystore. default : $JRE_HOME/lib/security/keystore.jks
+  public static final String SSL_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword"; // default: changeit
+  public static final String SSL_KEY_PASSWORD = "drill.exec.ssl.keyPassword"; //
+  public static final String SSL_TRUSTSTORE_TYPE = "drill.exec.ssl.trustStoreType"; // valid values are jks(default), jceks, pkcs12
+  public static final String SSL_TRUSTSTORE_PATH = "drill.exec.ssl.trustStorePath"; // path to keystore. default : $JRE_HOME/lib/security/cacerts.jks
+  public static final String SSL_TRUSTSTORE_PASSWORD = "drill.exec.ssl.trustStorePassword"; // default: changeit
+  public static final String SSL_USE_HADOOP_CONF = "drill.exec.ssl.useHadoopConfig"; // Initialize ssl params from hadoop if not provided by drill. default: true
+  public static final String SSL_HANDSHAKE_TIMEOUT = "drill.exec.security.user.encryption.ssl.handshakeTimeout"; // Default 10 seconds
+
   public static final String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   public static final String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
@@ -133,10 +145,10 @@ public final class ExecConstants {
   public static final String HTTP_SESSION_MEMORY_RESERVATION = "drill.exec.http.session.memory.reservation";
   public static final String HTTP_SESSION_MEMORY_MAXIMUM = "drill.exec.http.session.memory.maximum";
   public static final String HTTP_SESSION_MAX_IDLE_SECS = "drill.exec.http.session_max_idle_secs";
-  public static final String HTTP_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";
-  public static final String HTTP_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword";
-  public static final String HTTP_TRUSTSTORE_PATH = "drill.exec.ssl.trustStorePath";
-  public static final String HTTP_TRUSTSTORE_PASSWORD = "drill.exec.ssl.trustStorePassword";
+  public static final String HTTP_KEYSTORE_PATH = SSL_KEYSTORE_PATH;
+  public static final String HTTP_KEYSTORE_PASSWORD = SSL_KEYSTORE_PASSWORD;
+  public static final String HTTP_TRUSTSTORE_PATH = SSL_TRUSTSTORE_PATH;
+  public static final String HTTP_TRUSTSTORE_PASSWORD = SSL_TRUSTSTORE_PASSWORD;
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
@@ -153,6 +165,8 @@ public final class ExecConstants {
   public static final String USE_LOGIN_PRINCIPAL = "drill.exec.security.bit.auth.use_login_principal";
   public static final String USER_ENCRYPTION_SASL_ENABLED = "drill.exec.security.user.encryption.sasl.enabled";
   public static final String USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.user.encryption.sasl.max_wrapped_size";
+
+  public static final String USER_SSL_ENABLED = "drill.exec.security.user.encryption.ssl.enabled";
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
   public static final String BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.bit.encryption.sasl.max_wrapped_size";
 
@@ -208,7 +222,7 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_DICT_PAGE_SIZE_VALIDATOR = new PositiveLongValidator(PARQUET_DICT_PAGE_SIZE, Integer.MAX_VALUE);
   public static final String PARQUET_WRITER_COMPRESSION_TYPE = "store.parquet.compression";
   public static final OptionValidator PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR = new EnumeratedStringValidator(
-    PARQUET_WRITER_COMPRESSION_TYPE, "snappy", "gzip", "none");
+      PARQUET_WRITER_COMPRESSION_TYPE, "snappy", "gzip", "none");
   public static final String PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING = "store.parquet.enable_dictionary_encoding";
   public static final OptionValidator PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR = new BooleanValidator(
       PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
@@ -464,7 +478,7 @@ public final class ExecConstants {
    */
   public static final String IMPERSONATION_POLICIES_KEY = "exec.impersonation.inbound_policies";
   public static final StringValidator IMPERSONATION_POLICY_VALIDATOR =
-    new InboundImpersonationManager.InboundImpersonationPolicyValidator(IMPERSONATION_POLICIES_KEY);
+      new InboundImpersonationManager.InboundImpersonationPolicyValidator(IMPERSONATION_POLICIES_KEY);
 
 
   /**
@@ -546,5 +560,5 @@ public final class ExecConstants {
 
   public static String bootDefaultFor(String name) {
     return OPTION_DEFAULTS_ROOT + name;
-  }
+}
 }

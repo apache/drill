@@ -94,6 +94,7 @@ public class BaseTestQuery extends ExecTest {
       put(ExecConstants.HTTP_ENABLE, "false");
       // Increasing retry attempts for testing
       put(ExecConstants.UDF_RETRY_ATTEMPTS, "10");
+      put(ExecConstants.SSL_USE_HADOOP_CONF, "false");
     }
   };
 
@@ -220,12 +221,12 @@ public class BaseTestQuery extends ExecTest {
     }
 
     if (!properties.containsKey(DrillProperties.DRILLBIT_CONNECTION)) {
-      properties = new Properties(properties);
       properties.setProperty(DrillProperties.DRILLBIT_CONNECTION,
-        String.format("localhost:%s", bits[0].getUserPort()));
+          String.format("localhost:%s", bits[0].getUserPort()));
     }
 
-    client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
+    DrillConfig clientConfig = DrillConfig.forClient();
+    client = QueryTestUtil.createClient(clientConfig,  serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   /**
@@ -241,7 +242,8 @@ public class BaseTestQuery extends ExecTest {
       client = null;
     }
 
-    client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
+    DrillConfig clientConfig = DrillConfig.forClient();
+    client = QueryTestUtil.createClient(clientConfig, serviceSet, MAX_WIDTH_PER_NODE, properties);
   }
 
   /*
