@@ -121,7 +121,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
                                  RelDataType queryRowType,
                                  StorageStrategy storageStrategy)
       throws RelConversionException, SqlUnsupportedException {
-    final DrillRel convertedRelNode = convertToDrel(relNode);
+    final DrillRel convertedRelNode = convertToRawDrel(relNode);
 
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
     // Only insert project when the field count from the child is same as that of the queryRowType.
@@ -136,7 +136,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   private Prel convertToPrel(RelNode drel, RelDataType inputRowType, List<String> partitionColumns)
       throws RelConversionException, SqlUnsupportedException {
-    Prel prel = convertToPrel(drel);
+    Prel prel = convertToPrel(drel, inputRowType);
 
     prel = prel.accept(new ProjectForWriterVisitor(inputRowType, partitionColumns), null);
 
@@ -188,7 +188,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
       final RelOptCluster cluster = prel.getCluster();
 
       final List<RexNode> exprs = Lists.newArrayListWithExpectedSize(queryRowType.getFieldCount() + 1);
-      final List<String> fieldnames = new ArrayList<String>(queryRowType.getFieldNames());
+      final List<String> fieldNames = new ArrayList<>(queryRowType.getFieldNames());
 
       for (final RelDataTypeField field : queryRowType.getFieldList()) {
         exprs.add(RexInputRef.of(field.getIndex(), queryRowType));
@@ -199,7 +199,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
         final ProjectPrel projectUnderWriter = new ProjectAllowDupPrel(cluster,
             cluster.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL), child, exprs, queryRowType);
 
-        return (Prel) prel.copy(projectUnderWriter.getTraitSet(),
+        return prel.copy(projectUnderWriter.getTraitSet(),
             Collections.singletonList( (RelNode) projectUnderWriter));
       } else {
         // find list of partition columns.
@@ -217,19 +217,19 @@ public class CreateTableHandler extends DefaultSqlHandler {
         }
 
         // Add partition column comparator to Project's field name list.
-        fieldnames.add(WriterPrel.PARTITION_COMPARATOR_FIELD);
+        fieldNames.add(WriterPrel.PARTITION_COMPARATOR_FIELD);
 
         // Add partition column comparator to Project's expression list.
         final RexNode partionColComp = createPartitionColComparator(prel.getCluster().getRexBuilder(), partitionColumnExprs);
         exprs.add(partionColComp);
 
 
-        final RelDataType rowTypeWithPCComp = RexUtil.createStructType(cluster.getTypeFactory(), exprs, fieldnames);
+        final RelDataType rowTypeWithPCComp = RexUtil.createStructType(cluster.getTypeFactory(), exprs, fieldNames, null);
 
         final ProjectPrel projectUnderWriter = new ProjectAllowDupPrel(cluster,
             cluster.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL), child, exprs, rowTypeWithPCComp);
 
-        return (Prel) prel.copy(projectUnderWriter.getTraitSet(),
+        return prel.copy(projectUnderWriter.getTraitSet(),
             Collections.singletonList( (RelNode) projectUnderWriter));
       }
     }

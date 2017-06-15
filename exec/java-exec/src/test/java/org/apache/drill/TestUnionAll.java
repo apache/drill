@@ -1031,7 +1031,6 @@ public class TestUnionAll extends BaseTestQuery{
 
     // Validate the plan
     final String[] expectedPlan = {"UnionExchange.*\n",
-        ".*Project.*\n" +
         ".*UnionAll"};
     final String[] excludedPlan = {};
 
