@@ -1180,4 +1180,15 @@ public class TestUnionAll extends BaseTestQuery{
     }
   }
 
+  @Test // DRILL-5130
+  public void testUnionAllWithValues() throws Exception {
+    testBuilder()
+        .sqlQuery("values('A') union all values('B')")
+        .unOrdered()
+        .baselineColumns("EXPR$0")
+        .baselineValues("A")
+        .baselineValues("B")
+        .go();
+  }
+
 }

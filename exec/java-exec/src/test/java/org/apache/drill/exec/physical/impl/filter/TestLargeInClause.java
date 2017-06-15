@@ -87,7 +87,7 @@ public class TestLargeInClause extends BaseTestQuery {
 
     testBuilder()
         .sqlQuery(query)
-        .ordered()
+        .unOrdered()
         .baselineColumns("r_regionkey")
         .baselineValues(1)
         .baselineValues(2)
