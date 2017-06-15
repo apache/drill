@@ -121,6 +121,8 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
       completionListener.failed(RpcException.mapException(
           new SaslException("Server sent a corrupt message.")));
     } else {
+      // SaslSuccessProcessor.process disposes saslClient so get mechanism here to use later in logging
+      final String mechanism = connection.getSaslClient().getMechanismName();
       try {
         final SaslChallengeContext<C> context = new SaslChallengeContext<>(value, ugi, connection);
         final SaslMessage saslResponse = processor.process(context);
@@ -134,12 +136,12 @@ public class AuthenticationOutcomeListener<T extends EnumLite, C extends ClientC
           completionListener.success(null, null);
           if (logger.isTraceEnabled()) {
             logger.trace("Successfully authenticated to server using {} mechanism and encryption context: {}",
-                connection.getSaslClient().getMechanismName(), connection.getEncryptionCtxtString());
+                mechanism, connection.getEncryptionCtxtString());
           }
         }
       } catch (final Exception e) {
         logger.error("Authentication with encryption context: {} using mechanism {} failed with {}",
-            connection.getEncryptionCtxtString(), connection.getSaslClient().getMechanismName(), e.getMessage());
+            connection.getEncryptionCtxtString(), mechanism, e.getMessage());
         completionListener.failed(RpcException.mapException(e));
       }
     }
