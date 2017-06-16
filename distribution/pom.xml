@@ -97,6 +97,12 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
+      <exclusions>
+       <exclusion>
+           <groupId>io.netty</groupId>
+           <artifactId>netty</artifactId>
+       </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

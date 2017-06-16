@@ -41,6 +41,16 @@
         <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-client</artifactId>
         <version>${mapr-format-plugin.hbase.version}</version>
+        <exclusions>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -112,6 +122,14 @@
           <artifactId>log4j-over-slf4j</artifactId>
           <groupId>org.slf4j</groupId>
         </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -134,6 +152,16 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -146,6 +174,14 @@
           <artifactId>log4j-over-slf4j</artifactId>
           <groupId>org.slf4j</groupId>
         </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -154,6 +190,16 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>

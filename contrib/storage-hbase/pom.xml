@@ -53,6 +53,14 @@
           <artifactId>hadoop-client</artifactId>
           <groupId>org.apache.hadoop</groupId>
         </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -63,6 +71,16 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -70,6 +88,16 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.yammer.metrics</groupId>
@@ -176,6 +204,16 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
+          <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
 
         <!-- test dependencies -->
@@ -192,6 +230,14 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
               </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-parent</artifactId>
+            </exclusion>
           </exclusions>
           <scope>test</scope>
         </dependency>
@@ -208,6 +254,14 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
               </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-parent</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
       </dependencies>
@@ -223,6 +277,16 @@
         <dependency>
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
+          <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
@@ -232,6 +296,18 @@
             <exclusion>
               <artifactId>log4j</artifactId>
               <groupId>log4j</groupId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-all</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>io.netty</groupId>
+              <artifactId>netty-parent</artifactId>
             </exclusion>
           </exclusions>
         </dependency>
