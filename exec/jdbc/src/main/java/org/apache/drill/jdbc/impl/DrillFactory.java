@@ -18,13 +18,12 @@
 
 package org.apache.drill.jdbc.impl;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Properties;
-
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.UnregisteredDriver;
+
+import java.sql.SQLException;
+import java.util.Properties;
 
 
 /**
@@ -37,24 +36,6 @@ import org.apache.calcite.avatica.UnregisteredDriver;
 abstract class DrillFactory implements AvaticaFactory {
   protected final int major;
   protected final int minor;
-
-  static {
-    Properties prop = new Properties();
-    try {
-      /** Load the properties file containing the namespace prefix based on profile used
-       *  to build jdbc-all package. This prefix is used in
-       *  {@link org.apache.drill.exec.rpc.security.SecurityConfiguration} to add on
-       *  certain class path.
-       */
-      prop.load(DrillFactory.class.getClassLoader().getResourceAsStream("profile.props"));
-
-      // Get the property value and set it in system property
-      System.setProperty("namespacePrefix", prop.getProperty("package.namespace.prefix").trim());
-    } catch (IOException ex) {
-      // If properties file is not there then ignore the exception which means that property
-      // value will be null and is handled in consumer of System Property
-    }
-  }
 
   /** Creates a JDBC factory with given major/minor version number. */
   protected DrillFactory(int major, int minor) {

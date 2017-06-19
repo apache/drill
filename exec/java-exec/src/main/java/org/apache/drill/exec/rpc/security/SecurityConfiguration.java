@@ -17,12 +17,33 @@
  */
 package org.apache.drill.exec.rpc.security;
 
+import com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+
+import java.io.InputStream;
+import java.util.Properties;
 
 
 public class SecurityConfiguration extends Configuration {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SecurityConfiguration.class);
+
+  static {
+    Properties prop = new Properties();
+    try {
+      // Load the properties file containing the namespace prefix based on profile used
+      // to build jdbc-all package. This prefix is used to add on certain Hadoop classes class path.
+      final InputStream inputStream = SecurityConfiguration.class.getClassLoader().getResourceAsStream("profile.props");
+
+      // For null inputStream prop.load() throws NullPointerException
+      // Get the property value and set it in system property
+      prop.load(inputStream);
+      System.setProperty("drill.security.namespacePrefix", prop.getProperty("package.namespace.prefix").trim());
+
+    } catch (Exception ex) {
+      // Ignore the exception which means that property value will be null and is handled in consumer of System Property
+    }
+  }
 
   public SecurityConfiguration() {
     super();
@@ -30,15 +51,18 @@ public class SecurityConfiguration extends Configuration {
   }
 
   /**
-   * Update the Group Mapping class name to add namespace prefix retrieved from System Property. This is needed since
+   * Update the GroupMapping class name to add namespace prefix retrieved from System Property. This is needed since
    * in drill-jdbc-all jar we are packaging hadoop dependencies under that namespace. This will help application
-   * using this jar as driver to avoid conflict with it's own hadoop dependency if any.
+   * using this jar as driver to avoid conflict with it's own hadoop dependency if any. The property is needed only
+   * when Hadoop classes are relocated to different namespace which is done inside jdbc-all package. For normal build
+   * this property is not required as Hadoop classes will be used normally.
    */
   private void updateGroupMapping() {
     final String originalClassName = get(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING);
-    final String profilePrefix = System.getProperty("namespacePrefix");
-    final String updatedClassName = (profilePrefix != null) ? (profilePrefix + originalClassName)
-                                                            : originalClassName;
-    set(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING, updatedClassName);
+    final String profilePrefix = System.getProperty("drill.security.namespacePrefix");
+
+    if (!Strings.isNullOrEmpty(profilePrefix)) {
+      set(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING, profilePrefix + originalClassName);
+    }
   }
 }
