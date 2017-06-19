@@ -20,12 +20,17 @@ package org.apache.drill.jdbc.impl;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.StatementHandle;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillStatement;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
@@ -37,12 +42,16 @@ import org.apache.drill.jdbc.InvalidParameterSqlException;
 // interface methods, but now newer versions would probably use Java 8's default
 // methods for compatibility.)
 class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
-                                                             DrillRemoteStatement {
+DrillRemoteStatement {
+  //Not using the DrillbitContext's ExecutorService as this is threadPool is light-weight (threads wake up to cancel tasks) but needs a low response time
+  private static ExecutorService queryTimeoutTaskPool = Executors.newCachedThreadPool(new NamedThreadFactory("q-timeout-"));
 
   private final DrillConnectionImpl connection;
+  private TimeoutTrigger timeoutTrigger;
+  private Future<?> triggerHandle;
 
   DrillStatementImpl(DrillConnectionImpl connection, StatementHandle h, int resultSetType,
-                     int resultSetConcurrency, int resultSetHoldability) {
+      int resultSetConcurrency, int resultSetHoldability) {
     super(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
     this.connection = connection;
     connection.openStatementsRegistry.addStatement(this);
@@ -98,6 +107,9 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public boolean execute( String sql ) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        triggerHandle = queryTimeoutTaskPool.submit(timeoutTrigger);
+      }
       return super.execute( sql );
     }
     catch ( final SQLException possiblyExtraWrapperException ) {
@@ -108,8 +120,11 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public ResultSet executeQuery( String sql ) throws SQLException {
     try {
-       throwIfClosed();
-       return super.executeQuery( sql );
+      throwIfClosed();
+      if (timeoutTrigger != null) {
+        triggerHandle = queryTimeoutTaskPool.submit(timeoutTrigger);
+      }
+      return super.executeQuery( sql );
     }
     catch ( final SQLException possiblyExtraWrapperException ) {
       throw unwrapIfExtra( possiblyExtraWrapperException );
@@ -120,6 +135,9 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public long executeLargeUpdate( String sql ) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        triggerHandle = queryTimeoutTaskPool.submit(timeoutTrigger);
+      }
       return super.executeLargeUpdate( sql );
     }
     catch ( final SQLException possiblyExtraWrapperException ) {
@@ -131,6 +149,9 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public int executeUpdate( String sql, int[] columnIndexes ) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        triggerHandle = queryTimeoutTaskPool.submit(timeoutTrigger);
+      }
       return super.executeUpdate( sql, columnIndexes );
     }
     catch (UnsupportedOperationException e) {
@@ -142,6 +163,9 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public int executeUpdate( String sql, String[] columnNames ) throws SQLException {
     throwIfClosed();
     try {
+      if (timeoutTrigger != null) {
+        triggerHandle = queryTimeoutTaskPool.submit(timeoutTrigger);
+      }
       return super.executeUpdate( sql, columnNames );
     }
     catch (UnsupportedOperationException e) {
@@ -151,6 +175,10 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
 
   @Override
   public void cleanUp() {
+    //Cancel Timeout trigger
+    if (this.timeoutTrigger != null) {
+      triggerHandle.cancel(true);
+    }
     final DrillConnectionImpl connection1 = connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }
@@ -159,24 +187,26 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public int getQueryTimeout() throws AlreadyClosedSqlException
   {
     throwIfClosed();
-    return 0;  // (No no timeout.)
+    if (timeoutTrigger != null) {
+      return timeoutTrigger.getTimeoutInSeconds();
+    }
+    return 0;  //i.e. No timeout
   }
 
   @Override
-  public void setQueryTimeout( int milliseconds )
+  public void setQueryTimeout( int seconds )
       throws AlreadyClosedSqlException,
-             InvalidParameterSqlException,
-             SQLFeatureNotSupportedException {
+      InvalidParameterSqlException,
+      SQLFeatureNotSupportedException {
     throwIfClosed();
-    if ( milliseconds < 0 ) {
+    if ( seconds < 0 ) {
       throw new InvalidParameterSqlException(
-          "Invalid (negative) \"milliseconds\" parameter to setQueryTimeout(...)"
-          + " (" + milliseconds + ")" );
+          "Invalid (negative) \"seconds\" parameter to setQueryTimeout(...)"
+              + " (" + seconds + ")" );
     }
     else {
-      if ( 0 != milliseconds ) {
-        throw new SQLFeatureNotSupportedException(
-            "Setting network timeout is not supported." );
+      if ( 0 != seconds ) {
+        timeoutTrigger = new TimeoutTrigger(this, seconds);
       }
     }
   }
@@ -257,6 +287,11 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public void cancel() throws SQLException {
     throwIfClosed();
     super.cancel();
+  }
+
+  public void cancelDueToTimeout() throws SQLException {
+    cancel();
+    throw new SQLTimeoutException("Cancelling due to query timeout in "+ timeoutTrigger.getTimeoutInSeconds() + " seconds");
   }
 
   @Override
@@ -505,6 +540,52 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   public boolean isCloseOnCompletion() throws SQLException {
     throwIfClosed();
     return super.isCloseOnCompletion();
+  }
+
+}
+
+/**
+ * Timeout Trigger required for canceling of running queries
+ */
+class TimeoutTrigger implements Runnable {
+  private int timeoutInSeconds;
+  public int getTimeoutInSeconds() {
+    return timeoutInSeconds;
+  }
+
+  private DrillStatementImpl statementHandle;
+
+  //Default Constructor is Invalid
+  @SuppressWarnings("unused")
+  private TimeoutTrigger() {}
+
+  /**
+   * Timeout Constructor
+   * @param stmtContext
+   * @param timeoutInSec
+   */
+  TimeoutTrigger(DrillStatementImpl stmtContext, int timeoutInSec) {
+    timeoutInSeconds = timeoutInSec;
+    statementHandle = stmtContext;
+  }
+
+  @Override
+  public void run() {
+    try {
+      Thread.sleep(timeoutInSeconds*1000L);
+    } catch (InterruptedException e) {
+      //Skip interruption due to query completion
+      //e.printStackTrace();
+    }
+    try {
+      if (!statementHandle.isClosed()) {
+        statementHandle.cancelDueToTimeout();
+      }
+    } catch (SQLTimeoutException e) {
+      e.printStackTrace();
+    } catch (SQLException e) {
+      //Skip interruption due to query completion
+    }
   }
 
 }
