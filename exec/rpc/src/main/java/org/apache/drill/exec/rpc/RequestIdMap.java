@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,7 +47,7 @@ class RequestIdMap {
   private final IntObjectHashMap<RpcOutcome<?>> map;
 
   public RequestIdMap() {
-    map = new IntObjectHashMap<RpcOutcome<?>>();
+    map = new IntObjectHashMap<>();
   }
 
   void channelClosed(Throwable ex) {
@@ -82,7 +82,7 @@ class RequestIdMap {
   public <V> ChannelListenerWithCoordinationId createNewRpcListener(RpcOutcomeListener<V> handler, Class<V> clazz,
       RemoteConnection connection) {
     final int i = lastCoordinationId.incrementAndGet();
-    final RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
+    final RpcListener<V> future = new RpcListener<>(handler, clazz, i, connection);
     final Object old;
     synchronized (map) {
       Preconditions.checkArgument(isOpen.get(),
@@ -111,13 +111,16 @@ class RequestIdMap {
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-
       if (!future.isSuccess()) {
-        removeFromMap(coordinationId);
-        if (future.channel().isActive()) {
-          throw new RpcException("Future failed");
-        } else {
-          setException(new ChannelClosedException());
+        try {
+          removeFromMap(coordinationId);
+        } finally {
+          final Throwable cause = future.cause();
+          if (future.channel().isActive()) {
+            setException(cause == null ? new RpcException("Unknown ChannelFuture operation failure") : cause);
+          } else {
+            setException(cause == null ? new ChannelClosedException() : new ChannelClosedException(cause));
+          }
         }
       }
     }
