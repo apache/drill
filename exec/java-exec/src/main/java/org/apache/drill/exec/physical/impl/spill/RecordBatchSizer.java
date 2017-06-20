@@ -31,6 +31,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 
 /**
  * Given a record batch or vector container, determines the actual memory
@@ -68,14 +69,14 @@ public class RecordBatchSizer {
     public int capacity;
     public int density;
     public int dataSize;
+    public boolean variableWidth;
 
-    public ColumnSize(ValueVector v) {
-      metadata = v.getField();
+    public ColumnSize(ValueVector vv) {
+      metadata = vv.getField();
       stdSize = TypeHelper.getSize(metadata.getType());
 
       // Can't get size estimates if this is an empty batch.
-
-      int rowCount = v.getAccessor().getValueCount();
+      int rowCount = vv.getAccessor().getValueCount();
       if (rowCount == 0) {
         estSize = stdSize;
         return;
@@ -84,17 +85,17 @@ public class RecordBatchSizer {
       // Total size taken by all vectors (and underlying buffers)
       // associated with this vector.
 
-      totalSize = v.getAllocatedByteCount();
+      totalSize = vv.getAllocatedByteCount();
 
       // Capacity is the number of values that the vector could
       // contain. This is useful only for fixed-length vectors.
 
-      capacity = v.getValueCapacity();
+      capacity = vv.getValueCapacity();
 
       // The amount of memory consumed by the payload: the actual
       // data stored in the vectors.
 
-      dataSize = v.getPayloadByteCount();
+      dataSize = vv.getPayloadByteCount();
 
       // Determine "density" the number of rows compared to potential
       // capacity. Low-density batches occur at block boundaries, ends
@@ -105,6 +106,7 @@ public class RecordBatchSizer {
 
       density = roundUp(dataSize * 100, totalSize);
       estSize = roundUp(dataSize, rowCount);
+      variableWidth = vv instanceof VariableWidthVector ;
     }
 
     @Override
@@ -155,6 +157,7 @@ public class RecordBatchSizer {
    * vectors are partially full; prevents overestimating row width.
    */
   private int netRowWidth;
+  private int netRowWidthCap50;
   private boolean hasSv2;
   private int sv2Size;
   private int avgDensity;
@@ -167,6 +170,18 @@ public class RecordBatchSizer {
          batch.getSelectionVector2() : null);
   }
 
+  /**
+   *  Maximum width of a column; used for memory estimation in case of Varchars
+   */
+  public int maxSize;
+  /**
+   *  Count the nullable columns; used for memory estimation
+   */
+  public int numNullables;
+  /**
+   *
+   * @param va
+   */
   public RecordBatchSizer(VectorAccessible va) {
     this(va, null);
   }
@@ -174,7 +189,9 @@ public class RecordBatchSizer {
   public RecordBatchSizer(VectorAccessible va, SelectionVector2 sv2) {
     rowCount = va.getRecordCount();
     for (VectorWrapper<?> vw : va) {
-      measureColumn(vw);
+      int size = measureColumn(vw.getValueVector());
+      if ( size > maxSize ) { maxSize = size; }
+      if ( vw.getField().isNullable() ) { numNullables++; }
     }
 
     if (rowCount > 0) {
@@ -208,32 +225,45 @@ public class RecordBatchSizer {
     totalBatchSize += sv2Size;
   }
 
-  private void measureColumn(VectorWrapper<?> vw) {
-    measureColumn(vw.getValueVector());
+  /**
+   *  Round up (if needed) to the next power of 2 (only up to 64)
+   * @param arg Number to round up (must be < 64)
+   * @return power of 2 result
+   */
+  private int roundUpToPowerOf2(int arg) {
+    if ( arg <= 2 ) { return 2; }
+    if ( arg <= 4 ) { return 4; }
+    if ( arg <= 8 ) { return 8; }
+    if ( arg <= 16 ) { return 16; }
+    if ( arg <= 32 ) { return 32; }
+    return 64;
   }
-
-  private void measureColumn(ValueVector v) {
-
+  private int measureColumn(ValueVector vv) {
     // Maps consume no size themselves. However, their contained
     // vectors do consume space, so visit columns recursively.
-
-    if (v.getField().getType().getMinorType() == MinorType.MAP) {
-      expandMap((AbstractMapVector) v);
-      return;
+    if (vv.getField().getType().getMinorType() == MinorType.MAP) {
+      return expandMap((AbstractMapVector) vv);
     }
-    ColumnSize colSize = new ColumnSize(v);
+
+    ColumnSize colSize = new ColumnSize(vv);
     columnSizes.add(colSize);
 
     stdRowWidth += colSize.stdSize;
     totalBatchSize += colSize.totalSize;
     netBatchSize += colSize.dataSize;
     netRowWidth += colSize.estSize;
+    netRowWidthCap50 += ! colSize.variableWidth ? colSize.estSize :
+        8 /* offset vector */ + roundUpToPowerOf2( Math.min(colSize.estSize,50) );
+        // above change 8 to 4 after DRILL-5446 is fixed
+    return colSize.estSize;
   }
 
-  private void expandMap(AbstractMapVector mapVector) {
+  private int expandMap(AbstractMapVector mapVector) {
+    int accum = 0;
     for (ValueVector vector : mapVector) {
-      measureColumn(vector);
+      accum += measureColumn(vector);
     }
+    return accum;
   }
 
   public static int roundUp(int num, int denom) {
@@ -247,10 +277,18 @@ public class RecordBatchSizer {
   public int stdRowWidth() { return stdRowWidth; }
   public int grossRowWidth() { return grossRowWidth; }
   public int netRowWidth() { return netRowWidth; }
+  /**
+   * Compute the "real" width of the row, taking into account each varchar column size
+   * (historically capped at 50, and rounded up to power of 2 to match drill buf allocation)
+   * and null marking columns.
+   * @return "real" width of the row
+   */
+  public int netRowWidthCap50() { return netRowWidthCap50 + numNullables; }
   public int actualSize() { return totalBatchSize; }
   public boolean hasSv2() { return hasSv2; }
   public int avgDensity() { return avgDensity; }
   public int netSize() { return netBatchSize; }
+  public int maxSize() { return maxSize; }
 
   public static final int MAX_VECTOR_SIZE = 16 * 1024 * 1024; // 16 MiB
 

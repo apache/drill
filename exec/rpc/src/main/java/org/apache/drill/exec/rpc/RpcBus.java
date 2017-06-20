@@ -192,8 +192,8 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           r.pBody, r.dBodies);
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Adding message to outbound buffer. {}", outMessage);
+        logger.debug("Sending response with Sender {}", System.identityHashCode(this));
       }
-      logger.debug("Sending response with Sender {}", System.identityHashCode(this));
       connection.getChannel().writeAndFlush(outMessage);
     }
 

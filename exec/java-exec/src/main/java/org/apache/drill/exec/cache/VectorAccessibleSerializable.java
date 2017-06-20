@@ -35,6 +35,8 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.codahale.metrics.MetricRegistry;
@@ -136,6 +138,60 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     container.buildSchema(svMode);
     container.setRecordCount(recordCount);
     va = container;
+  }
+
+  // Like above, only preserve the original container and list of value-vectors
+  public void readFromStreamWithContainer(VectorContainer myContainer, InputStream input) throws IOException {
+    final VectorContainer container = new VectorContainer();
+    final UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
+    recordCount = batchDef.getRecordCount();
+    if (batchDef.hasCarriesTwoByteSelectionVector() && batchDef.getCarriesTwoByteSelectionVector()) {
+
+      if (sv2 == null) {
+        sv2 = new SelectionVector2(allocator);
+      }
+      sv2.allocateNew(recordCount * SelectionVector2.RECORD_SIZE);
+      sv2.getBuffer().setBytes(0, input, recordCount * SelectionVector2.RECORD_SIZE);
+      svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
+    }
+    final List<ValueVector> vectorList = Lists.newArrayList();
+    final List<SerializedField> fieldList = batchDef.getFieldList();
+    for (SerializedField metaData : fieldList) {
+      final int dataLength = metaData.getBufferLength();
+      final MaterializedField field = MaterializedField.create(metaData);
+      final DrillBuf buf = allocator.buffer(dataLength);
+      final ValueVector vector;
+      try {
+        buf.writeBytes(input, dataLength);
+        vector = TypeHelper.getNewVector(field, allocator);
+        vector.load(metaData, buf);
+      } finally {
+        buf.release();
+      }
+      vectorList.add(vector);
+    }
+    container.addCollection(vectorList);
+    container.setRecordCount(recordCount);
+    myContainer.transferIn(container); // transfer the vectors
+    myContainer.buildSchema(svMode);
+    myContainer.setRecordCount(recordCount);
+    /*
+    // for debugging -- show values from the first row
+    Object tmp0 = (myContainer).getValueAccessorById(NullableVarCharVector.class, 0).getValueVector();
+    Object tmp1 = (myContainer).getValueAccessorById(NullableVarCharVector.class, 1).getValueVector();
+    Object tmp2 = (myContainer).getValueAccessorById(NullableBigIntVector.class, 2).getValueVector();
+    if (tmp0 != null && tmp1 != null && tmp2 != null) {
+      NullableVarCharVector vv0 = ((NullableVarCharVector) tmp0);
+      NullableVarCharVector vv1 = ((NullableVarCharVector) tmp1);
+      NullableBigIntVector vv2 = ((NullableBigIntVector) tmp2);
+
+      try {
+        logger.info("HASH AGG: Got a row = {} , {} , {}", vv0.getAccessor().get(0), vv1.getAccessor().get(0), vv2.getAccessor().get(0));
+      } catch (Exception e) { logger.info("HASH AGG: Got an exception = {}",e); }
+    }
+    else { logger.info("HASH AGG: got nulls !!!"); }
+    */
+    va = myContainer;
   }
 
   public void writeToStreamAndRetain(OutputStream output) throws IOException {
