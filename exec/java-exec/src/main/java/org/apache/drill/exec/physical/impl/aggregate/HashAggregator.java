@@ -24,8 +24,8 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
@@ -40,13 +40,17 @@ public interface HashAggregator {
       new TemplateClassDefinition<HashAggregator>(HashAggregator.class, HashAggTemplate.class);
 
   public static enum AggOutcome {
-    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
+    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR, CALL_WORK_AGAIN
   }
 
+  // For returning results from outputCurrentBatch
+  // OK - batch returned, NONE - end of data, RESTART - call again
+  public enum AggIterOutcome { AGG_OK, AGG_NONE, AGG_RESTART }
+
   public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context,
-      OperatorStats stats, BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
-      LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds,
-      VectorContainer outContainer) throws SchemaChangeException, IOException, ClassTransformationException;
+                             OperatorStats stats, OperatorContext oContext, RecordBatch incoming, HashAggBatch outgoing,
+                             LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds, TypedFieldId[] keyFieldIds,
+                             VectorContainer outContainer) throws SchemaChangeException, IOException, ClassTransformationException;
 
   public abstract IterOutcome getOutcome();
 
@@ -60,6 +64,9 @@ public interface HashAggregator {
 
   public abstract boolean buildComplete();
 
-  public abstract IterOutcome outputCurrentBatch();
+  public abstract AggIterOutcome outputCurrentBatch();
 
+  public abstract boolean earlyOutput();
+
+  public abstract RecordBatch getNewIncoming();
 }

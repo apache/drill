@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * <p>
  *   A key thing to know is that the Iterator provided by a record batch must
  *   align with the rank positions of the field IDs provided using
- *   {@link getValueVectorId}.
+ *   {@link #getValueVectorId}.
  * </p>
  */
 public interface RecordBatch extends VectorAccessible {

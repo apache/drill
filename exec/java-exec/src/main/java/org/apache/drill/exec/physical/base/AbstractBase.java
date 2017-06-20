@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -102,16 +104,30 @@ public abstract class AbstractBase implements PhysicalOperator{
     this.cost = cost;
   }
 
-  // Not available. Presumably because Drill does not currently use
-  // this value, though it does appear in some test physical plans.
-//  public void setMaxAllocation(long alloc) {
-//    maxAllocation = alloc;
-//  }
-
   @Override
   public long getMaxAllocation() {
     return maxAllocation;
   }
+
+  /**
+   * Any operator that supports spilling should override this method
+   * @param maxAllocation The max memory allocation to be set
+   */
+  @Override
+  public void setMaxAllocation(long maxAllocation) {
+    this.maxAllocation = maxAllocation;
+    /*throw new DrillRuntimeException("Unsupported method: setMaxAllocation()");*/
+  }
+
+  /**
+   * Any operator that supports spilling should override this method (and return true)
+   * @return false
+   */
+  @Override @JsonIgnore
+  public boolean isBufferedOperator() { return false; }
+
+  // @Override
+  // public void setBufferedOperator(boolean bo) {}
 
   @Override
   public String getUserName() {

@@ -39,6 +39,8 @@ import org.apache.drill.exec.physical.impl.xsort.MSortTemplate;
 import org.apache.drill.exec.physical.impl.xsort.SingleBatchSorter;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
 import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.SpilledRun;
+
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -399,7 +401,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     allocator = oContext.getAllocator();
     opCodeGen = new OperatorCodeGenerator(context, popConfig);
 
-    spillSet = new SpillSet(context, popConfig, "sort", "run");
+    spillSet = new SpillSet(context, popConfig, UserBitShared.CoreOperatorType.EXTERNAL_SORT);
     copierHolder = new CopierHolder(context, allocator, opCodeGen);
     configure(context.getConfig());
   }
@@ -1390,7 +1392,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     // spill file. After each write, we release the memory associated
     // with the just-written batch.
 
-    String outputFile = spillSet.getNextSpillFile();
+    String outputFile = spillSet.getNextSpillFile(null);
     stats.setLongStat(Metric.SPILL_COUNT, spillSet.getFileCount());
     BatchGroup.SpilledRun newGroup = null;
     try (AutoCloseable ignored = AutoCloseables.all(batchesToSpill);

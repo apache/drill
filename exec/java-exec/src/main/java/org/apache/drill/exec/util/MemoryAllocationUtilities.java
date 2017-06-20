@@ -26,7 +26,6 @@ import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.server.options.OptionManager;
 
 public class MemoryAllocationUtilities {
@@ -40,7 +39,7 @@ public class MemoryAllocationUtilities {
    * @param plan
    * @param queryContext
    */
-  public static void setupSortMemoryAllocations(final PhysicalPlan plan, final QueryContext queryContext) {
+  public static void setupBufferedOpsMemoryAllocations(final PhysicalPlan plan, final QueryContext queryContext) {
 
     // Test plans may already have a pre-defined memory plan.
     // Otherwise, determine memory allocation.
@@ -49,30 +48,30 @@ public class MemoryAllocationUtilities {
       return;
     }
     // look for external sorts
-    final List<ExternalSort> sortList = new LinkedList<>();
+    final List<PhysicalOperator> bufferedOpList = new LinkedList<>();
     for (final PhysicalOperator op : plan.getSortedOperators()) {
-      if (op instanceof ExternalSort) {
-        sortList.add((ExternalSort) op);
+      if ( op.isBufferedOperator() ) {
+        bufferedOpList.add(op);
       }
     }
 
     // if there are any sorts, compute the maximum allocation, and set it on them
-    if (sortList.size() > 0) {
+    if (bufferedOpList.size() > 0) {
       final OptionManager optionManager = queryContext.getOptions();
       final long maxWidthPerNode = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val;
       long maxAllocPerNode = Math.min(DrillConfig.getMaxDirectMemory(),
           queryContext.getConfig().getLong(RootAllocatorFactory.TOP_LEVEL_MAX_ALLOC));
       maxAllocPerNode = Math.min(maxAllocPerNode,
           optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY).num_val);
-      final long maxSortAlloc = maxAllocPerNode / (sortList.size() * maxWidthPerNode);
-      logger.debug("Max sort alloc: {}", maxSortAlloc);
+      final long maxOperatorAlloc = maxAllocPerNode / (bufferedOpList.size() * maxWidthPerNode);
+      logger.debug("Max buffered operator alloc: {}", maxOperatorAlloc);
 
-      for(final ExternalSort externalSort : sortList) {
+      for(final PhysicalOperator op : bufferedOpList) {
         // Ensure that the sort receives the minimum memory needed to make progress.
         // Without this, the math might work out to allocate too little memory.
 
-        long alloc = Math.max(maxSortAlloc, externalSort.getInitialAllocation());
-        externalSort.setMaxAllocation(alloc);
+        long alloc = Math.max(maxOperatorAlloc, op.getInitialAllocation());
+        op.setMaxAllocation(alloc);
       }
     }
     plan.getProperties().hasResourcePlan = true;

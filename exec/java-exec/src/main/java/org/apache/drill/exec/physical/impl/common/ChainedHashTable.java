@@ -114,7 +114,7 @@ public class ChainedHashTable {
   private HashTableConfig htConfig;
   private final FragmentContext context;
   private final BufferAllocator allocator;
-  private final RecordBatch incomingBuild;
+  private RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
 
@@ -129,14 +129,18 @@ public class ChainedHashTable {
     this.outgoing = outgoing;
   }
 
-  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
+  public void updateIncoming(RecordBatch incomingBuild) {
+    this.incomingBuild = incomingBuild;
+  }
+
+  public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds, int numPartitions) throws ClassTransformationException,
       IOException, SchemaChangeException {
     CodeGenerator<HashTable> top = CodeGenerator.get(HashTable.TEMPLATE_DEFINITION, context.getFunctionRegistry(), context.getOptions());
     top.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
     // This code is called from generated code, so to step into this code,
     // persist the code generated in HashAggBatch also.
-//  top.saveCodeForDebugging(true);
+    // top.saveCodeForDebugging(true);
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 

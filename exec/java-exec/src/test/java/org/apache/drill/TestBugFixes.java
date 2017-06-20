@@ -211,12 +211,13 @@ public class TestBugFixes extends BaseTestQuery {
     int limit = 65536;
     ImmutableList.Builder<Map<String, Object>> baselineBuilder = ImmutableList.builder();
     for (int i = 0; i < limit; i++) {
-      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", String.valueOf(i + 1)));
+      baselineBuilder.add(Collections.<String, Object>singletonMap("`id`", /*String.valueOf */ (i + 1)));
     }
     List<Map<String, Object>> baseline = baselineBuilder.build();
 
     testBuilder()
-            .sqlQuery(String.format("select id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id limit %s", TEST_RES_PATH, limit))
+            .sqlQuery(String.format("select cast(id as int) as id from dfs_test.`%s/bugs/DRILL-4884/limit_test_parquet/test0_0_0.parquet` group by id order by 1 limit %s",
+                TEST_RES_PATH, limit))
             .unOrdered()
             .baselineRecords(baseline)
             .go();

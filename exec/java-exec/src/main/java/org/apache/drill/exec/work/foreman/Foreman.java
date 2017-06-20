@@ -433,7 +433,7 @@ public class Foreman implements Runnable {
 
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
-    MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
+    MemoryAllocationUtilities.setupBufferedOpsMemoryAllocations(plan, queryContext);
     //Marking endTime of Planning
     queryManager.markPlanningEndTime();
 
