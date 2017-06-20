@@ -64,6 +64,12 @@ public interface ExecConstants {
   String SPOOLING_BUFFER_MEMORY = "drill.exec.buffer.spooling.size";
   String BATCH_PURGE_THRESHOLD = "drill.exec.sort.purge.threshold";
 
+  // Spill boot-time Options common to all spilling operators
+  // (Each individual operator may override the common options)
+
+  String SPILL_FILESYSTEM = "drill.exec.spill.fs";
+  String SPILL_DIRS = "drill.exec.spill.directories";
+
   // External Sort Boot configuration
 
   String EXTERNAL_SORT_TARGET_SPILL_BATCH_SIZE = "drill.exec.sort.external.spill.batch.size";
@@ -86,6 +92,22 @@ public interface ExecConstants {
 
   BooleanValidator EXTERNAL_SORT_DISABLE_MANAGED_OPTION = new BooleanValidator("exec.sort.disable_managed", false);
 
+  // Hash Aggregate Options
+
+  String HASHAGG_NUM_PARTITIONS = "drill.exec.hashagg.num_partitions";
+  String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";
+  LongValidator HASHAGG_NUM_PARTITIONS_VALIDATOR = new RangeLongValidator(HASHAGG_NUM_PARTITIONS_KEY, 1, 128, 32); // 1 means - no spilling
+  String HASHAGG_MAX_MEMORY = "drill.exec.hashagg.mem_limit";
+  String HASHAGG_MAX_MEMORY_KEY = "exec.hashagg.mem_limit";
+  LongValidator HASHAGG_MAX_MEMORY_VALIDATOR = new RangeLongValidator(HASHAGG_MAX_MEMORY_KEY, 0, Integer.MAX_VALUE, 0);
+  // min batches is used for tuning (each partition needs so many batches when planning the number of partitions,
+  // or reserve this number when calculating whether the remaining available memory is too small and requires a spill.)
+  // Low value may OOM (e.g., when incoming rows become wider), higher values use fewer partitions but are safer
+  String HASHAGG_MIN_BATCHES_PER_PARTITION = "drill.exec.hashagg.min_batches_per_partition";
+  String HASHAGG_MIN_BATCHES_PER_PARTITION_KEY = "drill.exec.hashagg.min_batches_per_partition";
+  LongValidator HASHAGG_MIN_BATCHES_PER_PARTITION_VALIDATOR = new RangeLongValidator(HASHAGG_MIN_BATCHES_PER_PARTITION_KEY, 2, 5, 3);
+  String HASHAGG_SPILL_DIRS = "drill.exec.hashagg.spill.directories";
+  String HASHAGG_SPILL_FILESYSTEM = "drill.exec.hashagg.spill.fs";
 
   String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";

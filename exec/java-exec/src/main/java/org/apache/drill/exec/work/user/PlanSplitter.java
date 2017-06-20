@@ -97,7 +97,7 @@ public class PlanSplitter {
       throw new IllegalStateException("Planning fragments supports only SQL or PHYSICAL QueryType");
     }
 
-    MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
+    MemoryAllocationUtilities.setupBufferedOpsMemoryAllocations(plan, queryContext);
 
     final PhysicalOperator rootOperator = plan.getSortedOperators(false).iterator().next();
 

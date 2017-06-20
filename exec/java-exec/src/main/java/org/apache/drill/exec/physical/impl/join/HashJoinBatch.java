@@ -315,7 +315,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     // Create the chained hash table
     final ChainedHashTable ht =
         new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
-    hashTable = ht.createAndSetupHashTable(null);
+    hashTable = ht.createAndSetupHashTable(null, 1);
   }
 
   public void executeBuildPhase() throws SchemaChangeException, ClassTransformationException, IOException {
@@ -374,7 +374,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
         // For every record in the build batch , hash the key columns
         for (int i = 0; i < currentRecordCount; i++) {
-          hashTable.put(i, htIndex, 1 /* retry count */);
+          int hashCode = hashTable.getHashCode(i);
+          hashTable.put(i, htIndex, hashCode);
 
                         /* Use the global index returned by the hash table, to store
                          * the current record index and batch index. This will be used

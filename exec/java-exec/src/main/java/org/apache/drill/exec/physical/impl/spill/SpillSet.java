@@ -30,11 +30,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -84,7 +86,7 @@ public class SpillSet {
      * Given a manager-specific input stream, return the current read position.
      * Used to report total read bytes.
      *
-     * @param outputStream input stream created by the file manager
+     * @param inputStream input stream created by the file manager
      * @return
      */
     long getReadBytes(InputStream inputStream);
@@ -346,7 +348,6 @@ public class SpillSet {
    */
 
   private final String spillDirName;
-  private final String spillFileName;
 
   private int fileCount = 0;
 
@@ -356,16 +357,34 @@ public class SpillSet {
 
   private long writeBytes;
 
-  public SpillSet(FragmentContext context, PhysicalOperator popConfig) {
-    this(context, popConfig, null, "spill");
-  }
-
-  public SpillSet(FragmentContext context, PhysicalOperator popConfig,
-                  String opName, String fileName) {
+  public SpillSet(FragmentContext context, PhysicalOperator popConfig, UserBitShared.CoreOperatorType optype) {
     FragmentHandle handle = context.getHandle();
+    String operName = "Unknown";
+
+    // Set the spill options from the configuration
     DrillConfig config = context.getConfig();
-    spillFileName = fileName;
-    List<String> dirList = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
+    String spillFs;
+    List<String> dirList;
+
+    // Set the operator name (used as part of the spill file name),
+    // and set oper. specific options (the config file defaults to using the
+    // common options; users may override those - per operator)
+    switch (optype) {
+      case EXTERNAL_SORT:
+        operName = "Sort";
+        spillFs = config.getString(ExecConstants.EXTERNAL_SORT_SPILL_FILESYSTEM);
+        dirList = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
+        break;
+      case HASH_AGGREGATE:
+        operName = "HashAgg";
+        spillFs = config.getString(ExecConstants.HASHAGG_SPILL_FILESYSTEM);
+        dirList = config.getStringList(ExecConstants.HASHAGG_SPILL_DIRS);
+        break;
+      default: // just use the common ones
+        spillFs = config.getString(ExecConstants.SPILL_FILESYSTEM);
+        dirList = config.getStringList(ExecConstants.SPILL_DIRS);
+    }
+
     dirs = Iterators.cycle(dirList);
 
     // If more than one directory, semi-randomly choose an offset into
@@ -386,23 +405,18 @@ public class SpillSet {
     // system is selected and impersonation is off. (We use that
     // as a proxy for a non-production Drill setup.)
 
-    String spillFs = config.getString(ExecConstants.EXTERNAL_SORT_SPILL_FILESYSTEM);
     boolean impersonationEnabled = config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
     if (spillFs.startsWith("file:///") && ! impersonationEnabled) {
       fileManager = new LocalFileManager(spillFs);
     } else {
       fileManager = new HadoopFileManager(spillFs);
     }
-    spillDirName = String.format(
-        "%s_major%d_minor%d_op%d%s",
-        QueryIdHelper.getQueryId(handle.getQueryId()),
-        handle.getMajorFragmentId(),
-        handle.getMinorFragmentId(),
-        popConfig.getOperatorId(),
-        (opName == null) ? "" : "_" + opName);
+
+    spillDirName = String.format("%s_%s_%s-%s_minor%s", QueryIdHelper.getQueryId(handle.getQueryId()),
+        operName, handle.getMajorFragmentId(), popConfig.getOperatorId(), handle.getMinorFragmentId());
   }
 
-  public String getNextSpillFile() {
+  public String getNextSpillFile(String extraName) {
 
     // Identify the next directory from the round-robin list to
     // the file created from this round of spilling. The directory must
@@ -411,7 +425,12 @@ public class SpillSet {
     String spillDir = dirs.next();
     String currSpillPath = Joiner.on("/").join(spillDir, spillDirName);
     currSpillDirs.add(currSpillPath);
-    String outputFile = Joiner.on("/").join(currSpillPath, spillFileName + ++fileCount);
+
+    String outputFile = Joiner.on("/").join(currSpillPath, "spill" + ++fileCount);
+    if ( extraName != null ) {
+      outputFile += "_" + extraName;
+    }
+
     try {
         fileManager.deleteOnExit(currSpillPath);
     } catch (IOException e) {

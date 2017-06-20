@@ -133,6 +133,9 @@ public class PlannerSettings implements Context{
      the need to turn off join optimization may go away.
    */
   public static final BooleanValidator JOIN_OPTIMIZATION = new BooleanValidator("planner.enable_join_optimization", true);
+  // for testing purpose
+  public static final String FORCE_2PHASE_AGGR_KEY = "planner.force_2phase_aggr";
+  public static final BooleanValidator FORCE_2PHASE_AGGR = new BooleanValidator(FORCE_2PHASE_AGGR_KEY, false);
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
@@ -273,6 +276,8 @@ public class PlannerSettings implements Context{
   public boolean isTypeInferenceEnabled() {
     return options.getOption(TYPE_INFERENCE);
   }
+
+  public boolean isForce2phaseAggr() { return options.getOption(FORCE_2PHASE_AGGR);} // for testing
 
   public long getInSubqueryThreshold() {
     return options.getOption(IN_SUBQUERY_THRESHOLD);

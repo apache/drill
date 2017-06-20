@@ -61,6 +61,9 @@ public abstract class AggPruleBase extends Prule {
   // currently won't generate a 2 phase plan.
   protected boolean create2PhasePlan(RelOptRuleCall call, DrillAggregateRel aggregate) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    if ( settings.isForce2phaseAggr() ) { // for testing - force 2 phase aggr
+      return true;
+    }
     RelNode child = call.rel(0).getInputs().get(0);
     boolean smallInput = child.getRows() < settings.getSliceTarget();
     if (! settings.isMultiPhaseAggEnabled() || settings.isSingleMode() || smallInput) {
