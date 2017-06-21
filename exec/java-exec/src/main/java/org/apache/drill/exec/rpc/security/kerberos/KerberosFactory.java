@@ -22,6 +22,7 @@ import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.FastSaslClientFactory;
 import org.apache.drill.exec.rpc.security.FastSaslServerFactory;
+import org.apache.drill.exec.rpc.security.SecurityConfiguration;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.HadoopKerberosName;
@@ -56,7 +57,7 @@ public class KerberosFactory implements AuthenticatorFactory {
 
   @Override
   public UserGroupInformation createAndLoginUser(final Map<String, ?> properties) throws IOException {
-    final Configuration conf = new Configuration();
+    final Configuration conf = new SecurityConfiguration();
     conf.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
         UserGroupInformation.AuthenticationMethod.KERBEROS.toString());
     UserGroupInformation.setConfiguration(conf);
