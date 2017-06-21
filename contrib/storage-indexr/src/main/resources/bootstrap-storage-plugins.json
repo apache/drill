@@ -1,0 +1,8 @@
+{
+    "storage": {
+        indexr: {
+            type: "indexr",
+            enabled: true
+        }
+    }
+}
