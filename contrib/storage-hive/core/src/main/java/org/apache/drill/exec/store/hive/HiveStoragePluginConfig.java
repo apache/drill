@@ -33,6 +33,8 @@ public class HiveStoragePluginConfig extends StoragePluginConfigBase {
 
   public static final String NAME = "hive";
 
+  public static final String HIVE_SECURITY_CONFIG = "hive.metastore.sasl.enabled";
+
   @JsonIgnore
   public Map<String, String> getHiveConfigOverride() {
     return configProps;
@@ -64,6 +66,42 @@ public class HiveStoragePluginConfig extends StoragePluginConfigBase {
     }
 
     return true;
+  }
+
+
+  @Override
+  public boolean enableSecurity() {
+    return compareAndUpdateSecurityConfig("true");
+  }
+
+  @Override
+  public boolean disableSecurity() {
+    return compareAndUpdateSecurityConfig("false");
+  }
+
+  /**
+   * Compare the newValue with current value of security setting for Hive Plugin
+   *
+   * @param newValue - new value for security setting.
+   * @return true - if modified
+   *         false - if not modified
+   */
+  public boolean compareAndUpdateSecurityConfig(String newValue) {
+
+    final String oldValue = configProps.get(HIVE_SECURITY_CONFIG).trim();
+
+    if (!(oldValue.equals(newValue))) {
+      configProps.put(HIVE_SECURITY_CONFIG, newValue);
+      return true;
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean isValidSecurityConfig(boolean enablePluginSecurity) {
+    final boolean securityConfig = Boolean.parseBoolean(configProps.get(HIVE_SECURITY_CONFIG).trim());
+    return securityConfig == enablePluginSecurity;
   }
 
 }
