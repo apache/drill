@@ -17,15 +17,9 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.univocity.parsers.common.TextParsingException;
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -36,16 +30,16 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.mapred.FileSplit;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import org.apache.drill.exec.expr.TypeHelper;
+import com.univocity.parsers.common.TextParsingException;
+
+import io.netty.buffer.DrillBuf;
 
 // New text reader, complies with the RFC 4180 standard for text/csv files
 public class CompliantTextRecordReader extends AbstractRecordReader {
@@ -255,63 +249,4 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       logger.warn("Exception while closing stream.", e);
     }
   }
-
-  /**
-   * TextRecordReader during its first phase read to extract header should pass its own
-   * OutputMutator to avoid reshaping query output.
-   * This class provides OutputMutator for header extraction.
-   */
-  private class HeaderOutputMutator implements OutputMutator {
-    private final Map<String, ValueVector> fieldVectorMap = Maps.newHashMap();
-
-    @SuppressWarnings("resource")
-    @Override
-    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
-      ValueVector v = fieldVectorMap.get(field);
-      if (v == null || v.getClass() != clazz) {
-        // Field does not exist add it to the map
-        v = TypeHelper.getNewVector(field, oContext.getAllocator());
-        if (!clazz.isAssignableFrom(v.getClass())) {
-          throw new SchemaChangeException(String.format(
-              "Class %s was provided, expected %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
-        }
-        fieldVectorMap.put(field.getPath(), v);
-      }
-      return clazz.cast(v);
-    }
-
-    @Override
-    public void allocate(int recordCount) {
-      //do nothing for now
-    }
-
-    @Override
-    public boolean isNewSchema() {
-      return false;
-    }
-
-    @Override
-    public DrillBuf getManagedBuffer() {
-      return null;
-    }
-
-    @Override
-    public CallBack getCallBack() {
-      return null;
-    }
-
-    /**
-     * Since this OutputMutator is passed by TextRecordReader to get the header out
-     * the mutator might not get cleaned up elsewhere. TextRecordReader will call
-     * this method to clear any allocations
-     */
-    public void close() {
-      for (final ValueVector v : fieldVectorMap.values()) {
-        v.clear();
-      }
-      fieldVectorMap.clear();
-    }
-
-  }
-
 }

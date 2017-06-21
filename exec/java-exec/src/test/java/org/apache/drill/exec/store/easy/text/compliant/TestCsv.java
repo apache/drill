@@ -135,6 +135,28 @@ public class TestCsv extends ClusterTest {
       .verifyAndClear(actual);
   }
 
+  // Test fix for DRILL-5590
+  @Test
+  public void testCsvHeadersCaseInsensitive() throws IOException {
+    String fileName = "case2.csv";
+    buildFile(fileName, validHeaders);
+    String sql = "SELECT A, b, C FROM `dfs.data`.`" + fileName + "`";
+    RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .add("A", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("C", MinorType.VARCHAR)
+        .build();
+    assertEquals(expectedSchema, actual.batchSchema());
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .add("10", "foo", "bar")
+        .build();
+    new RowSetComparison(expected)
+      .verifyAndClear(actual);
+  }
+
   private String makeStatement(String fileName) {
     return "SELECT * FROM `dfs.data`.`" + fileName + "`";
   }

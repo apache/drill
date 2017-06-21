@@ -345,9 +345,6 @@ class RepeatedVarCharOutput extends TextOutput {
     return out;
   }
 
-  // Sets the record count in this batch within the value vector
   @Override
-  public void finishBatch() {
-    mutator.setValueCount(batchIndex);
-  }
+  public void finishBatch() { }
 }
