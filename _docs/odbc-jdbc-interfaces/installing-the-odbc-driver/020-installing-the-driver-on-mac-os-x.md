@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-06-20 02:21:36 UTC
+date: 2017-06-21 21:09:03 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -32,7 +32,7 @@ To install the driver, you need Administrator privileges on the computer.
 ----------
 
 ## Step 1: Download the MapR Drill ODBC Driver  
- 
+
 To download ODBC drivers that support both 32- and 64-bit client applications, click 
 [MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/).
 
