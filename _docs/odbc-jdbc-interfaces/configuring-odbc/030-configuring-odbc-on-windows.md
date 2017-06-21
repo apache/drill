@@ -1,15 +1,17 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-06-06 23:26:12 UTC
+date: 2017-06-21 23:58:59 UTC
 parent: "Configuring ODBC"
 ---
-Complete one of the following steps to create an ODBC connection on Windows to Drill data
-sources:
+To create an ODBC connection to Drill data sources on Windows, complete the following steps:
 
-  * Create a Data Source Name
-  * Create an ODBC Connection String
+  * [Step 1: Create a Data Source Name (DSN)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#create-a-data-source-name-(dsn))
+  * [Step 2: Select an Authentication Option]({{site.baseurl}}/docs/configuring-odbc-on-windows/#select-an-authentication-option)  
+  * [Step 3: Configure the Connection Type]({{site.baseurl}}/docs/configuring-odbc-on-windows/#configure-the-connection-type)  
+  * [Step 4: Configure Advanced Properties (optional)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#configure-advanced-properties-(optional))  
+  * [Additional Configuration Options]({{site.baseurl}}/docs/configuring-odbc-on-windows/#additional-configuration-options)
 
-## Sample ODBC Configuration
+## Step 1: Create a Data Source Name (DSN) 
 
 You can see how to create a DSN to connect to Drill data sources by taking a look at the preconfigured sample that the installer sets up. If you want to create a DSN for a 32- or 64-bit application, you must use the 32- or 64-bit
 version of the ODBC Data Source Administrator to create the DSN.
@@ -22,7 +24,7 @@ version of the ODBC Data Source Administrator to create the DSN.
 
 2\. On the **System DSN** tab in System Data Sources, select **MapR Drill**.  
 
-   The system DSN is available for all users who log in to the machine. You can set up a user DSN is available only to the user who creates the DSN on the **User DSN** tab. 
+   The system DSN is available for all users who log in to the machine. A user DSN is available only to the user who creates the DSN on the **User DSN** tab. 
  
 3\. Click **Configure**.  
   
@@ -31,9 +33,9 @@ version of the ODBC Data Source Administrator to create the DSN.
 
 ![](http://i.imgur.com/f9Avhcz.png) 
 
-   To access Drill Explorer, click **Drill Explorer...**.
+   To access Drill Explorer, click **Drill Explorer...**. See [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/) for more information.
    
-### Authentication Options
+### Step 2: Select an Authentication Option
 To password protect the DSN, select the appropriate authentication type in the **Authentication Type** dropdown.  If the Drillbit does not require authentication (or to configure no password protection), you can use the No Authentication option. You do not need to configure additional settings.
 
 * **MapR-SASL**
@@ -44,7 +46,7 @@ To password protect the DSN, select the appropriate authentication type in the *
 * **Plain Authentication** - configure UID and PWD properties. 
 
 
-### Direct to Drillbit and ZooKeeper Quorum Options
+### Step 3: Configure the Connection Type
 In the **Connection Type** section, **Direct to Drillbit** is selected for using Drill in embedded mode. To use Drill in embedded mode, set the connection type to **Direct** and define HOST and PORT properties. For example:
 
 * `HOST=localhost`  
@@ -63,13 +65,16 @@ To use Drill in distributed mode, select **ZooKeeper Quorum**. If you select Zoo
 
  Check the `drill-override.conf` file for the cluster name.  
 
+## Step 4: Configure Advanced Properties (optional)
 
-The [Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/) section describes the advanced  configuration properties in detail.
+
+The [Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/) section describes the advanced configuration properties in detail.  
+
+## Additional Configuration Options
 
 Select the **Disable Async** option to disable the asynchronous ODBC connection and enable a synchronous ODBC connection for performance reasons. By default the ODBC connection is asynchronous (Disable Asynch is not checked). A change in state occurs during driver initialization and is propagated to all driver DSNs.
 
-
-[Logging Options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options) and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/) sections describe the options at the bottom of this dialog.
+For information about logging options, see [Logging Options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options).
 
 ### Next Step
 

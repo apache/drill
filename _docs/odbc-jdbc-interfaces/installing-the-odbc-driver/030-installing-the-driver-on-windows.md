@@ -1,20 +1,27 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2017-06-07 00:02:30 UTC
+date: 2017-06-21 23:59:01 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32- and 64-bit
 applications on Windows®. On 64-bit Windows operating systems, you can execute both 32- and 64-bit applications. However, 64-bit applications must use 64-bit drivers, and 32-bit applications must use 32-bit drivers. Make sure that you use the driver version that matches the bitness of the client application machine. 
 					
   * MapR Drill 1.3 32-bit.msi for 32-bit applications
-  * MapR Drill 1.3 64-bit.msi for 64-bit applications
+  * MapR Drill 1.3 64-bit.msi for 64-bit applications  
+
+  
+{% include startnote.html %}Currently Drill does not support a 32-bit Windows machine. However, the 32- or 64-bit MapR Drill ODBC Driver is supported on a 64-bit machine.{% include endnote.html %}
 
 
-Install the MapR Drill ODBC Driver on a system that meets the system requirements. 
+Install the MapR Drill ODBC Driver on a system that meets the system requirements. Complete the following steps, described in detail in this document:  
+
+   *  [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-1:-download-the-mapr-drill-odbc-driver)
+   *  [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-2:-install-the-mapr-drill-odbc-driver) 
+   *  [Step 3: Verify the installation]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-3:-verify-the-installation) 
 
 ## Known Issue
 
-Drill does not support running drillbits on 32-bit Windows machines.
+The 32-bit driver does not support MapR-SASL. The 32-bit driver supports Plain and Kerberos authentication only. 
 
 ##  System Requirements
 
@@ -26,7 +33,7 @@ requirements:
     * Windows Server 2008 or later
   * 75 MB of available disk space
   * .NET Framework 4.5, installed and enabled by default on Windows 8 and later
-  * Visual C++ Redistributable for Visual Studio 2013 installed (with the same bitness as the driver that you are installing)
+  * [Visual C++ Redistributable for Visual Studio 2013](https://www.microsoft.com/en-us/download/details.aspx?id=40784) installed (with the same bitness as the driver that you are installing)
  
   * The client must be able to resolve the actual host name of the Drill node or nodes from the IP address. Verify that a DNS entry was created on the client machine for the Drill node or nodes. If not, create an entry in `\Windows\system32\drivers\etc\hosts` for each node in the following format:  
 

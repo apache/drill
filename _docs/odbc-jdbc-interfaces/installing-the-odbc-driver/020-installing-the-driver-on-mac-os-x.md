@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
-date: 2017-06-21 21:09:03 UTC
+date: 2017-06-21 23:59:00 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -10,12 +10,7 @@ Install the MapR Drill ODBC Driver on a system that meets the [system requiremen
 
   * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-1-download-the-mapr-drill-odbc-driver)  
   * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2:-install-the-mapr-drill-odbc-driver) 
-  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)
-
-## Known Issues
-
-- The 32- and 64-bit MapR Drill ODBC drivers are supported on 64-bit machines. 
-- MapR SASL support for Kerberos and MapR tickets is only available on 64-bit machines. 
+  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)   
 
 
 ## System Requirements  

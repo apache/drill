@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2017-06-07 00:02:29 UTC
+date: 2017-06-21 23:59:00 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
@@ -19,7 +19,7 @@ Verify that your system meets the system requirements before you start.
 
 ## Known Issue
 
-MapR SASL support for Kerberos and MapR tickets is only available on 64-bit machines. 
+MapR-SASL is not supported on 32-bit machines. 
 
 ## System Requirements
 
