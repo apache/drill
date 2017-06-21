@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Joiner;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -158,13 +157,13 @@ public class Metadata {
   }
 
   /**
-   * Create the parquet metadata files for the directory at the given path, and for any subdirectories.
-   * Result metadata cache files and returned Pair of metadata contain relative paths.
+   * Create the parquet metadata files for the directory at the given path and for any subdirectories.
+   * Metadata cache files written to the disk contain relative paths. Returned Pair of metadata contains absolute paths.
    *
    * @param path to the directory of the parquet table
-   * @return Pair of parquet metadata. The left one is a parquet metadata for the table (metadata for every
-   *         parquet file). The right one of the Pair is a metadata for all subdirectories (if they are present
-   *         and there are no any parquet files in the {@code path} directory).
+   * @return Pair of parquet metadata. The left one is a parquet metadata for the table. The right one of the Pair is
+   *         a metadata for all subdirectories (if they are present and there are no any parquet files in the
+   *         {@code path} directory).
    * @throws IOException if parquet metadata can't be serialized and written to the json file
    */
   private Pair<ParquetTableMetadata_v3, ParquetTableMetadataDirs>
@@ -182,18 +181,10 @@ public class Metadata {
 
     for (final FileStatus file : fs.listStatus(p, new DrillPathFilter())) {
       if (file.isDirectory()) {
-        String subdirectoryName = file.getPath().getName();
         ParquetTableMetadata_v3 subTableMetadata = (createMetaFilesRecursively(file.getPath().toString())).getLeft();
-        for (ParquetFileMetadata_v3 pfm_v3 : subTableMetadata.files) {
-          // Construction of the relative file path by adding subdirectory name and inner relative file path
-          String relativePath = Joiner.on("/").join(subdirectoryName, pfm_v3.getPath());
-          metaDataList.add(new ParquetFileMetadata_v3(relativePath, pfm_v3.length, pfm_v3.rowGroups));
-        }
-        for (String directory : subTableMetadata.getDirectories()) {
-          String relativeDirPath = Joiner.on("/").join(subdirectoryName, directory);
-          directoryList.add(relativeDirPath);
-        }
-        directoryList.add(subdirectoryName);
+        metaDataList.addAll(subTableMetadata.files);
+        directoryList.addAll(subTableMetadata.directories);
+        directoryList.add(file.getPath().toString());
         // Merge the schema from the child level into the current level
         //TODO: We need a merge method that merges two colums with the same name but different types
         columnTypeInfoSet.putAll(subTableMetadata.columnTypeInfo);
@@ -204,7 +195,7 @@ public class Metadata {
     ParquetTableMetadata_v3 parquetTableMetadata = new ParquetTableMetadata_v3(DrillVersionInfo.getVersion());
     if (childFiles.size() > 0) {
       List<ParquetFileMetadata_v3 > childFilesMetadata =
-          getParquetFileMetadata_v3(parquetTableMetadata, childFiles, false);
+          getParquetFileMetadata_v3(parquetTableMetadata, childFiles);
       metaDataList.addAll(childFilesMetadata);
       // Note that we do not need to merge the columnInfo at this point. The columnInfo is already added
       // to the parquetTableMetadata.
@@ -218,16 +209,21 @@ public class Metadata {
     }
     parquetTableMetadata.columnTypeInfo.putAll(columnTypeInfoSet);
 
-    for (String oldname : OLD_METADATA_FILENAMES) {
-      fs.delete(new Path(p, oldname), false);
+    for (String oldName : OLD_METADATA_FILENAMES) {
+      fs.delete(new Path(p, oldName), false);
     }
-    writeFile(parquetTableMetadata, new Path(p, METADATA_FILENAME));
+    //  relative paths in the metadata are only necessary for meta cache files.
+    ParquetTableMetadata_v3 metadataTableWithRelativePaths =
+        MetadataPathUtils.createMetadataWithRelativePaths(parquetTableMetadata, path);
+    writeFile(metadataTableWithRelativePaths, new Path(p, METADATA_FILENAME));
 
     if (directoryList.size() > 0 && childFiles.size() == 0) {
-      ParquetTableMetadataDirs parquetTableMetadataDirs = new ParquetTableMetadataDirs(directoryList);
-      writeFile(parquetTableMetadataDirs, new Path(p, METADATA_DIRECTORIES_FILENAME));
+      ParquetTableMetadataDirs parquetTableMetadataDirsRelativePaths =
+          new ParquetTableMetadataDirs(metadataTableWithRelativePaths.directories);
+      writeFile(parquetTableMetadataDirsRelativePaths, new Path(p, METADATA_DIRECTORIES_FILENAME));
       logger.info("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
+      ParquetTableMetadataDirs parquetTableMetadataDirs = new ParquetTableMetadataDirs(directoryList);
       return Pair.of(parquetTableMetadata, parquetTableMetadataDirs);
     }
     List<String> emptyDirList = Lists.newArrayList();
@@ -266,7 +262,7 @@ public class Metadata {
   private ParquetTableMetadata_v3 getParquetTableMetadata(List<FileStatus> fileStatuses)
       throws IOException {
     ParquetTableMetadata_v3 tableMetadata = new ParquetTableMetadata_v3();
-    List<ParquetFileMetadata_v3> fileMetadataList = getParquetFileMetadata_v3(tableMetadata, fileStatuses, true);
+    List<ParquetFileMetadata_v3> fileMetadataList = getParquetFileMetadata_v3(tableMetadata, fileStatuses);
     tableMetadata.files = fileMetadataList;
     tableMetadata.directories = new ArrayList<String>();
     return tableMetadata;
@@ -277,16 +273,15 @@ public class Metadata {
    *
    * @param parquetTableMetadata_v3 can store column schema info from all the files and row groups
    * @param fileStatuses list of the parquet files statuses
-   * @param absolutePathInMetadata true if result metadata files should contain absolute paths, false for relative paths.
-   *                               Relative paths in the metadata are only necessary while creating meta cache files.
-   * @return list of the parquet file metadata (parquet metadata for every file)
+   *
+   * @return list of the parquet file metadata with absolute paths
    * @throws IOException
    */
-  private List<ParquetFileMetadata_v3> getParquetFileMetadata_v3(ParquetTableMetadata_v3 parquetTableMetadata_v3,
-      List<FileStatus> fileStatuses, boolean absolutePathInMetadata) throws IOException {
+  private List<ParquetFileMetadata_v3> getParquetFileMetadata_v3(
+      ParquetTableMetadata_v3 parquetTableMetadata_v3, List<FileStatus> fileStatuses) throws IOException {
     List<TimedRunnable<ParquetFileMetadata_v3>> gatherers = Lists.newArrayList();
     for (FileStatus file : fileStatuses) {
-      gatherers.add(new MetadataGatherer(parquetTableMetadata_v3, file, absolutePathInMetadata));
+      gatherers.add(new MetadataGatherer(parquetTableMetadata_v3, file));
     }
 
     List<ParquetFileMetadata_v3> metaDataList = Lists.newArrayList();
@@ -320,18 +315,15 @@ public class Metadata {
 
     private FileStatus fileStatus;
     private ParquetTableMetadata_v3 parquetTableMetadata;
-    private boolean absolutePathInMetadata;
 
-    public MetadataGatherer(ParquetTableMetadata_v3 parquetTableMetadata, FileStatus fileStatus,
-                            boolean absolutePathInMetadata) {
+    public MetadataGatherer(ParquetTableMetadata_v3 parquetTableMetadata, FileStatus fileStatus) {
       this.fileStatus = fileStatus;
       this.parquetTableMetadata = parquetTableMetadata;
-      this.absolutePathInMetadata = absolutePathInMetadata;
     }
 
     @Override
     protected ParquetFileMetadata_v3 runInner() throws Exception {
-      return getParquetFileMetadata_v3(parquetTableMetadata, fileStatus, absolutePathInMetadata);
+      return getParquetFileMetadata_v3(parquetTableMetadata, fileStatus);
     }
 
     @Override
@@ -389,13 +381,9 @@ public class Metadata {
 
   /**
    * Get the metadata for a single file
-   *
-   * @param file
-   * @return
-   * @throws IOException
    */
   private ParquetFileMetadata_v3 getParquetFileMetadata_v3(ParquetTableMetadata_v3 parquetTableMetadata,
-      FileStatus file, boolean absolutePathInMetadata) throws IOException {
+      FileStatus file) throws IOException {
     ParquetMetadata metadata = ParquetFileReader.readFooter(fs.getConf(), file);
     MessageType schema = metadata.getFileMetaData().getSchema();
 
@@ -472,8 +460,8 @@ public class Metadata {
 
       rowGroupMetadataList.add(rowGroupMeta);
     }
-    String path = absolutePathInMetadata ? Path.getPathWithoutSchemeAndAuthority(file.getPath()).toString()
-        : file.getPath().getName();
+    String path = Path.getPathWithoutSchemeAndAuthority(file.getPath()).toString();
+
     return new ParquetFileMetadata_v3(path, file.getLen(), rowGroupMetadataList);
   }
 
@@ -555,6 +543,7 @@ public class Metadata {
     Stopwatch timer = Stopwatch.createStarted();
     Path p = new Path(path);
     Path parentDir = Path.getPathWithoutSchemeAndAuthority(p.getParent()); // parent directory of the metadata file
+    String parentDirString = parentDir.toUri().toString(); // string representation for parent directory of the metadata file
     ObjectMapper mapper = new ObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
@@ -574,18 +563,17 @@ public class Metadata {
     boolean newMetadata = false;
 
     if (metaContext != null) {
-      alreadyCheckedModification = metaContext.getStatus(parentDir.toString());
+      alreadyCheckedModification = metaContext.getStatus(parentDirString);
     }
 
     if (dirsOnly) {
       parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
       logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
-      parquetTableMetadataDirs.updateRelativePaths(parentDir);
+      parquetTableMetadataDirs.updateRelativePaths(parentDirString);
       if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), p, parentDir, metaContext)) {
         parquetTableMetadataDirs =
             (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getRight();
-        parquetTableMetadataDirs.updateRelativePaths(parentDir);
         newMetadata = true;
       }
     } else {
@@ -593,12 +581,11 @@ public class Metadata {
       logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
       if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
-        ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDir);
+        ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDirString);
       }
       if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), p, parentDir, metaContext)) {
         parquetTableMetadata =
             (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
-        ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDir);
         newMetadata = true;
       }
 
@@ -774,18 +761,8 @@ public class Metadata {
     /** If directories list contains relative paths, update it to absolute ones
      * @param baseDir base parent directory
      */
-    @JsonIgnore public void updateRelativePaths(Path baseDir) {
-      if (!directories.isEmpty()) {
-        // It is enough to check the first path to decide if updating needed
-        if (!new Path(directories.get(0)).isAbsolute()) {
-          List<String> directoryList = Lists.newArrayList();
-          for (String directory : directories) {
-            String absolutePath = new Path(baseDir, directory).toUri().toString();
-            directoryList.add(absolutePath);
-          }
-          directories = directoryList;
-        }
-      }
+    @JsonIgnore public void updateRelativePaths(String baseDir) {
+      this.directories = MetadataPathUtils.convertToAbsolutePaths(directories, baseDir);
     }
   }
 
@@ -1452,29 +1429,16 @@ public class Metadata {
       return directories;
     }
 
-    /** If directories list and file metadata list contain relative paths, update it to absolute ones
+    /**
+     * If directories list and file metadata list contain relative paths, update it to absolute ones
      * @param baseDir base parent directory
      */
-    @JsonIgnore public void updateRelativePaths(Path baseDir) {
-      if (!files.isEmpty()) {
-        // It is enough to check the first path to decide if updating needed
-        if (!new Path(files.get(0).getPath()).isAbsolute()) {
-          List<ParquetFileMetadata_v3> filesWithAbsolutePaths = Lists.newArrayList();
-          for (ParquetFileMetadata_v3 file : files) {
-            String absolutePath = new Path(baseDir, file.getPath()).toUri().toString();
-            filesWithAbsolutePaths.add(new ParquetFileMetadata_v3(absolutePath, file.length, file.rowGroups));
-          }
-          files = filesWithAbsolutePaths;
-          if (!directories.isEmpty()) {
-            List<String> directoriesWithAbsolutePaths = Lists.newArrayList();
-            for (String directory : directories) {
-              String absolutePath = new Path(baseDir, directory).toUri().toString();
-              directoriesWithAbsolutePaths.add(absolutePath);
-            }
-            directories = directoriesWithAbsolutePaths;
-          }
-        }
-      }
+    @JsonIgnore public void updateRelativePaths(String baseDir) {
+      // update directories paths to absolute ones
+      this.directories = MetadataPathUtils.convertToAbsolutePaths(directories, baseDir);
+
+      // update files paths to absolute ones
+      this.files = MetadataPathUtils.convertToFilesWithAbsolutePaths(files, baseDir);
     }
 
     @JsonIgnore @Override public List<? extends ParquetFileMetadata> getFiles() {
@@ -1798,6 +1762,99 @@ public class Metadata {
       }
     }
 
+  }
+
+  /**
+   * Util class that contains helper methods for converting paths in the table and directory metadata structures
+   */
+  private static class MetadataPathUtils {
+
+    /**
+     * Helper method that converts a list of relative paths to absolute ones
+     *
+     * @param paths list of relative paths
+     * @param baseDir base parent directory
+     * @return list of absolute paths
+     */
+    private static List<String> convertToAbsolutePaths(List<String> paths, String baseDir) {
+      if (!paths.isEmpty()) {
+        List<String> absolutePaths = Lists.newArrayList();
+        for (String relativePath : paths) {
+          String absolutePath = (new Path(relativePath).isAbsolute()) ? relativePath
+              : new Path(baseDir, relativePath).toUri().toString();
+          absolutePaths.add(absolutePath);
+        }
+        return absolutePaths;
+      }
+      return paths;
+    }
+
+    /**
+     * Convert a list of files with relative paths to files with absolute ones
+     *
+     * @param files list of files with relative paths
+     * @param baseDir base parent directory
+     * @return list of files with absolute paths
+     */
+    private static List<ParquetFileMetadata_v3> convertToFilesWithAbsolutePaths(
+        List<ParquetFileMetadata_v3> files, String baseDir) {
+      if (!files.isEmpty()) {
+        List<ParquetFileMetadata_v3> filesWithAbsolutePaths = Lists.newArrayList();
+        for (ParquetFileMetadata_v3 file : files) {
+          Path relativePath = new Path(file.getPath());
+          // create a new file if old one contains a relative path, otherwise use an old file
+          ParquetFileMetadata_v3 fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
+              : new ParquetFileMetadata_v3(new Path(baseDir, relativePath).toUri().toString(), file.length, file.rowGroups);
+          filesWithAbsolutePaths.add(fileWithAbsolutePath);
+        }
+        return filesWithAbsolutePaths;
+      }
+      return files;
+    }
+
+    /**
+     * Creates a new parquet table metadata from the {@code tableMetadataWithAbsolutePaths} parquet table.
+     * A new parquet table will contain relative paths for the files and directories.
+     *
+     * @param tableMetadataWithAbsolutePaths parquet table metadata with absolute paths for the files and directories
+     * @param baseDir base parent directory
+     * @return parquet table metadata with relative paths for the files and directories
+     */
+    private static ParquetTableMetadata_v3 createMetadataWithRelativePaths(
+        ParquetTableMetadata_v3 tableMetadataWithAbsolutePaths, String baseDir) {
+      List<String> directoriesWithRelativePaths = Lists.newArrayList();
+      for (String directory : tableMetadataWithAbsolutePaths.getDirectories()) {
+        directoriesWithRelativePaths.add(relativize(baseDir, directory)) ;
+      }
+      List<ParquetFileMetadata_v3> filesWithRelativePaths = Lists.newArrayList();
+      for (ParquetFileMetadata_v3 file : tableMetadataWithAbsolutePaths.files) {
+        filesWithRelativePaths.add(new ParquetFileMetadata_v3(
+            relativize(baseDir, file.getPath()), file.length, file.rowGroups));
+      }
+      return new ParquetTableMetadata_v3(tableMetadataWithAbsolutePaths, filesWithRelativePaths,
+          directoriesWithRelativePaths, DrillVersionInfo.getVersion());
+    }
+
+    /**
+     * Constructs relative path from child full path and base path. Or return child path if the last one is already relative
+     *
+     * @param childPath full absolute path
+     * @param baseDir base path (the part of the Path, which should be cut off from child path)
+     * @return relative path
+     */
+    private static String relativize(String baseDir, String childPath) {
+      Path fullPathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(new Path(childPath));
+      Path basePathWithoutSchemeAndAuthority = Path.getPathWithoutSchemeAndAuthority(new Path(baseDir));
+
+      // Since hadoop Path hasn't relativize() we use uri.relativize() to get relative path
+      Path relativeFilePath = new Path(basePathWithoutSchemeAndAuthority.toUri()
+          .relativize(fullPathWithoutSchemeAndAuthority.toUri()));
+      if (relativeFilePath.isAbsolute()) {
+        throw new IllegalStateException(String.format("Path %s is not a subpath of %s.",
+            basePathWithoutSchemeAndAuthority.toUri().toString(), fullPathWithoutSchemeAndAuthority.toUri().toString()));
+      }
+      return relativeFilePath.toUri().toString();
+    }
   }
 
 }
