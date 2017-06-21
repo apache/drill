@@ -166,7 +166,7 @@ public interface ExecConstants {
   String DEFAULT_TEMPORARY_WORKSPACE = "drill.exec.default_temporary_workspace";
 
   String OUTPUT_FORMAT_OPTION = "store.format";
-  OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
+  OptionValidator OUTPUT_FORMAT_VALIDATOR = new EnumeratedStringValidator(OUTPUT_FORMAT_OPTION, "parquet", "parquet", "json", "psv", "csv", "tsv", "csvh");
   String PARQUET_BLOCK_SIZE = "store.parquet.block-size";
   OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
   String PARQUET_WRITER_USE_SINGLE_FS_BLOCK = "store.parquet.writer.use_single_fs_block";
@@ -211,7 +211,7 @@ public interface ExecConstants {
 
   // Size in MiB of the buffer the Parquet page reader will use to read from disk. Default is 1 MiB
   String PARQUET_PAGEREADER_BUFFER_SIZE = "store.parquet.reader.pagereader.buffersize";
-  OptionValidator PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR = new  LongValidator(PARQUET_PAGEREADER_BUFFER_SIZE, 1*1024*1024);
+  OptionValidator PARQUET_PAGEREADER_BUFFER_SIZE_VALIDATOR = new  PositiveLongValidator(PARQUET_PAGEREADER_BUFFER_SIZE, Integer.MAX_VALUE, 1*1024*1024);
 
   // try to use fadvise if available
   String PARQUET_PAGEREADER_USE_FADVISE = "store.parquet.reader.pagereader.usefadvise";
