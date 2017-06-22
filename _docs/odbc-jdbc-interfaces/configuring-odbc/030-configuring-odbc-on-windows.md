@@ -1,14 +1,14 @@
 ---
 title: "Configuring ODBC on Windows"
-date: 2017-06-21 23:58:59 UTC
+date: 2017-06-22 20:42:15 UTC
 parent: "Configuring ODBC"
 ---
 To create an ODBC connection to Drill data sources on Windows, complete the following steps:
 
-  * [Step 1: Create a Data Source Name (DSN)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#create-a-data-source-name-(dsn))
-  * [Step 2: Select an Authentication Option]({{site.baseurl}}/docs/configuring-odbc-on-windows/#select-an-authentication-option)  
-  * [Step 3: Configure the Connection Type]({{site.baseurl}}/docs/configuring-odbc-on-windows/#configure-the-connection-type)  
-  * [Step 4: Configure Advanced Properties (optional)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#configure-advanced-properties-(optional))  
+  * [Step 1: Create a Data Source Name (DSN)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#step-1:-create-a-data-source-name-(dsn))
+  * [Step 2: Select an Authentication Option]({{site.baseurl}}/docs/configuring-odbc-on-windows/#step-2:-select-an-authentication-option)  
+  * [Step 3: Configure the Connection Type]({{site.baseurl}}/docs/configuring-odbc-on-windows/#step-3:-configure-the-connection-type)  
+  * [Step 4: Configure Advanced Properties (optional)]({{site.baseurl}}/docs/configuring-odbc-on-windows/#step-4:-configure-advanced-properties-(optional))  
   * [Additional Configuration Options]({{site.baseurl}}/docs/configuring-odbc-on-windows/#additional-configuration-options)
 
 ## Step 1: Create a Data Source Name (DSN) 

@@ -1,6 +1,6 @@
 ---
 title: "Creating Custom Authenticators"
-date: 2016-03-02 00:30:47 UTC
+date: 2017-06-22 20:42:14 UTC
 parent: "Adding Custom Functions to Drill"
 ---
 
@@ -13,17 +13,20 @@ Complete the following steps to build and implement a custom authenticator:
  
            MyCustomDrillUserAuthenticatorImpl.java 
            
-           package myorg.dept.drill.security;
+           package myorg.dept.drill.security;     
            
            import org.apache.drill.common.config.DrillConfig;
            import org.apache.drill.exec.exception.DrillbitStartupException;
+           import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
+           import org.apache.drill.exec.rpc.user.security.UserAuthenticationException;
+           import org.apache.drill.exec.rpc.user.security.UserAuthenticatorTemplate;
            
            import java.io.IOException;
            
            /*
-           * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} for illustraing how to develop a custom authenticator and use it in Drill
+           * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} for illustrating how to develop a custom authenticator and use it in Drill
            */
-           @UserAuthenticatorTemplate(type = “myCustomAuthenticatorType”)
+           @UserAuthenticatorTemplate(type = "myCustomAuthenticatorType")
            public class MyCustomDrillUserAuthenticatorImpl implements UserAuthenticator {
            
             public static final String TEST_USER_1 = "testUser1";
@@ -50,9 +53,9 @@ Complete the following steps to build and implement a custom authenticator:
             @Override
             public void authenticate(String userName, String password) throws UserAuthenticationException {
            
-              if (!(TEST_USER_1.equals(user) && TEST_USER_1_PASSWORD.equals(password)) &&
-              !(TEST_USER_2.equals(user) && TEST_USER_2_PASSWORD.equals(password))) {
-            throw new UserAuthenticationException(“custom failure message if the admin wants to show it to user”);
+              if (!(TEST_USER_1.equals(userName) && TEST_USER_1_PASSWORD.equals(password)) &&
+              !(TEST_USER_2.equals(userName) && TEST_USER_2_PASSWORD.equals(password))) {
+            throw new UserAuthenticationException("custom failure message if the admin wants to show it to user");
               }
             }
            
