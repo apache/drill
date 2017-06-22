@@ -140,7 +140,7 @@ public class PcapRecordReader extends AbstractRecordReader {
     for (int i = 0; i < schema.getNumberOfColumns(); i++) {
       column = schema.getColumnByIndex(i);
 
-      final String name = column.getColumnName();
+      final String name = column.getColumnName().toLowerCase();
       final PcapTypes type = column.getColumnType();
       TypeProtos.MinorType minorType = TYPES.get(type);
 

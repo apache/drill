@@ -29,11 +29,15 @@ public class TestPcapRecordReader extends BaseTestQuery {
   @Test
   public void testStarQuery() throws Exception {
     runSQLVerifyCount("select * from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 16);
+    runSQLVerifyCount("select distinct DST_IP from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct DsT_IP from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct dst_ip from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
   }
 
   @Test
   public void testCountQuery() throws Exception {
     runSQLVerifyCount("select count(*) from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select count(*) from dfs.`${WORKING_PATH}/src/test/resources/store/pcap/tcp-2.pcap`", 1);
   }
 
   @Test
