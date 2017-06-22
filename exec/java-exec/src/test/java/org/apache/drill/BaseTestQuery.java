@@ -138,10 +138,6 @@ public class BaseTestQuery extends ExecTest {
     // turns on the verbose errors in tests
     // sever side stacktraces are added to the message before sending back to the client
     test("ALTER SESSION SET `exec.errors.verbose` = true");
-  }
-
-  @BeforeClass
-  public static void initFs() throws Exception {
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
     fs = FileSystem.get(conf);
@@ -628,11 +624,11 @@ public class BaseTestQuery extends ExecTest {
   }
 
   /**
-   * Metadata cache files include full paths to the files that have been scanned.
-   *
+   * Old metadata cache files include full paths to the files that have been scanned.
+   * <p>
    * There is no way to generate a metadata cache file with absolute paths that
    * will be guaranteed to be available on an arbitrary test machine.
-   *
+   * <p>
    * To enable testing older metadata cache files, they were generated manually
    * using older drill versions, and the absolute path up to the folder where
    * the metadata cache file appeared was manually replaced with the string
