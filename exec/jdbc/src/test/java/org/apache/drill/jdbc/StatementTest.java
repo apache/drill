@@ -17,28 +17,23 @@
  */
 package org.apache.drill.jdbc;
 
-import org.apache.drill.jdbc.Driver;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLException;
-
 
 /**
  * Test for Drill's implementation of Statement's methods (most).
  */
 public class StatementTest extends JdbcTestBase {
 
+  private static final String SYS_VERSION_SQL = "select * from sys.version";
   private static Connection connection;
-  private static Statement statement;
 
   @BeforeClass
   public static void setUpStatement() throws SQLException {
@@ -46,7 +41,6 @@ public class StatementTest extends JdbcTestBase {
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
-    statement = connection.createStatement();
   }
 
   @AfterClass
@@ -54,62 +48,94 @@ public class StatementTest extends JdbcTestBase {
     connection.close();
   }
 
-
-  ////////////////////////////////////////
-  // Query timeout methods:
-
-  //////////
-  // getQueryTimeout():
-
-  /** Tests that getQueryTimeout() indicates no timeout set. */
+  /**
+   * Test for reading of default query timeout
+   */
   @Test
-  public void testGetQueryTimeoutSaysNoTimeout() throws SQLException {
-    assertThat( statement.getQueryTimeout(), equalTo( 0 ) );
+  public void testDefaultGetQueryTimeout() throws SQLException {
+    Statement stmt = connection.createStatement();
+    int timeoutValue = stmt.getQueryTimeout();
+    assert( 0 == timeoutValue );
   }
 
-  //////////
-  // setQueryTimeout(...):
+  /**
+   * Test Invalid parameter by giving negative timeout
+   */
+  @Test ( expected = InvalidParameterSqlException.class )
+  public void testInvalidSetQueryTimeout() throws SQLException {
+    Statement stmt = connection.createStatement();
+    //Setting negative value
+    int valueToSet = -10;
+    if (0L == valueToSet) {
+      valueToSet--;
+    }
+    stmt.setQueryTimeout(valueToSet);
+  }
 
-  /** Tests that setQueryTimeout(...) accepts (redundantly) setting to
-   *  no-timeout mode. */
+  /**
+   * Test setting a valid timeout
+   */
   @Test
-  public void testSetQueryTimeoutAcceptsNotimeoutRequest() throws SQLException {
-    statement.setQueryTimeout( 0 );
+  public void testValidSetQueryTimeout() throws SQLException {
+    Statement stmt = connection.createStatement();
+    assert(stmt != null);
+    //Setting positive value
+    int valueToSet = new Random(System.currentTimeMillis()).nextInt(60);
+    if (0L == valueToSet) {
+      valueToSet++;
+    }
+    System.out.println("Setting timeout "+ valueToSet);
+    stmt.setQueryTimeout(valueToSet);
+    assert( valueToSet == stmt.getQueryTimeout() );
   }
 
-  /** Tests that setQueryTimeout(...) rejects setting a timeout. */
-  @Test( expected = SQLFeatureNotSupportedException.class )
-  public void testSetQueryTimeoutRejectsTimeoutRequest() throws SQLException {
+  /**
+   * Test setting timeout for a query that actually times out
+   */
+  @Test ( expected = SqlTimeoutException.class )
+  public void testTriggeredQueryTimeout() throws SQLException {
+    Statement stmt = connection.createStatement();
+    //Setting to a very low value (3sec)
+    int timeoutDuration = 3;
     try {
-      statement.setQueryTimeout( 1_000 );
+      stmt.setQueryTimeout(timeoutDuration);
+      System.out.println("Set a timeout of "+ stmt.getQueryTimeout() +" seconds");
+      ResultSet rs = stmt.executeQuery(SYS_VERSION_SQL);
+      //Pause briefly (a second beyond the timeout) before attempting to fetch rows
+      try {
+        Thread.sleep( (timeoutDuration + 1) * 1000L );
+      } catch (InterruptedException e) {/*DoNothing*/}
+      //Fetch rows
+      while (rs.next()) {
+        rs.getBytes(1);
+      }
+    } catch (SQLException sqlEx) {
+      if (sqlEx instanceof SqlTimeoutException) {
+        throw (SqlTimeoutException) sqlEx;
+      }
+      if (stmt.isClosed()) {
+        //The statement is assumed to be closed by timeout, since we didn't call it explicitly
+        throw new SqlTimeoutException(timeoutDuration);
+      }
     }
-    catch ( SQLFeatureNotSupportedException e ) {
-      // Check exception for some mention of query timeout:
-      assertThat( e.getMessage(), anyOf( containsString( "Timeout" ),
-                                         containsString( "timeout" ) ) );
-      throw e;
-    }
+    stmt.close();
   }
 
-  /** Tests that setQueryTimeout(...) rejects setting a timeout (different
-   *  value). */
-  @Test( expected = SQLFeatureNotSupportedException.class )
-  public void testSetQueryTimeoutRejectsTimeoutRequest2() throws SQLException {
-    statement.setQueryTimeout( Integer.MAX_VALUE / 2 );
-  }
-
-  @Test( expected = InvalidParameterSqlException.class )
-  public void testSetQueryTimeoutRejectsBadTimeoutValue() throws SQLException {
-    try {
-      statement.setQueryTimeout( -2 );
+  /**
+   * Test setting timeout that never gets triggered
+   */
+  @Test
+  public void testNonTriggeredQueryTimeout() throws SQLException {
+    Statement stmt = connection.createStatement();
+    stmt.setQueryTimeout(60);
+    stmt.executeQuery(SYS_VERSION_SQL);
+    ResultSet rs = stmt.getResultSet();
+    int rowCount = 0;
+    while (rs.next()) {
+      rs.getBytes(1);
+      rowCount++;
     }
-    catch ( InvalidParameterSqlException e ) {
-      // Check exception for some mention of parameter name or semantics:
-      assertThat( e.getMessage(), anyOf( containsString( "milliseconds" ),
-                                         containsString( "timeout" ),
-                                         containsString( "Timeout" ) ) );
-      throw e;
-    }
+    stmt.close();
+    assert( 1 == rowCount );
   }
-
 }

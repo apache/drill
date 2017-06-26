@@ -39,6 +39,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
@@ -79,6 +82,8 @@ class DrillConnectionImpl extends AvaticaConnection
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
+  //Timeout Execution Service
+  final ExecutorService timeoutTriggerExecutor;
   final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
 
@@ -166,7 +171,11 @@ class DrillConnectionImpl extends AvaticaConnection
       // toString() since getMessage() text doesn't always mention error:)
       throw new SQLException("Failure in connecting to Drill: " + e, e);
     }
+
+    //Manage Timeout Triggered Threads
+    this.timeoutTriggerExecutor = Executors.newCachedThreadPool();
   }
+
 
 
   @Override
@@ -207,6 +216,10 @@ class DrillConnectionImpl extends AvaticaConnection
   @Override
   public DrillClient getClient() {
     return client;
+  }
+
+  public ExecutorService getTimeoutTriggerService() {
+    return timeoutTriggerExecutor;
   }
 
   @Override
@@ -836,5 +849,23 @@ class DrillConnectionImpl extends AvaticaConnection
           "Shouldn't be seen in production code.");
       // Ignore the error and go with defaults
     }
+  }
+
+  @Override
+  public void close() throws SQLException {
+    //Closing TimeoutTrigger service
+    if (timeoutTriggerExecutor != null) {
+      timeoutTriggerExecutor.shutdownNow(); // Disable new tasks from being submitted & closing existing
+      try {
+        // Wait a while for existing tasks to terminate (1 seconds should be enough)
+        if (!timeoutTriggerExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
+          timeoutTriggerExecutor.shutdownNow(); // Cancel currently executing tasks
+        }
+      } catch (Exception e) {
+        logger.warn("Timeout threadpool was interrupted while cleaning up connection");
+      }
+    }
+    //Closing connection
+    super.close();
   }
 }

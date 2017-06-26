@@ -16,6 +16,7 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 
@@ -34,11 +35,11 @@ public interface DrillStatement extends Statement {
    *            if connection is closed
    */
   @Override
-  int getQueryTimeout() throws AlreadyClosedSqlException;
+  int getQueryTimeout() throws AlreadyClosedSqlException, SQLException;
 
   /**
    * <strong>Drill</strong>:
-   * Not supported (for non-zero timeout value).
+   * Supported (for non-zero timeout value).
    * <p>
    *   Normally, just throws {@link SQLFeatureNotSupportedException} unless
    *   request is trivially for no timeout (zero {@code milliseconds} value).
@@ -54,7 +55,8 @@ public interface DrillStatement extends Statement {
   void setQueryTimeout( int milliseconds )
       throws AlreadyClosedSqlException,
              JdbcApiSqlException,
-             SQLFeatureNotSupportedException;
+             SQLFeatureNotSupportedException,
+             SQLException;
 
   /**
    * {@inheritDoc}
@@ -65,4 +67,22 @@ public interface DrillStatement extends Statement {
   @Override
   boolean isClosed();
 
+  /**
+   * <p>
+   *   <strong>Drill</strong>: Identify if the statement has already timed out
+   * </p>
+   */
+  boolean isTimedOut();
+
+  /**
+   * <p>
+   *   <strong>Drill</strong>: Allows cancel due to timeout.
+   *       The duration in which the cancellation occurred is retrieved from {@link Statement#getQueryTimeout() }.
+   *       The statement, however, is not closed to allow access to most getter methods
+   * </p>
+   *
+   * @throws SqlTimeoutException  if Timeout occurred (recommended exception)
+   * @throws SQLException         Non-timeout related exceptions
+   */
+  void cancelDueToTimeout() throws SqlTimeoutException, SQLException;
 }
