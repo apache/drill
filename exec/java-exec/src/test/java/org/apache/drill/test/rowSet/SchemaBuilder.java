@@ -53,6 +53,47 @@ import org.apache.drill.exec.record.MaterializedField;
 public class SchemaBuilder {
 
   /**
+   * Build a column schema (AKA "materialized field") based on name and a
+   * variety of schema options. Every column needs a name and (minor) type,
+   * some may need a mode other than required, may need a width, may
+   * need scale and precision, and so on.
+   */
+
+  // TODO: Add map methods
+
+  public static class ColumnBuilder {
+    private final String name;
+    private final MajorType.Builder typeBuilder;
+
+    public ColumnBuilder(String name, MinorType type) {
+      this.name = name;
+      typeBuilder = MajorType.newBuilder()
+          .setMinorType(type)
+          .setMode(DataMode.REQUIRED);
+    }
+
+    public ColumnBuilder setMode(DataMode mode) {
+      typeBuilder.setMode(mode);
+      return this;
+    }
+
+    public ColumnBuilder setWidth(int width) {
+      typeBuilder.setPrecision(width);
+      return this;
+    }
+
+    public ColumnBuilder setScale(int scale, int precision) {
+      typeBuilder.setScale(scale);
+      typeBuilder.setPrecision(precision);
+      return this;
+    }
+
+    public MaterializedField build() {
+      return MaterializedField.create(name, typeBuilder.build());
+    }
+  }
+
+  /**
    * Internal structure for building a map. A map is just a schema,
    * but one that is part of a parent column.
    */
@@ -73,11 +114,7 @@ public class SchemaBuilder {
 
     @Override
     public SchemaBuilder buildMap() {
-      MaterializedField col = MaterializedField.create(memberName,
-          MajorType.newBuilder()
-            .setMinorType(MinorType.MAP)
-            .setMode(DataMode.REQUIRED)
-            .build());
+      MaterializedField col = columnSchema(memberName, MinorType.MAP, DataMode.REQUIRED);
       for (MaterializedField childCol : columns) {
         col.addChild(childCol);
       }
@@ -96,25 +133,66 @@ public class SchemaBuilder {
 
   public SchemaBuilder() { }
 
+  /**
+   * Create a new schema starting with the base schema. Allows appending
+   * additional columns to an additional schema.
+   */
+
+  public SchemaBuilder(BatchSchema baseSchema) {
+    for (MaterializedField field : baseSchema) {
+      add(field);
+    }
+  }
+
   public SchemaBuilder add(String pathName, MajorType type) {
-    MaterializedField col = MaterializedField.create(pathName, type);
+    return add(MaterializedField.create(pathName, type));
+  }
+
+  public SchemaBuilder add(MaterializedField col) {
     columns.add(col);
     return this;
   }
 
+  /**
+   * Create a column schema using the "basic three" properties of name, type and
+   * cardinality (AKA "data mode.") Use the {@link ColumnBuilder} for to set
+   * other schema attributes.
+   */
+
+  public static MaterializedField columnSchema(String pathName, MinorType type, DataMode mode) {
+    return MaterializedField.create(pathName,
+        MajorType.newBuilder()
+          .setMinorType(type)
+          .setMode(mode)
+          .build());
+  }
+
   public SchemaBuilder add(String pathName, MinorType type, DataMode mode) {
-    return add(pathName, MajorType.newBuilder()
-        .setMinorType(type)
-        .setMode(mode)
-        .build());
+    return add(columnSchema(pathName, type, mode));
   }
 
   public SchemaBuilder add(String pathName, MinorType type) {
     return add(pathName, type, DataMode.REQUIRED);
   }
 
+  public SchemaBuilder add(String pathName, MinorType type, int width) {
+    MaterializedField field = new SchemaBuilder.ColumnBuilder(pathName, type)
+        .setMode(DataMode.REQUIRED)
+        .setWidth(width)
+        .build();
+    return add(field);
+  }
+
   public SchemaBuilder addNullable(String pathName, MinorType type) {
     return add(pathName, type, DataMode.OPTIONAL);
+  }
+
+  public SchemaBuilder addNullable(String pathName, MinorType type, int width) {
+    MaterializedField field = new SchemaBuilder.ColumnBuilder(pathName, type)
+        .setMode(DataMode.OPTIONAL)
+        .setWidth(width)
+        .build();
+    return add(field);
   }
 
   public SchemaBuilder addArray(String pathName, MinorType type) {

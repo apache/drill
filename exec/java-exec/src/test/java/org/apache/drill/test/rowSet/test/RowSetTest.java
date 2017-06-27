@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
-import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
@@ -40,25 +40,11 @@ import org.apache.drill.test.rowSet.RowSetSchema;
 import org.apache.drill.test.rowSet.RowSetSchema.FlattenedSchema;
 import org.apache.drill.test.rowSet.RowSetSchema.PhysicalSchema;
 import org.apache.drill.test.rowSet.SchemaBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Splitter;
 
-public class RowSetTest {
-
-  private static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.standardFixture();
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-  }
+public class RowSetTest extends SubOperatorTest {
 
   /**
    * Test a simple physical schema with no maps.
@@ -105,6 +91,17 @@ public class RowSetTest {
     assertEquals("b", physical.column(2).field().getName());
   }
 
+  /**
+   * Validate that the actual column metadata is as expected by
+   * cross-checking: validate that the column at the index and
+   * the column at the column name are both correct.
+   *
+   * @param schema the schema for the row set
+   * @param index column index
+   * @param fullName expected column name
+   * @param type expected type
+   */
+
   public void crossCheck(TupleSchema schema, int index, String fullName, MinorType type) {
     String name = null;
     for (String part : Splitter.on(".").split(fullName)) {
@@ -115,6 +112,10 @@ public class RowSetTest {
     assertSame(schema.column(index), schema.column(fullName));
     assertEquals(type, schema.column(index).getType().getMinorType());
   }
+
+  /**
+   * Verify that a nested map schema works as expected.
+   */
 
   @Test
   public void testMapSchema() {
@@ -185,17 +186,13 @@ public class RowSetTest {
     assertEquals("a.e.f", eSchema.column(0).fullName());
   }
 
-  @Test
-  public void testScalarReaderWriter() {
-    testTinyIntRW();
-    testSmallIntRW();
-    testIntRW();
-    testLongRW();
-    testFloatRW();
-    testDoubleRW();
-  }
+  /**
+   * Verify that simple scalar (non-repeated) column readers
+   * and writers work as expected. This is for tiny ints.
+   */
 
-  private void testTinyIntRW() {
+  @Test
+  public void testTinyIntRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.TINYINT)
         .build();
@@ -204,18 +201,21 @@ public class RowSetTest {
         .add(Byte.MAX_VALUE)
         .add(Byte.MIN_VALUE)
         .build();
+    assertEquals(3, rs.rowCount());
     RowSetReader reader = rs.reader();
     assertTrue(reader.next());
     assertEquals(0, reader.column(0).getInt());
     assertTrue(reader.next());
     assertEquals(Byte.MAX_VALUE, reader.column(0).getInt());
+    assertEquals((int) Byte.MAX_VALUE, reader.column(0).getObject());
     assertTrue(reader.next());
     assertEquals(Byte.MIN_VALUE, reader.column(0).getInt());
     assertFalse(reader.next());
     rs.clear();
   }
 
-  private void testSmallIntRW() {
+  @Test
+  public void testSmallIntRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.SMALLINT)
         .build();
@@ -229,13 +229,15 @@ public class RowSetTest {
     assertEquals(0, reader.column(0).getInt());
     assertTrue(reader.next());
     assertEquals(Short.MAX_VALUE, reader.column(0).getInt());
+    assertEquals((int) Short.MAX_VALUE, reader.column(0).getObject());
     assertTrue(reader.next());
     assertEquals(Short.MIN_VALUE, reader.column(0).getInt());
     assertFalse(reader.next());
     rs.clear();
   }
 
-  private void testIntRW() {
+  @Test
+  public void testIntRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.INT)
         .build();
@@ -249,13 +251,15 @@ public class RowSetTest {
     assertEquals(0, reader.column(0).getInt());
     assertTrue(reader.next());
     assertEquals(Integer.MAX_VALUE, reader.column(0).getInt());
+    assertEquals(Integer.MAX_VALUE, reader.column(0).getObject());
     assertTrue(reader.next());
     assertEquals(Integer.MIN_VALUE, reader.column(0).getInt());
     assertFalse(reader.next());
     rs.clear();
   }
 
-  private void testLongRW() {
+  @Test
+  public void testLongRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.BIGINT)
         .build();
@@ -269,13 +273,15 @@ public class RowSetTest {
     assertEquals(0, reader.column(0).getLong());
     assertTrue(reader.next());
     assertEquals(Long.MAX_VALUE, reader.column(0).getLong());
+    assertEquals(Long.MAX_VALUE, reader.column(0).getObject());
     assertTrue(reader.next());
     assertEquals(Long.MIN_VALUE, reader.column(0).getLong());
     assertFalse(reader.next());
     rs.clear();
   }
 
-  private void testFloatRW() {
+  @Test
+  public void testFloatRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.FLOAT4)
         .build();
@@ -288,14 +294,16 @@ public class RowSetTest {
     assertTrue(reader.next());
     assertEquals(0, reader.column(0).getDouble(), 0.000001);
     assertTrue(reader.next());
-    assertEquals(Float.MAX_VALUE, reader.column(0).getDouble(), 0.000001);
+    assertEquals((double) Float.MAX_VALUE, reader.column(0).getDouble(), 0.000001);
+    assertEquals((double) Float.MAX_VALUE, (double) reader.column(0).getObject(), 0.000001);
     assertTrue(reader.next());
-    assertEquals(Float.MIN_VALUE, reader.column(0).getDouble(), 0.000001);
+    assertEquals((double) Float.MIN_VALUE, reader.column(0).getDouble(), 0.000001);
     assertFalse(reader.next());
     rs.clear();
   }
 
-  private void testDoubleRW() {
+  @Test
+  public void testDoubleRW() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("col", MinorType.FLOAT8)
         .build();
@@ -309,11 +317,36 @@ public class RowSetTest {
     assertEquals(0, reader.column(0).getDouble(), 0.000001);
     assertTrue(reader.next());
     assertEquals(Double.MAX_VALUE, reader.column(0).getDouble(), 0.000001);
+    assertEquals(Double.MAX_VALUE, (double) reader.column(0).getObject(), 0.000001);
     assertTrue(reader.next());
     assertEquals(Double.MIN_VALUE, reader.column(0).getDouble(), 0.000001);
     assertFalse(reader.next());
     rs.clear();
   }
+
+  @Test
+  public void testStringRW() {
+    BatchSchema batchSchema = new SchemaBuilder()
+        .add("col", MinorType.VARCHAR)
+        .build();
+    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .add("")
+        .add("abcd")
+        .build();
+    RowSetReader reader = rs.reader();
+    assertTrue(reader.next());
+    assertEquals("", reader.column(0).getString());
+    assertTrue(reader.next());
+    assertEquals("abcd", reader.column(0).getString());
+    assertEquals("abcd", reader.column(0).getObject());
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  /**
+   * Test writing to and reading from a row set with nested maps.
+   * Map fields are flattened into a logical schema.
+   */
 
   @Test
   public void testMap() {
@@ -343,8 +376,13 @@ public class RowSetTest {
     rs.clear();
   }
 
+  /**
+   * Test an array of ints (as an example fixed-width type)
+   * at the top level of a schema.
+   */
+
   @Test
-  public void TestTopScalarArray() {
+  public void TestTopFixedWidthArray() {
     BatchSchema batchSchema = new SchemaBuilder()
         .add("c", MinorType.INT)
         .addArray("a", MinorType.INT)
@@ -394,7 +432,7 @@ public class RowSetTest {
       .build();
 
     new RowSetComparison(rs1)
-      .verifyAndClear(rs2);
+      .verifyAndClearAll(rs2);
   }
 
 }

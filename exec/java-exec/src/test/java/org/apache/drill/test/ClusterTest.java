@@ -118,5 +118,4 @@ public class ClusterTest extends DrillTest {
   public QueryBuilder queryBuilder( ) {
     return client.queryBuilder();
   }
-
 }

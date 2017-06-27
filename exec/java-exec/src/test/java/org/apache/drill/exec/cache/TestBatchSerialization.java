@@ -137,7 +137,7 @@ public class TestBatchSerialization extends DrillTest {
 
     assertTrue(origSize >= result.size());
     new RowSetComparison(expected)
-      .verifyAndClear(result);
+      .verifyAndClearAll(result);
     outFile.delete();
   }
 

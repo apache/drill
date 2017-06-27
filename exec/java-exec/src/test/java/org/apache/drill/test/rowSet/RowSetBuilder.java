@@ -56,11 +56,44 @@ public final class RowSetBuilder {
    * <tt>add(10, new int[] {100, 200});</tt><br>
    * @param values column values in column index order
    * @return this builder
+   * @see {@link #addSingleCol(Object)} to create a row of a single column when
+   * the value to <tt>add()</tt> is ambiguous
    */
 
   public RowSetBuilder add(Object...values) {
     writer.setRow(values);
     return this;
+  }
+
+  /**
+   * The {@link #add(Object...)} method uses Java variable-length arguments to
+   * pass a row of values. But, when the row consists of a single array, Java
+   * gets confused: is that an array for variable-arguments or is it the value
+   * of the first argument? This method clearly states that the single value
+   * (including an array) is meant to be the value of the first (and only)
+   * column.
+   * <p>
+   * Examples:<code><pre>
+   *     RowSetBuilder twoColsBuilder = ...
+   *     // Fine, second item is an array of strings for a repeated Varchar
+   *     // column.
+   *     twoColsBuilder.add("First", new String[] {"a", "b", "c"});
+   *     ...
+   *     RowSetBuilder oneColBuilder = ...
+   *     // Ambiguous: is this a varargs array of three items?
+   *     // That is how Java will perceive it.
+   *     oneColBuilder.add(new String[] {"a", "b", "c"});
+   *     // Unambiguous: this is a single column value for the
+   *     // repeated Varchar column.
+   *     oneColBuilder.addSingleCol(new String[] {"a", "b", "c"});
+   * </pre></code>
+   * @param value value of the first column, which may be an array for a
+   * repeated column
+   * @return this builder
+   */
+
+  public RowSetBuilder addSingleCol(Object value) {
+    return add(new Object[] { value });
   }
 
   /**
