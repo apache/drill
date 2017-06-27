@@ -85,7 +85,7 @@ public class TestSorter extends DrillTest {
     sorter.sortBatch(rowSet.container(), rowSet.getSv2());
 
     new RowSetComparison(expected)
-        .verifyAndClear(rowSet);
+        .verifyAndClearAll(rowSet);
     sorter.close();
   }
 
@@ -219,16 +219,12 @@ public class TestSorter extends DrillTest {
       DataItem expected[] = Arrays.copyOf(data, data.length);
       doSort(expected);
       RowSet expectedRows = makeDataSet(actual.allocator(), actual.schema().batch(), expected);
-//      System.out.println("Expected:");
-//      expectedRows.print();
-//      System.out.println("Actual:");
-//      actual.print();
       doVerify(expected, expectedRows, actual);
     }
 
     protected void doVerify(DataItem[] expected, RowSet expectedRows, RowSet actual) {
       new RowSetComparison(expectedRows)
-            .verifyAndClear(actual);
+            .verifyAndClearAll(actual);
     }
 
     protected abstract void doSort(DataItem[] expected);
@@ -300,7 +296,7 @@ public class TestSorter extends DrillTest {
             .offset(offset)
             .span(nullCount)
             .withMask(true, false)
-            .verifyAndClear(actual);
+            .verifyAndClearAll(actual);
     }
   }
 
@@ -370,7 +366,7 @@ public class TestSorter extends DrillTest {
         int mo = rand.nextInt(12);
         int yr = rand.nextInt(10);
         Period period = makePeriod(yr, mo, day, hr, min, sec, ms);
-         builder.add(period);
+        builder.add(period);
       }
       return builder.build();
     }
@@ -385,7 +381,6 @@ public class TestSorter extends DrillTest {
       long prevMs = 0;
       while (reader.next()) {
         Period period = reader.column(0).getPeriod().normalizedStandard();
-//        System.out.println(period);
         int years = period.getYears();
         assertTrue(prevYears <= years);
         if (prevYears != years) {

@@ -150,7 +150,7 @@ public class TestCsv extends ClusterTest {
         .add("10", "foo", "bar")
         .build();
     new RowSetComparison(expected)
-      .verifyAndClear(actual);
+      .verifyAndClearAll(actual);
   }
 
   private String makeStatement(String fileName) {
