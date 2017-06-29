@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,8 +43,10 @@ import org.apache.drill.exec.record.RecordBatch;
  */
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-public class Cast${type.from}${type.to} implements DrillSimpleFunc{
+@FunctionTemplate(name = "cast${type.to?upper_case}",
+                  scope = FunctionTemplate.FunctionScope.SIMPLE,
+                  nulls = NullHandling.NULL_IF_NULL)
+public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
@@ -53,18 +55,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   public void eval() {
     <#if (type.from.startsWith("Float") && type.to.endsWith("Int"))>
-    boolean sign = (in.value < 0);
-    in.value = java.lang.Math.abs(in.value);
     ${type.native} fractional = in.value % 1;
     int digit = ((int) (fractional * 10));
     int carry = 0;
-    if (digit > 4) {
-      carry = 1;
+    if (java.lang.Math.abs(digit) > 4) {
+      carry = (int) java.lang.Math.signum(digit);
     }
-    out.value = ((${type.explicit}) in.value) + carry;
-    if (sign == true) {
-      out.value *= -1;
-    }
+    out.value = (${type.explicit}) (in.value + carry);
     <#elseif type.explicit??>
     out.value = (${type.explicit}) in.value;
     <#else>
