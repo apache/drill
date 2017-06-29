@@ -119,7 +119,9 @@ public class VarLenBinaryReader {
     ArrayList<Future<Integer>> futures = Lists.newArrayList();
     for (VarLengthColumn<?> columnReader : columns) {
       Future<Integer> f = columnReader.readRecordsAsync(columnReader.pageReader.valuesReadyToRead);
-      futures.add(f);
+      if (f != null) {
+        futures.add(f);
+      }
     }
     Exception exception = null;
     for(Future<Integer> f: futures){
