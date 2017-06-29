@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,6 +33,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -50,8 +51,8 @@ public class ShowFileHandler extends DefaultSqlHandler {
 
     SqlIdentifier from = ((SqlShowFiles) sqlNode).getDb();
 
-    DrillFileSystem fs = null;
-    String defaultLocation = null;
+    DrillFileSystem fs;
+    String defaultLocation;
     String fromDir = "./";
 
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
@@ -93,9 +94,9 @@ public class ShowFileHandler extends DefaultSqlHandler {
 
     List<ShowFilesCommandResult> rows = new ArrayList<>();
 
-    for (FileStatus fileStatus : fs.list(false, new Path(defaultLocation, fromDir))) {
-      ShowFilesCommandResult result = new ShowFilesCommandResult(fileStatus.getPath().getName(), fileStatus.isDir(),
-                                                                 !fileStatus.isDir(), fileStatus.getLen(),
+    for (FileStatus fileStatus : FileSystemUtil.listAll(fs, new Path(defaultLocation, fromDir), false)) {
+      ShowFilesCommandResult result = new ShowFilesCommandResult(fileStatus.getPath().getName(), fileStatus.isDirectory(),
+                                                                 fileStatus.isFile(), fileStatus.getLen(),
                                                                  fileStatus.getOwner(), fileStatus.getGroup(),
                                                                  fileStatus.getPermission().toString(),
                                                                  fileStatus.getAccessTime(), fileStatus.getModificationTime());

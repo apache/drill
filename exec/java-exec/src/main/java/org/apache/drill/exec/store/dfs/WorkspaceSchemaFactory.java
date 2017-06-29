@@ -64,6 +64,7 @@ import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -404,7 +405,7 @@ public class WorkspaceSchemaFactory {
 
       List<FileStatus> fileStatuses;
       try {
-        fileStatuses = getFS().list(false, new Path(getDefaultLocation(), table));
+        fileStatuses = DrillFileSystemUtil.listDirectories(getFS(), new Path(getDefaultLocation(), table), false);
       } catch (IOException e) {
         throw new PartitionNotFoundException("Error finding partitions for table " + table, e);
       }
@@ -639,12 +640,12 @@ public class WorkspaceSchemaFactory {
     }
 
     /**
-     * Check if the table contains homogenenous files that can be read by Drill. Eg: parquet, json csv etc.
+     * Check if the table contains homogeneous files that can be read by Drill. Eg: parquet, json csv etc.
      * However if it contains more than one of these formats or a totally different file format that Drill cannot
      * understand then we will raise an exception.
-     * @param tableName - name of the table to be checked for homogeneous property
-     * @return
-     * @throws IOException
+     * @param tableName name of the table to be checked for homogeneous property
+     * @return true if table contains homogeneous files, false otherwise
+     * @throws IOException is case of problems accessing table files
      */
     private boolean isHomogeneous(String tableName) throws IOException {
       FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), tableName);
@@ -663,7 +664,7 @@ public class WorkspaceSchemaFactory {
       while (!listOfFiles.isEmpty()) {
         FileStatus currentFile = listOfFiles.poll();
         if (currentFile.isDirectory()) {
-          listOfFiles.addAll(fs.list(true, currentFile.getPath()));
+          listOfFiles.addAll(DrillFileSystemUtil.listFiles(fs, currentFile.getPath(), true));
         } else {
           if (matcher != null) {
             if (!matcher.isFileReadable(fs, currentFile)) {
@@ -709,7 +710,7 @@ public class WorkspaceSchemaFactory {
         long time =  (System.currentTimeMillis()/1000);
         Long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
         Long p2 = r.nextLong();
-        final String fileNameDelimiter = DrillFileSystem.HIDDEN_FILE_PREFIX;
+        final String fileNameDelimiter = DrillFileSystem.UNDERSCORE_PREFIX;
         String[] pathSplit = table.split(Path.SEPARATOR);
         /*
          * Builds the string for the renamed table
@@ -718,7 +719,7 @@ public class WorkspaceSchemaFactory {
          * separated by underscores
          */
         tableRenameBuilder
-            .append(DrillFileSystem.HIDDEN_FILE_PREFIX)
+            .append(DrillFileSystem.UNDERSCORE_PREFIX)
             .append(pathSplit[pathSplit.length - 1])
             .append(fileNameDelimiter)
             .append(p1.toString())

@@ -57,8 +57,8 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ImplicitColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.dfs.MetadataContext.PruneStatus;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
@@ -743,7 +743,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       } else {
         final List<FileStatus> fileStatuses = Lists.newArrayList();
         for (ReadEntryWithPath entry : entries) {
-          getFiles(entry.getPath(), fileStatuses);
+          fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, Path.getPathWithoutSchemeAndAuthority(new Path(entry.getPath())), true));
         }
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses, formatConfig);
       }
@@ -855,18 +855,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     return this.endpointAffinities;
-  }
-
-  private void getFiles(String path, List<FileStatus> fileStatuses) throws IOException {
-    Path p = Path.getPathWithoutSchemeAndAuthority(new Path(path));
-    FileStatus fileStatus = fs.getFileStatus(p);
-    if (fileStatus.isDirectory()) {
-      for (FileStatus f : fs.listStatus(p, new DrillPathFilter())) {
-        getFiles(f.getPath().toString(), fileStatuses);
-      }
-    } else {
-      fileStatuses.add(fileStatus);
-    }
   }
 
   @Override

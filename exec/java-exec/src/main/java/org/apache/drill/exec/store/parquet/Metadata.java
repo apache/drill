@@ -31,7 +31,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.TimedRunnable;
-import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.BlockLocation;
@@ -179,7 +179,7 @@ public class Metadata {
 
     final List<FileStatus> childFiles = Lists.newArrayList();
 
-    for (final FileStatus file : fs.listStatus(p, new DrillPathFilter())) {
+    for (final FileStatus file : DrillFileSystemUtil.listAll(fs, p, false)) {
       if (file.isDirectory()) {
         ParquetTableMetadata_v3 subTableMetadata = (createMetaFilesRecursively(file.getPath().toString())).getLeft();
         metaDataList.addAll(subTableMetadata.files);
@@ -233,17 +233,22 @@ public class Metadata {
   }
 
   /**
-   * Get the parquet metadata for the parquet files in a directory
+   * Get the parquet metadata for the parquet files in a directory.
    *
    * @param path the path of the directory
-   * @return
-   * @throws IOException
+   * @return metadata object for an entire parquet directory structure
+   * @throws IOException in case of problems during accessing files
    */
   private ParquetTableMetadata_v3 getParquetTableMetadata(String path) throws IOException {
     Path p = new Path(path);
     FileStatus fileStatus = fs.getFileStatus(p);
     final Stopwatch watch = Stopwatch.createStarted();
-    List<FileStatus> fileStatuses = getFileStatuses(fileStatus);
+    List<FileStatus> fileStatuses = new ArrayList<>();
+    if (fileStatus.isFile()) {
+      fileStatuses.add(fileStatus);
+    } else {
+      fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, p, true));
+    }
     logger.info("Took {} ms to get file statuses", watch.elapsed(TimeUnit.MILLISECONDS));
     watch.reset();
     watch.start();
@@ -287,25 +292,6 @@ public class Metadata {
     List<ParquetFileMetadata_v3> metaDataList = Lists.newArrayList();
     metaDataList.addAll(TimedRunnable.run("Fetch parquet metadata", logger, gatherers, 16));
     return metaDataList;
-  }
-
-  /**
-   * Recursively get a list of files
-   *
-   * @param fileStatus
-   * @return
-   * @throws IOException
-   */
-  private List<FileStatus> getFileStatuses(FileStatus fileStatus) throws IOException {
-    List<FileStatus> statuses = Lists.newArrayList();
-    if (fileStatus.isDirectory()) {
-      for (FileStatus child : fs.listStatus(fileStatus.getPath(), new DrillPathFilter())) {
-        statuses.addAll(getFileStatuses(child));
-      }
-    } else {
-      statuses.add(fileStatus);
-    }
-    return statuses;
   }
 
   /**
