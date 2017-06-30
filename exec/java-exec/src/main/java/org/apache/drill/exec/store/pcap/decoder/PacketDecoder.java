@@ -22,9 +22,9 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.apache.drill.exec.store.pcap.Utils.getInt;
-import static org.apache.drill.exec.store.pcap.Utils.getIntFileOrder;
-import static org.apache.drill.exec.store.pcap.Utils.getShortFileOrder;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getInt;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getIntFileOrder;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getShortFileOrder;
 
 public class PacketDecoder {
   //  typedef struct pcap_hdr_s {

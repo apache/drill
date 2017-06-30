@@ -19,8 +19,15 @@ package org.apache.drill.exec.store.pcap;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Shorts;
 
-public class Utils {
+public class PcapFormatUtils {
 
+  /**
+   *
+   * @param byteOrder true for forward file order, false fore revers file order
+   * @param buf byte buffer
+   * @param offset buffer offset
+   * @return integer value of specific bytes from buffer
+   */
   public static int getIntFileOrder(boolean byteOrder, final byte[] buf, final int offset) {
     if (byteOrder) {
       return Ints.fromBytes(buf[offset], buf[offset + 1], buf[offset + 2], buf[offset + 3]);
@@ -29,7 +36,14 @@ public class Utils {
     }
   }
 
-  public static int getShortFileOrder(boolean byteOrder, final byte[] buf, @SuppressWarnings("SameParameterValue") final int offset) {
+  /**
+   *
+   * @param byteOrder true for forward file order, false fore revers file order
+   * @param buf byte buffer
+   * @param offset buffer offset
+   * @return short value as int of specific bytes from buffer
+   */
+  public static int getShortFileOrder(boolean byteOrder, final byte[] buf, final int offset) {
     if (byteOrder) {
       return Shorts.fromBytes(buf[offset], buf[offset + 1]);
     } else {

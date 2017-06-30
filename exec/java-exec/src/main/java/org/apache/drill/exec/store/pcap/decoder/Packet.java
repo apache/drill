@@ -24,11 +24,11 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import static org.apache.drill.exec.store.pcap.Utils.convertInt;
-import static org.apache.drill.exec.store.pcap.Utils.convertShort;
-import static org.apache.drill.exec.store.pcap.Utils.getByte;
-import static org.apache.drill.exec.store.pcap.Utils.getIntFileOrder;
-import static org.apache.drill.exec.store.pcap.Utils.getShort;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.convertInt;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.convertShort;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getByte;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getIntFileOrder;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getShort;
 
 public class Packet {
   // pcap header

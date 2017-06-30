@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.drill.exec.store.pcap.Utils.parseBytesToASCII;
+import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
 public class PcapRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(PcapRecordReader.class);
