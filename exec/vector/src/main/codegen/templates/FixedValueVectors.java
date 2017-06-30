@@ -64,6 +64,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    * and stay below the maximum vector size limit and/or stay below
    * the maximum row count. This is the limit enforced when the
    * vector is used to hold scalar (required or nullable) values.
+   * <p>
+   * Note: <tt>MAX_ROW_COUNT</tt> is defined in the parent <tt>ValueVector</tt>
+   * class as the maximum number of rows in a record batch (64K). Use this
+   * in place of the <tt>Character.MAX_SIZE</tt> value previously used.
    */
 
   public static final int MAX_SCALAR_COUNT = Math.min(MAX_ROW_COUNT, MAX_VALUE_COUNT);

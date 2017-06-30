@@ -25,6 +25,13 @@ public class VectorUtils {
    */
 
   private static final int ABSOLUTE_MAX_SIZE = 16 * 1024 * 1024;
+
+  /**
+   * Minimum size selected to prevent pathological performance if vectors
+   * are limited to an unusably small size. This limit is a judgment call,
+   * not based on any known limits.
+   */
+
   private static final int ABSOLUTE_MIN_SIZE = 16 * 1024;
 
   private VectorUtils() { }

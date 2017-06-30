@@ -765,6 +765,9 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major = "VarLen">lastSet = -1;</#if>
     }
 
+    // For nullable vectors, exchanging buffers (done elsewhere)
+    // requires also exchanging mutator state (done here.)
+
     @Override
     public void exchange(ValueVector.Mutator other) {
       final Mutator target = (Mutator) other;
