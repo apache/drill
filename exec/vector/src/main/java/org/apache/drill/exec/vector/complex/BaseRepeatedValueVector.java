@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -209,7 +209,6 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     vector = v;
   }
 
-
   @Override
   public int getAllocatedByteCount() {
     return offsets.getAllocatedByteCount() + vector.getAllocatedByteCount();
@@ -218,6 +217,13 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   @Override
   public int getPayloadByteCount() {
     return offsets.getPayloadByteCount() + vector.getPayloadByteCount();
+  }
+
+  @Override
+  public void exchange(ValueVector other) {
+    BaseRepeatedValueVector target = (BaseRepeatedValueVector) other;
+    vector.exchange(target.vector);
+    offsets.exchange(target.offsets);
   }
 
   public abstract class BaseRepeatedAccessor extends BaseValueVector.BaseAccessor implements RepeatedAccessor {
@@ -257,6 +263,14 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       }
       offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
       setValueCount(index+1);
+    }
+
+    public boolean startNewValueBounded(int index) {
+      if (index >= MAX_ROW_COUNT) {
+        return false;
+      }
+      startNewValue(index);
+      return true;
     }
 
     @Override

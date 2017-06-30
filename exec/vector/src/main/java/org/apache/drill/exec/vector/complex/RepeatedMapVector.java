@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -390,7 +390,6 @@ public class RepeatedMapVector extends AbstractMapVector
     }
   }
 
-
   transient private RepeatedMapTransferPair ephPair;
 
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
@@ -398,6 +397,11 @@ public class RepeatedMapVector extends AbstractMapVector
       ephPair = (RepeatedMapTransferPair) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
+  }
+
+  @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedMapVector) from);
   }
 
   @Override
@@ -411,13 +415,19 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
+  public void exchange(ValueVector other) {
+    // Exchange is used for look-ahead writers, but writers manage
+    // map member vectors directly.
+    throw new UnsupportedOperationException("Exchange() not supported for maps");
+  }
+
+  @Override
   public DrillBuf[] getBuffers(boolean clear) {
     //final int expectedBufferSize = getBufferSize();
     //final int actualBufferSize = super.getBufferSize();
     //Preconditions.checkArgument(expectedBufferSize == actualBufferSize + offsets.getBufferSize());
     return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
   }
-
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
@@ -572,6 +582,9 @@ public class RepeatedMapVector extends AbstractMapVector
       offsets.getMutator().setSafe(index + 1, prevEnd + 1);
       return prevEnd;
     }
+
+    @Override
+    public void exchange(ValueVector.Mutator other) { }
   }
 
   @Override

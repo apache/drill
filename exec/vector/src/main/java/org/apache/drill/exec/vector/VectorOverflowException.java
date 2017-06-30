@@ -17,18 +17,14 @@
  */
 package org.apache.drill.exec.vector;
 
-
-public interface FixedWidthVector extends ValueVector {
-
-  /**
-   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
-   *
-   * @param valueCount   Number of values in the vector.
-   */
-  void allocateNew(int valueCount);
-
 /**
- * Zero out the underlying buffer backing this vector.
+ * Indicates that an attempt to write to a vector overflowed the vector
+ * bounds: either the limit on values or the size of the buffer backing
+ * the vector. This is an expected exception: code must catch it and
+ * properly handle the partially-written, incomplete last row.
  */
-  void zeroVector();
+
+@SuppressWarnings("serial")
+public class VectorOverflowException extends Exception {
+
 }
