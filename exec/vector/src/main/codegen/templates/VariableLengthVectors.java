@@ -778,6 +778,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      * to be copied forward
      * @param index the current write position filling occurs up to,
      * but not including, this position
+     * @throws VectorOverflowException if the item was written, false if the index would
+     * overfill the vector
      */
 
     public void fillEmptiesBounded(int lastWrite, int index)

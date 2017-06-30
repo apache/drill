@@ -404,7 +404,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
      *
      * @param   index   position of the value
      * @return  value of the element, if not null
-     * @throws  NullValueException if the value is null
+     * @throws  IllegalStateException if the value is null
      */
     public <#if type.major == "VarLen">byte[]<#else>${minor.javaType!type.javaType}</#if> get(int index) {
       if (isNull(index)) {

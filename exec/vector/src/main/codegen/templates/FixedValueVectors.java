@@ -157,7 +157,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    * Note that the maximum number of values a vector can allocate is Integer.MAX_VALUE / value width.
    *
    * @param valueCount
-   * @throws org.apache.drill.exec.memory.OutOfMemoryException if it can't allocate the new buffer
+   * @throws OutOfMemoryException if it can't allocate the new buffer
    */
   @Override
   public void allocateNew(final int valueCount) {
@@ -637,7 +637,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      * Set the value of a required or nullable vector. Enforces the value
      * and size limits.
      * @param index item to write
-     * @return true if the item was written, false if the index would
+     * @param value value to set
+     * @throws VectorOverflowException if the item was written, false if the index would
      * overfill the vector
      */
 
@@ -651,7 +652,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     /**
      * Set the value of a repeated vector. Enforces only the size limit.
      * @param index item to write
-     * @return true if the item was written, false if the index would
+     * @param value value to set
+     * @throws VectorOverflowException if the item was written, false if the index would
      * overfill the vector
      */
 
@@ -899,7 +901,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      * Set the value of a required or nullable vector. Enforces the value
      * and size limits.
      * @param index item to write
-     * @return true if the item was written, false if the index would
+     * @param value value to set
+     * @throws VectorOverflowException if the item was written, false if the index would
      * overfill the vector
      */
 
@@ -913,7 +916,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     /**
      * Set the value of a repeated vector. Enforces only the size limit.
      * @param index item to write
-     * @return true if the item was written, false if the index would
+     * @param value value to set
+     * @throws VectorOverflowException if the item was written, false if the index would
      * overfill the vector
      */
 
@@ -1011,6 +1015,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      * to be copied forward
      * @param index the current write position filling occurs up to,
      * but not including, this position
+     * @throws VectorOverflowException if the item was written, false if the index would
+     * overfill the vector
      */
 
     public void fillEmptiesBounded(int lastWrite, int index)
