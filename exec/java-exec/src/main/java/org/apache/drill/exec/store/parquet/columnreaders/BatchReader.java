@@ -68,7 +68,9 @@ public abstract class BatchReader {
     ArrayList<Future<Long>> futures = Lists.newArrayList();
     for (ColumnReader<?> crs : readState.getColumnReaders()) {
       Future<Long> f = crs.processPagesAsync(recordsToRead);
-      futures.add(f);
+      if (f != null) {
+        futures.add(f);
+      }
     }
     Exception exception = null;
     for(Future<Long> f: futures){
