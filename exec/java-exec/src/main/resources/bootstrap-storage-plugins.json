@@ -41,6 +41,9 @@
           type: "json",
           extensions: [ "json" ]
         },
+        "pcap" : {
+          type: "pcap"
+        },
         "avro" : {
           type: "avro"
         },
