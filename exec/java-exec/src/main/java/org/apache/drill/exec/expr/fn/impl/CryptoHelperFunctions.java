@@ -56,12 +56,7 @@ public class CryptoHelperFunctions {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-            byte[] message = "hello world".getBytes("UTF-8");
-            String encoded = DatatypeConverter.printBase64Binary(message);
-            byte[] decoded = DatatypeConverter.parseBase64Binary(encoded);
-
             return DatatypeConverter.printBase64Binary(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
-            //return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
         }
         catch (Exception e)
         {
@@ -77,8 +72,6 @@ public class CryptoHelperFunctions {
             setKey(secret);
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-
-            //return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
             return new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(strToDecrypt)));
 
         }
