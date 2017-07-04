@@ -36,7 +36,7 @@ public class CryptoFunctions {
   }
 
   @FunctionTemplate(name = "md5", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class md5Function implements DrillSimpleFunc {
+  public static class MD5Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder rawInput;
@@ -85,7 +85,7 @@ public class CryptoFunctions {
 
 
   @FunctionTemplate(names = {"sha", "sha1"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class sha1Function implements DrillSimpleFunc {
+  public static class SHA1Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder rawInput;
@@ -117,7 +117,7 @@ public class CryptoFunctions {
   }
 
   @FunctionTemplate(names = {"sha256", "sha2"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class sha256Function implements DrillSimpleFunc {
+  public static class SHA256Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder rawInput;
@@ -150,7 +150,7 @@ public class CryptoFunctions {
   }
 
   @FunctionTemplate(name = "sha384", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class sha384Function implements DrillSimpleFunc {
+  public static class SHA384Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder rawInput;
@@ -182,7 +182,7 @@ public class CryptoFunctions {
   }
 
   @FunctionTemplate(name = "sha512", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class sha512Function implements DrillSimpleFunc {
+  public static class SHA512Function implements DrillSimpleFunc {
 
     @Param
     VarCharHolder rawInput;
