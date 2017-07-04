@@ -19,9 +19,12 @@ package org.apache.drill.exec.vector.accessor.impl;
 
 import java.math.BigDecimal;
 
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.joda.time.Period;
 
 /**
@@ -31,57 +34,73 @@ import org.joda.time.Period;
  * method(s).
  */
 
-public abstract class AbstractColumnWriter extends AbstractColumnAccessor implements ColumnWriter {
+public abstract class AbstractColumnWriter implements ColumnWriter {
+
+  protected ColumnWriterIndex vectorIndex;
+  protected int lastWriteIndex;
+
+  public abstract void bind(ColumnWriterIndex rowIndex, ValueVector vector);
+
+  protected void bind(ColumnWriterIndex rowIndex) {
+    vectorIndex = rowIndex;
+  }
+
+  public ColumnWriterIndex vectorIndex() { return vectorIndex; }
 
   public void start() { }
+  public void reset() { lastWriteIndex = -1; }
+  public void reset(int index) { lastWriteIndex = index - 1; }
+  public int lastWriteIndex() { return lastWriteIndex; }
+
+  public abstract void finishBatch() throws VectorOverflowException;
 
   @Override
-  public void setNull() {
-    throw new UnsupportedOperationException();
+  public void setNull() throws VectorOverflowException {
+    throw new UnsupportedOperationException("setNull");
   }
 
   @Override
-  public void setInt(int value) {
-    throw new UnsupportedOperationException();
+  public void setInt(int value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setInt");
   }
 
   @Override
-  public void setLong(long value) {
-    throw new UnsupportedOperationException();
+  public void setLong(long value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setLong");
   }
 
   @Override
-  public void setDouble(double value) {
-    throw new UnsupportedOperationException();
+  public void setDouble(double value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setDouble");
   }
 
   @Override
-  public void setString(String value) {
-    throw new UnsupportedOperationException();
+  public void setString(String value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setString");
   }
 
   @Override
-  public void setBytes(byte[] value) {
-    throw new UnsupportedOperationException();
+  public void setBytes(byte[] value, int len) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setBytes");
   }
 
   @Override
-  public void setDecimal(BigDecimal value) {
-    throw new UnsupportedOperationException();
+  public void setDecimal(BigDecimal value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setDecimal");
   }
 
   @Override
-  public void setPeriod(Period value) {
-    throw new UnsupportedOperationException();
+  public void setPeriod(Period value) throws VectorOverflowException {
+    throw new UnsupportedOperationException("setPeriod");
   }
 
   @Override
   public TupleWriter map() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("map");
   }
 
   @Override
   public ArrayWriter array() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("array");
   }
 }

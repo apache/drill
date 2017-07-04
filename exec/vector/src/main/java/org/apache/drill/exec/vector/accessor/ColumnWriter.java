@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import org.apache.drill.exec.vector.VectorOverflowException;
+
 /**
  * Defines a writer to set values for value vectors using
  * a simple, uniform interface. Vector values are mapped to
@@ -39,7 +41,8 @@ package org.apache.drill.exec.vector.accessor;
  */
 
 public interface ColumnWriter extends ColumnAccessor, ScalarWriter {
-  void setNull();
+
+  void setNull() throws VectorOverflowException;
   TupleWriter map();
   ArrayWriter array();
 }

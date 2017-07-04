@@ -19,11 +19,13 @@
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/accessor/ColumnAccessors.java" />
 <#include "/@includes/license.ftl" />
-<#macro getType label>
+<#macro getType drillType label>
     @Override
     public ValueType valueType() {
   <#if label == "Int">
       return ValueType.INTEGER;
+  <#elseif drillType == "VarChar" || drillType == "Var16Char">
+      return ValueType.STRING;
   <#else>
       return ValueType.${label?upper_case};
   </#if>
@@ -36,7 +38,7 @@
     private ${prefix}${drillType}Vector.Accessor accessor;
 
     @Override
-    public void bind(RowIndex vectorIndex, ValueVector vector) {
+    public void bind(ColumnReaderIndex vectorIndex, ValueVector vector) {
       bind(vectorIndex);
   <#if drillType = "Decimal9" || drillType == "Decimal18">
       field = vector.getField();
@@ -46,7 +48,7 @@
 
   <#if drillType = "Decimal9" || drillType == "Decimal18">
     @Override
-    public void bind(RowIndex vectorIndex, MaterializedField field, VectorAccessor va) {
+    public void bind(ColumnReaderIndex vectorIndex, MaterializedField field, VectorAccessor va) {
       bind(vectorIndex, field, va);
       this.field = field;
     }
@@ -64,29 +66,40 @@
     @Override
     public ${accessorType} get${label}(<#if isArray>int index</#if>) {
   <#if isArray>
-    <#assign index=", index"/>
-    <#assign getObject="getSingleObject">
+    <#assign indexVar = "index"/>
+    <#assign index = ", " + indexVar/>
+    <#assign getObject = "getSingleObject"/>
   <#else>
-    <#assign index=""/>
-    <#assign getObject="getObject">
+    <#assign indexVar = ""/>
+    <#assign index = ""/>
+    <#assign getObject =" getObject"/>
   </#if>
-  <#if drillType == "VarChar">
-      return new String(accessor().get(vectorIndex.index()${index}), Charsets.UTF_8);
-  <#elseif drillType == "Var16Char">
-      return new String(accessor().get(vectorIndex.index()${index}), Charsets.UTF_16);
-  <#elseif drillType == "VarBinary">
-      return accessor().get(vectorIndex.index()${index});
+  <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
+      return accessor().get(vectorIndex.vectorIndex()${index});
   <#elseif drillType == "Decimal9" || drillType == "Decimal18">
       return DecimalUtility.getBigDecimalFromPrimitiveTypes(
-                accessor().get(vectorIndex.index()${index}),
+                accessor().get(vectorIndex.vectorIndex()${index}),
                 field.getScale(),
                 field.getPrecision());
   <#elseif accessorType == "BigDecimal" || accessorType == "Period">
-      return accessor().${getObject}(vectorIndex.index()${index});
+      return accessor().${getObject}(vectorIndex.vectorIndex()${index});
   <#else>
-      return accessor().get(vectorIndex.index()${index});
+      return accessor().get(vectorIndex.vectorIndex()${index});
   </#if>
     }
+  <#if drillType == "VarChar">
+
+    @Override
+    public String getString(<#if isArray>int index</#if>) {
+      return new String(getBytes(${indexVar}), Charsets.UTF_8);
+    }
+  <#elseif drillType == "Var16Char">
+
+    @Override
+    public String getString(<#if isArray>int index</#if>) {
+      return new String(getBytes(${indexVar}), Charsets.UTF_16);
+    }
+  </#if>
 </#macro>
 <#macro bindWriter prefix drillType>
   <#if drillType = "Decimal9" || drillType == "Decimal18">
@@ -95,7 +108,7 @@
     private ${prefix}${drillType}Vector.Mutator mutator;
 
     @Override
-    public void bind(RowIndex vectorIndex, ValueVector vector) {
+    public void bind(ColumnWriterIndex vectorIndex, ValueVector vector) {
       bind(vectorIndex);
   <#if drillType = "Decimal9" || drillType == "Decimal18">
       field = vector.getField();
@@ -103,41 +116,94 @@
       this.mutator = ((${prefix}${drillType}Vector) vector).getMutator();
     }
 </#macro>
-<#macro set drillType accessorType label nullable verb>
+<#-- DRILL-5529 describes how required and repeated vectors don't implement
+     fillEmpties() to recover from skiped writes. Since the mutator does
+     not do the work, we must insert code here to do it.
+     DRILL-5530 describes why required vectors may not be initialized
+     to zeros. -->
+<#macro fillEmpties drillType mode>
+  <#if mode == "Repeated"  || (mode == "" && drillType != "Bit")>
+        // Work-around for DRILL-5529: lack of fillEmpties for some vectors.
+    <#if mode == "">
+        // See DRILL-5530 for why this is needed for required vectors.
+    </#if>
+        if (lastWriteIndex + 1 < writeIndex) {
+          mutator.fillEmptiesBounded(lastWriteIndex, writeIndex);
+        }
+ </#if>
+</#macro>
+<#macro set drillType accessorType label mode setFn>
+  <#if accessorType == "byte[]">
+    <#assign args = ", int len">
+  <#else>
+    <#assign args = "">
+  </#if>
     @Override
-    public void set${label}(${accessorType} value) {
-  <#if drillType == "VarChar">
-      byte bytes[] = value.getBytes(Charsets.UTF_8);
-      mutator.${verb}Safe(vectorIndex.index(), bytes, 0, bytes.length);
-  <#elseif drillType == "Var16Char">
-      byte bytes[] = value.getBytes(Charsets.UTF_16);
-      mutator.${verb}Safe(vectorIndex.index(), bytes, 0, bytes.length);
-  <#elseif drillType == "VarBinary">
-      mutator.${verb}Safe(vectorIndex.index(), value, 0, value.length);
+    public void set${label}(${accessorType} value${args}) throws VectorOverflowException {
+      try {
+        final int writeIndex = vectorIndex.vectorIndex();
+        <@fillEmpties drillType mode />
+  <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
+        mutator.${setFn}(writeIndex, value, 0, len);
   <#elseif drillType == "Decimal9">
-      mutator.${verb}Safe(vectorIndex.index(),
-          DecimalUtility.getDecimal9FromBigDecimal(value,
+        mutator.${setFn}(writeIndex,
+            DecimalUtility.getDecimal9FromBigDecimal(value,
               field.getScale(), field.getPrecision()));
   <#elseif drillType == "Decimal18">
-      mutator.${verb}Safe(vectorIndex.index(),
-          DecimalUtility.getDecimal18FromBigDecimal(value,
+        mutator.${setFn}(writeIndex,
+            DecimalUtility.getDecimal18FromBigDecimal(value,
               field.getScale(), field.getPrecision()));
   <#elseif drillType == "IntervalYear">
-      mutator.${verb}Safe(vectorIndex.index(), value.getYears() * 12 + value.getMonths());
+        mutator.${setFn}(writeIndex, value.getYears() * 12 + value.getMonths());
   <#elseif drillType == "IntervalDay">
-      mutator.${verb}Safe(vectorIndex.index(),<#if nullable> 1,</#if>
+        mutator.${setFn}(writeIndex,<#if mode == "Nullable"> 1,</#if>
                       value.getDays(),
                       ((value.getHours() * 60 + value.getMinutes()) * 60 +
                        value.getSeconds()) * 1000 + value.getMillis());
   <#elseif drillType == "Interval">
-      mutator.${verb}Safe(vectorIndex.index(),<#if nullable> 1,</#if>
+        mutator.${setFn}(writeIndex,<#if mode == "Nullable"> 1,</#if>
                       value.getYears() * 12 + value.getMonths(),
                       value.getDays(),
                       ((value.getHours() * 60 + value.getMinutes()) * 60 +
                        value.getSeconds()) * 1000 + value.getMillis());
   <#else>
-      mutator.${verb}Safe(vectorIndex.index(), <#if cast=="set">(${javaType}) </#if>value);
+        mutator.${setFn}(writeIndex, <#if cast=="set">(${javaType}) </#if>value);
   </#if>
+        lastWriteIndex = writeIndex;
+      } catch (VectorOverflowException e) {
+        vectorIndex.overflowed();
+        throw e;
+      }
+    }
+  <#if drillType == "VarChar">
+
+    @Override
+    public void setString(String value) throws VectorOverflowException {
+      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      setBytes(bytes, bytes.length);
+    }
+  <#elseif drillType == "Var16Char">
+
+    @Override
+    public void setString(String value) throws VectorOverflowException {
+      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      setBytes(bytes, bytes.length);
+    }
+  </#if>
+</#macro>
+<#macro finishBatch drillType mode>
+    @Override
+    public void finishBatch() throws VectorOverflowException {
+      final int rowCount = vectorIndex.vectorIndex();
+  <#-- See note above for the fillEmpties macro. -->
+  <#if mode == "Repeated"  || (mode == "" && drillType != "Bit")>
+      // Work-around for DRILL-5529: lack of fillEmpties for some vectors.
+    <#if mode == "">
+      // See DRILL-5530 for why this is needed for required vectors.
+    </#if>
+      mutator.fillEmptiesBounded(lastWriteIndex, rowCount - 1);
+   </#if>
+      mutator.setValueCount(rowCount);
     }
 </#macro>
 
@@ -150,6 +216,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.impl.AbstractColumnReader;
 import org.apache.drill.exec.vector.accessor.impl.AbstractColumnWriter;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
@@ -191,6 +259,10 @@ public class ColumnAccessors {
     <#if accessorType=="BigDecimal">
       <#assign label="Decimal">
     </#if>
+    <#if drillType == "VarChar" || drillType == "Var16Char">
+      <#assign accessorType = "byte[]">
+      <#assign label = "Bytes">
+    </#if>
     <#if ! notyet>
   //------------------------------------------------------------------------
   // ${drillType} readers and writers
@@ -199,7 +271,7 @@ public class ColumnAccessors {
 
     <@bindReader "" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
     <@get drillType accessorType label false/>
   }
@@ -208,11 +280,11 @@ public class ColumnAccessors {
 
     <@bindReader "Nullable" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
     @Override
     public boolean isNull() {
-      return accessor().isNull(vectorIndex.index());
+      return accessor().isNull(vectorIndex.vectorIndex());
     }
 
     <@get drillType accessorType label false/>
@@ -222,11 +294,11 @@ public class ColumnAccessors {
 
     <@bindReader "Repeated" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
     @Override
     public int size() {
-      return accessor().getInnerValueCountAt(vectorIndex.index());
+      return accessor().getInnerValueCountAt(vectorIndex.vectorIndex());
     }
 
     <@get drillType accessorType label true/>
@@ -236,36 +308,49 @@ public class ColumnAccessors {
 
     <@bindWriter "" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
-    <@set drillType accessorType label false "set" />
+    <@set drillType accessorType label "" "setScalar" />
+
+    <@finishBatch drillType "" />
   }
 
   public static class Nullable${drillType}ColumnWriter extends AbstractColumnWriter {
 
     <@bindWriter "Nullable" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
     @Override
-    public void setNull() {
-      mutator.setNull(vectorIndex.index());
+    public void setNull() throws VectorOverflowException {
+      try {
+        final int writeIndex = vectorIndex.vectorIndex();
+        mutator.setNullBounded(writeIndex);
+        lastWriteIndex = vectorIndex.vectorIndex();
+      } catch (VectorOverflowException e) {
+        vectorIndex.overflowed();
+        throw e;
+      }
     }
 
-    <@set drillType accessorType label true "set" />
+    <@set drillType accessorType label "Nullable" "setScalar" />
+
+    <@finishBatch drillType "Nullable" />
   }
 
   public static class Repeated${drillType}ColumnWriter extends AbstractArrayWriter {
 
     <@bindWriter "Repeated" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
     protected BaseRepeatedValueVector.BaseRepeatedMutator mutator() {
       return mutator;
     }
 
-    <@set drillType accessorType label false "add" />
+    <@set drillType accessorType label "Repeated" "addEntry" />
+
+    <@finishBatch drillType "Repeated" />
   }
 
     </#if>
