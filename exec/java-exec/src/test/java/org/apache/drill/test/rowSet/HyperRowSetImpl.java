@@ -67,12 +67,12 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
     }
 
     @Override
-    public int index() {
+    public int vectorIndex() {
       return AccessorUtilities.sv4Index(sv4.get(rowIndex));
     }
 
     @Override
-    public int batch( ) {
+    public int batchIndex( ) {
       return AccessorUtilities.sv4Batch(sv4.get(rowIndex));
     }
   }
@@ -95,7 +95,7 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
     @Override
     public ValueVector vector() {
-      return vectors[rowIndex.batch()];
+      return vectors[rowIndex.batchIndex()];
     }
   }
 

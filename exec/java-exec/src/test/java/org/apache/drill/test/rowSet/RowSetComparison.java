@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
 import org.bouncycastle.util.Arrays;
 
 /**

@@ -29,7 +29,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.TupleAccessor.TupleSchema;
 import org.apache.drill.exec.vector.accessor.impl.AbstractColumnWriter;
 import org.apache.drill.exec.vector.accessor.impl.ColumnAccessorFactory;
-import org.apache.drill.exec.vector.accessor.impl.TupleWriterImpl;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 
 /**
@@ -53,99 +52,10 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
     }
 
     @Override
-    public int index() { return rowIndex; }
+    public int vectorIndex() { return rowIndex; }
 
     @Override
-    public int batch() { return 0; }
-  }
-
-  /**
-   * Writer index that points to each row in the row set. The index starts at
-   * the 0th row and advances one row on each increment. This allows writers to
-   * start positioned at the first row. Writes happen in the current row.
-   * Calling <tt>next()</tt> advances to the next position, effectively saving
-   * the current row. The most recent row can be abandoned easily simply by not
-   * calling <tt>next()</tt>. This means that the number of completed rows is
-   * the same as the row index.
-   */
-
-  private static class ExtendableRowIndex extends RowSetIndex {
-
-    private final int maxSize;
-
-    public ExtendableRowIndex(int maxSize) {
-      this.maxSize = maxSize;
-      rowIndex = 0;
-    }
-
-    @Override
-    public int index() { return rowIndex; }
-
-    @Override
-    public boolean next() {
-      if (++rowIndex <= maxSize ) {
-        return true;
-      } else {
-        rowIndex--;
-        return false;
-      }
-    }
-
-    @Override
-    public int size() { return rowIndex; }
-
-    @Override
-    public boolean valid() { return rowIndex < maxSize; }
-
-    @Override
-    public int batch() { return 0; }
-  }
-
-  /**
-   * Implementation of a row set writer. Only available for newly-created,
-   * empty, direct, single row sets. Rewriting is not allowed, nor is writing
-   * to a hyper row set.
-   */
-
-  public class RowSetWriterImpl extends TupleWriterImpl implements RowSetWriter {
-
-    private final ExtendableRowIndex index;
-    private final ExtendableRowSet rowSet;
-
-    protected RowSetWriterImpl(ExtendableRowSet rowSet, TupleSchema schema, ExtendableRowIndex index, AbstractColumnWriter[] writers) {
-      super(schema, writers);
-      this.rowSet = rowSet;
-      this.index = index;
-      start();
-    }
-
-    @Override
-    public void setRow(Object...values) {
-      if (! index.valid()) {
-        throw new IndexOutOfBoundsException("Write past end of row set");
-      }
-      for (int i = 0; i < values.length;  i++) {
-        set(i, values[i]);
-      }
-      save();
-    }
-
-    @Override
-    public boolean valid() { return index.valid(); }
-
-    @Override
-    public int index() { return index.position(); }
-
-    @Override
-    public void save() {
-      index.next();
-      start();
-    }
-
-    @Override
-    public void done() {
-      rowSet.setRowCount(index.size());
-    }
+    public int batchIndex() { return 0; }
   }
 
   public DirectRowSet(BufferAllocator allocator, BatchSchema schema) {
@@ -191,17 +101,10 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
       throw new IllegalStateException("Row set already contains data");
     }
     allocate(initialRowCount);
-    return buildWriter(new ExtendableRowIndex(Character.MAX_VALUE));
-  }
+    RowSetWriterImpl.WriterIndexImpl rowIndex = new RowSetWriterImpl.WriterIndexImpl();
 
-  /**
-   * Build writer objects for each column based on the column type.
-   *
-   * @param rowIndex the index which points to each row
-   * @return an array of writers
-   */
+    //Build writer objects for each column based on the column type.
 
-  protected RowSetWriter buildWriter(ExtendableRowIndex rowIndex) {
     ValueVector[] valueVectors = vectors();
     AbstractColumnWriter[] writers = new AbstractColumnWriter[valueVectors.length];
     for (int i = 0; i < writers.length; i++) {
