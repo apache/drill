@@ -1,14 +1,13 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p/>
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,6 +27,13 @@ public class TestCryptoFunctions extends BaseTestQuery {
     final String query = "select md5('testing') as md5Hash from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("md5Hash").baselineValues("ae2b1fca515949e5d54fb22b8ed95575").go();
   }
+
+  @Test
+  public void testMD2() throws Exception {
+    final String query = "select md2('testing') as md2Hash from (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("md2Hash").baselineValues("fc134df10d6ecafceb5c75861d01b41f").go();
+  }
+
 
   @Test
   public void testSHA1() throws Exception {

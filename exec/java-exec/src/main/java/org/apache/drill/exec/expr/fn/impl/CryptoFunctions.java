@@ -1,20 +1,20 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p/>
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.DrillBuf;
@@ -35,6 +35,50 @@ public class CryptoFunctions {
   private CryptoFunctions() {
   }
 
+  /**
+   * This class returns the md2 digest of a given input string.
+   *  Usage is SELECT md2( <input string> ) FROM ...
+   */
+
+  @FunctionTemplate(name = "md2", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class MD2Function implements DrillSimpleFunc {
+
+    @Param
+    VarCharHolder rawInput;
+
+    @Output
+    VarCharHolder out;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Workspace
+    java.security.MessageDigest md;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
+      String outputString = org.apache.commons.codec.digest.DigestUtils.md2Hex(input).toLowerCase();
+
+      out.buffer = buffer;
+      out.start = 0;
+      out.end = outputString.getBytes().length;
+      buffer.setBytes(0, outputString.getBytes());
+    }
+
+  }
+
+  /**
+   * This function returns the MD5 digest of a given input string.
+   *  Usage is shown below:
+   *  select md5( 'testing' ) from (VALUES(1));
+   */
+
   @FunctionTemplate(name = "md5", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class MD5Function implements DrillSimpleFunc {
 
@@ -52,29 +96,14 @@ public class CryptoFunctions {
 
     @Override
     public void setup() {
-      try {
-        md = java.security.MessageDigest.getInstance("MD5");
-      } catch (Exception e) {
-        logger.debug(e.getMessage());
-      }
     }
 
     @Override
     public void eval() {
 
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
-      byte[] thedigest = null;
-      String outputString = "";
+      String outputString = org.apache.commons.codec.digest.DigestUtils.md5Hex(input).toLowerCase();
 
-      try {
-        byte[] bytesOfMessage = input.getBytes("UTF-8");
-        thedigest = md.digest(bytesOfMessage);
-        outputString = String.format("%032X", new java.math.BigInteger(1, thedigest));
-        outputString = outputString.toLowerCase();
-
-      } catch (Exception e) {
-        logger.debug(e.getMessage());
-      }
       out.buffer = buffer;
       out.start = 0;
       out.end = outputString.getBytes().length;
@@ -83,6 +112,13 @@ public class CryptoFunctions {
 
   }
 
+  /**
+   * sha(<text>) / sha1(<text>): Calculates an SHA-1 160-bit checksum for the string, as described in RFC 3174 (Secure Hash Algorithm).
+   * (https://en.wikipedia.org/wiki/SHA-1) The value is returned as a string of 40 hexadecimal digits, or NULL if the argument was NULL.
+   * Note that sha() and sha1() are aliases for the same function.
+   *
+   * > select sha1( 'testing' ) from (VALUES(1));
+   */
 
   @FunctionTemplate(names = {"sha", "sha1"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class SHA1Function implements DrillSimpleFunc {
@@ -115,6 +151,12 @@ public class CryptoFunctions {
     }
 
   }
+
+  /**
+   * sha2(<text>) / sha256(<text>): Calculates an SHA-2 256-bit checksum for the string.  The value is returned as a string of hexadecimal digits,
+   * or NULL if the argument was NULL. Note that sha2() and sha256() are aliases for the same function.
+   * > select sha2( 'testing' ) from (VALUES(1));
+   */
 
   @FunctionTemplate(names = {"sha256", "sha2"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class SHA256Function implements DrillSimpleFunc {
@@ -149,6 +191,12 @@ public class CryptoFunctions {
 
   }
 
+  /**
+   * This function returns the SHA384 digest of a given input string.
+   *  Usage is shown below:
+   *  select sha384( 'testing' ) from (VALUES(1));
+   */
+
   @FunctionTemplate(name = "sha384", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class SHA384Function implements DrillSimpleFunc {
 
@@ -180,6 +228,13 @@ public class CryptoFunctions {
     }
 
   }
+
+  /**
+   * This function returns the SHA512 digest of a given input string.
+   *  Usage is shown below:
+   *  select sha512( 'testing' ) from (VALUES(1));
+   */
+
 
   @FunctionTemplate(name = "sha512", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class SHA512Function implements DrillSimpleFunc {
@@ -213,6 +268,14 @@ public class CryptoFunctions {
 
   }
 
+  /**
+   * aes_encrypt()/ aes_decrypt(): implement encryption and decryption of data using the official AES (Advanced Encryption Standard) algorithm,
+   * previously known as “Rijndael.” AES_ENCRYPT() encrypts the string str using the key string key_str and returns a
+   * binary string containing the encrypted output.
+   * Usage:  SELECT aes_encrypt( 'encrypted_text', 'my_secret_key' ) AS aes FROM (VALUES(1));
+   */
+
+
   @FunctionTemplate(name = "aes_encrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class AESEncryptFunction implements DrillSimpleFunc {
 
@@ -229,27 +292,18 @@ public class CryptoFunctions {
     DrillBuf buffer;
 
     @Workspace
-    String key;
-
-    @Workspace
-    SecretKeySpec secretKey;
-
-    @Workspace
-    byte[] keyByteArray;
-
-    @Workspace
     Cipher cipher;
 
     @Override
     public void setup() {
-      key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
       java.security.MessageDigest sha = null;
       try {
-        keyByteArray = key.getBytes("UTF-8");
+        byte[] keyByteArray = key.getBytes("UTF-8");
         sha = java.security.MessageDigest.getInstance("SHA-1");
         keyByteArray = sha.digest(keyByteArray);
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
-        secretKey = new SecretKeySpec(keyByteArray, "AES");
+        SecretKeySpec secretKey = new SecretKeySpec(keyByteArray, "AES");
 
         cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
@@ -277,6 +331,11 @@ public class CryptoFunctions {
 
   }
 
+  /**
+   *  AES_DECRYPT() decrypts the encrypted string crypt_str using the key string key_str and returns the original cleartext string.
+   *  If either function argument is NULL, the function returns NULL.
+   *  Usage:  SELECT aes_decrypt( <encrypted_text>, <key> ) FROM ...
+   */
 
   @FunctionTemplate(name = "aes_decrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class AESDecryptFunction implements DrillSimpleFunc {
@@ -294,27 +353,18 @@ public class CryptoFunctions {
     DrillBuf buffer;
 
     @Workspace
-    String key;
-
-    @Workspace
-    SecretKeySpec secretKey;
-
-    @Workspace
-    byte[] keyByteArray;
-
-    @Workspace
     Cipher cipher;
 
     @Override
     public void setup() {
-      key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
+      String key = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawKey.start, rawKey.end, rawKey.buffer);
       java.security.MessageDigest sha = null;
       try {
-        keyByteArray = key.getBytes("UTF-8");
+        byte[] keyByteArray = key.getBytes("UTF-8");
         sha = java.security.MessageDigest.getInstance("SHA-1");
         keyByteArray = sha.digest(keyByteArray);
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
-        secretKey = new SecretKeySpec(keyByteArray, "AES");
+        SecretKeySpec secretKey = new SecretKeySpec(keyByteArray, "AES");
 
         cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
