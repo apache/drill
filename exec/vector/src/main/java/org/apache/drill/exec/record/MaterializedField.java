@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -198,6 +199,58 @@ public class MaterializedField {
     return this.name.equalsIgnoreCase(other.name) &&
             Objects.equals(this.type, other.type);
   }
+
+  public boolean isEquivalent(MaterializedField other) {
+    if (! name.equalsIgnoreCase(other.name)) {
+      return false;
+    }
+
+    // Requires full type equality, including fields such as precision and scale.
+    // But, unset fields are equivalent to 0. Can't use the protobuf-provided
+    // isEquals(), that treats set and unset fields as different.
+
+    if (type.getMinorType() != other.type.getMinorType()) {
+      return false;
+    }
+    if (type.getMode() != other.type.getMode()) {
+      return false;
+    }
+    if (type.getScale() != other.type.getScale()) {
+      return false;
+    }
+    if (type.getPrecision() != other.type.getPrecision()) {
+      return false;
+    }
+
+    // Compare children -- but only for maps, not the internal children
+    // for Varchar, repeated or nullable types.
+
+    if (type.getMinorType() != MinorType.MAP) {
+      return true;
+    }
+
+    if (children == null  ||  other.children == null) {
+      return children == other.children;
+    }
+    if (children.size() != other.children.size()) {
+      return false;
+    }
+
+    // Maps are name-based, not position. But, for our
+    // purposes, we insist on identical ordering.
+
+    Iterator<MaterializedField> thisIter = children.iterator();
+    Iterator<MaterializedField> otherIter = other.children.iterator();
+    while (thisIter.hasNext()) {
+      MaterializedField thisChild = thisIter.next();
+      MaterializedField otherChild = otherIter.next();
+      if (! thisChild.isEquivalent(otherChild)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 
   /**
    * <p>Creates materialized field string representation.

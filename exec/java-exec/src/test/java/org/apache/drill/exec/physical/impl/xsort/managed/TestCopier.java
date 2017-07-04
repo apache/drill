@@ -28,10 +28,11 @@ import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrap
 import org.apache.drill.exec.physical.impl.xsort.managed.SortTestUtilities.CopierTester;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.SchemaBuilder;
@@ -129,7 +130,11 @@ public class TestCopier extends DrillTest {
     int value = first;
     for (int i = 0; i < count; i++, value += step) {
       RowSetUtilities.setFromInt(writer, 0, value);
-      writer.column(1).setString(Integer.toString(value));
+      try {
+        writer.column(1).setString(Integer.toString(value));
+      } catch (VectorOverflowException e) {
+        throw new IllegalStateException(e);
+      }
       writer.save();
     }
     writer.done();

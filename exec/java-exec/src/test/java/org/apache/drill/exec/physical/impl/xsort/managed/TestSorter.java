@@ -31,12 +31,13 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
@@ -201,15 +202,19 @@ public class TestSorter extends DrillTest {
     public SingleRowSet makeDataSet(BufferAllocator allocator, BatchSchema schema, DataItem[] items) {
       ExtendableRowSet rowSet = fixture.rowSet(schema);
       RowSetWriter writer = rowSet.writer(items.length);
-      for (int i = 0; i < items.length; i++) {
-        DataItem item = items[i];
-        if (nullable && item.isNull) {
-          writer.column(0).setNull();
-        } else {
-          RowSetUtilities.setFromInt(writer, 0, item.key);
+      try {
+        for (int i = 0; i < items.length; i++) {
+          DataItem item = items[i];
+          if (nullable && item.isNull) {
+            writer.column(0).setNull();
+          } else {
+            RowSetUtilities.setFromInt(writer, 0, item.key);
+          }
+          writer.column(1).setString(Integer.toString(item.value));
+          writer.save();
         }
-        writer.column(1).setString(Integer.toString(item.value));
-        writer.save();
+      } catch (VectorOverflowException e) {
+        throw new IllegalStateException(e);
       }
       writer.done();
       return rowSet;

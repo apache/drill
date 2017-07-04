@@ -17,7 +17,8 @@
  */
 package org.apache.drill.vector;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -30,11 +31,9 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VectorOverflowException;
-import org.apache.drill.test.DrillTest;
-import org.apache.drill.test.OperatorFixture;
+import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.bouncycastle.util.Arrays;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
@@ -45,19 +44,7 @@ import io.netty.buffer.DrillBuf;
  * rely on the fact that code is generated from a common template.
  */
 
-public class TestVectorLimits extends DrillTest {
-
-  public static OperatorFixture fixture;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    fixture = OperatorFixture.builder().build();
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-  }
+public class TestVectorLimits extends SubOperatorTest {
 
   /**
    * Test a vector directly using the vector mutator to ensure
@@ -74,7 +61,7 @@ public class TestVectorLimits extends DrillTest {
     // Create a non-nullable int vector: a typical fixed-size vector
 
     @SuppressWarnings("resource")
-    IntVector vector = new IntVector(makeField(MinorType.INT, DataMode.REQUIRED), fixture.allocator() );
+    IntVector vector = new IntVector(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REQUIRED), fixture.allocator() );
 
     // Sanity test of generated constants.
 
@@ -114,7 +101,7 @@ public class TestVectorLimits extends DrillTest {
   public void testNullableFixedVector() {
 
     @SuppressWarnings("resource")
-    NullableIntVector vector = new NullableIntVector(makeField(MinorType.INT, DataMode.OPTIONAL), fixture.allocator() );
+    NullableIntVector vector = new NullableIntVector(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.OPTIONAL), fixture.allocator() );
     vector.allocateNew( );
 
     NullableIntVector.Mutator mutator = vector.getMutator();
@@ -140,7 +127,7 @@ public class TestVectorLimits extends DrillTest {
   public void testRepeatedFixedVectorCountLimit() {
 
     @SuppressWarnings("resource")
-    RepeatedIntVector vector = new RepeatedIntVector(makeField(MinorType.INT, DataMode.REPEATED), fixture.allocator() );
+    RepeatedIntVector vector = new RepeatedIntVector(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REPEATED), fixture.allocator() );
     vector.allocateNew( );
 
     RepeatedIntVector.Mutator mutator = vector.getMutator();
@@ -174,7 +161,7 @@ public class TestVectorLimits extends DrillTest {
   public void testRepeatedFixedVectorBufferLimit() {
 
     @SuppressWarnings("resource")
-    RepeatedIntVector vector = new RepeatedIntVector(makeField(MinorType.INT, DataMode.REPEATED), fixture.allocator() );
+    RepeatedIntVector vector = new RepeatedIntVector(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REPEATED), fixture.allocator() );
     vector.allocateNew( );
 
     RepeatedIntVector.Mutator mutator = vector.getMutator();
@@ -197,17 +184,6 @@ public class TestVectorLimits extends DrillTest {
     vector.close();
   }
 
-  // To be replaced by a test method in a separate commit.
-
-  public static MaterializedField makeField(MinorType dataType, DataMode mode) {
-    MajorType type = MajorType.newBuilder()
-        .setMinorType(dataType)
-        .setMode(mode)
-        .build();
-
-    return MaterializedField.create("foo", type);
-  }
-
   /**
    * Baseline test for a variable-width vector using <tt>setSafe</tt> and
    * loading the vector up to the maximum size. Doing so will cause the vector
@@ -221,7 +197,7 @@ public class TestVectorLimits extends DrillTest {
     // Create a non-nullable VarChar vector: a typical variable-size vector
 
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField(MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
     vector.allocateNew( );
 
     // A 16 MB value can hold 64K values of up to 256 bytes each.
@@ -256,7 +232,7 @@ public class TestVectorLimits extends DrillTest {
   public void testWideVariableVector() {
 
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField(MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
     vector.allocateNew( );
 
     // A 16 MB value can hold 64K values of up to 256 bytes each.
@@ -295,7 +271,7 @@ public class TestVectorLimits extends DrillTest {
   public void testNullableWideVariableVector() {
 
     @SuppressWarnings("resource")
-    NullableVarCharVector vector = new NullableVarCharVector(makeField(MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
+    NullableVarCharVector vector = new NullableVarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
     vector.allocateNew( );
 
     byte dummyValue[] = makeVarCharValue(512);
@@ -325,7 +301,7 @@ public class TestVectorLimits extends DrillTest {
   public void testNarrowVariableVector() {
 
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField(MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
     vector.allocateNew( );
 
     // Write small values that fit into 16 MB. We should stop writing
@@ -361,7 +337,7 @@ public class TestVectorLimits extends DrillTest {
   public void testDirectVariableVector() {
 
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField(MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED), fixture.allocator() );
     vector.allocateNew( );
 
     // Repeat the big-value test, but with data coming from a DrillBuf
@@ -400,7 +376,7 @@ public class TestVectorLimits extends DrillTest {
   public void testDirectNullableVariableVector() {
 
     @SuppressWarnings("resource")
-    NullableVarCharVector vector = new NullableVarCharVector(makeField(MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
+    NullableVarCharVector vector = new NullableVarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
     vector.allocateNew( );
 
     @SuppressWarnings("resource")
@@ -424,9 +400,9 @@ public class TestVectorLimits extends DrillTest {
 
   public static void main(String args[]) {
     try {
-      setUpBeforeClass();
+      classSetup();
       new TestVectorLimits().performanceTest();
-      tearDownAfterClass();
+      classTeardown();
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -435,7 +411,7 @@ public class TestVectorLimits extends DrillTest {
 
   private void performanceTest() {
     @SuppressWarnings("resource")
-    VarCharVector vector = new VarCharVector(makeField(MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
+    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.OPTIONAL), fixture.allocator() );
     byte value[] = makeVarCharValue(1);
     int warmCount = 100;
     timeSetSafe(vector, value, warmCount);
@@ -469,10 +445,9 @@ public class TestVectorLimits extends DrillTest {
       vector.allocateNew( );
 
       VarCharVector.Mutator mutator = vector.getMutator();
-      int posn = 0;
-      for (;;) {
+      for (int j = 0; j < ValueVector.MAX_ROW_COUNT; j++) {
         try {
-          mutator.setScalar(posn++, value, 0, value.length);
+          mutator.setScalar(j, value, 0, value.length);
         } catch (VectorOverflowException e) {
           break;
         }

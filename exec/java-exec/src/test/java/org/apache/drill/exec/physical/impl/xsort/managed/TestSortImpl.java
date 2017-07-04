@@ -37,6 +37,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.OperatorFixture.OperatorFixtureBuilder;
@@ -45,8 +46,8 @@ import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.SchemaBuilder;
@@ -515,12 +516,16 @@ public class TestSortImpl extends DrillTest {
     BatchSchema schema = builder.build();
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
-    for (int i = 0; i < rowCount; i++) {
-      writer.set(0, i);
-      for (int j = 0; j < colCount; j++) {
-        writer.set(j + 1, i * 100_000 + j);
+    try {
+      for (int i = 0; i < rowCount; i++) {
+        writer.set(0, i);
+        for (int j = 0; j < colCount; j++) {
+          writer.set(j + 1, i * 100_000 + j);
+        }
+        writer.save();
       }
-      writer.save();
+    } catch (VectorOverflowException e) {
+      throw new IllegalStateException(e);
     }
     writer.done();
 

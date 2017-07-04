@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.impl.MaterializedSchema;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -227,5 +228,13 @@ public class SchemaBuilder {
 
   public SchemaBuilder buildMap() {
     throw new IllegalStateException("Cannot build map for a top-level schema");
+  }
+
+  public MaterializedSchema buildSchema() {
+    MaterializedSchema schema = new MaterializedSchema();
+    for (MaterializedField col : columns) {
+      schema.add(col);
+    }
+    return schema;
   }
 }
