@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public abstract class BaseDataValueVector extends BaseValueVector {
 
-  protected final static byte[] emptyByteArray = new byte[]{}; // Nullable vectors use this
+  protected final static byte[] emptyByteArray = new byte[0]; // Nullable vectors use this
 
   protected DrillBuf data;
 
@@ -78,9 +78,7 @@ public abstract class BaseDataValueVector extends BaseValueVector {
     return data.writerIndex();
   }
 
-  public DrillBuf getBuffer() {
-    return data;
-  }
+  public DrillBuf getBuffer() { return data; }
 
   /**
    * This method has a similar effect of allocateNew() without actually clearing and reallocating
@@ -89,7 +87,16 @@ public abstract class BaseDataValueVector extends BaseValueVector {
   public void reset() {}
 
   @Override
-  public int getAllocatedByteCount() {
-    return data.capacity();
+  public int getAllocatedByteCount() { return data.capacity(); }
+
+  @Override
+  public void exchange(ValueVector other) {
+    BaseDataValueVector target = (BaseDataValueVector) other;
+    DrillBuf temp = data;
+    data = target.data;
+    target.data = temp;
+    getReader().reset();
+    getMutator().exchange(target.getMutator());
+    // No state in an Accessor to reset
   }
 }

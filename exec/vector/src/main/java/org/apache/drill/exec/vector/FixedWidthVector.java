@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,7 @@
 package org.apache.drill.exec.vector;
 
 
-public interface FixedWidthVector extends ValueVector{
+public interface FixedWidthVector extends ValueVector {
 
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
@@ -31,5 +31,4 @@ public interface FixedWidthVector extends ValueVector{
  * Zero out the underlying buffer backing this vector.
  */
   void zeroVector();
-
 }

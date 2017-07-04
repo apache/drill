@@ -108,7 +108,7 @@ public class TestVectorContainer extends DrillTest {
     // Merge containers via row set facade
 
     RowSet mergedRs = left.merge(right);
-    comparison.verifyAndClear(mergedRs);
+    comparison.verifyAndClearAll(mergedRs);
 
     // Add a selection vector. Merging is forbidden, in the present code,
     // for batches that have a selection vector.

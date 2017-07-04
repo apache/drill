@@ -123,7 +123,7 @@ public class SortTestUtilities {
         assertTrue(merger.next());
         RowSet rowSet = new DirectRowSet(fixture.allocator(), dest);
         new RowSetComparison(expectedSet)
-              .verifyAndClear(rowSet);
+              .verifyAndClearAll(rowSet);
       }
       assertFalse(merger.next());
     }

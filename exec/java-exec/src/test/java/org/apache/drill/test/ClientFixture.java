@@ -27,12 +27,14 @@ import org.apache.drill.TestBuilder;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.testing.Controls;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.apache.drill.test.ClusterFixture.FixtureTestServices;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 
 /**
  * Represents a Drill client. Provides many useful test-specific operations such
@@ -224,5 +226,9 @@ public class ClientFixture implements AutoCloseable {
   public void setControls(String controls) {
     ControlsInjectionUtil.validateControlsString(controls);
     alterSession(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, controls);
+  }
+
+  public RowSetBuilder rowSetBuilder(BatchSchema schema) {
+    return new RowSetBuilder(allocator(), schema);
   }
 }

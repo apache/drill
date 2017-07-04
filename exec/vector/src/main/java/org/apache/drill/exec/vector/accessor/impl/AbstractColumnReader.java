@@ -47,6 +47,34 @@ public abstract class AbstractColumnReader extends AbstractColumnAccessor implem
   }
 
   @Override
+  public Object getObject() {
+    switch (valueType()) {
+    case ARRAY:
+      // TODO: build an array. Just a bit tedious...
+      throw new UnsupportedOperationException();
+    case BYTES:
+      return getBytes();
+    case DECIMAL:
+      return getDecimal();
+    case DOUBLE:
+      return getDouble();
+    case INTEGER:
+      return getInt();
+    case LONG:
+      return getLong();
+    case MAP:
+      // TODO: build an array. Just a bit tedious...
+      throw new UnsupportedOperationException();
+    case PERIOD:
+      return getPeriod();
+    case STRING:
+      return getString();
+    default:
+      throw new IllegalStateException("Unexpected type: " + valueType());
+    }
+  }
+
+  @Override
   public boolean isNull() {
     return false;
   }

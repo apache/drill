@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -118,7 +118,6 @@ public class RepeatedListVector extends AbstractContainerVector
       }
     }
 
-
     public class DelegateTransferPair implements TransferPair {
       private final DelegateRepeatedVector target;
       private final TransferPair[] children;
@@ -218,6 +217,10 @@ public class RepeatedListVector extends AbstractContainerVector
       ephPair.copyValueSafe(fromIndex, thisIndex);
     }
 
+    @Override
+    public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+      copyFromSafe(fromIndex, toIndex, (DelegateRepeatedVector) from);
+    }
   }
 
   protected class RepeatedListTransferPair implements TransferPair {
@@ -428,6 +431,11 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
+  public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
+    copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
+  }
+
+  @Override
   public int getAllocatedByteCount() {
     return delegate.getAllocatedByteCount();
   }
@@ -436,4 +444,11 @@ public class RepeatedListVector extends AbstractContainerVector
   public int getPayloadByteCount() {
     return delegate.getPayloadByteCount();
   }
+
+  @Override
+  public void exchange(ValueVector other) {
+    // TODO: Figure out how to test this scenario, then what to do...
+    throw new UnsupportedOperationException("Exchange() not yet supported for repeated lists");
+  }
+
 }

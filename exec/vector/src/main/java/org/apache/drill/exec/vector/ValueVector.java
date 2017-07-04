@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,14 +40,17 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * There are a few "rules" around vectors:
  *
  * <ul>
- *   <li>values need to be written in order (e.g. index 0, 1, 2, 5)</li>
- *   <li>null vectors start with all values as null before writing anything</li>
- *   <li>for variable width types, the offset vector should be all zeros before writing</li>
- *   <li>you must call setValueCount before a vector can be read</li>
- *   <li>you should never write to a vector once it has been read.</li>
+ *   <li>Values need to be written in order (e.g. index 0, 1, 2, 5).</li>
+ *   <li>Null vectors start with all values as null before writing anything.</li>
+ *   <li>For variable width types, the offset vector should be all zeros before writing.</li>
+ *   <li>You must call setValueCount before a vector can be read.</li>
+ *   <li>You should never write to a vector once it has been read.</li>
+ *   <li>Vectors may not grow larger than the number of bytes specified
+ *   in {@link #MAX_BUFFER_SIZE} to prevent memory fragmentation. Use the
+ *   <tt>setBounded()</tt> methods in the mutator to enforce this rule.</li>
  * </ul>
  *
- * Please note that the current implementation doesn't enfore those rules, hence we may find few places that
+ * Please note that the current implementation doesn't enforce those rules, hence we may find few places that
  * deviate from these rules (e.g. offset vectors in Variable Length and Repeated vector)
  *
  * This interface "should" strive to guarantee this order of operation:
@@ -56,6 +59,29 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * </blockquote>
  */
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
+
+  /**
+   * Maximum allowed size of the buffer backing a value vector.
+   */
+
+  int MAX_BUFFER_SIZE = VectorUtils.maxSize();
+
+  /**
+   * Debug-time system option that artificially limits vector lengths
+   * for testing. Must be set prior to the first reference to this
+   * class. (Made deliberately difficult to prevent misuse...)
+   */
+
+  String MAX_BUFFER_SIZE_KEY = "drill.max_vector";
+
+  /**
+   * Maximum allowed row count in a vector. Repeated vectors
+   * may have more items, but can have no more than this number
+   * or arrays. Limited by 2-byte length in SV2: 65536 = 2<sup>16</sup>.
+   */
+
+  int MAX_ROW_COUNT = Character.MAX_VALUE + 1;
+
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
    * @throws OutOfMemoryException Thrown if no memory can be allocated.
@@ -64,7 +90,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Allocates new buffers. ValueVector implements logic to determine how much to allocate.
-   * @return Returns true if allocation was succesful.
+   * @return Returns true if allocation was successful.
    */
   boolean allocateNewSafe();
 
@@ -175,6 +201,8 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   void load(SerializedField metadata, DrillBuf buffer);
 
+  void copyEntry(int toIndex, ValueVector from, int fromIndex);
+
   /**
    * Return the total memory consumed by all buffers within this vector.
    */
@@ -186,6 +214,13 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
 
   int getPayloadByteCount();
+
+  /**
+   * Exchange state with another value vector of the same type.
+   * Used to implement look-ahead writers.
+   */
+
+  void exchange(ValueVector other);
 
   /**
    * An abstraction that is used to read from this vector instance.
@@ -211,7 +246,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   }
 
   /**
-   * An abstractiong that is used to write into this vector instance.
+   * An abstraction that is used to write into this vector instance.
    */
   interface Mutator {
     /**
@@ -231,5 +266,12 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
      */
     @Deprecated
     void generateTestData(int values);
+
+    /**
+     * Exchanges state with the mutator of another mutator. Used when exchanging
+     * state with another vector.
+     */
+
+    void exchange(Mutator other);
   }
 }

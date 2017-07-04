@@ -32,10 +32,12 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.ops.AbstractOperatorExecContext;
 import org.apache.drill.exec.ops.FragmentExecContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.ops.OperExecContextImpl;
+import org.apache.drill.exec.ops.OperatorExecContext;
 import org.apache.drill.exec.ops.OperatorStatReceiver;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema;
@@ -50,7 +52,6 @@ import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 
 /**
@@ -222,7 +223,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
   }
 
   /**
-   * Implements a write-only version of the stats collector for use by opeators,
+   * Implements a write-only version of the stats collector for use by operators,
    * then provides simplified test-time accessors to get the stats values when
    * validating code in tests.
    */
@@ -327,5 +328,9 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     default:
       throw new IllegalStateException( "Unexpected selection mode" );
     }
+  }
+
+  public OperatorExecContext operatorContext(PhysicalOperator config) {
+    return new AbstractOperatorExecContext(allocator(), config, context.getExecutionControls(), stats);
   }
 }
