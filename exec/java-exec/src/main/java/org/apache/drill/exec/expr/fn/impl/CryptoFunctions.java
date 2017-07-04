@@ -52,9 +52,6 @@ public class CryptoFunctions {
     @Inject
     DrillBuf buffer;
 
-    @Workspace
-    java.security.MessageDigest md;
-
     @Override
     public void setup() {
     }
@@ -90,9 +87,6 @@ public class CryptoFunctions {
 
     @Inject
     DrillBuf buffer;
-
-    @Workspace
-    java.security.MessageDigest md;
 
     @Override
     public void setup() {
