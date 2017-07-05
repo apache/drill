@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
@@ -65,7 +65,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
         count += b.getHeader().getRowCount();
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
-          System.out.print(vw.getValueVector().getField().getPath() + ": ");
+          System.out.print(vw.getValueVector().getField().getName() + ": ");
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -124,7 +124,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
   public void testParseParquetPhysicalPlanRemote() throws Exception {
     DrillConfig config = DrillConfig.create();
 
-    try(DrillClient client = new DrillClient(config);) {
+    try (DrillClient client = new DrillClient(config)) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       Stopwatch watch = Stopwatch.createStarted();

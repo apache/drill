@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -93,4 +93,23 @@ public class TestSchemaPathMaterialization extends BaseTestQuery {
       .go();
   }
 
+  @Test //DRILL-4264
+  public void testFieldNameWithDot() throws Exception {
+    final String tableName = "dfs_test.tmp.table_with_dot_field";
+    try {
+      test("create table %s as select o_custkey as `x.y.z` from cp.`tpch/orders.parquet`", tableName);
+
+      final String query = "select * from %s t where `x.y.z`=1091";
+
+      testBuilder()
+        .sqlQuery(query, tableName)
+        .unOrdered()
+        .baselineColumns("`x.y.z`")
+        .baselineValues(1091)
+        .baselineValues(1091)
+        .go();
+    } finally {
+      test("drop table if exists %s", tableName);
+    }
+  }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -100,16 +100,16 @@ public class DumpCat {
    *  Options as input to JCommander.
    */
   static class Options {
-    @Parameter(names = {"-f"}, description = "file containing dump", required=true)
+    @Parameter(names = {"-f"}, description = "file containing dump", required = true)
     public String location = null;
 
-    @Parameter(names = {"-batch"}, description = "id of batch to show", required=false, validateWith = BatchNumValidator.class)
+    @Parameter(names = {"-batch"}, description = "id of batch to show", required = false, validateWith = BatchNumValidator.class)
     public int batch = -1;
 
-    @Parameter(names = {"-include-headers"}, description = "whether include header of batch", required=false)
+    @Parameter(names = {"-include-headers"}, description = "whether include header of batch", required = false)
     public boolean include_headers = false;
 
-    @Parameter(names = {"-h", "-help", "--help"}, description = "show usage", help=true)
+    @Parameter(names = {"-h", "-help", "--help"}, description = "show usage", help = true)
     public boolean help = false;
    }
 
@@ -138,7 +138,7 @@ public class DumpCat {
 
     @Override
     public String toString() {
-      String avgRecSizeStr = null;
+      String avgRecSizeStr;
       if (this.rows > 0) {
         avgRecSizeStr = String.format("Average Record Size : %d ", this.dataSize/this.rows);
       } else {
@@ -175,7 +175,7 @@ public class DumpCat {
     while (input.available() > 0) {
       final VectorAccessibleSerializable vcSerializable = new VectorAccessibleSerializable(DumpCat.allocator);
       vcSerializable.readFromStream(input);
-      final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+      final VectorContainer vectorContainer = vcSerializable.get();
 
       aggBatchMetaInfo.add(getBatchMetaInfo(vcSerializable));
 
@@ -224,7 +224,7 @@ public class DumpCat {
       vcSerializable.readFromStream(input);
 
       if (batchNum != targetBatchNum) {
-        final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+        final VectorContainer vectorContainer = vcSerializable.get();
         vectorContainer.zeroVectors();
       }
     }
@@ -237,13 +237,13 @@ public class DumpCat {
 
     if (vcSerializable != null) {
       showSingleBatch(vcSerializable, showHeader);
-      final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+      final VectorContainer vectorContainer = vcSerializable.get();
       vectorContainer.zeroVectors();
     }
   }
 
   private void showSingleBatch (VectorAccessibleSerializable vcSerializable, boolean showHeader) {
-    final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+    final VectorContainer vectorContainer = vcSerializable.get();
 
     /* show the header of the batch */
     if (showHeader) {
@@ -253,7 +253,7 @@ public class DumpCat {
       for (final VectorWrapper w : vectorContainer) {
         final MaterializedField field = w.getValueVector().getField();
         System.out.println (String.format("name : %s, minor_type : %s, data_mode : %s",
-                                          field.getPath(),
+                                          field.getName(),
                                           field.getType().getMinorType().toString(),
                                           field.isNullable() ? "nullable":"non-nullable"
                           ));
@@ -268,8 +268,8 @@ public class DumpCat {
   private BatchMetaInfo getBatchMetaInfo(VectorAccessibleSerializable vcSerializable) {
     final VectorAccessible vectorContainer = vcSerializable.get();
 
-    int rows = 0;
-    int selectedRows = 0;
+    int rows;
+    int selectedRows;
     int totalDataSize = 0;
 
     rows = vectorContainer.getRecordCount();

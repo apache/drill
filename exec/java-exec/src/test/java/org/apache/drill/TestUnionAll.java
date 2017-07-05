@@ -28,9 +28,12 @@ import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
-public class TestUnionAll extends BaseTestQuery{
+public class TestUnionAll extends BaseTestQuery {
 
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
@@ -1189,4 +1192,41 @@ public class TestUnionAll extends BaseTestQuery{
         .go();
   }
 
+  @Test // DRILL-4264
+  public void testFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select * from (" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t)\n" +
+                                            "union all\n" +
+                                              "(select t.m.`a.b` as a,\n" +
+                                                      "t.m.a.b as b,\n" +
+                                                      "t.m['a.b'] as c,\n" +
+                                                      "t.rk.q as d,\n" +
+                                                      "t.`rk.q` as e\n" +
+                                              "from dfs_test.`%1$s/%2$s` t))",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
 }

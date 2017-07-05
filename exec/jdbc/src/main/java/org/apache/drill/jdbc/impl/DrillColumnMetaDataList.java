@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -118,9 +118,9 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
         new ArrayList<>(schema.getFieldCount());
     for (int colOffset = 0; colOffset < schema.getFieldCount(); colOffset++) {
       final MaterializedField field = schema.getColumn(colOffset);
-      Class<?> objectClass = getObjectClasses.get( colOffset );
+      Class<?> objectClass = getObjectClasses.get(colOffset);
 
-      final String columnName = field.getPath();
+      final String columnName = field.getName();
 
       final MajorType rpcDataType = field.getType();
       final AvaticaType bundledSqlDataType = getAvaticaType(rpcDataType);

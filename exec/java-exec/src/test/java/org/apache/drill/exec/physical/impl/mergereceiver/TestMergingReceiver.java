@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,7 +49,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       bit2.run();
       client.connect();
@@ -78,7 +78,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       bit2.run();
@@ -102,9 +102,9 @@ public class TestMergingReceiver extends PopUnitTestBase {
           final ValueVector.Accessor va = vv.getAccessor();
           final MaterializedField materializedField = vv.getField();
           final int numValues = va.getValueCount();
-          for(int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
-            if (materializedField.getPath().equals("blue")) {
-              final long longValue = ((Long) va.getObject(valueIdx)).longValue();
+          for (int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
+            if (materializedField.getName().equals("blue")) {
+              final long longValue = (Long) va.getObject(valueIdx);
               // check that order is ascending
               if (lastBlueValue != null) {
                 assertTrue(longValue >= lastBlueValue);
@@ -127,7 +127,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         final Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       bit1.run();
       bit2.run();

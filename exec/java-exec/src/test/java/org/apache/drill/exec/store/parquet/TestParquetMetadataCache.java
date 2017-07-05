@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.google.common.io.Resources;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
@@ -465,36 +466,43 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
-  public void testMetadataCacheAbsolutePaths() throws Exception {
-    final String absolutePathsMetadata = "absolute_paths_metadata";
-    try {
-      test("use dfs_test.tmp");
-      // creating two inner directories to leverage METADATA_DIRECTORIES_FILENAME metadata file as well
-      final String absolutePathsMetadataT1 = absolutePathsMetadata + "/t1";
-      final String absolutePathsMetadataT2 = absolutePathsMetadata + "/t2";
-      test("create table `%s` as select * from cp.`tpch/nation.parquet`", absolutePathsMetadataT1);
-      test("create table `%s` as select * from cp.`tpch/nation.parquet`", absolutePathsMetadataT2);
-      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_directories_with_absolute_paths.requires_replace.txt", absolutePathsMetadata, Metadata.METADATA_DIRECTORIES_FILENAME);
-      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths.requires_replace.txt", absolutePathsMetadata, Metadata.METADATA_FILENAME);
-      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths_t1.requires_replace.txt", absolutePathsMetadataT1, Metadata.METADATA_FILENAME);
-      copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths_t2.requires_replace.txt", absolutePathsMetadataT2, Metadata.METADATA_FILENAME);
-      String query = String.format("select * from %s", absolutePathsMetadata);
-      int expectedRowCount = 50;
-      int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
-      int actualRowCount = testSql(query);
-      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
-          expectedRowCount, actualRowCount);
-      String numFilesPattern = "numFiles=" + expectedNumFiles;
-      String usedMetaPattern = "usedMetadataFile=true";
-      String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), absolutePathsMetadata);
-      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
-          new String[] {"Filter"});
-    } finally {
-      test("drop table if exists %s", absolutePathsMetadata);
+  public void testOldMetadataVersions() throws Exception {
+    final String tablePath = "absolute_paths_metadata";
+    String rootMetadataPath =  new Path("parquet", "metadata_files_with_old_versions").toUri().getPath();
+    // gets folders with different metadata cache versions
+    String[] metadataPaths = new File(Resources.getResource(rootMetadataPath).getFile()).list();
+    for (String metadataPath : metadataPaths) {
+      try {
+        test("use dfs_test.tmp");
+        // creating two inner directories to leverage METADATA_DIRECTORIES_FILENAME metadata file as well
+        final String absolutePathsMetadataT1 = new Path(tablePath, "t1").toUri().getPath();
+        final String absolutePathsMetadataT2 = new Path(tablePath, "t2").toUri().getPath();
+        String createQuery = "create table `%s` as select * from cp.`tpch/nation.parquet`";
+        test(createQuery, absolutePathsMetadataT1);
+        test(createQuery, absolutePathsMetadataT2);
+        Path relativePath = new Path(rootMetadataPath, metadataPath);
+        copyMetaDataCacheToTempReplacingInternalPaths(new Path(relativePath, "metadata_directories.requires_replace.txt"),
+                                                      tablePath, Metadata.METADATA_DIRECTORIES_FILENAME);
+        copyMetaDataCacheToTempReplacingInternalPaths(new Path(relativePath, "metadata_table.requires_replace.txt"),
+                                                      tablePath, Metadata.METADATA_FILENAME);
+        copyMetaDataCacheToTempReplacingInternalPaths(new Path(relativePath, "metadata_table_t1.requires_replace.txt"),
+                                                      absolutePathsMetadataT1, Metadata.METADATA_FILENAME);
+        copyMetaDataCacheToTempReplacingInternalPaths(new Path(relativePath, "metadata_table_t2.requires_replace.txt"),
+                                                      absolutePathsMetadataT2, Metadata.METADATA_FILENAME);
+        String query = String.format("select * from %s", tablePath);
+        int expectedRowCount = 50;
+        int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
+        int actualRowCount = testSql(query);
+        assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+                      expectedRowCount, actualRowCount);
+        String numFilesPattern = "numFiles=" + expectedNumFiles;
+        String usedMetaPattern = "usedMetadataFile=true";
+        String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), tablePath);
+        PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
+                                              new String[]{"Filter"});
+      } finally {
+        test("drop table if exists %s", tablePath);
+      }
     }
   }
 
@@ -678,6 +686,31 @@ public class TestParquetMetadataCache extends PlanTestBase {
           new String[] {"cacheFileRoot", "Filter"});
     } finally {
       FileUtils.deleteQuietly(dataDir);
+    }
+  }
+
+  @Test // DRILL-4264
+  public void testMetadataCacheFieldWithDots() throws Exception {
+    final String tableWithDots = "dfs_test.tmp.`complex_table`";
+    try {
+      test("create table %s as\n" +
+        "select cast(1 as int) as `column.with.dots`, t.`column`.`with.dots`\n" +
+        "from cp.`store/parquet/complex/complex.parquet` t limit 1", tableWithDots);
+
+      String query = String.format("select * from %s", tableWithDots);
+      int expectedRowCount = 1;
+
+      int actualRowCount = testSql(query);
+      assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=false"}, null);
+
+      test("refresh table metadata %s", tableWithDots);
+
+      actualRowCount = testSql(query);
+      assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=true"}, null);
+    } finally {
+      test(String.format("drop table if exists %s", tableWithDots));
     }
   }
 

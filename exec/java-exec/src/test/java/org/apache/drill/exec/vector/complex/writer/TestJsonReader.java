@@ -740,4 +740,33 @@ public class TestJsonReader extends BaseTestQuery {
       org.apache.commons.io.FileUtils.deleteQuietly(directory);
     }
   }
+
+  @Test // DRILL-4264
+  public void testFieldWithDots() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select t.m.`a.b` as a,\n" +
+                                          "t.m.a.b as b,\n" +
+                                          "t.m['a.b'] as c,\n" +
+                                          "t.rk.q as d,\n" +
+                                          "t.`rk.q` as e\n" +
+                                    "from dfs_test.`%s/%s` t",
+                                  directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
+  }
 }

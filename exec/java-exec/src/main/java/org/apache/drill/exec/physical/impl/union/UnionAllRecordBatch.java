@@ -103,7 +103,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     try {
       IterOutcome upstream = unionAllInput.nextBatch();
       logger.debug("Upstream of Union-All: {}", upstream);
-      switch(upstream) {
+      switch (upstream) {
         case NONE:
         case OUT_OF_MEMORY:
         case STOP:
@@ -114,7 +114,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         case OK:
           IterOutcome workOutcome = doWork();
 
-          if(workOutcome != IterOutcome.OK) {
+          if (workOutcome != IterOutcome.OK) {
             return workOutcome;
           } else {
             return upstream;
@@ -164,9 +164,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     transfers.clear();
 
     // If both sides of Union-All are empty
-    if(unionAllInput.isBothSideEmpty()) {
-      for(int i = 0; i < outputFields.size(); ++i) {
-        final String colName = outputFields.get(i).getPath();
+    if (unionAllInput.isBothSideEmpty()) {
+      for (MaterializedField materializedField : outputFields) {
+        final String colName = materializedField.getName();
         final MajorType majorType = MajorType.newBuilder()
             .setMinorType(MinorType.INT)
             .setMode(DataMode.OPTIONAL)
@@ -186,12 +186,12 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     // Uncomment out this line to debug the generated code.
 //    cg.getCodeGenerator().saveCodeForDebugging(true);
     int index = 0;
-    for(VectorWrapper<?> vw : current) {
+    for (VectorWrapper<?> vw : current) {
        ValueVector vvIn = vw.getValueVector();
       // get the original input column names
-      SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getPath());
+      SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getName());
       // get the renamed column names
-      SchemaPath outputPath = SchemaPath.getSimplePath(outputFields.get(index).getPath());
+      SchemaPath outputPath = SchemaPath.getSimplePath(outputFields.get(index).getName());
 
       final ErrorCollector collector = new ErrorCollectorImpl();
       // According to input data names, Minortypes, Datamodes, choose to
@@ -202,19 +202,20 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         // Transfer column
 
         MajorType outputFieldType = outputFields.get(index).getType();
-        MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), outputFieldType);
+        MaterializedField outputField = MaterializedField.create(outputPath.getLastSegment().getNameSegment().getPath(),
+                                                                  outputFieldType);
 
         /*
           todo: Fix if condition when DRILL-4824 is merged
           If condition should be changed to:
-          `if (outputFields.get(index).getPath().equals(inputPath.getAsUnescapedPath())) {`
+          `if (outputFields.get(index).getName().equals(inputPath.getRootSegmentPath())) {`
           DRILL-5419 has changed condition to correct one but this caused regression (DRILL-5521).
           Root cause is missing indication of child column in map types when it is null.
           DRILL-4824 is re-working json reader implementation, including map types and will fix this problem.
           Reverting condition to previous one to avoid regression till DRILL-4824 is merged.
           Unit test - TestJsonReader.testKvgenWithUnionAll().
          */
-        if (outputFields.get(index).getPath().equals(inputPath)) {
+        if (outputFields.get(index).getName().equals(inputPath)) {
           ValueVector vvOut = container.addOrGet(outputField);
           TransferPair tp = vvIn.makeTransferPair(vvOut);
           transfers.add(tp);
@@ -227,7 +228,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
           ValueVector vv = container.addOrGet(outputField, callBack);
           allocationVectors.add(vv);
-          TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
+          TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getName()));
           ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
           cg.addExpr(write);
         }
@@ -240,7 +241,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
         // If the inputs' DataMode is required and the outputs' DataMode is not required
         // cast to the one with the least restriction
-        if(vvIn.getField().getType().getMode() == DataMode.REQUIRED
+        if (vvIn.getField().getType().getMode() == DataMode.REQUIRED
             && outputFields.get(index).getType().getMode() != DataMode.REQUIRED) {
           expr = ExpressionTreeMaterializer.convertToNullableType(expr, vvIn.getField().getType().getMinorType(), context.getFunctionRegistry(), collector);
           if (collector.hasErrors()) {
@@ -250,17 +251,18 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
         // If two inputs' MinorTypes are different,
         // Insert a cast before the Union operation
-        if(vvIn.getField().getType().getMinorType() != outputFields.get(index).getType().getMinorType()) {
+        if (vvIn.getField().getType().getMinorType() != outputFields.get(index).getType().getMinorType()) {
           expr = ExpressionTreeMaterializer.addCastExpression(expr, outputFields.get(index).getType(), context.getFunctionRegistry(), collector);
           if (collector.hasErrors()) {
             throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
           }
         }
 
-        final MaterializedField outputField = MaterializedField.create(outputPath.getAsUnescapedPath(), expr.getMajorType());
+        final MaterializedField outputField = MaterializedField.create(outputPath.getLastSegment().getNameSegment().getPath(),
+                                                                        expr.getMajorType());
         ValueVector vector = container.addOrGet(outputField, callBack);
         allocationVectors.add(vector);
-        TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getPath()));
+        TypedFieldId fid = container.getValueVectorId(outputPath);
 
         boolean useSetSafe = !(vector instanceof FixedWidthVector);
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
@@ -272,12 +274,12 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     unionall = context.getImplementationClass(cg.getCodeGenerator());
     unionall.setup(context, current, this, transfers);
 
-    if(!schemaAvailable) {
+    if (!schemaAvailable) {
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       schemaAvailable = true;
     }
 
-    if(!doAlloc()) {
+    if (!doAlloc()) {
       return IterOutcome.OUT_OF_MEMORY;
     }
 
@@ -298,7 +300,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   // This method is used by inner class to clear the current record batch
   private void clearCurrentRecordBatch() {
-    for(VectorWrapper<?> v: current) {
+    for (VectorWrapper<?> v: current) {
       v.clear();
     }
   }
@@ -333,9 +335,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
     }
 
     public IterOutcome nextBatch() throws SchemaChangeException {
-      if(upstream == RecordBatch.IterOutcome.NOT_YET) {
+      if (upstream == RecordBatch.IterOutcome.NOT_YET) {
         IterOutcome iterLeft = leftSide.nextBatch();
-        switch(iterLeft) {
+        switch (iterLeft) {
           case OK_NEW_SCHEMA:
             /*
              * If the first few record batches are all empty,
@@ -345,7 +347,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
              * Thus, while-loop is necessary to skip those empty batches.
              */
             whileLoop:
-            while(leftSide.getRecordBatch().getRecordCount() == 0) {
+            while (leftSide.getRecordBatch().getRecordCount() == 0) {
               iterLeft = leftSide.nextBatch();
 
               switch(iterLeft) {
@@ -380,11 +382,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         }
 
         IterOutcome iterRight = rightSide.nextBatch();
-        switch(iterRight) {
+        switch (iterRight) {
           case OK_NEW_SCHEMA:
             // Unless there is no record batch on the left side of the inputs,
             // always start processing from the left side.
-            if(leftIsFinish) {
+            if (leftIsFinish) {
               unionAllRecordBatch.setCurrentRecordBatch(rightSide.getRecordBatch());
             } else {
               unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
@@ -402,9 +404,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
              * Thus, while-loop is necessary to skip those empty batches.
              */
             whileLoop:
-            while(rightSide.getRecordBatch().getRecordCount() == 0) {
+            while (rightSide.getRecordBatch().getRecordCount() == 0) {
               iterRight = rightSide.nextBatch();
-              switch(iterRight) {
+              switch (iterRight) {
                 case STOP:
                 case OUT_OF_MEMORY:
                   return iterRight;
@@ -425,7 +427,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               }
             }
 
-            if(leftIsFinish && rightIsFinish) {
+            if (leftIsFinish && rightIsFinish) {
               setBothSideEmpty(true);
             }
 
@@ -446,19 +448,19 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         upstream = IterOutcome.OK_NEW_SCHEMA;
         return upstream;
       } else {
-        if(isBothSideEmpty()) {
+        if (isBothSideEmpty()) {
           return IterOutcome.NONE;
         }
 
         unionAllRecordBatch.clearCurrentRecordBatch();
 
-        if(leftIsFinish && rightIsFinish) {
+        if (leftIsFinish && rightIsFinish) {
           upstream = IterOutcome.NONE;
           return upstream;
-        } else if(leftIsFinish) {
+        } else if (leftIsFinish) {
           IterOutcome iterOutcome = rightSide.nextBatch();
 
-          switch(iterOutcome) {
+          switch (iterOutcome) {
             case NONE:
               rightIsFinish = true;
               // fall through
@@ -468,7 +470,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               return upstream;
 
             case OK_NEW_SCHEMA:
-              if(!rightSide.getRecordBatch().getSchema().equals(rightSchema)) {
+              if (!rightSide.getRecordBatch().getSchema().equals(rightSchema)) {
                 throw new SchemaChangeException("Schema change detected in the right input of Union-All. This is not currently supported");
               }
               iterOutcome = IterOutcome.OK;
@@ -481,9 +483,9 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             default:
               throw new IllegalStateException(String.format("Unknown state %s.", upstream));
           }
-        } else if(rightIsFinish) {
+        } else if (rightIsFinish) {
           IterOutcome iterOutcome = leftSide.nextBatch();
-          switch(iterOutcome) {
+          switch (iterOutcome) {
             case STOP:
             case OUT_OF_MEMORY:
             case NONE:
@@ -501,14 +503,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         } else {
           IterOutcome iterOutcome = leftSide.nextBatch();
 
-          switch(iterOutcome) {
+          switch (iterOutcome) {
             case STOP:
             case OUT_OF_MEMORY:
               upstream = iterOutcome;
               return upstream;
 
             case OK_NEW_SCHEMA:
-              if(!leftSide.getRecordBatch().getSchema().equals(leftSchema)) {
+              if (!leftSide.getRecordBatch().getSchema().equals(leftSchema)) {
                 throw new SchemaChangeException("Schema change detected in the left input of Union-All. This is not currently supported");
               }
 
@@ -549,10 +551,10 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
      *      types are nullable integer
      */
     private void inferOutputFields() {
-      if(!leftIsFinish && !rightIsFinish) {
+      if (!leftIsFinish && !rightIsFinish) {
         // Both sides are non-empty
         inferOutputFieldsBothSide();
-      } else if(!rightIsFinish) {
+      } else if (!rightIsFinish) {
         // Left side is non-empty
         // While use left side's column names as output column names,
         // use right side's column types as output column types.
@@ -585,7 +587,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
         if (hasSameTypeAndMode(leftField, rightField)) {
           MajorType.Builder builder = MajorType.newBuilder().setMinorType(leftField.getType().getMinorType()).setMode(leftField.getDataMode());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
-          outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
+          outputFields.add(MaterializedField.create(leftField.getName(), builder.build()));
         } else {
           // If the output type is not the same,
           // cast the column of one of the table to a data type which is the Least Restrictive
@@ -612,7 +614,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
           dataModes.add(rightField.getType().getMode());
           builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(dataModes));
 
-          outputFields.add(MaterializedField.create(leftField.getPath(), builder.build()));
+          outputFields.add(MaterializedField.create(leftField.getName(), builder.build()));
         }
         ++index;
       }
@@ -624,20 +626,19 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       outputFields = Lists.newArrayList();
 
       final List<String> outputColumnNames = Lists.newArrayList();
-      final Iterator<MaterializedField> iterForNames = schemaForNames.iterator();
-      while(iterForNames.hasNext()) {
-        outputColumnNames.add(iterForNames.next().getPath());
+      for (MaterializedField materializedField : schemaForNames) {
+        outputColumnNames.add(materializedField.getName());
       }
 
       final Iterator<MaterializedField> iterForTypes = schemaForTypes.iterator();
-      for(int i = 0; iterForTypes.hasNext(); ++i) {
+      for (int i = 0; iterForTypes.hasNext(); ++i) {
         MaterializedField field = iterForTypes.next();
         outputFields.add(MaterializedField.create(outputColumnNames.get(i), field.getType()));
       }
     }
 
     public List<MaterializedField> getOutputFields() {
-      if(outputFields == null) {
+      if (outputFields == null) {
         throw new NullPointerException("Output fields have not been inferred");
       }
 
@@ -670,11 +671,11 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
       }
 
       public IterOutcome nextBatch() {
-        if(upstream == IterOutcome.NONE) {
+        if (upstream == IterOutcome.NONE) {
           throw new IllegalStateException(String.format("Unknown state %s.", upstream));
         }
 
-        if(upstream == IterOutcome.NOT_YET) {
+        if (upstream == IterOutcome.NOT_YET) {
           upstream = unionAllRecordBatch.next(recordBatch);
 
           return upstream;
