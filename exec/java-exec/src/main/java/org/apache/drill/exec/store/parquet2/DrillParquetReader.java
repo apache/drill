@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -208,27 +208,28 @@ public class DrillParquetReader extends AbstractRecordReader {
     try {
       this.operatorContext = context;
       schema = footer.getFileMetaData().getSchema();
-      MessageType projection = null;
+      MessageType projection;
 
       if (isStarQuery()) {
         projection = schema;
       } else {
-        columnsNotFound=new ArrayList<SchemaPath>();
+        columnsNotFound = new ArrayList<>();
         projection = getProjection(schema, getColumns(), columnsNotFound);
-        if(projection == null){
+        if (projection == null) {
             projection = schema;
         }
-        if(columnsNotFound!=null && columnsNotFound.size()>0) {
+        if (columnsNotFound != null && columnsNotFound.size() > 0) {
           nullFilledVectors = new ArrayList<>();
-          for(SchemaPath col: columnsNotFound){
+          for (SchemaPath col: columnsNotFound) {
+            // col.toExpr() is used here as field name since we don't want to see these fields in the existing maps
             nullFilledVectors.add(
-              (NullableIntVector)output.addField(MaterializedField.create(col.getAsUnescapedPath(),
+              (NullableIntVector) output.addField(MaterializedField.create(col.toExpr(),
                   org.apache.drill.common.types.Types.optional(TypeProtos.MinorType.INT)),
                 (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT,
                   TypeProtos.DataMode.OPTIONAL)));
           }
-          if(columnsNotFound.size()==getColumns().size()){
-            noColumnsFound=true;
+          if (columnsNotFound.size() == getColumns().size()) {
+            noColumnsFound = true;
           }
         }
       }

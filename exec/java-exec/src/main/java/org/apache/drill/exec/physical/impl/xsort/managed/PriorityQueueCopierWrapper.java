@@ -310,7 +310,7 @@ public class PriorityQueueCopierWrapper extends BaseSortWrapper {
         for (BatchGroup group : batchGroupList) {
           vectors[i++] = group.getValueAccessorById(
               field.getValueClass(),
-              group.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds())
+              group.getValueVectorId(SchemaPath.getSimplePath(field.getName())).getFieldIds())
               .getValueVector();
         }
         cont.add(vectors);

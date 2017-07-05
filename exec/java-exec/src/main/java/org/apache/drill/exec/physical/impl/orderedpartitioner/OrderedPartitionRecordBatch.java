@@ -431,11 +431,10 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     int i = 0;
     for (Ordering od : orderings) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector, context.getFunctionRegistry());
-      SchemaPath schemaPath = SchemaPath.getSimplePath("f" + i++);
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType())
           .clearMode().setMode(TypeProtos.DataMode.REQUIRED);
       TypeProtos.MajorType newType = builder.build();
-      MaterializedField outputField = MaterializedField.create(schemaPath.getAsUnescapedPath(), newType);
+      MaterializedField outputField = MaterializedField.create("f" + i++, newType);
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format(
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
@@ -533,7 +532,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // if this now that all the batches on the queue are processed, we begin processing the incoming batches. For the
     // first one
     // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
-    if (this.startedUnsampledBatches == false) {
+    if (!this.startedUnsampledBatches) {
       this.startedUnsampledBatches = true;
       if (upstream == IterOutcome.OK) {
         upstream = IterOutcome.OK_NEW_SCHEMA;

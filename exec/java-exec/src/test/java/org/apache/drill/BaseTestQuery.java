@@ -628,6 +628,11 @@ public class BaseTestQuery extends ExecTest {
     copyMetaDataCacheToTempWithReplacements(srcFileOnClassPath, destFolderInTmp, metaFileName, null);
   }
 
+  protected static void copyMetaDataCacheToTempReplacingInternalPaths(Path srcFileOnClassPath, String destFolderInTmp,
+                                                                      String metaFileName) throws IOException {
+    copyMetaDataCacheToTempReplacingInternalPaths(srcFileOnClassPath.toUri().getPath(), destFolderInTmp, metaFileName);
+  }
+
   /**
    * Old metadata cache files include full paths to the files that have been scanned.
    * <p>

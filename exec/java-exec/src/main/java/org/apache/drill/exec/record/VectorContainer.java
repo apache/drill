@@ -136,7 +136,7 @@ public class VectorContainer implements VectorAccessible {
 
   @SuppressWarnings({ "resource", "unchecked" })
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
-    final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getPath()));
+    final TypedFieldId id = getValueVectorId(SchemaPath.getSimplePath(field.getName()));
     final ValueVector vector;
     final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
@@ -206,12 +206,12 @@ public class VectorContainer implements VectorAccessible {
    */
   public static VectorContainer canonicalize(VectorContainer original) {
     VectorContainer vc = new VectorContainer();
-    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
+    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<>(original.wrappers);
     // Sort list of VectorWrapper alphabetically based on SchemaPath.
     Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
       @Override
       public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
-        return v1.getField().getPath().compareTo(v2.getField().getPath());
+        return v1.getField().getName().compareTo(v2.getField().getName());
       }
     });
 
@@ -255,9 +255,7 @@ public class VectorContainer implements VectorAccessible {
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
     ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, hyperVector.length);
-    for (int i = 0; i < hyperVector.length; i++) {
-      c[i] = hyperVector[i];
-    }
+    System.arraycopy(hyperVector, 0, c, 0, hyperVector.length);
     // todo: work with a merged schema.
     wrappers.add(HyperVectorWrapper.create(hyperVector[0].getField(), c, releasable));
   }
@@ -283,7 +281,7 @@ public class VectorContainer implements VectorAccessible {
     for (VectorWrapper<?> w : wrappers){
       if (!w.isHyper() && old == w.getValueVector()) {
         w.clear();
-        wrappers.set(i, new SimpleVectorWrapper<ValueVector>(newVector));
+        wrappers.set(i, new SimpleVectorWrapper<>(newVector));
         return;
       }
       i++;

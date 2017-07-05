@@ -293,7 +293,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
       keyExprs[i] = expr;
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
       @SuppressWarnings("resource")
       final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyOutputIds[i] = container.add(vector);
@@ -309,7 +310,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         continue;
       }
 
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
       @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       TypedFieldId id = container.add(vector);
@@ -425,17 +427,17 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     case FOUR_BYTE: {
       JVar var = g.declareClassField("sv4_", g.getModel()._ref(SelectionVector4.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));
-      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));
       return;
     }
     case NONE: {
-      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));;
+      g.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));
       return;
     }
     case TWO_BYTE: {
       JVar var = g.declareClassField("sv2_", g.getModel()._ref(SelectionVector2.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
-      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));
       return;
     }
 

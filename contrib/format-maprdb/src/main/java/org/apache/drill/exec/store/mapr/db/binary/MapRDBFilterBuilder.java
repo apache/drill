@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -95,7 +95,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     String functionName = call.getName();
     ImmutableList<LogicalExpression> args = call.args;
 
-    if (CompareFunctionsProcessor.isCompareFunction(functionName)) {
+    if (MaprDBCompareFunctionsProcessor.isCompareFunction(functionName)) {
       /*
        * HBASE-10848: Bug in HBase versions (0.94.[0-18], 0.96.[0-2], 0.98.[0-1])
        * causes a filter with NullComparator to fail. Enable only if specified in
@@ -105,7 +105,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
       }
 
-      CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call, nullComparatorSupported);
+      MaprDBCompareFunctionsProcessor processor = MaprDBCompareFunctionsProcessor.createFunctionsProcessorInstance(call, nullComparatorSupported);
       if (processor.isSuccess()) {
         nodeScanSpec = createHBaseScanSpec(call, processor);
       }
@@ -156,12 +156,12 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     return new HBaseScanSpec(groupScan.getTableName(), startRow, stopRow, newFilter);
   }
 
-  private HBaseScanSpec createHBaseScanSpec(FunctionCall call, CompareFunctionsProcessor processor) {
+  private HBaseScanSpec createHBaseScanSpec(FunctionCall call, MaprDBCompareFunctionsProcessor processor) {
     String functionName = processor.getFunctionName();
     SchemaPath field = processor.getPath();
     byte[] fieldValue = processor.getValue();
     boolean sortOrderAscending = processor.isSortOrderAscending();
-    boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
+    boolean isRowKey = field.getRootSegmentPath().equals(ROW_KEY);
     if (!(isRowKey
         || (!field.getRootSegment().isLastPath()
             && field.getRootSegment().getChild().isLastPath()
@@ -338,7 +338,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
   }
 
   private HBaseScanSpec createRowKeyPrefixScanSpec(FunctionCall call,
-      CompareFunctionsProcessor processor) {
+      MaprDBCompareFunctionsProcessor processor) {
     byte[] startRow = processor.getRowKeyPrefixStartRow();
     byte[] stopRow  = processor.getRowKeyPrefixStopRow();
     Filter filter   = processor.getRowKeyPrefixFilter();

@@ -199,7 +199,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private void newSchema() throws IOException {
     List<Type> types = Lists.newArrayList();
     for (MaterializedField field : batchSchema) {
-      if (field.getPath().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
+      if (field.getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
         continue;
       }
       types.add(getType(field));
@@ -230,7 +230,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   private PrimitiveType getPrimitiveType(MaterializedField field) {
     MinorType minorType = field.getType().getMinorType();
-    String name = field.getLastName();
+    String name = field.getName();
     PrimitiveTypeName primitiveTypeName = ParquetTypeHelper.getPrimitiveTypeNameForMinorType(minorType);
     Repetition repetition = ParquetTypeHelper.getRepetitionForDataMode(field.getDataMode());
     OriginalType originalType = ParquetTypeHelper.getOriginalTypeForMinorType(minorType);
@@ -248,7 +248,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         for (MaterializedField childField : field.getChildren()) {
           types.add(getType(childField));
         }
-        return new GroupType(dataMode == DataMode.REPEATED ? Repetition.REPEATED : Repetition.OPTIONAL, field.getLastName(), types);
+        return new GroupType(dataMode == DataMode.REPEATED ? Repetition.REPEATED : Repetition.OPTIONAL, field.getName(), types);
       case LIST:
         throw new UnsupportedOperationException("Unsupported type " + minorType);
       default:

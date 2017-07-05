@@ -47,7 +47,7 @@ public class MaterializedField {
     this.children = children;
   }
 
-  public static MaterializedField create(SerializedField serField){
+  public static MaterializedField create(SerializedField serField) {
     LinkedHashSet<MaterializedField> children = new LinkedHashSet<>();
     for (SerializedField sf : serField.getChildList()) {
       children.add(MaterializedField.create(sf));
@@ -66,7 +66,7 @@ public class MaterializedField {
     return serializedFieldBuilder.build();
   }
 
-  public SerializedField.Builder getAsBuilder(){
+  public SerializedField.Builder getAsBuilder() {
     return SerializedField.newBuilder()
         .setMajorType(type)
         .setNamePart(NamePart.newBuilder().setName(name).build());
@@ -82,7 +82,7 @@ public class MaterializedField {
     return newField;
   }
 
-  public void addChild(MaterializedField field){
+  public void addChild(MaterializedField field) {
     children.add(field);
   }
 
@@ -106,47 +106,16 @@ public class MaterializedField {
     return new MaterializedField(name, type, newChildren);
   }
 
-//  public String getLastName(){
-//    PathSegment seg = key.path.getRootSegment();
-//    while (seg.getChild() != null) {
-//      seg = seg.getChild();
-//    }
-//    return seg.getNameSegment().getPath();
-//  }
-
   // TODO: rewrite without as direct match rather than conversion then match.
-  public boolean matches(SerializedField field){
+  public boolean matches(SerializedField field) {
     MaterializedField f = create(field);
     return f.equals(this);
   }
 
-  public static MaterializedField create(String name, MajorType type){
+  public static MaterializedField create(String name, MajorType type) {
     return new MaterializedField(name, type, new LinkedHashSet<MaterializedField>());
   }
 
-//  public String getName(){
-//    StringBuilder sb = new StringBuilder();
-//    boolean first = true;
-//    for(NamePart np : def.getNameList()){
-//      if(np.getType() == Type.ARRAY){
-//        sb.append("[]");
-//      }else{
-//        if(first){
-//          first = false;
-//        }else{
-//          sb.append(".");
-//        }
-//        sb.append('`');
-//        sb.append(np.getName());
-//        sb.append('`');
-//
-//      }
-//    }
-//    return sb.toString();
-//  }
-
-  public String getPath() { return getName(); }
-  public String getLastName() { return getName(); }
   public String getName() { return name; }
   public int getWidth() { return type.getWidth(); }
   public MajorType getType() { return type; }

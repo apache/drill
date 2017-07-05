@@ -95,7 +95,7 @@ public class ColumnExplorer {
    */
   public static boolean isPartitionColumn(OptionManager optionManager, SchemaPath column){
     String partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    String path = column.getAsUnescapedPath();
+    String path = column.getRootSegmentPath();
     return isPartitionColumn(partitionDesignator, path);
   }
 
@@ -187,7 +187,7 @@ public class ColumnExplorer {
       selectedImplicitColumns.putAll(allImplicitColumns);
     } else {
       for (SchemaPath column : columns) {
-        String path = column.getAsUnescapedPath();
+        String path = column.getRootSegmentPath();
         if (isPartitionColumn(partitionDesignator, path)) {
           selectedPartitionColumns.add(Integer.parseInt(path.substring(partitionDesignator.length())));
         } else if (allImplicitColumns.get(path) != null) {

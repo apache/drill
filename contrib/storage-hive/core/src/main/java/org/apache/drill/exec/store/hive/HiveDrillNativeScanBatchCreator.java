@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,10 +80,10 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
       newColumns = Lists.newArrayList();
       Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
       for (SchemaPath column : columns) {
-        Matcher m = pattern.matcher(column.getAsUnescapedPath());
+        Matcher m = pattern.matcher(column.getRootSegmentPath());
         if (m.matches()) {
           selectedPartitionColumns.add(
-              Integer.parseInt(column.getAsUnescapedPath().substring(partitionDesignator.length())));
+              Integer.parseInt(column.getRootSegmentPath().substring(partitionDesignator.length())));
         } else {
           newColumns.add(column);
         }

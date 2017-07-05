@@ -196,7 +196,8 @@ public class ChainedHashTable {
      */
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = keyExprsBuild[i];
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsUnescapedPath(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getLastSegment().getNameSegment().getPath(),
+                                                                      expr.getMajorType());
       @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
@@ -318,8 +319,7 @@ public class ChainedHashTable {
      * aggregate. For join we need to hash everything as double (both for distribution and for comparison) but
      * for aggregation we can avoid the penalty of casting to double
      */
-    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs),
-        incomingProbe != null ? true : false);
+    LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs), incomingProbe != null);
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
     HoldingContainer hash = cg.addExpr(materializedExpr);
     cg.getEvalBlock()._return(hash.getValue());

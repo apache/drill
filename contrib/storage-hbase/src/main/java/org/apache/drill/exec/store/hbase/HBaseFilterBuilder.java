@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -99,7 +99,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
         nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
       }
 
-      CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call, nullComparatorSupported);
+      CompareFunctionsProcessor processor = CompareFunctionsProcessor.createFunctionsProcessorInstance(call, nullComparatorSupported);
       if (processor.isSuccess()) {
         nodeScanSpec = createHBaseScanSpec(call, processor);
       }
@@ -155,7 +155,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     SchemaPath field = processor.getPath();
     byte[] fieldValue = processor.getValue();
     boolean sortOrderAscending = processor.isSortOrderAscending();
-    boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
+    boolean isRowKey = field.getRootSegmentPath().equals(ROW_KEY);
     if (!(isRowKey
         || (!field.getRootSegment().isLastPath()
             && field.getRootSegment().getChild().isLastPath()

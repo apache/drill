@@ -59,12 +59,12 @@ public class ParquetColumnMetadata {
     se = schemaElements.get(column.getPath()[0]);
     type = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
         getDataMode(column), se, options);
-    field = MaterializedField.create(toFieldName(column.getPath()), type);
+    field = MaterializedField.create(toFieldName(column.getPath()).getLastSegment().getNameSegment().getPath(), type);
     length = getDataTypeLength();
   }
 
-  private String toFieldName(String[] paths) {
-    return SchemaPath.getCompoundPath(paths).getAsUnescapedPath();
+  private SchemaPath toFieldName(String[] paths) {
+    return SchemaPath.getCompoundPath(paths);
   }
 
   private TypeProtos.DataMode getDataMode(ColumnDescriptor column) {

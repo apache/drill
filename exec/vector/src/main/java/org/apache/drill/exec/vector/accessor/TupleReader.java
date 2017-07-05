@@ -27,6 +27,13 @@ package org.apache.drill.exec.vector.accessor;
 
 public interface TupleReader extends TupleAccessor {
   ColumnReader column(int colIndex);
+
+  /**
+   * Returns column reader for the column with name specified in param.
+   *
+   * @param colName name of the column in the schema
+   * @return column reader
+   */
   ColumnReader column(String colName);
   Object get(int colIndex);
   String getAsString(int colIndex);

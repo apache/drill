@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
   // Maintains a map with key as field name and value is the vector itself
-  private final MapWithOrdinal<String, ValueVector> vectors =  new MapWithOrdinal<>();
+  private final MapWithOrdinal<String, ValueVector> vectors = new MapWithOrdinal<>();
 
   protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field.clone(), allocator, callBack);
@@ -51,7 +51,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     // create the hierarchy of the child vectors based on the materialized field
     for (MaterializedField child : clonedField.getChildren()) {
       if (!child.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
-        final String fieldName = child.getLastName();
+        final String fieldName = child.getName();
         final ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
         putVector(fieldName, v);
       }
@@ -60,7 +60,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public void close() {
-    for(final ValueVector valueVector : vectors.values()) {
+    for (final ValueVector valueVector : vectors.values()) {
       valueVector.close();
     }
     vectors.clear();
@@ -135,7 +135,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     if (create) {
       final T vector = (T) BasicTypeHelper.getNewVector(name, allocator, type, callBack);
       putChild(name, vector);
-      if (callBack!=null) {
+      if (callBack != null) {
         callBack.doWork();
       }
       return vector;

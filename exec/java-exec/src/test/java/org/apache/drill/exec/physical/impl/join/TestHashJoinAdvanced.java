@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,8 +22,11 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.BaseTestQuery;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 public class TestHashJoinAdvanced extends BaseTestQuery {
 
@@ -88,6 +91,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .build()
         .run();
   }
+
   @Test
   public void testJoinWithDifferentTypesInCondition() throws Exception {
     String query = "select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 " +
@@ -112,7 +116,7 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
         .unOrdered()
         .baselineColumns("bigint_col")
-        .baselineValues(1l)
+        .baselineValues(1L)
         .go();
 
     query = "select count(*) col1 from " +
@@ -123,7 +127,38 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("col1")
-        .baselineValues(4l)
+        .baselineValues(4L)
         .go();
+  }
+
+  @Test //DRILL-2197 Left Join with complex type in projection
+  public void testJoinWithMapAndDotField() throws Exception {
+    File directory = new File(BaseTestQuery.getTempDir("json/input"));
+    try {
+      directory.mkdirs();
+      String fileName = "table.json";
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(directory, fileName)))) {
+        writer.write("{\"rk.q\": \"a\", \"m\": {\"a.b\":\"1\", \"a\":{\"b\":\"2\"}, \"c\":\"3\"}}");
+      }
+
+      String query = String.format("select t1.m.`a.b` as a,\n" +
+                                          "t2.m.a.b as b,\n" +
+                                          "t1.m['a.b'] as c,\n" +
+                                          "t2.rk.q as d,\n" +
+                                          "t1.`rk.q` as e\n" +
+                                   "from dfs_test.`%1$s/%2$s` t1,\n" +
+                                        "dfs_test.`%1$s/%2$s` t2\n" +
+                                  "where t1.m.`a.b`=t2.m.`a.b` and t1.m.a.b=t2.m.a.b",
+                                   directory.toPath().toString(), fileName);
+      testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a", "b", "c", "d", "e")
+        .baselineValues("1", "2", "1", null, "a")
+        .go();
+
+    } finally {
+      org.apache.commons.io.FileUtils.deleteQuietly(directory);
+    }
   }
 }

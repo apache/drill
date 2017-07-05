@@ -317,7 +317,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         outputType = inputType;
       }
 
-      MaterializedField newField = MaterializedField.create(field.getPath(), outputType);
+      MaterializedField newField = MaterializedField.create(field.getName(), outputType);
       container.addOrGet(newField);
 
       JVar inVV = nLJClassGenerator.declareVectorValueSetupAndMember("rightContainer",
@@ -384,7 +384,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(vectorWrapper.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(vectorWrapper.getField().getName(), outputType);
           ValueVector valueVector = container.addOrGet(newField);
           if (valueVector instanceof AbstractContainerVector) {
             vectorWrapper.getValueVector().makeTransferPair(valueVector);

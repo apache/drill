@@ -477,7 +477,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           outputType = inputType;
         }
 
-        final ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getPath(), outputType));
+        final ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getName(), outputType));
         if (v instanceof AbstractContainerVector) {
           vv.getValueVector().makeTransferPair(v);
           v.clear();

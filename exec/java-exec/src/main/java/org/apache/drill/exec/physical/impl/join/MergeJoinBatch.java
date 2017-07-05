@@ -400,7 +400,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -417,7 +417,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           } else {
             outputType = inputType;
           }
-          MaterializedField newField = MaterializedField.create(w.getField().getPath(), outputType);
+          MaterializedField newField = MaterializedField.create(w.getField().getName(), outputType);
           ValueVector v = container.addOrGet(newField);
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);

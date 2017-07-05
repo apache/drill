@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.record;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
@@ -71,7 +71,7 @@ public class TestMaterializedField {
 
         final MaterializedField clone = field.withPathAndType(path, type);
 
-        final boolean isPathEqual = path.equals(clone.getPath());
+        final boolean isPathEqual = path.equals(clone.getName());
         assertTrue("Cloned path does not match the original", isPathEqual);
 
         final boolean isTypeEqual = type.equals(clone.getType());
@@ -83,5 +83,4 @@ public class TestMaterializedField {
     }
 
   }
-
 }

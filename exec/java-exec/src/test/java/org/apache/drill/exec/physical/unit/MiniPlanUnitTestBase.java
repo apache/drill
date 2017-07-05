@@ -23,14 +23,12 @@ import com.google.common.collect.Lists;
 import mockit.NonStrictExpectations;
 import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -54,7 +52,6 @@ import java.util.concurrent.Executors;
 
 import static org.apache.drill.exec.physical.base.AbstractBase.INIT_ALLOCATION;
 import static org.apache.drill.exec.physical.base.AbstractBase.MAX_ALLOCATION;
-import static org.apache.drill.exec.physical.unit.TestMiniPlan.fs;
 
 /**
  * A MiniPlanUnitTestBase extends PhysicalOpUnitTestBase, to construct MiniPlan (aka plan fragment).
@@ -112,7 +109,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
           "Must supply the same number of baseline values as columns in expected schema.");
 
       for (MaterializedField field : expectedSchema) {
-        ret.put(SchemaPath.getSimplePath(field.getPath()).toExpr(), baselineValues[i]);
+        ret.put(SchemaPath.getSimplePath(field.getName()).toExpr(), baselineValues[i]);
         i++;
       }
 

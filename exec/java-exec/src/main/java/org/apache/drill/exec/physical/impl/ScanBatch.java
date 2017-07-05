@@ -359,19 +359,19 @@ public class ScanBatch implements CloseableRecordBatch {
     public <T extends ValueVector> T addField(MaterializedField field,
                                               Class<T> clazz) throws SchemaChangeException {
       // Check if the field exists.
-      ValueVector v = fieldVectorMap.get(field.getPath());
+      ValueVector v = fieldVectorMap.get(field.getName());
       if (v == null || v.getClass() != clazz) {
         // Field does not exist--add it to the map and the output container.
         v = TypeHelper.getNewVector(field, allocator, callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
           throw new SchemaChangeException(
-              String.format(
-                  "The class that was provided, %s, does not correspond to the "
-                  + "expected vector type of %s.",
-                  clazz.getSimpleName(), v.getClass().getSimpleName()));
+            String.format(
+              "The class that was provided, %s, does not correspond to the "
+                + "expected vector type of %s.",
+              clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
 
-        final ValueVector old = fieldVectorMap.put(field.getPath(), v);
+        final ValueVector old = fieldVectorMap.put(field.getName(), v);
         if (old != null) {
           old.clear();
           container.remove(old);
