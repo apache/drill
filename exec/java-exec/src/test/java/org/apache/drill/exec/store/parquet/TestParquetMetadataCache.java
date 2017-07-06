@@ -207,6 +207,34 @@ public class TestParquetMetadataCache extends PlanTestBase {
         .go();
   }
 
+  @Test //DRILL-4511
+  public void testTableDoesNotExistWithEmptyDirectory() throws Exception {
+    File path = new File(getTempDir("empty_directory"));
+    String pathString = path.toURI().getPath();
+    try {
+      path.mkdir();
+      testBuilder()
+          .sqlQuery("refresh table metadata dfs.`%s`", pathString)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(false, String.format("Table %s does not exist.", pathString))
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(path);
+    }
+  }
+
+  @Test //DRILL-4511
+  public void testTableDoesNotExistWithIncorrectTableName() throws Exception {
+    String tableName = "incorrect_table";
+    testBuilder()
+        .sqlQuery("refresh table metadata dfs.`%s`", tableName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Table %s does not exist.", tableName))
+        .go();
+  }
+
   @Test
   public void testNoSupportedError() throws Exception {
     testBuilder()
