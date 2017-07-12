@@ -1,5 +1,5 @@
 {
-  "metadata_version" : "v3",
+  "metadata_version" : "CUSTOM_STRING_REPLACEMENT",
   "columnTypeInfo" : {
     "n_name" : {
       "name" : [ "n_name" ],
@@ -39,7 +39,7 @@
     }
   },
   "files" : [ {
-    "path" : "REPLACED_IN_TEST/absolute_paths_metadata/t1/0_0_0.parquet",
+    "path" : "0_0_0.parquet",
     "length" : 2424,
     "rowGroups" : [ {
       "start" : 4,
