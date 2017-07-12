@@ -139,13 +139,13 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
+  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, Path path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
     Metadata metadata = new Metadata(fs, formatConfig);
     metadata.readBlockMeta(path, false, metaContext);
     return metadata.parquetTableMetadata;
   }
 
-  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
+  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, Path path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
     Metadata metadata = new Metadata(fs, formatConfig);
     metadata.readBlockMeta(path, true, metaContext);
     return metadata.parquetTableMetadataDirs;
@@ -523,13 +523,12 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private void readBlockMeta(String path,
+  private void readBlockMeta(Path path,
       boolean dirsOnly,
       MetadataContext metaContext) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
-    Path p = new Path(path);
-    Path parentDir = Path.getPathWithoutSchemeAndAuthority(p.getParent()); // parent directory of the metadata file
-    String parentDirString = parentDir.toUri().toString(); // string representation for parent directory of the metadata file
+    Path parentDir = Path.getPathWithoutSchemeAndAuthority(path.getParent()); // parent directory of the metadata file
+    String parentDirString = parentDir.toUri().getPath(); // string representation for parent directory of the metadata file
     ObjectMapper mapper = new ObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
@@ -543,7 +542,7 @@ public class Metadata {
     mapper.registerModule(serialModule);
     mapper.registerModule(module);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    FSDataInputStream is = fs.open(p);
+    FSDataInputStream is = fs.open(path);
 
     boolean alreadyCheckedModification = false;
     boolean newMetadata = false;
@@ -557,9 +556,9 @@ public class Metadata {
       logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
       parquetTableMetadataDirs.updateRelativePaths(parentDirString);
-      if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), p, parentDir, metaContext)) {
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadataDirs.getDirectories(), path, parentDir, metaContext)) {
         parquetTableMetadataDirs =
-            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getRight();
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()).toString())).getRight();
         newMetadata = true;
       }
     } else {
@@ -569,9 +568,9 @@ public class Metadata {
       if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
         ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDirString);
       }
-      if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), p, parentDir, metaContext)) {
+      if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), path, parentDir, metaContext)) {
         parquetTableMetadata =
-            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString())).getLeft();
+            (createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(path.getParent()).toString())).getLeft();
         newMetadata = true;
       }
 
@@ -644,11 +643,21 @@ public class Metadata {
     return false;
   }
 
+  /**
+   * Basic class for parquet metadata. Inheritors of this class are json serializable structures of
+   * different versions metadata cache files.
+   *
+   * Bump up metadata major version if metadata structure is changed.
+   * Bump up metadata minor version if only metadata content is changed, but metadata structure is the same.
+   *
+   * Note: keep metadata versions synchronized with {@link MetadataVersion.Versions}
+   */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "metadata_version")
   @JsonSubTypes({
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name="v1"),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name="v2"),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name="v3")
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name = MetadataVersion.Versions.Constants.V1),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = MetadataVersion.Versions.Constants.V2),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.Versions.Constants.V3),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.Versions.Constants.V3_1)
       })
   public static abstract class ParquetTableMetadataBase {
 
@@ -1363,7 +1372,7 @@ public class Metadata {
    *
    * Difference between v3 and v2 : min/max, type_length, precision, scale, repetitionLevel, definitionLevel
    */
-  @JsonTypeName("v3") public static class ParquetTableMetadata_v3 extends ParquetTableMetadataBase {
+  @JsonTypeName("v3_1") public static class ParquetTableMetadata_v3 extends ParquetTableMetadataBase {
     /*
      ColumnTypeInfo is schema information from all the files and row groups, merged into
      one. To get this info, we pass the ParquetTableMetadata object all the way dow to the
@@ -1767,7 +1776,7 @@ public class Metadata {
         List<String> absolutePaths = Lists.newArrayList();
         for (String relativePath : paths) {
           String absolutePath = (new Path(relativePath).isAbsolute()) ? relativePath
-              : new Path(baseDir, relativePath).toUri().toString();
+              : new Path(baseDir, relativePath).toUri().getPath();
           absolutePaths.add(absolutePath);
         }
         return absolutePaths;
@@ -1790,7 +1799,7 @@ public class Metadata {
           Path relativePath = new Path(file.getPath());
           // create a new file if old one contains a relative path, otherwise use an old file
           ParquetFileMetadata_v3 fileWithAbsolutePath = (relativePath.isAbsolute()) ? file
-              : new ParquetFileMetadata_v3(new Path(baseDir, relativePath).toUri().toString(), file.length, file.rowGroups);
+              : new ParquetFileMetadata_v3(new Path(baseDir, relativePath).toUri().getPath(), file.length, file.rowGroups);
           filesWithAbsolutePaths.add(fileWithAbsolutePath);
         }
         return filesWithAbsolutePaths;
@@ -1837,9 +1846,81 @@ public class Metadata {
           .relativize(fullPathWithoutSchemeAndAuthority.toUri()));
       if (relativeFilePath.isAbsolute()) {
         throw new IllegalStateException(String.format("Path %s is not a subpath of %s.",
-            basePathWithoutSchemeAndAuthority.toUri().toString(), fullPathWithoutSchemeAndAuthority.toUri().toString()));
+            basePathWithoutSchemeAndAuthority.toUri().getPath(), fullPathWithoutSchemeAndAuthority.toUri().getPath()));
       }
-      return relativeFilePath.toUri().toString();
+      return relativeFilePath.toUri().getPath();
+    }
+  }
+
+  /**
+   * Used to identify metadata version by the deserialization "metadata_version" first property
+   * from the metadata cache file
+   */
+  public static class MetadataVersion {
+    @JsonProperty("metadata_version")
+    public String textVersion;
+
+    /**
+     * Supported metadata versions.
+     * Note: keep them synchronized with {@link ParquetTableMetadataBase} versions
+     */
+    enum Versions {
+      v1(Constants.V1),
+      v2(Constants.V2),
+      v3(Constants.V3),
+      v3_1(Constants.V3_1);
+
+      private final String version;
+
+      Versions(String version) {
+        this.version = version;
+      }
+
+      public String getVersion() {
+        return version;
+      }
+
+      public static Versions fromString(String version) {
+        for (Versions v : Versions.values()) {
+          if (v.version.equalsIgnoreCase(version)) {
+            return v;
+          }
+        }
+        return null;
+      }
+
+      public static class Constants {
+        public static final String V1 = "v1";
+        public static final String V2 = "v2";
+        public static final String V3 = "v3";
+        public static final String V3_1 = "v3_1";
+      }
+    }
+
+    /**
+     * @param fs current file system
+     * @param path of metadata cache file
+     * @return true if metadata version is supported, false otherwise
+     * @throws IOException if parquet metadata can't be deserialized from the json file
+     */
+    public static boolean isVersionSupported(FileSystem fs, Path path) throws IOException {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      FSDataInputStream is = fs.open(path);
+
+      MetadataVersion metadataVersion = mapper.readValue(is, MetadataVersion.class);
+      Versions version = Versions.fromString(metadataVersion.textVersion);
+      if (!(version == null)) {
+        logger.debug("Metadata version is {}", version.getVersion());
+        return true;
+      } else {
+        logger.error("Drillbit version {} cannot read metadata file version {}", DrillVersionInfo.getVersion(),
+            metadataVersion.textVersion);
+        // Ignoring the error to perform the query without using parquet metadata cache file
+        logger.warn("Ignoring unsupported metadata file version {}. Query performance may be slow.",
+            metadataVersion.textVersion);
+        return false;
+      }
     }
   }
 

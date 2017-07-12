@@ -39,6 +39,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   private static final String tableName1 = "parquetTable1";
   private static final String tableName2 = "parquetTable2";
   private static final String RELATIVE_PATHS_METADATA = "relative_paths_metadata";
+  private static final String PATH_WITH_SPACES = "path with spaces";
 
 
   @BeforeClass
@@ -474,10 +475,25 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
+  @Test
+  public void testSpacesInMetadataCachePath() throws Exception {
+    try {
+      // creating multilevel table to store path with spaces in both metadata files (METADATA and METADATA_DIRECTORIES)
+      test("create table dfs_test.tmp.`%1$s` as select * from cp.`tpch/nation.parquet`", PATH_WITH_SPACES);
+      test("create table dfs_test.tmp.`%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", PATH_WITH_SPACES);
+      test("refresh table metadata dfs_test.tmp.`%s`", PATH_WITH_SPACES);
+      checkForMetadataFile(PATH_WITH_SPACES);
+      int rowCount = testSql(String.format("select * from dfs_test.tmp.`%s`", PATH_WITH_SPACES));
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files", 50, rowCount);
+    } finally {
+      test("drop table if exists dfs_test.tmp.`%s`", PATH_WITH_SPACES);
+    }
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
-    assertTrue(String.format("There is no metadata cache file for the %s table", table),
+    assertTrue(String.format("There is no metadata cache file for the `%s` table", table),
         Files.exists(new File(metaFile).toPath()));
   }
 
