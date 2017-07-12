@@ -119,6 +119,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;
+  private final MetadataContext metaContext;
   private String selectionRoot;
 
   private boolean usedMetadataCache = false;
@@ -172,26 +173,23 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.selectionRoot = selectionRoot;
     this.cacheFileRoot = cacheFileRoot;
     this.filter = filter;
+    this.metaContext = new MetadataContext();
 
-    init(null);
+    init();
   }
 
   public ParquetGroupScan( //
       String userName,
       FileSelection selection, //
       ParquetFormatPlugin formatPlugin, //
-      String selectionRoot,
-      String cacheFileRoot,
-      List<SchemaPath> columns) throws IOException{
-    this(userName, selection, formatPlugin, selectionRoot, cacheFileRoot, columns, ValueExpressions.BooleanExpression.TRUE);
+      List<SchemaPath> columns) throws IOException {
+    this(userName, selection, formatPlugin, columns, ValueExpressions.BooleanExpression.TRUE);
   }
 
   public ParquetGroupScan( //
       String userName,
       FileSelection selection, //
       ParquetFormatPlugin formatPlugin, //
-      String selectionRoot,
-      String cacheFileRoot,
       List<SchemaPath> columns,
       LogicalExpression filter) //
       throws IOException {
@@ -201,19 +199,18 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.formatConfig = formatPlugin.getConfig();
     this.fs = ImpersonationUtil.createFileSystem(userName, formatPlugin.getFsConf());
 
-    this.selectionRoot = selectionRoot;
-    this.cacheFileRoot = cacheFileRoot;
+    this.selectionRoot = selection.getSelectionRoot();
+    this.cacheFileRoot = selection.getCacheFileRoot();
+
+    MetadataContext metadataContext = selection.getMetaContext();
+    this.metaContext = metadataContext != null ? metadataContext : new MetadataContext();
 
     final FileSelection fileSelection = expandIfNecessary(selection);
 
     this.entries = Lists.newArrayList();
-    if (fileSelection.getMetaContext() != null &&
-        (fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_STARTED ||
-          fileSelection.getMetaContext().getPruneStatus() == PruneStatus.NOT_PRUNED)) {
-      // if pruning was not applicable or was attempted and nothing was pruned, initialize the
-      // entries with just the selection root instead of the fully expanded list to reduce overhead.
-      // The fully expanded list is already stored as part of the fileSet.
-      // TODO: at some point we should examine whether the list of entries is absolutely needed.
+
+    if (checkForInitializingEntriesWithSelectionRoot()) {
+      // The fully expanded list is already stored as part of the fileSet
       entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
     } else {
       for (String fileName : fileSelection.getFiles()) {
@@ -223,13 +220,20 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
     this.filter = filter;
 
-    init(fileSelection.getMetaContext());
+    init();
   }
 
   /*
    * This is used to clone another copy of the group scan.
    */
   private ParquetGroupScan(ParquetGroupScan that) {
+    this(that, null);
+  }
+
+  /*
+   * This is used to clone another copy of the group scan, but keep the metadata caching info from the file selection
+   */
+  private ParquetGroupScan(ParquetGroupScan that, FileSelection selection) {
     super(that);
     this.columns = that.columns == null ? null : Lists.newArrayList(that.columns);
     this.endpointAffinities = that.endpointAffinities == null ? null : Lists.newArrayList(that.endpointAffinities);
@@ -248,7 +252,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.usedMetadataCache = that.usedMetadataCache;
     this.parquetTableMetadata = that.parquetTableMetadata;
     this.filter = that.filter;
-    this.cacheFileRoot = that.cacheFileRoot;
+    if (selection != null) {
+      this.cacheFileRoot = selection.getCacheFileRoot();
+      MetadataContext metaContext = selection.getMetaContext();
+      this.metaContext = metaContext != null ? metaContext : that.metaContext;
+    } else {
+      this.cacheFileRoot = that.cacheFileRoot;
+      this.metaContext = that.metaContext;
+    }
   }
 
   /**
@@ -268,11 +279,31 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // use the cacheFileRoot if provided (e.g after partition pruning)
     Path metaFilePath = new Path(cacheFileRoot != null ? cacheFileRoot : selectionRoot, Metadata.METADATA_FILENAME);
     if (!fs.exists(metaFilePath)) { // no metadata cache
+      if (selection.isExpandedPartial()) {
+        logger.error("'{}' metadata file does not exist, but metadata directories cache file is present", metaFilePath);
+        metaContext.setMetadataCacheCorrupted(true);
+      }
+
       return selection;
     }
 
-    FileSelection expandedSelection = initFromMetadataCache(selection, metaFilePath);
-    return expandedSelection;
+    return expandSelectionFromMetadataCache(selection, metaFilePath);
+  }
+
+  /**
+   * For two cases the entries should be initialized with just the selection root instead of the fully expanded list:
+   * <ul>
+   *   <li> When metadata caching is corrupted (to use correct file selection)
+   *   <li> Metadata caching is correct and used, but pruning was not applicable or was attempted and nothing was pruned
+   *        (to reduce overhead in parquet group scan).
+   * </ul>
+   *
+   * @return true if entries should be initialized with selection root, false otherwise
+   */
+  private boolean checkForInitializingEntriesWithSelectionRoot() {
+    // TODO: at some point we should examine whether the list of entries is absolutely needed.
+    return metaContext.isMetadataCacheCorrupted() || (parquetTableMetadata != null &&
+        (metaContext.getPruneStatus() == PruneStatus.NOT_STARTED || metaContext.getPruneStatus() == PruneStatus.NOT_PRUNED));
   }
 
   public List<ReadEntryWithPath> getEntries() {
@@ -633,14 +664,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
    * @throws UserException when the updated selection is empty, this happens if the user selects an empty folder.
    */
   private FileSelection
-  initFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
+  expandSelectionFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
     // get the metadata for the root directory by reading the metadata file
     // parquetTableMetadata contains the metadata for all files in the selection root folder, but we need to make sure
     // we only select the files that are part of selection (by setting fileSet appropriately)
 
     // get (and set internal field) the metadata for the directory by reading the metadata file
-    this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString(), selection.getMetaContext(), formatConfig);
-    if (formatConfig.autoCorrectCorruptDates) {
+    parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath, metaContext, formatConfig);
+    if (ignoreExpandingSelection(parquetTableMetadata)) {
+      return selection;
+    }
+    if (formatConfig.areCorruptDatesAutoCorrected()) {
       ParquetReaderUtility.correctDatesInMetadataCache(this.parquetTableMetadata);
     }
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
@@ -656,8 +690,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         fileSet.add(file.getPath());
       }
 
-    } else if (selection.isExpandedPartial() && !selection.hadWildcard() &&
-        cacheFileRoot != null) {
+    } else if (selection.isExpandedPartial() && !selection.hadWildcard() && cacheFileRoot != null) {
       if (selection.wasAllPartitionsPruned()) {
         // if all partitions were previously pruned, we only need to read 1 file (for the schema)
         fileSet.add(this.parquetTableMetadata.getFiles().get(0).getPath());
@@ -677,7 +710,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         if (status.isDirectory()) {
           //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(cacheFileRoot, Metadata.METADATA_FILENAME);
-          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString(), selection.getMetaContext(), formatConfig);
+          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
+          if (ignoreExpandingSelection(metadata)) {
+            return selection;
+          }
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
             fileSet.add(file.getPath());
           }
@@ -710,11 +746,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         cacheFileRoot, selection.wasAllPartitionsPruned());
 
     newSelection.setExpandedFully();
-    newSelection.setMetaContext(selection.getMetaContext());
+    newSelection.setMetaContext(metaContext);
     return newSelection;
   }
 
-  private void init(MetadataContext metaContext) throws IOException {
+  private void init() throws IOException {
     Path metaPath = null;
     if (entries.size() == 1 && parquetTableMetadata == null) {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
@@ -723,24 +759,31 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         // if querying a single file we can look up the metadata directly from the file
         metaPath = new Path(p, Metadata.METADATA_FILENAME);
       }
-      if (metaPath != null && fs.exists(metaPath)) {
-        usedMetadataCache = true;
-        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
-      } else {
+      if (!metaContext.isMetadataCacheCorrupted() && metaPath != null && fs.exists(metaPath)) {
+        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
+        if (parquetTableMetadata != null) {
+          usedMetadataCache = true;
+        }
+      }
+      if (!usedMetadataCache) {
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString(), formatConfig);
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
       metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
-        usedMetadataCache = true;
+      if (!metaContext.isMetadataCacheCorrupted() && fs.isDirectory(new Path(selectionRoot))
+          && fs.exists(metaPath)) {
         if (parquetTableMetadata == null) {
-          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
+          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath, metaContext, formatConfig);
         }
-        if (fileSet != null) {
-          parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+        if (parquetTableMetadata != null) {
+          usedMetadataCache = true;
+          if (fileSet != null) {
+            parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+          }
         }
-      } else {
+      }
+      if (!usedMetadataCache) {
         final List<FileStatus> fileStatuses = Lists.newArrayList();
         for (ReadEntryWithPath entry : entries) {
           fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, Path.getPathWithoutSchemeAndAuthority(new Path(entry.getPath())), true));
@@ -913,10 +956,6 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return toString();
   }
 
-  public void setCacheFileRoot(String cacheFileRoot) {
-    this.cacheFileRoot = cacheFileRoot;
-  }
-
   @Override
   public String toString() {
     String cacheFileString = "";
@@ -972,10 +1011,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
   @Override
   public ParquetGroupScan clone(FileSelection selection) throws IOException {
-    ParquetGroupScan newScan = new ParquetGroupScan(this);
+    ParquetGroupScan newScan = new ParquetGroupScan(this, selection);
     newScan.modifyFileSelection(selection);
-    newScan.setCacheFileRoot(selection.cacheFileRoot);
-    newScan.init(selection.getMetaContext());
+    newScan.init();
     return newScan;
   }
 
@@ -1121,6 +1159,22 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       logger.warn("Could not apply filter prune due to Exception : {}", e);
       return null;
     }
+  }
+
+  /**
+   * If metadata is corrupted, ignore expanding selection and reset parquetTableMetadata and fileSet fields
+   *
+   * @param metadata parquet table metadata
+   * @return true if parquet metadata is corrupted, false otherwise
+   */
+  private boolean ignoreExpandingSelection(ParquetTableMetadataBase metadata) {
+    if (metadata == null || metaContext.isMetadataCacheCorrupted()) {
+      logger.debug("Selection can't be expanded since metadata file is corrupted or metadata version is not supported");
+      this.parquetTableMetadata = null;
+      this.fileSet = null;
+      return true;
+    }
+    return false;
   }
 
 }
