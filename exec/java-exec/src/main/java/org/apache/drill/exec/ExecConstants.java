@@ -122,10 +122,10 @@ public interface ExecConstants {
   String HTTP_SESSION_MEMORY_RESERVATION = "drill.exec.http.session.memory.reservation";
   String HTTP_SESSION_MEMORY_MAXIMUM = "drill.exec.http.session.memory.maximum";
   String HTTP_SESSION_MAX_IDLE_SECS = "drill.exec.http.session_max_idle_secs";
-  String HTTP_KEYSTORE_PATH = "javax.net.ssl.keyStore";
-  String HTTP_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
-  String HTTP_TRUSTSTORE_PATH = "javax.net.ssl.trustStore";
-  String HTTP_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword";
+  String HTTP_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";
+  String HTTP_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword";
+  String HTTP_TRUSTSTORE_PATH = "drill.exec.ssl.trustStorePath";
+  String HTTP_TRUSTSTORE_PASSWORD = "drill.exec.ssl.trustStorePassword";
   String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
