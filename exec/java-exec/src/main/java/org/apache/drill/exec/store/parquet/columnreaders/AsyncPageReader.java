@@ -130,7 +130,10 @@ class AsyncPageReader extends PageReader {
 
   @Override protected void init() throws IOException {
     super.init();
-    asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+    //Avoid Init if a shutdown is already in progress even if init() is called once
+    if (!parentColumnReader.isShuttingDown) {
+      asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
+    }
   }
 
   private DrillBuf getDecompressedPageData(ReadStatus readStatus) {
@@ -224,7 +227,7 @@ class AsyncPageReader extends PageReader {
         }
         //if the queue was full before we took a page out, then there would
         // have been no new read tasks scheduled. In that case, schedule a new read.
-        if (pageQueueFull) {
+        if (!parentColumnReader.isShuttingDown && pageQueueFull) {
           asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
         }
       }
@@ -256,7 +259,7 @@ class AsyncPageReader extends PageReader {
             }
             //if the queue was full before we took a page out, then there would
             // have been no new read tasks scheduled. In that case, schedule a new read.
-            if (pageQueueFull) {
+            if (!parentColumnReader.isShuttingDown && pageQueueFull) {
               asyncPageRead.offer(threadPool.submit(new AsyncPageReaderTask(debugName, pageQueue)));
             }
           }
@@ -278,6 +281,7 @@ class AsyncPageReader extends PageReader {
   }
 
   @Override public void clear() {
+    //Cancelling all existing AsyncPageReaderTasks
     while (asyncPageRead != null && !asyncPageRead.isEmpty()) {
       try {
         Future<Void> f = asyncPageRead.poll();
@@ -298,12 +302,13 @@ class AsyncPageReader extends PageReader {
     while (!pageQueue.isEmpty()) {
       r = null;
       try {
-        r = pageQueue.take();
+        r = pageQueue.poll();
         if (r == ReadStatus.EMPTY) {
           break;
         }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        //Reporting because we shouldn't get this
+        logger.error(e.getMessage());
       } finally {
         if (r != null && r.pageData != null) {
           r.pageData.release();
@@ -412,6 +417,7 @@ class AsyncPageReader extends PageReader {
       try {
         PageHeader pageHeader = Util.readPageHeader(parent.dataReader);
         int compressedSize = pageHeader.getCompressed_page_size();
+        if ( parent.parentColumnReader.isShuttingDown ) { return null; } //Opportunity to skip expensive Parquet processing
         pageData = parent.dataReader.getNext(compressedSize);
         bytesRead = compressedSize;
 
@@ -438,7 +444,7 @@ class AsyncPageReader extends PageReader {
           queue.put(readStatus);
           // if the queue is not full, schedule another read task immediately. If it is then the consumer
           // will schedule a new read task as soon as it removes a page from the queue.
-          if (queue.remainingCapacity() > 0) {
+          if (!parentColumnReader.isShuttingDown && queue.remainingCapacity() > 0) {
             asyncPageRead.offer(parent.threadPool.submit(new AsyncPageReaderTask(debugName, queue)));
           }
         }
@@ -454,6 +460,7 @@ class AsyncPageReader extends PageReader {
         }
         parent.handleAndThrowException(e, "Exception occurred while reading from disk.");
       } finally {
+        //Nothing to do if isShuttingDown.
     }
       return null;
     }

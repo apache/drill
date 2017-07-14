@@ -77,7 +77,7 @@ std::string getMessage(uint32_t msgId, ...){
     assert((ERR_NONE <= msgId) && (msgId < ERR_QRY_MAX));
     va_list args;
     va_start (args, msgId);
-    vsprintf (str, errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);
+    vsnprintf (str, sizeof(str), errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);
     va_end (args);
     s=std::string("[")+boost::lexical_cast<std::string>(msgId)+std::string("]")+str;
     return s;

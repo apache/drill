@@ -2377,7 +2377,7 @@ status_t DrillClientQueryResult::setupColumnDefs(exec::shared::QueryData* pQuery
         for(std::vector<Drill::FieldMetadata*>::iterator it = this->m_columnDefs->begin(); it != this->m_columnDefs->end(); ++it){
             // the key is the field_name + type
             char type[256];
-            sprintf(type, ":%d:%d",(*it)->getMinorType(), (*it)->getDataMode() );
+            snprintf(type, sizeof(type), ":%d:%d",(*it)->getMinorType(), (*it)->getDataMode() );
             std::string k= (*it)->getName()+type;
             oldSchema[k]=*it;
             delete *it;
@@ -2394,7 +2394,7 @@ status_t DrillClientQueryResult::setupColumnDefs(exec::shared::QueryData* pQuery
             //Look for changes in the vector and trigger a Schema change event if necessary.
             //If vectors are different, then call the schema change listener.
             char type[256];
-            sprintf(type, ":%d:%d",fmd->getMinorType(), fmd->getDataMode() );
+            snprintf(type, sizeof(type), ":%d:%d",fmd->getMinorType(), fmd->getDataMode() );
             std::string k= fmd->getName()+type;
             std::map<std::string, Drill::FieldMetadata*>::iterator iter=oldSchema.find(k);
             if(iter==oldSchema.end()){
