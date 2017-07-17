@@ -343,6 +343,15 @@ public interface ExecConstants {
       MAX_QUERY_MEMORY_PER_NODE_KEY, 1024 * 1024, Long.MAX_VALUE, 2 * 1024 * 1024 * 1024L);
 
   /**
+   * Minimum memory alocated to each buffered operator instance.
+   * <p/>
+   * DEFAULT: 40 MB
+   */
+  String MIN_MEMORY_PER_BUFFERED_OP_KEY = "planner.memory.min_memory_per_buffered_op";
+  LongValidator MIN_MEMORY_PER_BUFFERED_OP = new RangeLongValidator(
+      MIN_MEMORY_PER_BUFFERED_OP_KEY, 1024 * 1024, Long.MAX_VALUE, 40 * 1024 * 1024L);
+
+  /**
    * Extra query memory per node for non-blocking operators.
    * NOTE: This option is currently used only for memory estimation.
    * <p/>
