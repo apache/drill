@@ -2307,6 +2307,10 @@ namespace { // anonymous
 namespace { // anonymous
 // Helper class to wait on ServerMeta results
 struct ServerMetaContext {
+    ServerMetaContext() : m_done(false), m_status(QRY_FAILURE) 
+    {
+        ; // Do nothing.
+    }
 	bool m_done;
 	status_t m_status;
 	exec::user::ServerMeta m_serverMeta;
