@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ImplicitColumnExplorer {
+public class ColumnExplorer {
 
   private final String partitionDesignator;
   private final List<SchemaPath> columns;
@@ -51,7 +51,7 @@ public class ImplicitColumnExplorer {
    * between actual table columns, partition columns and implicit file columns.
    * Also populates map with implicit columns names as keys and their values
    */
-  public ImplicitColumnExplorer(FragmentContext context, List<SchemaPath> columns) {
+  public ColumnExplorer(FragmentContext context, List<SchemaPath> columns) {
     this(context.getOptions(), columns);
   }
 
@@ -60,7 +60,7 @@ public class ImplicitColumnExplorer {
    * between actual table columns, partition columns and implicit file columns.
    * Also populates map with implicit columns names as keys and their values
    */
-  public ImplicitColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
+  public ColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
     this.partitionDesignator = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     this.columns = columns;
     this.isStarQuery = columns != null && AbstractRecordReader.isStarQuery(columns);
@@ -133,6 +133,24 @@ public class ImplicitColumnExplorer {
   }
 
   /**
+   * Checks if current column selection contains partition columns.
+   *
+   * @return true if partition columns are present, false otherwise
+   */
+  public boolean containsPartitionColumns() {
+    return !selectedPartitionColumns.isEmpty();
+  }
+
+  /**
+   * Checks if current column selection contains implicit columns.
+   *
+   * @return true if implicit columns are present, false otherwise
+   */
+  public boolean containsImplicitColumns() {
+    return !selectedImplicitColumns.isEmpty();
+  }
+
+  /**
    * If it is not star query, sorts out columns into three categories:
    * 1. table columns
    * 2. partition columns
@@ -169,7 +187,7 @@ public class ImplicitColumnExplorer {
     FQN (ExecConstants.IMPLICIT_FQN_COLUMN_LABEL) {
       @Override
       public String getValue(Path path) {
-        return path.toString();
+        return path.toUri().getPath();
       }
     },
 
@@ -179,7 +197,7 @@ public class ImplicitColumnExplorer {
     FILEPATH (ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL) {
       @Override
       public String getValue(Path path) {
-        return path.getParent().toString();
+        return path.getParent().toUri().getPath();
       }
     },
 

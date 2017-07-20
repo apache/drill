@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -256,7 +256,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         "where concat(a, 'asdf') = 'asdf'", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Scan.*a.parquet.*numFiles=1"};
+    final String[] expectedPlan = {"Scan.*a.parquet.*numFiles = 1"};
     final String[] excludedPlan = {"Filter"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -265,7 +265,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("col")
-        .baselineValues(1l)
+        .baselineValues(1L)
         .build()
         .run();
   }

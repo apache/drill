@@ -58,7 +58,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.store.ImplicitColumnExplorer;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -500,7 +500,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   }
 
   private boolean isImplicitFileColumn(ValueVector vvIn) {
-    return ImplicitColumnExplorer.initImplicitFileColumns(context.getOptions()).get(vvIn.getField().getName()) != null;
+    return ColumnExplorer.initImplicitFileColumns(context.getOptions()).get(vvIn.getField().getName()) != null;
   }
 
   private List<NamedExpression> getExpressionList() {
