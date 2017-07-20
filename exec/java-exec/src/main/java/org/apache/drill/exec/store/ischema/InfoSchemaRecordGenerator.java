@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -250,7 +250,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public PojoRecordReader<Records.Catalog> getRecordReader() {
-      return new PojoRecordReader<>(Records.Catalog.class, records.iterator());
+      return new PojoRecordReader<>(Records.Catalog.class, records);
     }
 
     @Override
@@ -269,7 +269,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public PojoRecordReader<Records.Schema> getRecordReader() {
-      return new PojoRecordReader<>(Records.Schema.class, records.iterator());
+      return new PojoRecordReader<>(Records.Schema.class, records);
     }
 
     @Override
@@ -290,7 +290,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public PojoRecordReader<Records.Table> getRecordReader() {
-      return new PojoRecordReader<>(Records.Table.class, records.iterator());
+      return new PojoRecordReader<>(Records.Table.class, records);
     }
 
     @Override
@@ -341,7 +341,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public PojoRecordReader<Records.View> getRecordReader() {
-      return new PojoRecordReader<>(Records.View.class, records.iterator());
+      return new PojoRecordReader<>(Records.View.class, records);
     }
 
     @Override
@@ -362,7 +362,7 @@ public abstract class InfoSchemaRecordGenerator<S> {
 
     @Override
     public PojoRecordReader<Records.Column> getRecordReader() {
-      return new PojoRecordReader<>(Records.Column.class, records.iterator());
+      return new PojoRecordReader<>(Records.Column.class, records);
     }
 
     @Override

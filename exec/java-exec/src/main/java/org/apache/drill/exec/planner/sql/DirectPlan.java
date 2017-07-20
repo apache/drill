@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.util.Collections;
-import java.util.Iterator;
-
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanPropertiesBuilder;
@@ -33,6 +30,9 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
+import java.util.Collections;
+import java.util.List;
+
 public class DirectPlan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectPlan.class);
 
@@ -43,12 +43,12 @@ public class DirectPlan {
 
   @SuppressWarnings("unchecked")
   public static <T> PhysicalPlan createDirectPlan(QueryContext context, T obj){
-    Iterator<T> iter = (Iterator<T>) Collections.singleton(obj).iterator();
-    return createDirectPlan(context.getCurrentEndpoint(), iter, (Class<T>) obj.getClass());
+    return createDirectPlan(context.getCurrentEndpoint(), Collections.singletonList(obj), (Class<T>) obj.getClass());
 
   }
-  public static <T> PhysicalPlan createDirectPlan(DrillbitEndpoint endpoint, Iterator<T> iterator, Class<T> clazz){
-    PojoRecordReader<T> reader = new PojoRecordReader<T>(clazz, iterator);
+
+  public static <T> PhysicalPlan createDirectPlan(DrillbitEndpoint endpoint, List<T> records, Class<T> clazz){
+    PojoRecordReader<T> reader = new PojoRecordReader<>(clazz, records);
     DirectGroupScan scan = new DirectGroupScan(reader);
     Screen screen = new Screen(scan, endpoint);
 

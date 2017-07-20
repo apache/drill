@@ -54,7 +54,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ImplicitColumnExplorer;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -1063,7 +1063,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     ParquetFilterPredicate filterPredicate = null;
 
     for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
-      final ImplicitColumnExplorer columnExplorer = new ImplicitColumnExplorer(optionManager, this.columns);
+      final ColumnExplorer columnExplorer = new ColumnExplorer(optionManager, this.columns);
       Map<String, String> implicitColValues = columnExplorer.populateImplicitColumns(file.getPath(), selectionRoot);
 
       for (RowGroupMetadata rowGroup : file.getRowGroups()) {
