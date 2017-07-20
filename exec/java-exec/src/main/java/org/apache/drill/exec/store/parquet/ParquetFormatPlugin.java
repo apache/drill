@@ -223,14 +223,16 @@ public class ParquetFormatPlugin implements FormatPlugin{
           MetadataContext metaContext = new MetadataContext();
 
           ParquetTableMetadataDirs mDirs = Metadata.readMetadataDirs(fs, dirMetaPath, metaContext, formatConfig);
-          if (mDirs.getDirectories().size() > 0) {
-            FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
-                selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);
-            dirSelection.setExpandedPartial();
-            dirSelection.setMetaContext(metaContext);
+          if (mDirs != null) {
+            if (mDirs.getDirectories().size() > 0) {
+              FileSelection dirSelection = FileSelection.createFromDirectories(mDirs.getDirectories(), selection,
+                  selection.getSelectionRoot() /* cacheFileRoot initially points to selectionRoot */);
+              dirSelection.setExpandedPartial();
+              dirSelection.setMetaContext(metaContext);
 
-            return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
-                new FormatSelection(plugin.getConfig(), dirSelection));
+              return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+                  new FormatSelection(plugin.getConfig(), dirSelection));
+            }
           }
         }
         if(isDirReadable(fs, selection.getFirstPath(fs))) {

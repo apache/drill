@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,6 +41,10 @@ public class MetadataContext {
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
+  // False values of these flags allow to avoid double reading of corrupted or unsupported metadata files
+  public boolean isMetaCacheFileCorrect = true;
+  public boolean isMetaDirsCacheFileCorrect = true;
+
   public MetadataContext() {
   }
 
@@ -61,6 +65,8 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
+    isMetaCacheFileCorrect = true;
+    isMetaDirsCacheFileCorrect = true;
   }
 
   public void setPruneStatus(PruneStatus status) {

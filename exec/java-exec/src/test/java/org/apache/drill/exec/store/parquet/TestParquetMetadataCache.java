@@ -18,10 +18,12 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,23 +40,29 @@ public class TestParquetMetadataCache extends PlanTestBase {
   private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
   private static final String tableName1 = "parquetTable1";
   private static final String tableName2 = "parquetTable2";
-  private static final String RELATIVE_PATHS_METADATA = "relative_paths_metadata";
-  private static final String PATH_WITH_SPACES = "path with spaces";
+  private static File dataDir1;
+  private static File dataDir2;
 
 
   @BeforeClass
   public static void copyData() throws Exception {
     // copy the data into the temporary location
     String tmpLocation = getDfsTestTmpSchemaLocation();
-    File dataDir1 = new File(tmpLocation + Path.SEPARATOR + tableName1);
+    dataDir1 = new File(tmpLocation + Path.SEPARATOR + tableName1);
     dataDir1.mkdir();
     FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet", TEST_RES_PATH))),
         dataDir1);
 
-    File dataDir2 = new File(tmpLocation + Path.SEPARATOR + tableName2);
+    dataDir2 = new File(tmpLocation + Path.SEPARATOR + tableName2);
     dataDir2.mkdir();
     FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet2", TEST_RES_PATH))),
         dataDir2);
+  }
+
+  @AfterClass
+  public static void cleanupTestData() throws Exception {
+    FileUtils.deleteQuietly(dataDir1);
+    FileUtils.deleteQuietly(dataDir2);
   }
 
   @Test
@@ -453,40 +461,109 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   @Test
   public void testMetadataCacheAbsolutePaths() throws Exception {
+    final String absolutePathsMetadata = "absolute_paths_metadata";
     try {
       test("use dfs_test.tmp");
-      final String relative_path_metadata_t1 = RELATIVE_PATHS_METADATA + "/t1";
-      final String relative_path_metadata_t2 = RELATIVE_PATHS_METADATA + "/t2";
-      test("create table `%s` as select * from cp.`tpch/nation.parquet`", relative_path_metadata_t1);
-      test("create table `%s` as select * from cp.`tpch/nation.parquet`", relative_path_metadata_t2);
+      // creating two inner directories to leverage METADATA_DIRECTORIES_FILENAME metadata file as well
+      final String absolutePathsMetadataT1 = absolutePathsMetadata + "/t1";
+      final String absolutePathsMetadataT2 = absolutePathsMetadata + "/t2";
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", absolutePathsMetadataT1);
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", absolutePathsMetadataT2);
       copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_directories_with_absolute_paths.requires_replace.txt", RELATIVE_PATHS_METADATA, Metadata.METADATA_DIRECTORIES_FILENAME);
+          "metadata_directories_with_absolute_paths.requires_replace.txt", absolutePathsMetadata, Metadata.METADATA_DIRECTORIES_FILENAME);
       copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths.requires_replace.txt", RELATIVE_PATHS_METADATA, Metadata.METADATA_FILENAME);
+          "metadata_table_with_absolute_paths.requires_replace.txt", absolutePathsMetadata, Metadata.METADATA_FILENAME);
       copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths_t1.requires_replace.txt", relative_path_metadata_t1, Metadata.METADATA_FILENAME);
+          "metadata_table_with_absolute_paths_t1.requires_replace.txt", absolutePathsMetadataT1, Metadata.METADATA_FILENAME);
       copyMetaDataCacheToTempReplacingInternalPaths("parquet/metadata_with_absolute_path/" +
-          "metadata_table_with_absolute_paths_t2.requires_replace.txt", relative_path_metadata_t2, Metadata.METADATA_FILENAME);
-
-      int rowCount = testSql(String.format("select * from %s", RELATIVE_PATHS_METADATA));
-      assertEquals("An incorrect result was obtained while querying a table with metadata cache files", 50, rowCount);
+          "metadata_table_with_absolute_paths_t2.requires_replace.txt", absolutePathsMetadataT2, Metadata.METADATA_FILENAME);
+      String query = String.format("select * from %s", absolutePathsMetadata);
+      int expectedRowCount = 50;
+      int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=true";
+      String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), absolutePathsMetadata);
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
+          new String[] {"Filter"});
     } finally {
-      test("drop table if exists %s", RELATIVE_PATHS_METADATA);
+      test("drop table if exists %s", absolutePathsMetadata);
     }
   }
 
   @Test
   public void testSpacesInMetadataCachePath() throws Exception {
+    final String pathWithSpaces = "path with spaces";
     try {
       // creating multilevel table to store path with spaces in both metadata files (METADATA and METADATA_DIRECTORIES)
-      test("create table dfs_test.tmp.`%1$s` as select * from cp.`tpch/nation.parquet`", PATH_WITH_SPACES);
-      test("create table dfs_test.tmp.`%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", PATH_WITH_SPACES);
-      test("refresh table metadata dfs_test.tmp.`%s`", PATH_WITH_SPACES);
-      checkForMetadataFile(PATH_WITH_SPACES);
-      int rowCount = testSql(String.format("select * from dfs_test.tmp.`%s`", PATH_WITH_SPACES));
-      assertEquals("An incorrect result was obtained while querying a table with metadata cache files", 50, rowCount);
+      test("create table dfs_test.tmp.`%s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
+      test("create table dfs_test.tmp.`%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", pathWithSpaces);
+      test("refresh table metadata dfs_test.tmp.`%s`", pathWithSpaces);
+      checkForMetadataFile(pathWithSpaces);
+      String query = String.format("select * from dfs_test.tmp.`%s`", pathWithSpaces);
+      int expectedRowCount = 50;
+      int expectedNumFiles = 1; // point to selectionRoot since no pruning is done in this query
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=true";
+      String cacheFileRootPattern = String.format("cacheFileRoot=%s/%s", getDfsTestTmpSchemaLocation(), pathWithSpaces);
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern, cacheFileRootPattern},
+          new String[] {"Filter"});
     } finally {
-      test("drop table if exists dfs_test.tmp.`%s`", PATH_WITH_SPACES);
+      test("drop table if exists dfs_test.tmp.`%s`", pathWithSpaces);
+    }
+  }
+
+  @Test
+  public void testFutureUnsupportedMetadataVersion() throws Exception {
+    final String unsupportedMetadataVersion = "unsupported_metadata_version";
+    try {
+      test("use dfs_test.tmp");
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", unsupportedMetadataVersion);
+      final String lastVersion = Iterables.getLast(Metadata.MetadataVersion.SUPPORTED_VERSIONS);
+      // Get the future version, which is absent in MetadataVersion.SUPPORTED_VERSIONS list
+      String futureVersion = "v" + (Integer.parseInt("" + lastVersion.charAt(1)) + 1);
+      copyMetaDataCacheToTempWithReplacements("parquet/unsupported_metadata/unsupported_metadata_version.requires_replace.txt",
+          unsupportedMetadataVersion, Metadata.METADATA_FILENAME, futureVersion);
+      String query = String.format("select * from %s", unsupportedMetadataVersion);
+      int expectedRowCount = 25;
+      int expectedNumFiles = 1;
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=false"; // ignoring metadata cache file
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
+          new String[] {"Filter"});
+    } finally {
+      test("drop table if exists %s", unsupportedMetadataVersion);
+    }
+  }
+
+  @Test
+  public void testCorruptedMetadataFile() throws Exception {
+    final String corruptedMetadata = "corrupted_metadata";
+    try {
+      test("use dfs_test.tmp");
+      test("create table `%s` as select * from cp.`tpch/nation.parquet`", corruptedMetadata);
+      copyMetaDataCacheToTempReplacingInternalPaths("parquet/unsupported_metadata/" +
+          "corrupted_metadata.requires_replace.txt", corruptedMetadata, Metadata.METADATA_FILENAME);
+      String query = String.format("select * from %s", corruptedMetadata);
+      int expectedRowCount = 25;
+      int expectedNumFiles = 1;
+      int actualRowCount = testSql(query);
+      assertEquals("An incorrect result was obtained while querying a table with metadata cache files",
+          expectedRowCount, actualRowCount);
+      String numFilesPattern = "numFiles=" + expectedNumFiles;
+      String usedMetaPattern = "usedMetadataFile=false"; // ignoring metadata cache file
+      PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern},
+          new String[] {"Filter"});
+    } finally {
+      test("drop table if exists %s", corruptedMetadata);
     }
   }
 
