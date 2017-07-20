@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.pojo;
 
-import java.lang.reflect.Field;
-
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -26,20 +24,24 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
-abstract class AbstractWriter<V extends ValueVector> implements PojoWriter{
+/**
+ * Parent class for all pojo writers created for each field.
+ * Contains common logic for initializing value vector, stores field name and its type.
+ */
+public abstract class AbstractPojoWriter<V extends ValueVector> implements PojoWriter {
 
-  protected final Field field;
   protected V vector;
-  protected final MajorType type;
+  private final String fieldName;
+  private final MajorType type;
 
-  public AbstractWriter(Field field, MajorType type){
-    this.field = field;
+  public AbstractPojoWriter(String fieldName, MajorType type) {
+    this.fieldName = fieldName;
     this.type = type;
   }
 
   @Override
   public void init(OutputMutator output) throws SchemaChangeException {
-    MaterializedField mf = MaterializedField.create(field.getName(), type);
+    MaterializedField mf = MaterializedField.create(fieldName, type);
     @SuppressWarnings("unchecked")
     Class<V> valueVectorClass = (Class<V>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
     this.vector = output.addField(mf, valueVectorClass);
@@ -50,13 +52,13 @@ abstract class AbstractWriter<V extends ValueVector> implements PojoWriter{
     vector.allocateNew();
   }
 
-  public void setValueCount(int valueCount){
+  @Override
+  public void setValueCount(int valueCount) {
     vector.getMutator().setValueCount(valueCount);
   }
 
   @Override
   public void cleanup() {
   }
-
 
 }

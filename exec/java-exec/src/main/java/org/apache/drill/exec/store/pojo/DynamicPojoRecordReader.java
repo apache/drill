@@ -17,34 +17,33 @@
  */
 package org.apache.drill.exec.store.pojo;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Reads values from the given list of pojo instances.
- * Fields writers are determined based on pojo field class types.
+ * Dynamically reads values from the given list of records.
+ * Creates writers based on given schema.
  *
- * @param <T> pojo class type
+ * @param <T> type of given values, if contains various types, use Object class
  */
-public class PojoRecordReader<T> extends AbstractPojoRecordReader<T> {
+public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>> {
 
-  private final Class<T> pojoClass;
-  private final List<Field> fields;
+  private final LinkedHashMap<String, Class<?>> schema;
 
-  public PojoRecordReader(Class<T> pojoClass, List<T> records) {
+  public DynamicPojoRecordReader(LinkedHashMap<String, Class<?>> schema, List<List<T>> records) {
     super(records);
-    this.pojoClass = pojoClass;
-    this.fields = new ArrayList<>();
+    Preconditions.checkState(schema != null && !schema.isEmpty(), "Undefined schema is not allowed.");
+    this.schema = schema;
   }
 
   /**
-   * Creates writers based on pojo field class types. Ignores static fields.
+   * Initiates writers based on given schema which contains field name and its type.
    *
    * @param output output mutator
    * @return list of pojo writers
@@ -52,31 +51,21 @@ public class PojoRecordReader<T> extends AbstractPojoRecordReader<T> {
   @Override
   protected List<PojoWriter> setupWriters(OutputMutator output) throws ExecutionSetupException {
     List<PojoWriter> writers = new ArrayList<>();
-    Field[] declaredFields = pojoClass.getDeclaredFields();
-    for (Field field : declaredFields) {
-      if (Modifier.isStatic(field.getModifiers())) {
-        continue;
-      }
-      writers.add(initWriter(field.getType(), field.getName(), output));
-      fields.add(field);
+    for (Map.Entry<String, Class<?>> field : schema.entrySet()) {
+      writers.add(initWriter(field.getValue(), field.getKey(), output));
     }
     return writers;
   }
 
   @Override
-  protected Object getFieldValue(T row, int fieldPosition) {
-    try {
-      return fields.get(fieldPosition).get(row);
-    } catch (IllegalArgumentException | IllegalAccessException e) {
-      throw new DrillRuntimeException("Failure while trying to use PojoRecordReader.", e);
-    }
+  protected Object getFieldValue(List<T> row, int fieldPosition) {
+    return row.get(fieldPosition);
   }
 
   @Override
   public String toString() {
-    return "PojoRecordReader{" +
-        "pojoClass = " + pojoClass +
-        ", recordCount = " + records.size() +
+    return "DynamicPojoRecordReader{" +
+        "records = " + records +
         "}";
   }
 }
