@@ -144,6 +144,7 @@ public class SystemOptionManager extends BaseOptionManager implements OptionMana
       ExecConstants.EARLY_LIMIT0_OPT,
       ExecConstants.ENABLE_MEMORY_ESTIMATION,
       ExecConstants.MAX_QUERY_MEMORY_PER_NODE,
+      ExecConstants.MIN_MEMORY_PER_BUFFERED_OP,
       ExecConstants.NON_BLOCKING_OPERATORS_MEMORY,
       ExecConstants.HASH_JOIN_TABLE_FACTOR,
       ExecConstants.HASH_AGG_TABLE_FACTOR,
