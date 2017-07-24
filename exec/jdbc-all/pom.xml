@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.11.0-SNAPSHOT</version>
+    <version>1.11.0</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -533,7 +533,7 @@
       <profile>
         <id>mapr</id>
         <properties>
-          <package.namespace.prefix></package.namespace.prefix>
+          <package.namespace.prefix />
         </properties>
 
         <build>
