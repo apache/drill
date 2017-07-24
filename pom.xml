@@ -226,7 +226,8 @@
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>
-            <exclude>**/client/build/**</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/client/tags</exclude>
             <exclude>**/cmake_install.cmake</exclude>
             <exclude>**/ssl/*.csr</exclude>
             <exclude>**/*.tbl</exclude>

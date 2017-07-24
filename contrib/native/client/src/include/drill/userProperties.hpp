@@ -36,20 +36,17 @@ class DECLSPEC_DRILL_CLIENT DrillUserProperties{
 
         size_t size() const { return m_properties.size(); }
 
-        //const std::string& keyAt(size_t i) const { return m_properties.at(i).first; }
-
-        //const std::string& valueAt(size_t i) const { return m_properties.at(i).second; }
-
         const bool  isPropSet(const std::string& key) const{
             bool isSet=true;
-            auto f= m_properties.find(key);
+            std::map<std::string, std::string>::const_iterator f=m_properties.find(key);
             if(f==m_properties.end()){
                 isSet=false;
             }
             return isSet;
         }
+
         const std::string&  getProp(const std::string& key, std::string& value) const{
-            auto f= m_properties.find(key);
+            std::map<std::string, std::string>::const_iterator f=m_properties.find(key);
             if(f!=m_properties.end()){
                 value=f->second;
             }

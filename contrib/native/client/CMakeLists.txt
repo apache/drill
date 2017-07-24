@@ -126,6 +126,9 @@ endif()
 find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
+if (MSVC)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
 #Find SSL
 find_package(OpenSSL REQUIRED )
 if(OPENSSL_FOUND)

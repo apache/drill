@@ -21,27 +21,7 @@
 #define DRILL_CONFIG_H
 
 #include "drill/common.hpp"
-#include <boost/thread.hpp>
-
-
-
-#if defined _WIN32 || defined __CYGWIN__
-  #ifdef DRILL_CLIENT_EXPORTS
-      #define DECLSPEC_DRILL_CLIENT __declspec(dllexport)
-  #else
-    #ifdef USE_STATIC_LIBDRILL
-      #define DECLSPEC_DRILL_CLIENT
-    #else
-      #define DECLSPEC_DRILL_CLIENT  __declspec(dllimport)
-    #endif
-  #endif
-#else
-  #if __GNUC__ >= 4
-    #define DECLSPEC_DRILL_CLIENT __attribute__ ((visibility ("default")))
-  #else
-    #define DECLSPEC_DRILL_CLIENT
-  #endif
-#endif
+#include <boost/thread/mutex.hpp>
 
 namespace exec{
     namespace shared{

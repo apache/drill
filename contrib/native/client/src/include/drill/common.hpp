@@ -165,6 +165,10 @@ typedef enum{
     RET_FAILURE=1
 } ret_t;
 
+// Connect string protocol types
+#define PROTOCOL_TYPE_ZK     "zk"
+#define PROTOCOL_TYPE_DIRECT "drillbit"
+#define PROTOCOL_TYPE_DIRECT_2 "local"
 
 // User Property Names
 #define USERPROP_USERNAME "userName"
@@ -173,7 +177,8 @@ typedef enum{
 #define USERPROP_USESSL   "enableTLS"
 #define USERPROP_TLSPROTOCOL "TLSProtocol" //TLS version
 #define USERPROP_CERTFILEPATH "certFilePath" // pem file path and name
-#define USERPROP_CERTPASSWORD "certPassword" // Password for certificate file
+// TODO: support truststore protected by password. 
+// #define USERPROP_CERTPASSWORD "certPassword" // Password for certificate file. 
 #define USERPROP_DISABLE_HOSTVERIFICATION "disableHostVerification"
 #define USERPROP_DISABLE_CERTVERIFICATION "disableCertVerification"
 #define USERPROP_USESYSTEMTRUSTSTORE "useSystemTrustStore" //Windows only, use the system trust store

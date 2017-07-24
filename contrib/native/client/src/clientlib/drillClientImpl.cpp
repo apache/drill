@@ -19,31 +19,22 @@
 
 #include "drill/common.hpp"
 #include <queue>
-#include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/assign.hpp>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/functional/factory.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 
 #include "drill/drillClient.hpp"
 #include "drill/fieldmeta.hpp"
 #include "drill/recordBatch.hpp"
+#include "drill/userProperties.hpp"
 #include "drillClientImpl.hpp"
-#include "collectionsImpl.hpp"
 #include "errmsgs.hpp"
 #include "logger.hpp"
-#include "metadata.hpp"
-#include "rpcMessage.hpp"
-#include "utils.hpp"
-#include "GeneralRPC.pb.h"
-#include "UserBitShared.pb.h"
 #include "zookeeperClient.hpp"
-#include "saslAuthenticatorImpl.hpp"
 
 namespace Drill{
 namespace { // anonymous namespace
@@ -65,108 +56,69 @@ struct ToRpcType: public std::unary_function<google::protobuf::int32, exec::user
 		return static_cast<exec::user::RpcType>(i);
 	}
 };
-}
-connectionStatus_t DrillClientImpl::connect(const char* connStr, DrillUserProperties* props){
-    std::string pathToDrill, protocol, hostPortStr;
-    std::string host;
-    std::string port;
+} // anonymous
 
+connectionStatus_t DrillClientImpl::connect(const char* connStr, DrillUserProperties* props){
     if (this->m_bIsConnected) {
-        if(std::strcmp(connStr, m_connectStr.c_str())){ // trying to connect to a different address is not allowed if already connected
+        if(!std::strcmp(connStr, m_connectStr.c_str())){
+            // trying to connect to a different address is not allowed if already connected
             return handleConnError(CONN_ALREADYCONNECTED, getMessage(ERR_CONN_ALREADYCONN));
         }
         return CONN_SUCCESS;
     }
+    std::string val;
+    channelType_t type = ( props->isPropSet(USERPROP_USESSL) &&
+            props->getProp(USERPROP_USESSL, val) =="true") ?
+        CHANNEL_TYPE_SSLSTREAM :
+        CHANNEL_TYPE_SOCKET;
 
-    m_connectStr=connStr;
-    Utils::parseConnectStr(connStr, pathToDrill, protocol, hostPortStr);
-    if(protocol == "zk"){
-        ZookeeperClient zook(pathToDrill);
-        std::vector<std::string> drillbits;
-        int err = zook.getAllDrillbits(hostPortStr, drillbits);
-        if(!err){
-            if (drillbits.empty()){
-                return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_ZKNODBIT));
-            }
-            Utils::shuffle(drillbits);
-            exec::DrillbitEndpoint endpoint;
-            err = zook.getEndPoint(drillbits[drillbits.size() -1], endpoint);// get the last one in the list
-            if(!err){
-                host=boost::lexical_cast<std::string>(endpoint.address());
-                port=boost::lexical_cast<std::string>(endpoint.user_port());
-            }
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Choosing drillbit <" << (drillbits.size() - 1)  << ">. Selected " << endpoint.DebugString() << std::endl;)
-
-        }
-        if(err){
-            return handleConnError(CONN_ZOOKEEPER_ERROR, getMessage(ERR_CONN_ZOOKEEPER, zook.getError().c_str()));
-        }
-        zook.close();
-        m_bIsDirectConnection=true;
-    }else if(protocol == "local"){
-        boost::lock_guard<boost::mutex> lock(m_dcMutex);//strtok is not reentrant
-        char tempStr[MAX_CONNECT_STR+1];
-        strncpy(tempStr, hostPortStr.c_str(), MAX_CONNECT_STR); tempStr[MAX_CONNECT_STR]=0;
-        host=strtok(tempStr, ":");
-        port=strtok(NULL, "");
-        m_bIsDirectConnection=false;
-    }else{
-        return handleConnError(CONN_INVALID_INPUT, getMessage(ERR_CONN_UNKPROTO, protocol.c_str()));
+    connectionStatus_t ret = CONN_SUCCESS;
+    m_pChannel= ChannelFactory::getChannel(type, m_io_service, connStr, props);
+    ret=m_pChannel->init();
+    if(ret!=CONN_SUCCESS){
+        handleConnError(m_pChannel->getError());
+        return ret;
     }
-    DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connecting to endpoint: " << host << ":" << port << std::endl;)
-    std::string serviceHost;
-    for (size_t i = 0; i < props->size(); i++) {
-        if (props->keyAt(i) == USERPROP_SERVICE_HOST) {
-            serviceHost = props->valueAt(i);
-        }
+    ret= m_pChannel->connect();
+    if(ret!=CONN_SUCCESS){
+        handleConnError(m_pChannel->getError());
+        return ret;
     }
-    if (serviceHost.empty()) {
-        props->setProperty(USERPROP_SERVICE_HOST, host);
-    }
-    connectionStatus_t ret = this->connect(host.c_str(), port.c_str());
+    props->setProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
+    m_bIsConnected = true;
     return ret;
 }
 
-connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
-    using boost::asio::ip::tcp;
-    tcp::endpoint endpoint;
-    try{
-        tcp::resolver resolver(m_io_service);
-        tcp::resolver::query query(tcp::v4(), host, port);
-        tcp::resolver::iterator iter = resolver.resolve(query);
-        tcp::resolver::iterator end;
-        while (iter != end){
-            endpoint = *iter++;
-            DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << endpoint << std::endl;)
+connectionStatus_t DrillClientImpl::connect(const char* host, const char* port, DrillUserProperties* props){
+    if (this->m_bIsConnected) {
+        std::string connStr = std::string(host)+":"+std::string(port);
+        if(!std::strcmp(connStr.c_str(), m_connectStr.c_str())){
+            // trying to connect to a different address is not allowed if already connected
+            return handleConnError(CONN_ALREADYCONNECTED, getMessage(ERR_CONN_ALREADYCONN));
         }
-        boost::system::error_code ec;
-        m_socket.connect(endpoint, ec);
-        if(ec){
-            return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_FAILURE, host, port, ec.message().c_str()));
-        }
-
-    }catch(const std::exception & e){
-        // Handle case when the hostname cannot be resolved. "resolve" is hard-coded in boost asio resolver.resolve
-        if (!strcmp(e.what(), "resolve")) {
-            return handleConnError(CONN_HOSTNAME_RESOLUTION_ERROR, getMessage(ERR_CONN_EXCEPT, e.what()));
-        }
-        return handleConnError(CONN_FAILURE, getMessage(ERR_CONN_EXCEPT, e.what()));
+        return CONN_SUCCESS;
     }
+    std::string val;
+    channelType_t type = ( props->isPropSet(USERPROP_USESSL) &&
+            props->getProp(USERPROP_USESSL, val) =="true") ?
+        CHANNEL_TYPE_SSLSTREAM :
+        CHANNEL_TYPE_SOCKET;
 
-    m_bIsConnected=true;
-    // set socket keep alive
-    boost::asio::socket_base::keep_alive keepAlive(true);
-    m_socket.set_option(keepAlive);
-    // set no_delay
-    boost::asio::ip::tcp::no_delay noDelay(true);
-    m_socket.set_option(noDelay);
-
-    std::ostringstream connectedHost;
-    connectedHost << "id: " << m_socket.native_handle() << " address: " << host << ":" << port;
-    m_connectedHost = connectedHost.str();
-    DRILL_MT_LOG(DRILL_LOG(LOG_INFO) << "Connected to endpoint: " << m_connectedHost << std::endl;)
-
-    return CONN_SUCCESS;
+    connectionStatus_t ret = CONN_SUCCESS;
+    m_pChannel= ChannelFactory::getChannel(type, m_io_service, host, port, props);
+    ret=m_pChannel->init();
+    if(ret!=CONN_SUCCESS){
+        handleConnError(m_pChannel->getError());
+        return ret;
+    }
+    ret=m_pChannel->connect();
+    if(ret!=CONN_SUCCESS){
+        handleConnError(m_pChannel->getError());
+        return ret;
+    }
+    props->setProperty(USERPROP_SERVICE_HOST, m_pChannel->getEndpoint()->getHost());
+    m_bIsConnected = true;
+    return ret;
 }
 
 void DrillClientImpl::startHeartbeatTimer(){
@@ -250,7 +202,15 @@ void DrillClientImpl::doWriteToSocket(const char* dataPtr, size_t bytesToWrite,
     // Write all the bytes to socket. In case of error when all bytes are not successfully written
     // proper errorCode will be set.
     while(1) {
-        size_t bytesWritten = m_socket.write_some(boost::asio::buffer(dataPtr, bytesToWrite), errorCode);
+        size_t bytesWritten;
+        {
+            boost::lock_guard<boost::mutex> lock(m_channelMutex);
+            if(m_pChannel==NULL){
+                return;
+            }
+            bytesWritten = m_pChannel->getSocketStream().writeSome(boost::asio::buffer(dataPtr, bytesToWrite),
+                                                                          errorCode);
+        }
 
         if(errorCode && boost::asio::error::interrupted != errorCode){
             break;
@@ -359,8 +319,10 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
     }
 
     m_io_service.reset();
-    if (DrillClientConfig::getHandshakeTimeout() > 0){
-        m_deadlineTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getHandshakeTimeout()));
+      
+    int32_t handshakeTimeout=DrillClientConfig::getHandshakeTimeout();
+    if (handshakeTimeout > 0){
+        m_deadlineTimer.expires_from_now(boost::posix_time::seconds(handshakeTimeout));
         m_deadlineTimer.async_wait(boost::bind(
                     &DrillClientImpl::handleHShakeReadTimeout,
                     this,
@@ -370,16 +332,21 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
                 << DrillClientConfig::getHandshakeTimeout() << " seconds." << std::endl;)
     }
 
-    async_read(
-            this->m_socket,
-            boost::asio::buffer(m_rbuf, LEN_PREFIX_BUFLEN),
-            boost::bind(
-                &DrillClientImpl::handleHandshake,
-                this,
-                m_rbuf,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred)
-            );
+    {
+        boost::lock_guard<boost::mutex> lock(m_channelMutex);
+        if (m_pChannel == NULL) {
+            return CONN_NOSOCKET;
+        }
+        m_pChannel->getSocketStream().asyncRead(
+                boost::asio::buffer(m_rbuf, LEN_PREFIX_BUFLEN),
+                boost::bind(
+                        &DrillClientImpl::handleHandshake,
+                        this,
+                        m_rbuf,
+                        boost::asio::placeholders::error,
+                        boost::asio::placeholders::bytes_transferred)
+        );
+    }
     DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::recvHandshake: async read waiting for server handshake response.\n";)
     m_io_service.run();
     if(m_rbuf!=NULL){
@@ -418,8 +385,15 @@ void DrillClientImpl::doReadFromSocket(ByteBuf_t inBuf, size_t bytesToRead,
     // Read all the bytes. In case when all the bytes were not read the proper
     // errorCode will be set.
     while(1){
-        size_t dataBytesRead = m_socket.read_some(boost::asio::buffer(inBuf, bytesToRead),
+        size_t dataBytesRead;
+        {
+            boost::lock_guard<boost::mutex> lock(m_channelMutex);
+            if(m_pChannel==NULL){
+                return;
+            }
+            dataBytesRead = m_pChannel->getSocketStream().readSome(boost::asio::buffer(inBuf, bytesToRead),
                                            errorCode);
+        }
         // Check if errorCode is EINTR then just retry otherwise break from loop
         if(errorCode && boost::asio::error::interrupted != errorCode){
             break;
@@ -518,8 +492,10 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
                                               << "Deadline timer expired; ERR_CONN_HSHAKETIMOUT.\n";)
             handleConnError(CONN_HANDSHAKE_TIMEOUT, getMessage(ERR_CONN_HSHAKETIMOUT));
             m_io_service.stop();
-            boost::system::error_code ignorederr;
-            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
+            {
+                boost::lock_guard<boost::mutex> lock(m_channelMutex);
+                if(m_pChannel != NULL) m_pChannel->close();
+            }
         }
     }
     return;
@@ -1027,16 +1003,21 @@ void DrillClientImpl::getNextResult(){
 
     startHeartbeatTimer();
 
-    async_read(
-            this->m_socket,
-            boost::asio::buffer(readBuf, LEN_PREFIX_BUFLEN),
-            boost::bind(
-                &DrillClientImpl::handleRead,
-                this,
-                readBuf,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred)
-            );
+    {
+        boost::lock_guard<boost::mutex> lock(m_channelMutex);
+        if (m_pChannel == NULL) {
+            return;
+        }
+        m_pChannel->getSocketStream().asyncRead(
+                boost::asio::buffer(readBuf, LEN_PREFIX_BUFLEN),
+                boost::bind(
+                        &DrillClientImpl::handleRead,
+                        this,
+                        readBuf,
+                        boost::asio::placeholders::error,
+                        boost::asio::placeholders::bytes_transferred)
+        );
+    }
     DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::getNextResult: async_read from the server\n";)
 }
 
@@ -1937,10 +1918,16 @@ void DrillClientImpl::handleReadTimeout(const boost::system::error_code & err){
             // defined. To be really sure, we need to close the socket. Closing the socket is a bit
             // drastic and we will defer that till a later release.
 #ifdef WIN32_SHUTDOWN_ON_TIMEOUT
-            boost::system::error_code ignorederr;
-            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
+            {
+                boost::lock_guard<boost::mutex> lock(m_channelMutex);
+                if(m_pChannel != NULL) m_pChannel->close();
+            }
+            m_pChannel->close();
 #else // NOT WIN32_SHUTDOWN_ON_TIMEOUT
-            m_socket.cancel();
+            {
+                boost::lock_guard<boost::mutex> lock(m_channelMutex);
+                if(m_pChannel != NULL) m_pChannel->getInnerSocket().cancel();
+            }
 #endif // WIN32_SHUTDOWN_ON_TIMEOUT
         }
     }
@@ -2149,6 +2136,20 @@ connectionStatus_t DrillClientImpl::handleConnError(connectionStatus_t status, c
     return status;
 }
 
+connectionStatus_t DrillClientImpl::handleConnError(DrillClientError* err){
+    DrillClientError* pErr = new DrillClientError(*err);
+    m_pendingRequests=0;
+    if(!m_queryHandles.empty()){
+        // set query error only if queries are running
+        broadcastError(pErr);
+    }else{
+        if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
+        m_pError=pErr;
+        shutdownSocket();
+    }
+    return (connectionStatus_t)pErr->status;
+}
+
 /*
  * Always called with NULL QueryHandle when there is any error while reading data from socket. Once enough data is read
  * and a valid RPC message is formed then it can get called with NULL/valid QueryHandle depending on if QueryHandle is found
@@ -2268,9 +2269,16 @@ void DrillClientImpl::sendCancel(const exec::shared::QueryId* pQueryId){
 }
 
 void DrillClientImpl::shutdownSocket(){
+    m_pendingRequests=0;
+    m_heartbeatTimer.cancel();
+    m_deadlineTimer.cancel();
+    {
+        boost::lock_guard<boost::mutex> lock(m_channelMutex);
+        if (m_pChannel != NULL) {
+            m_pChannel->close();
+        }
+    }
     m_io_service.stop();
-    boost::system::error_code ignorederr;
-    m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
     m_bIsConnected=false;
 
     // Delete the saslAuthenticatorImpl instance since connection is broken. It will recreated on next
@@ -2697,7 +2705,7 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr, DrillUser
     }
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connecting to endpoint: (Pooled) " << host << ":" << port << std::endl;)
         DrillClientImpl* pDrillClientImpl = new DrillClientImpl();
-    stat =  pDrillClientImpl->connect(host.c_str(), port.c_str());
+    stat =  pDrillClientImpl->connect(host.c_str(), port.c_str(), props);
     if(stat == CONN_SUCCESS){
         boost::lock_guard<boost::mutex> lock(m_poolMutex);
         m_clientConnections.push_back(pDrillClientImpl);

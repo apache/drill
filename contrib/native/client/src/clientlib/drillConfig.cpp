@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-
+#include <boost/thread/lock_guard.hpp>
 #include "drill/common.hpp"
 #include "drill/drillConfig.hpp"
 #include "env.h"

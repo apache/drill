@@ -45,6 +45,7 @@
 #include "drill/drillConfig.hpp"
 #include "drill/drillError.hpp"
 #include "drill/preparedStatement.hpp"
+#include "channel.hpp"
 #include "collectionsImpl.hpp"
 #include "metadata.hpp"
 #include "rpcMessage.hpp"
@@ -386,7 +387,8 @@ class DrillClientImpl : public DrillClientImplBase{
             m_pError(NULL),
             m_pListenerThread(NULL),
             m_pWork(NULL),
-            m_socket(m_io_service),
+            m_pChannel(NULL),
+            m_pChannelContext(NULL),
             m_deadlineTimer(m_io_service),
             m_heartbeatTimer(m_io_service),
             m_rbuf(NULL),
@@ -399,9 +401,11 @@ class DrillClientImpl : public DrillClientImplBase{
     };
 
         ~DrillClientImpl(){
-            //TODO: Cleanup.
-            //Free any record batches or buffers remaining
             //Cancel any pending requests
+            m_heartbeatTimer.cancel();
+            m_deadlineTimer.cancel();
+            m_io_service.stop();
+            //Free any record batches or buffers remaining
             //Clear and destroy DrillClientQueryResults vector?
             if(this->m_pWork!=NULL){
                 delete this->m_pWork;
@@ -411,13 +415,19 @@ class DrillClientImpl : public DrillClientImplBase{
                 delete this->m_saslAuthenticator;
                 this->m_saslAuthenticator = NULL;
             }
+            {
+                boost::lock_guard<boost::mutex> lock(m_channelMutex);
+                if (this->m_pChannel != NULL) {
+                    m_pChannel->close();
+                    delete this->m_pChannel;
+                    this->m_pChannel = NULL;
+                }
+                if (this->m_pChannelContext != NULL) {
+                    delete this->m_pChannelContext;
+                    this->m_pChannelContext = NULL;
+                }
+            }
 
-            m_heartbeatTimer.cancel();
-            m_deadlineTimer.cancel();
-            m_io_service.stop();
-            boost::system::error_code ignorederr;
-            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignorederr);
-            m_socket.close();
             if(m_rbuf!=NULL){
                 Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
             }
@@ -442,6 +452,8 @@ class DrillClientImpl : public DrillClientImplBase{
 
         //Connect via Zookeeper or directly
         connectionStatus_t connect(const char* connStr, DrillUserProperties* props);
+        connectionStatus_t connect(const char* host, const char* port, DrillUserProperties* props);
+
         // test whether the client is active
         bool Active();
         void Close() ;
@@ -523,6 +535,7 @@ class DrillClientImpl : public DrillClientImplBase{
         status_t validateResultMessage(const rpc::InBoundRpcMessage& msg, const exec::shared::QueryResult& qr, std::string& valError);
         bool validateResultRPCType(DrillClientQueryHandle* pQueryHandle, const rpc::InBoundRpcMessage& msg);
         connectionStatus_t handleConnError(connectionStatus_t status, const std::string& msg);
+        connectionStatus_t handleConnError(DrillClientError* err);
         status_t handleQryCancellation(status_t status, DrillClientQueryResult* pQueryResult);
         status_t handleQryError(status_t status, const std::string& msg, DrillClientQueryHandle* pQueryHandle);
         status_t handleQryError(status_t status, const exec::shared::DrillPBError& e, DrillClientQueryHandle* pQueryHandle);
@@ -603,7 +616,12 @@ class DrillClientImpl : public DrillClientImplBase{
         boost::asio::io_service m_io_service;
         // the work object prevent io_service running out of work
         boost::asio::io_service::work * m_pWork;
-        boost::asio::ip::tcp::socket m_socket;
+
+        // Mutex to protect channel
+        boost::mutex m_channelMutex;
+        Channel* m_pChannel;
+        ChannelContext_t* m_pChannelContext;
+
         boost::asio::deadline_timer m_deadlineTimer; // to timeout async queries that never return
         boost::asio::deadline_timer m_heartbeatTimer; // to send heartbeat messages
 

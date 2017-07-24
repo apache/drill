@@ -330,6 +330,7 @@ int main(int argc, char* argv[]){
     std::string connectStr = "zk=localhost:2181/drill/drillbits1";
     //std::string connectStr = "drillbit=localhost:31090";
     channelType_t type;
+    boost::asio::io_service ioService;
 
     bool isSSL = argc==2 && !(strcmp(argv[1], "ssl"));
     type = CHANNEL_TYPE_SOCKET;
@@ -341,12 +342,10 @@ int main(int argc, char* argv[]){
     props.setProperty(USERPROP_PASSWORD, "admin");
     props.setProperty(USERPROP_CERTFILEPATH, "../../../test/ssl/drillTestCert.pem");
 
-    pChannelContext = ChannelContextFactory::getChannelContext(type, &props);
-
-    pChannel = ChannelFactory::getChannel(type, connectStr.c_str());
+    pChannel = ChannelFactory::getChannel(type, ioService, connectStr.c_str(), &props);
     if(pChannel != NULL){
         connectionStatus_t connStat;
-        connStat = pChannel->init(pChannelContext);
+        connStat = pChannel->init();
         if(connStat != CONN_SUCCESS){
             std::cout << "Init Failed." << std::endl;
             return -1;

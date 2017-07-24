@@ -36,9 +36,9 @@ class UserProperties;
             //parse the connection string and set up the host and port to connect to
             connectionStatus_t getDrillbitEndpoint();
 
-            std::string& getProtocol(){return m_protocol;}
-            std::string& getHost(){return m_host;}
-            std::string& getPort(){return m_port;}
+            const std::string& getProtocol() const {return m_protocol;}
+            const std::string& getHost() const {return m_host;}
+            const std::string& getPort() const {return m_port;}
             DrillClientError* getError(){ return m_pError;};
 
         private:
@@ -70,25 +70,21 @@ class UserProperties;
 
     class SSLChannelContext: public ChannelContext{
         public:
-            static boost::asio::ssl::context::method getTlsVersion(std::string version){
-                if(version.empty()){
-                    return boost::asio::ssl::context::tlsv12;
-                } else if (version == "tlsv12") {
+            static boost::asio::ssl::context::method getTlsVersion(const std::string & version){
+                if (version == "tlsv12") {
                     return boost::asio::ssl::context::tlsv12;
                 } else if (version == "tlsv11") {
                     return boost::asio::ssl::context::tlsv11;
-                } else if (version == "sslv23") {
-                    return boost::asio::ssl::context::sslv23;
                 } else if (version == "tlsv1") {
                     return boost::asio::ssl::context::tlsv1;
-                } else if (version == "sslv3") {
-                    return boost::asio::ssl::context::sslv3;
                 } else {
                     return boost::asio::ssl::context::tlsv12;
                 }
             }
 
-        SSLChannelContext(DrillUserProperties *props, boost::asio::ssl::context::method tlsVersion, boost::asio::ssl::verify_mode verifyMode) :
+        SSLChannelContext(DrillUserProperties *props,
+                          boost::asio::ssl::context::method tlsVersion,
+                          boost::asio::ssl::verify_mode verifyMode) :
                 ChannelContext(props),
                 m_SSLContext(tlsVersion) {
                 m_SSLContext.set_default_verify_paths();
@@ -108,11 +104,6 @@ class UserProperties;
     typedef ChannelContext ChannelContext_t; 
     typedef SSLChannelContext SSLChannelContext_t; 
 
-    class ChannelContextFactory{
-        public:
-            static ChannelContext_t* getChannelContext(channelType_t t, DrillUserProperties* props);
-    };
-
     /***
      * The Channel class encapsulates a connection to a drillbit. Based on 
      * the connection string and the options, the connection will be either 
@@ -122,13 +113,12 @@ class UserProperties;
      * will use to communicate with the server.
      ***/
     class Channel{
+        friend class ChannelFactory;
         public: 
-            Channel(const char* connStr);
-            Channel(const char* host, const char* port);
             Channel(boost::asio::io_service& ioService, const char* connStr);
             Channel(boost::asio::io_service& ioService, const char* host, const char* port);
             virtual ~Channel();
-            virtual connectionStatus_t init(ChannelContext_t* context)=0;
+            virtual connectionStatus_t init()=0;
             connectionStatus_t connect();
             bool isConnected(){ return m_state == CHANNEL_CONNECTED;}
             template <typename SettableSocketOption> void setOption(SettableSocketOption& option);
@@ -168,7 +158,6 @@ class UserProperties;
             ChannelContext_t *m_pContext;
 
         private:
-
             typedef enum channelState{ 
                 CHANNEL_UNINITIALIZED=1, 
                 CHANNEL_INITIALIZED, 
@@ -189,45 +178,42 @@ class UserProperties;
 
             channelState_t m_state;
             DrillClientError* m_pError;
-            bool m_ownIoService;
     };
 
     class SocketChannel: public Channel{
         public:
-            SocketChannel(const char* connStr):Channel(connStr){
-            }
-            SocketChannel(const char* host, const char* port):Channel(host, port){
-            }
             SocketChannel(boost::asio::io_service& ioService, const char* connStr)
                 :Channel(ioService, connStr){
             }
             SocketChannel(boost::asio::io_service& ioService, const char* host, const char* port)
                 :Channel(ioService, host, port){
             }
-            connectionStatus_t init(ChannelContext_t* context=NULL);
+            connectionStatus_t init();
     };
 
     class SSLStreamChannel: public Channel{
         public:
-            SSLStreamChannel(const char* connStr):Channel(connStr){
-            }
-            SSLStreamChannel(const char* host, const char* port):Channel(host, port){
-            }
             SSLStreamChannel(boost::asio::io_service& ioService, const char* connStr)
                 :Channel(ioService, connStr){
             }
             SSLStreamChannel(boost::asio::io_service& ioService, const char* host, const char* port)
                 :Channel(ioService, host, port){
             }
-            connectionStatus_t init(ChannelContext_t* context);
+            connectionStatus_t init();
     };
 
     class ChannelFactory{
         public:
-            static Channel* getChannel(channelType_t t, const char* connStr);
-            static Channel* getChannel(channelType_t t, const char* host, const char* port);
-            static Channel* getChannel(channelType_t t, boost::asio::io_service& ioService, const char* connStr);
-            static Channel* getChannel(channelType_t t, boost::asio::io_service& ioService, const char* host, const char* port);
+            static Channel* getChannel(channelType_t t,
+                                       boost::asio::io_service& ioService,
+                                       const char* connStr, DrillUserProperties* props);
+            static Channel* getChannel(channelType_t t,
+                                       boost::asio::io_service& ioService,
+                                       const char* host,
+                                       const char* port,
+                                       DrillUserProperties* props);
+        private:
+            static ChannelContext_t* getChannelContext(channelType_t t, DrillUserProperties* props);
     };
 
 

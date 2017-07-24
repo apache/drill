@@ -39,7 +39,7 @@ ConnectionEndpoint::ConnectionEndpoint(const char* connStr){
 ConnectionEndpoint::ConnectionEndpoint(const char* host, const char* port){
     m_host=host;
     m_port=port;
-    m_protocol="drillbit"; // direct connection
+    m_protocol=PROTOCOL_TYPE_DIRECT; // direct connection
     m_pError=NULL;
 }
 
@@ -61,7 +61,7 @@ connectionStatus_t ConnectionEndpoint::getDrillbitEndpoint(){
                 DRILL_LOG(LOG_INFO) << "Failed to get endpoint from zk" << std::endl;
                 return ret;
             }
-        }else if(!this->isDirectConnection()){
+        }else if(!isDirectConnection()){
             return handleError(CONN_INVALID_INPUT, getMessage(ERR_CONN_UNKPROTO, this->getProtocol().c_str()));
         }
     }else{
@@ -77,19 +77,19 @@ void ConnectionEndpoint::parseConnectString(){
     boost::cmatch matched;
 
     if(boost::regex_match(m_connectString.c_str(), matched, connStrExpr)){
-        m_protocol.assign(matched[1].first, matched[1].second);
+        m_protocol = matched[1].str();
         if(isDirectConnection()){
-            m_host.assign(matched[4].first, matched[4].second);
-            m_port.assign(matched[5].first, matched[5].second);
+            m_host = matched[4].str();
+            m_port = matched[5].str();
         }else {
             // if the connection is to a zookeeper,
             // we will get the host and the port only after connecting to the Zookeeper
             m_host = "";
             m_port = "";
         }
-        m_hostPortStr.assign(matched[2].first, matched[2].second);
+        m_hostPortStr = matched[2].str();
         if(matched[6].matched) {
-            m_pathToDrill.assign(matched[6].first, matched[6].second);
+            m_pathToDrill = matched[6].str();
         }
         DRILL_MT_LOG(DRILL_LOG(LOG_DEBUG)
                              << "Conn str: "<< m_connectString
@@ -106,12 +106,12 @@ void ConnectionEndpoint::parseConnectString(){
 
 bool ConnectionEndpoint::isDirectConnection(){
     assert(!m_protocol.empty());
-    return (!strcmp(m_protocol.c_str(), "local") || !strcmp(m_protocol.c_str(), "drillbit"));
+    return ( m_protocol == PROTOCOL_TYPE_DIRECT || m_protocol == PROTOCOL_TYPE_DIRECT_2 );
 }
 
 bool ConnectionEndpoint::isZookeeperConnection(){
     assert(!m_protocol.empty());
-    return (!strcmp(m_protocol.c_str(), "zk"));
+    return (m_protocol == PROTOCOL_TYPE_ZK);
 }
 
 connectionStatus_t ConnectionEndpoint::getDrillbitEndpointFromZk(){
@@ -148,10 +148,50 @@ connectionStatus_t ConnectionEndpoint::handleError(connectionStatus_t status, st
     return status;
 }
 
-/****************************
- * Channel Context Factory
- ****************************/
-ChannelContext* ChannelContextFactory::getChannelContext(channelType_t t, DrillUserProperties* props){
+/*******************
+ *  ChannelFactory
+ * *****************/
+Channel* ChannelFactory::getChannel(channelType_t t, boost::asio::io_service& ioService, const char* connStr, DrillUserProperties* props){
+    Channel* pChannel=NULL;
+    ChannelContext_t * pChannelContext = ChannelFactory::getChannelContext(t, props);
+    switch(t){
+        case CHANNEL_TYPE_SOCKET:
+            pChannel=new SocketChannel(ioService, connStr);
+            break;
+#if defined(IS_SSL_ENABLED)
+        case CHANNEL_TYPE_SSLSTREAM:
+            pChannel=new SSLStreamChannel(ioService, connStr);
+            break;
+#endif
+        default:
+            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
+            break;
+    }
+    pChannel->m_pContext = pChannelContext;
+    return pChannel;
+}
+
+Channel* ChannelFactory::getChannel(channelType_t t, boost::asio::io_service& ioService, const char* host, const char* port, DrillUserProperties* props){
+    Channel* pChannel=NULL;
+    ChannelContext_t * pChannelContext = ChannelFactory::getChannelContext(t, props);
+    switch(t){
+        case CHANNEL_TYPE_SOCKET:
+            pChannel=new SocketChannel(ioService, host, port);
+            break;
+#if defined(IS_SSL_ENABLED)
+        case CHANNEL_TYPE_SSLSTREAM:
+            pChannel=new SSLStreamChannel(ioService, host, port);
+            break;
+#endif
+        default:
+            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
+            break;
+    }
+    pChannel->m_pContext = pChannelContext;
+    return pChannel;
+}
+
+ChannelContext* ChannelFactory::getChannelContext(channelType_t t, DrillUserProperties* props){
     ChannelContext* pChannelContext=NULL;
     switch(t){
         case CHANNEL_TYPE_SOCKET:
@@ -180,106 +220,14 @@ ChannelContext* ChannelContextFactory::getChannelContext(channelType_t t, DrillU
             break;
     }
     return pChannelContext;
-} 
-
-/*******************
- *  ChannelFactory
- * *****************/
-Channel* ChannelFactory::getChannel(channelType_t t, const char* connStr){
-    Channel* pChannel=NULL;
-    switch(t){
-        case CHANNEL_TYPE_SOCKET:
-            pChannel=new SocketChannel(connStr);
-            break;
-#if defined(IS_SSL_ENABLED)
-        case CHANNEL_TYPE_SSLSTREAM:
-            pChannel=new SSLStreamChannel(connStr);
-            break;
-#endif
-        default:
-            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
-            break;
-    }
-    return pChannel;
-}
-
-Channel* ChannelFactory::getChannel(channelType_t t, const char* host, const char* port){
-    Channel* pChannel=NULL;
-    switch(t){
-        case CHANNEL_TYPE_SOCKET:
-            pChannel=new SocketChannel(host, port);
-            break;
-#if defined(IS_SSL_ENABLED)
-        case CHANNEL_TYPE_SSLSTREAM:
-            pChannel=new SSLStreamChannel(host, port);
-            break;
-#endif
-        default:
-            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
-            break;
-    }
-    return pChannel;
-}
-
-Channel* ChannelFactory::getChannel(channelType_t t, boost::asio::io_service& ioService, const char* connStr){
-    Channel* pChannel=NULL;
-    switch(t){
-        case CHANNEL_TYPE_SOCKET:
-            pChannel=new SocketChannel(ioService, connStr);
-            break;
-#if defined(IS_SSL_ENABLED)
-        case CHANNEL_TYPE_SSLSTREAM:
-            pChannel=new SSLStreamChannel(ioService, connStr);
-            break;
-#endif
-        default:
-            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
-            break;
-    }
-    return pChannel;
-}
-
-Channel* ChannelFactory::getChannel(channelType_t t, boost::asio::io_service& ioService, const char* host, const char* port){
-    Channel* pChannel=NULL;
-    switch(t){
-        case CHANNEL_TYPE_SOCKET:
-            pChannel=new SocketChannel(ioService, host, port);
-            break;
-#if defined(IS_SSL_ENABLED)
-        case CHANNEL_TYPE_SSLSTREAM:
-            pChannel=new SSLStreamChannel(ioService, host, port);
-            break;
-#endif
-        default:
-            DRILL_LOG(LOG_ERROR) << "Channel type " << t << " is not supported." << std::endl;
-            break;
-    }
-    return pChannel;
 }
 
 /*******************
  *  Channel
  * *****************/
 
-Channel::Channel(const char* connStr) : m_ioService(m_ioServiceFallback){
-    m_pEndpoint=new ConnectionEndpoint(connStr);
-    m_ownIoService = true;
-    m_pSocket=NULL;
-    m_state=CHANNEL_UNINITIALIZED;
-    m_pError=NULL;
-}
-
-Channel::Channel(const char* host, const char* port) : m_ioService(m_ioServiceFallback){
-    m_pEndpoint=new ConnectionEndpoint(host, port);
-    m_ownIoService = true;
-    m_pSocket=NULL;
-    m_state=CHANNEL_UNINITIALIZED;
-    m_pError=NULL;
-}
-
 Channel::Channel(boost::asio::io_service& ioService, const char* connStr):m_ioService(ioService){
     m_pEndpoint=new ConnectionEndpoint(connStr);
-    m_ownIoService = false;
     m_pSocket=NULL;
     m_state=CHANNEL_UNINITIALIZED;
     m_pError=NULL;
@@ -287,7 +235,6 @@ Channel::Channel(boost::asio::io_service& ioService, const char* connStr):m_ioSe
 
 Channel::Channel(boost::asio::io_service& ioService, const char* host, const char* port) : m_ioService(ioService){
     m_pEndpoint=new ConnectionEndpoint(host, port);
-    m_ownIoService = true;
     m_pSocket=NULL;
     m_state=CHANNEL_UNINITIALIZED;
     m_pError=NULL;
@@ -311,10 +258,9 @@ template <typename SettableSocketOption> void Channel::setOption(SettableSocketO
     assert(0); 
 }
 
-connectionStatus_t Channel::init(ChannelContext_t* pContext){
+connectionStatus_t Channel::init(){
     connectionStatus_t ret=CONN_SUCCESS;
     this->m_state=CHANNEL_INITIALIZED;
-    this->m_pContext = pContext;
     return ret;
 }
 
@@ -389,11 +335,11 @@ connectionStatus_t Channel::connectInternal() {
 
 }
 
-connectionStatus_t SocketChannel::init(ChannelContext_t* pContext){
+connectionStatus_t SocketChannel::init(){
     connectionStatus_t ret=CONN_SUCCESS;
     m_pSocket=new Socket(m_ioService);
     if(m_pSocket!=NULL){
-        ret=Channel::init(pContext);
+        ret=Channel::init();
     }else{
         DRILL_LOG(LOG_ERROR) << "Channel initialization failure. " << std::endl;
         handleError(CONN_NOSOCKET, getMessage(ERR_CONN_NOSOCKET));
@@ -403,17 +349,17 @@ connectionStatus_t SocketChannel::init(ChannelContext_t* pContext){
 }
 
 #if defined(IS_SSL_ENABLED)
-connectionStatus_t SSLStreamChannel::init(ChannelContext_t* pContext){
+connectionStatus_t SSLStreamChannel::init(){
     connectionStatus_t ret=CONN_SUCCESS;
 
-    const DrillUserProperties* props = pContext->getUserProperties();
+    const DrillUserProperties* props = m_pContext->getUserProperties();
 	std::string useSystemTrustStore;
 	props->getProp(USERPROP_USESYSTEMTRUSTSTORE, useSystemTrustStore);
 	if (useSystemTrustStore != "true"){
 		std::string certFile;
 		props->getProp(USERPROP_CERTFILEPATH, certFile);
 		try{
-			((SSLChannelContext_t*)pContext)->getSslContext().load_verify_file(certFile);
+			((SSLChannelContext_t*)m_pContext)->getSslContext().load_verify_file(certFile);
 		}
 		catch (boost::system::system_error e){
 			DRILL_LOG(LOG_ERROR) << "Channel initialization failure. Certificate file  "
@@ -429,13 +375,13 @@ connectionStatus_t SSLStreamChannel::init(ChannelContext_t* pContext){
     props->getProp(USERPROP_DISABLE_HOSTVERIFICATION, disableHostVerification);
     if (disableHostVerification != "true") {
         std::string hostPortStr = m_pEndpoint->getHost() + ":" + m_pEndpoint->getPort();
-        ((SSLChannelContext_t *) pContext)->getSslContext().set_verify_callback(
+        ((SSLChannelContext_t *) m_pContext)->getSslContext().set_verify_callback(
                 boost::asio::ssl::rfc2818_verification(hostPortStr.c_str()));
     }
 
-    m_pSocket=new SslSocket(m_ioService, ((SSLChannelContext_t*)pContext)->getSslContext() );
+    m_pSocket=new SslSocket(m_ioService, ((SSLChannelContext_t*)m_pContext)->getSslContext() );
     if(m_pSocket!=NULL){
-        ret=Channel::init(pContext);
+        ret=Channel::init();
     }else{
         DRILL_LOG(LOG_ERROR) << "Channel initialization failure. " << std::endl;
         handleError(CONN_NOSOCKET, getMessage(ERR_CONN_NOSOCKET));
