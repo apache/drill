@@ -24,8 +24,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.SSLConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.BootStrapContext;
@@ -140,7 +142,13 @@ public class WebServer implements AutoCloseable {
 
     final ServerConnector serverConnector;
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
-      serverConnector = createHttpsConnector();
+      try {
+        serverConnector = createHttpsConnector();
+      }
+      catch(DrillException e){
+        throw new DrillbitStartupException(e.getMessage(),e.getCause());
+      }
+
     } else {
       serverConnector = createHttpConnector();
     }
@@ -264,27 +272,19 @@ public class WebServer implements AutoCloseable {
     logger.info("Setting up HTTPS connector for web server");
 
     final SslContextFactory sslContextFactory = new SslContextFactory();
+    SSLConfig ssl = new SSLConfig(config);
 
-    final boolean hasPath = config.hasPath(ExecConstants.HTTP_KEYSTORE_PATH);
-    final boolean hasPassword = config.hasPath(ExecConstants.HTTP_KEYSTORE_PASSWORD);
+    if(ssl.isValid){
+      logger.info("Using configured SSL settings for web server");
 
-    // Check if both keypath and password are present or not
-    if (hasPath && hasPassword) {
-      final String pathValue = config.getString(ExecConstants.HTTP_KEYSTORE_PATH);
-      final String passwordValue = config.getString(ExecConstants.HTTP_KEYSTORE_PASSWORD);
-
-      // checking if any one of them is null or empty
-      if (!Strings.isNullOrEmpty(pathValue) && !Strings.isNullOrEmpty(passwordValue)) {
-        sslContextFactory.setKeyStorePath(pathValue);
-        sslContextFactory.setKeyStorePassword(passwordValue);
+      sslContextFactory.setKeyStorePath(ssl.getkeystorePath());
+      sslContextFactory.setKeyStorePassword(ssl.getkeystorePassword());
+      if(!ssl.gettruststorePath().isEmpty()){
+        sslContextFactory.setTrustStorePath(ssl.gettruststorePath());
+        if(!ssl.gettruststorePassword().isEmpty()){
+          sslContextFactory.setTrustStorePassword(ssl.gettruststorePassword());
+        }
       }
-
-      // Throwing an exception if anyone of them is null or empty
-      else {
-        throw new DrillbitStartupException("keystorepath and/or keystorepassword can't be empty.");
-      }
-    } else if (hasPath || hasPassword) {
-      throw new DrillbitStartupException("Either of keystorepath or keystorepassword is absent. Please provide both the parameters or none of it for self-signed certificate.");
     } else {
       logger.info("Using generated self-signed SSL settings for web server");
       final SecureRandom random = new SecureRandom();
@@ -297,19 +297,30 @@ public class WebServer implements AutoCloseable {
       final DateTime now = DateTime.now();
 
       // Create builder for certificate attributes
-      final X500NameBuilder nameBuilder = new X500NameBuilder(BCStyle.INSTANCE).addRDN(BCStyle.OU, "Apache Drill (auth-generated)").addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)").addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
+      final X500NameBuilder nameBuilder =
+          new X500NameBuilder(BCStyle.INSTANCE)
+              .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
+              .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
+              .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
 
       final Date notBefore = now.minusMinutes(1).toDate();
       final Date notAfter = now.plusYears(5).toDate();
       final BigInteger serialNumber = new BigInteger(128, random);
 
       // Create a certificate valid for 5years from now.
-      final X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(nameBuilder.build(), // attributes
-          serialNumber, notBefore, notAfter, nameBuilder.build(), keyPair.getPublic());
+      final X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(
+          nameBuilder.build(), // attributes
+          serialNumber,
+          notBefore,
+          notAfter,
+          nameBuilder.build(),
+          keyPair.getPublic());
 
       // Sign the certificate using the private key
-      final ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
-      final X509Certificate certificate = new JcaX509CertificateConverter().getCertificate(certificateBuilder.build(contentSigner));
+      final ContentSigner contentSigner =
+          new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
+      final X509Certificate certificate =
+          new JcaX509CertificateConverter().getCertificate(certificateBuilder.build(contentSigner));
 
       // Check the validity
       certificate.checkValidity(now.toDate());
@@ -321,7 +332,8 @@ public class WebServer implements AutoCloseable {
       final String keyStorePasswd = RandomStringUtils.random(20);
       final KeyStore keyStore = KeyStore.getInstance("JKS");
       keyStore.load(null, null);
-      keyStore.setKeyEntry("DrillAutoGeneratedCert", keyPair.getPrivate(), keyStorePasswd.toCharArray(), new java.security.cert.Certificate[]{certificate});
+      keyStore.setKeyEntry("DrillAutoGeneratedCert", keyPair.getPrivate(),
+          keyStorePasswd.toCharArray(), new java.security.cert.Certificate[]{certificate});
 
       sslContextFactory.setKeyStore(keyStore);
       sslContextFactory.setKeyStorePassword(keyStorePasswd);
@@ -331,10 +343,13 @@ public class WebServer implements AutoCloseable {
     httpsConfig.addCustomizer(new SecureRequestCustomizer());
 
     // SSL Connector
-    final ServerConnector sslConnector = new ServerConnector(embeddedJetty, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(httpsConfig));
+    final ServerConnector sslConnector = new ServerConnector(embeddedJetty,
+        new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+        new HttpConnectionFactory(httpsConfig));
     sslConnector.setPort(config.getInt(ExecConstants.HTTP_PORT));
 
     return sslConnector;
+
   }
 
   /**
