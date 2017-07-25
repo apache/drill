@@ -17,6 +17,7 @@
 #
 cmake_minimum_required(VERSION 2.6)
 
+project(drillclient)
 cmake_policy(SET CMP0043 NEW)
 cmake_policy(SET CMP0048 NEW)
 enable_testing()
@@ -125,6 +126,12 @@ endif()
 find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
+#Find SSL
+find_package(OpenSSL REQUIRED )
+if(OPENSSL_FOUND)
+    add_definitions("-DIS_SSL_ENABLED=1")
+endif()
+
 #Find Zookeeper
 find_package(Zookeeper REQUIRED )
 
@@ -169,6 +176,12 @@ set_property(
 
 # Link directory
 link_directories(/usr/local/lib)
+
+#test programs
+add_subdirectory("${CMAKE_SOURCE_DIR}/test")
+message("Open SSL Include = ${OPENSSL_INCLUDE_DIR}")
+message("Open SSL Libraries = ${OPENSSL_LIBRARIES}")
+message("Open SSL = ${OPENSSL_ROOT_DIR}")
 
 add_executable(querySubmitter example/querySubmitter.cpp )
 
