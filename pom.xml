@@ -228,6 +228,7 @@
             <exclude>**/*.linux</exclude>
             <exclude>**/client/build/**</exclude>
             <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/ssl/*.csr</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
             <exclude>**/*.autotools</exclude>
