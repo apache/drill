@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -201,8 +201,8 @@ public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
     builder.go();
   }
 
+  @Ignore("DRILL-5612")
   @Test
-  //@Ignore
   public void testMissingAndNewColumns() throws Exception {
     final File left_dir = new File(BaseTestQuery.getTempDir("mergejoin-schemachanges-left"));
     final File right_dir = new File(BaseTestQuery.getTempDir("mergejoin-schemachanges-right"));
