@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date:  
+date: 2017-07-25 01:09:40 UTC
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
@@ -12,8 +12,9 @@ As with any source, Drill supports joins within and between all systems. Drill a
 Drill is designed to work with any relational datastore that provides a JDBC driver. Drill is actively tested with Postgres, MySQL, Oracle, MSSQL and Apache Derby. For each system, you will follow three basic steps for setup:
 
   1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
-  1. Copy your database's JDBC driver into the jars/3rdparty directory. (You'll need to do this on every node.)
-  1. Add a new storage configuration to Drill through the web ui. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
+  2. Copy your database's JDBC driver into the jars/3rdparty directory. (You'll need to do this on every node.)  
+  3. Restart Drill. See [Starting Drill in Distributed Mode]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
+  4. Add a new storage configuration to Drill through the Web Console. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
   
 ## Example: Working with MySQL
 
