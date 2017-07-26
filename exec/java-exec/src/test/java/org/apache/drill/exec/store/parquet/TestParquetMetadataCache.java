@@ -22,7 +22,6 @@ import com.google.common.collect.Iterables;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -48,12 +47,12 @@ public class TestParquetMetadataCache extends PlanTestBase {
   public static void copyData() throws Exception {
     // copy the data into the temporary location
     String tmpLocation = getDfsTestTmpSchemaLocation();
-    dataDir1 = new File(tmpLocation + Path.SEPARATOR + tableName1);
+    dataDir1 = new File(tmpLocation, tableName1);
     dataDir1.mkdir();
     FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet", TEST_RES_PATH))),
         dataDir1);
 
-    dataDir2 = new File(tmpLocation + Path.SEPARATOR + tableName2);
+    dataDir2 = new File(tmpLocation, tableName2);
     dataDir2.mkdir();
     FileUtils.copyDirectory(new File(String.format(String.format("%s/multilevel/parquet2", TEST_RES_PATH))),
         dataDir2);
@@ -524,8 +523,13 @@ public class TestParquetMetadataCache extends PlanTestBase {
     try {
       test("use dfs_test.tmp");
       test("create table `%s` as select * from cp.`tpch/nation.parquet`", unsupportedMetadataVersion);
-      final String lastVersion = Iterables.getLast(Metadata.MetadataVersion.SUPPORTED_VERSIONS);
-      // Get the future version, which is absent in MetadataVersion.SUPPORTED_VERSIONS list
+      String lastVersion = Iterables.getLast(MetadataVersions.SUPPORTED_VERSIONS);
+      for (String supportedVersion : MetadataVersions.SUPPORTED_VERSIONS) {
+        if (MetadataVersions.compare(lastVersion, supportedVersion) < 0) {
+          lastVersion = supportedVersion;
+        }
+      }
+      // Get the future version, which is absent in MetadataVersions.SUPPORTED_VERSIONS list
       String futureVersion = "v" + (Integer.parseInt("" + lastVersion.charAt(1)) + 1);
       copyMetaDataCacheToTempWithReplacements("parquet/unsupported_metadata/unsupported_metadata_version.requires_replace.txt",
           unsupportedMetadataVersion, Metadata.METADATA_FILENAME, futureVersion);

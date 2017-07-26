@@ -140,12 +140,12 @@ public class ParquetReaderUtility {
 
   public static void correctDatesInMetadataCache(Metadata.ParquetTableMetadataBase parquetTableMetadata) {
     DateCorruptionStatus cacheFileCanContainsCorruptDates =
-        Metadata.MetadataVersion.compare(parquetTableMetadata.getMetadataVersion(), Metadata.MetadataVersion.V3) >= 0 ?
+        MetadataVersions.compare(parquetTableMetadata.getMetadataVersion(), MetadataVersions.V3) >= 0 ?
         DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
     if (cacheFileCanContainsCorruptDates == DateCorruptionStatus.META_UNCLEAR_TEST_VALUES) {
       // Looking for the DATE data type of column names in the metadata cache file ("metadata_version" : "v2")
       String[] names = new String[0];
-      if (Metadata.MetadataVersion.V2.equals(parquetTableMetadata.getMetadataVersion())) {
+      if (MetadataVersions.V2.equals(parquetTableMetadata.getMetadataVersion())) {
         for (Metadata.ColumnTypeMetadata_v2 columnTypeMetadata :
             ((Metadata.ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
           if (OriginalType.DATE.equals(columnTypeMetadata.originalType)) {
@@ -159,7 +159,7 @@ public class ParquetReaderUtility {
         Metadata.RowGroupMetadata rowGroupMetadata = file.getRowGroups().get(0);
         for (Metadata.ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
           // Setting Min/Max values for ParquetTableMetadata_v1
-          if (Metadata.MetadataVersion.V1.equals(parquetTableMetadata.getMetadataVersion())) {
+          if (MetadataVersions.V1.equals(parquetTableMetadata.getMetadataVersion())) {
             OriginalType originalType = columnMetadata.getOriginalType();
             if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue() &&
                 (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
@@ -169,7 +169,7 @@ public class ParquetReaderUtility {
             }
           }
           // Setting Max values for ParquetTableMetadata_v2
-          else if (Metadata.MetadataVersion.V2.equals(parquetTableMetadata.getMetadataVersion()) &&
+          else if (MetadataVersions.V2.equals(parquetTableMetadata.getMetadataVersion()) &&
               columnMetadata.getName() != null && Arrays.equals(columnMetadata.getName(), names) &&
               columnMetadata.hasSingleValue() && (Integer) columnMetadata.getMaxValue() >
               ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {

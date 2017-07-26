@@ -173,7 +173,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.cacheFileRoot = cacheFileRoot;
     this.filter = filter;
 
-    init(null);
+    init(new MetadataContext());
   }
 
   public ParquetGroupScan( //

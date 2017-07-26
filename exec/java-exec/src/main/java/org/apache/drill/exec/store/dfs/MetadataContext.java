@@ -27,7 +27,8 @@ import com.google.common.collect.Maps;
  */
 public class MetadataContext {
 
-  /** Map of directory path to the status of whether modification time was already checked.
+  /**
+   *  Map of directory path to the status of whether modification time was already checked.
    *  Note: the #directories is typically a small percentage of the #files, so the memory footprint
    *  is expected to be relatively small.
    */
@@ -41,9 +42,8 @@ public class MetadataContext {
 
   private PruneStatus pruneStatus = PruneStatus.NOT_STARTED;
 
-  // False values of these flags allow to avoid double reading of corrupted or unsupported metadata files
-  public boolean isMetaCacheFileCorrect = true;
-  public boolean isMetaDirsCacheFileCorrect = true;
+  // Setting this value as true allows to avoid double reading of corrupted or unsupported metadata files
+  public boolean isMetadataFilesCorrupted;
 
   public MetadataContext() {
   }
@@ -65,8 +65,7 @@ public class MetadataContext {
 
   public void clear() {
     dirModifCheckMap.clear();
-    isMetaCacheFileCorrect = true;
-    isMetaDirsCacheFileCorrect = true;
+    isMetadataFilesCorrupted = false;
   }
 
   public void setPruneStatus(PruneStatus status) {

@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -146,19 +145,12 @@ public class Metadata {
    */
   public static @Nullable ParquetTableMetadataBase readBlockMeta(FileSystem fs, Path path, MetadataContext metaContext,
       ParquetFormatConfig formatConfig) {
-    if (metaContext.isMetaCacheFileCorrect) {
-      Metadata metadata = new Metadata(fs, formatConfig);
-      try {
-        metadata.readBlockMeta(path, false, metaContext);
-        return metadata.parquetTableMetadata;
-      } catch (IOException e) {
-        logger.error(e.toString());
-        metaContext.isMetaCacheFileCorrect = false;
-      }
+    if (isMetadataFilesCorrupted(metaContext, path)) {
+      return null;
     }
-    logger.warn("Ignoring unsupported or corrupted metadata file version. Query performance may be slow. Make sure " +
-        "the cache file is up-to-date by running the REFRESH TABLE METADATA command");
-    return null;
+    Metadata metadata = new Metadata(fs, formatConfig);
+    metadata.readBlockMeta(path, false, metaContext);
+    return metadata.parquetTableMetadata;
   }
 
   /**
@@ -173,19 +165,31 @@ public class Metadata {
    */
   public static @Nullable ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, Path path,
       MetadataContext metaContext, ParquetFormatConfig formatConfig) {
-    if (metaContext.isMetaDirsCacheFileCorrect) {
-      Metadata metadata = new Metadata(fs, formatConfig);
-      try {
-        metadata.readBlockMeta(path, true, metaContext);
-        return metadata.parquetTableMetadataDirs;
-      } catch (IOException e) {
-        logger.error(e.toString());
-        metaContext.isMetaDirsCacheFileCorrect = false;
+    if (isMetadataFilesCorrupted(metaContext, path)) {
+      return null;
+    }
+    Metadata metadata = new Metadata(fs, formatConfig);
+    metadata.readBlockMeta(path, true, metaContext);
+    return metadata.parquetTableMetadataDirs;
+  }
+
+  /**
+   * Checking whether metadata is corrupted
+   *
+   * @param metaContext metadata context
+   * @param path The path to the metadata file, located in the directory that contains the parquet files
+   * @return true if parquet metadata is corrupted, false otherwise
+   */
+  private static boolean isMetadataFilesCorrupted(MetadataContext metaContext, Path path) {
+    if (metaContext != null) {
+      if (metaContext.isMetadataFilesCorrupted) {
+        logger.warn("Ignoring of reading '{}' metadata file. Parquet metadata cache files are unsupported or corrupted. " +
+            "Query performance may be slow. Make sure the cache files are up-to-date by running the 'REFRESH TABLE " +
+            "METADATA' command", path);
+        return true;
       }
     }
-    logger.warn("Ignoring corrupted metadata file. Query performance may be slow. Make sure the cache file" +
-        "is up-to-date by running the REFRESH TABLE METADATA command");
-    return null;
+    return false;
   }
 
   private Metadata(FileSystem fs, ParquetFormatConfig formatConfig) {
@@ -229,7 +233,7 @@ public class Metadata {
         childFiles.add(file);
       }
     }
-    ParquetTableMetadata_v3 parquetTableMetadata = new ParquetTableMetadata_v3(MetadataVersion.V3_1,
+    ParquetTableMetadata_v3 parquetTableMetadata = new ParquetTableMetadata_v3(MetadataVersions.V3_1,
         DrillVersionInfo.getVersion());
     if (childFiles.size() > 0) {
       List<ParquetFileMetadata_v3 > childFilesMetadata =
@@ -563,7 +567,7 @@ public class Metadata {
    * @param metaContext current metadata context
    * @throws IOException if metadata file can't be read or updated
    */
-  private void readBlockMeta(Path path, boolean dirsOnly, MetadataContext metaContext) throws IOException {
+  private void readBlockMeta(Path path, boolean dirsOnly, MetadataContext metaContext) {
     Stopwatch timer = Stopwatch.createStarted();
     Path parentDir = Path.getPathWithoutSchemeAndAuthority(path.getParent()); // parent directory of the metadata file
     String parentDirString = parentDir.toUri().getPath(); // string representation for parent directory of the metadata file
@@ -580,14 +584,13 @@ public class Metadata {
     mapper.registerModule(serialModule);
     mapper.registerModule(module);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    boolean alreadyCheckedModification = false;
-    boolean newMetadata = false;
-
-    if (metaContext != null) {
-      alreadyCheckedModification = metaContext.getStatus(parentDirString);
-    }
     try (FSDataInputStream is = fs.open(path)) {
+      boolean alreadyCheckedModification = false;
+      boolean newMetadata = false;
+      if (metaContext != null) {
+        alreadyCheckedModification = metaContext.getStatus(parentDirString);
+      }
+
       if (dirsOnly) {
         parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
         logger.info("Took {} ms to read directories from directory cache file", timer.elapsed(TimeUnit.MILLISECONDS));
@@ -602,7 +605,7 @@ public class Metadata {
         parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
         logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
         timer.stop();
-        if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
+        if (MetadataVersions.compare(parquetTableMetadata.getMetadataVersion(), MetadataVersions.V3) >= 0) {
           ((ParquetTableMetadata_v3) parquetTableMetadata).updateRelativePaths(parentDirString);
         }
         if (!alreadyCheckedModification && tableModified(parquetTableMetadata.getDirectories(), path, parentDir, metaContext)) {
@@ -624,13 +627,14 @@ public class Metadata {
         }
 
       }
+      if (newMetadata && metaContext != null) {
+        // if new metadata files were created, invalidate the existing metadata context
+        metaContext.clear();
+      }
+    } catch (IOException e) {
+      logger.error("Failed to read '{}' metadata file", path, e);
+      metaContext.isMetadataFilesCorrupted = true;
     }
-
-    if (newMetadata && metaContext != null) {
-      // if new metadata files were created, invalidate the existing metadata context
-      metaContext.clear();
-    }
-
   }
 
   /**
@@ -688,17 +692,17 @@ public class Metadata {
    * Bump up metadata major version if metadata structure is changed.
    * Bump up metadata minor version if only metadata content is changed, but metadata structure is the same.
    * <p>
-   * Note: keep metadata versions synchronized with {@link MetadataVersion}
+   * Note: keep metadata versions synchronized with {@link MetadataVersions}
    */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
                 include = JsonTypeInfo.As.PROPERTY,
                 property = "metadata_version",
                 visible = true)
   @JsonSubTypes({
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name = MetadataVersion.V1),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = MetadataVersion.V2),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.V3),
-      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersion.V3_1)
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v1.class, name = MetadataVersions.V1),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v2.class, name = MetadataVersions.V2),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersions.V3),
+      @JsonSubTypes.Type(value = ParquetTableMetadata_v3.class, name = MetadataVersions.V3_1)
       })
   public static abstract class ParquetTableMetadataBase {
 
@@ -804,7 +808,7 @@ public class Metadata {
     }
   }
 
-  @JsonTypeName(MetadataVersion.V1)
+  @JsonTypeName(MetadataVersions.V1)
   public static class ParquetTableMetadata_v1 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     @JsonProperty List<ParquetFileMetadata_v1> files;
@@ -1069,7 +1073,7 @@ public class Metadata {
   /**
    * Struct which contains the metadata for an entire parquet directory structure
    */
-  @JsonTypeName(MetadataVersion.V2) public static class ParquetTableMetadata_v2 extends ParquetTableMetadataBase {
+  @JsonTypeName(MetadataVersions.V2) public static class ParquetTableMetadata_v2 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     /*
      ColumnTypeInfo is schema information from all the files and row groups, merged into
@@ -1424,7 +1428,7 @@ public class Metadata {
 
   }
 
-  @JsonTypeName(MetadataVersion.V3_1)
+  @JsonTypeName(MetadataVersions.V3_1)
   public static class ParquetTableMetadata_v3 extends ParquetTableMetadataBase {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     /*
@@ -1888,7 +1892,7 @@ public class Metadata {
         filesWithRelativePaths.add(new ParquetFileMetadata_v3(
             relativize(baseDir, file.getPath()), file.length, file.rowGroups));
       }
-      return new ParquetTableMetadata_v3(MetadataVersion.V3_1, tableMetadataWithAbsolutePaths, filesWithRelativePaths,
+      return new ParquetTableMetadata_v3(MetadataVersions.V3_1, tableMetadataWithAbsolutePaths, filesWithRelativePaths,
           directoriesWithRelativePaths, DrillVersionInfo.getVersion());
     }
 
@@ -1911,70 +1915,6 @@ public class Metadata {
             basePathWithoutSchemeAndAuthority.toUri().getPath(), fullPathWithoutSchemeAndAuthority.toUri().getPath()));
       }
       return relativeFilePath.toUri().getPath();
-    }
-  }
-
-  /**
-   * Supported metadata versions.
-   * <p>
-   * Note: keep them synchronized with {@link ParquetTableMetadataBase} versions
-   */
-  public static class MetadataVersion {
-
-    /**
-     * Version 1: Introduces parquet file metadata caching.<br>
-     * See DRILL-2743
-     */
-    public static final String V1 = "v1";
-    /**
-     * Version 2: Metadata cache file size is reduced.<br>
-     * See DRILL-4053
-     */
-    public static final String V2 = "v2";
-    /**
-     * Version 3: Difference between v3 and v2 : min/max, type_length, precision, scale, repetitionLevel, definitionLevel.<br>
-     * Filter pushdown for Parquet is implemented. <br>
-     * See DRILL-1950
-     */
-    public static final String V3 = "v3";
-    /**
-     * Version 3.1: Absolute paths of files and directories are replaced with relative ones.<br>
-     * See DRILL-3867
-     */
-    public static final String V3_1 = "v3.1";
-
-
-    /**
-     * All historical versions of the Drill metadata cache files
-     */
-    public static final List<String> SUPPORTED_VERSIONS = Lists.newArrayList(V1, V2, V3, V3_1);
-
-    /**
-     * @param metadataVersion parquet metadata version
-     * @return true if metadata version is supported, false otherwise
-     */
-    public static boolean isVersionSupported(String metadataVersion) {
-      return SUPPORTED_VERSIONS.contains(metadataVersion);
-    }
-
-    /**
-     * Helper compare method similar to {@link java.util.Comparator#compare}
-     *
-     * @param metadataVersion1 the first metadata version to be compared
-     * @param metadataVersion2 the second metadata version to be compared
-     * @return a negative integer, zero, or a positive integer as the
-     *         first argument is less than, equal to, or greater than the
-     *         second.
-     */
-    public static int compare(String metadataVersion1, String metadataVersion2) {
-      if (isVersionSupported(metadataVersion1) && isVersionSupported(metadataVersion2)) {
-        return Integer.compare(SUPPORTED_VERSIONS.indexOf(metadataVersion1), SUPPORTED_VERSIONS.indexOf(metadataVersion2));
-      } else {
-        // this is never reached
-        throw UserException.validationError()
-            .message("Unsupported metadata version. '%s' version can't be compared with '%s'", metadataVersion1, metadataVersion2)
-            .build(logger);
-      }
     }
   }
 
