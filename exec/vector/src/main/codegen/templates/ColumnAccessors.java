@@ -19,143 +19,230 @@
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/accessor/ColumnAccessors.java" />
 <#include "/@includes/license.ftl" />
-<#macro getType label>
+<#macro getType drillType label>
     @Override
     public ValueType valueType() {
   <#if label == "Int">
       return ValueType.INTEGER;
+  <#elseif drillType == "VarChar" || drillType == "Var16Char">
+      return ValueType.STRING;
   <#else>
       return ValueType.${label?upper_case};
   </#if>
     }
 </#macro>
-<#macro bindReader prefix drillType>
+<#macro bindReader vectorPrefix drillType isArray >
   <#if drillType = "Decimal9" || drillType == "Decimal18">
-    private MaterializedField field;
+    private MajorType type;
   </#if>
-    private ${prefix}${drillType}Vector.Accessor accessor;
+    private ${vectorPrefix}${drillType}Vector.Accessor accessor;
 
     @Override
-    public void bind(RowIndex vectorIndex, ValueVector vector) {
-      bind(vectorIndex);
+    public void bindVector(ValueVector vector) {
   <#if drillType = "Decimal9" || drillType == "Decimal18">
-      field = vector.getField();
+      type = vector.getField().getType();
   </#if>
-      accessor = ((${prefix}${drillType}Vector) vector).getAccessor();
+      accessor = ((${vectorPrefix}${drillType}Vector) vector).getAccessor();
     }
 
   <#if drillType = "Decimal9" || drillType == "Decimal18">
     @Override
-    public void bind(RowIndex vectorIndex, MaterializedField field, VectorAccessor va) {
-      bind(vectorIndex, field, va);
-      this.field = field;
+    public void bindVector(MajorType type, VectorAccessor va) {
+      super.bindVector(type, va);
+      this.type = type;
     }
 
  </#if>
-   private ${prefix}${drillType}Vector.Accessor accessor() {
+    private ${vectorPrefix}${drillType}Vector.Accessor accessor() {
       if (vectorAccessor == null) {
         return accessor;
       } else {
-        return ((${prefix}${drillType}Vector) vectorAccessor.vector()).getAccessor();
+        return ((${vectorPrefix}${drillType}Vector) vectorAccessor.vector()).getAccessor();
       }
     }
 </#macro>
 <#macro get drillType accessorType label isArray>
     @Override
     public ${accessorType} get${label}(<#if isArray>int index</#if>) {
+    <#assign getObject ="getObject"/>
   <#if isArray>
-    <#assign index=", index"/>
-    <#assign getObject="getSingleObject">
+    <#assign indexVar = "index"/>
   <#else>
-    <#assign index=""/>
-    <#assign getObject="getObject">
+    <#assign indexVar = ""/>
   </#if>
-  <#if drillType == "VarChar">
-      return new String(accessor().get(vectorIndex.index()${index}), Charsets.UTF_8);
-  <#elseif drillType == "Var16Char">
-      return new String(accessor().get(vectorIndex.index()${index}), Charsets.UTF_16);
-  <#elseif drillType == "VarBinary">
-      return accessor().get(vectorIndex.index()${index});
+  <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
+      return accessor().get(vectorIndex.vectorIndex(${indexVar}));
   <#elseif drillType == "Decimal9" || drillType == "Decimal18">
       return DecimalUtility.getBigDecimalFromPrimitiveTypes(
-                accessor().get(vectorIndex.index()${index}),
-                field.getScale(),
-                field.getPrecision());
+                accessor().get(vectorIndex.vectorIndex(${indexVar})),
+                type.getScale(),
+                type.getPrecision());
   <#elseif accessorType == "BigDecimal" || accessorType == "Period">
-      return accessor().${getObject}(vectorIndex.index()${index});
+      return accessor().${getObject}(vectorIndex.vectorIndex(${indexVar}));
   <#else>
-      return accessor().get(vectorIndex.index()${index});
+      return accessor().get(vectorIndex.vectorIndex(${indexVar}));
   </#if>
     }
-</#macro>
-<#macro bindWriter prefix drillType>
-  <#if drillType = "Decimal9" || drillType == "Decimal18">
-    private MaterializedField field;
-  </#if>
-    private ${prefix}${drillType}Vector.Mutator mutator;
+  <#if drillType == "VarChar">
 
     @Override
-    public void bind(RowIndex vectorIndex, ValueVector vector) {
-      bind(vectorIndex);
-  <#if drillType = "Decimal9" || drillType == "Decimal18">
-      field = vector.getField();
+    public String getString(<#if isArray>int index</#if>) {
+      return new String(getBytes(${indexVar}), Charsets.UTF_8);
+    }
+  <#elseif drillType == "Var16Char">
+
+    @Override
+    public String getString(<#if isArray>int index</#if>) {
+      return new String(getBytes(${indexVar}), Charsets.UTF_16);
+    }
   </#if>
-      this.mutator = ((${prefix}${drillType}Vector) vector).getMutator();
+</#macro>
+<#macro bindWriter vectorPrefix mode drillType>
+  <#if drillType = "Decimal9" || drillType == "Decimal18">
+    private MajorType type;
+  </#if>
+    private ${vectorPrefix}${drillType}Vector.Mutator mutator;
+
+    @Override
+    public void bindVector(ValueVector vector) {
+  <#if drillType = "Decimal9" || drillType == "Decimal18">
+      type = vector.getField().getType();
+  </#if>
+      this.mutator = ((${vectorPrefix}${drillType}Vector) vector).getMutator();
     }
 </#macro>
-<#macro set drillType accessorType label nullable verb>
-    @Override
-    public void set${label}(${accessorType} value) {
-  <#if drillType == "VarChar">
-      byte bytes[] = value.getBytes(Charsets.UTF_8);
-      mutator.${verb}Safe(vectorIndex.index(), bytes, 0, bytes.length);
-  <#elseif drillType == "Var16Char">
-      byte bytes[] = value.getBytes(Charsets.UTF_16);
-      mutator.${verb}Safe(vectorIndex.index(), bytes, 0, bytes.length);
-  <#elseif drillType == "VarBinary">
-      mutator.${verb}Safe(vectorIndex.index(), value, 0, value.length);
-  <#elseif drillType == "Decimal9">
-      mutator.${verb}Safe(vectorIndex.index(),
-          DecimalUtility.getDecimal9FromBigDecimal(value,
-              field.getScale(), field.getPrecision()));
-  <#elseif drillType == "Decimal18">
-      mutator.${verb}Safe(vectorIndex.index(),
-          DecimalUtility.getDecimal18FromBigDecimal(value,
-              field.getScale(), field.getPrecision()));
-  <#elseif drillType == "IntervalYear">
-      mutator.${verb}Safe(vectorIndex.index(), value.getYears() * 12 + value.getMonths());
-  <#elseif drillType == "IntervalDay">
-      mutator.${verb}Safe(vectorIndex.index(),<#if nullable> 1,</#if>
-                      value.getDays(),
-                      ((value.getHours() * 60 + value.getMinutes()) * 60 +
-                       value.getSeconds()) * 1000 + value.getMillis());
-  <#elseif drillType == "Interval">
-      mutator.${verb}Safe(vectorIndex.index(),<#if nullable> 1,</#if>
-                      value.getYears() * 12 + value.getMonths(),
-                      value.getDays(),
-                      ((value.getHours() * 60 + value.getMinutes()) * 60 +
-                       value.getSeconds()) * 1000 + value.getMillis());
-  <#else>
-      mutator.${verb}Safe(vectorIndex.index(), <#if cast=="set">(${javaType}) </#if>value);
+<#-- DRILL-5529 describes how required and repeated vectors don't implement
+     fillEmpties() to recover from skiped writes. Since the mutator does
+     not do the work, we must insert code here to do it.
+     DRILL-5530 describes why required vectors may not be initialized
+     to zeros. -->
+<#macro fillEmpties drillType mode>
+  <#if mode == "" && drillType != "Bit">
+        // Work-around for DRILL-5529: lack of fillEmpties for some vectors.
+        // See DRILL-5530 for why this is needed for required vectors.
+        if (lastWriteIndex + 1 < writeIndex) {
+          mutator.fillEmptiesBounded(lastWriteIndex, writeIndex);
+        }
+ </#if>
+</#macro>
+<#macro advance mode>
+  <#if mode == "Repeated">
+      vectorIndex.next();
   </#if>
+</#macro>
+<#macro set drillType accessorType label vectorPrefix mode setFn>
+  <#if accessorType == "byte[]">
+    <#assign args = ", int len">
+  <#else>
+    <#assign args = "">
+  </#if>
+    @Override
+    public void set${label}(${accessorType} value${args}) throws VectorOverflowException {
+      try {
+        final int writeIndex = vectorIndex.vectorIndex();
+        <@fillEmpties drillType mode />
+  <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
+        mutator.${setFn}(writeIndex, value, 0, len);
+  <#elseif drillType == "Decimal9">
+        mutator.${setFn}(writeIndex,
+            DecimalUtility.getDecimal9FromBigDecimal(value,
+              type.getScale(), type.getPrecision()));
+  <#elseif drillType == "Decimal18">
+        mutator.${setFn}(writeIndex,
+            DecimalUtility.getDecimal18FromBigDecimal(value,
+                type.getScale(), type.getPrecision()));
+  <#elseif drillType == "IntervalYear">
+        mutator.${setFn}(writeIndex, value.getYears() * 12 + value.getMonths());
+  <#elseif drillType == "IntervalDay">
+        mutator.${setFn}(writeIndex,<#if mode == "Nullable"> 1,</#if>
+                      value.getDays(),
+                      periodToMillis(value));
+  <#elseif drillType == "Interval">
+        mutator.${setFn}(writeIndex,<#if mode == "Nullable"> 1,</#if>
+                      value.getYears() * 12 + value.getMonths(),
+                      value.getDays(), periodToMillis(value));
+  <#else>
+        mutator.${setFn}(writeIndex, <#if cast=="set">(${javaType}) </#if>value);
+  </#if>
+  <#if mode != "Repeated">
+        lastWriteIndex = writeIndex;
+  </#if>
+      } catch (VectorOverflowException e) {
+        vectorIndex.overflowed();
+        throw e;
+      }
+      <@advance mode />
     }
+  <#if drillType == "VarChar">
+
+    @Override
+    public void setString(String value) throws VectorOverflowException {
+      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      setBytes(bytes, bytes.length);
+    }
+  <#elseif drillType == "Var16Char">
+
+    @Override
+    public void setString(String value) throws VectorOverflowException {
+      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      setBytes(bytes, bytes.length);
+    }
+  </#if>
+</#macro>
+<#macro finishBatch drillType mode>
+    @Override
+    protected void finish() throws VectorOverflowException {
+      final int rowCount = vectorIndex.vectorIndex();
+  <#-- See note above for the fillEmpties macro. -->
+  <#if mode == "" && drillType != "Bit">
+      // Work-around for DRILL-5529: lack of fillEmpties for some vectors.
+      // See DRILL-5530 for why this is needed for required vectors.
+      mutator.fillEmptiesBounded(lastWriteIndex, rowCount - 1);
+   </#if>
+      mutator.setValueCount(rowCount);
+    }
+</#macro>
+<#macro build types vectorType accessorType>
+  <#if vectorType == "Repeated">
+    <#assign fnPrefix = "Array" />
+    <#assign classType = "Element" />
+  <#else>
+    <#assign fnPrefix = vectorType />
+    <#assign classType = "Scalar" />
+  </#if>
+  <#if vectorType == "Required">
+    <#assign vectorPrefix = "" />
+  <#else>
+    <#assign vectorPrefix = vectorType />
+  </#if>
+  public static void define${fnPrefix}${accessorType}s(
+      Class<? extends Base${classType}${accessorType}> ${accessorType?lower_case}s[]) {
+  <#list types as type>
+  <#list type.minor as minor>
+    <#assign drillType=minor.class>
+    <#assign notyet=minor.accessorDisabled!type.accessorDisabled!false>
+    <#if ! notyet>
+    <#assign typeEnum=drillType?upper_case>
+    ${accessorType?lower_case}s[MinorType.${typeEnum}.ordinal()] = ${vectorPrefix}${drillType}Column${accessorType}.class;
+    </#if>
+  </#list>
+  </#list>
+  }
 </#macro>
 
 package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.accessor.impl.AbstractColumnReader;
-import org.apache.drill.exec.vector.accessor.impl.AbstractColumnWriter;
-import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
-import org.apache.drill.exec.vector.accessor.impl.AbstractArrayReader;
-import org.apache.drill.exec.vector.accessor.impl.AbstractArrayWriter;
-import org.apache.drill.exec.vector.accessor.impl.AbstractColumnReader.VectorAccessor;
+import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader;
+import org.apache.drill.exec.vector.accessor.reader.BaseElementReader;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
+import org.apache.drill.exec.vector.accessor.writer.BaseScalarWriter;
+import org.apache.drill.exec.vector.accessor.writer.BaseElementWriter;
 
 import com.google.common.base.Charsets;
 import org.joda.time.Period;
@@ -191,141 +278,115 @@ public class ColumnAccessors {
     <#if accessorType=="BigDecimal">
       <#assign label="Decimal">
     </#if>
+    <#if drillType == "VarChar" || drillType == "Var16Char">
+      <#assign accessorType = "byte[]">
+      <#assign label = "Bytes">
+    </#if>
     <#if ! notyet>
   //------------------------------------------------------------------------
   // ${drillType} readers and writers
 
-  public static class ${drillType}ColumnReader extends AbstractColumnReader {
+  public static class ${drillType}ColumnReader extends BaseScalarReader {
 
-    <@bindReader "" drillType />
+    <@bindReader "" drillType false />
 
-    <@getType label />
+    <@getType drillType label />
 
     <@get drillType accessorType label false/>
   }
 
-  public static class Nullable${drillType}ColumnReader extends AbstractColumnReader {
+  public static class Nullable${drillType}ColumnReader extends BaseScalarReader {
 
-    <@bindReader "Nullable" drillType />
+    <@bindReader "Nullable" drillType false />
 
-    <@getType label />
+    <@getType drillType label />
 
     @Override
     public boolean isNull() {
-      return accessor().isNull(vectorIndex.index());
+      return accessor().isNull(vectorIndex.vectorIndex());
     }
 
-    <@get drillType accessorType label false/>
+    <@get drillType accessorType label false />
   }
 
-  public static class Repeated${drillType}ColumnReader extends AbstractArrayReader {
+  public static class Repeated${drillType}ColumnReader extends BaseElementReader {
 
-    <@bindReader "Repeated" drillType />
+    <@bindReader "" drillType true />
 
-    <@getType label />
+    <@getType drillType label />
 
+    <@get drillType accessorType label true />
+  }
+
+  public static class ${drillType}ColumnWriter extends BaseScalarWriter {
+
+    <@bindWriter "" "Required" drillType />
+
+    <@getType drillType label />
+
+    <@set drillType accessorType label "" "Required" "setScalar" />
+
+    <@finishBatch drillType "" />
+  }
+
+  public static class Nullable${drillType}ColumnWriter extends BaseScalarWriter {
+
+    <@bindWriter "Nullable" "Nullable" drillType />
+
+    <@getType drillType label />
+
+    <#-- Generated for each type because, unfortunately, there is
+         no common base class for nullable vectors even though the
+         null vector is generic and should be common. Instead, the
+         null vector is generated as part of each kind of nullable
+         vector.
+         TODO: Factor out the null vector and move this code to
+         the base class.
+    -->
     @Override
-    public int size() {
-      return accessor().getInnerValueCountAt(vectorIndex.index());
+    public void setNull() throws VectorOverflowException {
+      try {
+        final int writeIndex = vectorIndex.vectorIndex();
+        mutator.setNullBounded(writeIndex);
+        lastWriteIndex = vectorIndex.vectorIndex();
+      } catch (VectorOverflowException e) {
+        vectorIndex.overflowed();
+        throw e;
+      }
     }
 
-    <@get drillType accessorType label true/>
+    <@set drillType accessorType label "Nullable" "Nullable" "setScalar" />
+
+    <@finishBatch drillType "Nullable" />
   }
 
-  public static class ${drillType}ColumnWriter extends AbstractColumnWriter {
+  public static class Repeated${drillType}ColumnWriter extends BaseElementWriter {
 
-    <@bindWriter "" drillType />
+    <@bindWriter "" "Repeated" drillType />
 
-    <@getType label />
+    <@getType drillType label />
 
-    <@set drillType accessorType label false "set" />
-  }
-
-  public static class Nullable${drillType}ColumnWriter extends AbstractColumnWriter {
-
-    <@bindWriter "Nullable" drillType />
-
-    <@getType label />
-
-    @Override
-    public void setNull() {
-      mutator.setNull(vectorIndex.index());
-    }
-
-    <@set drillType accessorType label true "set" />
-  }
-
-  public static class Repeated${drillType}ColumnWriter extends AbstractArrayWriter {
-
-    <@bindWriter "Repeated" drillType />
-
-    <@getType label />
-
-    protected BaseRepeatedValueVector.BaseRepeatedMutator mutator() {
-      return mutator;
-    }
-
-    <@set drillType accessorType label false "add" />
+    <@set drillType accessorType label "" "Repeated" "setScalar" />
   }
 
     </#if>
   </#list>
 </#list>
-  public static void defineReaders(
-      Class<? extends AbstractColumnReader> readers[][]) {
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#assign drillType=minor.class>
-    <#assign notyet=minor.accessorDisabled!type.accessorDisabled!false>
-    <#if ! notyet>
-    <#assign typeEnum=drillType?upper_case>
-    readers[MinorType.${typeEnum}.ordinal()][DataMode.REQUIRED.ordinal()] = ${drillType}ColumnReader.class;
-    readers[MinorType.${typeEnum}.ordinal()][DataMode.OPTIONAL.ordinal()] = Nullable${drillType}ColumnReader.class;
-    </#if>
-  </#list>
-</#list>
+  public static int periodToMillis(Period value) {
+    return ((value.getHours() * 60 +
+             value.getMinutes()) * 60 +
+             value.getSeconds()) * 1000 +
+           value.getMillis();
   }
+<@build vv.types "Required" "Reader" />
 
-  public static void defineWriters(
-      Class<? extends AbstractColumnWriter> writers[][]) {
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#assign drillType=minor.class>
-    <#assign notyet=minor.accessorDisabled!type.accessorDisabled!false>
-    <#if ! notyet>
-    <#assign typeEnum=drillType?upper_case>
-    writers[MinorType.${typeEnum}.ordinal()][DataMode.REQUIRED.ordinal()] = ${drillType}ColumnWriter.class;
-    writers[MinorType.${typeEnum}.ordinal()][DataMode.OPTIONAL.ordinal()] = Nullable${drillType}ColumnWriter.class;
-    </#if>
-  </#list>
-</#list>
-  }
+<@build vv.types "Nullable" "Reader" />
 
-  public static void defineArrayReaders(
-      Class<? extends AbstractArrayReader> readers[]) {
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#assign drillType=minor.class>
-    <#assign notyet=minor.accessorDisabled!type.accessorDisabled!false>
-    <#if ! notyet>
-    <#assign typeEnum=drillType?upper_case>
-    readers[MinorType.${typeEnum}.ordinal()] = Repeated${drillType}ColumnReader.class;
-    </#if>
-  </#list>
-</#list>
-  }
+<@build vv.types "Repeated" "Reader" />
 
-  public static void defineArrayWriters(
-      Class<? extends AbstractArrayWriter> writers[]) {
-<#list vv.types as type>
-  <#list type.minor as minor>
-    <#assign drillType=minor.class>
-    <#assign notyet=minor.accessorDisabled!type.accessorDisabled!false>
-    <#if ! notyet>
-    <#assign typeEnum=drillType?upper_case>
-    writers[MinorType.${typeEnum}.ordinal()] = Repeated${drillType}ColumnWriter.class;
-    </#if>
-  </#list>
-</#list>
-  }
+<@build vv.types "Required" "Writer" />
+
+<@build vv.types "Nullable" "Writer" />
+
+<@build vv.types "Repeated" "Writer" />
 }

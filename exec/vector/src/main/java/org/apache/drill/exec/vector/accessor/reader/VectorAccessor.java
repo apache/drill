@@ -15,24 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.impl;
+package org.apache.drill.exec.vector.accessor.reader;
 
-import org.apache.drill.exec.vector.accessor.TupleAccessor;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 
-/**
- * Common base class for tuple readers and writers.
- */
-
-public abstract class AbstractTupleAccessor implements TupleAccessor {
-
-  protected final TupleSchema schema;
-
-  public AbstractTupleAccessor(TupleSchema schema) {
-    this.schema = schema;
-  }
-
-  @Override
-  public TupleSchema schema() {
-    return schema;
-  }
+public interface VectorAccessor {
+  void bind(ColumnReaderIndex index);
+  ValueVector vector();
 }

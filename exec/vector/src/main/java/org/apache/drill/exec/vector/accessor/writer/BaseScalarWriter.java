@@ -15,29 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.impl;
+package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 
 /**
- * Abstract base class for column readers and writers that
- * implements the mechanism for binding accessors to a row
- * index. The row index is implicit: index a row, then
- * column accessors pull out columns from that row.
+ * Column writer implementation that acts as the basis for the
+ * generated, vector-specific implementations. All set methods
+ * throw an exception; subclasses simply override the supported
+ * method(s).
  */
 
-public abstract class AbstractColumnAccessor {
+public abstract class BaseScalarWriter extends AbstractScalarWriter {
 
-  public interface RowIndex {
-    int batch();
-    int index();
+  protected ColumnWriterIndex vectorIndex;
+  protected int lastWriteIndex;
+
+  public static ScalarObjectWriter build(ValueVector vector, BaseScalarWriter writer) {
+    writer.bindVector(vector);
+    return new ScalarObjectWriter(writer);
   }
 
-  protected RowIndex vectorIndex;
-
-  protected void bind(RowIndex rowIndex) {
-    this.vectorIndex = rowIndex;
+  @Override
+  public void bindIndex(ColumnWriterIndex vectorIndex) {
+    this.vectorIndex = vectorIndex;
   }
 
-  public abstract void bind(RowIndex rowIndex, ValueVector vector);
+  @Override
+  public void startWrite() { lastWriteIndex = -1; }
 }

@@ -17,36 +17,90 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-import java.math.BigDecimal;
-
-import org.joda.time.Period;
-
 /**
- * Interface to access the values of an array column. In general, each
- * vector implements just one of the get methods. Check the vector type
- * to know which method to use. Though, generally, when writing test
- * code, the type is known to the test writer.
- * <p>
- * Arrays allow random access to the values within the array. The index
- * passed to each method is the index into the array for the current
- * row and column. (This means that arrays are three dimensional:
- * the usual (row, column) dimensions plus an array index dimension:
- * (row, column, array index).
- * <p>
- * Note that the <tt>isNull()</tt> method is provided for completeness,
- * but no Drill array allows null values at present.
+ * Generic array reader. An array is one of the following:
+ * <ul>
+ * <li>Array of scalars. Read the values using {@link #elements()}, which provides
+ * an array-like access to the scalars.</li>
+ * <li>A repeated map. Use {@link #tuple(int)} to get a tuple reader for a
+ * specific array element. Use {@link #size()} to learn the number of maps in
+ * the array.</li>
+ * <li>List of lists. Use the {@link #array(int)} method to get the nested list
+ * at a given index. Use {@link #size()} to learn the number of maps in
+ * the array.</li>
+ * </ul>
+ * {@see ArrayWriter}
  */
 
-public interface ArrayReader extends ColumnAccessor {
+public interface ArrayReader {
+
+  /**
+   * Number of elements in the array.
+   * @return the number of elements
+   */
+
   int size();
-  boolean isNull(int index);
-  int getInt(int index);
-  long getLong(int index);
-  double getDouble(int index);
-  String getString(int index);
-  byte[] getBytes(int index);
-  BigDecimal getDecimal(int index);
-  Period getPeriod(int index);
-  TupleReader map(int index);
+
+  /**
+   * The object type of the list entry. All entries have the same
+   * type.
+   * @return the object type of each entry
+   */
+
+  ObjectType entryType();
+
+  /**
+   * Return a reader for the elements of a scalar array.
+   * @return reader for scalar elements
+   */
+
+  ScalarElementReader elements();
+
+  /**
+   * Return a generic object reader for the array entry. Not available
+   * for scalar elements. Positions the reader to read the selected
+   * element.
+   *
+   * @param index array index
+   * @return generic object reader
+   */
+
+  ObjectReader entry(int index);
+  TupleReader tuple(int index);
   ArrayReader array(int index);
+
+  /**
+   * Return the generic object reader for the array element. This
+   * version <i>does not</i> position the reader, the client must
+   * call {@link setPosn()} to set the position. This form allows
+   * up-front setup of the readers when convenient for the caller.
+   */
+
+  ObjectReader entry();
+  TupleReader tuple();
+  ArrayReader array();
+
+  /**
+   * Set the array reader to read a given array entry. Not used for
+   * scalars, only for maps and arrays when using the non-indexed
+   * methods {@link #entry()}, {@link #tuple()} and {@link #array()}.
+   */
+
+  void setPosn(int index);
+
+  /**
+   * Return the entire array as an <tt>List</tt> of objects.
+   * Note, even if the array is scalar, the elements are still returned
+   * as a list. This method is primarily for testing.
+   * @return array as a <tt>List</tt> of objects
+   */
+
+  Object getObject();
+
+  /**
+   * Return the entire array as a string. Primarily for debugging.
+   * @return string representation of the array
+   */
+
+  String getAsString();
 }

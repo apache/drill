@@ -25,6 +25,23 @@
  * unit tests, but the accessor framework could easily be used for other
  * purposes as well.
  * <p>
+ * The object reader and writer provide a generic, JSON-like interface
+ * to allow any valid combination of readers or writers (generically
+ * accessors):<pre><code>
+ * row : tuple
+ * tuple : (name column) *
+ * column : scalar obj | array obj | tuple obj
+ * scalar obj : scalar accessor
+ * array obj : array accessor
+ * array accessor : element accessor
+ * tuple obj : tuple</code></pre>
+ * <p>
+ * As seen above, the accessor tree starts with a tuple (a row in the form of
+ * a class provided by the consumer.) Each column in the tuple is represented
+ * by an object accesor. That object accessor contains a scalar, tuple or array
+ * accessor. This models Drill's JSON structure: a row can have a list of lists
+ * of tuples that contains lists of ints, say.
+ * <p>
  * Drill provides a set of column readers and writers. Compared to those, this
  * set:
  * <ul>
@@ -45,7 +62,7 @@
  * the extra level of indirection which hides the complex, type-specific code
  * otherwise required.)
  * <p>
- * {@link ColumnReader} and {@link ColumnWriter} are the core abstractions: they
+ * {@link ScalarReader} and {@link ColumnWriter} are the core abstractions: they
  * provide simplified access to the myriad of Drill column types via a
  * simplified, uniform API. {@link TupleReader} and {@link TupleWriter} provide
  * a simplified API to rows or maps (both of which are tuples in Drill.)
@@ -53,6 +70,10 @@
  * <p>
  * Overview of the code structure:
  * <dl>
+ * <dt>ObjectWriter, ObjectReader</dt>
+ * <dd>Drill follows a JSON data model. A row is a tuple (AKA structure). Each
+ * column is a scalar, a map (AKA tuple, structure) or an array (AKA a repeated
+ * value.)</dd>
  * <dt>TupleWriter, TupleReader</dt>
  * <dd>In relational terms, a tuple is an ordered collection of values, where
  * the meaning of the order is provided by a schema (usually a name/type pair.)
@@ -62,12 +83,8 @@
  * But, doing so is slower than access by position (index). To provide efficient
  * code, the tuple classes assume that the implementation imposes a column
  * ordering which can be exposed via the indexes.</dd>
- * <dt>ColumnAccessor</dt>
- * <dd>A generic base class for column readers and writers that provides the
- * column data type.</dd>
- * <dt>ColumnWriter, ColumnReader</dt>
- * <dd>A uniform interface implemented for each column type ("major type" in
- * Drill terminology). The scalar types: Nullable (Drill optional) and
+ * <dt>ScalarWriter, ScalarReader</dt>
+ * <dd>A uniform interface for the scalar types: Nullable (Drill optional) and
  * non-nullable (Drill required) fields use the same interface. Arrays (Drill
  * repeated) are special. To handle the array aspect, even array fields use the
  * same interface, but the <tt>getArray</tt> method returns another layer of
@@ -98,11 +115,11 @@
  * <dd>The generated accessors: one for each combination of write/read, data
  * (minor) type and cardinality (data model).
  * <dd>
- * <dt>RowIndex</dt>
+ * <dt>ColumnReaderIndex, ColumnWriterIndex</dt>
  * <dd>This nested class binds the accessor to the current row position for the
  * entire record batch. That is, you don't ask for the value of column a for row
  * 5, then the value of column b for row 5, etc. as with the "raw" vectors.
- * Instead, the implementation sets the row position (with, say an interator.)
+ * Instead, the implementation sets the row position (with, say an iterator.)
  * Then, all columns implicitly return values for the current row.
  * <p>
  * Different implementations of the row index handle the case of no selection

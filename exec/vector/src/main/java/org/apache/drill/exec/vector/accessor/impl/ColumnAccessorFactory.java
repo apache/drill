@@ -20,101 +20,129 @@ package org.apache.drill.exec.vector.accessor.impl;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors;
-import org.apache.drill.exec.vector.accessor.impl.AbstractArrayReader.ArrayColumnReader;
-import org.apache.drill.exec.vector.accessor.impl.AbstractArrayWriter.ArrayColumnWriter;
+import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
+import org.apache.drill.exec.vector.accessor.reader.BaseElementReader;
+import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader;
+import org.apache.drill.exec.vector.accessor.reader.ScalarArrayReader;
+import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
+import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
+import org.apache.drill.exec.vector.accessor.writer.BaseElementWriter;
+import org.apache.drill.exec.vector.accessor.writer.BaseScalarWriter;
+import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 /**
- * Gather generated accessor classes into a set of class
- * tables to allow rapid run-time creation of accessors.
- * The caller is responsible for binding the accessor to
- * a vector and a row index.
+ * Gather generated accessor classes into a set of class tables to allow rapid
+ * run-time creation of accessors. Builds the accessor and its object reader/writer
+ * wrapper which binds the vector to the accessor.
  */
 
+@SuppressWarnings("unchecked")
 public class ColumnAccessorFactory {
 
-  private static Class<? extends AbstractColumnWriter> columnWriters[][] = buildColumnWriters();
-  private static Class<? extends AbstractColumnReader> columnReaders[][] = buildColumnReaders();
-  private static Class<? extends AbstractArrayWriter> arrayWriters[] = buildArrayWriters();
-  private static Class<? extends AbstractArrayReader> arrayReaders[] = buildArrayReaders();
+  private static final int typeCount = MinorType.values().length;
+  private static final Class<? extends BaseScalarReader> requiredReaders[] = new Class[typeCount];
+  private static final Class<? extends BaseScalarReader> nullableReaders[] = new Class[typeCount];
+  private static final Class<? extends BaseElementReader> elementReaders[] = new Class[typeCount];
+  private static final Class<? extends BaseScalarWriter> requiredWriters[] = new Class[typeCount];
+  private static final Class<? extends BaseScalarWriter> nullableWriters[] = new Class[typeCount];
+  private static final Class<? extends BaseElementWriter> elementWriters[] = new Class[typeCount];
 
-  @SuppressWarnings("unchecked")
-  private static Class<? extends AbstractColumnWriter>[][] buildColumnWriters() {
-    int typeCount = MinorType.values().length;
-    int modeCount = DataMode.values().length;
-    Class<? extends AbstractColumnWriter> writers[][] = new Class[typeCount][];
-    for (int i = 0; i < typeCount; i++) {
-      writers[i] = new Class[modeCount];
-    }
-
-    ColumnAccessors.defineWriters(writers);
-    return writers;
+  static {
+    ColumnAccessors.defineRequiredReaders(requiredReaders);
+    ColumnAccessors.defineNullableReaders(nullableReaders);
+    ColumnAccessors.defineArrayReaders(elementReaders);
+    ColumnAccessors.defineRequiredWriters(requiredWriters);
+    ColumnAccessors.defineNullableWriters(nullableWriters);
+    ColumnAccessors.defineArrayWriters(elementWriters);
   }
 
-  @SuppressWarnings("unchecked")
-  private static Class<? extends AbstractColumnReader>[][] buildColumnReaders() {
-    int typeCount = MinorType.values().length;
-    int modeCount = DataMode.values().length;
-    Class<? extends AbstractColumnReader> readers[][] = new Class[typeCount][];
-    for (int i = 0; i < typeCount; i++) {
-      readers[i] = new Class[modeCount];
-    }
+  public static AbstractObjectWriter buildColumnWriter(ValueVector vector) {
+    MajorType major = vector.getField().getType();
+    MinorType type = major.getMinorType();
+    DataMode mode = major.getMode();
 
-    ColumnAccessors.defineReaders(readers);
-    return readers;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Class<? extends AbstractArrayWriter>[] buildArrayWriters() {
-    int typeCount = MinorType.values().length;
-    Class<? extends AbstractArrayWriter> writers[] = new Class[typeCount];
-    ColumnAccessors.defineArrayWriters(writers);
-    return writers;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Class<? extends AbstractArrayReader>[] buildArrayReaders() {
-    int typeCount = MinorType.values().length;
-    Class<? extends AbstractArrayReader> readers[] = new Class[typeCount];
-    ColumnAccessors.defineArrayReaders(readers);
-    return readers;
-  }
-
-  public static AbstractColumnWriter newWriter(MajorType type) {
-    try {
-      if (type.getMode() == DataMode.REPEATED) {
-        Class<? extends AbstractArrayWriter> writerClass = arrayWriters[type.getMinorType().ordinal()];
-        if (writerClass == null) {
-          throw new UnsupportedOperationException();
-        }
-        return new ArrayColumnWriter(writerClass.newInstance());
-      } else {
-        Class<? extends AbstractColumnWriter> writerClass = columnWriters[type.getMinorType().ordinal()][type.getMode().ordinal()];
-        if (writerClass == null) {
-          throw new UnsupportedOperationException();
-        }
-        return writerClass.newInstance();
+    switch (type) {
+    case GENERIC_OBJECT:
+    case LATE:
+    case NULL:
+    case LIST:
+    case MAP:
+      throw new UnsupportedOperationException(type.toString());
+    default:
+      switch (mode) {
+      case OPTIONAL:
+        return BaseScalarWriter.build(vector, newAccessor(type, nullableWriters));
+      case REQUIRED:
+        return BaseScalarWriter.build(vector, newAccessor(type, requiredWriters));
+      case REPEATED:
+        return ScalarArrayWriter.build((RepeatedValueVector) vector, newAccessor(type, elementWriters));
+      default:
+        throw new UnsupportedOperationException(mode.toString());
       }
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new IllegalStateException(e);
     }
   }
 
-  public static AbstractColumnReader newReader(MajorType type) {
-    try {
-      if (type.getMode() == DataMode.REPEATED) {
-        Class<? extends AbstractArrayReader> readerClass = arrayReaders[type.getMinorType().ordinal()];
-        if (readerClass == null) {
-          throw new UnsupportedOperationException();
-        }
-        return new ArrayColumnReader(readerClass.newInstance());
-      } else {
-        Class<? extends AbstractColumnReader> readerClass = columnReaders[type.getMinorType().ordinal()][type.getMode().ordinal()];
-        if (readerClass == null) {
-          throw new UnsupportedOperationException();
-        }
-        return readerClass.newInstance();
+  public static AbstractObjectReader buildColumnReader(ValueVector vector) {
+    MajorType major = vector.getField().getType();
+    MinorType type = major.getMinorType();
+    DataMode mode = major.getMode();
+
+    switch (type) {
+    case GENERIC_OBJECT:
+    case LATE:
+    case NULL:
+    case LIST:
+    case MAP:
+      throw new UnsupportedOperationException(type.toString());
+    default:
+      switch (mode) {
+      case OPTIONAL:
+        return BaseScalarReader.build(vector, newAccessor(type, nullableReaders));
+      case REQUIRED:
+        return BaseScalarReader.build(vector, newAccessor(type, requiredReaders));
+      case REPEATED:
+        return ScalarArrayReader.build((RepeatedValueVector) vector, newAccessor(type, elementReaders));
+      default:
+        throw new UnsupportedOperationException(mode.toString());
       }
+    }
+  }
+
+  public static AbstractObjectReader buildColumnReader(MajorType majorType, VectorAccessor va) {
+    MinorType type = majorType.getMinorType();
+    DataMode mode = majorType.getMode();
+
+    switch (type) {
+    case GENERIC_OBJECT:
+    case LATE:
+    case NULL:
+    case LIST:
+    case MAP:
+      throw new UnsupportedOperationException(type.toString());
+    default:
+      switch (mode) {
+      case OPTIONAL:
+        return BaseScalarReader.build(majorType, va, newAccessor(type, nullableReaders));
+      case REQUIRED:
+        return BaseScalarReader.build(majorType, va, newAccessor(type, requiredReaders));
+      case REPEATED:
+        return ScalarArrayReader.build(majorType, va, newAccessor(type, elementReaders));
+      default:
+        throw new UnsupportedOperationException(mode.toString());
+      }
+    }
+  }
+
+  public static <T> T newAccessor(MinorType type, Class<? extends T> accessors[]) {
+    try {
+      Class<? extends T> accessorClass = accessors[type.ordinal()];
+      if (accessorClass == null) {
+        throw new UnsupportedOperationException(type.toString());
+      }
+      return accessorClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
       throw new IllegalStateException(e);
     }

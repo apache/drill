@@ -17,8 +17,12 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
+import java.math.BigDecimal;
+
+import org.joda.time.Period;
+
 /**
- * Defines a writer to set values for value vectors using
+ * Defines a reader to obtain values from value vectors using
  * a simple, uniform interface. Vector values are mapped to
  * their "natural" representations: the representation closest
  * to the actual vector value. For date and time values, this
@@ -32,14 +36,40 @@ package org.apache.drill.exec.vector.accessor;
  * An exception is thrown if a call is made to a method that
  * is not supported by the column type.
  * <p>
- * Values of scalars are set directly, using the get method
+ * Values of scalars are provided directly, using the get method
  * for the target type. Maps and arrays are structured types and
- * require another level of writer abstraction to access each value
+ * require another level of reader abstraction to access each value
  * in the structure.
+ * <p>
+ * {@see ScalarWriter}
  */
 
-public interface ColumnWriter extends ColumnAccessor, ScalarWriter {
-  void setNull();
-  TupleWriter map();
-  ArrayWriter array();
+public interface ScalarReader {
+  /**
+   * Describe the type of the value. This is a compression of the
+   * value vector type: it describes which method will return the
+   * vector value.
+   * @return the value type which indicates which get method
+   * is valid for the column
+   */
+
+  ValueType valueType();
+
+  /**
+   * Report if the column is null. Non-nullable columns always
+   * return <tt>false</tt>.
+   * @return true if the column value is null, false if the
+   * value is set
+   */
+  boolean isNull();
+  int getInt();
+  long getLong();
+  double getDouble();
+  String getString();
+  byte[] getBytes();
+  BigDecimal getDecimal();
+  Period getPeriod();
+
+  Object getObject();
+  String getAsString();
 }
