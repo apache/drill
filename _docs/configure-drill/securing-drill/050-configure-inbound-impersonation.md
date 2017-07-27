@@ -1,6 +1,6 @@
 ---
 title: "Configuring Inbound Impersonation"
-date: 2017-07-27 02:10:07 UTC
+date: 2017-07-27 02:19:28 UTC
 parent: "Securing Drill"
 ---  
 
@@ -51,12 +51,12 @@ Policy format:
        
        *  For JDBC, through SQLLine:
 
-               bin/sqlline –u “jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1” -n puser1 -p ppass1  
+               bin/sqlline –u “jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1” -n puser1 -p ppass1    
+In this example, `puser1` is the user submitting the queries. This user is authenticated. Since this user is authorized to impersonate any user, queries through the established connection are run as `euser1`.
 
-         In this example, `puser1` is the user submitting the queries. This user is authenticated. Since this user is authorized to impersonate any user, queries through the established connection are run as `euser1`.  
+           
 
        * For ODBC on Linux or Mac, you can pass the username through the `DelegationUID` property in the odbc.ini file. See [Configuring ODBC on Linux]({{site.baseurl}}/docs/configuring-odbc-on-linux/) for more information.  
        
               DelegationUID=euser1  
-
-        If you are using ODBC on Windows, you can use the **ODBC Data Source Administrator** to provide the username through the `Delegation UID` field in the MapR Drill ODBC Driver DSN Setup dialog box. See [Configuring ODBC on Windows]({{site.baseurl}}/docs/configuring-odbc-on-windows/) for more information.
+If you are using ODBC on Windows, you can use the **ODBC Data Source Administrator** to provide the username through the `Delegation UID` field in the MapR Drill ODBC Driver DSN Setup dialog box. See [Configuring ODBC on Windows]({{site.baseurl}}/docs/configuring-odbc-on-windows/) for more information.
