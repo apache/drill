@@ -1,6 +1,6 @@
 ---
 title: "Configuring Inbound Impersonation"
-date: 2017-07-27 02:42:59 UTC
+date: 2017-07-27 20:41:28 UTC
 parent: "Securing Drill"
 ---  
 
@@ -46,12 +46,12 @@ Policy format:
               { proxy_principals : { users : [“...”, “...”], groups : [“...”, “...”] },
               target_principals: { users : [“...”, “...”], groups : [“...”, “...”] } }
 
-3. Ensure that the proxy user (application) passes the username of the impersonation target user to Drill when creating a connection through the `impersonation_target` connection property. 
+3. Ensure that the proxy user (application) passes the username of the impersonation target user to Drill when creating a connection. 
 
 The following examples show you how to do this for JDBC and ODBC:  
   
 
-- For JDBC, through SQLLine:
+- For JDBC, through SQLLine using the `impersonation_target` connection property:
 
             bin/sqlline –u “jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1” -n puser1 -p ppass1  
 
