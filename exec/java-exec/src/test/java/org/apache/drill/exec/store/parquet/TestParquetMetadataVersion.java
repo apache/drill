@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.common.Version;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.junit.Test;
 
@@ -27,71 +26,105 @@ import static org.junit.Assert.assertTrue;
 
 public class TestParquetMetadataVersion {
 
-  private static String TEST_EXCEPTION_MESSAGE = "Failure is expected while parsing the wrong metadata version";
-  private static String TEST_ASSERT_EQUALS_MESSAGE = "Parquet metadata version is parsed incorrectly";
-  private static String TEST_ASSERT_TRUE_MESSAGE = "Not expected exception is obtained while parsing parquet metadata version";
-
   @Test
   public void testCorrectOnlyMajorVersion() throws Exception {
-    String correctOnlyMajorVersion = MetadataVersions.V1;
-    Version parsedMetadataVersion = MetadataVersions.VersionParser.parse(correctOnlyMajorVersion);
-    Version expectedMetadataVersion = new Version(correctOnlyMajorVersion, 1, 0, 0, 0, "");
-    assertEquals(TEST_ASSERT_EQUALS_MESSAGE, expectedMetadataVersion, parsedMetadataVersion);
+    MetadataVersion parsedMetadataVersion = new MetadataVersion(MetadataVersion.Constants.V1);
+    MetadataVersion expectedMetadataVersion = new MetadataVersion(1, 0);
+    assertEquals("Parquet metadata version is parsed incorrectly", expectedMetadataVersion, parsedMetadataVersion);
   }
 
   @Test
-  public void testCorrectMajorMinorVersion() throws Exception {
-    String correctMajorMinorVersion = MetadataVersions.V3_1;
-    Version parsedMetadataVersion = MetadataVersions.VersionParser.parse(correctMajorMinorVersion);
-    Version expectedMetadataVersion = new Version(correctMajorMinorVersion, 3, 1, 0, 0, "");
-    assertEquals(TEST_ASSERT_EQUALS_MESSAGE, expectedMetadataVersion, parsedMetadataVersion);
+  public void testCorrectMajorMinorVersions() throws Exception {
+    MetadataVersion parsedMetadataVersion = new MetadataVersion(MetadataVersion.Constants.V3_1);
+    MetadataVersion expectedMetadataVersion = new MetadataVersion(3, 1);
+    assertEquals("Parquet metadata version is parsed incorrectly", expectedMetadataVersion, parsedMetadataVersion);
   }
 
   @Test
+  public void testTwoDigitNumberMajorVersion() throws Exception {
+    String twoDigitNumberMajorVersion = "v10.2";
+    MetadataVersion parsedMetadataVersion = new MetadataVersion(twoDigitNumberMajorVersion);
+    MetadataVersion expectedMetadataVersion = new MetadataVersion(10, 2);
+    assertEquals("Parquet metadata version is parsed incorrectly", expectedMetadataVersion, parsedMetadataVersion);
+  }
+
+  @Test
+  public void testCorrectTwoDigitNumberMinorVersion() throws Exception {
+    String twoDigitNumberMinorVersion = "v3.10";
+    MetadataVersion parsedMetadataVersion = new MetadataVersion(twoDigitNumberMinorVersion);
+    MetadataVersion expectedMetadataVersion = new MetadataVersion(3, 10);
+    assertEquals("Parquet metadata version is parsed incorrectly", expectedMetadataVersion, parsedMetadataVersion);
+  }
+
+  @Test(expected = DrillRuntimeException.class)
   public void testVersionWithoutFirstLetter() throws Exception {
     String versionWithoutFirstLetter = "3.1";
     try {
-      MetadataVersions.VersionParser.parse(versionWithoutFirstLetter);
+      new MetadataVersion(versionWithoutFirstLetter);
     } catch (DrillRuntimeException e) {
-      assertTrue(TEST_ASSERT_TRUE_MESSAGE, e.getMessage().contains("Could not parse metadata"));
-      return;
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
     }
-    throw new Exception(TEST_EXCEPTION_MESSAGE);
   }
 
-  @Test
+  @Test(expected = DrillRuntimeException.class)
   public void testVersionWithFirstLetterInUpperCase() throws Exception {
     String versionWithFirstLetterInUpperCase = "V2";
     try {
-      MetadataVersions.VersionParser.parse(versionWithFirstLetterInUpperCase);
+      new MetadataVersion(versionWithFirstLetterInUpperCase);
     } catch (DrillRuntimeException e) {
-      assertTrue(TEST_ASSERT_TRUE_MESSAGE, e.getMessage().contains("Could not parse metadata"));
-      return;
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
     }
-    throw new Exception(TEST_EXCEPTION_MESSAGE);
   }
 
-  @Test
+  @Test(expected = DrillRuntimeException.class)
   public void testVersionWithWrongDelimiter() throws Exception {
     String versionWithWrongDelimiter = "v3_1";
     try {
-      MetadataVersions.VersionParser.parse(versionWithWrongDelimiter);
+      new MetadataVersion(versionWithWrongDelimiter);
     } catch (DrillRuntimeException e) {
-      assertTrue(TEST_ASSERT_TRUE_MESSAGE, e.getMessage().contains("Could not parse metadata"));
-      return;
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
     }
-    throw new Exception(TEST_EXCEPTION_MESSAGE);
   }
 
-  @Test
+  @Test(expected = DrillRuntimeException.class)
+  public void testZeroMajorVersion() throws Exception {
+    String zeroMajorVersion = "v0.2";
+    try {
+      new MetadataVersion(zeroMajorVersion);
+    } catch (DrillRuntimeException e) {
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
+    }
+  }
+
+  @Test(expected = DrillRuntimeException.class)
+  public void testZeroMinorVersion() throws Exception {
+    String zeroMinorVersion = "v3.0";
+    try {
+      new MetadataVersion(zeroMinorVersion);
+    } catch (DrillRuntimeException e) {
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
+    }
+  }
+
+  @Test(expected = DrillRuntimeException.class)
   public void testVersionWithLetterInsteadOfNumber() throws Exception {
     String versionWithLetterInsteadOfNumber = "v3.O"; // "O" is a letter, not a zero
     try {
-      MetadataVersions.VersionParser.parse(versionWithLetterInsteadOfNumber);
+      new MetadataVersion(versionWithLetterInsteadOfNumber);
     } catch (DrillRuntimeException e) {
-      assertTrue(TEST_ASSERT_TRUE_MESSAGE, e.getMessage().contains("Could not parse metadata"));
-      return;
+      assertTrue("Not expected exception is obtained while parsing parquet metadata version",
+          e.getMessage().contains("Could not parse metadata"));
+      throw new DrillRuntimeException(e);
     }
-    throw new Exception(TEST_EXCEPTION_MESSAGE);
   }
 }

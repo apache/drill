@@ -523,14 +523,14 @@ public class TestParquetMetadataCache extends PlanTestBase {
     try {
       test("use dfs_test.tmp");
       test("create table `%s` as select * from cp.`tpch/nation.parquet`", unsupportedMetadataVersion);
-      String lastVersion = Iterables.getLast(MetadataVersions.SUPPORTED_VERSIONS);
-      for (String supportedVersion : MetadataVersions.SUPPORTED_VERSIONS) {
-        if (MetadataVersions.compare(lastVersion, supportedVersion) < 0) {
+      String lastVersion = Iterables.getLast(MetadataVersion.Constants.SUPPORTED_VERSIONS);
+      for (String supportedVersion : MetadataVersion.Constants.SUPPORTED_VERSIONS) {
+        if (new MetadataVersion(lastVersion).compareTo(new MetadataVersion(supportedVersion)) < 0) {
           lastVersion = supportedVersion;
         }
       }
-      // Get the future version, which is absent in MetadataVersions.SUPPORTED_VERSIONS list
-      String futureVersion = "v" + (Integer.parseInt("" + lastVersion.charAt(1)) + 1);
+      // Get the future version, which is absent in MetadataVersion.SUPPORTED_VERSIONS list
+      String futureVersion = "v" + (Integer.parseInt(String.valueOf(lastVersion.charAt(1))) + 1);
       copyMetaDataCacheToTempWithReplacements("parquet/unsupported_metadata/unsupported_metadata_version.requires_replace.txt",
           unsupportedMetadataVersion, Metadata.METADATA_FILENAME, futureVersion);
       String query = String.format("select * from %s", unsupportedMetadataVersion);
