@@ -164,8 +164,8 @@ public class ExampleTest {
         .maxParallelization(1)
         // Set some session options
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2L * 1024 * 1024 * 1024)
-        .sessionOption(PlannerSettings.EXCHANGE.getOptionName(), true)
-        .sessionOption(PlannerSettings.HASHAGG.getOptionName(), false)
+        .sessionOption(PlannerSettings.EXCHANGE, true)
+        .sessionOption(PlannerSettings.HASHAGG, false)
         ;
 
     try (LogFixture logs = logBuilder.build();
@@ -175,6 +175,9 @@ public class ExampleTest {
       cluster.defineWorkspace("dfs", "data", "/tmp/drill-test", "psv");
       String sql = "select * from `dfs.data`.`example.tbl` order by columns[0]";
       QuerySummary results = client.queryBuilder().sql(sql).run();
+
+      // Example of explaining the query plan as JSON.
+      System.out.println(client.queryBuilder().sql(sql).explainJson());
       assertEquals( 2, results.recordCount() );
     }
   }

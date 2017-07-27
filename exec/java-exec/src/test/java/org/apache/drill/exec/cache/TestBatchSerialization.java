@@ -31,11 +31,12 @@ import java.io.OutputStream;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -61,9 +62,14 @@ public class TestBatchSerialization extends DrillTest {
   public SingleRowSet makeRowSet(BatchSchema schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
-    for (int i = 0; i < rowCount; i++) {
-      RowSetUtilities.setFromInt(writer, 0, i);
-      writer.save();
+    try {
+      for (int i = 0; i < rowCount; i++) {
+        RowSetUtilities.setFromInt(writer, 0, i);
+        writer.save();
+      }
+    } catch (VectorOverflowException e) {
+      // Should not occur
+      throw new IllegalStateException(e);
     }
     writer.done();
     return rowSet;
@@ -72,13 +78,18 @@ public class TestBatchSerialization extends DrillTest {
   public SingleRowSet makeNullableRowSet(BatchSchema schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
-    for (int i = 0; i < rowCount; i++) {
-      if (i % 2 == 0) {
-        RowSetUtilities.setFromInt(writer, 0, i);
-      } else {
-        writer.column(0).setNull();
+    try {
+      for (int i = 0; i < rowCount; i++) {
+        if (i % 2 == 0) {
+          RowSetUtilities.setFromInt(writer, 0, i);
+        } else {
+          writer.scalar(0).setNull();
+        }
+        writer.save();
       }
-      writer.save();
+    } catch (VectorOverflowException e) {
+      // Should not occur
+      throw new IllegalStateException(e);
     }
     writer.done();
     return rowSet;

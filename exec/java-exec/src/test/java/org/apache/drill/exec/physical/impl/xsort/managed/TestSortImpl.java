@@ -37,6 +37,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.OperatorFixture.OperatorFixtureBuilder;
@@ -45,8 +46,8 @@ import org.apache.drill.test.rowSet.HyperRowSetImpl;
 import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.SchemaBuilder;
@@ -192,9 +193,9 @@ public class TestSortImpl extends DrillTest {
     if (results.getSv4() != null) {
       return new HyperRowSetImpl(fixture.allocator(), dest, results.getSv4());
     } else if (results.getSv2() != null) {
-      return new IndirectRowSet(fixture.allocator(), dest, results.getSv2());
+      return IndirectRowSet.fromContainer(fixture.allocator(), dest, results.getSv2());
     } else {
-      return new DirectRowSet(fixture.allocator(), dest);
+      return DirectRowSet.fromContainer(fixture.allocator(), dest);
     }
   }
 
@@ -384,7 +385,7 @@ public class TestSortImpl extends DrillTest {
       RowSetReader reader = output.reader();
       while (reader.next()) {
         assertEquals("Value of " + batchCount + ":" + rowCount,
-            rowCount, reader.column(0).getInt());
+            rowCount, reader.scalar(0).getInt());
         rowCount++;
       }
     }
@@ -504,9 +505,10 @@ public class TestSortImpl extends DrillTest {
    * @param fixture operator test fixture
    * @param colCount number of data (non-key) columns
    * @param rowCount number of rows to generate
+   * @throws VectorOverflowException
    */
 
-  public void runWideRowsTest(OperatorFixture fixture, int colCount, int rowCount) {
+  public void runWideRowsTest(OperatorFixture fixture, int colCount, int rowCount) throws VectorOverflowException {
     SchemaBuilder builder = new SchemaBuilder()
         .add("key", MinorType.INT);
     for (int i = 0; i < colCount; i++) {

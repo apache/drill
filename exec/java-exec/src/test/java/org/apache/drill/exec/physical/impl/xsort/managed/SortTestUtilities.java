@@ -33,11 +33,11 @@ import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrap
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.TupleMetadata;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.RowSetSchema;
 import org.apache.drill.test.rowSet.SchemaBuilder;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
@@ -92,7 +92,7 @@ public class SortTestUtilities {
     public void run() throws Exception {
       PriorityQueueCopierWrapper copier = makeCopier(fixture, sortOrder, nullOrder);
       List<BatchGroup> batches = new ArrayList<>();
-      RowSetSchema schema = null;
+      TupleMetadata schema = null;
       for (SingleRowSet rowSet : rowSets) {
         batches.add(new BatchGroup.InputBatch(rowSet.container(), rowSet.getSv2(),
                     fixture.allocator(), rowSet.size()));
@@ -103,7 +103,7 @@ public class SortTestUtilities {
       int rowCount = outputRowCount();
       VectorContainer dest = new VectorContainer();
       @SuppressWarnings("resource")
-      BatchMerger merger = copier.startMerge(schema.toBatchSchema(SelectionVectorMode.NONE),
+      BatchMerger merger = copier.startMerge(new BatchSchema(SelectionVectorMode.NONE, schema.toFieldList()),
                                              batches, dest, rowCount);
 
       verifyResults(merger, dest);
@@ -121,7 +121,7 @@ public class SortTestUtilities {
     protected void verifyResults(BatchMerger merger, VectorContainer dest) {
       for (RowSet expectedSet : expected) {
         assertTrue(merger.next());
-        RowSet rowSet = new DirectRowSet(fixture.allocator(), dest);
+        RowSet rowSet = DirectRowSet.fromContainer(fixture.allocator(), dest);
         new RowSetComparison(expectedSet)
               .verifyAndClearAll(rowSet);
       }

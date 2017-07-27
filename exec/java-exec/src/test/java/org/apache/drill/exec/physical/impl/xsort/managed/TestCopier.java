@@ -28,10 +28,11 @@ import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrap
 import org.apache.drill.exec.physical.impl.xsort.managed.SortTestUtilities.CopierTester;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.SchemaBuilder;
@@ -127,10 +128,15 @@ public class TestCopier extends DrillTest {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(count);
     int value = first;
-    for (int i = 0; i < count; i++, value += step) {
-      RowSetUtilities.setFromInt(writer, 0, value);
-      writer.column(1).setString(Integer.toString(value));
-      writer.save();
+    try {
+      for (int i = 0; i < count; i++, value += step) {
+        RowSetUtilities.setFromInt(writer, 0, value);
+        writer.scalar(1).setString(Integer.toString(value));
+        writer.save();
+      }
+    } catch (VectorOverflowException e) {
+      // Should not occur
+      throw new IllegalStateException(e);
     }
     writer.done();
     return rowSet;

@@ -31,12 +31,13 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperExecContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
@@ -201,15 +202,20 @@ public class TestSorter extends DrillTest {
     public SingleRowSet makeDataSet(BufferAllocator allocator, BatchSchema schema, DataItem[] items) {
       ExtendableRowSet rowSet = fixture.rowSet(schema);
       RowSetWriter writer = rowSet.writer(items.length);
-      for (int i = 0; i < items.length; i++) {
-        DataItem item = items[i];
-        if (nullable && item.isNull) {
-          writer.column(0).setNull();
-        } else {
-          RowSetUtilities.setFromInt(writer, 0, item.key);
+      try {
+        for (int i = 0; i < items.length; i++) {
+          DataItem item = items[i];
+          if (nullable && item.isNull) {
+            writer.scalar(0).setNull();
+          } else {
+            RowSetUtilities.setFromInt(writer, 0, item.key);
+          }
+          writer.scalar(1).setString(Integer.toString(item.value));
+          writer.save();
         }
-        writer.column(1).setString(Integer.toString(item.value));
-        writer.save();
+      } catch (VectorOverflowException e) {
+        // Should not occur
+        throw new IllegalStateException(e);
       }
       writer.done();
       return rowSet;
@@ -218,7 +224,7 @@ public class TestSorter extends DrillTest {
     private void verify(RowSet actual) {
       DataItem expected[] = Arrays.copyOf(data, data.length);
       doSort(expected);
-      RowSet expectedRows = makeDataSet(actual.allocator(), actual.schema().batch(), expected);
+      RowSet expectedRows = makeDataSet(actual.allocator(), actual.batchSchema(), expected);
       doVerify(expected, expectedRows, actual);
     }
 
@@ -380,7 +386,7 @@ public class TestSorter extends DrillTest {
       int prevMonths = 0;
       long prevMs = 0;
       while (reader.next()) {
-        Period period = reader.column(0).getPeriod().normalizedStandard();
+        Period period = reader.scalar(0).getPeriod().normalizedStandard();
         int years = period.getYears();
         assertTrue(prevYears <= years);
         if (prevYears != years) {
