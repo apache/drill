@@ -21,27 +21,58 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.exec.vector.accessor.ArrayReader;
-import org.apache.drill.exec.vector.accessor.ColumnReader;
-import org.apache.drill.test.rowSet.RowSet.RowSetReader;
+import org.apache.drill.exec.vector.accessor.ObjectReader;
+import org.apache.drill.exec.vector.accessor.ScalarElementReader;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.bouncycastle.util.Arrays;
 
 /**
  * For testing, compare the contents of two row sets (record batches)
  * to verify that they are identical. Supports masks to exclude certain
  * columns from comparison.
+ * <p>
+ * Drill rows are analogous to JSON documents: they can have scalars,
+ * arrays and maps, with maps and lists holding maps, arrays and scalars.
+ * This class walks the row structure tree to compare each structure
+ * of two row sets checking counts, types and values to ensure that the
+ * "actual" result set (result of a test) matches the "expected" result
+ * set.
+ * <p>
+ * This class acts as an example of how to use the suite of reader
+ * abstractions.
  */
 
 public class RowSetComparison {
 
+  /**
+   * Row set with the expected outcome of a test. This is the "golden"
+   * copy defined in the test itself.
+   */
   private RowSet expected;
+  /**
+   * Some tests wish to ignore certain (top-level) columns. If a
+   * mask is provided, then only those columns with a <tt>true</tt>
+   * will be verified.
+   */
   private boolean mask[];
+  /**
+   * Floats and doubles do not compare exactly. This delta is used
+   * by JUnit for such comparisons.
+   */
   private double delta = 0.001;
+  /**
+   * Tests can skip the first n rows.
+   */
   private int offset;
   private int span = -1;
 
   public RowSetComparison(RowSet expected) {
     this.expected = expected;
-    mask = new boolean[expected.schema().hierarchicalAccess().count()];
+
+    // TODO: The mask only works at the top level presently
+
+    mask = new boolean[expected.schema().size()];
     for (int i = 0; i < mask.length; i++) {
       mask[i] = true;
     }
@@ -132,7 +163,8 @@ public class RowSetComparison {
     for (int i = 0; i < testLength; i++) {
       er.next();
       ar.next();
-      verifyRow(er, ar);
+      String label = Integer.toString(er.index() + 1);
+      verifyRow(label, er, ar);
     }
   }
 
@@ -165,22 +197,50 @@ public class RowSetComparison {
     }
   }
 
-  private void verifyRow(RowSetReader er, RowSetReader ar) {
+  private void verifyRow(String label, TupleReader er, TupleReader ar) {
+    String prefix = label + ":";
     for (int i = 0; i < mask.length; i++) {
       if (! mask[i]) {
         continue;
       }
-      ColumnReader ec = er.column(i);
-      ColumnReader ac = ar.column(i);
-      String label = (er.index() + 1) + ":" + i;
-      assertEquals(label, ec.valueType(), ac.valueType());
-      if (ec.isNull()) {
-        assertTrue(label + " - column not null", ac.isNull());
-        continue;
-      }
-      if (! ec.isNull()) {
-        assertTrue(label + " - column is null", ! ac.isNull());
-      }
+      verifyColumn(prefix + i, er.column(i), ar.column(i));
+    }
+  }
+
+  private void verifyColumn(String label, ObjectReader ec, ObjectReader ac) {
+    assertEquals(label, ec.type(), ac.type());
+    switch (ec.type()) {
+    case ARRAY:
+      verifyArray(label, ec.array(), ac.array());
+      break;
+    case SCALAR:
+      verifyScalar(label, ac.scalar(), ec.scalar());
+      break;
+    case TUPLE:
+      verifyTuple(label, ec.tuple(), ac.tuple());
+      break;
+    default:
+      throw new IllegalStateException( "Unexpected type: " + ec.type());
+    }
+  }
+
+  private void verifyTuple(String label, TupleReader er, TupleReader ar) {
+    assertEquals(label, er.columnCount(), ar.columnCount());
+    String prefix = label + ":";
+    for (int i = 0; i < er.columnCount(); i++) {
+      verifyColumn(prefix + i, er.column(i), ar.column(i));
+    }
+  }
+
+  private void verifyScalar(String label, ScalarReader ec, ScalarReader ac) {
+    assertEquals(label, ec.valueType(), ac.valueType());
+    if (ec.isNull()) {
+      assertTrue(label + " - column not null", ac.isNull());
+      return;
+    }
+    if (! ec.isNull()) {
+      assertTrue(label + " - column is null", ! ac.isNull());
+    }
     switch (ec.valueType()) {
     case BYTES: {
         byte expected[] = ac.getBytes();
@@ -207,24 +267,42 @@ public class RowSetComparison {
      case PERIOD:
        assertEquals(label, ec.getPeriod(), ac.getPeriod());
        break;
-     case ARRAY:
-       verifyArray(label, ec.array(), ac.array());
-       break;
      default:
         throw new IllegalStateException( "Unexpected type: " + ec.valueType());
-      }
     }
   }
 
-  private void verifyArray(String colLabel, ArrayReader ea,
+  private void verifyArray(String label, ArrayReader ea,
       ArrayReader aa) {
+    assertEquals(label, ea.entryType(), aa.entryType());
+    assertEquals(label, ea.size(), aa.size());
+    switch (ea.entryType()) {
+    case ARRAY:
+      throw new UnsupportedOperationException();
+    case SCALAR:
+      verifyScalarArray(label, ea.elements(), aa.elements());
+      break;
+    case TUPLE:
+      verifyTupleArray(label, ea, aa);
+      break;
+    default:
+      throw new IllegalStateException( "Unexpected type: " + ea.entryType());
+    }
+  }
+
+  private void verifyTupleArray(String label, ArrayReader ea, ArrayReader aa) {
+    for (int i = 0; i < ea.size(); i++) {
+      verifyTuple(label + "[" + i + "]", ea.tuple(i), aa.tuple(i));
+    }
+  }
+
+  private void verifyScalarArray(String colLabel, ScalarElementReader ea,
+      ScalarElementReader aa) {
     assertEquals(colLabel, ea.valueType(), aa.valueType());
     assertEquals(colLabel, ea.size(), aa.size());
     for (int i = 0; i < ea.size(); i++) {
       String label = colLabel + "[" + i + "]";
       switch (ea.valueType()) {
-      case ARRAY:
-        throw new IllegalStateException("Arrays of arrays not supported yet");
       case BYTES: {
         byte expected[] = ea.getBytes(i);
         byte actual[] = aa.getBytes(i);

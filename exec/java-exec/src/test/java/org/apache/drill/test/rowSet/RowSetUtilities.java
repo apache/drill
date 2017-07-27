@@ -18,11 +18,20 @@
 package org.apache.drill.test.rowSet;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.TupleMetadata;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.TupleMetadata.ColumnMetadata;
+import org.apache.drill.exec.record.TupleMetadata.StructureType;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.accessor.AccessorUtilities;
-import org.apache.drill.exec.vector.accessor.ColumnAccessor.ValueType;
-import org.apache.drill.exec.vector.accessor.ColumnWriter;
-import org.apache.drill.test.rowSet.RowSet.RowSetWriter;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorOverflowException;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.joda.time.Duration;
 import org.joda.time.Period;
 
@@ -59,10 +68,11 @@ public class RowSetUtilities {
    * @param rowWriter
    * @param index
    * @param value
+   * @throws VectorOverflowException
    */
 
-  public static void setFromInt(RowSetWriter rowWriter, int index, int value) {
-    ColumnWriter writer = rowWriter.column(index);
+  public static void setFromInt(RowSetWriter rowWriter, int index, int value) throws VectorOverflowException {
+    ScalarWriter writer = rowWriter.column(index).scalar();
     if (writer.valueType() == ValueType.PERIOD) {
       setPeriodFromInt(writer, rowWriter.schema().column(index).getType().getMinorType(), value);
     } else {
@@ -81,10 +91,11 @@ public class RowSetUtilities {
    * @param writer column writer for a period column
    * @param minorType the Drill data type
    * @param value the integer value to apply
+   * @throws VectorOverflowException
    */
 
-  public static void setPeriodFromInt(ColumnWriter writer, MinorType minorType,
-      int value) {
+  public static void setPeriodFromInt(ScalarWriter writer, MinorType minorType,
+      int value) throws VectorOverflowException {
     switch (minorType) {
     case INTERVAL:
       writer.setPeriod(Duration.millis(value).toPeriod());
@@ -102,5 +113,33 @@ public class RowSetUtilities {
     default:
       throw new IllegalArgumentException("Writer is not an interval: " + minorType);
     }
+  }
+
+  public static VectorContainer buildVectors(BufferAllocator allocator, TupleMetadata schema) {
+    VectorContainer container = new VectorContainer(allocator);
+    for (int i = 0; i < schema.size(); i++) {
+      ColumnMetadata colSchema = schema.metadata(i);
+      @SuppressWarnings("resource")
+      ValueVector vector = TypeHelper.getNewVector(colSchema.schema(), allocator, null);
+      container.add(vector);
+      if (colSchema.structureType() == StructureType.TUPLE) {
+        buildMap(allocator, (AbstractMapVector) vector, colSchema.mapSchema());
+      }
+    }
+    container.buildSchema(SelectionVectorMode.NONE);
+    return container;
+  }
+
+  private static void buildMap(BufferAllocator allocator, AbstractMapVector mapVector, TupleMetadata mapSchema) {
+    for (int i = 0; i < mapSchema.size(); i++) {
+      ColumnMetadata colSchema = mapSchema.metadata(i);
+      @SuppressWarnings("resource")
+      ValueVector vector = TypeHelper.getNewVector(colSchema.schema(), allocator, null);
+      mapVector.putChild(colSchema.name(), vector);
+      if (colSchema.structureType() == StructureType.TUPLE) {
+        buildMap(allocator, (AbstractMapVector) vector, colSchema.mapSchema());
+      }
+    }
+
   }
 }
